@@ -9,6 +9,12 @@ hkrpg-go
 
 使用方法 ：
 
+1. 安装mysql
+2. 拉取项目文件
+3. 编译
+4. 运行后修改config.json
+5. 运行
+
 编译
 
    ```bash
