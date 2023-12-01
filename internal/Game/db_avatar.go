@@ -28,7 +28,7 @@ func AddAvatar(avatarId uint32) *Avatar {
 	avatar.AvatarId = avatarId
 	avatar.Exp = 0
 	avatar.Level = 1
-	avatar.FirstMetTimestamp = uint64(time.Now().UnixNano())
+	avatar.FirstMetTimestamp = uint64(time.Now().Unix())
 	avatar.Promotion = 0
 	avatar.Rank = 0
 	avatar.Hp = 10000

@@ -71,7 +71,9 @@ func (g *Game) GetMailCsReq() {
 
 func (g *Game) SetClientPausedCsReq() {
 	rsp := new(proto.SetClientPausedScRsp)
-	rsp.Paused = false
+	g.Player.IsPaused = false
+	g.Player.IsPaused = !g.Player.IsPaused
+	rsp.Paused = g.Player.IsPaused
 
 	g.send(cmd.SetClientPausedScRsp, rsp)
 }

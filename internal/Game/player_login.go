@@ -130,26 +130,6 @@ func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 	g.send(cmd.GetPlayerBoardDataScRsp, rsp)
 }
 
-func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetAvatarDataScRsp)
-	rsp.IsGetAll = true
-
-	for _, a := range g.Player.DbAvatar.Avatar {
-		avatarList := new(proto.Avatar)
-		avatarList.BaseAvatarId = a.AvatarId
-		avatarList.FirstMetTimestamp = a.FirstMetTimestamp
-		avatarList.Exp = a.Exp
-		avatarList.Level = a.Level
-		avatarList.Promotion = a.Promotion
-		avatarList.Rank = a.Rank
-		avatarList.SkilltreeList = GetKilltreeList(strconv.Itoa(int(a.AvatarId)))
-		avatarList.EquipmentUniqueId = 0
-		rsp.AvatarList = append(rsp.AvatarList, avatarList)
-	}
-
-	g.send(cmd.GetAvatarDataScRsp, rsp)
-}
-
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
 	rsp.ActivityScheduleList = make([]*proto.ActivityScheduleInfo, 0)
@@ -249,9 +229,7 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 			},
 			Rot: &proto.Vector{},
 		},
-		InstId:   0,
-		EntityId: 1,
-		GroupId:  0,
+		EntityId: uint32(g.GetNextGameObjectGuid()),
 	}
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: []*proto.SceneEntityInfo{entityList},
@@ -305,7 +283,7 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	req := msg.(*proto.PlayerHeartbeatCsReq)
 
 	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(time.Now().UnixNano())
+	rsp.ServerTimeMs = uint64(time.Now().Unix())
 	rsp.ClientTimeMs = req.ClientTimeMs
 
 	g.send(cmd.PlayerHeartBeatScRsp, rsp)

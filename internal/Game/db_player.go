@@ -16,6 +16,9 @@ type PlayerData struct {
 	Rot            *Vector   // 存档朝向
 	DbAvatar       *DbAvatar // 角色数据
 	DbLineUp       *DbLineUp // 队伍
+	// 下面是在线数据
+	IsPaused              bool   `json:"-"` // 是否暂停
+	GameObjectGuidCounter uint64 `json:"-"` // 游戏对象guid计数器
 }
 
 type Vector struct {
@@ -24,19 +27,24 @@ type Vector struct {
 	Z int
 }
 
+func (g *Game) GetNextGameObjectGuid() uint64 {
+	g.Player.GameObjectGuidCounter++
+	return 0 + g.Player.GameObjectGuidCounter
+}
+
 // 初始化账号数据
 func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data := new(PlayerData)
 	data.PlayerId = uid
-	data.MainAvatar = 8001
+	data.MainAvatar = 1215
 	data.NickName = "hkrpg-go"
 	data.Level = 1
 	data.Exp = 0
 	data.Stamina = 240
-	data.ReserveStamina = 4
+	data.ReserveStamina = 2400
 	data.WorldLevel = 0
 	data.Signature = "hkrpg-go"
-	data.HeadImage = 208001
+	data.HeadImage = 201217
 	data.Pos = &Vector{
 		X: 99,
 		Y: 62,
@@ -44,12 +52,12 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	}
 	data.DbAvatar = new(DbAvatar)
 	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
-	avatarIdList := []uint32{8001} // 设置初始化时给予多少角色
+	avatarIdList := []uint32{1215, 1217} // 设置初始化时给予多少角色
 	for _, a := range avatarIdList {
 		data.DbAvatar.Avatar[a] = AddAvatar(a)
 	}
 	// 将主角写入队伍
 	data = g.GetDbLineUp(data)
-	data.DbLineUp.LineUpList[0].AvatarIdList[0] = 8001
+	data.DbLineUp.LineUpList[0].AvatarIdList[0] = 1215
 	return data
 }
