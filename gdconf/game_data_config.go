@@ -51,4 +51,5 @@ func (g *GameDataConfig) loadAll() {
 
 func (g *GameDataConfig) load() {
 	g.loadAvatarData() // 角色
+	g.loadRogueArea()  // 副本
 }

@@ -36,7 +36,7 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	dbPlayer := g.Db.QueryAccountUidByFieldPlayer(g.Uid)
 	if dbPlayer.PlayerData == nil {
 		logger.Info("新账号登录，进入初始化流程")
-		playerData = AddPalyerData(g.Uid)
+		playerData = g.AddPalyerData(g.Uid)
 
 		dbData, err := json.Marshal(playerData)
 		if err != nil {
@@ -150,48 +150,6 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 	g.send(cmd.GetAvatarDataScRsp, rsp)
 }
 
-func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
-
-	rsp := new(proto.GetAllLineupDataScRsp)
-	rsp.CurIndex = 0
-
-	lineupList := new(proto.LineupInfo)
-	lineupList.ExtraLineupType = proto.ExtraLineupType_LINEUP_NONE
-	lineupList.Name = "Team 1"
-	lineupList.MaxMp = 5
-	lineupList.Mp = 4
-	lineupList.Index = 0
-	lineupList.LeaderSlot = 0
-
-	lineupAvatar := new(proto.LineupAvatar)
-	lineupAvatar.AvatarType = proto.AvatarType_AVATAR_FORMAL_TYPE
-	lineupAvatar.SpBar = &proto.SpBarInfo{CurSp: 0, MaxSp: 10000}
-	lineupAvatar.Hp = 10000
-	lineupAvatar.Id = g.Player.MainAvatar
-	lineupAvatar.Slot = 0
-
-	lineupList.AvatarList = make([]*proto.LineupAvatar, 0)
-	lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
-
-	rsp.LineupList = make([]*proto.LineupInfo, 0)
-	rsp.LineupList = append(rsp.LineupList, lineupList)
-
-	teamid := []string{"2", "3", "4", "5", "6"}
-	for _, a := range teamid {
-		id, _ := strconv.ParseUint(a, 10, 64)
-		lineupList2 := new(proto.LineupInfo)
-		lineupList2.ExtraLineupType = proto.ExtraLineupType_LINEUP_NONE
-		lineupList2.Name = "Team " + a
-		lineupList2.MaxMp = 5
-		lineupList2.Mp = 4
-		lineupList2.Index = uint32(id - 1)
-		lineupList2.LeaderSlot = 0
-		rsp.LineupList = append(rsp.LineupList, lineupList2)
-	}
-
-	g.send(cmd.GetAllLineupDataScRsp, rsp)
-}
-
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
 	rsp.ActivityScheduleList = make([]*proto.ActivityScheduleInfo, 0)
@@ -265,30 +223,6 @@ func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {
 	rsp.ClientResVersion = req.ClientResVersion
 
 	g.send(cmd.SyncClientResVersionScRsp, rsp)
-}
-
-func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
-	rsp := &proto.GetCurLineupDataScRsp{
-		Lineup: &proto.LineupInfo{
-			AvatarList:      []*proto.LineupAvatar{},
-			MaxMp:           5,
-			Mp:              4,
-			Index:           0,
-			Name:            "Team 1",
-			ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
-			LeaderSlot:      0,
-		},
-	}
-	avatar := &proto.LineupAvatar{
-		AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,
-		SpBar:      &proto.SpBarInfo{CurSp: 0, MaxSp: 10000},
-		Hp:         10000,
-		Id:         g.Player.MainAvatar,
-		Slot:       0,
-	}
-	rsp.Lineup.AvatarList = append(rsp.Lineup.AvatarList, avatar)
-
-	g.send(cmd.GetCurLineupDataScRsp, rsp)
 }
 
 func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
@@ -371,7 +305,7 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	req := msg.(*proto.PlayerHeartbeatCsReq)
 
 	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
+	rsp.ServerTimeMs = uint64(time.Now().UnixNano())
 	rsp.ClientTimeMs = req.ClientTimeMs
 
 	g.send(cmd.PlayerHeartBeatScRsp, rsp)

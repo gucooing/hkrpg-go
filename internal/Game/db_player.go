@@ -15,6 +15,7 @@ type PlayerData struct {
 	Pos            *Vector   // 存档坐标
 	Rot            *Vector   // 存档朝向
 	DbAvatar       *DbAvatar // 角色数据
+	DbLineUp       *DbLineUp // 队伍
 }
 
 type Vector struct {
@@ -24,7 +25,7 @@ type Vector struct {
 }
 
 // 初始化账号数据
-func AddPalyerData(uid uint32) *PlayerData {
+func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data := new(PlayerData)
 	data.PlayerId = uid
 	data.MainAvatar = 8001
@@ -47,6 +48,8 @@ func AddPalyerData(uid uint32) *PlayerData {
 	for _, a := range avatarIdList {
 		data.DbAvatar.Avatar[a] = AddAvatar(a)
 	}
-
+	// 将主角写入队伍
+	data = g.GetDbLineUp(data)
+	data.DbLineUp.LineUpList[0].AvatarIdList[0] = 8001
 	return data
 }
