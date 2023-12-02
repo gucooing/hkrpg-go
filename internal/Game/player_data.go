@@ -20,6 +20,50 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	g.send(cmd.GetArchiveDataScRsp, rsp)
 }
 
+func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
+	rsp := &proto.GetPlayerBoardDataScRsp{
+		CurrentHeadIconId:    g.Player.HeadImage,
+		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
+		Signature:            "",
+		Unk1:                 "",
+	}
+
+	for _, avatar := range g.Player.DbAvatar.Avatar {
+		headIcon := &proto.HeadIcon{
+			Id: avatar.AvatarId + 200000,
+		}
+		rsp.UnlockedHeadIconList = append(rsp.UnlockedHeadIconList, headIcon)
+	}
+
+	g.send(cmd.GetPlayerBoardDataScRsp, rsp)
+}
+
+func (g *Game) SetHeadIconCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.SetHeadIconCsReq, payloadMsg)
+	req := msg.(*proto.SetHeadIconCsReq)
+
+	g.Player.HeadImage = req.Id
+
+	rsp := &proto.SetHeadIconScRsp{
+		CurrentHeadIconId: req.Id,
+	}
+
+	g.send(cmd.SetHeadIconScRsp, rsp)
+}
+
+func (g *Game) SetHeroBasicTypeCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.SetHeroBasicTypeCsReq, payloadMsg)
+	req := msg.(*proto.SetHeroBasicTypeCsReq)
+
+	g.Player.DbAvatar.MainAvatar = req.BasicType
+
+	rsp := &proto.SetHeroBasicTypeScRsp{
+		BasicType: req.BasicType,
+	}
+
+	g.send(cmd.SetHeroBasicTypeScRsp, rsp)
+}
+
 func (g *Game) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetGachaInfoScRsp)
 	g.send(cmd.GetGachaInfoScRsp, rsp)

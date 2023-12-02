@@ -2,6 +2,7 @@ package Game
 
 import (
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
 type PlayerData struct {
@@ -38,6 +39,7 @@ func (g *Game) GetNextGameObjectGuid() uint64 {
 // 初始化账号数据
 func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data := new(PlayerData)
+	mainAvatar := proto.HeroBasicType_BoyWarrior
 	data.PlayerId = uid
 	data.NickName = "hkrpg-go"
 	data.Level = 1
@@ -46,26 +48,23 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data.ReserveStamina = 2400
 	data.WorldLevel = 0
 	data.Signature = "hkrpg-go"
-	data.HeadImage = 201217
+	data.HeadImage = 208001
 	data.Pos = &Vector{
-		X: 99,
-		Y: 62,
-		Z: -4800,
+		X: -47,
+		Y: 146,
+		Z: 7269,
+	}
+	data.Rot = &Vector{
+		X: 0,
+		Y: 0,
+		Z: 0,
 	}
 	data.DbAvatar = new(DbAvatar)
+	data.DbAvatar.MainAvatar = mainAvatar
 	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
-	/*
-		avatarIdList := []uint32{1217, 8001} // 设置初始化时给予多少角色
-		for _, a := range avatarIdList {
-			data.DbAvatar.Avatar[a] = AddAvatar(a)
-		}
-	*/
-	// 直接给全部角色
+	// TODO 直接给全部角色(包括多个主角，如果出现了问题，那只给一个当前属性主角）
 	for _, a := range gdconf.GetAvatarDataMap() {
 		avatarId := a.AvatarId
-		if avatarId == 8002 || avatarId == 8003 || avatarId == 8004 {
-			continue
-		}
 		data.DbAvatar.Avatar[avatarId] = AddAvatar(avatarId)
 	}
 	// 将主角写入队伍

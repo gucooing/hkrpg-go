@@ -91,6 +91,10 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandlePlayerHeartBeatCsReq(payloadMsg) // 心跳包
 	case cmd.SyncClientResVersionCsReq:
 		g.SyncClientResVersionCsReq(payloadMsg) // 版本同步
+	case cmd.SetHeadIconCsReq:
+		g.SetHeadIconCsReq(payloadMsg) // 切换头像
+	case cmd.SetHeroBasicTypeCsReq:
+		g.SetHeroBasicTypeCsReq(payloadMsg) // 切换主角类型
 	// 乱七八糟
 	case cmd.GetFirstTalkNpcCsReq:
 		g.GetFirstTalkNpcCsReq()

@@ -9,7 +9,8 @@ import (
 )
 
 type DbAvatar struct {
-	Avatar map[uint32]*Avatar
+	Avatar     map[uint32]*Avatar
+	MainAvatar proto.HeroBasicType // 默认主角
 }
 
 type Avatar struct {

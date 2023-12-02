@@ -98,7 +98,7 @@ func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
 	rsp.Gender = proto.Gender_GenderMan
-	rsp.CurBasicType = proto.HeroBasicType(8001)
+	rsp.CurBasicType = g.Player.DbAvatar.MainAvatar
 	avatarid := []uint32{8001, 8002, 8003, 8004}
 	for _, id := range avatarid {
 		basicTypeInfoList := &proto.HeroBasicTypeInfo{
@@ -116,18 +116,6 @@ func (g *Game) HandleGetBagCsReq(payloadMsg []byte) {
 	// TODO
 	rsp := new(proto.GetBagScRsp)
 	g.send(cmd.GetBagScRsp, rsp)
-}
-
-func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
-	headIcon := &proto.HeadIcon{Id: g.Player.HeadImage}
-	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.Player.HeadImage,
-		UnlockedHeadIconList: []*proto.HeadIcon{headIcon},
-		Signature:            "",
-		Unk1:                 "",
-	}
-
-	g.send(cmd.GetPlayerBoardDataScRsp, rsp)
 }
 
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {

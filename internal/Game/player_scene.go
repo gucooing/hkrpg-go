@@ -18,6 +18,8 @@ func (g *Game) GetRogueScoreRewardInfoCsReq() {
 
 func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetCurSceneInfoScRsp)
+	pos := g.Player.Pos
+	rot := g.Player.Rot
 	rsp.Scene = &proto.SceneInfo{
 		WorldId:         101,
 		LeaderEntityId:  1,
@@ -41,11 +43,15 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 			}},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
-					Y: 146,
-					X: -47,
-					Z: 7269,
+					X: int32(pos.X),
+					Y: int32(pos.Y),
+					Z: int32(pos.Z),
 				},
-				Rot: &proto.Vector{},
+				Rot: &proto.Vector{
+					X: int32(rot.X),
+					Y: int32(rot.Y),
+					Z: int32(rot.Z),
+				},
 			},
 			EntityId: uint32(g.GetNextGameObjectGuid()),
 		}
