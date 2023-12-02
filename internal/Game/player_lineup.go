@@ -169,3 +169,27 @@ func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
 
 	g.send(cmd.SetLineupNameScRsp, rsp)
 }
+
+func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
+	req := msg.(*proto.ReplaceLineupCsReq)
+	for id, avatarid := range req.Slots {
+		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[id] = avatarid.Id
+	}
+
+	// 队伍更新通知
+	g.SyncLineupNotify(req.Index)
+
+	rsp := &proto.ReplaceLineupCsReq{} // TODO
+
+	g.send(cmd.ReplaceLineupScRsp, rsp)
+}
+
+func (g *Game) ChangeLineupLeaderCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.ChangeLineupLeaderCsReq, payloadMsg)
+	req := msg.(*proto.ChangeLineupLeaderCsReq)
+
+	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
+
+	g.send(cmd.ChangeLineupLeaderScRsp, rsp)
+}

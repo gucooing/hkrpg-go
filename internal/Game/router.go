@@ -65,6 +65,10 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleSwapLineupCsReq(payloadMsg) // 队伍角色交换请求
 	case cmd.SetLineupNameCsReq:
 		g.SetLineupNameCsReq(payloadMsg) // 修改队伍名称
+	case cmd.ReplaceLineupCsReq:
+		g.ReplaceLineupCsReq(payloadMsg) // 快速入队
+	case cmd.ChangeLineupLeaderCsReq:
+		g.ChangeLineupLeaderCsReq(payloadMsg) // 切换角色
 	// 场景
 	case cmd.GetRogueInfoCsReq:
 		g.GetRogueInfoCsReq(payloadMsg) // 获取副本库
