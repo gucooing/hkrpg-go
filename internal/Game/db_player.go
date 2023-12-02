@@ -15,7 +15,7 @@ type PlayerData struct {
 	WorldLevel     uint32    // 世界等级
 	Signature      string    // 签名
 	HeadImage      uint32    // 头像
-	Birthday       []uint8   // 生日
+	Birthday       uint32    // 生日
 	Pos            *Vector   // 存档坐标
 	Rot            *Vector   // 存档朝向
 	DbAvatar       *DbAvatar // 角色数据
@@ -23,6 +23,7 @@ type PlayerData struct {
 	// 下面是在线数据
 	IsPaused              bool   `json:"-"` // 是否暂停
 	GameObjectGuidCounter uint64 `json:"-"` // 游戏对象guid计数器
+	IsNickName            bool   `json:"-"` // 是否修改昵称
 }
 
 type Vector struct {
@@ -62,7 +63,7 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data.DbAvatar = new(DbAvatar)
 	data.DbAvatar.MainAvatar = mainAvatar
 	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
-	// TODO 直接给全部角色(包括多个主角，如果出现了问题，那只给一个当前属性主角）
+	// TODO 直接给全部角色(包括多个主角，如果出现了问题，那只给一个当前属性主角） *不知道你是不是下一个把四个主角添加到一个队伍的yz
 	for _, a := range gdconf.GetAvatarDataMap() {
 		avatarId := a.AvatarId
 		data.DbAvatar.Avatar[avatarId] = AddAvatar(avatarId)

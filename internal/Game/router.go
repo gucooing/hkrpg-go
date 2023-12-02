@@ -91,10 +91,18 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandlePlayerHeartBeatCsReq(payloadMsg) // 心跳包
 	case cmd.SyncClientResVersionCsReq:
 		g.SyncClientResVersionCsReq(payloadMsg) // 版本同步
+	case cmd.GetAssistHistoryCsReq:
+		g.HandleGetAssistHistoryCsReq() // 漫游签证
 	case cmd.SetHeadIconCsReq:
 		g.SetHeadIconCsReq(payloadMsg) // 切换头像
 	case cmd.SetHeroBasicTypeCsReq:
 		g.SetHeroBasicTypeCsReq(payloadMsg) // 切换主角类型
+	case cmd.SetNicknameCsReq:
+		g.SetNicknameCsReq(payloadMsg) // 修改昵称请求
+	case cmd.SetGameplayBirthdayCsReq:
+		g.SetGameplayBirthdayCsReq(payloadMsg) // 修改生日请求
+	case cmd.SetSignatureCsReq:
+		g.SetSignatureCsReq(payloadMsg) // 简介修改请求
 	// 乱七八糟
 	case cmd.GetFirstTalkNpcCsReq:
 		g.GetFirstTalkNpcCsReq()

@@ -103,7 +103,7 @@ func recvHandle(g *Game.Game) {
 		DecodeBinToPayload(bin, &kcpMsgList)
 		for _, v := range kcpMsgList {
 			// name := g.ServerCmdProtoMap.GetCmdNameByCmdId(v.CmdId)
-			// logger.Debug("C --> S: %v", v.CmdId)
+			// logger.Error("C --> S: %v", v.CmdId)
 			// payloadMsg := DecodePayloadToProto(g, v) TODO 由于 req 大部分缺失，所以不预处理数据
 			g.RegisterMessage(v.CmdId, v.ProtoData)
 		}

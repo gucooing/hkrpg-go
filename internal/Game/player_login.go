@@ -89,7 +89,7 @@ func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
 	rsp.NextRecoverTime = time.Now().UnixNano() + 300
-	rsp.GameplayBirthday = 0
+	rsp.GameplayBirthday = g.Player.Birthday
 	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
 
 	g.send(cmd.GetBasicInfoScRsp, rsp)
@@ -230,15 +230,4 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.send(cmd.PlayerLoginFinishScRsp, rsp)
 	// 更新账号数据
 	go g.UpDataPlayer()
-}
-
-func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.PlayerHeartBeatCsReq, payloadMsg)
-	req := msg.(*proto.PlayerHeartbeatCsReq)
-
-	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(time.Now().Unix())
-	rsp.ClientTimeMs = req.ClientTimeMs
-
-	g.send(cmd.PlayerHeartBeatScRsp, rsp)
 }
