@@ -1,6 +1,7 @@
 package Game
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
@@ -34,18 +35,18 @@ func AddAvatar(avatarId uint32) *Avatar {
 	avatar.Hp = 10000
 	return avatar
 }
-func GetKilltreeList(avatarId string) []*proto.AvatarSkillTree {
-	avatarData := gdconf.GetAvatarDataById(avatarId)
-	SkilltreeList := make([]*proto.AvatarSkillTree, 0)
-	for _, a := range avatarData.SkillList {
-		if a%10 == 6 {
-			continue
+func GetKilltreeList(avatarId, level string) []*proto.AvatarSkillTree {
+	skilltreeList := make([]*proto.AvatarSkillTree, 0)
+	skillList := gdconf.GetAvatarSkilltreeMap()
+	for _, a := range skillList {
+		if a[level].AvatarID == avatarId {
+			pointId, _ := strconv.ParseUint(a[level].PointID, 10, 32)
+			skilltree := &proto.AvatarSkillTree{
+				PointId: uint32(pointId),
+				Level:   1,
+			}
+			skilltreeList = append(skilltreeList, skilltree)
 		}
-		skilltreeList := &proto.AvatarSkillTree{
-			PointId: a,
-			Level:   1,
-		}
-		SkilltreeList = append(SkilltreeList, skilltreeList)
 	}
-	return SkilltreeList
+	return skilltreeList
 }

@@ -103,7 +103,7 @@ func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	for _, id := range avatarid {
 		basicTypeInfoList := &proto.HeroBasicTypeInfo{
 			BasicType:     proto.HeroBasicType(id),
-			SkillTreeList: GetKilltreeList(strconv.Itoa(int(id))),
+			SkillTreeList: GetKilltreeList(strconv.Itoa(int(id)), "1"),
 			Rank:          0,
 		}
 		rsp.BasicTypeInfoList = append(rsp.BasicTypeInfoList, basicTypeInfoList)

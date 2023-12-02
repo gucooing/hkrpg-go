@@ -30,7 +30,7 @@ type NetMsg struct {
 
 func (g *Game) send(cmdid uint16, playerMsg pb.Message) {
 	data := protojson.Format(playerMsg)
-	logger.Debug("[UID:%v] S --> C : %s", g.Uid, data)
+	logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
 	netMsg := new(NetMsg)
 	netMsg.G = g
 	netMsg.CmdId = cmdid
@@ -50,7 +50,7 @@ func (g *Game) decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		return nil
 	}
 	data := protojson.Format(protoObj)
-	logger.Debug("[UID:%v] C --> S : %s", g.Uid, data)
+	logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, g.ServerCmdProtoMap.GetCmdNameByCmdId(cmdId), data)
 	return protoObj
 }
 

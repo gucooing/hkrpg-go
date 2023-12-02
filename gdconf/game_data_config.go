@@ -16,8 +16,9 @@ type GameDataConfig struct {
 	// 配置表路径前缀
 	excelPrefix string
 	// 配置表数据
-	AvatarDataMap map[string]*AvatarData // 角色
-	RogueAreaMap  map[string]*RogueArea  // 地图库
+	AvatarDataMap      map[string]*AvatarData                 // 角色
+	RogueAreaMap       map[string]*RogueArea                  // 地图库
+	AvatarSkilltreeMap map[string]map[string]*AvatarSkilltree // 技能库
 }
 
 func InitGameDataConfig() {
@@ -50,6 +51,7 @@ func (g *GameDataConfig) loadAll() {
 }
 
 func (g *GameDataConfig) load() {
-	g.loadAvatarData() // 角色
-	g.loadRogueArea()  // 副本
+	g.loadAvatarData()      // 角色
+	g.loadRogueArea()       // 副本
+	g.loadAvatarSkilltree() // 技能库
 }

@@ -20,7 +20,7 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 		avatarList.Rank = a.Rank
 		avatarList.Level = a.Level
 		avatarList.Exp = a.Exp
-		avatarList.SkilltreeList = GetKilltreeList(strconv.Itoa(int(a.AvatarId)))
+		avatarList.SkilltreeList = GetKilltreeList(strconv.Itoa(int(a.AvatarId)), "1")
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 
