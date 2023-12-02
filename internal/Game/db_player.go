@@ -20,6 +20,7 @@ type PlayerData struct {
 	Rot            *Vector   // 存档朝向
 	DbAvatar       *DbAvatar // 角色数据
 	DbLineUp       *DbLineUp // 队伍
+	Dbgacha        *Dbgacha  // 卡池抽取情况
 	// 下面是在线数据
 	IsPaused              bool   `json:"-"` // 是否暂停
 	GameObjectGuidCounter uint64 `json:"-"` // 游戏对象guid计数器

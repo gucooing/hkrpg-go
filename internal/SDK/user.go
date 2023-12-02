@@ -109,13 +109,13 @@ func (s *Server) VerifyRequestHandler(c *gin.Context) {
 	if account.Username == "" {
 		logger.Error("查询不到此账户,uid: %s", requestData.Uid)
 		c.Header("Content-type", "application/json")
-		_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"查询不到此账户\",\"retcode\":-103}")
+		_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"游戏信息账号缓存错误\",\"retcode\":-103}")
 		return
 	} else {
 		if account.Token != requestData.Token {
 			logger.Error("账户,uid: %s token本地缓存失效", requestData.Uid)
 			c.Header("Content-type", "application/json")
-			_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"本地缓存失效，请重新登录\",\"retcode\":-103}")
+			_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"token本地缓存失效，请重新登录\",\"retcode\":-103}")
 			return
 		}
 	}
@@ -171,7 +171,7 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 	if account.Username == "" {
 		logger.Error("查询不到此账户,uid: %s", loginData.Uid)
 		c.Header("Content-type", "application/json")
-		_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"查询不到此账户\",\"retcode\":-103}")
+		_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"游戏信息账号缓存错误\",\"retcode\":-103}")
 		return
 	} else {
 		if account.Token == loginData.Token {

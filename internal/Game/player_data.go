@@ -70,11 +70,6 @@ func (g *Game) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 	g.UpDataPlayer()
 }
 
-func (g *Game) HandleGetGachaInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetGachaInfoScRsp)
-	g.send(cmd.GetGachaInfoScRsp, rsp)
-}
-
 func (g *Game) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetFriendLoginInfoScRsp)
 	rsp.FriendUidList = []uint32{99}
@@ -225,7 +220,7 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	req := msg.(*proto.PlayerHeartbeatCsReq)
 
 	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(time.Now().Unix())
+	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.ClientTimeMs = req.ClientTimeMs
 
 	g.send(cmd.PlayerHeartBeatScRsp, rsp)

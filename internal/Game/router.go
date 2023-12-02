@@ -27,8 +27,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetEnteredSceneCsReq(payloadMsg)
 	case cmd.GetArchiveDataCsReq:
 		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取存档
-	case cmd.GetGachaInfoCsReq:
-		g.HandleGetGachaInfoCsReq(payloadMsg) // 获取卡池信息
 	case cmd.QueryProductInfoCsReq:
 		g.HandleQueryProductInfoCsReq(payloadMsg)
 	case cmd.GetFriendLoginInfoCsReq:
@@ -84,6 +82,11 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	// 社交
 	case cmd.GetMailCsReq:
 		g.GetMailCsReq() // 获取邮件
+	// 卡池
+	case cmd.GetGachaInfoCsReq:
+		g.HandleGetGachaInfoCsReq(payloadMsg) // 获取卡池信息
+	case cmd.GetGachaCeilingCsReq:
+		g.HandleGetGachaCeilingCsReq(payloadMsg) // 基础卡池保底达到进度请求
 	// 基础
 	case cmd.SetClientPausedCsReq:
 		g.SetClientPausedCsReq() // 客户端暂停请求
