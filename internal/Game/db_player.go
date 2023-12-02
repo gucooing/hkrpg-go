@@ -1,12 +1,7 @@
 package Game
 
-import (
-	"github.com/gucooing/hkrpg-go/gdconf"
-)
-
 type PlayerData struct {
 	PlayerId       uint32    // 玩家uid
-	MainAvatar     uint32    // 默认主角
 	NickName       string    // 昵称
 	Level          uint32    // 玩家等级
 	Exp            uint32    // 玩家经验
@@ -40,7 +35,6 @@ func (g *Game) GetNextGameObjectGuid() uint64 {
 func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data := new(PlayerData)
 	data.PlayerId = uid
-	data.MainAvatar = 1215
 	data.NickName = "hkrpg-go"
 	data.Level = 1
 	data.Exp = 0
@@ -56,15 +50,22 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	}
 	data.DbAvatar = new(DbAvatar)
 	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
-	for _, a := range gdconf.GetAvatarDataMap() {
-		avatarId := a.AvatarId
-		if avatarId == 8002 || avatarId == 8003 || avatarId == 8004 {
-			continue
-		}
-		data.DbAvatar.Avatar[avatarId] = AddAvatar(avatarId)
+	avatarIdList := []uint32{1217, 8001} // 设置初始化时给予多少角色
+	for _, a := range avatarIdList {
+		data.DbAvatar.Avatar[a] = AddAvatar(a)
 	}
+	/*
+		for _, a := range gdconf.GetAvatarDataMap() {
+			avatarId := a.AvatarId
+			if avatarId == 8002 || avatarId == 8003 || avatarId == 8004 {
+				continue
+			}
+			data.DbAvatar.Avatar[avatarId] = AddAvatar(avatarId)
+		}
+	*/
 	// 将主角写入队伍
 	data = g.GetDbLineUp(data)
-	data.DbLineUp.LineUpList[0].AvatarIdList[0] = 1215
+	data.DbLineUp.LineUpList[0].AvatarIdList[0] = 1217
+	data.DbLineUp.LineUpList[0].AvatarIdList[1] = 8001
 	return data
 }

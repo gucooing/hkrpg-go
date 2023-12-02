@@ -98,7 +98,7 @@ func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
 	rsp.Gender = proto.Gender_GenderMan
-	rsp.CurBasicType = proto.HeroBasicType(g.Player.MainAvatar)
+	rsp.CurBasicType = proto.HeroBasicType(8001)
 	avatarid := []uint32{8001, 8002, 8003, 8004}
 	for _, id := range avatarid {
 		basicTypeInfoList := &proto.HeroBasicTypeInfo{
@@ -203,40 +203,6 @@ func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {
 	rsp.ClientResVersion = req.ClientResVersion
 
 	g.send(cmd.SyncClientResVersionScRsp, rsp)
-}
-
-func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetCurSceneInfoScRsp)
-	rsp.Scene = &proto.SceneInfo{
-		WorldId:         101,
-		LeaderEntityId:  1,
-		FloorId:         20001001,
-		GameModeType:    2,
-		PlaneId:         20001,
-		EntryId:         2000101,
-		EntityGroupList: make([]*proto.SceneEntityGroupInfo, 0),
-	}
-	entityList := &proto.SceneEntityInfo{
-		EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
-			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-			BaseAvatarId: g.Player.MainAvatar,
-		}},
-		Motion: &proto.MotionInfo{
-			Pos: &proto.Vector{
-				Y: 146,
-				X: -47,
-				Z: 7269,
-			},
-			Rot: &proto.Vector{},
-		},
-		EntityId: uint32(g.GetNextGameObjectGuid()),
-	}
-	entityGroup := &proto.SceneEntityGroupInfo{
-		EntityList: []*proto.SceneEntityInfo{entityList},
-	}
-	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
-
-	g.send(cmd.GetCurSceneInfoScRsp, rsp)
 }
 
 func (g *Game) HandleGetMissionStatusCsReq(payloadMsg []byte) {
