@@ -26,11 +26,11 @@ func AddAvatar(avatarId uint32) *Avatar {
 	avatar := new(Avatar)
 	// TODO
 	avatar.AvatarId = avatarId
-	avatar.Exp = 0
-	avatar.Level = 1
+	avatar.Exp = 10
+	avatar.Level = 10
 	avatar.FirstMetTimestamp = uint64(time.Now().Unix())
 	avatar.Promotion = 0
-	avatar.Rank = 0
+	avatar.Rank = 6
 	avatar.Hp = 10000
 	return avatar
 }
@@ -38,6 +38,9 @@ func GetKilltreeList(avatarId string) []*proto.AvatarSkillTree {
 	avatarData := gdconf.GetAvatarDataById(avatarId)
 	SkilltreeList := make([]*proto.AvatarSkillTree, 0)
 	for _, a := range avatarData.SkillList {
+		if a%10 == 6 {
+			continue
+		}
 		skilltreeList := &proto.AvatarSkillTree{
 			PointId: a,
 			Level:   1,

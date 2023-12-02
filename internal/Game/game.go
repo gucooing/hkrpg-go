@@ -7,6 +7,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -28,6 +29,8 @@ type NetMsg struct {
 }
 
 func (g *Game) send(cmdid uint16, playerMsg pb.Message) {
+	data := protojson.Format(playerMsg)
+	logger.Debug("[UID:%v] S --> C : %s", g.Uid, data)
 	netMsg := new(NetMsg)
 	netMsg.G = g
 	netMsg.CmdId = cmdid
@@ -46,6 +49,8 @@ func (g *Game) decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		logger.Error("unmarshal proto data err: %v", err)
 		return nil
 	}
+	data := protojson.Format(protoObj)
+	logger.Debug("[UID:%v] C --> S : %s", g.Uid, data)
 	return protoObj
 }
 

@@ -262,7 +262,7 @@ func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
 func (c *CmdProtoMap) GetProtoObjCacheByCmdId(cmdId uint16) pb.Message {
 	cachePool, exist := c.cmdIdProtoObjCacheMap[cmdId]
 	if !exist {
-		logger.Debug("unknown cmd id: %v", cmdId)
+		logger.Error("unknown cmd id: %v", cmdId)
 		return nil
 	}
 	protoObj := cachePool.Get().(pb.Message)
