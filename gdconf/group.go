@@ -12,8 +12,9 @@ import (
 )
 
 type LevelGroup struct {
-	GroupId  uint32
-	PropList []PropList `json:"PropList"`
+	GroupId    uint32
+	PropList   []PropList   `json:"PropList"`
+	AnchorList []AnchorList `json:"AnchorList"`
 }
 type PropList struct {
 	ID                       uint32  `json:"ID"`
@@ -26,6 +27,17 @@ type PropList struct {
 	CampID                   uint32  `json:"CampID"`
 	EventID                  uint32  `json:"EventID"`
 	MapLayerID               uint32  `json:"MapLayerID"`
+}
+type AnchorList struct {
+	ID         uint32  `json:"ID"`
+	PosX       float64 `json:"PosX"`
+	PosY       float64 `json:"PosY"`
+	PosZ       float64 `json:"PosZ"`
+	Name       string  `json:"Name"`
+	RotX       float64 `json:"RotX"`
+	RotY       float64 `json:"RotY"`
+	RotZ       float64 `json:"RotZ "`
+	MapLayerID uint32  `json:"MapLayerID"`
 }
 
 func (g *GameDataConfig) loadGroup() {

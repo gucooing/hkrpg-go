@@ -1,11 +1,102 @@
 package Game
 
 import (
+	"strconv"
+
 	"github.com/gucooing/hkrpg-go/gdconf"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
+
+// 通知客户端进入场景
+func (g *Game) EnterSceneByServerScNotify(entryId uint32) {
+	rsp := new(proto.EnterSceneByServerScNotify)
+
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+
+	groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	group := groupMap[mapEntrance.StartGroupID]
+
+	rsp.Scene = &proto.SceneInfo{
+		WorldId:         101,
+		LeaderEntityId:  1,
+		FloorId:         mapEntrance.FloorID,
+		GameModeType:    2,
+		PlaneId:         mapEntrance.PlaneID,
+		EntryId:         entryId,
+		EntityGroupList: make([]*proto.SceneEntityGroupInfo, 0),
+	}
+	entityGroup := &proto.SceneEntityGroupInfo{
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	for _, anchor := range group.AnchorList {
+		if anchor.ID == mapEntrance.StartAnchorID {
+			for _, avatarid := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
+				if avatarid == 0 {
+					continue
+				}
+				entityList := &proto.SceneEntityInfo{
+					EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+						AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+						BaseAvatarId: avatarid,
+					}},
+					Motion: &proto.MotionInfo{
+						Pos: &proto.Vector{
+							X: int32(anchor.PosX * 1000),
+							Y: int32(anchor.PosY * 1000),
+							Z: int32(anchor.PosZ * 1000),
+						},
+						Rot: &proto.Vector{
+							X: int32(anchor.RotX),
+							Y: int32(anchor.RotY),
+							Z: int32(anchor.RotZ),
+						},
+					},
+					EntityId: uint32(g.GetNextGameObjectGuid()),
+				}
+				entityGroup.EntityList = append(entityGroup.EntityList, entityList)
+			}
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
+
+			break
+		}
+	}
+
+	// 获取场景实体
+	for _, levelGroup := range gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID) {
+		entityGroupList := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
+		}
+		for _, propList := range levelGroup.PropList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  levelGroup.GroupId,
+				InstId:   propList.ID,
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(propList.PosX * 1000),
+						Y: int32(propList.PosY * 1000),
+						Z: int32(propList.PosZ * 1000),
+					},
+					Rot: &proto.Vector{
+						X: 0,
+						Y: 0,
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+					PropId:    propList.PropID,
+					PropState: 0,
+				}},
+			}
+			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+		}
+		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
+	}
+
+	g.send(cmd.EnterSceneByServerScNotify, rsp)
+}
 
 func (g *Game) GetRogueScoreRewardInfoCsReq() {
 	rsp := new(proto.GetRogueScoreRewardInfoScRsp)
@@ -125,5 +216,9 @@ func (g *Game) EnterSceneCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.EnterSceneCsReq, payloadMsg)
 	req := msg.(*proto.EnterSceneCsReq)
 
-	logger.Info("", req)
+	g.EnterSceneByServerScNotify(req.EntryId)
+
+	rsp := &proto.GetEnteredSceneScRsp{}
+
+	g.send(cmd.EnterSceneScRsp, rsp)
 }

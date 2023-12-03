@@ -22,6 +22,7 @@ type GameDataConfig struct {
 	AvatarSkilltreeMap map[string]map[string]*AvatarSkilltree // 技能库
 	MazePlaneMap       map[string]*MazePlane                  // 场景id
 	GroupMap           map[uint32]map[uint32][]*LevelGroup    // 场景实体
+	MapEntranceMap     map[string]*MapEntrance                // 地图入口
 	BannersMap         []Banners                              // 卡池信息
 }
 
@@ -68,5 +69,6 @@ func (g *GameDataConfig) load() {
 	g.loadAvatarSkilltree() // 技能库
 	g.loadMazePlane()       // 场景id
 	g.loadGroup()           // 场景实体
+	g.loadMapEntrance()     // 地图入口
 	g.loadBanners()         // 卡池信息
 }
