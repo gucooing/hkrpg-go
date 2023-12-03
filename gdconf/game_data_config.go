@@ -14,11 +14,14 @@ var CONF *GameDataConfig = nil
 
 type GameDataConfig struct {
 	// 配置表路径前缀
-	excelPrefix string
+	excelPrefix  string
+	configPrefix string
 	// 配置表数据
 	AvatarDataMap      map[string]*AvatarData                 // 角色
 	RogueAreaMap       map[string]*RogueArea                  // 地图库
 	AvatarSkilltreeMap map[string]map[string]*AvatarSkilltree // 技能库
+	MazePlaneMap       map[string]*MazePlane                  // 场景id
+	GroupMap           map[uint32]map[uint32][]*LevelGroup    // 场景实体
 	BannersMap         []Banners                              // 卡池信息
 }
 
@@ -48,6 +51,14 @@ func (g *GameDataConfig) loadAll() {
 	}
 	g.excelPrefix += "/"
 
+	g.configPrefix = pathPrefix + "/Config"
+	dirInfo, err = os.Stat(g.configPrefix)
+	if err != nil || !dirInfo.IsDir() {
+		info := fmt.Sprintf("open game data config Config dir error: %v", err)
+		panic(info)
+	}
+	g.configPrefix += "/"
+
 	g.load()
 }
 
@@ -55,5 +66,7 @@ func (g *GameDataConfig) load() {
 	g.loadAvatarData()      // 角色
 	g.loadRogueArea()       // 副本
 	g.loadAvatarSkilltree() // 技能库
+	g.loadMazePlane()       // 场景id
+	g.loadGroup()           // 场景实体
 	g.loadBanners()         // 卡池信息
 }

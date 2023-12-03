@@ -1,6 +1,8 @@
 package Game
 
 import (
+	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -59,5 +61,69 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	}
 	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
 
+	// 获取场景实体
+	for _, levelGroup := range gdconf.GetGroupById(20001, 20001001) {
+		entityGroupList := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
+		}
+		for _, propList := range levelGroup.PropList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  levelGroup.GroupId,
+				InstId:   propList.ID,
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(propList.PosX * 1000),
+						Y: int32(propList.PosY * 1000),
+						Z: int32(propList.PosZ * 1000),
+					},
+					Rot: &proto.Vector{
+						X: 0,
+						Y: 0,
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+					PropId:    propList.PropID,
+					PropState: 0,
+				}},
+			}
+			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+		}
+		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
+	}
+
 	g.send(cmd.GetCurSceneInfoScRsp, rsp)
+}
+
+func (g *Game) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.GetSceneMapInfoCsReq, payloadMsg)
+	req := msg.(*proto.GetSceneMapInfoCsReq)
+
+	rsp := &proto.GetSceneMapInfoScRsp{
+		LightenSectionList: make([]uint32, 0),
+		UnlockedChestList: []*proto.MazeChest{
+			{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_NONE},
+			{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
+			{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
+		},
+	}
+
+	for _, entryId := range req.EntryIdList {
+		rsp.EntryId = entryId
+	}
+
+	for i := uint32(0); i < 100; i++ {
+		rsp.LightenSectionList = append(rsp.LightenSectionList, i)
+	}
+
+	g.send(cmd.GetSceneMapInfoScRsp, rsp)
+}
+
+func (g *Game) EnterSceneCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.EnterSceneCsReq, payloadMsg)
+	req := msg.(*proto.EnterSceneCsReq)
+
+	logger.Info("", req)
 }

@@ -71,6 +71,6 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	}
 	// 将主角写入队伍
 	data = g.GetDbLineUp(data)
-	data.DbLineUp.LineUpList[0].AvatarIdList[0] = 8001
+	data.DbLineUp.LineUpList[0].AvatarIdList[0] = uint32(mainAvatar)
 	return data
 }

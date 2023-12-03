@@ -17,8 +17,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetBagCsReq(payloadMsg)
 	case cmd.GetAvatarDataCsReq:
 		g.HandleGetAvatarDataCsReq(payloadMsg)
-	case cmd.GetActivityScheduleConfigCsReq:
-		g.HandleGetActivityScheduleConfigCsReq(payloadMsg)
 	case cmd.GetCurChallengeCsReq:
 		g.GetCurChallengeCsReq(payloadMsg)
 	case cmd.GetMissionStatusCsReq:
@@ -68,6 +66,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.ChangeLineupLeaderCsReq:
 		g.ChangeLineupLeaderCsReq(payloadMsg) // 切换角色
 	// 场景
+	case cmd.GetSceneMapInfoCsReq:
+		g.HanldeGetSceneMapInfoCsReq(payloadMsg) // 获取地图信息
 	case cmd.GetRogueInfoCsReq:
 		g.GetRogueInfoCsReq(payloadMsg) // 获取副本库
 	case cmd.GetCurSceneInfoCsReq:
@@ -76,6 +76,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.SceneEntityMoveCsReq() // 场景实体移动
 	case cmd.GetRogueScoreRewardInfoCsReq:
 		g.GetRogueScoreRewardInfoCsReq()
+	case cmd.EnterSceneCsReq:
+		g.EnterSceneCsReq(payloadMsg) // 场景传送
 	// 交易
 	case cmd.GetShopListCsReq:
 		g.GetShopListCsReq() // 获取商店物品列表
@@ -87,6 +89,12 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetGachaInfoCsReq(payloadMsg) // 获取卡池信息
 	case cmd.GetGachaCeilingCsReq:
 		g.HandleGetGachaCeilingCsReq(payloadMsg) // 基础卡池保底达到进度请求
+	// 任务
+	case cmd.GetQuestDataCsReq:
+		// TODO // 任务数据请求
+	// 活动
+	case cmd.GetActivityScheduleConfigCsReq:
+		g.HandleGetActivityScheduleConfigCsReq(payloadMsg) // 活动配置请求
 	// 基础
 	case cmd.SetClientPausedCsReq:
 		g.SetClientPausedCsReq() // 客户端暂停请求
