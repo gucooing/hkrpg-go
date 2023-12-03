@@ -97,11 +97,12 @@ func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 		if avatarId == 0 {
 			continue
 		}
+		avatar := g.Player.DbAvatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
 			AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,
 			Slot:       uint32(slot),
 			Satiety:    0,
-			Hp:         10000,
+			Hp:         avatar.Hp,
 			Id:         avatarId,
 			SpBar:      &proto.SpBarInfo{CurSp: 0, MaxSp: 10000},
 		}
@@ -167,4 +168,28 @@ func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
 	}
 
 	g.send(cmd.SetLineupNameScRsp, rsp)
+}
+
+func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
+	req := msg.(*proto.ReplaceLineupCsReq)
+	for id, avatarid := range req.Slots {
+		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[id] = avatarid.Id
+	}
+
+	// 队伍更新通知
+	g.SyncLineupNotify(req.Index)
+
+	rsp := &proto.ReplaceLineupCsReq{} // TODO
+
+	g.send(cmd.ReplaceLineupScRsp, rsp)
+}
+
+func (g *Game) ChangeLineupLeaderCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.ChangeLineupLeaderCsReq, payloadMsg)
+	req := msg.(*proto.ChangeLineupLeaderCsReq)
+
+	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
+
+	g.send(cmd.ChangeLineupLeaderScRsp, rsp)
 }

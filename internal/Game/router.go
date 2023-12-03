@@ -27,8 +27,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetEnteredSceneCsReq(payloadMsg)
 	case cmd.GetArchiveDataCsReq:
 		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取存档
-	case cmd.GetGachaInfoCsReq:
-		g.HandleGetGachaInfoCsReq(payloadMsg) // 获取卡池信息
 	case cmd.QueryProductInfoCsReq:
 		g.HandleQueryProductInfoCsReq(payloadMsg)
 	case cmd.GetFriendLoginInfoCsReq:
@@ -65,6 +63,10 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleSwapLineupCsReq(payloadMsg) // 队伍角色交换请求
 	case cmd.SetLineupNameCsReq:
 		g.SetLineupNameCsReq(payloadMsg) // 修改队伍名称
+	case cmd.ReplaceLineupCsReq:
+		g.ReplaceLineupCsReq(payloadMsg) // 快速入队
+	case cmd.ChangeLineupLeaderCsReq:
+		g.ChangeLineupLeaderCsReq(payloadMsg) // 切换角色
 	// 场景
 	case cmd.GetRogueInfoCsReq:
 		g.GetRogueInfoCsReq(payloadMsg) // 获取副本库
@@ -80,6 +82,11 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	// 社交
 	case cmd.GetMailCsReq:
 		g.GetMailCsReq() // 获取邮件
+	// 卡池
+	case cmd.GetGachaInfoCsReq:
+		g.HandleGetGachaInfoCsReq(payloadMsg) // 获取卡池信息
+	case cmd.GetGachaCeilingCsReq:
+		g.HandleGetGachaCeilingCsReq(payloadMsg) // 基础卡池保底达到进度请求
 	// 基础
 	case cmd.SetClientPausedCsReq:
 		g.SetClientPausedCsReq() // 客户端暂停请求
@@ -87,6 +94,18 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandlePlayerHeartBeatCsReq(payloadMsg) // 心跳包
 	case cmd.SyncClientResVersionCsReq:
 		g.SyncClientResVersionCsReq(payloadMsg) // 版本同步
+	case cmd.GetAssistHistoryCsReq:
+		g.HandleGetAssistHistoryCsReq() // 漫游签证
+	case cmd.SetHeadIconCsReq:
+		g.SetHeadIconCsReq(payloadMsg) // 切换头像
+	case cmd.SetHeroBasicTypeCsReq:
+		g.SetHeroBasicTypeCsReq(payloadMsg) // 切换主角类型
+	case cmd.SetNicknameCsReq:
+		g.SetNicknameCsReq(payloadMsg) // 修改昵称请求
+	case cmd.SetGameplayBirthdayCsReq:
+		g.SetGameplayBirthdayCsReq(payloadMsg) // 修改生日请求
+	case cmd.SetSignatureCsReq:
+		g.SetSignatureCsReq(payloadMsg) // 简介修改请求
 	// 乱七八糟
 	case cmd.GetFirstTalkNpcCsReq:
 		g.GetFirstTalkNpcCsReq()

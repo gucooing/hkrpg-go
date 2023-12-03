@@ -89,7 +89,7 @@ func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
 	rsp.NextRecoverTime = time.Now().UnixNano() + 300
-	rsp.GameplayBirthday = 0
+	rsp.GameplayBirthday = g.Player.Birthday
 	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
 
 	g.send(cmd.GetBasicInfoScRsp, rsp)
@@ -98,12 +98,12 @@ func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
 	rsp.Gender = proto.Gender_GenderMan
-	rsp.CurBasicType = proto.HeroBasicType(g.Player.MainAvatar)
+	rsp.CurBasicType = g.Player.DbAvatar.MainAvatar
 	avatarid := []uint32{8001, 8002, 8003, 8004}
 	for _, id := range avatarid {
 		basicTypeInfoList := &proto.HeroBasicTypeInfo{
 			BasicType:     proto.HeroBasicType(id),
-			SkillTreeList: GetKilltreeList(strconv.Itoa(int(id))),
+			SkillTreeList: GetKilltreeList(strconv.Itoa(int(id)), "1"),
 			Rank:          0,
 		}
 		rsp.BasicTypeInfoList = append(rsp.BasicTypeInfoList, basicTypeInfoList)
@@ -116,18 +116,6 @@ func (g *Game) HandleGetBagCsReq(payloadMsg []byte) {
 	// TODO
 	rsp := new(proto.GetBagScRsp)
 	g.send(cmd.GetBagScRsp, rsp)
-}
-
-func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
-	headIcon := &proto.HeadIcon{Id: g.Player.HeadImage}
-	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.Player.HeadImage,
-		UnlockedHeadIconList: []*proto.HeadIcon{headIcon},
-		Signature:            "",
-		Unk1:                 "",
-	}
-
-	g.send(cmd.GetPlayerBoardDataScRsp, rsp)
 }
 
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
@@ -205,40 +193,6 @@ func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {
 	g.send(cmd.SyncClientResVersionScRsp, rsp)
 }
 
-func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetCurSceneInfoScRsp)
-	rsp.Scene = &proto.SceneInfo{
-		WorldId:         101,
-		LeaderEntityId:  1,
-		FloorId:         20001001,
-		GameModeType:    2,
-		PlaneId:         20001,
-		EntryId:         2000101,
-		EntityGroupList: make([]*proto.SceneEntityGroupInfo, 0),
-	}
-	entityList := &proto.SceneEntityInfo{
-		EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
-			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-			BaseAvatarId: g.Player.MainAvatar,
-		}},
-		Motion: &proto.MotionInfo{
-			Pos: &proto.Vector{
-				Y: 146,
-				X: -47,
-				Z: 7269,
-			},
-			Rot: &proto.Vector{},
-		},
-		EntityId: uint32(g.GetNextGameObjectGuid()),
-	}
-	entityGroup := &proto.SceneEntityGroupInfo{
-		EntityList: []*proto.SceneEntityInfo{entityList},
-	}
-	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
-
-	g.send(cmd.GetCurSceneInfoScRsp, rsp)
-}
-
 func (g *Game) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.GetMissionStatusCsReq, payloadMsg)
 	req := msg.(*proto.GetMissionStatusCsReq)
@@ -276,15 +230,4 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.send(cmd.PlayerLoginFinishScRsp, rsp)
 	// 更新账号数据
 	go g.UpDataPlayer()
-}
-
-func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.PlayerHeartBeatCsReq, payloadMsg)
-	req := msg.(*proto.PlayerHeartbeatCsReq)
-
-	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(time.Now().Unix())
-	rsp.ClientTimeMs = req.ClientTimeMs
-
-	g.send(cmd.PlayerHeartBeatScRsp, rsp)
 }

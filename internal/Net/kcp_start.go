@@ -28,11 +28,11 @@ const (
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
 
 type KcpConnManager struct {
-	kcpListener           *kcp.Listener
+	kcpListener *kcp.Listener
 	// 会话
 	sessionIdCounter uint32
 	// 事件
-	kcpEventChan             chan *KcpEvent
+	kcpEventChan chan *KcpEvent
 }
 
 type KcpEvent struct {
@@ -102,8 +102,8 @@ func recvHandle(g *Game.Game) {
 		kcpMsgList := make([]*KcpMsg, 0)
 		DecodeBinToPayload(bin, &kcpMsgList)
 		for _, v := range kcpMsgList {
-			name := g.ServerCmdProtoMap.GetProtoObjCacheByCmdId(v.CmdId)
-			logger.Debug("C --> S: %s", name)
+			// name := g.ServerCmdProtoMap.GetCmdNameByCmdId(v.CmdId)
+			// logger.Error("C --> S: %v", v.CmdId)
 			// payloadMsg := DecodePayloadToProto(g, v) TODO 由于 req 大部分缺失，所以不预处理数据
 			g.RegisterMessage(v.CmdId, v.ProtoData)
 		}
@@ -159,7 +159,7 @@ func SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
 	if kcpMsg.CmdId == 0 {
 		logger.Error("cmdid error")
 	}
-	logger.Debug("S --> C: %s", g.ServerCmdProtoMap.GetCmdNameByCmdId(cmdid))
+	// logger.Debug("S --> C: %v", kcpMsg.CmdId)
 	binMsg := EncodePayloadToBin(kcpMsg, nil)
 	_, err := g.KcpConn.Write(binMsg)
 	if err != nil {

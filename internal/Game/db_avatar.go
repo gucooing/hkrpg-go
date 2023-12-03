@@ -1,6 +1,7 @@
 package Game
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
@@ -8,7 +9,8 @@ import (
 )
 
 type DbAvatar struct {
-	Avatar map[uint32]*Avatar
+	Avatar     map[uint32]*Avatar
+	MainAvatar proto.HeroBasicType // 默认主角
 }
 
 type Avatar struct {
@@ -26,23 +28,26 @@ func AddAvatar(avatarId uint32) *Avatar {
 	avatar := new(Avatar)
 	// TODO
 	avatar.AvatarId = avatarId
-	avatar.Exp = 0
-	avatar.Level = 1
+	avatar.Exp = 10
+	avatar.Level = 10
 	avatar.FirstMetTimestamp = uint64(time.Now().Unix())
 	avatar.Promotion = 0
-	avatar.Rank = 0
+	avatar.Rank = 6
 	avatar.Hp = 10000
 	return avatar
 }
-func GetKilltreeList(avatarId string) []*proto.AvatarSkillTree {
-	avatarData := gdconf.GetAvatarDataById(avatarId)
-	SkilltreeList := make([]*proto.AvatarSkillTree, 0)
-	for _, a := range avatarData.SkillList {
-		skilltreeList := &proto.AvatarSkillTree{
-			PointId: a,
-			Level:   1,
+func GetKilltreeList(avatarId, level string) []*proto.AvatarSkillTree {
+	skilltreeList := make([]*proto.AvatarSkillTree, 0)
+	skillList := gdconf.GetAvatarSkilltreeMap()
+	for _, a := range skillList {
+		if a[level].AvatarID == avatarId {
+			pointId, _ := strconv.ParseUint(a[level].PointID, 10, 32)
+			skilltree := &proto.AvatarSkillTree{
+				PointId: uint32(pointId),
+				Level:   1,
+			}
+			skilltreeList = append(skilltreeList, skilltree)
 		}
-		SkilltreeList = append(SkilltreeList, skilltreeList)
 	}
-	return SkilltreeList
+	return skilltreeList
 }
