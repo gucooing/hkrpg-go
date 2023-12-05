@@ -7,6 +7,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -25,8 +26,12 @@ func (g *Game) HandlePlayerGetTokenCsReq(payloadMsg []byte) {
 	// TODO 需添加 token 验证
 
 	// 构造回复内容
+	timeRand := random.GetTimeRand()
+	serverSeedUint64 := timeRand.Uint64()
+	g.Seed = serverSeedUint64
 	rsp := new(proto.PlayerGetTokenScRsp)
 	rsp.Uid = uint32(uid)
+	rsp.SecretKeySeed = serverSeedUint64
 	rsp.BlackInfo = &proto.BlackInfo{}
 	g.send(cmd.PlayerGetTokenScRsp, rsp)
 }
@@ -115,6 +120,14 @@ func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 func (g *Game) HandleGetBagCsReq(payloadMsg []byte) {
 	// TODO
 	rsp := new(proto.GetBagScRsp)
+	for _, itme := range g.Player.DbItem.RelicMap {
+		materialList := &proto.Material{
+			Tid: itme.Tid,
+			Num: itme.Num,
+		}
+		rsp.MaterialList = append(rsp.MaterialList, materialList)
+	}
+
 	g.send(cmd.GetBagScRsp, rsp)
 }
 

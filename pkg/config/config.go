@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 
 type Config struct {
@@ -15,6 +17,7 @@ type Config struct {
 	Dispatch           []Dispatch
 	Game               *Game
 	Email              *email
+	Ec2b               *random.Ec2b
 }
 type Account struct {
 	AutoCreate bool  `json:"autoCreate"`

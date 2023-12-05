@@ -87,6 +87,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	// 卡池
 	case cmd.GetGachaInfoCsReq:
 		g.HandleGetGachaInfoCsReq(payloadMsg) // 获取卡池信息
+	case cmd.DoGachaCsReq:
+		g.DoGachaCsReq(payloadMsg) // 抽卡请求
 	case cmd.GetGachaCeilingCsReq:
 		g.HandleGetGachaCeilingCsReq(payloadMsg) // 基础卡池保底达到进度请求
 	// 任务

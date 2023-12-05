@@ -15,7 +15,8 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	}
 	archiveData := &proto.ArchiveData{
 		ArchiveAvatarIdList:    archiveAvatarIdList,
-		ArchiveEquipmentIdList: nil,
+		ArchiveEquipmentIdList: make([]uint32, 0),
+		ArchiveRelicList:       make([]*proto.RelicArchive, 0),
 	}
 	rsp.ArchiveData = archiveData
 

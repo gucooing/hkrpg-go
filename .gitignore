@@ -18,6 +18,7 @@ atlassian-ide-plugin.xml
 logs
 *.log
 resources
+/data/Ec2b.bin
 cmdid.csv
 linux-amd64
 linux-arm64

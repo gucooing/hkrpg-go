@@ -68,3 +68,42 @@ func (g *Game) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 
 	g.send(cmd.GetGachaCeilingScRsp, rsp)
 }
+
+func (g *Game) DoGachaCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.DoGachaCsReq, payloadMsg)
+	req := msg.(*proto.DoGachaCsReq)
+
+	if req.GachaNum != 10 && req.GachaNum != 1 {
+		return
+	}
+
+	rsp := &proto.DoGachaScRsp{
+		GachaId:       req.GachaId,
+		CeilingNum:    0,
+		GachaItemList: make([]*proto.GachaItem, 0),
+		GachaNum:      req.GachaNum,
+	}
+	for i := 0; i < int(req.GachaNum); i++ {
+		gachaItemList := &proto.GachaItem{
+			TransferItemList: nil,
+			IsNew:            true,
+			GachaItem:        nil,
+			TokenItem:        &proto.ItemList{ItemList: make([]*proto.Item, 0)},
+		}
+		itemList := &proto.Item{
+			ItemId:      1217,
+			Level:       1,
+			Num:         1,
+			MainAffixId: 0,
+			Rank:        1,
+			Promotion:   0,
+			UniqueId:    0,
+		}
+		gachaItemList.GachaItem = itemList
+		gachaItemList.TokenItem.ItemList = append(gachaItemList.TokenItem.ItemList, itemList)
+
+		rsp.GachaItemList = append(rsp.GachaItemList, gachaItemList)
+	}
+
+	g.send(cmd.DoGachaScRsp, rsp)
+}

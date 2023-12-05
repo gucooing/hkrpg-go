@@ -16,11 +16,13 @@ type PlayerData struct {
 	Signature      string    // 签名
 	HeadImage      uint32    // 头像
 	Birthday       uint32    // 生日
+	DbScene        *DbScene  // 场景
 	Pos            *Vector   // 存档坐标
 	Rot            *Vector   // 存档朝向
 	DbAvatar       *DbAvatar // 角色数据
 	DbLineUp       *DbLineUp // 队伍
-	Dbgacha        *Dbgacha  // 卡池抽取情况
+	DbItem         *DbItem   // 背包
+	DbGacha        *Dbgacha  // 卡池抽取情况
 	// 下面是在线数据
 	IsPaused              bool   `json:"-"` // 是否暂停
 	GameObjectGuidCounter uint64 `json:"-"` // 游戏对象guid计数器
@@ -51,6 +53,7 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data.WorldLevel = 0
 	data.Signature = "hkrpg-go"
 	data.HeadImage = 208001
+	data = NewScene(data)
 	data.Pos = &Vector{
 		X: -47,
 		Y: 146,
@@ -72,5 +75,7 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	// 将主角写入队伍
 	data = g.GetDbLineUp(data)
 	data.DbLineUp.LineUpList[0].AvatarIdList[0] = uint32(mainAvatar)
+	data = NewItem(data)
+
 	return data
 }

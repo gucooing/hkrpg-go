@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 
+	"github.com/gucooing/hkrpg-go/pkg/endec"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -39,9 +40,9 @@ type ProtoMessage struct {
 	message pb.Message
 }
 
-func DecodeBinToPayload(data []byte, kcpMsgList *[]*KcpMsg) {
+func DecodeBinToPayload(data []byte, kcpMsgList *[]*KcpMsg, xorKey []byte) {
 	// xor解密
-	// endec.Xor(data, xorKey)
+	endec.Xor(data, xorKey)
 	DecodeLoop(data, kcpMsgList)
 	return
 }
@@ -134,6 +135,6 @@ func EncodePayloadToBin(kcpMsg *KcpMsg, xorKey []byte) (bin []byte) {
 	bin[len(bin)-2] = 0x52
 	bin[len(bin)-1] = 0xC8
 	// xor加密
-	// endec.Xor(bin, xorKey)
+	endec.Xor(bin, xorKey)
 	return bin
 }

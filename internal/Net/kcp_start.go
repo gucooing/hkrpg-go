@@ -72,7 +72,9 @@ func Run(s *SDK.Server) error {
 		kcpConn.SetWriteDelay(false)
 		kcpConn.SetWindowSize(256, 256)
 		kcpConn.SetMtu(1200)
+		// 读取密钥相关文件
 		g := NewGame(kcpConn)
+		g.XorKey = config.GetConfig().Ec2b.XorKey()
 		g.Db = s.Store
 		CLIENT_CONN_NUM++
 		go recvHandle(g)
@@ -100,7 +102,7 @@ func recvHandle(g *Game.Game) {
 		}
 		bin = payload[:recvLen]
 		kcpMsgList := make([]*KcpMsg, 0)
-		DecodeBinToPayload(bin, &kcpMsgList)
+		DecodeBinToPayload(bin, &kcpMsgList, g.XorKey)
 		for _, v := range kcpMsgList {
 			// name := g.ServerCmdProtoMap.GetCmdNameByCmdId(v.CmdId)
 			// logger.Error("C --> S: %v", v.CmdId)
@@ -160,12 +162,28 @@ func SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
 		logger.Error("cmdid error")
 	}
 	// logger.Debug("S --> C: %v", kcpMsg.CmdId)
-	binMsg := EncodePayloadToBin(kcpMsg, nil)
+	binMsg := EncodePayloadToBin(kcpMsg, g.XorKey)
 	_, err := g.KcpConn.Write(binMsg)
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
 		return
 	}
+	// 密钥交换
+	if cmdid == cmd.PlayerGetTokenScRsp {
+		if g.Seed == 0 {
+			return
+		}
+		g.XorKey = createXorPad(g.Seed)
+		logger.Info("uid:%v,seed:%v,密钥交换成功", g.Uid, g.Seed)
+	}
+}
+
+func createXorPad(seed uint64) []byte {
+	keyBlock := random.NewKeyBlock(seed, false)
+	xorKey := keyBlock.XorKey()
+	key := make([]byte, 4096)
+	copy(key, xorKey[:])
+	return key
 }
 
 func (k *KcpConnManager) kcpNetInfo() {

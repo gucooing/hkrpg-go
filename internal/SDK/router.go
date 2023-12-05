@@ -15,6 +15,7 @@ func (s *Server) InitRouter() {
 	// 调度
 	s.Router.GET("/query_dispatch", s.QueryDispatchHandler)
 	s.Router.GET("/query_gateway", s.QueryGatewayHandler)
+	s.Router.GET("/query_gateway_capture", s.QueryGatewayHandlerCapture)
 
 	// 登录
 	s.Router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)

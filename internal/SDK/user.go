@@ -176,6 +176,7 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 	} else {
 		if account.Token == loginData.Token {
 			combotoken := random.GetRandomByteHexStr(20)
+			logger.Info("combo token:%s", combotoken)
 			responseData.Retcode = 0
 			responseData.Message = "OK"
 			responseData.Data = &ComboTokenRspLoginData{

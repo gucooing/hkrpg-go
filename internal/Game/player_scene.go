@@ -15,6 +15,11 @@ func (g *Game) EnterSceneByServerScNotify(entryId uint32) {
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
 
 	groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	if int(mapEntrance.StartGroupID) > len(groupMap) {
+
+		g.send(cmd.EnterSceneByServerScNotify, rsp)
+		return
+	}
 	group := groupMap[mapEntrance.StartGroupID]
 
 	rsp.Scene = &proto.SceneInfo{
@@ -58,6 +63,18 @@ func (g *Game) EnterSceneByServerScNotify(entryId uint32) {
 			}
 			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
 
+			// TODO 数据保存问题？
+			g.Player.Pos = &Vector{
+				X: int(anchor.PosX * 1000),
+				Y: int(anchor.PosY * 1000),
+				Z: int(anchor.PosZ * 1000),
+			}
+			g.Player.Rot = &Vector{
+				X: int(anchor.RotX),
+				Y: int(anchor.RotY),
+				Z: int(anchor.RotZ),
+			}
+			g.Player.DbScene.EntryId = entryId
 			break
 		}
 	}
@@ -96,6 +113,8 @@ func (g *Game) EnterSceneByServerScNotify(entryId uint32) {
 	}
 
 	g.send(cmd.EnterSceneByServerScNotify, rsp)
+
+	g.UpDataPlayer()
 }
 
 func (g *Game) GetRogueScoreRewardInfoCsReq() {
@@ -110,16 +129,18 @@ func (g *Game) GetRogueScoreRewardInfoCsReq() {
 }
 
 func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(g.Player.DbScene.EntryId)))
+
 	rsp := new(proto.GetCurSceneInfoScRsp)
 	pos := g.Player.Pos
 	rot := g.Player.Rot
 	rsp.Scene = &proto.SceneInfo{
-		WorldId:         101,
+		WorldId:         g.Player.DbScene.WorldId,
 		LeaderEntityId:  1,
-		FloorId:         20001001,
+		FloorId:         mapEntrance.FloorID,
 		GameModeType:    2,
-		PlaneId:         20001,
-		EntryId:         2000101,
+		PlaneId:         mapEntrance.PlaneID,
+		EntryId:         g.Player.DbScene.EntryId,
 		EntityGroupList: make([]*proto.SceneEntityGroupInfo, 0),
 	}
 	entityGroup := &proto.SceneEntityGroupInfo{

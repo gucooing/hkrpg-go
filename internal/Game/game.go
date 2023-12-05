@@ -13,6 +13,7 @@ import (
 
 type Game struct {
 	Uid         uint32
+	Seed        uint64
 	NetMsgInput chan *NetMsg
 	KcpConn     *kcp.UDPSession
 	Db          *DataBase.Store
@@ -20,6 +21,8 @@ type Game struct {
 	ServerCmdProtoMap *cmd.CmdProtoMap
 	// 玩家数据
 	Player *PlayerData
+	// 密钥
+	XorKey []byte
 }
 
 type NetMsg struct {
