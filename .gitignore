@@ -19,6 +19,7 @@ logs
 *.log
 resources
 /data/Ec2b.bin
+protocol/retcode.pb.go
 cmdid.csv
 linux-amd64
 linux-arm64
