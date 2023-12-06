@@ -18,6 +18,7 @@ atlassian-ide-plugin.xml
 logs
 *.log
 resources
+build
 /data/Ec2b.bin
 protocol/retcode.pb.go
 cmdid.csv
