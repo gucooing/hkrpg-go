@@ -19,7 +19,7 @@ func NewServer(cfg *config.Config) *SDK.Server {
 	s.Config = cfg
 	s.Store = DataBase.NewStore(s.Config) // 初始化数据库连接
 	gin.SetMode(gin.ReleaseMode)          // 初始化gin
-	s.Router = gin.Default()              // gin.New()
+	s.Router = gin.New()                  // gin.Default()
 	s.Router.Use(gin.Recovery())
 	cfg.Ec2b = getEc2b() // 读取ec2b密钥
 

@@ -5,7 +5,8 @@ type Dbgacha struct {
 }
 
 type Num struct {
-	CeilingNum uint32 // 抽取次数
-	GachaItem4 uint32 // 几抽未四星up
-	GachaItem5 uint32 // 几抽未五星up
+	CeilingNum              uint32 // 抽取次数
+	Pity4                   uint32 // 几抽未四星up
+	Pity5                   uint32 // 几抽未五星up
+	FailedFeaturedItemPulls uint32 // 几次五星没出up
 }

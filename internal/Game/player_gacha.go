@@ -1,6 +1,9 @@
 package Game
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -72,10 +75,15 @@ func (g *Game) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.DoGachaCsReq, payloadMsg)
 	req := msg.(*proto.DoGachaCsReq)
+	rand.Seed(time.Now().UnixNano())
 
 	if req.GachaNum != 10 && req.GachaNum != 1 {
 		return
 	}
+	avatarList := gdconf.GetAvatarList()
+	equipmentList := gdconf.GetEquipmentList()
+
+	list := append(avatarList, equipmentList...)
 
 	rsp := &proto.DoGachaScRsp{
 		GachaId:       req.GachaId,
@@ -84,6 +92,8 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 		GachaNum:      req.GachaNum,
 	}
 	for i := 0; i < int(req.GachaNum); i++ {
+		idIndex := rand.Intn(len(list))
+		id := list[idIndex]
 		gachaItemList := &proto.GachaItem{
 			TransferItemList: nil,
 			IsNew:            true,
@@ -91,7 +101,7 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 			TokenItem:        &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		}
 		itemList := &proto.Item{
-			ItemId:      1217,
+			ItemId:      id,
 			Level:       1,
 			Num:         1,
 			MainAffixId: 0,

@@ -15,7 +15,6 @@ func NewItem(data *PlayerData) *PlayerData {
 
 	dbItem.RelicMap[101] = &Item{Tid: 101, Num: 2000}
 	dbItem.RelicMap[102] = &Item{Tid: 102, Num: 2000}
-	dbItem.RelicMap[23001] = &Item{Tid: 23001, Num: 50}
 
 	data.DbItem = dbItem
 

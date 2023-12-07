@@ -10,9 +10,9 @@ import (
 
 type AvatarData struct {
 	AvatarId       uint32        `json:"AvatarID"`       // 角色id
+	Rarity         string        `json:"Rarity"`         // 星级
 	RankIDList     []uint32      `json:"RankIDList"`     // 命座id
 	RewardList     []*RewardList `json:"RewardList"`     // 升级奖励
-	SkillList      []uint32      `json:"SkillList"`      // 技能列表
 	AvatarBaseType string        `json:"AvatarBaseType"` // 角色类型
 }
 
@@ -44,4 +44,12 @@ func GetAvatarDataById(avatarId string) *AvatarData {
 
 func GetAvatarDataMap() map[string]*AvatarData {
 	return CONF.AvatarDataMap
+}
+
+func GetAvatarList() []uint32 {
+	var avatarList []uint32
+	for _, avatar := range CONF.AvatarDataMap {
+		avatarList = append(avatarList, avatar.AvatarId)
+	}
+	return avatarList
 }

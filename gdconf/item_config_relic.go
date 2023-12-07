@@ -8,7 +8,7 @@ import (
 	"github.com/hjson/hjson-go/v4"
 )
 
-type ItemConfigEquipment struct {
+type ItemConfigRelic struct {
 	ID                  uint32              `json:"ID"`
 	ItemMainType        string              `json:"ItemMainType"`
 	ItemSubType         string              `json:"ItemSubType"`
@@ -21,32 +21,27 @@ type ItemConfigEquipment struct {
 	SellType            string              `json:"SellType"`
 }
 
-type ReturnItemIDList struct {
-	ItemID  uint32 `json:"ItemID"`
-	ItemNum uint32 `json:"ItemNum"`
-}
-
-func (g *GameDataConfig) loadItemConfigEquipment() {
-	g.ItemConfigEquipmentMap = make(map[string]*ItemConfigEquipment)
-	playerElementsFilePath := g.excelPrefix + "ItemConfigEquipment.json"
+func (g *GameDataConfig) loadItemConfigRelic() {
+	g.ItemConfigRelicMap = make(map[string]*ItemConfigRelic)
+	playerElementsFilePath := g.excelPrefix + "ItemConfigRelic.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ItemConfigEquipmentMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.ItemConfigRelicMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	logger.Info("load %v ItemConfigEquipment", len(g.ItemConfigEquipmentMap))
+	logger.Info("load %v ItemConfigRelic", len(g.ItemConfigRelicMap))
 }
 
-func GetItemConfigEquipmentById(ID string) *ItemConfigEquipment {
-	return CONF.ItemConfigEquipmentMap[ID]
+func GetItemConfigRelicById(ID string) *ItemConfigRelic {
+	return CONF.ItemConfigRelicMap[ID]
 }
 
-func GetItemConfigEquipmentMap() map[string]*ItemConfigEquipment {
-	return CONF.ItemConfigEquipmentMap
+func GetItemConfigRelicMap() map[string]*ItemConfigRelic {
+	return CONF.ItemConfigRelicMap
 }

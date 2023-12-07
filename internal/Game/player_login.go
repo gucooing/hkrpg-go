@@ -269,6 +269,7 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	go g.UpDataPlayer()
 }
 
-func (g *Game) PlayerLogoutCsReq(payloadMsg []byte) {
+// 账号离线
+func (g *Game) PlayerLogoutCsReq() {
 	g.UpDataPlayer()
 }
