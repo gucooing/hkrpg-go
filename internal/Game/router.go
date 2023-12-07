@@ -45,7 +45,7 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.PlayerLoginFinishCsReq:
 		g.HandlePlayerLoginFinishCsReq(payloadMsg) // 登录完成包
 	case cmd.PlayerLogoutCsReq:
-		// TODO 退出登录
+		g.PlayerLogoutCsReq(payloadMsg) // 客户端退出游戏通知
 	// 队伍
 	case cmd.GetAllLineupDataCsReq:
 		g.HandleGetAllLineupDataCsReq(payloadMsg) // 获取队伍信息请求
@@ -71,7 +71,7 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.GetCurSceneInfoCsReq:
 		g.HandleGetCurSceneInfoCsReq(payloadMsg) // 获取场景信息(关键包)
 	case cmd.SceneEntityMoveCsReq:
-		g.SceneEntityMoveCsReq() // 场景实体移动
+		g.SceneEntityMoveCsReq(payloadMsg) // 场景实体移动
 	case cmd.GetRogueScoreRewardInfoCsReq:
 		g.GetRogueScoreRewardInfoCsReq()
 	case cmd.EnterSceneCsReq:

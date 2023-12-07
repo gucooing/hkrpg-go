@@ -268,3 +268,7 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	// 更新账号数据
 	go g.UpDataPlayer()
 }
+
+func (g *Game) PlayerLogoutCsReq(payloadMsg []byte) {
+	g.UpDataPlayer()
+}
