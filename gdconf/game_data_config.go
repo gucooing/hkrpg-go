@@ -23,7 +23,7 @@ type GameDataConfig struct {
 	MazePlaneMap       map[string]*MazePlane                  // 场景id
 	GroupMap           map[uint32]map[uint32][]*LevelGroup    // 场景实体
 	MapEntranceMap     map[string]*MapEntrance                // 地图入口
-	BannersMap         []Banners                              // 卡池信息
+	BannersMap         map[uint32]*Banners                    // 卡池信息
 }
 
 func InitGameDataConfig() {

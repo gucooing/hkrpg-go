@@ -21,6 +21,7 @@ resources
 build
 /data/Ec2b.bin
 protocol/retcode.pb.go
+test
 cmdid.csv
 linux-amd64
 linux-arm64

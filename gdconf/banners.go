@@ -14,11 +14,12 @@ type Banners struct {
 	BeginTime    int64    `json:"beginTime"`
 	EndTime      int64    `json:"endTime"`
 	RateUpItems5 []uint32 `json:"rateUpItems5"`
-	RateUpItem4  []uint32 `json:"rateUpItem4"`
+	RateUpItem4  []uint32 `json:"rateUpItems4"`
 }
 
 func (g *GameDataConfig) loadBanners() {
-	g.BannersMap = make([]Banners, 0)
+	g.BannersMap = make(map[uint32]*Banners)
+	banners := make([]*Banners, 0)
 	playerElementsFilePath := "data/Banners.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,14 +27,17 @@ func (g *GameDataConfig) loadBanners() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.BannersMap)
+	err = hjson.Unmarshal(playerElementsFile, &banners)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, banner := range banners {
+		g.BannersMap[banner.Id] = banner
+	}
 	logger.Info("load %v Banners", len(g.BannersMap))
 }
 
-func GetBannersMap() []Banners {
+func GetBannersMap() map[uint32]*Banners {
 	return CONF.BannersMap
 }
