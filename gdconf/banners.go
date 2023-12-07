@@ -14,7 +14,7 @@ type Banners struct {
 	BeginTime    int64    `json:"beginTime"`
 	EndTime      int64    `json:"endTime"`
 	RateUpItems5 []uint32 `json:"rateUpItems5"`
-	RateUpItem4  []uint32 `json:"rateUpItems4"`
+	RateUpItems4 []uint32 `json:"rateUpItems4"`
 }
 
 func (g *GameDataConfig) loadBanners() {

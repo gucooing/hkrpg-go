@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -15,22 +16,58 @@ import (
 func (g *Game) HandlePlayerGetTokenCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.PlayerGetTokenCsReq, payloadMsg)
 	req := msg.(*proto.PlayerGetTokenCsReq)
-	uid, err := strconv.ParseUint(req.AccountUid, 10, 64)
+	accountUid, err := strconv.ParseUint(req.AccountUid, 10, 64)
 	if err != nil {
 		logger.Error("get token uid error")
 		return
 	}
 	logger.Debug("account_token:%s", req.Token)
-	g.Uid = uint32(uid)
 
-	// TODO 需添加 token 验证
+	rsp := new(proto.PlayerGetTokenScRsp)
+
+	uidPlayer := g.Db.QueryUidPlayerUidByFieldPlayer(uint32(accountUid))
+
+	if uidPlayer.ComboToken != req.Token {
+		rsp.Uid = 0
+		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_VERIFY_ERROR)
+		rsp.Msg = "token验证失败"
+		g.send(cmd.PlayerGetTokenScRsp, rsp)
+		logger.Info("登录账号:%v,token验证失败", accountUid)
+		return
+	}
+
+	if uidPlayer.IsBan {
+		rsp.Uid = 0
+		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_PARA_ERROR)
+		rsp.Msg = "账号已被封禁"
+		g.send(cmd.PlayerGetTokenScRsp, rsp)
+		logger.Info("登录账号:%v,已被封禁", accountUid)
+		return
+	}
+
+	newuidPlayer := &DataBase.UidPlayer{
+		AccountId:  uidPlayer.AccountId,
+		IsBan:      false,
+		ComboToken: "",
+	}
+
+	err = g.Db.UpdateUidPlayer(uidPlayer.AccountId, newuidPlayer)
+	if err != nil {
+		rsp.Uid = 0
+		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_VERIFY_ERROR)
+		rsp.Msg = "账号刷新失败"
+		g.send(cmd.PlayerGetTokenScRsp, rsp)
+		logger.Error("登录账号:%v,账号刷新失败", accountUid)
+		return
+	}
+
+	g.Uid = uint32(uidPlayer.AccountUid)
 
 	// 构造回复内容
 	timeRand := random.GetTimeRand()
 	serverSeedUint64 := timeRand.Uint64()
 	g.Seed = serverSeedUint64
-	rsp := new(proto.PlayerGetTokenScRsp)
-	rsp.Uid = uint32(uid)
+	rsp.Uid = g.Uid
 	rsp.SecretKeySeed = serverSeedUint64
 	rsp.BlackInfo = &proto.BlackInfo{}
 	g.send(cmd.PlayerGetTokenScRsp, rsp)
@@ -48,6 +85,7 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 			logger.Error("账号数据序列化失败")
 			return
 		}
+		dbPlayer.AccountUid = g.Uid
 		dbPlayer.PlayerData = dbData
 
 		err = g.Db.AddDatePlayerFieldByFieldName(dbPlayer)
@@ -115,20 +153,6 @@ func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	}
 
 	g.send(cmd.GetHeroBasicTypeInfoScRsp, rsp)
-}
-
-func (g *Game) HandleGetBagCsReq(payloadMsg []byte) {
-	// TODO
-	rsp := new(proto.GetBagScRsp)
-	for _, itme := range g.Player.DbItem.RelicMap {
-		materialList := &proto.Material{
-			Tid: itme.Tid,
-			Num: itme.Num,
-		}
-		rsp.MaterialList = append(rsp.MaterialList, materialList)
-	}
-
-	g.send(cmd.GetBagScRsp, rsp)
 }
 
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {

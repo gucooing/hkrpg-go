@@ -31,7 +31,7 @@ func (s *Store) init() {
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(10 * time.Second) // 10 秒钟
 	// 初始化表
-	err = s.Db.AutoMigrate(&Account{}, &Player{})
+	err = s.Db.AutoMigrate(&Account{}, &UidPlayer{}, &Player{})
 	if err != nil {
 		logger.Error("MySQL数据库初始化失败")
 		return

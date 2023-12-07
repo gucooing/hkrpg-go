@@ -13,8 +13,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
 	case cmd.GetHeroBasicTypeInfoCsReq:
 		g.HandleGetHeroBasicTypeInfoCsReq(payloadMsg)
-	case cmd.GetBagCsReq:
-		g.HandleGetBagCsReq(payloadMsg)
 	case cmd.GetAvatarDataCsReq:
 		g.HandleGetAvatarDataCsReq(payloadMsg)
 	case cmd.GetCurChallengeCsReq:
@@ -78,6 +76,9 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetRogueScoreRewardInfoCsReq()
 	case cmd.EnterSceneCsReq:
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
+	// 背包
+	case cmd.GetBagCsReq:
+		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品
 	// 交易
 	case cmd.GetShopListCsReq:
 		g.GetShopListCsReq() // 获取商店物品列表

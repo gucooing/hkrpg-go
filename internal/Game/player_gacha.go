@@ -13,12 +13,12 @@ func (g *Game) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 
 	for _, bannerslist := range gdconf.GetBannersMap() {
 		gachaInfoList := &proto.GachaInfo{
-			HistoryUrl: "https://www.bilibili.com/",                    // 历史记录
+			HistoryUrl: "http://127.0.0.1:8080/api/gacha/history",      // 历史记录
 			DetailUrl:  "https://www.bilibili.com/video/BV1X94y177QK/", // 卡池详情
 			BeginTime:  bannerslist.BeginTime,                          // 开始时间
 			EndTime:    bannerslist.EndTime,                            // 结束时间
 			Featured:   bannerslist.RateUpItems5,                       // 五星up
-			UpInfo:     bannerslist.RateUpItem4,                        // 四星up
+			UpInfo:     bannerslist.RateUpItems4,                       // 四星up
 			GachaId:    bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {
@@ -56,7 +56,7 @@ func (g *Game) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 	rsp.GachaCeiling = &proto.GachaCeiling{
 		IsClaimed:  false,
 		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-		CeilingNum: 0,
+		CeilingNum: 299,
 	}
 	for _, id := range list {
 		avatarlist := &proto.GachaCeilingAvatar{
