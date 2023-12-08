@@ -148,6 +148,30 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 		}
 	}
 
+	// 特殊情况处理
+	if g.Player.DbGacha.GachaMap[gachaId].Pity4 == 8 && g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 78 {
+		// 五星
+		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
+			idIndex := rand.Intn(len(upBanners.RateUpItems5))
+			g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
+			g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = false
+			return upBanners.RateUpItems5[idIndex]
+		} else {
+			idIndex := rand.Intn(len(list5))
+			g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
+			for _, id := range upBanners.RateUpItems5 {
+				if list5[idIndex] == id {
+					g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = false
+					break
+				} else {
+					g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = true
+				}
+			}
+			g.Player.DbGacha.GachaMap[gachaId].Pity4++
+			return list5[idIndex]
+		}
+	}
+
 	// 保底四星
 	if g.Player.DbGacha.GachaMap[gachaId].Pity4 == 9 && !g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 {
 		idIndex := rand.Intn(len(list4))
