@@ -288,7 +288,7 @@ func (g *Game) GetGrobability(gachaId uint32) (uint32, uint32) {
 	gaCha := g.GetGacha(gachaId)
 
 	if gaCha.CeilingNum >= 73 {
-		probability5 += (gaCha.CeilingNum - 73) * 58
+		probability5 += (gaCha.CeilingNum - 73) * 622
 		return 10000 - probability5, 10000 - probability5 - probability4
 	}
 
