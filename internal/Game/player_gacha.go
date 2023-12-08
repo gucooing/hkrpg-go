@@ -122,6 +122,8 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 		list5 []uint32 // 五星池
 	)
 
+	probability5, probability4 := g.GetGrobability(gachaId)
+
 	upBanners := gdconf.GetBannersMap()[gachaId]
 
 	for _, equi := range gdconf.GetEquipmentConfigMap() {
@@ -149,7 +151,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	}
 
 	// 特殊情况处理
-	if g.Player.DbGacha.GachaMap[gachaId].Pity4 == 8 && g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 78 {
+	if g.Player.DbGacha.GachaMap[gachaId].Pity4 == 8 && g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 88 {
 		// 五星
 		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
 			idIndex := rand.Intn(len(upBanners.RateUpItems5))
@@ -198,7 +200,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	}
 
 	// 保底五星
-	if g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 79 && !g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
+	if g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 89 && !g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
 		idIndex := rand.Intn(len(list5))
 		g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
 		for _, id := range upBanners.RateUpItems5 {
@@ -214,7 +216,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	}
 
 	// 大保底五星
-	if g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 79 && g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
+	if g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 89 && g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
 		idIndex := rand.Intn(len(upBanners.RateUpItems5))
 		g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
 		g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = false
@@ -223,9 +225,10 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 
 	// 下面是概率
 	rand.New(rand.NewSource(time.Now().UnixNano()))
-	randomNumber := rand.Intn(10000) + 1
+	randomNumbe := rand.Intn(10000) + 1
+	randomNumber := uint32(randomNumbe)
 
-	if randomNumber > 9941 {
+	if randomNumber > probability5 {
 		// 五星
 		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
 			idIndex := rand.Intn(len(upBanners.RateUpItems5))
@@ -247,7 +250,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 			return list5[idIndex]
 		}
 	}
-	if randomNumber > 9431 {
+	if randomNumber > probability4 {
 		// 四星
 		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 {
 			idIndex := rand.Intn(len(upBanners.RateUpItems4))
@@ -274,4 +277,20 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	g.Player.DbGacha.GachaMap[gachaId].CeilingNum++
 	g.Player.DbGacha.GachaMap[gachaId].Pity4++
 	return list3[idIndex]
+}
+
+func (g *Game) GetGrobability(gachaId uint32) (uint32, uint32) {
+	var probability5 uint32
+	var probability4 uint32
+	probability5 = 60
+	probability4 = 510
+
+	gaCha := g.GetGacha(gachaId)
+
+	if gaCha.CeilingNum >= 73 {
+		probability5 += (gaCha.CeilingNum - 73) * 58
+		return 10000 - probability5, 10000 - probability5 - probability4
+	}
+
+	return 10000 - probability5, 10000 - probability5 - probability4
 }
