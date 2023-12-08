@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -52,8 +51,6 @@ func (g *Game) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
 	req := msg.(*proto.GetGachaCeilingCsReq)
 
-	logger.Info("", req)
-
 	rsp := &proto.GetGachaCeilingScRsp{
 		GachaType: req.GachaType,
 	}
@@ -81,6 +78,13 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 	if req.GachaNum != 10 && req.GachaNum != 1 {
 		return
 	}
+	// 先扣球再抽卡
+	upBanners := gdconf.GetBannersMap()[req.GachaId]
+	if upBanners.GachaType == "Normal" {
+		g.SubtractMaterial(101, req.GachaNum)
+	} else {
+		g.SubtractMaterial(102, req.GachaNum)
+	}
 
 	rsp := &proto.DoGachaScRsp{
 		GachaId:       req.GachaId,
@@ -90,13 +94,14 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 	}
 	for i := 0; i < int(req.GachaNum); i++ {
 		id := g.GachaRandom(req.GachaId)
+		isAvatar, isNew := g.AddGachaItem(id)
 		gachaItemList := &proto.GachaItem{
-			TransferItemList: nil,
-			IsNew:            true,
+			TransferItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
+			IsNew:            isNew,
 			GachaItem:        nil,
 			TokenItem:        &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		}
-		itemList := &proto.Item{
+		gachaItem := &proto.Item{
 			ItemId:      id,
 			Level:       1,
 			Num:         1,
@@ -105,13 +110,41 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 			Promotion:   0,
 			UniqueId:    0,
 		}
-		gachaItemList.GachaItem = itemList
-		gachaItemList.TokenItem.ItemList = append(gachaItemList.TokenItem.ItemList, itemList)
+		if isAvatar {
+			if isNew {
+
+			} else {
+				tokenItemList := &proto.Item{
+					Num:    8,
+					ItemId: 252,
+				}
+				gachaItemList.TokenItem.ItemList = append(gachaItemList.TokenItem.ItemList, tokenItemList)
+
+				transferItemList := &proto.Item{
+					Num:    1,
+					ItemId: 10000 + id,
+				}
+				gachaItemList.TransferItemList.ItemList = append(gachaItemList.TransferItemList.ItemList, transferItemList)
+
+				g.AddMaterial(252, 8)
+				g.AddMaterial(10000+id, 1)
+			}
+		} else {
+			tokenItemList := &proto.Item{
+				Num:    42,
+				ItemId: 251,
+			}
+			gachaItemList.TokenItem.ItemList = append(gachaItemList.TokenItem.ItemList, tokenItemList)
+		}
+		gachaItemList.GachaItem = gachaItem
 
 		rsp.GachaItemList = append(rsp.GachaItemList, gachaItemList)
 	}
 
+	g.AddMaterial(251, req.GachaNum*42)
+
 	g.send(cmd.DoGachaScRsp, rsp)
+
 	g.UpDataPlayer()
 }
 
@@ -228,7 +261,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	randomNumbe := rand.Intn(10000) + 1
 	randomNumber := uint32(randomNumbe)
 
-	if randomNumber > probability5 {
+	if randomNumber >= probability5 {
 		// 五星
 		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
 			idIndex := rand.Intn(len(upBanners.RateUpItems5))
@@ -250,7 +283,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 			return list5[idIndex]
 		}
 	}
-	if randomNumber > probability4 {
+	if randomNumber >= probability4 {
 		// 四星
 		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 {
 			idIndex := rand.Intn(len(upBanners.RateUpItems4))

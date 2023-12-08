@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/gucooing/hkrpg-go/internal/DataBase"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -17,6 +18,7 @@ type Game struct {
 	NetMsgInput chan *NetMsg
 	KcpConn     *kcp.UDPSession
 	Db          *DataBase.Store
+	Snowflake   *alg.SnowflakeWorker // 雪花唯一id生成器
 	// 协议
 	ServerCmdProtoMap *cmd.CmdProtoMap
 	// 玩家数据

@@ -80,20 +80,25 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		logger.Info("新账号登录，进入初始化流程")
 		playerData = g.AddPalyerData(g.Uid)
 
-		dbData, err := json.Marshal(playerData)
+		g.Player = playerData
+		// 添加主角
+		g.AddAvatar(uint32(g.Player.DbAvatar.MainAvatar))
+		// 将主角写入队伍
+		g.Player.DbLineUp.LineUpList[0].AvatarIdList[0] = uint32(g.Player.DbAvatar.MainAvatar)
+
+		// 保存账号数据
+		dbData, err := json.Marshal(g.Player)
 		if err != nil {
 			logger.Error("账号数据序列化失败")
 			return
 		}
 		dbPlayer.AccountUid = g.Uid
 		dbPlayer.PlayerData = dbData
-
 		err = g.Db.AddDatePlayerFieldByFieldName(dbPlayer)
 		if err != nil {
 			logger.Error("账号数据储存失败")
 			return
 		}
-		g.Player = playerData
 	} else {
 		err := json.Unmarshal(dbPlayer.PlayerData, &playerData)
 		if err != nil {

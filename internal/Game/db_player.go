@@ -1,7 +1,6 @@
 package Game
 
 import (
-	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
@@ -64,17 +63,9 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 		Y: 0,
 		Z: 0,
 	}
-	data.DbAvatar = new(DbAvatar)
-	data.DbAvatar.MainAvatar = mainAvatar
-	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
-	// TODO 直接给全部角色(包括多个主角，如果出现了问题，那只给一个当前属性主角） *不知道你是不是下一个把四个主角添加到一个队伍的yz
-	for _, a := range gdconf.GetAvatarDataMap() {
-		avatarId := a.AvatarId
-		data.DbAvatar.Avatar[avatarId] = AddAvatar(avatarId)
-	}
+	data = NewAvatar(data, mainAvatar)
 	// 将主角写入队伍
-	data = g.GetDbLineUp(data)
-	data.DbLineUp.LineUpList[0].AvatarIdList[0] = uint32(mainAvatar)
+	data = NewDbLineUp(data)
 	data = NewItem(data)
 	data = NewGaCha(data)
 

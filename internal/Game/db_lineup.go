@@ -10,7 +10,7 @@ type LineUp struct {
 	AvatarIdList []uint32
 }
 
-func (g *Game) GetDbLineUp(data *PlayerData) *PlayerData {
+func NewDbLineUp(data *PlayerData) *PlayerData {
 	data.DbLineUp = new(DbLineUp)
 	data.DbLineUp.LineUpList = []*LineUp{
 		{Name: "Team 1", AvatarIdList: make([]uint32, 4)},

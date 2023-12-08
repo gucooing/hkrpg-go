@@ -12,6 +12,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/internal/Game"
 	"github.com/gucooing/hkrpg-go/internal/SDK"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/config"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -76,6 +77,7 @@ func Run(s *SDK.Server) error {
 		g := NewGame(kcpConn)
 		g.XorKey = config.GetConfig().Ec2b.XorKey()
 		g.Db = s.Store
+		g.Snowflake = alg.NewSnowflakeWorker(int64(1))
 		CLIENT_CONN_NUM++
 		go recvHandle(g)
 		go sendNet(g)

@@ -19,6 +19,7 @@ type GameDataConfig struct {
 	// 配置表数据
 	AvatarDataMap          map[string]*AvatarData                 // 角色
 	EquipmentConfigMap     map[string]*EquipmentConfig            // 光锥
+	RelicMap               map[string]*Relic                      // 遗器
 	ItemConfigEquipmentMap map[string]*ItemConfigEquipment        // 背包光锥配置
 	ItemConfigRelicMap     map[string]*ItemConfigRelic            // 背包遗器配置
 	RogueAreaMap           map[string]*RogueArea                  // 地图库
@@ -69,6 +70,7 @@ func (g *GameDataConfig) loadAll() {
 func (g *GameDataConfig) load() {
 	g.loadAvatarData()          // 角色
 	g.loadEquipmentConfig()     // 光锥
+	g.loadRelic()               // 遗器
 	g.loadItemConfigEquipment() // 背包光锥配置
 	g.loadItemConfigRelic()     // 背包遗器配置
 	g.loadRogueArea()           // 副本

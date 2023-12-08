@@ -30,3 +30,18 @@ func (g *Game) GetGacha(gachaId uint32) *Num {
 
 	return g.Player.DbGacha.GachaMap[gachaId]
 }
+
+func (g *Game) AddGachaItem(id uint32) (bool, bool) {
+	if id >= 20000 {
+		g.AddEquipment(id)
+		return false, false
+	} else {
+		if g.Player.DbAvatar.Avatar[id] != nil {
+			g.AddMaterial(id+10000, 1)
+			g.AddMaterial(252, 8)
+			return true, false
+		}
+		g.AddAvatar(id)
+		return true, true
+	}
+}
