@@ -15,6 +15,7 @@ func (g *Game) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 	rsp.GachaInfoList = make([]*proto.GachaInfo, 0)
 
 	for _, bannerslist := range gdconf.GetBannersMap() {
+		gacha := g.GetGacha(bannerslist.Id)
 		gachaInfoList := &proto.GachaInfo{
 			HistoryUrl: "http://127.0.0.1:8080/api/gacha/history",      // 历史记录
 			DetailUrl:  "https://www.bilibili.com/video/BV1X94y177QK/", // 卡池详情
@@ -27,7 +28,7 @@ func (g *Game) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
 				IsClaimed:  false,
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-				CeilingNum: 0,
+				CeilingNum: gacha.CeilingNum,
 			}
 			for _, id := range list {
 				avatarlist := &proto.GachaCeilingAvatar{
@@ -116,32 +117,21 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 
 func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	var (
-		array1 []uint32 // g3
-		array2 []uint32 // g4
-		array3 []uint32 // g5
-		array4 []uint32 // a4
-		array5 []uint32 // a5
+		list3 []uint32 // 三星池
+		list4 []uint32 // 四星池
+		list5 []uint32 // 五星池
 	)
-
-	if g.Player.DbGacha.GachaMap[gachaId] == nil {
-		g.Player.DbGacha.GachaMap[gachaId] = &Num{
-			CeilingNum:               0,
-			Pity4:                    0,
-			FailedFeaturedItemPulls4: false,
-			FailedFeaturedItemPulls5: false,
-		}
-	}
 
 	upBanners := gdconf.GetBannersMap()[gachaId]
 
 	for _, equi := range gdconf.GetEquipmentConfigMap() {
 		switch equi.Rarity {
 		case "CombatPowerLightconeRarity3":
-			array1 = append(array1, equi.EquipmentID)
+			list3 = append(list3, equi.EquipmentID)
 		case "CombatPowerLightconeRarity4":
-			array2 = append(array2, equi.EquipmentID)
+			list4 = append(list4, equi.EquipmentID)
 		case "CombatPowerLightconeRarity5":
-			array3 = append(array3, equi.EquipmentID)
+			list5 = append(list5, equi.EquipmentID)
 		}
 	}
 
@@ -152,15 +142,14 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 		}
 		switch avatar.Rarity {
 		case "CombatPowerAvatarRarityType4":
-			array4 = append(array4, avatar.AvatarId)
+			list4 = append(list4, avatar.AvatarId)
 		case "CombatPowerAvatarRarityType5":
-			array5 = append(array5, avatar.AvatarId)
+			list5 = append(list5, avatar.AvatarId)
 		}
 	}
 
 	// 保底四星
 	if g.Player.DbGacha.GachaMap[gachaId].Pity4 == 9 && !g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 {
-		list4 := append(array2, array4...)
 		idIndex := rand.Intn(len(list4))
 
 		for _, id := range upBanners.RateUpItems4 {
@@ -186,7 +175,6 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 
 	// 保底五星
 	if g.Player.DbGacha.GachaMap[gachaId].CeilingNum == 79 && !g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
-		list5 := append(array3, array5...)
 		idIndex := rand.Intn(len(list5))
 		g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
 		for _, id := range upBanners.RateUpItems5 {
@@ -212,67 +200,54 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	// 下面是概率
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	randomNumber := rand.Intn(10000) + 1
-	if randomNumber > 570 {
-		idIndex := rand.Intn(len(array1))
-		g.Player.DbGacha.GachaMap[gachaId].CeilingNum++
-		g.Player.DbGacha.GachaMap[gachaId].Pity4++
-		return array1[idIndex]
-	}
-	if randomNumber > 315 {
-		idIndex := rand.Intn(len(array2))
-		for _, id := range upBanners.RateUpItems4 {
-			if array2[idIndex] == id {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 = false
-				break
-			} else {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 = true
+
+	if randomNumber > 9941 {
+		// 五星
+		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 {
+			idIndex := rand.Intn(len(upBanners.RateUpItems5))
+			g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
+			g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = false
+			return upBanners.RateUpItems5[idIndex]
+		} else {
+			idIndex := rand.Intn(len(list5))
+			g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
+			for _, id := range upBanners.RateUpItems5 {
+				if list5[idIndex] == id {
+					g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = false
+					break
+				} else {
+					g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = true
+				}
 			}
+			g.Player.DbGacha.GachaMap[gachaId].Pity4++
+			return list5[idIndex]
 		}
-		g.Player.DbGacha.GachaMap[gachaId].Pity4 = 0
-		g.Player.DbGacha.GachaMap[gachaId].CeilingNum++
-		return array2[idIndex]
 	}
-	if randomNumber > 60 {
-		idIndex := rand.Intn(len(array4))
-		for _, id := range upBanners.RateUpItems4 {
-			if array4[idIndex] == id {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 = false
-				break
-			} else {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 = true
+	if randomNumber > 9431 {
+		// 四星
+		if g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 {
+			idIndex := rand.Intn(len(upBanners.RateUpItems4))
+			g.Player.DbGacha.GachaMap[gachaId].Pity4 = 0
+			g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 = false
+			return upBanners.RateUpItems4[idIndex]
+		} else {
+			idIndex := rand.Intn(len(list4))
+			for _, id := range upBanners.RateUpItems4 {
+				if list4[idIndex] == id {
+					g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 = false
+					break
+				} else {
+					g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls4 = true
+				}
 			}
+			g.Player.DbGacha.GachaMap[gachaId].Pity4 = 0
+			g.Player.DbGacha.GachaMap[gachaId].CeilingNum++
+			return list4[idIndex]
 		}
-		g.Player.DbGacha.GachaMap[gachaId].Pity4 = 0
-		g.Player.DbGacha.GachaMap[gachaId].CeilingNum++
-		return array4[idIndex]
 	}
-	if randomNumber > 30 {
-		idIndex := rand.Intn(len(array3))
-		g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
-		for _, id := range upBanners.RateUpItems5 {
-			if array3[idIndex] == id {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = false
-				break
-			} else {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = true
-			}
-		}
-		g.Player.DbGacha.GachaMap[gachaId].Pity4++
-		return array3[idIndex]
-	}
-	if randomNumber > 0 {
-		idIndex := rand.Intn(len(array5))
-		g.Player.DbGacha.GachaMap[gachaId].CeilingNum = 0
-		for _, id := range upBanners.RateUpItems5 {
-			if array5[idIndex] == id {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = false
-				break
-			} else {
-				g.Player.DbGacha.GachaMap[gachaId].FailedFeaturedItemPulls5 = true
-			}
-		}
-		g.Player.DbGacha.GachaMap[gachaId].Pity4++
-		return array5[idIndex]
-	}
-	return 0
+	// 三星
+	idIndex := rand.Intn(len(list3))
+	g.Player.DbGacha.GachaMap[gachaId].CeilingNum++
+	g.Player.DbGacha.GachaMap[gachaId].Pity4++
+	return list3[idIndex]
 }

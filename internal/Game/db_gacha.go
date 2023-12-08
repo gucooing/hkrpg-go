@@ -17,3 +17,16 @@ func NewGaCha(data *PlayerData) *PlayerData {
 	}
 	return data
 }
+
+func (g *Game) GetGacha(gachaId uint32) *Num {
+	if g.Player.DbGacha.GachaMap[gachaId] == nil {
+		g.Player.DbGacha.GachaMap[gachaId] = &Num{
+			CeilingNum:               0,
+			Pity4:                    0,
+			FailedFeaturedItemPulls4: false,
+			FailedFeaturedItemPulls5: false,
+		}
+	}
+
+	return g.Player.DbGacha.GachaMap[gachaId]
+}
