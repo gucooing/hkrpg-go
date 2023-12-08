@@ -1,8 +1,6 @@
 package Game
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -20,9 +18,21 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 		avatarList.Rank = a.Rank
 		avatarList.Level = a.Level
 		avatarList.Exp = a.Exp
-		avatarList.SkilltreeList = GetKilltreeList(strconv.Itoa(int(a.AvatarId)), "1")
+		avatarList.SkilltreeList = GetKilltreeList(a.AvatarId, 1)
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 
 	g.send(cmd.GetAvatarDataScRsp, rsp)
+}
+
+func (g *Game) RankUpAvatarCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
+	req := msg.(*proto.RankUpAvatarCsReq)
+
+	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Rank++
+	g.SubtractMaterial(req.BaseAvatarId+10000, 1)
+	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
+
+	rsp := new(proto.GetChallengeScRsp)
+	g.send(cmd.RankUpAvatarScRsp, rsp)
 }

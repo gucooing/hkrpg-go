@@ -63,6 +63,9 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.ReplaceLineupCsReq(payloadMsg) // 快速入队
 	case cmd.ChangeLineupLeaderCsReq:
 		g.ChangeLineupLeaderCsReq(payloadMsg) // 切换角色
+	// 角色管理
+	case cmd.RankUpAvatarCsReq:
+		g.RankUpAvatarCsReq(payloadMsg) // 提高角色命座
 	// 场景
 	case cmd.GetSceneMapInfoCsReq:
 		g.HanldeGetSceneMapInfoCsReq(payloadMsg) // 获取地图信息

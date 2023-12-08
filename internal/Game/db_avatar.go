@@ -47,14 +47,13 @@ func (g *Game) AddAvatar(avatarId uint32) {
 	g.Player.DbAvatar.Avatar[avatarId] = avatar
 	g.AvatarPlayerSyncScNotify(avatarId)
 }
-func GetKilltreeList(avatarId, level string) []*proto.AvatarSkillTree {
+func GetKilltreeList(avatarId, level uint32) []*proto.AvatarSkillTree {
 	skilltreeList := make([]*proto.AvatarSkillTree, 0)
 	skillList := gdconf.GetAvatarSkilltreeMap()
 	for _, a := range skillList {
-		if a[level].AvatarID == avatarId {
-			pointId, _ := strconv.ParseUint(a[level].PointID, 10, 32)
+		if a[strconv.Itoa(int(level))].AvatarID == avatarId {
 			skilltree := &proto.AvatarSkillTree{
-				PointId: uint32(pointId),
+				PointId: a[strconv.Itoa(int(level))].PointID,
 				Level:   1,
 			}
 			skilltreeList = append(skilltreeList, skilltree)
@@ -69,7 +68,7 @@ func (g *Game) AvatarPlayerSyncScNotify(avatarId uint32) {
 	}
 	avatardb := g.Player.DbAvatar.Avatar[avatarId]
 	avatar := &proto.Avatar{
-		SkilltreeList:     GetKilltreeList(strconv.Itoa(int(avatarId)), "1"),
+		SkilltreeList:     GetKilltreeList(avatarId, 1),
 		Exp:               avatardb.Exp,
 		BaseAvatarId:      avatarId,
 		Rank:              avatardb.Rank,
@@ -83,4 +82,6 @@ func (g *Game) AvatarPlayerSyncScNotify(avatarId uint32) {
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
 	g.send(cmd.PlayerSyncScNotify, notify)
+
+	g.UpDataPlayer()
 }

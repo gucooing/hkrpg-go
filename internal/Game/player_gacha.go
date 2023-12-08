@@ -155,7 +155,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 		list5 []uint32 // 五星池
 	)
 
-	probability5, probability4 := g.GetGrobability(gachaId)
+	probability5, probability4 := g.GetProbability(gachaId)
 
 	upBanners := gdconf.GetBannersMap()[gachaId]
 
@@ -312,7 +312,7 @@ func (g *Game) GachaRandom(gachaId uint32) uint32 {
 	return list3[idIndex]
 }
 
-func (g *Game) GetGrobability(gachaId uint32) (uint32, uint32) {
+func (g *Game) GetProbability(gachaId uint32) (uint32, uint32) {
 	var probability5 uint32
 	var probability4 uint32
 	probability5 = 60
