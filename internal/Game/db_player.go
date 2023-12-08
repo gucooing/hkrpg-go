@@ -76,6 +76,7 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data = g.GetDbLineUp(data)
 	data.DbLineUp.LineUpList[0].AvatarIdList[0] = uint32(mainAvatar)
 	data = NewItem(data)
+	data = NewGaCha(data)
 
 	return data
 }
