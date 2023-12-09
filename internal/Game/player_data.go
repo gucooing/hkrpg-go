@@ -14,7 +14,7 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		archiveAvatarIdList = append(archiveAvatarIdList, a.AvatarId)
 	}
 	archiveData := &proto.ArchiveData{
-		ArchiveAvatarIdList:    archiveAvatarIdList,
+		ArchiveAvatarIdList:    make([]uint32, 0),
 		ArchiveEquipmentIdList: make([]uint32, 0),
 		ArchiveRelicList:       make([]*proto.RelicArchive, 0),
 	}

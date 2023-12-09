@@ -11,10 +11,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetBasicInfoCsReq(payloadMsg)
 	case cmd.GetPlayerBoardDataCsReq:
 		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
-	case cmd.GetHeroBasicTypeInfoCsReq:
-		g.HandleGetHeroBasicTypeInfoCsReq(payloadMsg)
-	case cmd.GetAvatarDataCsReq:
-		g.HandleGetAvatarDataCsReq(payloadMsg)
 	case cmd.GetCurChallengeCsReq:
 		g.GetCurChallengeCsReq(payloadMsg)
 	case cmd.GetMissionStatusCsReq:
@@ -64,8 +60,14 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.ChangeLineupLeaderCsReq:
 		g.ChangeLineupLeaderCsReq(payloadMsg) // 切换角色
 	// 角色管理
+	case cmd.GetHeroBasicTypeInfoCsReq:
+		g.HandleGetHeroBasicTypeInfoCsReq(payloadMsg) // 请求主角基本信息
+	case cmd.GetAvatarDataCsReq:
+		g.HandleGetAvatarDataCsReq(payloadMsg) // 请求全部角色信息
 	case cmd.RankUpAvatarCsReq:
 		g.RankUpAvatarCsReq(payloadMsg) // 提高角色命座
+	case cmd.DressAvatarCsReq:
+		g.DressAvatarCsReq(payloadMsg) // 角色光锥装备
 	// 场景
 	case cmd.GetSceneMapInfoCsReq:
 		g.HanldeGetSceneMapInfoCsReq(payloadMsg) // 获取地图信息

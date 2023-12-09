@@ -122,7 +122,7 @@ func (g *Game) GetRogueScoreRewardInfoCsReq() {
 	rsp.ScoreRewardInfo = &proto.RogueScoreRewardInfo{
 		HasTakenInitialScore: true,
 		PoolRefreshed:        true,
-		PoolId:               20,
+		PoolId:               22,
 	}
 
 	g.send(cmd.GetRogueScoreRewardInfoScRsp, rsp)

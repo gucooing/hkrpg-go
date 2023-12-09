@@ -28,6 +28,7 @@ type GameDataConfig struct {
 	GroupMap               map[uint32]map[uint32][]*LevelGroup    // 场景实体
 	MapEntranceMap         map[string]*MapEntrance                // 地图入口
 	BannersMap             map[uint32]*Banners                    // 卡池信息
+	ActivityPanelMap       map[string]*ActivityPanel              // 活动
 }
 
 func InitGameDataConfig() {
@@ -79,4 +80,5 @@ func (g *GameDataConfig) load() {
 	g.loadGroup()               // 场景实体
 	g.loadMapEntrance()         // 地图入口
 	g.loadBanners()             // 卡池信息
+	g.loadActivityPanel()       // 活动
 }

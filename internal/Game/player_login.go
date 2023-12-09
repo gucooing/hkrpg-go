@@ -163,13 +163,15 @@ func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
 	rsp.ActivityScheduleList = make([]*proto.ActivityScheduleInfo, 0)
-	activityScheduleList := &proto.ActivityScheduleInfo{
-		ActivityId: 10016,
-		EndTime:    2147483647,
-		ModuleId:   1001601,
-		BeginTime:  0,
+	for _, activity := range gdconf.GetActivityPanelMap() {
+		activityScheduleList := &proto.ActivityScheduleInfo{
+			ActivityId: activity.PanelID,
+			EndTime:    4294967295,
+			ModuleId:   activity.ActivityModuleID,
+			BeginTime:  1664308800,
+		}
+		rsp.ActivityScheduleList = append(rsp.ActivityScheduleList, activityScheduleList)
 	}
-	rsp.ActivityScheduleList = append(rsp.ActivityScheduleList, activityScheduleList)
 
 	g.send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }

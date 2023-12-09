@@ -23,7 +23,7 @@ func (g *Game) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 			GachaId:    bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {
-			list := []uint32{1003, 1004, 1101, 1104, 1107, 1209, 1211}
+			list := []uint32{1003, 1101, 1211}
 			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
 				IsClaimed:  false,
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
@@ -54,11 +54,11 @@ func (g *Game) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 	rsp := &proto.GetGachaCeilingScRsp{
 		GachaType: req.GachaType,
 	}
-	list := []uint32{1003, 1004, 1101, 1104, 1107, 1209, 1211}
+	list := []uint32{1003, 1101, 1211}
 	rsp.GachaCeiling = &proto.GachaCeiling{
 		IsClaimed:  false,
 		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-		CeilingNum: 299,
+		CeilingNum: g.Player.DbGacha.GachaMap[1001].CeilingNum,
 	}
 	for _, id := range list {
 		avatarlist := &proto.GachaCeilingAvatar{

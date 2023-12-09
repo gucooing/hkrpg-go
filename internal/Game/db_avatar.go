@@ -23,6 +23,7 @@ type Avatar struct {
 	Rank              uint32            // 命座
 	Hp                uint32            // 血量
 	SkilltreeList     map[uint32]uint32 `json:"-"` // 技能等级数据
+	EquipmentUniqueId uint32            // 装备光锥
 }
 
 func NewAvatar(data *PlayerData, mainAvatar proto.HeroBasicType) *PlayerData {
@@ -43,6 +44,7 @@ func (g *Game) AddAvatar(avatarId uint32) {
 	avatar.Promotion = 0
 	avatar.Rank = 0
 	avatar.Hp = 10000
+	avatar.EquipmentUniqueId = 0
 
 	g.Player.DbAvatar.Avatar[avatarId] = avatar
 	g.AvatarPlayerSyncScNotify(avatarId)
@@ -72,9 +74,9 @@ func (g *Game) AvatarPlayerSyncScNotify(avatarId uint32) {
 		Exp:               avatardb.Exp,
 		BaseAvatarId:      avatarId,
 		Rank:              avatardb.Rank,
-		EquipmentUniqueId: 0,
-		EquipRelicList:    nil,
-		TakenRewards:      nil,
+		EquipmentUniqueId: avatardb.EquipmentUniqueId,
+		EquipRelicList:    make([]*proto.EquipRelic, 0),
+		TakenRewards:      make([]uint32, 0),
 		FirstMetTimestamp: avatardb.FirstMetTimestamp,
 		Promotion:         avatardb.Promotion,
 		Level:             avatardb.Level,
