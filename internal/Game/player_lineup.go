@@ -173,8 +173,9 @@ func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
 func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
 	req := msg.(*proto.ReplaceLineupCsReq)
-	for id, avatarid := range req.Slots {
-		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[id] = avatarid.Id
+	g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList = []uint32{0, 0, 0, 0}
+	for _, avatarid := range req.Slots {
+		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[avatarid.Slot] = avatarid.Id
 	}
 
 	// 队伍更新通知
@@ -192,4 +193,22 @@ func (g *Game) ChangeLineupLeaderCsReq(payloadMsg []byte) {
 	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
 
 	g.send(cmd.ChangeLineupLeaderScRsp, rsp)
+}
+
+func (g *Game) QuitLineupCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.QuitLineupCsReq, payloadMsg)
+	req := msg.(*proto.QuitLineupCsReq)
+
+	for id, avatarId := range g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList {
+		if avatarId == req.BaseAvatarId {
+			g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[id] = 0
+		}
+	}
+
+	// 队伍更新通知
+	g.SyncLineupNotify(req.Index)
+
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+	g.send(cmd.QuitLineupScRsp, rsp)
 }

@@ -59,6 +59,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.ReplaceLineupCsReq(payloadMsg) // 快速入队
 	case cmd.ChangeLineupLeaderCsReq:
 		g.ChangeLineupLeaderCsReq(payloadMsg) // 切换角色
+	case cmd.QuitLineupCsReq:
+		g.QuitLineupCsReq(payloadMsg) // 角色离队
 	// 角色管理
 	case cmd.GetHeroBasicTypeInfoCsReq:
 		g.HandleGetHeroBasicTypeInfoCsReq(payloadMsg) // 请求主角基本信息

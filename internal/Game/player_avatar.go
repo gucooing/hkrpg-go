@@ -13,6 +13,7 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 	for _, a := range g.Player.DbAvatar.Avatar {
 		avatarList := new(proto.Avatar)
 		avatarList.FirstMetTimestamp = a.FirstMetTimestamp
+		avatarList.EquipmentUniqueId = a.EquipmentUniqueId
 		avatarList.BaseAvatarId = a.AvatarId
 		avatarList.Promotion = a.Promotion
 		avatarList.Rank = a.Rank
@@ -45,9 +46,6 @@ func (g *Game) DressAvatarCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
 
-	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].BaseAvatarId = req.BaseAvatarId
-	g.Player.DbAvatar.Avatar[req.BaseAvatarId].EquipmentUniqueId = req.EquipmentUniqueId
-
 	g.DressAvatarPlayerSyncScNotify(req.BaseAvatarId, req.EquipmentUniqueId)
 
 	rsp := new(proto.GetChallengeScRsp)
@@ -61,6 +59,12 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
 	avatardb := g.Player.DbAvatar.Avatar[avatarId]
+	if avatardb.EquipmentUniqueId != 0 {
+		g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = 0
+		g.EquipmentPlayerSyncScNotify(g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].Tid, g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].UniqueId)
+	}
+	g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId = avatarId
+	g.Player.DbAvatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
 	avatar := &proto.Avatar{
 		SkilltreeList:     GetKilltreeList(avatarId, 1),
 		Exp:               avatardb.Exp,

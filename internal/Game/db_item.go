@@ -112,13 +112,14 @@ func (g *Game) EquipmentPlayerSyncScNotify(tid, uniqueId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
+	equipmens := g.Player.DbItem.EquipmentMap[uniqueId]
 	equipment := &proto.Equipment{
-		Exp:          0,
-		Promotion:    0,
-		Level:        1,
-		BaseAvatarId: 0,
-		IsProtected:  false,
-		Rank:         1,
+		Exp:          equipmens.Exp,
+		Promotion:    equipmens.Promotion,
+		Level:        equipmens.Level,
+		BaseAvatarId: equipmens.BaseAvatarId,
+		IsProtected:  equipmens.IsProtected,
+		Rank:         equipmens.Rank,
 		UniqueId:     uniqueId,
 		Tid:          tid,
 	}
