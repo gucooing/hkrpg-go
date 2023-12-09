@@ -11,7 +11,8 @@ import (
 type Relic struct {
 	ID             uint32 `json:"ID"`
 	SetID          uint32 `json:"SetID"`
-	Type           string `json:"Type"`
+	TypeS          string `json:"Type"`
+	Type           uint32
 	Rarity         string `json:"Rarity"` // 星级
 	MainAffixGroup uint32 `json:"MainAffixGroup"`
 	SubAffixGroup  uint32 `json:"SubAffixGroup"`
@@ -34,6 +35,22 @@ func (g *GameDataConfig) loadRelic() {
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, relic := range g.RelicMap {
+		switch relic.TypeS {
+		case "HEAD":
+			relic.Type = 1
+		case "HAND":
+			relic.Type = 2
+		case "BODY":
+			relic.Type = 3
+		case "FOOT":
+			relic.Type = 4
+		case "NECK":
+			relic.Type = 5
+		case "OBJECT":
+			relic.Type = 6
+		}
 	}
 	logger.Info("load %v RelicConfig", len(g.RelicMap))
 }

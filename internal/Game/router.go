@@ -13,12 +13,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
 	case cmd.GetCurChallengeCsReq:
 		g.GetCurChallengeCsReq(payloadMsg)
-	case cmd.GetMissionStatusCsReq:
-		g.HandleGetMissionStatusCsReq(payloadMsg)
 	case cmd.GetEnteredSceneCsReq:
 		g.HandleGetEnteredSceneCsReq(payloadMsg)
-	case cmd.GetArchiveDataCsReq:
-		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取存档
 	case cmd.QueryProductInfoCsReq:
 		g.HandleQueryProductInfoCsReq(payloadMsg)
 	case cmd.GetFriendLoginInfoCsReq:
@@ -101,7 +97,9 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetGachaCeilingCsReq(payloadMsg) // 基础卡池保底达到进度请求
 	// 任务
 	case cmd.GetQuestDataCsReq:
-		// TODO // 任务数据请求
+		g.GetQuestDataCsReq(payloadMsg) // 获取任务信息
+	case cmd.GetMissionStatusCsReq:
+		g.HandleGetMissionStatusCsReq(payloadMsg)
 	// 活动
 	case cmd.GetActivityScheduleConfigCsReq:
 		g.HandleGetActivityScheduleConfigCsReq(payloadMsg) // 活动配置请求
@@ -124,7 +122,12 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.SetGameplayBirthdayCsReq(payloadMsg) // 修改生日请求
 	case cmd.SetSignatureCsReq:
 		g.SetSignatureCsReq(payloadMsg) // 简介修改请求
+	// 成就
+	case cmd.GetArchiveDataCsReq:
+		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取成就
 	// 乱七八糟
+	case cmd.InteractPropCsReq:
+		g.InteractPropCsReq()
 	case cmd.GetFirstTalkNpcCsReq:
 		g.GetFirstTalkNpcCsReq()
 	default:

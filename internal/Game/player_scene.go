@@ -16,7 +16,6 @@ func (g *Game) EnterSceneByServerScNotify(entryId uint32) {
 
 	groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
 	if int(mapEntrance.StartGroupID) > len(groupMap) {
-
 		g.send(cmd.EnterSceneByServerScNotify, rsp)
 		return
 	}
@@ -213,24 +212,51 @@ func (g *Game) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.GetSceneMapInfoCsReq, payloadMsg)
 	req := msg.(*proto.GetSceneMapInfoCsReq)
 
-	rsp := &proto.GetSceneMapInfoScRsp{
-		LightenSectionList: make([]uint32, 0),
-		UnlockedChestList: []*proto.MazeChest{
-			{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_NONE},
-			{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
-			{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
-		},
-	}
+	entryId := req.EntryIdList[0]
 
-	for _, entryId := range req.EntryIdList {
-		rsp.EntryId = entryId
-	}
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
 
-	for i := uint32(0); i < 100; i++ {
-		rsp.LightenSectionList = append(rsp.LightenSectionList, i)
-	}
+	if mapEntrance != nil {
+		groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
+		if groupMap != nil {
+			if int(mapEntrance.StartGroupID) > len(groupMap) {
+				return
+			}
 
-	g.send(cmd.GetSceneMapInfoScRsp, rsp)
+			rsp := &proto.GetSceneMapInfoScRsp{
+				LightenSectionList: make([]uint32, 0),
+				UnlockedChestList: []*proto.MazeChest{
+					{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_NORMAL},
+					{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
+					{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
+				},
+			}
+
+			rsp.EntryId = entryId
+
+			for i := uint32(0); i < 100; i++ {
+				rsp.LightenSectionList = append(rsp.LightenSectionList, i)
+			}
+
+			for _, groupInfo := range groupMap {
+				mazeGroup := &proto.MazeGroup{GroupId: groupInfo.GroupId}
+				rsp.MazeGroupList = append(rsp.MazeGroupList, mazeGroup)
+			}
+
+			for _, groupMapList := range groupMap {
+				for _, propList := range groupMapList.PropList {
+					mazeProp := &proto.MazeProp{
+						State:    8,
+						GroupId:  propList.AnchorGroupID,
+						ConfigId: propList.ID,
+					}
+					rsp.MazePropList = append(rsp.MazePropList, mazeProp)
+				}
+			}
+
+			g.send(cmd.GetSceneMapInfoScRsp, rsp)
+		}
+	}
 }
 
 func (g *Game) EnterSceneCsReq(payloadMsg []byte) {

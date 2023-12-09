@@ -58,6 +58,25 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 		AvatarSync:    &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
+
+	if g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId != 0 {
+		avatardb := g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId]
+		avatar := &proto.Avatar{
+			SkilltreeList:     GetKilltreeList(avatarId, 1),
+			Exp:               avatardb.Exp,
+			BaseAvatarId:      avatardb.AvatarId,
+			Rank:              avatardb.Rank,
+			EquipmentUniqueId: avatardb.EquipmentUniqueId,
+			EquipRelicList:    make([]*proto.EquipRelic, 0),
+			TakenRewards:      make([]uint32, 0),
+			FirstMetTimestamp: avatardb.FirstMetTimestamp,
+			Promotion:         avatardb.Promotion,
+			Level:             avatardb.Level,
+		}
+		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
+		g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId].EquipmentUniqueId = 0
+	}
+
 	avatardb := g.Player.DbAvatar.Avatar[avatarId]
 	if avatardb.EquipmentUniqueId != 0 {
 		g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = 0

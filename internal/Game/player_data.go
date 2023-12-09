@@ -3,6 +3,7 @@ package Game
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -16,8 +17,24 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	archiveData := &proto.ArchiveData{
 		ArchiveAvatarIdList:    make([]uint32, 0),
 		ArchiveEquipmentIdList: make([]uint32, 0),
+		ArchiveMonsterIdList:   make([]*proto.MonsterArchive, 0),
 		ArchiveRelicList:       make([]*proto.RelicArchive, 0),
 	}
+	for _, monsterList := range gdconf.GetMonsterConfigMap() {
+		archiveMonsterIdList := &proto.MonsterArchive{
+			Num:       1,
+			MonsterId: monsterList.MonsterID,
+		}
+		archiveData.ArchiveMonsterIdList = append(archiveData.ArchiveMonsterIdList, archiveMonsterIdList)
+	}
+	for _, relicList := range gdconf.GetRelicMap() {
+		archiveRelicList := &proto.RelicArchive{
+			RelicId: relicList.ID,
+			Type:    relicList.Type,
+		}
+		archiveData.ArchiveRelicList = append(archiveData.ArchiveRelicList, archiveRelicList)
+	}
+
 	rsp.ArchiveData = archiveData
 
 	g.send(cmd.GetArchiveDataScRsp, rsp)
@@ -91,7 +108,13 @@ func (g *Game) HandleGetRogueHandbookDataCsReq(payloadMsg []byte) {
 
 func (g *Game) HandleGetChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
-
+	rsp.ChallengeList = make([]*proto.Challenge, 0)
+	for _, challengeList := range gdconf.GetChallengeMazeConfigMap() {
+		challenge := &proto.Challenge{
+			ChallengeId: challengeList.ID,
+		}
+		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
+	}
 	g.send(cmd.GetChallengeScRsp, rsp)
 }
 
@@ -140,12 +163,14 @@ func (g *Game) HandleGetJukeboxDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetJukeboxDataScRsp)
 	rsp.PlayingId = 210000
 	rsp.MusicList = make([]*proto.GetJukeboxDataScRsp_UnlockedMusic, 0)
-	musicList := &proto.GetJukeboxDataScRsp_UnlockedMusic{
-		GroupId: 3,
-		Unkbool: true,
-		Id:      210215,
+	for _, backMusicList := range gdconf.GetBackGroundMusicMap() {
+		musicList := &proto.GetJukeboxDataScRsp_UnlockedMusic{
+			GroupId: backMusicList.GroupID,
+			Unkbool: true,
+			Id:      backMusicList.ID,
+		}
+		rsp.MusicList = append(rsp.MusicList, musicList)
 	}
-	rsp.MusicList = append(rsp.MusicList, musicList)
 	g.send(cmd.GetJukeboxDataScRsp, rsp)
 }
 
@@ -225,4 +250,10 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	rsp.ClientTimeMs = req.ClientTimeMs
 
 	g.send(cmd.PlayerHeartBeatScRsp, rsp)
+}
+
+func (g *Game) InteractPropCsReq() {
+	rsp := new(proto.InteractPropScRsp)
+
+	g.send(cmd.InteractPropScRsp, rsp)
 }

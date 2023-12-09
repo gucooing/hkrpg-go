@@ -181,8 +181,8 @@ func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
 
-	rsp := &proto.ReplaceLineupCsReq{} // TODO
-
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
 	g.send(cmd.ReplaceLineupScRsp, rsp)
 }
 

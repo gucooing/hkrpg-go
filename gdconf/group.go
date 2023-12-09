@@ -27,6 +27,9 @@ type PropList struct {
 	CampID                   uint32  `json:"CampID"`
 	EventID                  uint32  `json:"EventID"`
 	MapLayerID               uint32  `json:"MapLayerID"`
+	AnchorGroupID            uint32  `json:"AnchorGroupID"`
+	AnchorID                 uint32  `json:"AnchorID"`
+	MappingInfoID            uint32  `json:"MappingInfoID"`
 }
 type AnchorList struct {
 	ID         uint32  `json:"ID"`
