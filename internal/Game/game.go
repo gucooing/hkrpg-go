@@ -110,7 +110,5 @@ func (g *Game) exitGame() {
 	netMsg.Type = "Close"
 	g.NetMsgInput <- netMsg
 	g.Db = nil
-	g.Snowflake = nil
-	g.ServerCmdProtoMap = nil
 	return
 }
