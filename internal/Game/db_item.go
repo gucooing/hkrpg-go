@@ -57,6 +57,7 @@ func NewItem(data *PlayerData) *PlayerData {
 	dbItem.MaterialMap[102] = &Material{Tid: 102, Num: 2000}
 	dbItem.MaterialMap[1] = &Material{Tid: 1, Num: 999999999}
 	dbItem.MaterialMap[2] = &Material{Tid: 2, Num: 999999999}
+	dbItem.MaterialMap[221] = &Material{Tid: 221, Num: 9999999}
 
 	data.DbItem = dbItem
 

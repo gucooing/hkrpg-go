@@ -37,6 +37,19 @@ func (g *GameDataConfig) loadEquipmentConfig() {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+
+	playerElementsFilePaths := g.excelPrefix + "EquipmentExpItemConfig.json"
+	playerElementsFiles, err := os.ReadFile(playerElementsFilePaths)
+	if err != nil {
+		info := fmt.Sprintf("open file error: %v", err)
+		panic(info)
+	}
+	err = hjson.Unmarshal(playerElementsFiles, &g.EquipmentConfigMap)
+	if err != nil {
+		info := fmt.Sprintf("parse file error: %v", err)
+		panic(info)
+	}
+
 	logger.Info("load %v EquipmentConfig", len(g.EquipmentConfigMap))
 }
 

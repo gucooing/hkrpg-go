@@ -68,6 +68,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.DressAvatarCsReq(payloadMsg) // 角色光锥装备
 	case cmd.ExpUpEquipmentCsReq:
 		g.ExpUpEquipmentCsReq(payloadMsg) // 光锥升级
+	case cmd.RankUpEquipmentCsReq:
+		g.RankUpEquipmentCsReq(payloadMsg) // 光锥叠影
 	// 场景
 	case cmd.GetSceneMapInfoCsReq:
 		g.HanldeGetSceneMapInfoCsReq(payloadMsg) // 获取地图信息
