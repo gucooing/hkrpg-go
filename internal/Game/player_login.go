@@ -118,8 +118,8 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Exp:        g.Player.Exp,
 		Stamina:    g.Player.Stamina,
 		Mcoin:      0,
-		Hcoin:      0,
-		Scoin:      0,
+		Hcoin:      g.Player.DbItem.MaterialMap[1].Num,
+		Scoin:      g.Player.DbItem.MaterialMap[2].Num,
 		WorldLevel: g.Player.WorldLevel,
 	}
 
@@ -258,5 +258,5 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 
 // 账号离线
 func (g *Game) PlayerLogoutCsReq() {
-	g.UpDataPlayer()
+	g.exitGame()
 }

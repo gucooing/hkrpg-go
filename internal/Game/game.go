@@ -2,6 +2,7 @@ package Game
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -31,6 +32,7 @@ type NetMsg struct {
 	G         *Game
 	CmdId     uint16
 	PlayerMsg pb.Message
+	Type      string
 }
 
 func (g *Game) send(cmdid uint16, playerMsg pb.Message) {
@@ -40,6 +42,7 @@ func (g *Game) send(cmdid uint16, playerMsg pb.Message) {
 	netMsg.G = g
 	netMsg.CmdId = cmdid
 	netMsg.PlayerMsg = playerMsg
+	netMsg.Type = "KcpMsg"
 	g.NetMsgInput <- netMsg
 }
 
@@ -61,6 +64,12 @@ func (g *Game) decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 
 func (g *Game) UpDataPlayer() {
 	var err error
+	if g.KcpConn == nil {
+		return
+	}
+	if g.Uid == 0 {
+		return
+	}
 	dbDate := new(DataBase.Player)
 	dbDate.AccountUid = g.Uid
 	dbDate.PlayerData, err = json.Marshal(g.Player)
@@ -73,4 +82,35 @@ func (g *Game) UpDataPlayer() {
 		return
 	}
 	logger.Info("数据库账号:%v 数据更新", g.Uid)
+}
+
+func (g *Game) AutoUpDataPlayer() {
+	ticker := time.NewTicker(time.Second * 60)
+	for {
+		<-ticker.C
+		if g.KcpConn == nil {
+			return
+		}
+		if g.Db == nil {
+			return
+		}
+		if g.Uid == 0 {
+			continue
+		}
+		logger.Info("[UID:%v] || 定时保存在线玩家数据", g.Uid)
+		g.UpDataPlayer()
+	}
+}
+
+func (g *Game) exitGame() {
+	g.UpDataPlayer()
+	logger.Info("[UID:%v] || 玩家已离线", g.Uid)
+	netMsg := new(NetMsg)
+	netMsg.G = g
+	netMsg.Type = "Close"
+	g.NetMsgInput <- netMsg
+	g.Db = nil
+	g.Snowflake = nil
+	g.ServerCmdProtoMap = nil
+	return
 }

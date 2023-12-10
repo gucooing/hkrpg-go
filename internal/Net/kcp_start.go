@@ -32,6 +32,7 @@ type KcpConnManager struct {
 	kcpListener *kcp.Listener
 	// 会话
 	sessionIdCounter uint32
+	sessionMap       map[uint32]*Game.Game
 	// 事件
 	kcpEventChan chan *KcpEvent
 }
@@ -50,6 +51,7 @@ type RemoteKick struct {
 
 func Run(s *SDK.Server) error {
 	k := KcpConnManager{}
+	k.sessionMap = make(map[uint32]*Game.Game)
 
 	addr := "0.0.0.0:" + strconv.Itoa(int(config.GetConfig().Game.Port))
 	kcpListener, err := kcp.ListenWithOptions(addr)
@@ -79,8 +81,9 @@ func Run(s *SDK.Server) error {
 		g.Db = s.Store
 		g.Snowflake = alg.NewSnowflakeWorker(int64(1))
 		CLIENT_CONN_NUM++
-		go recvHandle(g)
-		go sendNet(g)
+		go g.AutoUpDataPlayer()
+		go k.recvHandle(g)
+		go k.sendNet(g)
 	}
 }
 
@@ -92,7 +95,7 @@ func NewGame(kcpConn *kcp.UDPSession) *Game.Game {
 	return g
 }
 
-func recvHandle(g *Game.Game) {
+func (k *KcpConnManager) recvHandle(g *Game.Game) {
 	payload := make([]byte, PacketMaxLen)
 
 	for {
@@ -147,15 +150,23 @@ func (k *KcpConnManager) kcpEnetHandle(listener *kcp.Listener) {
 	}
 }
 
-func sendNet(g *Game.Game) {
+func (k *KcpConnManager) sendNet(g *Game.Game) {
 	for {
 		netMsg := <-g.NetMsgInput
-		SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
+		switch netMsg.Type {
+		case "KcpMsg":
+			k.SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
+		case "Close":
+			atomic.AddInt32(&CLIENT_CONN_NUM, -1)
+			g.KcpConn.Close()
+			delete(k.sessionMap, g.Uid)
+			return
+		}
 	}
 }
 
 // 发送事件处理
-func SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
+func (k *KcpConnManager) SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
 	rspMsg := new(ProtoMsg)
 	rspMsg.CmdId = cmdid
 	rspMsg.PayloadMessage = playerMsg
@@ -177,6 +188,10 @@ func SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
 		}
 		g.XorKey = createXorPad(g.Seed)
 		logger.Info("uid:%v,seed:%v,密钥交换成功", g.Uid, g.Seed)
+		if k.sessionMap[g.Uid] == nil {
+			k.sessionMap[g.Uid] = g
+		}
+		// 如果不为空则是断线重连
 	}
 }
 

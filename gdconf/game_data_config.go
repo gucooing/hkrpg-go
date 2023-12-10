@@ -19,6 +19,7 @@ type GameDataConfig struct {
 	// 配置表数据
 	AvatarDataMap          map[string]*AvatarData                 // 角色
 	EquipmentConfigMap     map[string]*EquipmentConfig            // 光锥
+	EquipmentExpTypeMap    map[string]map[string]*EquipmentExp    // 光锥经验配置
 	RelicMap               map[string]*Relic                      // 遗器
 	ItemConfigEquipmentMap map[string]*ItemConfigEquipment        // 背包光锥配置
 	ItemConfigRelicMap     map[string]*ItemConfigRelic            // 背包遗器配置
@@ -75,6 +76,7 @@ func (g *GameDataConfig) loadAll() {
 func (g *GameDataConfig) load() {
 	g.loadAvatarData()          // 角色
 	g.loadEquipmentConfig()     // 光锥
+	g.loadEquipmentExpType()    // 光锥经验配置
 	g.loadRelic()               // 遗器
 	g.loadItemConfigEquipment() // 背包光锥配置
 	g.loadItemConfigRelic()     // 背包遗器配置
