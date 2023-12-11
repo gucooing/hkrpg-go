@@ -10,8 +10,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/internal/Game"
-	"github.com/gucooing/hkrpg-go/internal/SDK"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/config"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -26,11 +27,13 @@ const (
 )
 
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
+var KCPCONNMANAGER *KcpConnManager
 
 type KcpConnManager struct {
 	kcpListener *kcp.Listener
 	// 会话
 	sessionIdCounter uint32
+	sessionMap       map[uint32]*Game.Game
 	// 事件
 	kcpEventChan chan *KcpEvent
 }
@@ -41,14 +44,14 @@ type KcpEvent struct {
 	EventMessage any
 }
 
-type RemoteKick struct {
-	regFinishNotifyChan  chan bool
-	userId               uint32
-	kickFinishNotifyChan chan bool
+type GmMsg struct {
+	CmdId     uint16
+	ProtoData []byte
 }
 
-func Run(s *SDK.Server) error {
+func Run() error {
 	k := KcpConnManager{}
+	k.sessionMap = make(map[uint32]*Game.Game)
 
 	addr := "0.0.0.0:" + strconv.Itoa(int(config.GetConfig().Game.Port))
 	kcpListener, err := kcp.ListenWithOptions(addr)
@@ -72,23 +75,26 @@ func Run(s *SDK.Server) error {
 		kcpConn.SetWriteDelay(false)
 		kcpConn.SetWindowSize(256, 256)
 		kcpConn.SetMtu(1200)
+		// 读取密钥相关文件
 		g := NewGame(kcpConn)
-		g.Db = s.Store
+		g.XorKey = config.GetConfig().Ec2b.XorKey()
+		g.Db = DataBase.DBASE
+		g.Snowflake = alg.NewSnowflakeWorker(int64(1))
 		CLIENT_CONN_NUM++
-		go recvHandle(g)
-		go sendNet(g)
+		go g.AutoUpDataPlayer()
+		go k.recvHandle(g)
+		go k.sendNet(g)
 	}
 }
 
 func NewGame(kcpConn *kcp.UDPSession) *Game.Game {
 	g := new(Game.Game)
 	g.KcpConn = kcpConn
-	g.ServerCmdProtoMap = cmd.NewCmdProtoMap()
 	g.NetMsgInput = make(chan *Game.NetMsg, 1000)
 	return g
 }
 
-func recvHandle(g *Game.Game) {
+func (k *KcpConnManager) recvHandle(g *Game.Game) {
 	payload := make([]byte, PacketMaxLen)
 
 	for {
@@ -100,7 +106,7 @@ func recvHandle(g *Game.Game) {
 		}
 		bin = payload[:recvLen]
 		kcpMsgList := make([]*KcpMsg, 0)
-		DecodeBinToPayload(bin, &kcpMsgList)
+		DecodeBinToPayload(bin, &kcpMsgList, g.XorKey)
 		for _, v := range kcpMsgList {
 			// name := g.ServerCmdProtoMap.GetCmdNameByCmdId(v.CmdId)
 			// logger.Error("C --> S: %v", v.CmdId)
@@ -112,6 +118,7 @@ func recvHandle(g *Game.Game) {
 
 // kcp连接事件处理函数
 func (k *KcpConnManager) kcpEnetHandle(listener *kcp.Listener) {
+	KCPCONNMANAGER = k
 	logger.Info("kcp enet handle start")
 	for {
 		enetNotify := <-listener.GetEnetNotifyChan()
@@ -143,15 +150,23 @@ func (k *KcpConnManager) kcpEnetHandle(listener *kcp.Listener) {
 	}
 }
 
-func sendNet(g *Game.Game) {
+func (k *KcpConnManager) sendNet(g *Game.Game) {
 	for {
 		netMsg := <-g.NetMsgInput
-		SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
+		switch netMsg.Type {
+		case "KcpMsg":
+			k.SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
+		case "Close":
+			atomic.AddInt32(&CLIENT_CONN_NUM, -1)
+			g.KcpConn.Close()
+			delete(k.sessionMap, g.Uid)
+			return
+		}
 	}
 }
 
 // 发送事件处理
-func SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
+func (k *KcpConnManager) SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
 	rspMsg := new(ProtoMsg)
 	rspMsg.CmdId = cmdid
 	rspMsg.PayloadMessage = playerMsg
@@ -160,12 +175,42 @@ func SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Message) {
 		logger.Error("cmdid error")
 	}
 	// logger.Debug("S --> C: %v", kcpMsg.CmdId)
-	binMsg := EncodePayloadToBin(kcpMsg, nil)
+	binMsg := EncodePayloadToBin(kcpMsg, g.XorKey)
 	_, err := g.KcpConn.Write(binMsg)
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
 		return
 	}
+	// 密钥交换
+	if cmdid == cmd.PlayerGetTokenScRsp {
+		if g.Seed == 0 {
+			return
+		}
+		g.XorKey = createXorPad(g.Seed)
+		logger.Info("uid:%v,seed:%v,密钥交换成功", g.Uid, g.Seed)
+		if k.sessionMap[g.Uid] == nil {
+			k.sessionMap[g.Uid] = g
+		}
+		// 如果不为空则是断线重连
+	}
+}
+
+func createXorPad(seed uint64) []byte {
+	keyBlock := random.NewKeyBlock(seed, false)
+	xorKey := keyBlock.XorKey()
+	key := make([]byte, 4096)
+	copy(key, xorKey[:])
+	return key
+}
+
+func GmToGs(uid uint32, gmMsg *GmMsg) bool {
+	if KCPCONNMANAGER.sessionMap[uid] == nil {
+		return false
+	}
+	game := KCPCONNMANAGER.sessionMap[uid]
+	payloadMsg := DecodeGmPayloadToProto(game, gmMsg)
+	go game.GMRegisterMessage(gmMsg.CmdId, payloadMsg)
+	return true
 }
 
 func (k *KcpConnManager) kcpNetInfo() {

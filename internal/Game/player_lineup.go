@@ -30,7 +30,7 @@ func (g *Game) SyncLineupNotify(index uint32) {
 			Satiety:    0,
 			Hp:         10000,
 			Id:         avatarId,
-			SpBar:      &proto.SpBarInfo{CurSp: 0, MaxSp: 10000},
+			SpBar:      &proto.SpBarInfo{CurSp: 10000, MaxSp: 10000},
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}
@@ -69,7 +69,7 @@ func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 				Satiety:    0,
 				Hp:         10000,
 				Id:         avatarId,
-				SpBar:      &proto.SpBarInfo{CurSp: 0, MaxSp: 10000},
+				SpBar:      &proto.SpBarInfo{CurSp: 10000, MaxSp: 10000},
 			}
 			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 		}
@@ -104,7 +104,7 @@ func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 			Satiety:    0,
 			Hp:         avatar.Hp,
 			Id:         avatarId,
-			SpBar:      &proto.SpBarInfo{CurSp: 0, MaxSp: 10000},
+			SpBar:      &proto.SpBarInfo{CurSp: 10000, MaxSp: 10000},
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}
@@ -173,15 +173,16 @@ func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
 func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
 	msg := g.decodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
 	req := msg.(*proto.ReplaceLineupCsReq)
-	for id, avatarid := range req.Slots {
-		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[id] = avatarid.Id
+	g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList = []uint32{0, 0, 0, 0}
+	for _, avatarid := range req.Slots {
+		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[avatarid.Slot] = avatarid.Id
 	}
 
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
 
-	rsp := &proto.ReplaceLineupCsReq{} // TODO
-
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
 	g.send(cmd.ReplaceLineupScRsp, rsp)
 }
 
@@ -192,4 +193,22 @@ func (g *Game) ChangeLineupLeaderCsReq(payloadMsg []byte) {
 	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
 
 	g.send(cmd.ChangeLineupLeaderScRsp, rsp)
+}
+
+func (g *Game) QuitLineupCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.QuitLineupCsReq, payloadMsg)
+	req := msg.(*proto.QuitLineupCsReq)
+
+	for id, avatarId := range g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList {
+		if avatarId == req.BaseAvatarId {
+			g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[id] = 0
+		}
+	}
+
+	// 队伍更新通知
+	g.SyncLineupNotify(req.Index)
+
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+	g.send(cmd.QuitLineupScRsp, rsp)
 }

@@ -3,7 +3,12 @@ package random
 import (
 	"encoding/hex"
 	"math/rand"
+	"time"
 )
+
+func GetTimeRand() *rand.Rand {
+	return rand.New(rand.NewSource(time.Now().UnixNano()))
+}
 
 func GetRandomByte(len int) []byte {
 	ret := make([]byte, 0)

@@ -2,6 +2,8 @@ package SDK
 
 import (
 	"encoding/base64"
+	"io"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/pkg/config"
@@ -40,6 +42,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.Ip = s.Config.Game.Addr
 	queryGateway.RegionName = "hkrpg-go"
 	queryGateway.Port = s.Config.Game.Port
+	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Config.Ec2b.Bytes())
 	queryGateway.Unk1 = true
 	queryGateway.Unk2 = true
 	queryGateway.Unk3 = true
@@ -54,4 +57,39 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	}
 	reqdataBase64 := base64.StdEncoding.EncodeToString(reqdata)
 	c.String(200, reqdataBase64)
+}
+
+func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
+	urlPath := c.Request.URL.RawQuery
+
+	rsps, err := http.Get("https://prod-official-asia-dp01.starrails.com/query_gateway?" + urlPath)
+	if err != nil {
+		logger.Error("Request failed:", err)
+		return
+	}
+	defer rsps.Body.Close()
+
+	data, err := io.ReadAll(rsps.Body)
+	if err != nil {
+		logger.Error("Read body failed:", err)
+		return
+	}
+
+	datamsg, _ := base64.StdEncoding.DecodeString(string(data))
+
+	dispatch := new(proto.Gateserver)
+
+	err = pb.Unmarshal(datamsg, dispatch)
+	if err != nil {
+		logger.Error("", err)
+	}
+
+	dispatch.Ip = "127.0.0.1"
+	dispatch.Port = 10001
+
+	rspbin, _ := pb.Marshal(dispatch)
+
+	dispatchb64 := base64.StdEncoding.EncodeToString(rspbin)
+
+	c.String(200, dispatchb64)
 }

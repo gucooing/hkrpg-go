@@ -10,14 +10,19 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+var DBASE *Store
+
 func (s *Store) init() {
 	var err error
+	DBASE = s
 	dsn := s.config.MysqlDsn
-	s.Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	DBASE.Db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
 	})
+	DBASE.config = s.config
+	s.Db = DBASE.Db
 	if err != nil {
 		logger.Error("MySQL数据库连接失败,错误原因:%s", err)
 		return
@@ -31,7 +36,7 @@ func (s *Store) init() {
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(10 * time.Second) // 10 秒钟
 	// 初始化表
-	err = s.Db.AutoMigrate(&Account{}, &Player{})
+	err = s.Db.AutoMigrate(&Account{}, &UidPlayer{}, &Player{})
 	if err != nil {
 		logger.Error("MySQL数据库初始化失败")
 		return

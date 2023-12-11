@@ -9,10 +9,10 @@ import (
 )
 
 type AvatarSkilltree struct {
-	PointID  string `json:"PointID"`
-	Level    string `json:"Level"`
-	MaxLevel string `json:"MaxLevel"`
-	AvatarID string `json:"AvatarID"`
+	PointID  uint32 `json:"PointID"`
+	Level    uint32 `json:"Level"`
+	MaxLevel uint32 `json:"MaxLevel"`
+	AvatarID uint32 `json:"AvatarID"`
 }
 
 func (g *GameDataConfig) loadAvatarSkilltree() {

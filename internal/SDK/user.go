@@ -176,6 +176,19 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 	} else {
 		if account.Token == loginData.Token {
 			combotoken := random.GetRandomByteHexStr(20)
+			logger.Info("combo token:%s", combotoken)
+			uidPlayer := &DataBase.UidPlayer{
+				AccountId:  account.AccountId,
+				IsBan:      false,
+				ComboToken: combotoken,
+			}
+			err = s.Store.AddUidPlayer(uidPlayer)
+			if err != nil {
+				logger.Error("token保存失败,uid: %s", loginData.Uid)
+				c.Header("Content-type", "application/json")
+				_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"token保存失败\",\"retcode\":-103}")
+				return
+			}
 			responseData.Retcode = 0
 			responseData.Message = "OK"
 			responseData.Data = &ComboTokenRspLoginData{

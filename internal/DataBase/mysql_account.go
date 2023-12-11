@@ -14,8 +14,9 @@ func (s *Store) QueryAccountByFieldAccountId(AccountId uint) *Account {
 
 // 添加新账号
 func (s *Store) UpdateAccountFieldByFieldName(account *Account) (uint, error) {
-	if err := s.Db.Create(account).Error; err != nil {
-		return account.AccountId, err
+	if err := s.Db.Create(account).Error; err == nil {
+		return account.AccountId, nil
+	} else {
+		return 0, err
 	}
-	return account.AccountId, nil
 }

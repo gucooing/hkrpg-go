@@ -5,9 +5,13 @@ import (
 	"sync"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	gmpb "github.com/gucooing/hkrpg-go/protocol/gmpb"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
 )
+
+var sharedCmdProtoMap *CmdProtoMap
+var cmdProtoMapOnce sync.Once
 
 type CmdProtoMap struct {
 	cmdIdProtoObjMap        map[uint16]reflect.Type
@@ -17,6 +21,13 @@ type CmdProtoMap struct {
 	cmdNameCmdIdMap         map[string]uint16
 	cmdIdProtoObjCacheMap   map[uint16]*sync.Pool
 	cmdIdProtoObjFastNewMap map[uint16]func() any
+}
+
+func GetSharedCmdProtoMap() *CmdProtoMap {
+	cmdProtoMapOnce.Do(func() {
+		sharedCmdProtoMap = NewCmdProtoMap()
+	})
+	return sharedCmdProtoMap
 }
 
 func NewCmdProtoMap() (r *CmdProtoMap) {
@@ -93,6 +104,7 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(GetFriendApplyListInfoScRsp, func() any { return new(proto.GetFriendApplyListInfoScRsp) })
 	c.regMsg(GetFriendListInfoScRsp, func() any { return new(proto.GetFriendListInfoScRsp) })
 	c.regMsg(GetFriendLoginInfoScRsp, func() any { return new(proto.GetFriendLoginInfoScRsp) })
+	c.regMsg(GetFriendRecommendListInfoScRsp, func() any { return new(proto.GetFriendRecommendListInfoScRsp) })
 	c.regMsg(GetGachaCeilingCsReq, func() any { return new(proto.GetGachaCeilingCsReq) })
 	c.regMsg(GetGachaCeilingScRsp, func() any { return new(proto.GetGachaCeilingScRsp) })
 	c.regMsg(GetGachaInfoScRsp, func() any { return new(proto.GetGachaInfoScRsp) })
@@ -111,6 +123,8 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(GetPlayerDetailInfoScRsp, func() any { return new(proto.GetPlayerDetailInfoScRsp) })
 	c.regMsg(GetPrivateChatHistoryCsReq, func() any { return new(proto.GetPrivateChatHistoryCsReq) })
 	c.regMsg(GetPrivateChatHistoryScRsp, func() any { return new(proto.GetPrivateChatHistoryScRsp) })
+	c.regMsg(GetQuestDataCsReq, func() any { return new(proto.GetQuestDataCsReq) })
+	c.regMsg(GetQuestDataScRsp, func() any { return new(proto.GetQuestDataScRsp) })
 	c.regMsg(GetRogueHandbookDataScRsp, func() any { return new(proto.GetRogueHandbookDataScRsp) })
 	c.regMsg(GetRogueInfoScRsp, func() any { return new(proto.GetRogueInfoScRsp) })
 	c.regMsg(GetRogueScoreRewardInfoScRsp, func() any { return new(proto.GetRogueScoreRewardInfoScRsp) })
@@ -179,6 +193,7 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(SellItemCsReq, func() any { return new(proto.SellItemCsReq) })
 	c.regMsg(SellItemScRsp, func() any { return new(proto.SellItemScRsp) })
 	c.regMsg(SendMsgCsReq, func() any { return new(proto.SendMsgCsReq) })
+	c.regMsg(ServerAnnounceNotify, func() any { return new(proto.ServerAnnounceNotify) })
 	c.regMsg(SetClientPausedCsReq, func() any { return new(proto.SetClientPausedCsReq) })
 	c.regMsg(SetClientPausedScRsp, func() any { return new(proto.SetClientPausedScRsp) })
 	c.regMsg(SetGameplayBirthdayCsReq, func() any { return new(proto.SetGameplayBirthdayCsReq) })
@@ -221,12 +236,15 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(TakeOffRelicCsReq, func() any { return new(proto.TakeOffRelicCsReq) })
 	c.regMsg(TakePromotionRewardCsReq, func() any { return new(proto.TakePromotionRewardCsReq) })
 	c.regMsg(TakePromotionRewardScRsp, func() any { return new(proto.TakePromotionRewardScRsp) })
+	c.regMsg(TextJoinQueryCsReq, func() any { return new(proto.TextJoinQueryCsReq) })
+	c.regMsg(TextJoinQueryScRsp, func() any { return new(proto.TextJoinQueryScRsp) })
 	c.regMsg(UnlockBackGroundMusicCsReq, func() any { return new(proto.UnlockBackGroundMusicCsReq) })
 	c.regMsg(UnlockBackGroundMusicScRsp, func() any { return new(proto.UnlockBackGroundMusicScRsp) })
 	c.regMsg(UnlockSkilltreeCsReq, func() any { return new(proto.UnlockSkilltreeCsReq) })
 	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
 	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
 	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
+	c.regMsg(GmGive, func() any { return new(gmpb.GmGive) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {

@@ -15,6 +15,7 @@ func (s *Server) InitRouter() {
 	// 调度
 	s.Router.GET("/query_dispatch", s.QueryDispatchHandler)
 	s.Router.GET("/query_gateway", s.QueryGatewayHandler)
+	s.Router.GET("/query_gateway_capture", s.QueryGatewayHandlerCapture)
 
 	// 登录
 	s.Router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)
@@ -26,6 +27,9 @@ func (s *Server) InitRouter() {
 		Global.POST("/combo/granter/login/v2/login", s.V2LoginRequestHandler)         // 获取combo token
 		Global.GET("/mdk/agreement/api/getAgreementInfos", s.GetAgreementInfos)
 	}
+
+	// API
+	s.Router.Any("/api", s.Api) // Api
 
 	// 杂
 	s.Router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)

@@ -1,7 +1,6 @@
 package Game
 
 import (
-	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
@@ -16,11 +15,13 @@ type PlayerData struct {
 	Signature      string    // 签名
 	HeadImage      uint32    // 头像
 	Birthday       uint32    // 生日
+	DbScene        *DbScene  // 场景
 	Pos            *Vector   // 存档坐标
 	Rot            *Vector   // 存档朝向
 	DbAvatar       *DbAvatar // 角色数据
 	DbLineUp       *DbLineUp // 队伍
-	Dbgacha        *Dbgacha  // 卡池抽取情况
+	DbItem         *DbItem   // 背包
+	DbGacha        *Dbgacha  // 卡池抽取情况
 	// 下面是在线数据
 	IsPaused              bool   `json:"-"` // 是否暂停
 	GameObjectGuidCounter uint64 `json:"-"` // 游戏对象guid计数器
@@ -51,26 +52,22 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data.WorldLevel = 0
 	data.Signature = "hkrpg-go"
 	data.HeadImage = 208001
+	data = NewScene(data)
 	data.Pos = &Vector{
-		X: -47,
-		Y: 146,
-		Z: 7269,
+		X: -43300,
+		Y: 6,
+		Z: -37960,
 	}
 	data.Rot = &Vector{
 		X: 0,
-		Y: 0,
+		Y: 90000,
 		Z: 0,
 	}
-	data.DbAvatar = new(DbAvatar)
-	data.DbAvatar.MainAvatar = mainAvatar
-	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
-	// TODO 直接给全部角色(包括多个主角，如果出现了问题，那只给一个当前属性主角） *不知道你是不是下一个把四个主角添加到一个队伍的yz
-	for _, a := range gdconf.GetAvatarDataMap() {
-		avatarId := a.AvatarId
-		data.DbAvatar.Avatar[avatarId] = AddAvatar(avatarId)
-	}
+	data = NewAvatar(data, mainAvatar)
 	// 将主角写入队伍
-	data = g.GetDbLineUp(data)
-	data.DbLineUp.LineUpList[0].AvatarIdList[0] = 8001
+	data = NewDbLineUp(data)
+	data = NewItem(data)
+	data = NewGaCha(data)
+
 	return data
 }

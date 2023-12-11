@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 
 type Config struct {
@@ -14,7 +16,9 @@ type Config struct {
 	Http               *Http
 	Dispatch           []Dispatch
 	Game               *Game
+	GmKey              string `json:"GmKey"`
 	Email              *email
+	Ec2b               *random.Ec2b
 }
 type Account struct {
 	AutoCreate bool  `json:"autoCreate"`
@@ -94,6 +98,7 @@ var DefaultConfig = &Config{
 		Addr: "127.0.0.1",
 		Port: 22102,
 	},
+	GmKey: "",
 	Email: &email{
 		From:     "123456789@qq.com",
 		Addr:     "smtp.qq.com:587",

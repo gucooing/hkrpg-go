@@ -20,8 +20,9 @@ func (s *Store) UpdatePlayer(player *Player) error {
 	if player.AccountUid == 0 {
 		return nil
 	}
-	if err := s.Db.Save(player).Error; err != nil {
+	if err := s.Db.Model(&Player{}).Where("account_uid = ?", player.AccountUid).Updates(player).Error; err == nil {
+		return nil
+	} else {
 		return err
 	}
-	return nil
 }
