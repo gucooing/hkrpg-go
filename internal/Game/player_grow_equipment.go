@@ -41,7 +41,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	for _, pileList := range req.ItemCostList.ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
-			break
+			continue
 		}
 		pile := new(Material)
 		pile.Tid = pileList.GetPileItem().ItemId
@@ -65,7 +65,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	for _, equipment := range req.ItemCostList.ItemList {
 		// 如果没有则退出
 		if equipment.GetEquipmentUniqueId() == 0 {
-			break
+			continue
 		}
 		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
 		// 获取光锥配置
@@ -173,11 +173,11 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 	for _, pileList := range req.ItemCostList.ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
-			break
+			continue
 		}
 
 		if pileList.GetPileItem().ItemId != 271 { // 特殊物品,叠影器
-			break
+			continue
 		}
 		pile := new(Material)
 		pile.Tid = pileList.GetPileItem().ItemId
@@ -191,7 +191,7 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 	for _, equipment := range req.ItemCostList.ItemList {
 		// 如果没有则退出
 		if equipment.GetEquipmentUniqueId() == 0 {
-			break
+			continue
 		}
 		if g.Player.DbItem.EquipmentMap[equipment.GetEquipmentUniqueId()].Tid != dbEquipment.Tid {
 			rsp := new(proto.GetChallengeScRsp)
@@ -235,7 +235,7 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	for _, pileList := range req.ItemCostList.ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
-			break
+			continue
 		}
 		pile := new(Material)
 		pile.Tid = pileList.GetPileItem().ItemId
