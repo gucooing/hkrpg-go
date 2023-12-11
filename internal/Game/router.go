@@ -3,6 +3,7 @@ package Game
 import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	pb "google.golang.org/protobuf/proto"
 )
 
 func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
@@ -138,4 +139,11 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		logger.Error("C --> S error router: %v", cmdId)
 	}
 	return
+}
+
+func (g *Game) GMRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
+	switch cmdId {
+	case cmd.GmGive:
+		g.GmGive(payloadMsg) // 获取物品
+	}
 }

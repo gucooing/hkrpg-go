@@ -52,12 +52,8 @@ func NewItem(data *PlayerData) *PlayerData {
 	dbItem.MaterialMap = make(map[uint32]*Material)
 	dbItem.EquipmentMap = make(map[uint32]*Equipment)
 	dbItem.RelicMap = make(map[uint32]*Relic)
-
-	dbItem.MaterialMap[101] = &Material{Tid: 101, Num: 2000}
-	dbItem.MaterialMap[102] = &Material{Tid: 102, Num: 2000}
-	dbItem.MaterialMap[1] = &Material{Tid: 1, Num: 999999999}
-	dbItem.MaterialMap[2] = &Material{Tid: 2, Num: 999999999}
-	dbItem.MaterialMap[221] = &Material{Tid: 221, Num: 9999999}
+	dbItem.MaterialMap[1] = &Material{Tid: 1, Num: 0}
+	dbItem.MaterialMap[2] = &Material{Tid: 2, Num: 0}
 
 	data.DbItem = dbItem
 
@@ -109,6 +105,7 @@ func (g *Game) AddRelic(tid uint32) {
 		BaseAvatarId: 0,
 		IsProtected:  false,
 	}
+	g.ScenePlaneEventScNotify(tid, 1)
 }
 
 func (g *Game) EquipmentPlayerSyncScNotify(tid, uniqueId uint32) {

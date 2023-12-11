@@ -5,9 +5,13 @@ import (
 	"sync"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	gmpb "github.com/gucooing/hkrpg-go/protocol/gmpb"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
 )
+
+var sharedCmdProtoMap *CmdProtoMap
+var cmdProtoMapOnce sync.Once
 
 type CmdProtoMap struct {
 	cmdIdProtoObjMap        map[uint16]reflect.Type
@@ -17,6 +21,13 @@ type CmdProtoMap struct {
 	cmdNameCmdIdMap         map[string]uint16
 	cmdIdProtoObjCacheMap   map[uint16]*sync.Pool
 	cmdIdProtoObjFastNewMap map[uint16]func() any
+}
+
+func GetSharedCmdProtoMap() *CmdProtoMap {
+	cmdProtoMapOnce.Do(func() {
+		sharedCmdProtoMap = NewCmdProtoMap()
+	})
+	return sharedCmdProtoMap
 }
 
 func NewCmdProtoMap() (r *CmdProtoMap) {
@@ -233,6 +244,7 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
 	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
 	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
+	c.regMsg(GmGive, func() any { return new(gmpb.GmGive) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {

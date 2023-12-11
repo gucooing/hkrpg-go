@@ -20,8 +20,6 @@ type Game struct {
 	KcpConn     *kcp.UDPSession
 	Db          *DataBase.Store
 	Snowflake   *alg.SnowflakeWorker // 雪花唯一id生成器
-	// 协议
-	ServerCmdProtoMap *cmd.CmdProtoMap
 	// 玩家数据
 	Player *PlayerData
 	// 密钥
@@ -47,7 +45,7 @@ func (g *Game) send(cmdid uint16, playerMsg pb.Message) {
 }
 
 func (g *Game) decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
-	protoObj = g.ServerCmdProtoMap.GetProtoObjCacheByCmdId(cmdId)
+	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
 	if protoObj == nil {
 		logger.Error("get new proto object is nil")
 		return nil
@@ -58,7 +56,7 @@ func (g *Game) decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		return nil
 	}
 	data := protojson.Format(protoObj)
-	logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, g.ServerCmdProtoMap.GetCmdNameByCmdId(cmdId), data)
+	logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
 	return protoObj
 }
 

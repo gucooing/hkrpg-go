@@ -28,6 +28,9 @@ func (s *Server) InitRouter() {
 		Global.GET("/mdk/agreement/api/getAgreementInfos", s.GetAgreementInfos)
 	}
 
+	// API
+	s.Router.Any("/api", s.Api) // Api
+
 	// 杂
 	s.Router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)
 }

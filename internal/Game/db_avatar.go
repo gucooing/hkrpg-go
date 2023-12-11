@@ -48,6 +48,7 @@ func (g *Game) AddAvatar(avatarId uint32) {
 
 	g.Player.DbAvatar.Avatar[avatarId] = avatar
 	g.AvatarPlayerSyncScNotify(avatarId)
+	g.ScenePlaneEventScNotify(avatarId, 1)
 }
 func GetKilltreeList(avatarId, level uint32) []*proto.AvatarSkillTree {
 	skilltreeList := make([]*proto.AvatarSkillTree, 0)

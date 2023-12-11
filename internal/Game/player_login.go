@@ -164,6 +164,9 @@ func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
 	rsp.ActivityScheduleList = make([]*proto.ActivityScheduleInfo, 0)
 	for _, activity := range gdconf.GetActivityPanelMap() {
+		if activity.Type != 18 {
+			continue
+		}
 		activityScheduleList := &proto.ActivityScheduleInfo{
 			ActivityId: activity.PanelID,
 			EndTime:    4294967295,

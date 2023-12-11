@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	gmpb "github.com/gucooing/hkrpg-go/protocol/gmpb"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
@@ -1068,6 +1069,10 @@ const (
 	GetChallengeCsReq                           = 1752
 )
 
+const (
+	GmGive = 11127
+)
+
 func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(ActivateFarmElementCsReq, func() any { return new(proto.ActivateFarmElementCsReq) })
 	c.regMsg(ActivateFarmElementScRsp, func() any { return new(proto.ActivateFarmElementScRsp) })
@@ -1268,4 +1273,5 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
 	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
 	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
+	c.regMsg(GmGive, func() any { return new(gmpb.GmGive) })
 }

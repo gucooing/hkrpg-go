@@ -58,7 +58,7 @@ func main() {
 
 	// 启动game服务
 	go func() {
-		if err := Net.Run(newserver); err != nil {
+		if err := Net.Run(); err != nil {
 			logger.Error("无法启动GAME服务器")
 		}
 	}()

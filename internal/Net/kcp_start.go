@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/internal/Game"
-	"github.com/gucooing/hkrpg-go/internal/SDK"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/config"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
@@ -27,6 +27,7 @@ const (
 )
 
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
+var KCPCONNMANAGER *KcpConnManager
 
 type KcpConnManager struct {
 	kcpListener *kcp.Listener
@@ -43,13 +44,12 @@ type KcpEvent struct {
 	EventMessage any
 }
 
-type RemoteKick struct {
-	regFinishNotifyChan  chan bool
-	userId               uint32
-	kickFinishNotifyChan chan bool
+type GmMsg struct {
+	CmdId     uint16
+	ProtoData []byte
 }
 
-func Run(s *SDK.Server) error {
+func Run() error {
 	k := KcpConnManager{}
 	k.sessionMap = make(map[uint32]*Game.Game)
 
@@ -78,7 +78,7 @@ func Run(s *SDK.Server) error {
 		// 读取密钥相关文件
 		g := NewGame(kcpConn)
 		g.XorKey = config.GetConfig().Ec2b.XorKey()
-		g.Db = s.Store
+		g.Db = DataBase.DBASE
 		g.Snowflake = alg.NewSnowflakeWorker(int64(1))
 		CLIENT_CONN_NUM++
 		go g.AutoUpDataPlayer()
@@ -90,7 +90,6 @@ func Run(s *SDK.Server) error {
 func NewGame(kcpConn *kcp.UDPSession) *Game.Game {
 	g := new(Game.Game)
 	g.KcpConn = kcpConn
-	g.ServerCmdProtoMap = cmd.NewCmdProtoMap()
 	g.NetMsgInput = make(chan *Game.NetMsg, 1000)
 	return g
 }
@@ -119,6 +118,7 @@ func (k *KcpConnManager) recvHandle(g *Game.Game) {
 
 // kcp连接事件处理函数
 func (k *KcpConnManager) kcpEnetHandle(listener *kcp.Listener) {
+	KCPCONNMANAGER = k
 	logger.Info("kcp enet handle start")
 	for {
 		enetNotify := <-listener.GetEnetNotifyChan()
@@ -201,6 +201,16 @@ func createXorPad(seed uint64) []byte {
 	key := make([]byte, 4096)
 	copy(key, xorKey[:])
 	return key
+}
+
+func GmToGs(uid uint32, gmMsg *GmMsg) bool {
+	if KCPCONNMANAGER.sessionMap[uid] == nil {
+		return false
+	}
+	game := KCPCONNMANAGER.sessionMap[uid]
+	payloadMsg := DecodeGmPayloadToProto(game, gmMsg)
+	go game.GMRegisterMessage(gmMsg.CmdId, payloadMsg)
+	return true
 }
 
 func (k *KcpConnManager) kcpNetInfo() {
