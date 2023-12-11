@@ -224,7 +224,7 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	var pileItem []*Material // 需要删除的突破材料
 	var delScoin uint32      // 扣除的信用点
 
-	// 从背包获取需要叠影的光锥
+	// 从背包获取需要突破的光锥
 	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
 	if dbEquipment == nil {
 		rsp := new(proto.GetChallengeScRsp)
@@ -240,15 +240,7 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 		pile := new(Material)
 		pile.Tid = pileList.GetPileItem().ItemId
 		pile.Num = pileList.GetPileItem().ItemNum
-
 		pileItem = append(pileItem, pile)
-		// 获取材料配置
-		pileconf := gdconf.GetItemConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
-		if pileconf == nil {
-			rsp := &proto.ExpUpEquipmentScRsp{}
-			g.send(cmd.ExpUpEquipmentScRsp, rsp)
-			return
-		}
 	}
 
 	// 删除用来突破的材料
@@ -260,7 +252,7 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	g.Player.DbItem.MaterialMap[2].Num -= delScoin
 	// 增加突破等级
 	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Promotion++
-	// 通知叠影后光锥消息
+	// 通知突破后光锥消息
 	g.EquipmentPlayerSyncScNotify(dbEquipment.Tid, req.EquipmentUniqueId)
 	// 通知角色还有多少信用点
 	g.PlayerPlayerSyncScNotify()
