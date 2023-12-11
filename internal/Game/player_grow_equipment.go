@@ -98,7 +98,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Exp = exp
 
 	// 删除用来升级的材料
-	if pileItem != nil {
+	if len(pileItem) != 0 {
 		g.DelMaterialPlayerSyncScNotify(pileItem)
 	}
 	if len(equipmentList) != 0 {
@@ -113,6 +113,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	g.send(cmd.ExpUpEquipmentScRsp, rsp)
 }
 
+// 角色状态改变时需要发送通知
 func (g *Game) PlayerPlayerSyncScNotify() {
 	notify := &proto.PlayerSyncScNotify{
 		BasicInfo: &proto.PlayerBasicInfo{
@@ -158,6 +159,7 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 	req := msg.(*proto.RankUpEquipmentCsReq)
 
 	var equipmentList []uint32 // 需要删除的equipmentList
+	var pileItem []*Material   // 需要删除的叠影材料
 
 	// 从背包获取需要叠影的光锥
 	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
@@ -166,6 +168,25 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 		g.send(cmd.RankUpEquipmentScRsp, rsp)
 		return
 	}
+
+	// 遍历用来叠影的材料
+	for _, pileList := range req.ItemCostList.ItemList {
+		// 如果没有则退出
+		if pileList.GetPileItem() == nil {
+			break
+		}
+
+		if pileList.GetPileItem().ItemId != 271 { // 特殊物品,叠影器
+			break
+		}
+		pile := new(Material)
+		pile.Tid = pileList.GetPileItem().ItemId
+		pile.Num = pileList.GetPileItem().ItemNum
+		pileItem = append(pileItem, pile)
+
+		g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Rank += pileList.GetPileItem().ItemNum
+	}
+
 	// 遍历用来叠影的光锥
 	for _, equipment := range req.ItemCostList.ItemList {
 		// 如果没有则退出
@@ -181,6 +202,10 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 		g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Rank++
 	}
 
+	// 删除用来突破的材料
+	if len(pileItem) != 0 {
+		g.DelMaterialPlayerSyncScNotify(pileItem)
+	}
 	if len(equipmentList) != 0 {
 		// 删除用来叠影的光锥
 		g.DelEquipmentPlayerSyncScNotify(equipmentList)
@@ -190,4 +215,56 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 
 	rsp := new(proto.GetChallengeScRsp)
 	g.send(cmd.RankUpEquipmentScRsp, rsp)
+}
+
+func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.PromoteEquipmentCsReq, payloadMsg)
+	req := msg.(*proto.PromoteEquipmentCsReq)
+
+	var pileItem []*Material // 需要删除的突破材料
+	var delScoin uint32      // 扣除的信用点
+
+	// 从背包获取需要叠影的光锥
+	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
+	if dbEquipment == nil {
+		rsp := new(proto.GetChallengeScRsp)
+		g.send(cmd.PromoteEquipmentScRsp, rsp)
+		return
+	}
+	// 遍历用来突破的材料
+	for _, pileList := range req.ItemCostList.ItemList {
+		// 如果没有则退出
+		if pileList.GetPileItem() == nil {
+			break
+		}
+		pile := new(Material)
+		pile.Tid = pileList.GetPileItem().ItemId
+		pile.Num = pileList.GetPileItem().ItemNum
+
+		pileItem = append(pileItem, pile)
+		// 获取材料配置
+		pileconf := gdconf.GetItemConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		if pileconf == nil {
+			rsp := &proto.ExpUpEquipmentScRsp{}
+			g.send(cmd.ExpUpEquipmentScRsp, rsp)
+			return
+		}
+	}
+
+	// 删除用来突破的材料
+	if len(pileItem) != 0 {
+		g.DelMaterialPlayerSyncScNotify(pileItem)
+	}
+	// 扣除本次升级需要的信用点
+	delScoin = g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Promotion * 5000
+	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+	// 增加突破等级
+	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Promotion++
+	// 通知叠影后光锥消息
+	g.EquipmentPlayerSyncScNotify(dbEquipment.Tid, req.EquipmentUniqueId)
+	// 通知角色还有多少信用点
+	g.PlayerPlayerSyncScNotify()
+
+	rsp := new(proto.GetChallengeScRsp)
+	g.send(cmd.PromoteEquipmentScRsp, rsp)
 }

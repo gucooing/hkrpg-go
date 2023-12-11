@@ -35,6 +35,7 @@ type GameDataConfig struct {
 	MonsterConfigMap       map[string]*MonsterConfig              // 怪物配置
 	ChallengeMazeConfigMap map[string]*ChallengeMazeConfig        // 挑战配置
 	BackGroundMusicMap     map[string]*BackGroundMusic            // 背景音乐
+	PlayerLevelConfigMap   map[string]*PlayerLevelConfig          // 账号等级经验配置
 }
 
 func InitGameDataConfig() {
@@ -93,4 +94,5 @@ func (g *GameDataConfig) load() {
 	g.loadMonsterConfig()       // 怪物配置
 	g.loadChallengeMazeConfig() // 挑战配置
 	g.loadBackGroundMusic()     // 背景音乐
+	g.loadPlayerLevelConfig()   // 账号等级经验配置
 }
