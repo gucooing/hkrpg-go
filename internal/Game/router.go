@@ -151,5 +151,7 @@ func (g *Game) GMRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 	switch cmdId {
 	case cmd.GmGive:
 		g.GmGive(payloadMsg) // 获取物品
+	case cmd.GmWorldLevel:
+		g.GmWorldLevel(payloadMsg) // 设置世界等级
 	}
 }

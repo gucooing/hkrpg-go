@@ -73,6 +73,13 @@ func GetEquipmentExpByLevel(equipmentType, exp, level, promotion uint32) (uint32
 				return CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Level, exp
 			}
 		} else {
+			if level == 80 {
+				if exp < CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(80)].Exp {
+					return 80, exp
+				} else {
+					return 80, CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(80)].Exp
+				}
+			}
 			exp -= CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Exp
 		}
 	}

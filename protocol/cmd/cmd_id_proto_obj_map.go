@@ -245,6 +245,7 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
 	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
 	c.regMsg(GmGive, func() any { return new(gmpb.GmGive) })
+	c.regMsg(GmWorldLevel, func() any { return new(gmpb.GmWorldLevel) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {

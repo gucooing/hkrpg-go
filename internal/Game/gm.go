@@ -82,3 +82,12 @@ func (g *Game) ScenePlaneEventScNotify(id, num uint32) {
 	notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
 	g.send(cmd.ScenePlaneEventScNotify, notify)
 }
+
+func (g *Game) GmWorldLevel(payloadMsg pb.Message) {
+	req := payloadMsg.(*gmpb.GmWorldLevel)
+
+	g.Player.WorldLevel = req.WorldLevel
+
+	// 账号状态通知
+	g.PlayerPlayerSyncScNotify()
+}

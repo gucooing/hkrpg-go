@@ -12,6 +12,8 @@ import (
 func InitRouter(c *gin.Context) {
 	cmdId := uint16(stou32(c.Query("cmd")))
 	switch cmdId {
+	case 1001:
+		WorldLevel(c)
 	case 1101:
 		State(c)
 	case 1127:

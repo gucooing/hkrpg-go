@@ -87,6 +87,13 @@ func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32)
 				return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
 			}
 		} else {
+			if level == 70 {
+				if exp < CONF.PlayerLevelConfigMap[strconv.Itoa(70)].PlayerExp {
+					return 70, exp
+				} else {
+					return 70, CONF.PlayerLevelConfigMap[strconv.Itoa(70)].PlayerExp
+				}
+			}
 			exp -= CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].PlayerExp
 		}
 	}
