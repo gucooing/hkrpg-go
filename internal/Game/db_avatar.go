@@ -1,7 +1,6 @@
 package Game
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
@@ -51,17 +50,7 @@ func (g *Game) AddAvatar(avatarId uint32) {
 	g.ScenePlaneEventScNotify(avatarId, 1)
 }
 func GetKilltreeList(avatarId, level uint32) []*proto.AvatarSkillTree {
-	skilltreeList := make([]*proto.AvatarSkillTree, 0)
-	skillList := gdconf.GetAvatarSkilltreeMap()
-	for _, a := range skillList {
-		if a[strconv.Itoa(int(level))].AvatarID == avatarId {
-			skilltree := &proto.AvatarSkillTree{
-				PointId: a[strconv.Itoa(int(level))].PointID,
-				Level:   1,
-			}
-			skilltreeList = append(skilltreeList, skilltree)
-		}
-	}
+	skilltreeList := gdconf.GetAvatarSkilltreeById(avatarId, level)
 	return skilltreeList
 }
 

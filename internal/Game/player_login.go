@@ -124,7 +124,7 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	}
 
 	staminaInfoScNotify := &proto.StaminaInfoScNotify{
-		NextRecoverTime: time.Now().UnixNano() + 300,
+		NextRecoverTime: time.Now().Unix() + 300,
 		Stamina:         g.Player.Stamina,
 		ReserveStamina:  g.Player.ReserveStamina,
 	}
@@ -136,7 +136,7 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
-	rsp.NextRecoverTime = time.Now().UnixNano() + 300
+	rsp.NextRecoverTime = time.Now().Unix() + 300
 	rsp.GameplayBirthday = g.Player.Birthday
 	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
 
@@ -188,27 +188,29 @@ func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
 
 func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 	// TODO
+	beginTime := time.Now().AddDate(0, 0, -1).Unix()
+	endTime := beginTime + int64(time.Hour.Seconds()*24*8)
 	rsp := new(proto.GetRogueInfoScRsp)
 	rogueInfo := &proto.RogueInfo{
-		BeginTime: 1701087406,
-		EndTime:   1701778606,
-		SeasonId:  73,
+		BeginTime: beginTime,
+		EndTime:   endTime,
+		SeasonId:  75,
 		RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
 			RogueAbilityPoint: 0,
 		},
 		RogueScoreInfo: &proto.RogueScoreRewardInfo{
-			PoolId:               20,
+			PoolId:               20 + g.Player.WorldLevel,
 			HasTakenInitialScore: true,
 			PoolRefreshed:        true,
 		},
 		RogueData: &proto.RogueInfoData{
 			RogueSeasonInfo: &proto.RogueSeasonInfo{
-				BeginTime: 1701087406,
-				SeasonId:  73,
-				EndTime:   1701778606,
+				BeginTime: beginTime,
+				SeasonId:  75,
+				EndTime:   endTime,
 			},
 			RogueScoreInfo: &proto.RogueScoreRewardInfo{
-				PoolId:               20,
+				PoolId:               20 + g.Player.WorldLevel,
 				HasTakenInitialScore: true,
 				PoolRefreshed:        true,
 			},
@@ -255,6 +257,23 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	rsp := new(proto.PlayerHeartbeatScRsp)
 	// TODO 逆天了，proto太残了，没办法
 	g.send(cmd.PlayerLoginFinishScRsp, rsp)
+
+	// 战斗通行证信息通知
+	notify := &proto.BattlePassInfoNotify{
+		TakenPremiumExtendedReward: 127,
+		TakenFreeExtendedReward:    127,
+		Unkfield:                   4,
+		TakenPremiumReward2:        2251799813685246,
+		TakenFreeReward:            1,
+		TakenPremiumReward1:        1,
+		TakenPremiumOptionalReward: 2251799813685246,
+		Exp:                        800,
+		Level:                      70,
+		CurBpId:                    5,
+		CurWeekAddExpSum:           8000,
+		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
+	}
+	g.send(cmd.BattlePassInfoNotify, notify)
 	// 更新账号数据
 	go g.UpDataPlayer()
 }

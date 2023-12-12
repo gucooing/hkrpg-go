@@ -257,3 +257,16 @@ func (g *Game) InteractPropCsReq() {
 
 	g.send(cmd.InteractPropScRsp, rsp)
 }
+
+func (g *Game) TextJoinQueryCsReq() {
+	rsp := new(proto.TextJoinQueryScRsp)
+	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
+		textJoinList := &proto.TextJoinQueryScRsp_TextJoinInfo{
+			TextItemId:       textJoin.TextJoinID,
+			TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
+		}
+		rsp.TextJoinList = append(rsp.TextJoinList, textJoinList)
+	}
+
+	g.send(cmd.TextJoinQueryScRsp, rsp)
+}

@@ -14,6 +14,8 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 		avatarList := new(proto.Avatar)
 		avatarList.FirstMetTimestamp = a.FirstMetTimestamp
 		avatarList.EquipmentUniqueId = a.EquipmentUniqueId
+		avatarList.EquipRelicList = make([]*proto.EquipRelic, 0)
+		avatarList.TakenRewards = make([]uint32, 0)
 		avatarList.BaseAvatarId = a.AvatarId
 		avatarList.Promotion = a.Promotion
 		avatarList.Rank = a.Rank

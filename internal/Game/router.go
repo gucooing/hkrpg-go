@@ -30,6 +30,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetJukeboxDataCsReq(payloadMsg) // 点歌？
 	case cmd.GetPhoneDataCsReq:
 		g.HandleGetPhoneDataCsReq(payloadMsg) // 获取手机信息?
+	case cmd.TextJoinQueryCsReq:
+		g.TextJoinQueryCsReq() //
 	// 登录
 	case cmd.PlayerGetTokenCsReq:
 		g.HandlePlayerGetTokenCsReq(payloadMsg) // 获取玩家token请求 第一个登录包
@@ -39,6 +41,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandlePlayerLoginFinishCsReq(payloadMsg) // 登录完成包
 	case cmd.PlayerLogoutCsReq:
 		g.PlayerLogoutCsReq() // 客户端退出游戏通知
+	case cmd.GetDailyActiveInfoCsReq:
+		// TODO 每日任务
 	// 队伍
 	case cmd.GetAllLineupDataCsReq:
 		g.HandleGetAllLineupDataCsReq(payloadMsg) // 获取队伍信息请求
