@@ -1,6 +1,9 @@
 package Game
 
 import (
+	"strconv"
+
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -55,6 +58,7 @@ func (g *Game) DressAvatarCsReq(payloadMsg []byte) {
 	g.send(cmd.DressAvatarScRsp, rsp)
 }
 
+// 光锥交换通知
 func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync:    &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
@@ -134,4 +138,132 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 	g.send(cmd.PlayerSyncScNotify, notify)
 
 	g.UpDataPlayer()
+}
+
+func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.AvatarExpUpCsReq, payloadMsg)
+	req := msg.(*proto.AvatarExpUpCsReq)
+	if req.BaseAvatarId == 0 {
+		rsp := &proto.AvatarExpUpScRsp{}
+		g.send(cmd.AvatarExpUpScRsp, rsp)
+		return
+	}
+
+	var pileItem []*Material // 需要删除的升级材料
+	var delScoin uint32      // 扣除的信用点
+	var addExp uint32        // 增加的经验
+
+	// 从背包获取需要升级的角色
+	dbAvatar := g.Player.DbAvatar.Avatar[req.BaseAvatarId]
+	if dbAvatar == nil {
+		rsp := &proto.AvatarExpUpScRsp{}
+		g.send(cmd.AvatarExpUpScRsp, rsp)
+		return
+	}
+
+	gdconfAvatar := gdconf.GetAvatarDataById(strconv.Itoa(int(req.BaseAvatarId)))
+
+	// 遍历用来升级的材料
+	for _, pileList := range req.ItemCostList.ItemList {
+		// 如果没有则退出
+		if pileList.GetPileItem() == nil {
+			continue
+		}
+		pile := new(Material)
+		pile.Tid = pileList.GetPileItem().ItemId
+		pile.Num = pileList.GetPileItem().ItemNum
+
+		pileItem = append(pileItem, pile)
+		// 获取材料配置
+		pileconf := gdconf.GetAvatarExpItemConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		if pileconf == nil {
+			rsp := &proto.AvatarExpUpScRsp{}
+			g.send(cmd.AvatarExpUpScRsp, rsp)
+			return
+		}
+		// 获取要扣多少信用点
+		delScoin += pileconf.Exp / 10 * pileList.GetPileItem().ItemNum
+		// 获取能添加多少经验
+		addExp += pileconf.Exp * pileList.GetPileItem().ItemNum
+	}
+
+	// 计算添加后有多少经验
+	exp := addExp + dbAvatar.Exp
+
+	// 获取能升级到的等级和升级后经验
+	level, exp, newExp := gdconf.GetExpTypeByLevel(gdconfAvatar.ExpGroup, exp, dbAvatar.Level, dbAvatar.Promotion, dbAvatar.AvatarId)
+	if level == 0 && exp == 0 {
+		rsp := &proto.AvatarExpUpScRsp{}
+		g.send(cmd.AvatarExpUpScRsp, rsp)
+	}
+
+	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Exp = exp
+	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Level = level
+
+	// 扣除本次升级需要的信用点
+	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+
+	// 删除用来升级的材料
+	if len(pileItem) != 0 {
+		g.DelMaterialPlayerSyncScNotify(pileItem)
+	}
+
+	// 通知角色还有多少信用点
+	g.PlayerPlayerSyncScNotify()
+	// 返还升级材料
+	if newExp >= 1000 {
+		num := (newExp / 1000) % 10
+		if num >= 5 {
+			g.AddMaterial(212, num/5)
+		}
+		g.AddMaterial(211, num%5)
+	}
+	// 通知升级后角色消息
+	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
+	rsp := &proto.AvatarExpUpScRsp{}
+	g.send(cmd.AvatarExpUpScRsp, rsp)
+}
+
+func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.PromoteAvatarCsReq, payloadMsg)
+	req := msg.(*proto.PromoteAvatarCsReq)
+
+	var pileItem []*Material // 需要删除的突破材料
+	var delScoin uint32      // 扣除的信用点
+
+	// 从背包获取需要升级的角色
+	dbAvatar := g.Player.DbAvatar.Avatar[req.BaseAvatarId]
+	if dbAvatar == nil {
+		rsp := &proto.AvatarExpUpScRsp{}
+		g.send(cmd.AvatarExpUpScRsp, rsp)
+		return
+	}
+
+	// 遍历用来突破的材料
+	for _, pileList := range req.ItemList {
+		// 如果没有则退出
+		if pileList.GetPileItem() == nil {
+			continue
+		}
+		pile := new(Material)
+		pile.Tid = pileList.GetPileItem().ItemId
+		pile.Num = pileList.GetPileItem().ItemNum
+		pileItem = append(pileItem, pile)
+	}
+
+	// 删除用来突破的材料
+	if len(pileItem) != 0 {
+		g.DelMaterialPlayerSyncScNotify(pileItem)
+	}
+	// 计算需要扣除的信用点
+	delScoin = gdconf.GetAvatarPromotionConfigByLevel(dbAvatar.AvatarId, dbAvatar.Promotion)
+	// 增加突破等级
+	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Promotion++
+	// 扣除本次升级需要的信用点
+	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+	// 通知升级后角色消息
+	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+	g.send(cmd.PromoteAvatarScRsp, rsp)
 }

@@ -69,6 +69,10 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetAvatarDataCsReq(payloadMsg) // 请求全部角色信息
 	case cmd.RankUpAvatarCsReq:
 		g.RankUpAvatarCsReq(payloadMsg) // 提高角色命座
+	case cmd.AvatarExpUpCsReq:
+		g.AvatarExpUpCsReq(payloadMsg) // 角色升级
+	case cmd.PromoteAvatarCsReq:
+		g.PromoteAvatarCsReq(payloadMsg) // 角色突破
 	// 光锥
 	case cmd.DressAvatarCsReq:
 		g.DressAvatarCsReq(payloadMsg) // 角色光锥装备

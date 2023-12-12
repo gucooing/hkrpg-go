@@ -86,7 +86,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	exp := addExp + dbEquipment.Exp
 
 	// 获取能升级到的等级和升级后经验
-	level, exp := gdconf.GetEquipmentExpByLevel(equConf.ExpType, exp, dbEquipment.Level, dbEquipment.Promotion)
+	level, exp := gdconf.GetEquipmentExpByLevel(equConf.ExpType, exp, dbEquipment.Level, dbEquipment.Promotion, dbEquipment.Tid)
 	if level == 0 && exp == 0 {
 		rsp := &proto.ExpUpEquipmentScRsp{}
 		g.send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -264,11 +264,12 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	if len(pileItem) != 0 {
 		g.DelMaterialPlayerSyncScNotify(pileItem)
 	}
-	// 扣除本次升级需要的信用点
-	delScoin = g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Promotion * 5000
-	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+	// 计算需要扣除的信用点
+	delScoin = gdconf.GetEquipmentPromotionConfigByLevel(dbEquipment.Tid, dbEquipment.Promotion)
 	// 增加突破等级
 	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Promotion++
+	// 扣除本次升级需要的信用点
+	g.Player.DbItem.MaterialMap[2].Num -= delScoin
 	// 通知突破后光锥消息
 	g.EquipmentPlayerSyncScNotify(dbEquipment.Tid, req.EquipmentUniqueId)
 	// 通知角色还有多少信用点
