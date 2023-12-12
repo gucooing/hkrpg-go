@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -169,6 +170,8 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 
+	gdconfEquipment := gdconf.GetEquipmentConfigById(strconv.Itoa(int(dbEquipment.Tid)))
+
 	// 遍历用来叠影的材料
 	for _, pileList := range req.ItemCostList.ItemList {
 		// 如果没有则退出
@@ -176,9 +179,23 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 			continue
 		}
 
-		if pileList.GetPileItem().ItemId != 271 { // 特殊物品,叠影器
+		// 特殊物品,叠影器
+		switch gdconfEquipment.Rarity {
+		case "CombatPowerLightconeRarity3":
+			// 三星貌似没有叠影器
+		case "CombatPowerLightconeRarity4":
+			if pileList.GetPileItem().ItemId != 121001 {
+				continue
+			}
+		case "CombatPowerLightconeRarity5":
+			if pileList.GetPileItem().ItemId != 271 {
+				continue
+			}
+		default:
+			logger.Warn("异常光锥:%v,查询不到星级", gdconfEquipment.EquipmentID)
 			continue
 		}
+
 		pile := new(Material)
 		pile.Tid = pileList.GetPileItem().ItemId
 		pile.Num = pileList.GetPileItem().ItemNum

@@ -61,29 +61,45 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
 
+	avatardb := g.Player.DbAvatar.Avatar[avatarId]
+
+	// 目标光锥是否已被装备
 	if g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId != 0 {
-		avatardb := g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId]
+		avatardbs := g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId]
+		// 获取要装备的角色光锥,与目标光锥角色交换
 		avatar := &proto.Avatar{
 			SkilltreeList:     GetKilltreeList(avatarId, 1),
-			Exp:               avatardb.Exp,
-			BaseAvatarId:      avatardb.AvatarId,
-			Rank:              avatardb.Rank,
-			EquipmentUniqueId: avatardb.EquipmentUniqueId,
+			Exp:               avatardbs.Exp,
+			BaseAvatarId:      avatardbs.AvatarId,
+			Rank:              avatardbs.Rank,
+			EquipmentUniqueId: avatardb.EquipmentUniqueId, // 设置成目标角色的光锥
 			EquipRelicList:    make([]*proto.EquipRelic, 0),
 			TakenRewards:      make([]uint32, 0),
-			FirstMetTimestamp: avatardb.FirstMetTimestamp,
-			Promotion:         avatardb.Promotion,
-			Level:             avatardb.Level,
+			FirstMetTimestamp: avatardbs.FirstMetTimestamp,
+			Promotion:         avatardbs.Promotion,
+			Level:             avatardbs.Level,
 		}
 		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-		g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId].EquipmentUniqueId = 0
+		// 交换光锥
+		g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
+		if avatardb.EquipmentUniqueId == 0 {
+		} else {
+			equipments := g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId]
+			equipmentLists := &proto.Equipment{
+				Exp:          equipments.Exp,
+				Promotion:    equipments.Promotion,
+				Level:        equipments.Level,
+				BaseAvatarId: avatardbs.AvatarId,
+				IsProtected:  equipments.IsProtected,
+				Rank:         equipments.Rank,
+				UniqueId:     equipments.UniqueId,
+				Tid:          equipments.Tid,
+			}
+			notify.EquipmentList = append(notify.EquipmentList, equipmentLists)
+			g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = avatardbs.AvatarId
+		}
 	}
 
-	avatardb := g.Player.DbAvatar.Avatar[avatarId]
-	if avatardb.EquipmentUniqueId != 0 {
-		g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = 0
-		g.EquipmentPlayerSyncScNotify(g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].Tid, g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].UniqueId)
-	}
 	g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId = avatarId
 	g.Player.DbAvatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
 	avatar := &proto.Avatar{
