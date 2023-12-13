@@ -16,11 +16,24 @@ type AvatarPromotionConfig struct {
 	MaxLevel           uint32               `json:"MaxLevel"`           // 突破前最大等级
 	PlayerLevelRequire uint32               `json:"PlayerLevelRequire"` // 突破需要的账号等级
 	WorldLevelRequire  uint32               `json:"WorldLevelRequire"`  // 突破需要的世界等级
+	AttackBase         *Value               `json:"AttackBase"`         // 基础攻击
+	AttackAdd          *Value               `json:"AttackAdd"`          // 升级攻击加成
+	DefenceBase        *Value               `json:"DefenceBase"`        // 基础防御
+	DefenceAdd         *Value               `json:"DefenceAdd"`         // 升级防御加成
+	HPBase             *Value               `json:"HPBase"`             // 基础生命
+	HPAdd              *Value               `json:"HPAdd"`              // 升级生命加成
+	SpeedBase          *Value               `json:"SpeedBase"`          // 速度
+	CriticalChance     *Value               `json:"CriticalChance"`     // 暴击率
+	CriticalDamage     *Value               `json:"CriticalDamage"`     // 暴击伤害
+	BaseAggro          *Value               `json:"BaseAggro"`          // 基础嘲讽范围
 }
 
 type PromotionCostList struct {
 	ItemID  uint32 `json:"ItemID"`
 	ItemNum uint32 `json:"ItemNum"`
+}
+type Value struct {
+	Value float64 `json:"Value"`
 }
 
 func (g *GameDataConfig) loadAvatarPromotionConfig() {
@@ -53,4 +66,8 @@ func GetAvatarPromotionConfigByLevel(avatarId, promotion uint32) uint32 {
 func GetAvatarMaxLevel(avatarId, promotion uint32) uint32 {
 	promotionConfig := CONF.AvatarPromotionConfigMap[strconv.Itoa(int(avatarId))][strconv.Itoa(int(promotion))]
 	return promotionConfig.MaxLevel
+}
+
+func GetAvatarPromotionConfigMap() map[string]map[string]*AvatarPromotionConfig {
+	return CONF.AvatarPromotionConfigMap
 }

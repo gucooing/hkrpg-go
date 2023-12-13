@@ -18,7 +18,7 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 		avatarList.FirstMetTimestamp = a.FirstMetTimestamp
 		avatarList.EquipmentUniqueId = a.EquipmentUniqueId
 		avatarList.EquipRelicList = make([]*proto.EquipRelic, 0)
-		avatarList.TakenRewards = make([]uint32, 0)
+		avatarList.TakenRewards = a.TakenRewards
 		avatarList.BaseAvatarId = a.AvatarId
 		avatarList.Promotion = a.Promotion
 		avatarList.Rank = a.Rank
@@ -78,7 +78,7 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 			Rank:              avatardbs.Rank,
 			EquipmentUniqueId: avatardb.EquipmentUniqueId, // 设置成目标角色的光锥
 			EquipRelicList:    make([]*proto.EquipRelic, 0),
-			TakenRewards:      make([]uint32, 0),
+			TakenRewards:      avatardb.TakenRewards,
 			FirstMetTimestamp: avatardbs.FirstMetTimestamp,
 			Promotion:         avatardbs.Promotion,
 			Level:             avatardbs.Level,
@@ -113,7 +113,7 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 		Rank:              avatardb.Rank,
 		EquipmentUniqueId: avatardb.EquipmentUniqueId,
 		EquipRelicList:    make([]*proto.EquipRelic, 0),
-		TakenRewards:      make([]uint32, 0),
+		TakenRewards:      avatardb.TakenRewards,
 		FirstMetTimestamp: avatardb.FirstMetTimestamp,
 		Promotion:         avatardb.Promotion,
 		Level:             avatardb.Level,
@@ -312,4 +312,38 @@ func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
 		Level:        req.Level,
 	}
 	g.send(cmd.UnlockSkilltreeScRsp, rsp)
+}
+
+func (g *Game) TakePromotionRewardCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.TakePromotionRewardCsReq, payloadMsg)
+	req := msg.(*proto.TakePromotionRewardCsReq)
+
+	if g.Player.DbAvatar.Avatar[req.BaseAvatarId] == nil {
+		rsp := &proto.TakePromotionRewardScRsp{
+			Retcode: uint32(proto.Retcode_RETCODE_RET_FAIL),
+		}
+		g.send(cmd.TakePromotionRewardScRsp, rsp)
+	}
+	g.Player.DbAvatar.Avatar[req.BaseAvatarId].TakenRewards = append(g.Player.DbAvatar.Avatar[req.BaseAvatarId].TakenRewards, req.Promotion)
+	// 通知升级后角色信息
+	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
+
+	item := &proto.Item{
+		ItemId:      101,
+		Level:       0,
+		Num:         1,
+		MainAffixId: 0,
+		Rank:        0,
+		Promotion:   0,
+		UniqueId:    0,
+	}
+
+	g.AddMaterial(101, 1)
+
+	rsq := &proto.TakePromotionRewardScRsp{
+		RewardList: &proto.ItemList{ItemList: []*proto.Item{
+			item,
+		}},
+	}
+	g.send(cmd.TakePromotionRewardScRsp, rsq)
 }

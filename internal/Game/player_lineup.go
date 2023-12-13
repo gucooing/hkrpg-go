@@ -24,11 +24,12 @@ func (g *Game) SyncLineupNotify(index uint32) {
 		if avatarId == 0 {
 			continue
 		}
+		avatar := g.Player.DbAvatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
 			AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,
 			Slot:       uint32(slot),
 			Satiety:    0,
-			Hp:         10000,
+			Hp:         avatar.Hp,
 			Id:         avatarId,
 			SpBar:      &proto.SpBarInfo{CurSp: 10000, MaxSp: 10000},
 		}
@@ -63,11 +64,12 @@ func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 			if avatarId == 0 {
 				continue
 			}
+			avatar := g.Player.DbAvatar.Avatar[avatarId]
 			lineupAvatar := &proto.LineupAvatar{
 				AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,
 				Slot:       uint32(slot),
 				Satiety:    0,
-				Hp:         10000,
+				Hp:         avatar.Hp,
 				Id:         avatarId,
 				SpBar:      &proto.SpBarInfo{CurSp: 10000, MaxSp: 10000},
 			}

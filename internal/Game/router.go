@@ -75,6 +75,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.PromoteAvatarCsReq(payloadMsg) // 角色突破
 	case cmd.UnlockSkilltreeCsReq:
 		g.UnlockSkilltreeCsReq(payloadMsg) // 行迹升级
+	case cmd.TakePromotionRewardCsReq:
+		g.TakePromotionRewardCsReq(payloadMsg) // 领取角色突破奖励
 	// 光锥
 	case cmd.DressAvatarCsReq:
 		g.DressAvatarCsReq(payloadMsg) // 角色光锥装备

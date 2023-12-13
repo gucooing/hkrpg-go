@@ -1,6 +1,7 @@
 package Game
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
@@ -24,11 +25,22 @@ type Avatar struct {
 	Hp                uint32       // 血量
 	SkilltreeList     []*Skilltree // 技能等级数据 [id]level
 	EquipmentUniqueId uint32       // 装备光锥
+	TakenRewards      []uint32     // 已领取的突破奖励
 }
 
 type Skilltree struct {
 	PointId uint32
 	Level   uint32
+}
+
+func (g *Game) GetAvatarHp(avatarId uint32) uint32 {
+	level := g.Player.DbAvatar.Avatar[avatarId].Level
+	promotion := g.Player.DbAvatar.Avatar[avatarId].Promotion
+
+	avatarPromotion := gdconf.GetAvatarPromotionConfigMap()[strconv.Itoa(int(avatarId))][strconv.Itoa(int(promotion))]
+
+	hp := avatarPromotion.HPBase.Value + (avatarPromotion.HPAdd.Value * float64(level))
+	return uint32(hp)
 }
 
 func NewAvatar(data *PlayerData, mainAvatar proto.HeroBasicType) *PlayerData {
@@ -57,6 +69,7 @@ func (g *Game) AddAvatar(avatarId uint32) {
 	avatar.Rank = 0
 	avatar.Hp = 10000
 	avatar.EquipmentUniqueId = 0
+	avatar.TakenRewards = make([]uint32, 0)
 	for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
 		skilltreeList := &Skilltree{
 			PointId: id,
@@ -97,7 +110,7 @@ func (g *Game) AvatarPlayerSyncScNotify(avatarId uint32) {
 		Rank:              avatardb.Rank,
 		EquipmentUniqueId: avatardb.EquipmentUniqueId,
 		EquipRelicList:    make([]*proto.EquipRelic, 0),
-		TakenRewards:      make([]uint32, 0),
+		TakenRewards:      avatardb.TakenRewards,
 		FirstMetTimestamp: avatardb.FirstMetTimestamp,
 		Promotion:         avatardb.Promotion,
 		Level:             avatardb.Level,
