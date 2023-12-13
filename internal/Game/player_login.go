@@ -147,11 +147,10 @@ func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
 	rsp.Gender = proto.Gender_GenderMan
 	rsp.CurBasicType = g.Player.DbAvatar.MainAvatar
-	avatarid := []uint32{8001, 8002, 8003, 8004}
-	for _, id := range avatarid {
+	for _, id := range g.Player.DbAvatar.MainAvatarList {
 		basicTypeInfoList := &proto.HeroBasicTypeInfo{
 			BasicType:     proto.HeroBasicType(id),
-			SkillTreeList: GetKilltreeList(id, 1),
+			SkillTreeList: gdconf.GetMainAvatarSkilltreeListById(id),
 			Rank:          0,
 		}
 		rsp.BasicTypeInfoList = append(rsp.BasicTypeInfoList, basicTypeInfoList)

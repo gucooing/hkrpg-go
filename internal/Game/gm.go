@@ -18,19 +18,21 @@ func (g *Game) GmGive(payloadMsg pb.Message) {
 				continue
 			}
 			g.AddAvatar(avatar)
+			g.AddMaterial(avatar+10000, 6)
 		}
 		for _, equipment := range gdconf.GetEquipmentList() {
 			if equipment == 0 {
 				continue
 			}
 			g.AddEquipment(equipment)
+			time.Sleep(10 * time.Millisecond)
 		}
 		for _, item := range gdconf.GetItemList() {
 			if item == 0 {
 				continue
 			}
 			g.AddMaterial(item, 99999)
-			time.Sleep(time.Microsecond)
+			time.Sleep(10 * time.Millisecond)
 		}
 	} else {
 		for _, item := range gdconf.GetItemList() {
@@ -58,6 +60,10 @@ func (g *Game) GmGive(payloadMsg pb.Message) {
 				g.AddEquipment(equipment)
 				return
 			}
+		}
+		// 特殊物品(不再EquipmentList表中的物品)
+		if req.ItemId/10000 == 1 {
+			g.AddMaterial(req.ItemId, req.ItemCount)
 		}
 	}
 	g.UpDataPlayer()

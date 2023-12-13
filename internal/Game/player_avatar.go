@@ -27,7 +27,7 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 		if a.AvatarId/100 == 80 {
 
 		} else {
-			avatarList.SkilltreeList = GetKilltreeList(a.AvatarId, 1)
+			avatarList.SkilltreeList = g.GetSkilltree(a.AvatarId)
 		}
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
@@ -72,7 +72,7 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 		avatardbs := g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId]
 		// 获取要装备的角色光锥,与目标光锥角色交换
 		avatar := &proto.Avatar{
-			SkilltreeList:     GetKilltreeList(avatarId, 1),
+			SkilltreeList:     g.GetSkilltree(avatardbs.AvatarId),
 			Exp:               avatardbs.Exp,
 			BaseAvatarId:      avatardbs.AvatarId,
 			Rank:              avatardbs.Rank,
@@ -107,7 +107,7 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 	g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId = avatarId
 	g.Player.DbAvatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
 	avatar := &proto.Avatar{
-		SkilltreeList:     GetKilltreeList(avatarId, 1),
+		SkilltreeList:     g.GetSkilltree(avatarId),
 		Exp:               avatardb.Exp,
 		BaseAvatarId:      avatarId,
 		Rank:              avatardb.Rank,
@@ -266,4 +266,50 @@ func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
 	g.send(cmd.PromoteAvatarScRsp, rsp)
+}
+
+func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
+	msg := g.decodePayloadToProto(cmd.UnlockSkilltreeCsReq, payloadMsg)
+	req := msg.(*proto.UnlockSkilltreeCsReq)
+
+	var pileItem []*Material // 需要删除的升级材料
+
+	avatarId := req.PointId / 1000 // 获取要升级技能的角色Id
+	if g.Player.DbAvatar.Avatar[avatarId] == nil {
+		rsp := &proto.UnlockSkilltreeScRsp{
+			Retcode: uint32(proto.Retcode_RETCODE_RET_FAIL),
+		}
+		g.send(cmd.UnlockSkilltreeScRsp, rsp)
+	}
+
+	// 遍历用来升级的材料
+	for _, pileList := range req.ItemList {
+		// 如果没有则退出
+		if pileList.GetPileItem() == nil {
+			continue
+		}
+		pile := new(Material)
+		pile.Tid = pileList.GetPileItem().ItemId
+		pile.Num = pileList.GetPileItem().ItemNum
+		pileItem = append(pileItem, pile)
+	}
+
+	// 删除用来突破的材料
+	if len(pileItem) != 0 {
+		g.DelMaterialPlayerSyncScNotify(pileItem)
+	}
+	// 升级
+	for id, skilltree := range g.Player.DbAvatar.Avatar[avatarId].SkilltreeList {
+		if skilltree.PointId == req.PointId {
+			g.Player.DbAvatar.Avatar[avatarId].SkilltreeList[id].Level = req.Level
+		}
+	}
+	// 通知升级后角色消息
+	g.AvatarPlayerSyncScNotify(avatarId)
+	rsp := &proto.UnlockSkilltreeScRsp{
+		BaseAvatarId: avatarId,
+		PointId:      req.PointId,
+		Level:        req.Level,
+	}
+	g.send(cmd.UnlockSkilltreeScRsp, rsp)
 }

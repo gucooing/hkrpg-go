@@ -18,6 +18,10 @@ func InitRouter(c *gin.Context) {
 		State(c)
 	case 1127:
 		Give(c)
+	default:
+		c.JSON(404, gin.H{
+			"code": -1,
+		})
 	}
 }
 
