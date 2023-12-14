@@ -54,13 +54,19 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data.HeadImage = 208001
 	data = NewScene(data)
 	data.Pos = &Vector{
-		X: -43300,
-		Y: 6,
-		Z: -37960,
+		/*
+			X: -43300,
+			Y: 6,
+			Z: -37960,
+		*/
+		X: 22842,
+		Y: 3443,
+		Z: -109125,
 	}
 	data.Rot = &Vector{
 		X: 0,
-		Y: 90000,
+		// Y: 90000,
+		Y: 289010,
 		Z: 0,
 	}
 	data = NewAvatar(data, mainAvatar)

@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/internal/DataBase"
@@ -13,10 +14,11 @@ import (
 )
 
 type Server struct {
-	Config *config.Config
-	Store  *DataBase.Store
-	Router *gin.Engine
-	server *http.Server
+	Config     *config.Config
+	Store      *DataBase.Store
+	Router     *gin.Engine
+	server     *http.Server
+	AutoCreate sync.Mutex
 }
 
 func (s *Server) Start() error {

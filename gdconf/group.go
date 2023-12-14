@@ -12,15 +12,18 @@ import (
 )
 
 type LevelGroup struct {
-	GroupId    uint32
-	PropList   []PropList   `json:"PropList"`
-	AnchorList []AnchorList `json:"AnchorList"`
+	GroupId     uint32
+	PropList    []PropList    `json:"PropList"`    // 实体列表
+	MonsterList []MonsterList `json:"MonsterList"` // 怪物列表
+	NPCList     []NPCList     `json:"NPCList"`     // NPC列表
+	AnchorList  []AnchorList  `json:"AnchorList"`
 }
 type PropList struct {
 	ID                       uint32  `json:"ID"`
 	PosX                     float64 `json:"PosX"`
 	PosY                     float64 `json:"PosY"`
 	PosZ                     float64 `json:"PosZ"`
+	RotY                     float64 `json:"RotY"`
 	Name                     string  `json:"Name"`
 	PropID                   uint32  `json:"PropID"`
 	IsOverrideInitLevelGraph bool    `json:"IsOverrideInitLevelGraph"`
@@ -30,6 +33,8 @@ type PropList struct {
 	AnchorGroupID            uint32  `json:"AnchorGroupID"`
 	AnchorID                 uint32  `json:"AnchorID"`
 	MappingInfoID            uint32  `json:"MappingInfoID"`
+	ChestClosed              string  `json:"ChestClosed"`
+	State                    string  `json:"State"`
 }
 type AnchorList struct {
 	ID         uint32  `json:"ID"`
@@ -41,6 +46,32 @@ type AnchorList struct {
 	RotY       float64 `json:"RotY"`
 	RotZ       float64 `json:"RotZ "`
 	MapLayerID uint32  `json:"MapLayerID"`
+}
+
+type MonsterList struct {
+	ID           uint32  `json:"ID"`
+	PosX         float64 `json:"PosX"`
+	PosY         float64 `json:"PosY"`
+	PosZ         float64 `json:"PosZ"`
+	Name         string  `json:"Name"`
+	RotY         float64 `json:"RotY"`
+	NPCMonsterID uint32  `json:"NPCMonsterID"`
+	CampID       uint32  `json:"CampID"`
+	EventID      uint32  `json:"EventID"`
+}
+
+type NPCList struct {
+	ID             uint32   `json:"ID"`
+	PosX           float64  `json:"PosX"`
+	PosY           float64  `json:"PosY"`
+	PosZ           float64  `json:"PosZ"`
+	Name           string   `json:"Name"`
+	RotY           float64  `json:"RotY"`
+	NPCID          uint32   `json:"NPCID"`
+	DialogueGroups []uint32 `json:"DialogueGroups"`
+	MapLayerID     uint32   `json:"MapLayerID"`
+	BoardShowList  []uint32 `json:"BoardShowList"`
+	RaidID         uint32   `json:"RaidID"`
 }
 
 func (g *GameDataConfig) loadGroup() {
@@ -127,4 +158,51 @@ func extractNumbers(filename string) (uint32, uint32, uint32) {
 	gValue, _ := strconv.ParseUint(gValueStr, 10, 32)
 
 	return uint32(pValue), uint32(fValue), uint32(gValue)
+}
+
+func GetStateValue(state string) uint32 {
+	stateMap := map[string]uint32{
+		"Closed":            0,
+		"Open":              1,
+		"Locked":            2,
+		"BridgeState1":      3,
+		"BridgeState2":      4,
+		"BridgeState3":      5,
+		"BridgeState4":      6,
+		"CheckPointDisable": 8,
+		"CheckPointEnable":  8,
+		"TriggerDisable":    9,
+		"TriggerEnable":     10,
+		"ChestLocked":       11,
+		"ChestClosed":       12,
+		"ChestUsed":         13,
+		"Elevator1":         14,
+		"Elevator2":         15,
+		"Elevator3":         16,
+		"WaitActive":        17,
+		"EventClose":        18,
+		"EventOpen":         19,
+		"Hidden":            20,
+		"TeleportGate0":     21,
+		"TeleportGate1":     22,
+		"TeleportGate2":     23,
+		"TeleportGate3":     24,
+		"Destructed":        25,
+		"CustomState01":     101,
+		"CustomState02":     102,
+		"CustomState03":     103,
+		"CustomState04":     104,
+		"CustomState05":     105,
+		"CustomState06":     106,
+		"CustomState07":     107,
+		"CustomState08":     108,
+		"CustomState09":     109,
+	}
+
+	value, ok := stateMap[state]
+	if !ok {
+		return 0
+	}
+
+	return value
 }
