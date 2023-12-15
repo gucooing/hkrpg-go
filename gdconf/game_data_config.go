@@ -41,6 +41,9 @@ type GameDataConfig struct {
 	BackGroundMusicMap          map[string]*BackGroundMusic                     // 背景音乐
 	PlayerLevelConfigMap        map[string]*PlayerLevelConfig                   // 账号等级经验配置
 	TextJoinConfigMap           map[string]*TextJoinConfig                      // 文本？
+	PlaneEventMap               map[string]map[string]*PlaneEvent               // 大世界怪物信息
+	StageConfigMap              map[string]*StageConfig                         // 具体怪物群信息
+	LoadingDescMap              map[string]*LoadingDesc                         // 战斗随机种子
 }
 
 func InitGameDataConfig() {
@@ -105,4 +108,7 @@ func (g *GameDataConfig) load() {
 	g.loadBackGroundMusic()          // 背景音乐
 	g.loadPlayerLevelConfig()        // 账号等级经验配置
 	g.loadTextJoinConfig()           // 文本？
+	g.loadPlaneEvent()               // 大世界怪物信息
+	g.loadStageConfig()              // 具体怪物群信息
+	g.loadLoadingDesc()              // 战斗随机种子
 }

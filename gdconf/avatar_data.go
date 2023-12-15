@@ -15,6 +15,7 @@ type AvatarData struct {
 	ExpGroup       uint32        `json:"ExpGroup"`       // 经验ID
 	RewardList     []*RewardList `json:"RewardList"`     // 升级奖励
 	AvatarBaseType string        `json:"AvatarBaseType"` // 角色类型
+	SkillList      []uint32      `json:"SkillList"`
 }
 
 type RewardList struct {

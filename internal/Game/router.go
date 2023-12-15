@@ -100,7 +100,10 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.EnterSceneCsReq:
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
 	// 战斗
-
+	case cmd.SceneCastSkillCsReq:
+		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
+	case cmd.PVEBattleResultCsReq:
+		g.PVEBattleResultCsReq(payloadMsg) // PVE战斗结算
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品

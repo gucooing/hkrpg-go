@@ -14,6 +14,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	rsp := new(proto.EnterSceneByServerScNotify)
 	leaderEntityId := uint32(g.GetNextGameObjectGuid())
 
+	entityMap := make(map[uint32]uint32)
 	var groupID uint32
 	var anchorID uint32
 	var group *gdconf.LevelGroup
@@ -59,12 +60,12 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		}
 		avatar := g.Player.DbAvatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,
+			AvatarType: avatar.Type,
 			Slot:       uint32(slot),
 			Satiety:    0,
 			Hp:         avatar.Hp,
 			Id:         avatarId,
-			SpBar:      &proto.SpBarInfo{CurSp: 10000, MaxSp: 10000},
+			SpBar:      avatar.SpBar,
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}
@@ -101,6 +102,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 				if avatarid == 0 {
 					continue
 				}
+				entityId := uint32(g.GetNextGameObjectGuid())
 				entityList := &proto.SceneEntityInfo{
 					EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
 						AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
@@ -122,8 +124,10 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 				// 为进入场景的角色设置与上面相同的实体id
 				if id == 0 {
 					entityList.EntityId = leaderEntityId
+					entityMap[leaderEntityId] = avatarid
 				} else {
-					entityList.EntityId = uint32(g.GetNextGameObjectGuid())
+					entityList.EntityId = entityId
+					entityMap[entityId] = avatarid
 				}
 				entityGroup.EntityList = append(entityGroup.EntityList, entityList)
 			}
@@ -182,10 +186,11 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		}
 		// 添加怪物实体
 		for _, monsterList := range levelGroup.MonsterList {
+			entityId := uint32(g.GetNextGameObjectGuid())
 			entityList := &proto.SceneEntityInfo{
 				GroupId:  levelGroup.GroupId,
 				InstId:   monsterList.ID,
-				EntityId: uint32(g.GetNextGameObjectGuid()),
+				EntityId: entityId,
 				Motion: &proto.MotionInfo{
 					Pos: &proto.Vector{
 						X: int32(monsterList.PosX * 1000),
@@ -204,6 +209,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 					EventId:    monsterList.EventID,
 				}},
 			}
+			entityMap[entityId] = monsterList.EventID
 			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 		}
 		// 添加NPC实体
@@ -233,6 +239,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
 	}
 
+	g.Player.EntityList = entityMap
 	g.send(cmd.EnterSceneByServerScNotify, rsp)
 
 	g.UpDataPlayer()
@@ -252,6 +259,7 @@ func (g *Game) GetRogueScoreRewardInfoCsReq() {
 // 客户端登录需要的包，不是传送的通知包
 func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(g.Player.DbScene.EntryId)))
+	entityMap := make(map[uint32]uint32)
 
 	rsp := new(proto.GetCurSceneInfoScRsp)
 	pos := g.Player.Pos
@@ -274,9 +282,10 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		if avatarid == 0 {
 			continue
 		}
+		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
 			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
-				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+				AvatarType:   g.Player.DbAvatar.Avatar[avatarid].Type,
 				BaseAvatarId: avatarid,
 			}},
 			Motion: &proto.MotionInfo{
@@ -295,8 +304,10 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		// 为进入场景的角色设置与上面相同的实体id
 		if id == 0 {
 			entityList.EntityId = leaderEntityId
+			entityMap[leaderEntityId] = avatarid
 		} else {
-			entityList.EntityId = uint32(g.GetNextGameObjectGuid())
+			entityMap[entityId] = avatarid
+			entityList.EntityId = entityId
 		}
 		entityGroup.EntityList = append(entityGroup.EntityList, entityList)
 	}
@@ -339,10 +350,11 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		}
 		// 添加怪物实体
 		for _, monsterList := range levelGroup.MonsterList {
+			entityId := uint32(g.GetNextGameObjectGuid())
 			entityList := &proto.SceneEntityInfo{
 				GroupId:  levelGroup.GroupId,
 				InstId:   monsterList.ID,
-				EntityId: uint32(g.GetNextGameObjectGuid()),
+				EntityId: entityId,
 				Motion: &proto.MotionInfo{
 					Pos: &proto.Vector{
 						X: int32(monsterList.PosX * 1000),
@@ -361,6 +373,7 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 					EventId:    monsterList.EventID,
 				}},
 			}
+			entityMap[entityId] = monsterList.EventID
 			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 		}
 		// 添加NPC实体
@@ -390,6 +403,7 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
 	}
 
+	g.Player.EntityList = entityMap
 	g.send(cmd.GetCurSceneInfoScRsp, rsp)
 }
 
@@ -461,4 +475,5 @@ func (g *Game) EnterSceneCsReq(payloadMsg []byte) {
 	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId)
 
 	g.send(cmd.EnterSceneScRsp, rsp)
+	g.send(cmd.SceneUpdatePositionVersionNotify, rsp)
 }

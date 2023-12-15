@@ -23,9 +23,12 @@ type PlayerData struct {
 	DbItem         *DbItem   // 背包
 	DbGacha        *Dbgacha  // 卡池抽取情况
 	// 下面是在线数据
-	IsPaused              bool   `json:"-"` // 是否暂停
-	GameObjectGuidCounter uint64 `json:"-"` // 游戏对象guid计数器
-	IsNickName            bool   `json:"-"` // 是否修改昵称
+	BattleId              uint32            `json:"-"` // 战斗id
+	EntityBattleId        uint32            `json:"-"` // 攻击实体id
+	IsPaused              bool              `json:"-"` // 是否暂停
+	GameObjectGuidCounter uint64            `json:"-"` // 游戏对象guid计数器
+	IsNickName            bool              `json:"-"` // 是否修改昵称
+	EntityList            map[uint32]uint32 `json:"-"` // 实体ID映射表
 }
 
 type Vector struct {
@@ -37,6 +40,11 @@ type Vector struct {
 func (g *Game) GetNextGameObjectGuid() uint64 {
 	g.Player.GameObjectGuidCounter++
 	return 0 + g.Player.GameObjectGuidCounter
+}
+
+func (g *Game) GetBattleIdGuid() uint32 {
+	g.Player.BattleId++
+	return 1 + g.Player.BattleId
 }
 
 // 初始化账号数据

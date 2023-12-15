@@ -194,23 +194,10 @@ func (g *Game) SetNicknameCsReq(payloadMsg []byte) {
 
 	g.Player.IsNickName = !g.Player.IsNickName
 
-	playerSyncScNotify := &proto.PlayerSyncScNotify{
-		BasicInfo: &proto.PlayerBasicInfo{
-			Nickname:   req.Nickname,
-			Level:      g.Player.Level,
-			Exp:        g.Player.Exp,
-			Stamina:    g.Player.Stamina,
-			Mcoin:      0,
-			Hcoin:      0,
-			Scoin:      0,
-			WorldLevel: g.Player.WorldLevel,
-		},
-	}
-
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
 
-	g.send(cmd.PlayerSyncScNotify, playerSyncScNotify)
+	g.PlayerPlayerSyncScNotify()
 	g.send(cmd.SetNicknameScRsp, rsp)
 }
 

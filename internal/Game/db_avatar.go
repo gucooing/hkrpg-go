@@ -16,16 +16,19 @@ type DbAvatar struct {
 }
 
 type Avatar struct {
-	AvatarId          uint32       // 角色id
-	Exp               uint32       // 经验
-	Level             uint32       // 等级
-	FirstMetTimestamp uint64       // 获得时间戳
-	Promotion         uint32       // 突破等阶
-	Rank              uint32       // 命座
-	Hp                uint32       // 血量
-	SkilltreeList     []*Skilltree // 技能等级数据 [id]level
-	EquipmentUniqueId uint32       // 装备光锥
-	TakenRewards      []uint32     // 已领取的突破奖励
+	AvatarId          uint32           // 角色id
+	Exp               uint32           // 经验
+	Level             uint32           // 等级
+	Type              proto.AvatarType // 角色状态
+	FirstMetTimestamp uint64           // 获得时间戳
+	Promotion         uint32           // 突破等阶
+	Rank              uint32           // 命座
+	Hp                uint32           // 血量
+	SpBar             *proto.SpBarInfo // 能量
+	SkilltreeList     []*Skilltree     // 技能等级数据 [id]level
+	EquipmentUniqueId uint32           // 装备光锥
+	TakenRewards      []uint32         // 已领取的突破奖励
+	BuffList          uint32           // 开启战斗的buff
 }
 
 type Skilltree struct {
@@ -64,12 +67,18 @@ func (g *Game) AddAvatar(avatarId uint32) {
 	avatar.AvatarId = avatarId
 	avatar.Exp = 0
 	avatar.Level = 1
+	avatar.Type = proto.AvatarType_AVATAR_FORMAL_TYPE
 	avatar.FirstMetTimestamp = uint64(time.Now().Unix())
 	avatar.Promotion = 0
 	avatar.Rank = 0
 	avatar.Hp = 10000
 	avatar.EquipmentUniqueId = 0
+	avatar.SpBar = &proto.SpBarInfo{
+		CurSp: 10000,
+		MaxSp: 10000,
+	}
 	avatar.TakenRewards = make([]uint32, 0)
+	avatar.BuffList = 0
 	for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
 		skilltreeList := &Skilltree{
 			PointId: id,
@@ -118,6 +127,4 @@ func (g *Game) AvatarPlayerSyncScNotify(avatarId uint32) {
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
 	g.send(cmd.PlayerSyncScNotify, notify)
-
-	g.UpDataPlayer()
 }
