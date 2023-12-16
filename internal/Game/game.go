@@ -14,12 +14,13 @@ import (
 )
 
 type Game struct {
-	Uid         uint32
-	Seed        uint64
-	NetMsgInput chan *NetMsg
-	KcpConn     *kcp.UDPSession
-	Db          *DataBase.Store
-	Snowflake   *alg.SnowflakeWorker // 雪花唯一id生成器
+	Uid            uint32
+	Seed           uint64
+	NetMsgInput    chan *NetMsg
+	KcpConn        *kcp.UDPSession
+	LastActiveTime int64 // 最近一次的活跃时间
+	Db             *DataBase.Store
+	Snowflake      *alg.SnowflakeWorker // 雪花唯一id生成器
 	// 玩家数据
 	Player *PlayerData
 	// 密钥
@@ -90,6 +91,11 @@ func (g *Game) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		<-ticker.C
+		timestamp := time.Now().Unix()
+		if timestamp-g.LastActiveTime >= 60 {
+			g.exitGame()
+			return
+		}
 		if g.KcpConn == nil {
 			return
 		}

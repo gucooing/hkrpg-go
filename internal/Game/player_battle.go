@@ -74,6 +74,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		}
 		rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
 	}
+	// 添加角色
 	for id, Lineup := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
 		if Lineup == 0 {
 			continue
@@ -105,6 +106,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
 		}
 		rsp.BattleInfo.BattleAvatarList = append(rsp.BattleInfo.BattleAvatarList, battleAvatar)
+		// 检查是否有提前释放的技能，添加到buff里
 		if avatar.BuffList != 0 {
 			buffList := &proto.BattleBuff{
 				Id:              avatar.BuffList,
