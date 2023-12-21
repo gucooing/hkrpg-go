@@ -41,7 +41,7 @@ func (g *Game) SyncLineupNotify(index uint32) {
 	// 更新数据库
 	g.UpDataPlayer()
 
-	g.send(cmd.SyncLineupNotify, rsq)
+	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
 func (g *Game) SceneGroupRefreshScNotify() {
@@ -85,7 +85,7 @@ func (g *Game) SceneGroupRefreshScNotify() {
 	}
 	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
 
-	g.send(cmd.SceneGroupRefreshScNotify, notify)
+	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
 
 func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
@@ -123,7 +123,7 @@ func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 		rsp.LineupList = append(rsp.LineupList, lineupList)
 	}
 
-	g.send(cmd.GetAllLineupDataScRsp, rsp)
+	g.Send(cmd.GetAllLineupDataScRsp, rsp)
 }
 
 func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
@@ -157,11 +157,11 @@ func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 	}
 	rsp.Lineup = lineupList
 
-	g.send(cmd.GetCurLineupDataScRsp, rsp)
+	g.Send(cmd.GetCurLineupDataScRsp, rsp)
 }
 
 func (g *Game) HandleJoinLineupCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.JoinLineupCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.JoinLineupCsReq, payloadMsg)
 	req := msg.(*proto.JoinLineupCsReq)
 
 	g.UnDbLineUp(req.Index, req.Slot, req.BaseAvatarId)
@@ -170,11 +170,11 @@ func (g *Game) HandleJoinLineupCsReq(payloadMsg []byte) {
 	g.SyncLineupNotify(req.Index)
 
 	rsp := new(proto.LineupAvatar)
-	g.send(cmd.JoinLineupScRsp, rsp)
+	g.Send(cmd.JoinLineupScRsp, rsp)
 }
 
 func (g *Game) HandleSwitchLineupIndexCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.SwitchLineupIndexCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.SwitchLineupIndexCsReq, payloadMsg)
 	req := msg.(*proto.SwitchLineupIndexCsReq)
 
 	g.Player.DbLineUp.MainLineUp = req.Index
@@ -183,11 +183,11 @@ func (g *Game) HandleSwitchLineupIndexCsReq(payloadMsg []byte) {
 
 	rsp := &proto.SwitchLineupIndexScRsp{Index: req.Index}
 
-	g.send(cmd.SwitchLineupIndexScRsp, rsp)
+	g.Send(cmd.SwitchLineupIndexScRsp, rsp)
 }
 
 func (g *Game) HandleSwapLineupCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.SwapLineupCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.SwapLineupCsReq, payloadMsg)
 	req := msg.(*proto.SwapLineupCsReq)
 
 	// 交换角色
@@ -198,11 +198,11 @@ func (g *Game) HandleSwapLineupCsReq(payloadMsg []byte) {
 
 	rsp := &proto.SwapLineupCsReq{}
 
-	g.send(cmd.SwapLineupScRsp, rsp)
+	g.Send(cmd.SwapLineupScRsp, rsp)
 }
 
 func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.SetLineupNameCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.SetLineupNameCsReq, payloadMsg)
 	req := msg.(*proto.SetLineupNameCsReq)
 	g.Player.DbLineUp.LineUpList[req.Index].Name = req.Name
 
@@ -214,11 +214,11 @@ func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
 		Name:  req.Name,
 	}
 
-	g.send(cmd.SetLineupNameScRsp, rsp)
+	g.Send(cmd.SetLineupNameScRsp, rsp)
 }
 
 func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
 	req := msg.(*proto.ReplaceLineupCsReq)
 	g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList = []uint32{0, 0, 0, 0}
 	for _, avatarid := range req.Slots {
@@ -230,20 +230,20 @@ func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
 
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
-	g.send(cmd.ReplaceLineupScRsp, rsp)
+	g.Send(cmd.ReplaceLineupScRsp, rsp)
 }
 
 func (g *Game) ChangeLineupLeaderCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.ChangeLineupLeaderCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.ChangeLineupLeaderCsReq, payloadMsg)
 	req := msg.(*proto.ChangeLineupLeaderCsReq)
 
 	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
 
-	g.send(cmd.ChangeLineupLeaderScRsp, rsp)
+	g.Send(cmd.ChangeLineupLeaderScRsp, rsp)
 }
 
 func (g *Game) QuitLineupCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.QuitLineupCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.QuitLineupCsReq, payloadMsg)
 	req := msg.(*proto.QuitLineupCsReq)
 
 	for id, avatarId := range g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList {
@@ -257,5 +257,5 @@ func (g *Game) QuitLineupCsReq(payloadMsg []byte) {
 
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
-	g.send(cmd.QuitLineupScRsp, rsp)
+	g.Send(cmd.QuitLineupScRsp, rsp)
 }

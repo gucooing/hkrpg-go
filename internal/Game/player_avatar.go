@@ -24,19 +24,15 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 		avatarList.Rank = a.Rank
 		avatarList.Level = a.Level
 		avatarList.Exp = a.Exp
-		if a.AvatarId/100 == 80 {
-
-		} else {
-			avatarList.SkilltreeList = g.GetSkilltree(a.AvatarId)
-		}
+		avatarList.SkilltreeList = g.GetSkilltree(a.AvatarId)
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 
-	g.send(cmd.GetAvatarDataScRsp, rsp)
+	g.Send(cmd.GetAvatarDataScRsp, rsp)
 }
 
 func (g *Game) RankUpAvatarCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
 	req := msg.(*proto.RankUpAvatarCsReq)
 
 	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Rank++
@@ -44,18 +40,18 @@ func (g *Game) RankUpAvatarCsReq(payloadMsg []byte) {
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 
 	rsp := new(proto.GetChallengeScRsp)
-	g.send(cmd.RankUpAvatarScRsp, rsp)
+	g.Send(cmd.RankUpAvatarScRsp, rsp)
 }
 
 func (g *Game) DressAvatarCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
 
 	g.DressAvatarPlayerSyncScNotify(req.BaseAvatarId, req.EquipmentUniqueId)
 
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
-	g.send(cmd.DressAvatarScRsp, rsp)
+	g.Send(cmd.DressAvatarScRsp, rsp)
 }
 
 // 光锥交换通知
@@ -135,17 +131,17 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 
 	notify.EquipmentList = append(notify.EquipmentList, equipmentList)
 
-	g.send(cmd.PlayerSyncScNotify, notify)
+	g.Send(cmd.PlayerSyncScNotify, notify)
 
 	g.UpDataPlayer()
 }
 
 func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.AvatarExpUpCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.AvatarExpUpCsReq, payloadMsg)
 	req := msg.(*proto.AvatarExpUpCsReq)
 	if req.BaseAvatarId == 0 {
 		rsp := &proto.AvatarExpUpScRsp{}
-		g.send(cmd.AvatarExpUpScRsp, rsp)
+		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
 
@@ -157,7 +153,7 @@ func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
 	dbAvatar := g.Player.DbAvatar.Avatar[req.BaseAvatarId]
 	if dbAvatar == nil {
 		rsp := &proto.AvatarExpUpScRsp{}
-		g.send(cmd.AvatarExpUpScRsp, rsp)
+		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
 
@@ -178,7 +174,7 @@ func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
 		pileconf := gdconf.GetAvatarExpItemConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
 		if pileconf == nil {
 			rsp := &proto.AvatarExpUpScRsp{}
-			g.send(cmd.AvatarExpUpScRsp, rsp)
+			g.Send(cmd.AvatarExpUpScRsp, rsp)
 			return
 		}
 		// 获取要扣多少信用点
@@ -194,7 +190,7 @@ func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
 	level, exp, newExp := gdconf.GetExpTypeByLevel(gdconfAvatar.ExpGroup, exp, dbAvatar.Level, dbAvatar.Promotion, dbAvatar.AvatarId)
 	if level == 0 && exp == 0 {
 		rsp := &proto.AvatarExpUpScRsp{}
-		g.send(cmd.AvatarExpUpScRsp, rsp)
+		g.Send(cmd.AvatarExpUpScRsp, rsp)
 	}
 
 	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Exp = exp
@@ -221,11 +217,11 @@ func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
 	// 通知升级后角色消息
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 	rsp := &proto.AvatarExpUpScRsp{}
-	g.send(cmd.AvatarExpUpScRsp, rsp)
+	g.Send(cmd.AvatarExpUpScRsp, rsp)
 }
 
 func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.PromoteAvatarCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.PromoteAvatarCsReq, payloadMsg)
 	req := msg.(*proto.PromoteAvatarCsReq)
 
 	var pileItem []*Material // 需要删除的突破材料
@@ -235,7 +231,7 @@ func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
 	dbAvatar := g.Player.DbAvatar.Avatar[req.BaseAvatarId]
 	if dbAvatar == nil {
 		rsp := &proto.AvatarExpUpScRsp{}
-		g.send(cmd.AvatarExpUpScRsp, rsp)
+		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
 
@@ -265,11 +261,11 @@ func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
-	g.send(cmd.PromoteAvatarScRsp, rsp)
+	g.Send(cmd.PromoteAvatarScRsp, rsp)
 }
 
 func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.UnlockSkilltreeCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.UnlockSkilltreeCsReq, payloadMsg)
 	req := msg.(*proto.UnlockSkilltreeCsReq)
 
 	var pileItem []*Material // 需要删除的升级材料
@@ -279,7 +275,7 @@ func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
 		rsp := &proto.UnlockSkilltreeScRsp{
 			Retcode: uint32(proto.Retcode_RETCODE_RET_FAIL),
 		}
-		g.send(cmd.UnlockSkilltreeScRsp, rsp)
+		g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 	}
 
 	// 遍历用来升级的材料
@@ -311,18 +307,18 @@ func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
 		PointId:      req.PointId,
 		Level:        req.Level,
 	}
-	g.send(cmd.UnlockSkilltreeScRsp, rsp)
+	g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 }
 
 func (g *Game) TakePromotionRewardCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.TakePromotionRewardCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.TakePromotionRewardCsReq, payloadMsg)
 	req := msg.(*proto.TakePromotionRewardCsReq)
 
 	if g.Player.DbAvatar.Avatar[req.BaseAvatarId] == nil {
 		rsp := &proto.TakePromotionRewardScRsp{
 			Retcode: uint32(proto.Retcode_RETCODE_RET_FAIL),
 		}
-		g.send(cmd.TakePromotionRewardScRsp, rsp)
+		g.Send(cmd.TakePromotionRewardScRsp, rsp)
 	}
 	g.Player.DbAvatar.Avatar[req.BaseAvatarId].TakenRewards = append(g.Player.DbAvatar.Avatar[req.BaseAvatarId].TakenRewards, req.Promotion)
 	// 通知升级后角色信息
@@ -345,5 +341,5 @@ func (g *Game) TakePromotionRewardCsReq(payloadMsg []byte) {
 			item,
 		}},
 	}
-	g.send(cmd.TakePromotionRewardScRsp, rsq)
+	g.Send(cmd.TakePromotionRewardScRsp, rsq)
 }

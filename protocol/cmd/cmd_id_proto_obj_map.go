@@ -166,6 +166,9 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(RankUpEquipmentCsReq, func() any { return new(proto.RankUpEquipmentCsReq) })
 	c.regMsg(ReEnterLastElementStageCsReq, func() any { return new(proto.ReEnterLastElementStageCsReq) })
 	c.regMsg(ReEnterLastElementStageScRsp, func() any { return new(proto.ReEnterLastElementStageScRsp) })
+	c.regMsg(RefreshTriggerByClientCsReq, func() any { return new(proto.RefreshTriggerByClientCsReq) })
+	c.regMsg(RefreshTriggerByClientScNotify, func() any { return new(proto.RefreshTriggerByClientScNotify) })
+	c.regMsg(RefreshTriggerByClientScRsp, func() any { return new(proto.RefreshTriggerByClientScRsp) })
 	c.regMsg(ReplaceLineupCsReq, func() any { return new(proto.ReplaceLineupCsReq) })
 	c.regMsg(ReserveStaminaExchangeCsReq, func() any { return new(proto.ReserveStaminaExchangeCsReq) })
 	c.regMsg(ReserveStaminaExchangeScRsp, func() any { return new(proto.ReserveStaminaExchangeScRsp) })
@@ -221,6 +224,7 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(SyncClientResVersionCsReq, func() any { return new(proto.SyncClientResVersionCsReq) })
 	c.regMsg(SyncClientResVersionScRsp, func() any { return new(proto.SyncClientResVersionScRsp) })
 	c.regMsg(SyncDeleteFriendScNotify, func() any { return new(proto.SyncDeleteFriendScNotify) })
+	c.regMsg(SyncEntityBuffChangeListScNotify, func() any { return new(proto.SyncEntityBuffChangeListScNotify) })
 	c.regMsg(SyncHandleFriendScNotify, func() any { return new(proto.SyncHandleFriendScNotify) })
 	c.regMsg(SyncLineupNotify, func() any { return new(proto.SyncLineupNotify) })
 	c.regMsg(SyncRogueBuffSelectInfoScNotify, func() any { return new(proto.SyncRogueBuffSelectInfoScNotify) })
@@ -251,7 +255,7 @@ func (c *CmdProtoMap) registerMessage() {
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
 	_, exist := c.cmdDeDupMap[cmdId]
 	if exist {
-		logger.Error("reg dup msg, cmd id: %v", cmdId)
+		logger.Debug("reg dup msg, cmd id: %v", cmdId)
 		return
 	} else {
 		c.cmdDeDupMap[cmdId] = true
@@ -281,7 +285,7 @@ func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
 func (c *CmdProtoMap) GetProtoObjCacheByCmdId(cmdId uint16) pb.Message {
 	cachePool, exist := c.cmdIdProtoObjCacheMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v", cmdId)
+		logger.Debug("unknown cmd id: %v", cmdId)
 		return nil
 	}
 	protoObj := cachePool.Get().(pb.Message)
@@ -292,7 +296,7 @@ func (c *CmdProtoMap) GetProtoObjCacheByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) PutProtoObjCache(cmdId uint16, protoObj pb.Message) {
 	cachePool, exist := c.cmdIdProtoObjCacheMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v", cmdId)
+		logger.Debug("unknown cmd id: %v", cmdId)
 		return
 	}
 	cachePool.Put(protoObj)
@@ -301,7 +305,7 @@ func (c *CmdProtoMap) PutProtoObjCache(cmdId uint16, protoObj pb.Message) {
 func (c *CmdProtoMap) GetProtoObjFastNewByCmdId(cmdId uint16) pb.Message {
 	fn, exist := c.cmdIdProtoObjFastNewMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v", cmdId)
+		logger.Debug("unknown cmd id: %v", cmdId)
 		return nil
 	}
 	protoObj := fn().(pb.Message)
@@ -313,7 +317,7 @@ func (c *CmdProtoMap) GetProtoObjFastNewByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) GetProtoObjByCmdId(cmdId uint16) pb.Message {
 	refType, exist := c.cmdIdProtoObjMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v", cmdId)
+		logger.Debug("unknown cmd id: %v", cmdId)
 		return nil
 	}
 	protoObjInst := reflect.New(refType.Elem())
@@ -324,7 +328,7 @@ func (c *CmdProtoMap) GetProtoObjByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) GetCmdIdByProtoObj(protoObj pb.Message) uint16 {
 	cmdId, exist := c.protoObjCmdIdMap[reflect.TypeOf(protoObj)]
 	if !exist {
-		logger.Error("unknown proto object: %v", protoObj)
+		logger.Debug("unknown proto object: %v", protoObj)
 		return 0
 	}
 	return cmdId
@@ -333,7 +337,7 @@ func (c *CmdProtoMap) GetCmdIdByProtoObj(protoObj pb.Message) uint16 {
 func (c *CmdProtoMap) GetCmdNameByCmdId(cmdId uint16) string {
 	cmdName, exist := c.cmdIdCmdNameMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v", cmdId)
+		logger.Debug("unknown cmd id: %v", cmdId)
 		return ""
 	}
 	return cmdName
@@ -342,7 +346,7 @@ func (c *CmdProtoMap) GetCmdNameByCmdId(cmdId uint16) string {
 func (c *CmdProtoMap) GetCmdIdByCmdName(cmdName string) uint16 {
 	cmdId, exist := c.cmdNameCmdIdMap[cmdName]
 	if !exist {
-		logger.Error("unknown cmd name: %v", cmdName)
+		logger.Debug("unknown cmd name: %v", cmdName)
 		return 0
 	}
 	return cmdId

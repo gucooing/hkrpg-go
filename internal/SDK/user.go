@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,8 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 )
+
+var LoginOnce sync.Mutex
 
 /*
 登录流程
@@ -27,6 +30,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 	}
 	loginrsq := new(Login)
 
+	s.AutoCreate.Lock()
 	account := s.Store.QueryAccountByFieldUsername(requestData.Account)
 	if account.Username == "" {
 		logger.Warn("在数据库中没有找到登录的账号")
@@ -38,7 +42,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 				Token:      token,
 				CreateTime: time.Now().Unix(),
 			}
-			s.AutoCreate.Lock()
+
 			accountid, err := s.Store.UpdateAccountFieldByFieldName(account)
 			if err != nil {
 				logger.Error("自动注册账号添加失败:%s", err)
@@ -69,6 +73,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 			logger.Info("账号 %s 自动注册成功", account.Username)
 			return
 		} else {
+			s.AutoCreate.Unlock()
 			loginrsq.Data = nil
 			loginrsq.Message = "hkrpg-go\b账号不存在\n已关闭自动注册\n请手动注册"
 			loginrsq.Retcode = -107
@@ -76,6 +81,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 			return
 		}
 	}
+	s.AutoCreate.Unlock()
 	loginrsq.Retcode = 0
 	loginrsq.Message = "OK"
 	rspaccount := &LoginAccount{

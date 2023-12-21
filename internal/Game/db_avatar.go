@@ -126,5 +126,5 @@ func (g *Game) AvatarPlayerSyncScNotify(avatarId uint32) {
 	}
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
-	g.send(cmd.PlayerSyncScNotify, notify)
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }

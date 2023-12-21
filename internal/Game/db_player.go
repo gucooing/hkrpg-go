@@ -12,6 +12,7 @@ type PlayerData struct {
 	Stamina        uint32    // 体力
 	ReserveStamina uint32    // 储备体力
 	WorldLevel     uint32    // 世界等级
+	Mcoin          uint32    // 氪金的
 	Signature      string    // 签名
 	HeadImage      uint32    // 头像
 	Birthday       uint32    // 生日
@@ -58,6 +59,7 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data.Stamina = 240
 	data.ReserveStamina = 2400
 	data.WorldLevel = 0
+	data.Mcoin = 9999
 	data.Signature = "hkrpg-go"
 	data.HeadImage = 208001
 	data = NewScene(data)

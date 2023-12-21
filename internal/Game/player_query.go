@@ -8,11 +8,11 @@ import (
 func (g *Game) HandleQueryProductInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.QuitLineupCsReq)
 	// TODO 是的，没错，还是同样的原因
-	g.send(cmd.QueryProductInfoScRsp, rsp)
+	g.Send(cmd.QueryProductInfoScRsp, rsp)
 }
 
 func (g *Game) SceneEntityMoveCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.SceneEntityMoveCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.SceneEntityMoveCsReq, payloadMsg)
 	req := msg.(*proto.SceneEntityMoveCsReq)
 
 	g.Player.DbScene.EntryId = req.EntryId
@@ -30,5 +30,5 @@ func (g *Game) SceneEntityMoveCsReq(payloadMsg []byte) {
 
 	rsq := new(proto.SceneEntityMoveCsReq)
 	// TODO 是的，没错，还是同样的原因
-	g.send(cmd.SceneEntityMoveScRsp, rsq)
+	g.Send(cmd.SceneEntityMoveScRsp, rsq)
 }

@@ -17,6 +17,10 @@ func (g *Game) GmGive(payloadMsg pb.Message) {
 			if avatar == 0 {
 				continue
 			}
+			// 过滤主角
+			if avatar/100 == 80 {
+				continue
+			}
 			g.AddAvatar(avatar)
 			g.AddMaterial(avatar+10000, 6)
 		}
@@ -86,7 +90,7 @@ func (g *Game) ScenePlaneEventScNotify(id, num uint32) {
 		UniqueId:    0,
 	}
 	notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
-	g.send(cmd.ScenePlaneEventScNotify, notify)
+	g.Send(cmd.ScenePlaneEventScNotify, notify)
 }
 
 func (g *Game) GmWorldLevel(payloadMsg pb.Message) {

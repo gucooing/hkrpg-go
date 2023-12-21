@@ -44,3 +44,11 @@ func GetMapEntranceById(entryId string) *MapEntrance {
 func GetMapEntranceMap() map[string]*MapEntrance {
 	return CONF.MapEntranceMap
 }
+
+func GetEntryIdList() []uint32 {
+	var entryIdList []uint32
+	for _, id := range CONF.MapEntranceMap {
+		entryIdList = append(entryIdList, id.ID)
+	}
+	return entryIdList
+}

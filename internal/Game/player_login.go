@@ -2,76 +2,13 @@ package Game
 
 import (
 	"encoding/json"
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
-	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
-
-func (g *Game) HandlePlayerGetTokenCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.PlayerGetTokenCsReq, payloadMsg)
-	req := msg.(*proto.PlayerGetTokenCsReq)
-	accountUid, err := strconv.ParseUint(req.AccountUid, 10, 64)
-	if err != nil {
-		logger.Error("get token uid error")
-		return
-	}
-	logger.Debug("account_token:%s", req.Token)
-
-	rsp := new(proto.PlayerGetTokenScRsp)
-
-	uidPlayer := g.Db.QueryUidPlayerUidByFieldPlayer(uint32(accountUid))
-
-	if uidPlayer.ComboToken != req.Token {
-		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_VERIFY_ERROR)
-		rsp.Msg = "token验证失败"
-		g.send(cmd.PlayerGetTokenScRsp, rsp)
-		logger.Info("登录账号:%v,token验证失败", accountUid)
-		return
-	}
-
-	if uidPlayer.IsBan {
-		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_PARA_ERROR)
-		rsp.Msg = "账号已被封禁"
-		g.send(cmd.PlayerGetTokenScRsp, rsp)
-		logger.Info("登录账号:%v,已被封禁", accountUid)
-		return
-	}
-
-	newuidPlayer := &DataBase.UidPlayer{
-		AccountId:  uidPlayer.AccountId,
-		IsBan:      false,
-		ComboToken: "",
-	}
-
-	err = g.Db.UpdateUidPlayer(uidPlayer.AccountId, newuidPlayer)
-	if err != nil {
-		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_VERIFY_ERROR)
-		rsp.Msg = "账号刷新失败"
-		g.send(cmd.PlayerGetTokenScRsp, rsp)
-		logger.Error("登录账号:%v,账号刷新失败", accountUid)
-		return
-	}
-
-	g.Uid = uint32(uidPlayer.AccountUid)
-
-	// 构造回复内容
-	timeRand := random.GetTimeRand()
-	serverSeedUint64 := timeRand.Uint64()
-	g.Seed = serverSeedUint64
-	rsp.Uid = g.Uid
-	rsp.SecretKeySeed = serverSeedUint64
-	rsp.BlackInfo = &proto.BlackInfo{}
-	g.send(cmd.PlayerGetTokenScRsp, rsp)
-}
 
 func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	playerData := new(PlayerData)
@@ -117,30 +54,30 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Level:      g.Player.Level,
 		Exp:        g.Player.Exp,
 		Stamina:    g.Player.Stamina,
-		Mcoin:      0,
+		Mcoin:      g.Player.Mcoin,
 		Hcoin:      g.Player.DbItem.MaterialMap[1].Num,
 		Scoin:      g.Player.DbItem.MaterialMap[2].Num,
 		WorldLevel: g.Player.WorldLevel,
 	}
 
 	staminaInfoScNotify := &proto.StaminaInfoScNotify{
-		NextRecoverTime: time.Now().Unix() + 300,
+		NextRecoverTime: 0,
 		Stamina:         g.Player.Stamina,
 		ReserveStamina:  g.Player.ReserveStamina,
 	}
 
-	g.send(cmd.PlayerLoginScRsp, rsp)
-	g.send(cmd.StaminaInfoScNotify, staminaInfoScNotify)
+	g.Send(cmd.PlayerLoginScRsp, rsp)
+	g.Send(cmd.StaminaInfoScNotify, staminaInfoScNotify)
 }
 
 func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
-	rsp.NextRecoverTime = time.Now().Unix() + 300
+	rsp.NextRecoverTime = 1698768000
 	rsp.GameplayBirthday = g.Player.Birthday
 	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
 
-	g.send(cmd.GetBasicInfoScRsp, rsp)
+	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
 
 func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
@@ -156,7 +93,7 @@ func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 		rsp.BasicTypeInfoList = append(rsp.BasicTypeInfoList, basicTypeInfoList)
 	}
 
-	g.send(cmd.GetHeroBasicTypeInfoScRsp, rsp)
+	g.Send(cmd.GetHeroBasicTypeInfoScRsp, rsp)
 }
 
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
@@ -175,14 +112,14 @@ func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 		rsp.ActivityScheduleList = append(rsp.ActivityScheduleList, activityScheduleList)
 	}
 
-	g.send(cmd.GetActivityScheduleConfigScRsp, rsp)
+	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }
 
 func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetCurChallengeScRsp)
 	rsp.Retcode = 0
 
-	g.send(cmd.GetCurChallengeScRsp, rsp)
+	g.Send(cmd.GetCurChallengeScRsp, rsp)
 }
 
 func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
@@ -228,34 +165,23 @@ func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 	}
 	rsp.RogueInfo = rogueInfo
 
-	g.send(cmd.GetRogueInfoScRsp, rsp)
+	g.Send(cmd.GetRogueInfoScRsp, rsp)
 }
 
 func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.SyncClientResVersionCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.SyncClientResVersionCsReq, payloadMsg)
 	req := msg.(*proto.SyncClientResVersionCsReq)
 
 	rsp := new(proto.SyncClientResVersionScRsp)
 	rsp.ClientResVersion = req.ClientResVersion
 
-	g.send(cmd.SyncClientResVersionScRsp, rsp)
-}
-
-func (g *Game) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetEnteredSceneScRsp)
-	enteredSceneInfo := &proto.EnteredSceneInfo{
-		FloorId: 20001001,
-		PlaneId: 20001,
-	}
-	rsp.EnteredSceneInfo = []*proto.EnteredSceneInfo{enteredSceneInfo}
-
-	g.send(cmd.GetEnteredSceneScRsp, rsp)
+	g.Send(cmd.SyncClientResVersionScRsp, rsp)
 }
 
 func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	rsp := new(proto.PlayerHeartbeatScRsp)
 	// TODO 逆天了，proto太残了，没办法
-	g.send(cmd.PlayerLoginFinishScRsp, rsp)
+	g.Send(cmd.PlayerLoginFinishScRsp, rsp)
 
 	// 战斗通行证信息通知
 	notify := &proto.BattlePassInfoNotify{
@@ -272,7 +198,7 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 		CurWeekAddExpSum:           8000,
 		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
 	}
-	g.send(cmd.BattlePassInfoNotify, notify)
+	g.Send(cmd.BattlePassInfoNotify, notify)
 	// 更新账号数据
 	go g.UpDataPlayer()
 }

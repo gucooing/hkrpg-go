@@ -130,7 +130,7 @@ func (g *Game) EquipmentPlayerSyncScNotify(tid, uniqueId uint32) {
 	}
 	notify.EquipmentList = append(notify.EquipmentList, equipment)
 
-	g.send(cmd.PlayerSyncScNotify, notify)
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
 func (g *Game) MaterialPlayerSyncScNotify(tid uint32) {
@@ -144,5 +144,5 @@ func (g *Game) MaterialPlayerSyncScNotify(tid uint32) {
 	}
 	notify.MaterialList = append(notify.MaterialList, material)
 
-	g.send(cmd.PlayerSyncScNotify, notify)
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }

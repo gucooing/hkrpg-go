@@ -14,6 +14,7 @@ import (
 )
 
 type Game struct {
+	IsToken        bool // 是否通过token验证
 	Uid            uint32
 	Seed           uint64
 	NetMsgInput    chan *NetMsg
@@ -34,8 +35,9 @@ type NetMsg struct {
 	Type      string
 }
 
-func (g *Game) send(cmdid uint16, playerMsg pb.Message) {
-	if cmdid != 1468 {
+func (g *Game) Send(cmdid uint16, playerMsg pb.Message) {
+	// 打印需要的数据包
+	if cmdid == 1448 {
 		data := protojson.Format(playerMsg)
 		logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
 	}
@@ -47,7 +49,7 @@ func (g *Game) send(cmdid uint16, playerMsg pb.Message) {
 	g.NetMsgInput <- netMsg
 }
 
-func (g *Game) decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
+func (g *Game) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
 	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
 	if protoObj == nil {
 		logger.Error("get new proto object is nil")
@@ -58,7 +60,8 @@ func (g *Game) decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		logger.Error("unmarshal proto data err: %v", err)
 		return nil
 	}
-	if cmdId != 1452 {
+	// 打印需要的数据包
+	if cmdId == 1452 {
 		data := protojson.Format(protoObj)
 		logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
 	}

@@ -33,8 +33,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.TextJoinQueryCsReq:
 		g.TextJoinQueryCsReq() //
 	// 登录
-	case cmd.PlayerGetTokenCsReq:
-		g.HandlePlayerGetTokenCsReq(payloadMsg) // 获取玩家token请求 第一个登录包
 	case cmd.PlayerLoginCsReq:
 		g.HandlePlayerLoginCsReq(payloadMsg) // 玩家登录请求 第二个登录包
 	case cmd.PlayerLoginFinishCsReq:
@@ -104,12 +102,16 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
 	case cmd.PVEBattleResultCsReq:
 		g.PVEBattleResultCsReq(payloadMsg) // PVE战斗结算
+	case cmd.StartRogueCsReq:
+		g.StartRogueCsReq(payloadMsg) // 模拟宇宙,启动!
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品
 	// 交易
 	case cmd.GetShopListCsReq:
 		g.GetShopListCsReq() // 获取商店物品列表
+	case cmd.ExchangeHcoinCsReq:
+		g.ExchangeHcoinCsReq(payloadMsg) // 梦华兑换
 	// 社交
 	case cmd.GetMailCsReq:
 		g.GetMailCsReq() // 获取邮件

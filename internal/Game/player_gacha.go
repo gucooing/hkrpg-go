@@ -44,11 +44,11 @@ func (g *Game) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 		rsp.GachaInfoList = append(rsp.GachaInfoList, gachaInfoList)
 	}
 
-	g.send(cmd.GetGachaInfoScRsp, rsp)
+	g.Send(cmd.GetGachaInfoScRsp, rsp)
 }
 
 func (g *Game) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
 	req := msg.(*proto.GetGachaCeilingCsReq)
 
 	rsp := &proto.GetGachaCeilingScRsp{
@@ -68,11 +68,11 @@ func (g *Game) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 		rsp.GachaCeiling.AvatarList = append(rsp.GachaCeiling.AvatarList, avatarlist)
 	}
 
-	g.send(cmd.GetGachaCeilingScRsp, rsp)
+	g.Send(cmd.GetGachaCeilingScRsp, rsp)
 }
 
 func (g *Game) DoGachaCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.DoGachaCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.DoGachaCsReq, payloadMsg)
 	req := msg.(*proto.DoGachaCsReq)
 
 	if req.GachaNum != 10 && req.GachaNum != 1 {
@@ -143,7 +143,7 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 
 	g.AddMaterial(251, req.GachaNum*42)
 
-	g.send(cmd.DoGachaScRsp, rsp)
+	g.Send(cmd.DoGachaScRsp, rsp)
 
 	g.UpDataPlayer()
 }

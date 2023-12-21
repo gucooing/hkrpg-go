@@ -22,10 +22,12 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
 
 	groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
-	if int(mapEntrance.StartGroupID) > len(groupMap) {
-		g.send(cmd.EnterSceneByServerScNotify, rsp)
-		return
-	}
+	/*
+		if int(mapEntrance.StartGroupID) > len(groupMap) {
+			g.send(cmd.EnterSceneByServerScNotify, rsp)
+			return
+		}
+	*/
 
 	if teleportId != 0 {
 		for _, levelGroup := range groupMap {
@@ -79,19 +81,27 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 
 	if group == nil {
 		logger.Error("寄,找不到这个地图 P:%v F:%v G:%v", mapEntrance.PlaneID, mapEntrance.FloorID, groupID)
-		g.send(cmd.EnterSceneByServerScNotify, rsp)
+		g.Send(cmd.EnterSceneByServerScNotify, rsp)
 		return
 	}
 
 	rsp.Scene = &proto.SceneInfo{
-		WorldId:         gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
-		LeaderEntityId:  leaderEntityId,
-		FloorId:         mapEntrance.FloorID,
-		GameModeType:    gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
-		PlaneId:         mapEntrance.PlaneID,
-		EntryId:         entryId,
-		EntityGroupList: make([]*proto.SceneEntityGroupInfo, 0),
+		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		LeaderEntityId:     leaderEntityId,
+		FloorId:            mapEntrance.FloorID,
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		PlaneId:            mapEntrance.PlaneID,
+		EntryId:            entryId,
+		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
+		GroupIdList:        make([]uint32, 0),
+		LightenSectionList: make([]uint32, 0),
+		GroupStateList:     make([]*proto.SceneGroupState, 0),
 	}
+
+	for i := uint32(0); i < 100; i++ {
+		rsp.Scene.LightenSectionList = append(rsp.Scene.LightenSectionList, i)
+	}
+
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
@@ -131,7 +141,6 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 				}
 				entityGroup.EntityList = append(entityGroup.EntityList, entityList)
 			}
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
 
 			// TODO 数据保存问题？
 			g.Player.Pos = &Vector{
@@ -148,6 +157,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			break
 		}
 	}
+	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
 
 	// 获取场景实体
 	for _, levelGroup := range gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID) {
@@ -155,6 +165,15 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		if len(levelGroup.PropList) == 0 {
 			continue
 		}
+		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
+
+		sceneGroupState := &proto.SceneGroupState{
+			GroupId:   levelGroup.GroupId,
+			IsDefault: true,
+		}
+
+		rsp.Scene.GroupStateList = append(rsp.Scene.GroupStateList, sceneGroupState)
+
 		entityGroupList := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
@@ -240,7 +259,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 
 	g.Player.EntityList = entityMap
-	g.send(cmd.EnterSceneByServerScNotify, rsp)
+	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 
 	g.UpDataPlayer()
 }
@@ -253,7 +272,18 @@ func (g *Game) GetRogueScoreRewardInfoCsReq() {
 		PoolId:               22,
 	}
 
-	g.send(cmd.GetRogueScoreRewardInfoScRsp, rsp)
+	g.Send(cmd.GetRogueScoreRewardInfoScRsp, rsp)
+}
+
+func (g *Game) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
+	rsp := new(proto.GetEnteredSceneScRsp)
+	enteredSceneInfo := &proto.EnteredSceneInfo{
+		FloorId: 20001001,
+		PlaneId: 20001,
+	}
+	rsp.EnteredSceneInfo = []*proto.EnteredSceneInfo{enteredSceneInfo}
+
+	g.Send(cmd.GetEnteredSceneScRsp, rsp)
 }
 
 // 客户端登录需要的包，不是传送的通知包
@@ -266,14 +296,22 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	rot := g.Player.Rot
 	leaderEntityId := uint32(g.GetNextGameObjectGuid())
 	rsp.Scene = &proto.SceneInfo{
-		WorldId:         gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,                        // 世界id
-		LeaderEntityId:  leaderEntityId,                                                                                 // 进入场景的角色实体id
-		FloorId:         mapEntrance.FloorID,                                                                            // 上面表查询到的，对应文件名中F开头后面的数字
-		GameModeType:    gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType), // 未知
-		PlaneId:         mapEntrance.PlaneID,                                                                            // 上面表查询到的，对应文件名中P开头后面的数字
-		EntryId:         g.Player.DbScene.EntryId,                                                                       // 应该是具体的场景条目
-		EntityGroupList: make([]*proto.SceneEntityGroupInfo, 0),                                                         // 实体列表
+		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,                        // 世界id
+		LeaderEntityId:     leaderEntityId,                                                                                 // 进入场景的角色实体id
+		FloorId:            mapEntrance.FloorID,                                                                            // 上面表查询到的，对应文件名中F开头后面的数字
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType), // 未知
+		PlaneId:            mapEntrance.PlaneID,                                                                            // 上面表查询到的，对应文件名中P开头后面的数字
+		EntryId:            g.Player.DbScene.EntryId,                                                                       // 应该是具体的场景条目
+		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),                                                         // 实体列表
+		GroupIdList:        make([]uint32, 0),
+		LightenSectionList: make([]uint32, 0),
+		GroupStateList:     make([]*proto.SceneGroupState, 0),
 	}
+
+	for i := uint32(0); i < 100; i++ {
+		rsp.Scene.LightenSectionList = append(rsp.Scene.LightenSectionList, i)
+	}
+
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
@@ -319,6 +357,16 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		if len(levelGroup.PropList) == 0 {
 			continue
 		}
+
+		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
+
+		sceneGroupState := &proto.SceneGroupState{
+			GroupId:   levelGroup.GroupId,
+			IsDefault: true,
+		}
+
+		rsp.Scene.GroupStateList = append(rsp.Scene.GroupStateList, sceneGroupState)
+
 		entityGroupList := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
@@ -404,11 +452,11 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	}
 
 	g.Player.EntityList = entityMap
-	g.send(cmd.GetCurSceneInfoScRsp, rsp)
+	g.Send(cmd.GetCurSceneInfoScRsp, rsp)
 }
 
 func (g *Game) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.GetSceneMapInfoCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.GetSceneMapInfoCsReq, payloadMsg)
 	req := msg.(*proto.GetSceneMapInfoCsReq)
 
 	entryId := req.EntryIdList[0]
@@ -462,18 +510,18 @@ func (g *Game) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 			rsp.MapList = append(rsp.MapList, mapList)
 		}
 	}
-	g.send(cmd.GetSceneMapInfoScRsp, rsp)
+	g.Send(cmd.GetSceneMapInfoScRsp, rsp)
 }
 
 func (g *Game) EnterSceneCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.EnterSceneCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.EnterSceneCsReq, payloadMsg)
 	req := msg.(*proto.EnterSceneCsReq)
 	rsp := &proto.GetEnteredSceneScRsp{}
 	if req.EntryId != g.Player.DbScene.EntryId {
-		g.send(cmd.SyncServerSceneChangeNotify, rsp)
+		g.Send(cmd.SyncServerSceneChangeNotify, rsp)
 	}
 	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId)
 
-	g.send(cmd.EnterSceneScRsp, rsp)
-	g.send(cmd.SceneUpdatePositionVersionNotify, rsp)
+	g.Send(cmd.EnterSceneScRsp, rsp)
+	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
 }

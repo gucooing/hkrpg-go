@@ -11,6 +11,8 @@ go.work
 test.go
 .idea/*
 cmake-build-*/
+robot
+RobotConfig.json
 *.iws
 out/
 .idea_modules/

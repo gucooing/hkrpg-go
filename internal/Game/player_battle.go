@@ -9,7 +9,7 @@ import (
 )
 
 func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.SceneCastSkillCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCsReq, payloadMsg)
 	req := msg.(*proto.SceneCastSkillCsReq)
 
 	var targetIndex uint32 = 0
@@ -24,7 +24,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
 		}
-		g.send(cmd.SceneCastSkillScRsp, rsp)
+		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
 
@@ -32,7 +32,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
 		}
-		g.send(cmd.SceneCastSkillScRsp, rsp)
+		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
 	eventID := g.Player.EntityList[req.HitTargetIdList[0]]
@@ -113,18 +113,18 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 				Level:           1,
 				OwnerId:         targetIndex,
 				TargetIndexList: []uint32{targetIndex},
-				WaveFlag:        4294967295,
+				WaveFlag:        4294967295, // 失效时间
 			}
 			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 			targetIndex++
 			g.Player.DbAvatar.Avatar[Lineup].BuffList = 0
 		}
 	}
-	g.send(cmd.SceneCastSkillScRsp, rsp)
+	g.Send(cmd.SceneCastSkillScRsp, rsp)
 }
 
 func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.PVEBattleResultCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.PVEBattleResultCsReq, payloadMsg)
 	req := msg.(*proto.PVEBattleResultCsReq)
 	/*
 		SceneGroupRefreshScNotify
@@ -140,10 +140,9 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	// 更新角色状态
 	for _, avatar := range req.Stt.BattleAvatarList {
 		g.Player.DbAvatar.Avatar[avatar.Id].Type = avatar.AvatarType
-		g.Player.DbAvatar.Avatar[avatar.Id].SpBar.MaxSp = uint32(avatar.AvatarStatus.MaxSp)
-		g.Player.DbAvatar.Avatar[avatar.Id].SpBar.CurSp = uint32(avatar.AvatarStatus.LeftSp)
+		g.Player.DbAvatar.Avatar[avatar.Id].SpBar.CurSp = uint32((avatar.AvatarStatus.LeftSp / avatar.AvatarStatus.MaxSp) * 10000)
 		if avatar.AvatarStatus.LeftHp == 0 {
-			g.Player.DbAvatar.Avatar[avatar.Id].Hp = 10000
+			g.Player.DbAvatar.Avatar[avatar.Id].Hp = 1000
 			g.Player.DbAvatar.Avatar[avatar.Id].Type = proto.AvatarType_AVATAR_FORMAL_TYPE
 		} else {
 			g.Player.DbAvatar.Avatar[avatar.Id].Hp = uint32((avatar.AvatarStatus.LeftHp / avatar.AvatarStatus.MaxHp) * 10000)
@@ -170,5 +169,52 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 		}}},
 		ResVersion: strconv.Itoa(int(req.ClientResVersion)),
 	}
-	g.send(cmd.PVEBattleResultScRsp, rsp)
+	g.Send(cmd.PVEBattleResultScRsp, rsp)
+}
+
+func (g *Game) StartRogueCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.StartRogueCsReq, payloadMsg)
+	req := msg.(*proto.StartRogueCsReq)
+
+	rsp := &proto.StartRogueScRsp{
+		Scene: nil,
+		Lineup: &proto.LineupInfo{
+			AvatarList:      make([]*proto.LineupAvatar, 0),
+			ExtraLineupType: proto.ExtraLineupType_LINEUP_ROGUE,
+			MaxMp:           5,
+			Mp:              5,
+		},
+		RogueInfo: &proto.RogueInfo{
+			RogueData:            nil,
+			RogueVirtualItemInfo: nil,
+			RogueScoreInfo:       nil,
+			RoomMap:              nil,
+			RogueAreaList:        nil,
+			Status:               0,
+			SeasonId:             0,
+			RogueProgress:        nil,
+			RogueAeonInfo:        nil,
+			EndTime:              0,
+			BaseAvatarIdList:     nil,
+			BeginTime:            0,
+			RogueCoin:            0,
+		},
+	}
+
+	for slot, avatarId := range req.BaseAvatarIdList {
+		if avatarId == 0 {
+			continue
+		}
+		avatar := g.Player.DbAvatar.Avatar[avatarId]
+		lineupAvatar := &proto.LineupAvatar{
+			AvatarType: avatar.Type,
+			Slot:       uint32(slot),
+			Hp:         avatar.Hp,
+			Id:         avatarId,
+			SpBar:      avatar.SpBar,
+		}
+		rsp.Lineup.AvatarList = append(rsp.Lineup.AvatarList, lineupAvatar)
+	}
+
+	g.Send(cmd.StartRogueScRsp, rsp)
 }

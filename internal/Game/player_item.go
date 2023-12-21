@@ -52,5 +52,5 @@ func (g *Game) HandleGetBagCsReq(payloadMsg []byte) {
 		rsp.RelicList = append(rsp.RelicList, relicList)
 	}
 
-	g.send(cmd.GetBagScRsp, rsp)
+	g.Send(cmd.GetBagScRsp, rsp)
 }

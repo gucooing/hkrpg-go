@@ -111,7 +111,11 @@ func (k *KcpConnManager) recvHandle(g *Game.Game) {
 			// name := g.ServerCmdProtoMap.GetCmdNameByCmdId(v.CmdId)
 			// logger.Error("C --> S: %v", v.CmdId)
 			// payloadMsg := DecodePayloadToProto(g, v) TODO 由于 req 大部分缺失，所以不预处理数据
-			g.RegisterMessage(v.CmdId, v.ProtoData)
+			if g.IsToken {
+				g.RegisterMessage(v.CmdId, v.ProtoData)
+			} else {
+				HandlePlayerGetTokenCsReq(g, v.ProtoData)
+			}
 		}
 	}
 }
@@ -157,7 +161,7 @@ func (k *KcpConnManager) sendNet(g *Game.Game) {
 		case "KcpMsg":
 			k.SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
 		case "Close":
-			atomic.AddInt32(&CLIENT_CONN_NUM, -1)
+			CLIENT_CONN_NUM--
 			g.KcpConn.Close()
 			delete(k.sessionMap, g.Uid)
 			return

@@ -10,11 +10,11 @@ import (
 )
 
 func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.ExpUpEquipmentCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.ExpUpEquipmentCsReq, payloadMsg)
 	req := msg.(*proto.ExpUpEquipmentCsReq)
 	if req.EquipmentUniqueId == 0 {
 		rsp := &proto.ExpUpEquipmentScRsp{}
-		g.send(cmd.ExpUpEquipmentScRsp, rsp)
+		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 		return
 	}
 
@@ -27,14 +27,14 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
 	if dbEquipment == nil {
 		rsp := &proto.ExpUpEquipmentScRsp{}
-		g.send(cmd.ExpUpEquipmentScRsp, rsp)
+		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 		return
 	}
 	// 获取需要升级光锥的配置信息
 	equConf := gdconf.GetEquipmentConfigById(strconv.Itoa(int(dbEquipment.Tid)))
 	if equConf == nil {
 		rsp := &proto.ExpUpEquipmentScRsp{}
-		g.send(cmd.ExpUpEquipmentScRsp, rsp)
+		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 		return
 	}
 
@@ -53,7 +53,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		pileconf := gdconf.GetEquipmentConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
 		if pileconf == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
-			g.send(cmd.ExpUpEquipmentScRsp, rsp)
+			g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 			return
 		}
 		// 获取要扣多少信用点
@@ -73,7 +73,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		equipmentconfig := gdconf.GetEquipmentConfigById(strconv.Itoa(int(g.Player.DbItem.EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)))
 		if equipmentconfig == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
-			g.send(cmd.ExpUpEquipmentScRsp, rsp)
+			g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 			return
 		}
 		// 获取要扣多少信用点
@@ -89,7 +89,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	level, exp := gdconf.GetEquipmentExpByLevel(equConf.ExpType, exp, dbEquipment.Level, dbEquipment.Promotion, dbEquipment.Tid)
 	if level == 0 && exp == 0 {
 		rsp := &proto.ExpUpEquipmentScRsp{}
-		g.send(cmd.ExpUpEquipmentScRsp, rsp)
+		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 	}
 
 	// 扣除本次升级需要的信用点
@@ -111,7 +111,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	// 通知升级后光锥消息
 	g.EquipmentPlayerSyncScNotify(dbEquipment.Tid, req.EquipmentUniqueId)
 	rsp := &proto.ExpUpEquipmentScRsp{}
-	g.send(cmd.ExpUpEquipmentScRsp, rsp)
+	g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 }
 
 // 角色状态改变时需要发送通知
@@ -122,14 +122,14 @@ func (g *Game) PlayerPlayerSyncScNotify() {
 			Level:      g.Player.Level,
 			Exp:        g.Player.Exp,
 			Stamina:    g.Player.Stamina,
-			Mcoin:      0,
+			Mcoin:      g.Player.Mcoin,
 			Hcoin:      g.Player.DbItem.MaterialMap[1].Num,
 			Scoin:      g.Player.DbItem.MaterialMap[2].Num,
 			WorldLevel: g.Player.WorldLevel,
 		},
 	}
 
-	g.send(cmd.PlayerSyncScNotify, notify)
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
 func (g *Game) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
@@ -138,7 +138,7 @@ func (g *Game) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
 	}
 
 	notify := &proto.PlayerSyncScNotify{DelEquipmentList: equipmentList}
-	g.send(cmd.PlayerSyncScNotify, notify)
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
 func (g *Game) DelMaterialPlayerSyncScNotify(pileItem []*Material) {
@@ -152,11 +152,11 @@ func (g *Game) DelMaterialPlayerSyncScNotify(pileItem []*Material) {
 		}
 		notify.MaterialList = append(notify.MaterialList, material)
 	}
-	g.send(cmd.PlayerSyncScNotify, notify)
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
 func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.RankUpEquipmentCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.RankUpEquipmentCsReq, payloadMsg)
 	req := msg.(*proto.RankUpEquipmentCsReq)
 
 	var equipmentList []uint32 // 需要删除的equipmentList
@@ -166,7 +166,7 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
 	if dbEquipment == nil {
 		rsp := new(proto.GetChallengeScRsp)
-		g.send(cmd.RankUpEquipmentScRsp, rsp)
+		g.Send(cmd.RankUpEquipmentScRsp, rsp)
 		return
 	}
 
@@ -212,7 +212,7 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 		}
 		if g.Player.DbItem.EquipmentMap[equipment.GetEquipmentUniqueId()].Tid != dbEquipment.Tid {
 			rsp := new(proto.GetChallengeScRsp)
-			g.send(cmd.RankUpEquipmentScRsp, rsp)
+			g.Send(cmd.RankUpEquipmentScRsp, rsp)
 			return
 		}
 		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
@@ -231,11 +231,11 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 	g.EquipmentPlayerSyncScNotify(dbEquipment.Tid, req.EquipmentUniqueId)
 
 	rsp := new(proto.GetChallengeScRsp)
-	g.send(cmd.RankUpEquipmentScRsp, rsp)
+	g.Send(cmd.RankUpEquipmentScRsp, rsp)
 }
 
 func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.PromoteEquipmentCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.PromoteEquipmentCsReq, payloadMsg)
 	req := msg.(*proto.PromoteEquipmentCsReq)
 
 	var pileItem []*Material // 需要删除的突破材料
@@ -245,7 +245,7 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
 	if dbEquipment == nil {
 		rsp := new(proto.GetChallengeScRsp)
-		g.send(cmd.PromoteEquipmentScRsp, rsp)
+		g.Send(cmd.PromoteEquipmentScRsp, rsp)
 		return
 	}
 	// 遍历用来突破的材料
@@ -276,5 +276,5 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	g.PlayerPlayerSyncScNotify()
 
 	rsp := new(proto.GetChallengeScRsp)
-	g.send(cmd.PromoteEquipmentScRsp, rsp)
+	g.Send(cmd.PromoteEquipmentScRsp, rsp)
 }

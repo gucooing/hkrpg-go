@@ -7,7 +7,7 @@ import (
 )
 
 func (g *Game) HandleGetMissionStatusCsReq(payloadMsg []byte) {
-	msg := g.decodePayloadToProto(cmd.GetMissionStatusCsReq, payloadMsg)
+	msg := g.DecodePayloadToProto(cmd.GetMissionStatusCsReq, payloadMsg)
 	req := msg.(*proto.GetMissionStatusCsReq)
 
 	rsp := new(proto.GetMissionStatusScRsp)
@@ -23,7 +23,7 @@ func (g *Game) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 		})
 	}
 
-	g.send(cmd.GetMissionStatusScRsp, rsp)
+	g.Send(cmd.GetMissionStatusScRsp, rsp)
 }
 
 func (g *Game) GetQuestDataCsReq(payloadMsg []byte) {
@@ -39,5 +39,5 @@ func (g *Game) GetQuestDataCsReq(payloadMsg []byte) {
 		rsp.QuestList = append(rsp.QuestList, quest)
 	}
 
-	g.send(cmd.GetQuestDataScRsp, rsp)
+	g.Send(cmd.GetQuestDataScRsp, rsp)
 }
