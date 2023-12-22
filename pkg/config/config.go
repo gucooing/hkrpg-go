@@ -9,26 +9,26 @@ import (
 )
 
 type Config struct {
-	LogLevel           string `json:"logLevel"`
-	GameDataConfigPath string `toml:"GameDataConfigPath"` // 配置表路径
-	MysqlDsn           string `json:"MysqlDsn"`
-	Account            *Account
-	Http               *Http
-	Dispatch           []Dispatch
-	Game               *Game
-	GmKey              string `json:"GmKey"`
-	Email              *email
-	Ec2b               *random.Ec2b
+	LogLevel           string       `json:"LogLevel"`
+	GameDataConfigPath string       `toml:"GameDataConfigPath"`
+	MysqlDsn           string       `json:"MysqlDsn"`
+	Account            *Account     `json:"Account"`
+	Http               *Http        `json:"Http"`
+	Dispatch           []Dispatch   `json:"Dispatch"`
+	Game               *Game        `json:"Game"`
+	GmKey              string       `json:"GmKey"`
+	Email              *email       `json:"Email"`
+	Ec2b               *random.Ec2b `json:"Ec2B"`
 }
 type Account struct {
 	AutoCreate bool  `json:"autoCreate"`
-	MaxPlayer  int64 `json:"maxPlayer"`
+	MaxPlayer  int32 `json:"maxPlayer"`
 }
 type Dispatch struct {
-	Name        string
-	Title       string
-	Type        string
-	DispatchUrl string
+	Name        string `json:"name"`
+	Title       string `json:"title"`
+	Type        string `json:"type"`
+	DispatchUrl string `json:"dispatchUrl"`
 }
 type Http struct {
 	Addr string `json:"addr"`
@@ -39,10 +39,10 @@ type Game struct {
 	Port uint32 `json:"port"`
 }
 type email struct {
-	From     string `json:"From"`
-	Addr     string `json:"Addr"`
-	Host     string `json:"Host"`
-	Identity string `json:"Identity"`
+	From     string `json:"from"`
+	Addr     string `json:"addr"`
+	Host     string `json:"host"`
+	Identity string `json:"identity"`
 }
 
 var CONF *Config = nil
@@ -92,6 +92,12 @@ var DefaultConfig = &Config{
 			Title:       "os_usa",
 			Type:        "2",
 			DispatchUrl: "http://127.0.0.1:8080/query_gateway",
+		},
+		{
+			Name:        "hkrpg-official",
+			Title:       "os_usa",
+			Type:        "2",
+			DispatchUrl: "http://127.0.0.1:8080/query_gateway_capture",
 		},
 	},
 	Game: &Game{

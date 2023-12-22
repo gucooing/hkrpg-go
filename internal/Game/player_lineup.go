@@ -31,7 +31,10 @@ func (g *Game) SyncLineupNotify(index uint32) {
 			Satiety:    0,
 			Hp:         avatar.Hp,
 			Id:         avatarId,
-			SpBar:      avatar.SpBar,
+			SpBar:      &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.CurSp,
+			},
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}
@@ -114,7 +117,10 @@ func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 				Satiety:    0,
 				Hp:         avatar.Hp,
 				Id:         avatarId,
-				SpBar:      avatar.SpBar,
+				SpBar:      &proto.SpBarInfo{
+					CurSp: avatar.SpBar.CurSp,
+					MaxSp: avatar.SpBar.CurSp,
+				},
 			}
 			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 		}
@@ -149,7 +155,10 @@ func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 			Satiety:    0,
 			Hp:         avatar.Hp,
 			Id:         avatarId,
-			SpBar:      avatar.SpBar,
+			SpBar:      &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.CurSp,
+			},
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}

@@ -24,7 +24,7 @@ type Avatar struct {
 	Promotion         uint32           // 突破等阶
 	Rank              uint32           // 命座
 	Hp                uint32           // 血量
-	SpBar             *proto.SpBarInfo // 能量
+	SpBar             *SpBarInfo       // 能量
 	SkilltreeList     []*Skilltree     // 技能等级数据 [id]level
 	EquipmentUniqueId uint32           // 装备光锥
 	TakenRewards      []uint32         // 已领取的突破奖励
@@ -34,6 +34,11 @@ type Avatar struct {
 type Skilltree struct {
 	PointId uint32
 	Level   uint32
+}
+
+type SpBarInfo struct {
+	CurSp uint32
+	MaxSp uint32
 }
 
 func (g *Game) GetAvatarHp(avatarId uint32) uint32 {
@@ -73,7 +78,7 @@ func (g *Game) AddAvatar(avatarId uint32) {
 	avatar.Rank = 0
 	avatar.Hp = 10000
 	avatar.EquipmentUniqueId = 0
-	avatar.SpBar = &proto.SpBarInfo{
+	avatar.SpBar = &SpBarInfo{
 		CurSp: 10000,
 		MaxSp: 10000,
 	}

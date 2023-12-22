@@ -28,7 +28,7 @@ type GameDataConfig struct {
 	ItemConfigMap               map[string]*ItemConfig                          // 材料
 	ItemConfigEquipmentMap      map[string]*ItemConfigEquipment                 // 背包光锥配置
 	ItemConfigRelicMap          map[string]*ItemConfigRelic                     // 背包遗器配置
-	RogueAreaMap                map[string]*RogueArea                           // 地图库
+	RogueAreaMap                map[string]*RogueArea                           // 副本配置
 	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
 	MazePlaneMap                map[string]*MazePlane                           // 场景id
 	GroupMap                    map[uint32]map[uint32][]*LevelGroup             // 场景实体
@@ -95,7 +95,7 @@ func (g *GameDataConfig) load() {
 	g.loadItemConfig()               // 材料
 	g.loadItemConfigEquipment()      // 背包光锥配置
 	g.loadItemConfigRelic()          // 背包遗器配置
-	g.loadRogueArea()                // 副本
+	g.loadRogueArea()                // 副本配置
 	g.loadAvatarSkilltree()          // 技能库
 	g.loadMazePlane()                // 场景id
 	g.loadGroup()                    // 场景实体

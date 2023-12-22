@@ -92,7 +92,10 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			Promotion:     avatar.Promotion,
 			RelicList:     make([]*proto.BattleRelic, 0),
 			WorldLevel:    g.Player.WorldLevel,
-			SpBar:         avatar.SpBar,
+			SpBar: &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.CurSp,
+			},
 		}
 		// 获取角色装备的光锥
 		if avatar.EquipmentUniqueId != 0 {
@@ -211,7 +214,10 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 			Slot:       uint32(slot),
 			Hp:         avatar.Hp,
 			Id:         avatarId,
-			SpBar:      avatar.SpBar,
+			SpBar: &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.CurSp,
+			},
 		}
 		rsp.Lineup.AvatarList = append(rsp.Lineup.AvatarList, lineupAvatar)
 	}

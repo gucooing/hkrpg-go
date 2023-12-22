@@ -22,12 +22,6 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
 
 	groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
-	/*
-		if int(mapEntrance.StartGroupID) > len(groupMap) {
-			g.send(cmd.EnterSceneByServerScNotify, rsp)
-			return
-		}
-	*/
 
 	if teleportId != 0 {
 		for _, levelGroup := range groupMap {
@@ -79,7 +73,10 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			Satiety:    0,
 			Hp:         avatar.Hp,
 			Id:         avatarId,
-			SpBar:      avatar.SpBar,
+			SpBar:      &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.CurSp,
+			},
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}
