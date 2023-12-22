@@ -61,6 +61,7 @@ func Run() error {
 	}
 	logger.Info("kcp服务在 %s 上启动", addr)
 	k.kcpListener = kcpListener
+	Game.SNOWFLAKE = alg.NewSnowflakeWorker(int64(1))
 	go k.kcpNetInfo()
 	go k.kcpEnetHandle(kcpListener)
 
@@ -79,9 +80,6 @@ func Run() error {
 		g := NewGame(kcpConn)
 		g.XorKey = config.GetConfig().Ec2b.XorKey()
 		g.Db = DataBase.DBASE
-		g.Snowflake = alg.NewSnowflakeWorker(int64(1))
-		CLIENT_CONN_NUM++
-		go g.AutoUpDataPlayer()
 		go k.recvHandle(g)
 		go k.sendNet(g)
 	}
@@ -114,7 +112,13 @@ func (k *KcpConnManager) recvHandle(g *Game.Game) {
 			if g.IsToken {
 				g.RegisterMessage(v.CmdId, v.ProtoData)
 			} else {
-				HandlePlayerGetTokenCsReq(g, v.ProtoData)
+				if v.CmdId == cmd.PlayerGetTokenCsReq {
+					HandlePlayerGetTokenCsReq(g, v.ProtoData)
+				} else {
+					g.Db = nil
+					g.XorKey = nil
+					g.KcpConn.Close()
+				}
 			}
 		}
 	}
@@ -161,9 +165,9 @@ func (k *KcpConnManager) sendNet(g *Game.Game) {
 		case "KcpMsg":
 			k.SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
 		case "Close":
-			CLIENT_CONN_NUM--
 			g.KcpConn.Close()
 			delete(k.sessionMap, g.Uid)
+			CLIENT_CONN_NUM = int32(len(k.sessionMap))
 			return
 		}
 	}
@@ -194,6 +198,7 @@ func (k *KcpConnManager) SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Mes
 		logger.Info("uid:%v,seed:%v,密钥交换成功", g.Uid, g.Seed)
 		if k.sessionMap[g.Uid] == nil {
 			k.sessionMap[g.Uid] = g
+			CLIENT_CONN_NUM = int32(len(k.sessionMap))
 		}
 		// 如果不为空则是断线重连
 	}

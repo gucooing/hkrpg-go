@@ -70,7 +70,6 @@ func (g *Game) GmGive(payloadMsg pb.Message) {
 			g.AddMaterial(req.ItemId, req.ItemCount)
 		}
 	}
-	g.UpDataPlayer()
 }
 
 func (g *Game) ScenePlaneEventScNotify(id, num uint32) {

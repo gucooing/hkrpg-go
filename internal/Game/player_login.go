@@ -13,7 +13,7 @@ import (
 func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	playerData := new(PlayerData)
 	dbPlayer := g.Db.QueryAccountUidByFieldPlayer(g.Uid)
-	if dbPlayer.PlayerData == nil {
+	if dbPlayer.PlayerData == nil || string(dbPlayer.PlayerData) == "null" {
 		logger.Info("新账号登录，进入初始化流程")
 		playerData = g.AddPalyerData(g.Uid)
 
@@ -65,6 +65,9 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Stamina:         g.Player.Stamina,
 		ReserveStamina:  g.Player.ReserveStamina,
 	}
+
+	// 开启数据定时保存
+	go g.AutoUpDataPlayer()
 
 	g.Send(cmd.PlayerLoginScRsp, rsp)
 	g.Send(cmd.StaminaInfoScNotify, staminaInfoScNotify)
@@ -199,8 +202,6 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
 	}
 	g.Send(cmd.BattlePassInfoNotify, notify)
-	// 更新账号数据
-	go g.UpDataPlayer()
 }
 
 // 账号离线

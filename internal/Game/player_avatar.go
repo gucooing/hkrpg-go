@@ -133,7 +133,6 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
 
-	g.UpDataPlayer()
 }
 
 func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {

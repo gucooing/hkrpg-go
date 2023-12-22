@@ -83,7 +83,7 @@ func (g *Game) SubtractMaterial(tid, num uint32) {
 }
 
 func (g *Game) AddEquipment(tid uint32) {
-	uniqueId := uint32(g.Snowflake.GenId())
+	uniqueId := uint32(SNOWFLAKE.GenId())
 	g.Player.DbItem.EquipmentMap[uniqueId] = &Equipment{
 		Tid:          tid,
 		UniqueId:     uniqueId,
@@ -98,7 +98,7 @@ func (g *Game) AddEquipment(tid uint32) {
 }
 
 func (g *Game) AddRelic(tid uint32) {
-	uniqueId := uint32(g.Snowflake.GenId())
+	uniqueId := uint32(SNOWFLAKE.GenId())
 	relic := gdconf.GetRelicById(strconv.Itoa(int(tid)))
 	g.Player.DbItem.RelicMap[uniqueId] = &Relic{
 		Tid:          tid,

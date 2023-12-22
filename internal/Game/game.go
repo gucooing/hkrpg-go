@@ -13,6 +13,8 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
+
 type Game struct {
 	IsToken        bool // 是否通过token验证
 	Uid            uint32
@@ -21,7 +23,6 @@ type Game struct {
 	KcpConn        *kcp.UDPSession
 	LastActiveTime int64 // 最近一次的活跃时间
 	Db             *DataBase.Store
-	Snowflake      *alg.SnowflakeWorker // 雪花唯一id生成器
 	// 玩家数据
 	Player *PlayerData
 	// 密钥
@@ -100,26 +101,29 @@ func (g *Game) AutoUpDataPlayer() {
 			return
 		}
 		if g.KcpConn == nil {
+			g.exitGame()
 			return
 		}
 		if g.Db == nil {
+			g.exitGame()
 			return
 		}
 		if g.Uid == 0 {
-			continue
+			g.exitGame()
+			return
 		}
-		logger.Info("[UID:%v] || 定时保存在线玩家数据", g.Uid)
-		g.UpDataPlayer()
 	}
 }
 
 func (g *Game) exitGame() {
-	g.UpDataPlayer()
-	logger.Info("[UID:%v] || 玩家已离线", g.Uid)
-	netMsg := new(NetMsg)
-	netMsg.G = g
-	netMsg.Type = "Close"
-	g.NetMsgInput <- netMsg
-	g.Db = nil
+	if g.Uid != 0 {
+		g.UpDataPlayer()
+		logger.Info("[UID:%v] || 玩家已离线", g.Uid)
+		netMsg := new(NetMsg)
+		netMsg.G = g
+		netMsg.Type = "Close"
+		g.NetMsgInput <- netMsg
+		g.Db = nil
+	}
 	return
 }

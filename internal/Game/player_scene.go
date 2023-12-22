@@ -39,6 +39,18 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			}
 		}
 	} else {
+		/*
+		  "8000101": {
+		    "ID": 8000101,
+		    "EntranceType": "Explore",
+		    "PlaneID": 80001,
+		    "FloorID": 80001001,
+		    "BeginMainMissionList": [],
+		    "FinishMainMissionList": [],
+		    "FinishSubMissionList": []
+		  },
+		*/
+		// 此处有问题 不应这么获取
 		groupID = mapEntrance.StartGroupID
 		anchorID = mapEntrance.StartAnchorID
 	}
@@ -260,8 +272,6 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 
 	g.Player.EntityList = entityMap
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
-
-	g.UpDataPlayer()
 }
 
 func (g *Game) GetRogueScoreRewardInfoCsReq() {

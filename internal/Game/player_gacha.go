@@ -144,8 +144,6 @@ func (g *Game) DoGachaCsReq(payloadMsg []byte) {
 	g.AddMaterial(251, req.GachaNum*42)
 
 	g.Send(cmd.DoGachaScRsp, rsp)
-
-	g.UpDataPlayer()
 }
 
 func (g *Game) GachaRandom(gachaId uint32) uint32 {

@@ -38,8 +38,6 @@ func (g *Game) SyncLineupNotify(index uint32) {
 	rsq.Lineup = lineupList
 
 	g.SceneGroupRefreshScNotify()
-	// 更新数据库
-	g.UpDataPlayer()
 
 	g.Send(cmd.SyncLineupNotify, rsq)
 }

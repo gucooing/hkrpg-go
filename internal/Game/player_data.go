@@ -70,7 +70,6 @@ func (g *Game) SetHeadIconCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.SetHeadIconScRsp, rsp)
 
-	g.UpDataPlayer()
 }
 
 func (g *Game) SetHeroBasicTypeCsReq(payloadMsg []byte) {
@@ -85,7 +84,6 @@ func (g *Game) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.SetHeroBasicTypeScRsp, rsp)
 
-	g.UpDataPlayer()
 }
 
 func (g *Game) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
@@ -189,7 +187,6 @@ func (g *Game) SetNicknameCsReq(payloadMsg []byte) {
 
 	if g.Player.IsNickName {
 		g.Player.NickName = req.Nickname
-		g.UpDataPlayer()
 	}
 
 	g.Player.IsNickName = !g.Player.IsNickName
@@ -210,8 +207,6 @@ func (g *Game) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 	rsp := &proto.SetGameplayBirthdayScRsp{Birthday: req.Birthday}
 
 	g.Send(cmd.SetGameplayBirthdayScRsp, rsp)
-
-	g.UpDataPlayer()
 }
 
 func (g *Game) SetSignatureCsReq(payloadMsg []byte) {
@@ -223,8 +218,6 @@ func (g *Game) SetSignatureCsReq(payloadMsg []byte) {
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
 
 	g.Send(cmd.SetSignatureScRsp, rsp)
-
-	g.UpDataPlayer()
 }
 
 func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
