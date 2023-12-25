@@ -54,11 +54,11 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	mainAvatar := proto.HeroBasicType_BoyWarrior
 	data.PlayerId = uid
 	data.NickName = "hkrpg-go"
-	data.Level = 1
+	data.Level = 30
 	data.Exp = 0
 	data.Stamina = 240
 	data.ReserveStamina = 2400
-	data.WorldLevel = 0
+	data.WorldLevel = 1
 	data.Mcoin = 9999
 	data.Signature = "hkrpg-go"
 	data.HeadImage = 208001

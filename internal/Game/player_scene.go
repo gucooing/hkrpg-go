@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -19,8 +18,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 
 	var groupID = mapEntrance.StartGroupID
 	var anchorID = mapEntrance.StartAnchorID
-	var group *gdconf.LevelGroup
-	entityMap := make(map[uint32]uint32)
+	entityMap := make(map[uint32]uint32) // [实体id]怪物群id
 
 	if teleportId != 0 {
 		groupID = foorMap.Teleports[teleportId].AnchorGroupID
@@ -62,18 +60,6 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}
 	rsp.Lineup = lineupList
-
-	for _, groupList := range groupMap {
-		if groupList.GroupId == groupID {
-			group = groupList
-		}
-	}
-
-	if group == nil {
-		logger.Error("寄,找不到这个地图 P:%v F:%v G:%v", mapEntrance.PlaneID, mapEntrance.FloorID, groupID)
-		g.Send(cmd.EnterSceneByServerScNotify, rsp)
-		return
-	}
 
 	rsp.Scene = &proto.SceneInfo{
 		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
@@ -164,33 +150,31 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-		/*
-			// 添加物品实体
-			for _, propList := range levelGroup.PropList {
-				entityList := &proto.SceneEntityInfo{
-					GroupId:  levelGroup.GroupId, // 文件名后那个G
-					InstId:   propList.ID,        // ID
-					EntityId: uint32(g.GetNextGameObjectGuid()),
-					Motion: &proto.MotionInfo{
-						Pos: &proto.Vector{
-							X: int32(propList.PosX * 1000),
-							Y: int32(propList.PosY * 1000),
-							Z: int32(propList.PosZ * 1000),
-						},
-						Rot: &proto.Vector{
-							X: 0,
-							Y: int32(propList.RotY * 1000),
-							Z: 0,
-						},
+		// 添加物品实体
+		for _, propList := range levelGroup.PropList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  levelGroup.GroupId, // 文件名后那个G
+				InstId:   propList.ID,        // ID
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(propList.PosX * 1000),
+						Y: int32(propList.PosY * 1000),
+						Z: int32(propList.PosZ * 1000),
 					},
-					EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
-						PropId:    propList.PropID, // PropID
-						PropState: gdconf.GetStateValue(propList.State),
-					}},
-				}
-				entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(propList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+					PropId:    propList.PropID, // PropID
+					PropState: gdconf.GetStateValue(propList.State),
+				}},
 			}
-		*/
+			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+		}
 		// 添加怪物实体
 		for _, monsterList := range levelGroup.MonsterList {
 			entityId := uint32(g.GetNextGameObjectGuid())
@@ -362,33 +346,31 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-		/*
-			// 添加物品实体
-			for _, propList := range levelGroup.PropList {
-				entityList := &proto.SceneEntityInfo{
-					GroupId:  levelGroup.GroupId, // 文件名后那个G
-					InstId:   propList.ID,        // ID
-					EntityId: uint32(g.GetNextGameObjectGuid()),
-					Motion: &proto.MotionInfo{
-						Pos: &proto.Vector{
-							X: int32(propList.PosX * 1000),
-							Y: int32(propList.PosY * 1000),
-							Z: int32(propList.PosZ * 1000),
-						},
-						Rot: &proto.Vector{
-							X: 0,
-							Y: int32(propList.RotY * 1000),
-							Z: 0,
-						},
+		// 添加物品实体
+		for _, propList := range levelGroup.PropList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  levelGroup.GroupId, // 文件名后那个G
+				InstId:   propList.ID,        // ID
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(propList.PosX * 1000),
+						Y: int32(propList.PosY * 1000),
+						Z: int32(propList.PosZ * 1000),
 					},
-					EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
-						PropId:    propList.PropID, // PropID
-						PropState: gdconf.GetStateValue(propList.State),
-					}},
-				}
-				entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(propList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+					PropId:    propList.PropID, // PropID
+					PropState: gdconf.GetStateValue(propList.State),
+				}},
 			}
-		*/
+			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+		}
 		// 添加怪物实体
 		for _, monsterList := range levelGroup.MonsterList {
 			entityId := uint32(g.GetNextGameObjectGuid())
@@ -512,9 +494,7 @@ func (g *Game) EnterSceneCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.EnterSceneCsReq, payloadMsg)
 	req := msg.(*proto.EnterSceneCsReq)
 	rsp := &proto.GetEnteredSceneScRsp{}
-	if req.EntryId != g.Player.DbScene.EntryId {
-		g.Send(cmd.SyncServerSceneChangeNotify, rsp)
-	}
+
 	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId)
 
 	g.Send(cmd.EnterSceneScRsp, rsp)

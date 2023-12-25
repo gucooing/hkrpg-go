@@ -17,7 +17,7 @@ type LevelGroup struct {
 	PropList      []*PropList    `json:"PropList"`    // 实体列表
 	MonsterList   []*MonsterList `json:"MonsterList"` // 怪物列表
 	NPCList       []*NPCList     `json:"NPCList"`     // NPC列表
-	AnchorList    []*AnchorList  `json:"AnchorList"`
+	AnchorList    []*AnchorList  `json:"AnchorList"`  // 锚点列表
 }
 type PropList struct {
 	ID                       uint32  `json:"ID"`
@@ -178,16 +178,16 @@ func GetStateValue(state string) uint32 {
 		"BridgeState4":      6,
 		"CheckPointDisable": 8,
 		"CheckPointEnable":  8,
-		"TriggerDisable":    9,
+		"TriggerDisable":    10,
 		"TriggerEnable":     10,
-		"ChestLocked":       11,
+		"ChestLocked":       12,
 		"ChestClosed":       12,
 		"ChestUsed":         13,
 		"Elevator1":         14,
 		"Elevator2":         15,
 		"Elevator3":         16,
 		"WaitActive":        17,
-		"EventClose":        18,
+		"EventClose":        19,
 		"EventOpen":         19,
 		"Hidden":            20,
 		"TeleportGate0":     21,

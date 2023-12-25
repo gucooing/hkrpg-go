@@ -52,8 +52,8 @@ func (r *RoBot) EnterSceneCsReq() {
 		}
 	*/
 	rep := &proto.EnterSceneCsReq{
-		EntryId:    1000001,
-		TeleportId: 2215,
+		EntryId:    2013402,
+		TeleportId: 1101,
 	}
 
 	r.send(cmd.EnterSceneCsReq, rep)

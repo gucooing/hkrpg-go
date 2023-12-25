@@ -24,8 +24,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetRogueHandbookDataCsReq(payloadMsg) // 获取帮助手册
 	case cmd.GetChatEmojiListCsReq:
 		g.HandleGetChatEmojiListCsReq(payloadMsg) // 获取聊天表情
-	case cmd.GetChallengeCsReq:
-		g.HandleGetChallengeCsReq(payloadMsg) // 获取挑战id列表
 	case cmd.GetJukeboxDataCsReq:
 		g.HandleGetJukeboxDataCsReq(payloadMsg) // 点歌？
 	case cmd.GetPhoneDataCsReq:
@@ -98,12 +96,17 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.EnterSceneCsReq:
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
 	// 战斗
+	case cmd.GetChallengeCsReq:
+		g.HandleGetChallengeCsReq(payloadMsg) // 获取挑战id列表
 	case cmd.SceneCastSkillCsReq:
 		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
 	case cmd.PVEBattleResultCsReq:
 		g.PVEBattleResultCsReq(payloadMsg) // PVE战斗结算
 	case cmd.StartRogueCsReq:
 		g.StartRogueCsReq(payloadMsg) // 模拟宇宙,启动!
+	case cmd.StartCocoonStageCsReq:
+		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
+
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品
