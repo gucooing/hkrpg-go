@@ -1,12 +1,9 @@
 package internal
 
 import (
-	"math/rand"
-	"time"
-
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	"github.com/gucooing/hkrpg-go/robot/pkg/gdconf"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -37,20 +34,33 @@ func (r *RoBot) GetCurSceneInfoScRsp(payloadMsg pb.Message) {
 }
 
 func (r *RoBot) EnterSceneCsReq() {
-	entryIdList := gdconf.GetEntryIdList()
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	for {
-		if r.KcpAddr == "" {
-			return
-		}
-		entryId := rand.Intn(len(entryIdList)-1) + 1
-		rep := &proto.EnterSceneCsReq{
-			EntryId: entryIdList[entryId],
-		}
+	/*
+		entryIdList := gdconf.GetEntryIdList()
+		rand.New(rand.NewSource(time.Now().UnixNano()))
+		for {
+			if r.KcpAddr == "" {
+				return
+			}
+			entryId := rand.Intn(len(entryIdList)-1) + 1
+			rep := &proto.EnterSceneCsReq{
+				EntryId: entryIdList[entryId],
+			}
 
-		r.send(cmd.EnterSceneCsReq, rep)
+			r.send(cmd.EnterSceneCsReq, rep)
 
-		time.Sleep(3 * time.Second)
+			time.Sleep(3 * time.Second)
+		}
+	*/
+	rep := &proto.EnterSceneCsReq{
+		EntryId:    1000001,
+		TeleportId: 2215,
 	}
 
+	r.send(cmd.EnterSceneCsReq, rep)
+}
+
+func (r *RoBot) EnterSceneByServerScNotify(payloadMsg pb.Message) {
+	rsp := payloadMsg.(*proto.EnterSceneByServerScNotify)
+
+	logger.Info("", rsp)
 }

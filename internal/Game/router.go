@@ -158,7 +158,7 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.GetFirstTalkNpcCsReq:
 		g.GetFirstTalkNpcCsReq()
 	default:
-		logger.Error("C --> S error router: %v", cmdId)
+		logger.Debug("C --> S error router: %v", cmdId)
 	}
 	return
 }

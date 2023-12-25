@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -12,7 +13,7 @@ import (
 
 func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	playerData := new(PlayerData)
-	dbPlayer := g.Db.QueryAccountUidByFieldPlayer(g.Uid)
+	dbPlayer := DataBase.DBASE.QueryAccountUidByFieldPlayer(g.Uid)
 	if dbPlayer.PlayerData == nil || string(dbPlayer.PlayerData) == "null" {
 		logger.Info("新账号登录，进入初始化流程")
 		playerData = g.AddPalyerData(g.Uid)
@@ -31,7 +32,7 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		}
 		dbPlayer.AccountUid = g.Uid
 		dbPlayer.PlayerData = dbData
-		err = g.Db.AddDatePlayerFieldByFieldName(dbPlayer)
+		err = DataBase.DBASE.AddDatePlayerFieldByFieldName(dbPlayer)
 		if err != nil {
 			logger.Error("账号数据储存失败")
 			return
@@ -206,5 +207,5 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 
 // 账号离线
 func (g *Game) PlayerLogoutCsReq() {
-	g.exitGame()
+	g.KickPlayer()
 }

@@ -31,7 +31,8 @@ type GameDataConfig struct {
 	RogueAreaMap                map[string]*RogueArea                           // 副本配置
 	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
 	MazePlaneMap                map[string]*MazePlane                           // 场景id
-	GroupMap                    map[uint32]map[uint32][]*LevelGroup             // 场景实体
+	GroupMap                    map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
+	FloorMap                    map[uint32]map[uint32]*LevelFloor               // ?
 	MapEntranceMap              map[string]*MapEntrance                         // 地图入口
 	BannersMap                  map[uint32]*Banners                             // 卡池信息
 	ActivityPanelMap            map[string]*ActivityPanel                       // 活动
@@ -47,6 +48,7 @@ type GameDataConfig struct {
 }
 
 func InitGameDataConfig() {
+	logger.Info("读取资源文件")
 	CONF = new(GameDataConfig)
 	startTime := time.Now().Unix()
 	CONF.loadAll()
@@ -99,6 +101,7 @@ func (g *GameDataConfig) load() {
 	g.loadAvatarSkilltree()          // 技能库
 	g.loadMazePlane()                // 场景id
 	g.loadGroup()                    // 场景实体
+	g.loadFloor()                    // ?
 	g.loadMapEntrance()              // 地图入口
 	g.loadBanners()                  // 卡池信息
 	g.loadActivityPanel()            // 活动

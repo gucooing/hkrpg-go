@@ -96,7 +96,7 @@ func (r *RoBot) getHttpToken() (string, string) {
 		logger.Error("获取token失败,%s", err)
 		r.getHttpToken()
 	}
-	if login.Data.Account == nil {
+	if login.Retcode != float64(0) {
 		logger.Warn("登录失败:%s", login.Message)
 		return "", ""
 	}

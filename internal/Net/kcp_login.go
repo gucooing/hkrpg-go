@@ -16,8 +16,11 @@ import (
 var syncGD sync.Mutex
 
 func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.PlayerGetTokenCsReq, payloadMsg)
+	req := msg.(*proto.PlayerGetTokenCsReq)
 	rsp := new(proto.PlayerGetTokenScRsp)
 
+	// 人数验证
 	if config.GetConfig().Account.MaxPlayer != -1 {
 		if CLIENT_CONN_NUM >= config.GetConfig().Account.MaxPlayer {
 			rsp.Uid = 0
@@ -28,8 +31,7 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 		}
 	}
 
-	msg := g.DecodePayloadToProto(cmd.PlayerGetTokenCsReq, payloadMsg)
-	req := msg.(*proto.PlayerGetTokenCsReq)
+	// 请求验证
 	if req.Token == "" || req.AccountUid == "" {
 		return
 	}
@@ -38,10 +40,9 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 		logger.Error("get token uid error")
 		return
 	}
-	logger.Debug("account_token:%s", req.Token)
+	uidPlayer := DataBase.DBASE.QueryUidPlayerUidByFieldPlayer(uint32(accountUid))
 
-	uidPlayer := g.Db.QueryUidPlayerUidByFieldPlayer(uint32(accountUid))
-
+	// token验证
 	if uidPlayer.ComboToken != req.Token {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_VERIFY_ERROR)
@@ -51,6 +52,7 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 		return
 	}
 
+	// 封禁验证
 	if uidPlayer.IsBan {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_IN_GM_BIND_ACCESS)
@@ -60,6 +62,15 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 		return
 	}
 
+	// 重复登录验证
+	if player, ok := KCPCONNMANAGER.sessionMap[uint32(uidPlayer.AccountUid)]; ok {
+		notify := new(proto.GetChallengeScRsp)
+		// TODO 是的，没错，还是同样的原因
+		// 重复登录下线通知
+		player.Send(cmd.PlayerKickOutScNotify, notify)
+		player.ChangePlayer()
+	}
+
 	newuidPlayer := &DataBase.UidPlayer{
 		AccountId:  uidPlayer.AccountId,
 		IsBan:      false,
@@ -67,10 +78,10 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 	}
 
 	syncGD.Lock()
-	err = g.Db.UpdateUidPlayer(uidPlayer.AccountId, newuidPlayer)
+	err = DataBase.DBASE.UpdateUidPlayer(uidPlayer.AccountId, newuidPlayer)
 	if err != nil {
 		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_VERIFY_ERROR)
+		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_PARA_ERROR)
 		rsp.Msg = "账号刷新失败"
 		g.Send(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Error("登录账号:%v,账号刷新失败", accountUid)

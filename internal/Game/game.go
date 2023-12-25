@@ -22,7 +22,6 @@ type Game struct {
 	NetMsgInput    chan *NetMsg
 	KcpConn        *kcp.UDPSession
 	LastActiveTime int64 // 最近一次的活跃时间
-	Db             *DataBase.Store
 	// 玩家数据
 	Player *PlayerData
 	// 密钥
@@ -69,26 +68,27 @@ func (g *Game) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 	return protoObj
 }
 
-func (g *Game) UpDataPlayer() {
+func (g *Game) UpDataPlayer() error {
 	var err error
 	if g.KcpConn == nil {
-		return
+		return nil
 	}
 	if g.Uid == 0 {
-		return
+		return nil
 	}
 	dbDate := new(DataBase.Player)
 	dbDate.AccountUid = g.Uid
 	dbDate.PlayerData, err = json.Marshal(g.Player)
 	if err != nil {
 		logger.Error("json to bin error:%s", err)
-		return
+		return err
 	}
-	if err = g.Db.UpdatePlayer(dbDate); err != nil {
+	if err = DataBase.DBASE.UpdatePlayer(dbDate); err != nil {
 		logger.Error("Update Player error")
-		return
+		return err
 	}
 	logger.Info("数据库账号:%v 数据更新", g.Uid)
+	return nil
 }
 
 func (g *Game) AutoUpDataPlayer() {
@@ -97,33 +97,48 @@ func (g *Game) AutoUpDataPlayer() {
 		<-ticker.C
 		timestamp := time.Now().Unix()
 		if timestamp-g.LastActiveTime >= 60 {
-			g.exitGame()
+			g.KickPlayer()
 			return
 		}
 		if g.KcpConn == nil {
-			g.exitGame()
-			return
-		}
-		if g.Db == nil {
-			g.exitGame()
+			g.KickPlayer()
 			return
 		}
 		if g.Uid == 0 {
-			g.exitGame()
+			g.KickPlayer()
 			return
 		}
 	}
 }
 
-func (g *Game) exitGame() {
+func (g *Game) KickPlayer() error {
 	if g.Uid != 0 {
-		g.UpDataPlayer()
+		err := g.UpDataPlayer()
+		if err != nil {
+			return err
+		}
 		logger.Info("[UID:%v] || 玩家已离线", g.Uid)
 		netMsg := new(NetMsg)
 		netMsg.G = g
 		netMsg.Type = "Close"
 		g.NetMsgInput <- netMsg
-		g.Db = nil
+		g.Player = nil
+	}
+	return nil
+}
+
+func (g *Game) ChangePlayer() {
+	if g.Uid != 0 {
+		err := g.UpDataPlayer()
+		if err != nil {
+			return
+		}
+		logger.Info("[UID:%v] || 玩家重复登录", g.Uid)
+		netMsg := new(NetMsg)
+		netMsg.G = g
+		netMsg.Type = "Change"
+		g.NetMsgInput <- netMsg
+		g.Player = nil
 	}
 	return
 }

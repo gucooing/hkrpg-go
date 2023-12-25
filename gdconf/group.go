@@ -12,18 +12,21 @@ import (
 )
 
 type LevelGroup struct {
-	GroupId     uint32
-	PropList    []PropList    `json:"PropList"`    // 实体列表
-	MonsterList []MonsterList `json:"MonsterList"` // 怪物列表
-	NPCList     []NPCList     `json:"NPCList"`     // NPC列表
-	AnchorList  []AnchorList  `json:"AnchorList"`
+	GroupId       uint32
+	LoadOnInitial bool           `json:"LoadOnInitial"`
+	PropList      []*PropList    `json:"PropList"`    // 实体列表
+	MonsterList   []*MonsterList `json:"MonsterList"` // 怪物列表
+	NPCList       []*NPCList     `json:"NPCList"`     // NPC列表
+	AnchorList    []*AnchorList  `json:"AnchorList"`
 }
 type PropList struct {
 	ID                       uint32  `json:"ID"`
 	PosX                     float64 `json:"PosX"`
 	PosY                     float64 `json:"PosY"`
 	PosZ                     float64 `json:"PosZ"`
+	RotX                     float64 `json:"RotX"`
 	RotY                     float64 `json:"RotY"`
+	RotZ                     float64 `json:"RotZ "`
 	Name                     string  `json:"Name"`
 	PropID                   uint32  `json:"PropID"`
 	IsOverrideInitLevelGraph bool    `json:"IsOverrideInitLevelGraph"`
@@ -54,7 +57,9 @@ type MonsterList struct {
 	PosY         float64 `json:"PosY"`
 	PosZ         float64 `json:"PosZ"`
 	Name         string  `json:"Name"`
+	RotX         float64 `json:"RotX"`
 	RotY         float64 `json:"RotY"`
+	RotZ         float64 `json:"RotZ "`
 	NPCMonsterID uint32  `json:"NPCMonsterID"`
 	CampID       uint32  `json:"CampID"`
 	EventID      uint32  `json:"EventID"`
@@ -66,7 +71,9 @@ type NPCList struct {
 	PosY           float64  `json:"PosY"`
 	PosZ           float64  `json:"PosZ"`
 	Name           string   `json:"Name"`
+	RotX           float64  `json:"RotX"`
 	RotY           float64  `json:"RotY"`
+	RotZ           float64  `json:"RotZ "`
 	NPCID          uint32   `json:"NPCID"`
 	DialogueGroups []uint32 `json:"DialogueGroups"`
 	MapLayerID     uint32   `json:"MapLayerID"`
@@ -75,7 +82,7 @@ type NPCList struct {
 }
 
 func (g *GameDataConfig) loadGroup() {
-	g.GroupMap = make(map[uint32]map[uint32][]*LevelGroup)
+	g.GroupMap = make(map[uint32]map[uint32]map[uint32]*LevelGroup)
 	playerElementsFilePath := g.configPrefix + "LevelOutput/Group"
 	files, err := scanFiles(playerElementsFilePath)
 	if err != nil {
@@ -101,23 +108,23 @@ func (g *GameDataConfig) loadGroup() {
 		levelGroup.GroupId = groupId
 
 		if g.GroupMap[planeId] == nil {
-			g.GroupMap[planeId] = make(map[uint32][]*LevelGroup)
+			g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
 		}
 		if g.GroupMap[planeId][floorId] == nil {
-			g.GroupMap[planeId][floorId] = make([]*LevelGroup, 0)
+			g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
 		}
 
-		g.GroupMap[planeId][floorId] = append(g.GroupMap[planeId][floorId], levelGroup)
+		g.GroupMap[planeId][floorId][groupId] = levelGroup
 	}
 
 	logger.Info("load %v Groups", len(g.GroupMap))
 }
 
-func GetGroupById(planeId, floorId uint32) []*LevelGroup {
+func GetGroupById(planeId, floorId uint32) map[uint32]*LevelGroup {
 	return CONF.GroupMap[planeId][floorId]
 }
 
-func GetGroupMap() map[uint32]map[uint32][]*LevelGroup {
+func GetGroupMap() map[uint32]map[uint32]map[uint32]*LevelGroup {
 	return CONF.GroupMap
 }
 

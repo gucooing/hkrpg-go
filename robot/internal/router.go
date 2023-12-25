@@ -14,6 +14,8 @@ func (r *RoBot) RegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 		r.PlayerHeartbeatScRsp(payloadMsg)
 	case cmd.GetCurSceneInfoScRsp:
 		r.GetCurSceneInfoScRsp(payloadMsg)
+	case cmd.EnterSceneByServerScNotify:
+		r.EnterSceneByServerScNotify(payloadMsg)
 	default:
 
 	}
