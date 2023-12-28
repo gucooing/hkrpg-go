@@ -16,6 +16,9 @@ func (g *Game) SceneEntityMoveCsReq(payloadMsg []byte) {
 	req := msg.(*proto.SceneEntityMoveCsReq)
 
 	for _, entryId := range req.EntityMotionList {
+		if g.Player.EntityList[entryId.EntityId] == nil {
+			break
+		}
 		if g.Player.EntityList[entryId.EntityId].Entity == g.GetSceneAvatarId() {
 			g.Player.Pos = &Vector{
 				X: int(entryId.Motion.Pos.X),

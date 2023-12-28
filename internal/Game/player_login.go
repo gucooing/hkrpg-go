@@ -61,27 +61,12 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		WorldLevel: g.Player.WorldLevel,
 	}
 
-	staminaInfoScNotify := &proto.StaminaInfoScNotify{
-		NextRecoverTime: 0,
-		Stamina:         g.Player.Stamina,
-		ReserveStamina:  g.Player.ReserveStamina,
-	}
-
 	// 开启数据定时保存
 	go g.AutoUpDataPlayer()
 
+	g.StaminaInfoScNotify()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
-	g.Send(cmd.StaminaInfoScNotify, staminaInfoScNotify)
-}
 
-func (g *Game) HandleGetBasicInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetBasicInfoScRsp)
-	rsp.CurDay = 1
-	rsp.NextRecoverTime = 1698768000
-	rsp.GameplayBirthday = g.Player.Birthday
-	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
-
-	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
 
 func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {

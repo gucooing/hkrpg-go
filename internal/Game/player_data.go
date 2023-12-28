@@ -8,6 +8,25 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+func (g *Game) StaminaInfoScNotify() {
+	notify := &proto.StaminaInfoScNotify{
+		NextRecoverTime: 0,
+		Stamina:         g.Player.Stamina,
+		ReserveStamina:  g.Player.ReserveStamina,
+	}
+	g.Send(cmd.StaminaInfoScNotify, notify)
+}
+
+func (g *Game) HandleGetBasicInfoCsReq() {
+	rsp := new(proto.GetBasicInfoScRsp)
+	rsp.CurDay = 1
+	rsp.NextRecoverTime = 1698768000
+	rsp.GameplayBirthday = g.Player.Birthday
+	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
+
+	g.Send(cmd.GetBasicInfoScRsp, rsp)
+}
+
 func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetArchiveDataScRsp)
 	var archiveAvatarIdList []uint32

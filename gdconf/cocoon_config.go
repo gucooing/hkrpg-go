@@ -19,7 +19,7 @@ type CocoonConfig struct {
 	StageIDList   []uint32 `json:"StageIDList"`
 	ParamList     []*Value `json:"ParamList"`
 	DropList      []uint32 `json:"DropList"`
-	StaminaCost   uint32   `json:"StaminaCost"`
+	StaminaCost   uint32   `json:"StaminaCost"` // 扣除体力
 	MaxWave       uint32   `json:"MaxWave"`
 	OpenDate      []uint32 `json:"OpenDate"`
 	DamageType    []string `json:"DamageType"`

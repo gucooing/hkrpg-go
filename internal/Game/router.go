@@ -12,7 +12,7 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	g.LastActiveTime = time.Now().Unix()
 	switch cmdId {
 	case cmd.GetBasicInfoCsReq:
-		g.HandleGetBasicInfoCsReq(payloadMsg)
+		g.HandleGetBasicInfoCsReq()
 	case cmd.GetPlayerBoardDataCsReq:
 		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
 	case cmd.GetCurChallengeCsReq:

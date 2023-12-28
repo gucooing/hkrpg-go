@@ -181,6 +181,9 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	// 更新队伍状态
 	g.BattleSyncLineupNotify(g.Player.DbLineUp.MainLineUp)
 
+	// 账号状态改变通知
+	g.PlayerPlayerSyncScNotify()
+
 	// 胜利时获取奖励
 	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
 		battle := g.Player.Battle[req.BattleId]
@@ -205,23 +208,31 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 			delete(g.Player.EntityList, battle.EventID)
 		}
 
+		g.Player.Stamina -= battle.StaminaCost * battle.Wave // 扣除体力
+
 		// 获取奖励
-		rsp.DropData = &proto.ItemList{ItemList: []*proto.Item{{
-			ItemId:      2,
-			Level:       0,
-			Num:         1,
-			MainAffixId: 0,
-			Rank:        0,
-			Promotion:   0,
-			UniqueId:    0,
-		}}}
+		rsp.DropData = &proto.ItemList{ItemList: make([]*proto.Item, 0)}
+		for _, drop := range battle.DisplayItemList {
+			item := &proto.Item{
+				ItemId:      drop.Tid,
+				Level:       0,
+				Num:         drop.Num * battle.Wave,
+				MainAffixId: 0,
+				Rank:        0,
+				Promotion:   0,
+				UniqueId:    0,
+			}
+			rsp.DropData.ItemList = append(rsp.DropData.ItemList, item)
+
+			g.AddMaterial(drop.Tid, drop.Num*battle.Wave)
+		}
 	}
 
 	// 当前坐标通知(失败情况应该是移动到最近锚点)
 	g.SceneEntityMoveScNotify()
 
-	// 账号状态改变通知
-	g.PlayerPlayerSyncScNotify()
+	// 体力改变通知
+	g.StaminaInfoScNotify()
 
 	// 删除储存的战斗信息
 	delete(g.Player.Battle, req.BattleId)
@@ -412,11 +423,24 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	g.Player.Battle = make(map[uint32]*Battle)
 	battle := &Battle{
 		BattleId:         rsp.BattleInfo.BattleId,
+		Wave:             req.Wave,
 		EventID:          req.CocoonId,
 		LogicRandomSeed:  rsp.BattleInfo.LogicRandomSeed,
 		RoundsLimit:      rsp.BattleInfo.RoundsLimit,
+		StaminaCost:      cocoonConfig.StaminaCost,
 		BuffList:         rsp.BattleInfo.BuffList,
 		BattleAvatarList: rsp.BattleInfo.BattleAvatarList,
+	}
+	// 添加奖励
+	for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.Player.WorldLevel).DisplayItemList {
+		material := &Material{
+			Tid: displayItem.ItemID,
+			Num: displayItem.ItemNum,
+		}
+		if material.Num == 0 {
+			material.Num += 1
+		}
+		battle.DisplayItemList = append(battle.DisplayItemList, material)
 	}
 	g.Player.Battle[rsp.BattleInfo.BattleId] = battle
 
