@@ -15,17 +15,20 @@ func (g *Game) SceneEntityMoveCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneEntityMoveCsReq, payloadMsg)
 	req := msg.(*proto.SceneEntityMoveCsReq)
 
-	g.Player.DbScene.EntryId = req.EntryId
-	g.Player.Pos = &Vector{
-		X: int(req.EntityMotionList[0].Motion.Pos.X),
-		Y: int(req.EntityMotionList[0].Motion.Pos.Y),
-		Z: int(req.EntityMotionList[0].Motion.Pos.Z),
-	}
+	for _, entryId := range req.EntityMotionList {
+		if g.Player.EntityList[entryId.EntityId].Entity == g.GetSceneAvatarId() {
+			g.Player.Pos = &Vector{
+				X: int(entryId.Motion.Pos.X),
+				Y: int(entryId.Motion.Pos.Y),
+				Z: int(entryId.Motion.Pos.Z),
+			}
 
-	g.Player.Rot = &Vector{
-		X: int(req.EntityMotionList[0].Motion.Rot.X),
-		Y: int(req.EntityMotionList[0].Motion.Rot.Y),
-		Z: int(req.EntityMotionList[0].Motion.Rot.Z),
+			g.Player.Rot = &Vector{
+				X: int(entryId.Motion.Rot.X),
+				Y: int(entryId.Motion.Rot.Y),
+				Z: int(entryId.Motion.Rot.Z),
+			}
+		}
 	}
 
 	rsq := new(proto.SceneEntityMoveCsReq)

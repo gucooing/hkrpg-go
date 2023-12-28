@@ -1,12 +1,15 @@
 package Game
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	pb "google.golang.org/protobuf/proto"
 )
 
 func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
+	g.LastActiveTime = time.Now().Unix()
 	switch cmdId {
 	case cmd.GetBasicInfoCsReq:
 		g.HandleGetBasicInfoCsReq(payloadMsg)

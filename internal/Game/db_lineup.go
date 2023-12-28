@@ -1,8 +1,9 @@
 package Game
 
 type DbLineUp struct {
-	LineUpList []*LineUp
-	MainLineUp uint32 // 当前上场队伍
+	LineUpList   []*LineUp
+	MainLineUp   uint32 // 当前上场队伍
+	MainAvatarId uint32 // 当前上场角色
 }
 
 type LineUp struct {
@@ -21,6 +22,7 @@ func NewDbLineUp(data *PlayerData) *PlayerData {
 		{Name: "Team 6", AvatarIdList: make([]uint32, 4)},
 	}
 	data.DbLineUp.MainLineUp = 0
+	data.DbLineUp.MainAvatarId = 0
 	return data
 }
 
@@ -33,4 +35,8 @@ func (g *Game) UnDbLineUp(index uint32, Slot uint32, avatarId uint32) {
 func (g *Game) SwapLineup(index, src_slot, dst_slot uint32) {
 	lineUpList := g.Player.DbLineUp.LineUpList[index]
 	lineUpList.AvatarIdList[src_slot], lineUpList.AvatarIdList[dst_slot] = lineUpList.AvatarIdList[dst_slot], lineUpList.AvatarIdList[src_slot]
+}
+
+func (g *Game) GetSceneAvatarId() uint32 {
+	return g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList[g.Player.DbLineUp.MainAvatarId]
 }

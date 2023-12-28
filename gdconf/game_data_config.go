@@ -31,6 +31,7 @@ type GameDataConfig struct {
 	RogueAreaMap                map[string]*RogueArea                           // 副本配置
 	CocoonConfigMap             map[string]map[string]*CocoonConfig             // 挑战/周本
 	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
+	MazeBuffMap                 map[string]map[string]*MazeBuff                 // 技能buff库
 	MazePlaneMap                map[string]*MazePlane                           // 场景id
 	GroupMap                    map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                    map[uint32]map[uint32]*LevelFloor               // ?
@@ -101,6 +102,7 @@ func (g *GameDataConfig) load() {
 	g.loadRogueArea()                // 副本配置
 	g.loadCocoonConfig()             // 挑战/周本
 	g.loadAvatarSkilltree()          // 技能库
+	g.loadMazeBuff()                 // 技能buff库
 	g.loadMazePlane()                // 场景id
 	g.loadGroup()                    // 场景实体
 	g.loadFloor()                    // ?

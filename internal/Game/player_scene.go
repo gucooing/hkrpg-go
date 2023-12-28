@@ -8,17 +8,47 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+// 当前坐标通知
+func (g *Game) SceneEntityMoveScNotify() {
+	pos := g.Player.Pos
+	rot := g.Player.Rot
+
+	notify := &proto.SceneEntityMoveScNotify{
+		EntryId:          g.Player.DbScene.EntryId,
+		ClientPosVersion: 0,
+		Motion: &proto.MotionInfo{
+			Pos: &proto.Vector{
+				X: int32(pos.X),
+				Y: int32(pos.Y),
+				Z: int32(pos.Z),
+			},
+			Rot: &proto.Vector{
+				X: int32(rot.X),
+				Y: int32(rot.Y),
+				Z: int32(rot.Z),
+			},
+		},
+	}
+
+	g.Send(cmd.SceneEntityMoveScNotify, notify)
+}
+
 // 通知客户端进入场景
 func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	rsp := new(proto.EnterSceneByServerScNotify)
 	leaderEntityId := uint32(g.GetNextGameObjectGuid())
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
-	groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	if mapEntrance == nil {
+		return
+	}
 	foorMap := gdconf.GetFloorById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	if foorMap == nil {
+		return
+	}
 
 	var groupID = mapEntrance.StartGroupID
 	var anchorID = mapEntrance.StartAnchorID
-	entityMap := make(map[uint32]uint32) // [实体id]怪物群id
+	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
 
 	if teleportId != 0 {
 		groupID = foorMap.Teleports[teleportId].AnchorGroupID
@@ -54,7 +84,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			Id:         avatarId,
 			SpBar: &proto.SpBarInfo{
 				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.MaxSp,
 			},
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
@@ -110,10 +140,16 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 				// 为进入场景的角色设置与上面相同的实体id
 				if id == 0 {
 					entityList.EntityId = leaderEntityId
-					entityMap[leaderEntityId] = avatarid
+					entityMap[leaderEntityId] = &EntityList{
+						Entity:  avatarid,
+						GroupId: groupID,
+					}
 				} else {
 					entityList.EntityId = entityId
-					entityMap[entityId] = avatarid
+					entityMap[entityId] = &EntityList{
+						Entity:  avatarid,
+						GroupId: groupID,
+					}
 				}
 				entityGroup.EntityList = append(entityGroup.EntityList, entityList)
 			}
@@ -136,7 +172,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
 
 	// 获取场景实体
-	for _, levelGroup := range groupMap {
+	for _, levelGroup := range foorMap.Groups {
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		sceneGroupState := &proto.SceneGroupState{
@@ -200,7 +236,10 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 					EventId:    monsterList.EventID,
 				}},
 			}
-			entityMap[entityId] = monsterList.EventID
+			entityMap[entityId] = &EntityList{
+				Entity:  monsterList.EventID,
+				GroupId: levelGroup.GroupId,
+			}
 			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 		}
 		/*
@@ -264,7 +303,7 @@ func (g *Game) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 // 客户端登录需要的包，不是传送的通知包
 func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(g.Player.DbScene.EntryId)))
-	entityMap := make(map[uint32]uint32)
+	entityMap := make(map[uint32]*EntityList)
 
 	rsp := new(proto.GetCurSceneInfoScRsp)
 	pos := g.Player.Pos
@@ -317,9 +356,15 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		// 为进入场景的角色设置与上面相同的实体id
 		if id == 0 {
 			entityList.EntityId = leaderEntityId
-			entityMap[leaderEntityId] = avatarid
+			entityMap[leaderEntityId] = &EntityList{
+				Entity:  avatarid,
+				GroupId: 0,
+			}
 		} else {
-			entityMap[entityId] = avatarid
+			entityMap[entityId] = &EntityList{
+				Entity:  avatarid,
+				GroupId: 0,
+			}
 			entityList.EntityId = entityId
 		}
 		entityGroup.EntityList = append(entityGroup.EntityList, entityList)
@@ -328,11 +373,6 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 
 	// 获取场景实体
 	for _, levelGroup := range gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID) {
-		// 将0的Group过滤掉
-		if len(levelGroup.PropList) == 0 {
-			continue
-		}
-
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		sceneGroupState := &proto.SceneGroupState{
@@ -396,7 +436,10 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 					EventId:    monsterList.EventID,
 				}},
 			}
-			entityMap[entityId] = monsterList.EventID
+			entityMap[entityId] = &EntityList{
+				Entity:  monsterList.EventID,
+				GroupId: levelGroup.GroupId,
+			}
 			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 		}
 		/*

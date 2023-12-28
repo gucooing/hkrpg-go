@@ -17,9 +17,13 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	var stageID *gdconf.PlaneEvent
 
 	if req.SkillIndex == 1 {
-		avatarId := g.Player.EntityList[req.CasterId]
-		g.Player.DbAvatar.Avatar[avatarId].BuffList = (avatarId * 100) + req.SkillIndex
-		// 此处buff获取应该更改，不应这样获取，有的技能并不会增加buff而是回复生命等功能
+		avatarId := g.Player.EntityList[req.CasterId].Entity
+		skillId := (avatarId * 100) + req.SkillIndex
+		if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+			g.Player.DbAvatar.Avatar[avatarId].BuffList = skillId
+		} else {
+			// 技能处理，有的技能并不会增加buff而是回复生命等功能
+		}
 	}
 	if len(req.HitTargetIdList) == 0 {
 		rsp := &proto.SceneCastSkillScRsp{
@@ -29,18 +33,18 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		return
 	}
 
-	if g.Player.EntityList[req.HitTargetIdList[0]] == 0 {
+	if g.Player.EntityList[req.HitTargetIdList[0]] == nil {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
 		}
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
-	eventID := g.Player.EntityList[req.HitTargetIdList[0]]
-	stageID = gdconf.GetPlaneEventById(eventID, g.Player.WorldLevel)
+	entity := g.Player.EntityList[req.HitTargetIdList[0]]
+	stageID = gdconf.GetPlaneEventById(entity.Entity, g.Player.WorldLevel)
 	if stageID == nil {
-		event := g.Player.EntityList[req.CasterId]
-		stageID = gdconf.GetPlaneEventById(event, g.Player.WorldLevel)
+		newEntity := g.Player.EntityList[req.CasterId]
+		stageID = gdconf.GetPlaneEventById(newEntity.Entity, g.Player.WorldLevel)
 		stageConfig = gdconf.GetStageConfigById(stageID.StageID)
 	} else {
 		stageConfig = gdconf.GetStageConfigById(stageID.StageID)
@@ -95,7 +99,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			WorldLevel:    g.Player.WorldLevel,
 			SpBar: &proto.SpBarInfo{
 				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.MaxSp,
 			},
 		}
 		// 获取角色装备的光锥
@@ -124,56 +128,143 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			g.Player.DbAvatar.Avatar[Lineup].BuffList = 0
 		}
 	}
+
+	// 储存战斗信息
+	g.Player.Battle = make(map[uint32]*Battle)
+	battle := &Battle{
+		BattleId:         rsp.BattleInfo.BattleId,
+		EventID:          req.HitTargetIdList[0],
+		LogicRandomSeed:  rsp.BattleInfo.LogicRandomSeed,
+		RoundsLimit:      rsp.BattleInfo.RoundsLimit,
+		BuffList:         rsp.BattleInfo.BuffList,
+		BattleAvatarList: rsp.BattleInfo.BattleAvatarList,
+	}
+	g.Player.Battle[rsp.BattleInfo.BattleId] = battle
+
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
 }
 
 func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.PVEBattleResultCsReq, payloadMsg)
 	req := msg.(*proto.PVEBattleResultCsReq)
-	/*
-		SceneGroupRefreshScNotify
-		{
-		  "groupRefreshInfo": [{
-		    "groupId": 16,
-		    "refreshEntity": [{
-		      "delEntity": 22
-		    }]
-		  }]
-		}
-	*/
+
+	rsp := new(proto.PVEBattleResultScRsp)
+
+	// 要记得扣体力,和回复奖励
+
+	rsp.BattleId = req.BattleId
+	rsp.StageId = req.StageId
+	rsp.EndStatus = req.EndStatus // 战斗结算状态
+	rsp.CheckIdentical = true     // 反作弊验证
+	rsp.BinVersion = ""
+	rsp.ResVersion = strconv.Itoa(int(req.ClientResVersion)) // 版本验证
+
+	// 撤退
+	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_QUIT {
+		// 删除储存的战斗信息
+		delete(g.Player.Battle, req.BattleId)
+		g.Send(cmd.PVEBattleResultScRsp, rsp)
+		return
+	}
+
 	// 更新角色状态
 	for _, avatar := range req.Stt.BattleAvatarList {
 		g.Player.DbAvatar.Avatar[avatar.Id].Type = avatar.AvatarType
 		g.Player.DbAvatar.Avatar[avatar.Id].SpBar.CurSp = uint32((avatar.AvatarStatus.LeftSp / avatar.AvatarStatus.MaxSp) * 10000)
-		if avatar.AvatarStatus.LeftHp == 0 {
-			g.Player.DbAvatar.Avatar[avatar.Id].Hp = 1000
+		if avatar.AvatarStatus.LeftHp == float64(0) {
+			g.Player.DbAvatar.Avatar[avatar.Id].Hp = 2000
 			g.Player.DbAvatar.Avatar[avatar.Id].Type = proto.AvatarType_AVATAR_FORMAL_TYPE
 		} else {
 			g.Player.DbAvatar.Avatar[avatar.Id].Hp = uint32((avatar.AvatarStatus.LeftHp / avatar.AvatarStatus.MaxHp) * 10000)
 		}
 	}
-	// 账号状态改变通知
-	g.PlayerPlayerSyncScNotify()
 	// 更新队伍状态
-	g.SyncLineupNotify(g.Player.DbLineUp.MainLineUp)
+	g.BattleSyncLineupNotify(g.Player.DbLineUp.MainLineUp)
 
-	rsp := &proto.PVEBattleResultScRsp{
-		BattleId:       req.BattleId,
-		StageId:        req.StageId,
-		EndStatus:      req.EndStatus, // 战斗结算状态
-		CheckIdentical: true,          // 反作弊验证
-		DropData: &proto.ItemList{ItemList: []*proto.Item{{
-			ItemId:      0,
+	// 胜利时获取奖励
+	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+		battle := g.Player.Battle[req.BattleId]
+		entity := g.Player.EntityList[battle.EventID]
+
+		if entity != nil {
+			// 删除实体
+			nitify := new(proto.SceneGroupRefreshScNotify)
+			nitify.GroupRefreshInfo = []*proto.SceneGroupRefreshInfo{
+				{
+					GroupId: entity.GroupId,
+					RefreshEntity: []*proto.SceneEntityRefreshInfo{
+						{
+							UpdateType: &proto.SceneEntityRefreshInfo_DelEntity{
+								DelEntity: battle.EventID,
+							},
+						},
+					},
+				},
+			}
+			g.Send(cmd.SceneGroupRefreshScNotify, nitify)
+			delete(g.Player.EntityList, battle.EventID)
+		}
+
+		// 获取奖励
+		rsp.DropData = &proto.ItemList{ItemList: []*proto.Item{{
+			ItemId:      2,
 			Level:       0,
-			Num:         0,
+			Num:         1,
 			MainAffixId: 0,
 			Rank:        0,
 			Promotion:   0,
 			UniqueId:    0,
-		}}},
-		ResVersion: strconv.Itoa(int(req.ClientResVersion)),
+		}}}
 	}
+
+	// 当前坐标通知(失败情况应该是移动到最近锚点)
+	g.SceneEntityMoveScNotify()
+
+	// 账号状态改变通知
+	g.PlayerPlayerSyncScNotify()
+
+	// 删除储存的战斗信息
+	delete(g.Player.Battle, req.BattleId)
+
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
+}
+
+// 队伍更新通知
+func (g *Game) BattleSyncLineupNotify(index uint32) {
+	rsq := new(proto.SyncLineupNotify)
+	lineUp := g.Player.DbLineUp.LineUpList[index]
+	lineupList := &proto.LineupInfo{
+		IsVirtual:       false,
+		LeaderSlot:      0,
+		AvatarList:      make([]*proto.LineupAvatar, 0),
+		Index:           index,
+		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
+		MaxMp:           5,
+		Mp:              5,
+		Name:            lineUp.Name,
+		PlaneId:         0,
+	}
+	for slot, avatarId := range lineUp.AvatarIdList {
+		if avatarId == 0 {
+			continue
+		}
+		avatar := g.Player.DbAvatar.Avatar[avatarId]
+		lineupAvatar := &proto.LineupAvatar{
+			AvatarType: avatar.Type,
+			Slot:       uint32(slot),
+			Satiety:    0,
+			Hp:         avatar.Hp,
+			Id:         avatarId,
+			SpBar: &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.MaxSp,
+			},
+		}
+		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
+	}
+	rsq.Lineup = lineupList
+
+	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
 func (g *Game) StartRogueCsReq(payloadMsg []byte) {
@@ -217,7 +308,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 			Id:         avatarId,
 			SpBar: &proto.SpBarInfo{
 				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.MaxSp,
 			},
 		}
 		rsp.Lineup.AvatarList = append(rsp.Lineup.AvatarList, lineupAvatar)
@@ -237,27 +328,36 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	rsp.Wave = req.Wave
 
 	cocoonConfig := gdconf.GetCocoonConfigById(req.CocoonId, req.WorldLevel)
-	stageConfig := gdconf.GetStageConfigById(cocoonConfig.StageID)
+
+	if len(cocoonConfig.DropList) == 0 {
+		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+		g.Send(cmd.StartCocoonStageScRsp, rsp)
+		return
+	}
 
 	rsp.BattleInfo = new(proto.SceneBattleInfo)
 	rsp.BattleInfo.LogicRandomSeed = gdconf.GetLoadingDesc()
 	rsp.BattleInfo.BattleId = g.GetBattleIdGuid() // 战斗Id
 	rsp.BattleInfo.StageId = cocoonConfig.StageID
 
-	// 怪物波列表
-	for id, monsterListMap := range stageConfig.MonsterList {
-		monsterWaveList := &proto.SceneMonsterWave{
-			StageId: cocoonConfig.StageID,
-			WaveId:  uint32(id + 1),
-		}
-		for _, monsterList := range monsterListMap {
-			sceneMonster := &proto.SceneMonster{
-				MonsterId: monsterList,
+	for _, StageList := range cocoonConfig.StageIDList {
+		stageConfig := gdconf.GetStageConfigById(StageList)
+		// 怪物波列表
+		for id, monsterListMap := range stageConfig.MonsterList {
+			monsterWaveList := &proto.SceneMonsterWave{
+				StageId: StageList,
+				WaveId:  uint32(id + 1),
 			}
-			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
+			for _, monsterList := range monsterListMap {
+				sceneMonster := &proto.SceneMonster{
+					MonsterId: monsterList,
+				}
+				monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
+			}
+			rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
 		}
-		rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
 	}
+
 	// 添加角色
 	for id, Lineup := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
 		if Lineup == 0 {
@@ -278,7 +378,7 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 			WorldLevel:    g.Player.WorldLevel,
 			SpBar: &proto.SpBarInfo{
 				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.MaxSp,
 			},
 		}
 		// 获取角色装备的光锥
@@ -307,6 +407,18 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 			g.Player.DbAvatar.Avatar[Lineup].BuffList = 0
 		}
 	}
+
+	// 储存战斗信息
+	g.Player.Battle = make(map[uint32]*Battle)
+	battle := &Battle{
+		BattleId:         rsp.BattleInfo.BattleId,
+		EventID:          req.CocoonId,
+		LogicRandomSeed:  rsp.BattleInfo.LogicRandomSeed,
+		RoundsLimit:      rsp.BattleInfo.RoundsLimit,
+		BuffList:         rsp.BattleInfo.BuffList,
+		BattleAvatarList: rsp.BattleInfo.BattleAvatarList,
+	}
+	g.Player.Battle[rsp.BattleInfo.BattleId] = battle
 
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
 }

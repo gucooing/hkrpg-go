@@ -1,7 +1,6 @@
 package Game
 
 type DbScene struct {
-	WorldId uint32 // 世界ID
 	EntryId uint32 //
 }
 

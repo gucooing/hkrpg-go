@@ -224,8 +224,6 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.PlayerHeartBeatCsReq, payloadMsg)
 	req := msg.(*proto.PlayerHeartbeatCsReq)
 
-	g.LastActiveTime = time.Now().Unix()
-
 	rsp := new(proto.PlayerHeartbeatScRsp)
 	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.ClientTimeMs = req.ClientTimeMs

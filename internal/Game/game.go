@@ -37,10 +37,10 @@ type NetMsg struct {
 
 func (g *Game) Send(cmdid uint16, playerMsg pb.Message) {
 	// 打印需要的数据包
-	if cmdid == 0 {
-		data := protojson.Format(playerMsg)
-		logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
-	}
+	// if cmdid == 0 {
+	data := protojson.Format(playerMsg)
+	logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
+	// }
 	netMsg := new(NetMsg)
 	netMsg.G = g
 	netMsg.CmdId = cmdid
@@ -61,10 +61,10 @@ func (g *Game) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		return nil
 	}
 	// 打印需要的数据包
-	if cmdId == 123 {
-		data := protojson.Format(protoObj)
-		logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
-	}
+	// if cmdId == 1439 {
+	data := protojson.Format(protoObj)
+	logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
+	// }
 	// logger.Debug("[UID:%v] C --> S : NAME: %s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
 	return protoObj
 }
@@ -79,7 +79,8 @@ func (g *Game) UpDataPlayer() error {
 	}
 	dbDate := new(DataBase.Player)
 	dbDate.AccountUid = g.Uid
-	dbDate.PlayerData, err = json.Marshal(g.Player)
+	data := g.Player
+	dbDate.PlayerData, err = json.Marshal(data)
 	if err != nil {
 		logger.Error("json to bin error:%s", err)
 		return err
@@ -97,7 +98,7 @@ func (g *Game) AutoUpDataPlayer() {
 	for {
 		<-ticker.C
 		timestamp := time.Now().Unix()
-		if timestamp-g.LastActiveTime >= 60 {
+		if timestamp-g.LastActiveTime >= 120 {
 			g.KickPlayer()
 			return
 		}
@@ -123,7 +124,6 @@ func (g *Game) KickPlayer() error {
 		netMsg.G = g
 		netMsg.Type = "Close"
 		g.NetMsgInput <- netMsg
-		g.Player = nil
 	}
 	return nil
 }
@@ -139,7 +139,6 @@ func (g *Game) ChangePlayer() {
 		netMsg.G = g
 		netMsg.Type = "Change"
 		g.NetMsgInput <- netMsg
-		g.Player = nil
 	}
 	return
 }

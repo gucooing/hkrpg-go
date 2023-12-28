@@ -2,11 +2,14 @@ package Game
 
 import (
 	"strconv"
+	"sync"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
+
+var syncGD sync.Mutex
 
 type DbItem struct {
 	RelicMap     map[uint32]*Relic     // 遗器
@@ -70,7 +73,9 @@ func (g *Game) AddMaterial(tid, num uint32) {
 	if material == nil {
 		g.Player.DbItem.MaterialMap[tid] = &Material{Tid: tid, Num: num}
 	} else {
+		syncGD.Lock()
 		g.Player.DbItem.MaterialMap[tid] = &Material{Tid: tid, Num: material.Num + num}
+		syncGD.Unlock()
 	}
 
 	g.MaterialPlayerSyncScNotify(tid)
