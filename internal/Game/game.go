@@ -106,10 +106,6 @@ func (g *Game) AutoUpDataPlayer() {
 			g.KickPlayer()
 			return
 		}
-		if g.Uid == 0 {
-			g.KickPlayer()
-			return
-		}
 	}
 }
 

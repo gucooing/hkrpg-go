@@ -13,6 +13,8 @@ import (
 
 type LevelGroup struct {
 	GroupId       uint32
+	GroupName     string         `json:"GroupName"`
+	LoadSide      string         `json:"LoadSide"`
 	LoadOnInitial bool           `json:"LoadOnInitial"`
 	PropList      []*PropList    `json:"PropList"`    // 实体列表
 	MonsterList   []*MonsterList `json:"MonsterList"` // 怪物列表

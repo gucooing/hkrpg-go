@@ -11,8 +11,8 @@ import (
 func (g *Game) StaminaInfoScNotify() {
 	notify := &proto.StaminaInfoScNotify{
 		NextRecoverTime: 0,
-		Stamina:         g.Player.Stamina,
-		ReserveStamina:  g.Player.ReserveStamina,
+		Stamina:         g.Player.DbItem.MaterialMap[11].Num,
+		ReserveStamina:  g.Player.DbItem.MaterialMap[12].Num,
 	}
 	g.Send(cmd.StaminaInfoScNotify, notify)
 }

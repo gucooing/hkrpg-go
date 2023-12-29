@@ -173,6 +173,11 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 
 	// 获取场景实体
 	for _, levelGroup := range foorMap.Groups {
+
+		if levelGroup.GroupName == "RogueBase_Common" {
+			continue
+		}
+
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		sceneGroupState := &proto.SceneGroupState{

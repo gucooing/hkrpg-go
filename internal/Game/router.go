@@ -88,8 +88,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	// 场景
 	case cmd.GetSceneMapInfoCsReq:
 		g.HanldeGetSceneMapInfoCsReq(payloadMsg) // 获取地图信息
-	case cmd.GetRogueInfoCsReq:
-		g.GetRogueInfoCsReq(payloadMsg) // 获取副本库
 	case cmd.GetCurSceneInfoCsReq:
 		g.HandleGetCurSceneInfoCsReq(payloadMsg) // 获取场景信息(关键包)
 	case cmd.SceneEntityMoveCsReq:
@@ -105,8 +103,12 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
 	case cmd.PVEBattleResultCsReq:
 		g.PVEBattleResultCsReq(payloadMsg) // PVE战斗结算
+	case cmd.GetRogueInfoCsReq:
+		g.GetRogueInfoCsReq(payloadMsg) // 获取模拟宇宙
 	case cmd.StartRogueCsReq:
 		g.StartRogueCsReq(payloadMsg) // 模拟宇宙,启动!
+	case cmd.GetRogueTalentInfoCsReq:
+		g.GetRogueTalentInfoCsReq() // 获取天赋信息
 	case cmd.StartCocoonStageCsReq:
 		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
 

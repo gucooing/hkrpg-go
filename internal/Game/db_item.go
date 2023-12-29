@@ -57,6 +57,8 @@ func NewItem(data *PlayerData) *PlayerData {
 	dbItem.RelicMap = make(map[uint32]*Relic)
 	dbItem.MaterialMap[1] = &Material{Tid: 1, Num: 0}
 	dbItem.MaterialMap[2] = &Material{Tid: 2, Num: 0}
+	dbItem.MaterialMap[11] = &Material{Tid: 11, Num: 240}
+	dbItem.MaterialMap[12] = &Material{Tid: 12, Num: 0}
 	dbItem.MaterialMap[22] = &Material{Tid: 22, Num: 0}
 
 	data.DbItem = dbItem
@@ -65,10 +67,25 @@ func NewItem(data *PlayerData) *PlayerData {
 }
 
 func (g *Game) AddMaterial(tid, num uint32) {
-	if tid == 22 {
+	// 特殊物品处理
+	switch tid {
+	case 11:
+		g.Player.DbItem.MaterialMap[tid].Num += num
+		if g.Player.DbItem.MaterialMap[tid].Num > 240 {
+			g.Player.DbItem.MaterialMap[tid].Num = 240
+		}
+		return
+	case 12:
+		g.Player.DbItem.MaterialMap[tid].Num += num
+		if g.Player.DbItem.MaterialMap[tid].Num > 2400 {
+			g.Player.DbItem.MaterialMap[tid].Num = 2400
+		}
+		return
+	case 22:
 		g.AddTrailblazerExp(num)
 		return
 	}
+
 	material := g.Player.DbItem.MaterialMap[tid]
 	if material == nil {
 		g.Player.DbItem.MaterialMap[tid] = &Material{Tid: tid, Num: num}

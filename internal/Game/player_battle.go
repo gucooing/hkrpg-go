@@ -2,11 +2,14 @@ package Game
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
+
+/***********************************大世界攻击事件处理***********************************/
 
 func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCsReq, payloadMsg)
@@ -144,6 +147,8 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
 }
 
+/***********************************战斗结算***********************************/
+
 func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.PVEBattleResultCsReq, payloadMsg)
 	req := msg.(*proto.PVEBattleResultCsReq)
@@ -208,7 +213,7 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 			delete(g.Player.EntityList, battle.EventID)
 		}
 
-		g.Player.Stamina -= battle.StaminaCost * battle.Wave // 扣除体力
+		g.Player.DbItem.MaterialMap[11].Num -= battle.StaminaCost * battle.Wave // 扣除体力
 
 		// 获取奖励
 		rsp.DropData = &proto.ItemList{ItemList: make([]*proto.Item, 0)}
@@ -278,9 +283,61 @@ func (g *Game) BattleSyncLineupNotify(index uint32) {
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
+/***********************************模拟宇宙***********************************/
+
+func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
+	beginTime := time.Now().AddDate(0, 0, -1).Unix()
+	endTime := beginTime + int64(time.Hour.Seconds()*24*8)
+	rsp := new(proto.GetRogueInfoScRsp)
+	rogueInfo := &proto.RogueInfo{
+		BeginTime: beginTime,
+		EndTime:   endTime,
+		SeasonId:  77,
+		RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
+			RogueAbilityPoint: 0,
+		},
+		RogueScoreInfo: &proto.RogueScoreRewardInfo{
+			PoolId:               20 + g.Player.WorldLevel,
+			HasTakenInitialScore: true,
+			PoolRefreshed:        true,
+		},
+		RogueData: &proto.RogueInfoData{
+			RogueSeasonInfo: &proto.RogueSeasonInfo{
+				BeginTime: beginTime,
+				SeasonId:  77,
+				EndTime:   endTime,
+			},
+			RogueScoreInfo: &proto.RogueScoreRewardInfo{
+				PoolId:               20 + g.Player.WorldLevel,
+				HasTakenInitialScore: true,
+				PoolRefreshed:        true,
+			},
+		},
+		RogueAreaList: make([]*proto.RogueArea, 0),
+	}
+	for _, rogueArea := range gdconf.GetRogueAreaMap() {
+		RogueArea := &proto.RogueArea{
+			AreaId:          rogueArea.RogueAreaID,
+			RogueAreaStatus: proto.RogueAreaStatus_ROGUE_AREA_STATUS_FIRST_PASS,
+		}
+		rogueInfo.RogueAreaList = append(rogueInfo.RogueAreaList, RogueArea)
+	}
+	rsp.RogueInfo = rogueInfo
+
+	g.Send(cmd.GetRogueInfoScRsp, rsp)
+}
+
 func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartRogueCsReq, payloadMsg)
 	req := msg.(*proto.StartRogueCsReq)
+
+	// 先更新队伍
+	for id, avatarid := range req.BaseAvatarIdList {
+		g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList[id] = avatarid
+	}
+	g.Player.DbLineUp.MainAvatarId = 0
+	// 队伍更新通知
+	g.SyncLineupNotify(g.Player.DbLineUp.MainLineUp)
 
 	rsp := &proto.StartRogueScRsp{
 		Scene: nil,
@@ -328,6 +385,27 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartRogueScRsp, rsp)
 }
 
+func (g *Game) GetRogueTalentInfoCsReq() {
+	rsp := &proto.GetRogueTalentInfoScRsp{
+		TalentInfo: &proto.RogueTalentInfo{
+			RogueTalent: make([]*proto.RogueTalent, 0),
+		},
+	}
+
+	for _, talent := range gdconf.GetTalentIDList() {
+		rogueTalent := &proto.RogueTalent{
+			Status: proto.RogueTalentStatus_ROGUE_TALENT_STATUS_UNLOCK,
+			// UnlockProgressList: nil,
+			TalentId: talent,
+		}
+		rsp.TalentInfo.RogueTalent = append(rsp.TalentInfo.RogueTalent, rogueTalent)
+	}
+
+	g.Send(cmd.GetRogueTalentInfoScRsp, rsp)
+}
+
+/***********************************关卡/副本***********************************/
+
 func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartCocoonStageCsReq, payloadMsg)
 	req := msg.(*proto.StartCocoonStageCsReq)
@@ -350,11 +428,16 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	rsp.BattleInfo.LogicRandomSeed = gdconf.GetLoadingDesc()
 	rsp.BattleInfo.BattleId = g.GetBattleIdGuid() // 战斗Id
 	rsp.BattleInfo.StageId = cocoonConfig.StageID
+	rsp.BattleInfo.WorldLevel = g.Player.WorldLevel
 
-	for _, StageList := range cocoonConfig.StageIDList {
+	if rsp.BattleInfo.StageId == 0 {
+		rsp.BattleInfo.StageId = cocoonConfig.StageIDList[0]
+	}
+
+	for id, StageList := range cocoonConfig.StageIDList {
 		stageConfig := gdconf.GetStageConfigById(StageList)
 		// 怪物波列表
-		for id, monsterListMap := range stageConfig.MonsterList {
+		for _, monsterListMap := range stageConfig.MonsterList {
 			monsterWaveList := &proto.SceneMonsterWave{
 				StageId: StageList,
 				WaveId:  uint32(id + 1),

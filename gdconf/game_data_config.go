@@ -28,7 +28,8 @@ type GameDataConfig struct {
 	ItemConfigMap               map[string]*ItemConfig                          // 材料
 	ItemConfigEquipmentMap      map[string]*ItemConfigEquipment                 // 背包光锥配置
 	ItemConfigRelicMap          map[string]*ItemConfigRelic                     // 背包遗器配置
-	RogueAreaMap                map[string]*RogueArea                           // 副本配置
+	RogueAreaMap                map[string]*RogueArea                           // 模拟宇宙配置
+	RogueTalentMap              map[string]*RogueTalent                         // 模拟宇宙天赋
 	CocoonConfigMap             map[string]map[string]*CocoonConfig             // 挑战/周本
 	MappingInfoMap              map[string]map[string]*MappingInfo              // 挑战/周本奖励
 	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
@@ -100,7 +101,8 @@ func (g *GameDataConfig) load() {
 	g.loadItemConfig()               // 材料
 	g.loadItemConfigEquipment()      // 背包光锥配置
 	g.loadItemConfigRelic()          // 背包遗器配置
-	g.loadRogueArea()                // 副本配置
+	g.loadRogueArea()                // 模拟宇宙配置
+	g.loadRogueTalent()              // 模拟宇宙天赋
 	g.loadCocoonConfig()             // 挑战/周本
 	g.loadMappingInfo()              // 挑战/周本奖励
 	g.loadAvatarSkilltree()          // 技能库

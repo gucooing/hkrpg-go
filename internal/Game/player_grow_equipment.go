@@ -121,7 +121,7 @@ func (g *Game) PlayerPlayerSyncScNotify() {
 			Nickname:   g.Player.NickName,
 			Level:      g.Player.Level,
 			Exp:        g.Player.Exp,
-			Stamina:    g.Player.Stamina,
+			Stamina:    g.Player.DbItem.MaterialMap[11].Num,
 			Mcoin:      g.Player.Mcoin,
 			Hcoin:      g.Player.DbItem.MaterialMap[1].Num,
 			Scoin:      g.Player.DbItem.MaterialMap[2].Num,

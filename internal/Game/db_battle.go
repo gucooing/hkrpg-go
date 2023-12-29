@@ -16,3 +16,6 @@ type Battle struct {
 	BuffList         []*proto.BattleBuff   // Buff列表
 	BattleAvatarList []*proto.BattleAvatar // 战斗角色列表
 }
+
+type Rogue struct {
+}

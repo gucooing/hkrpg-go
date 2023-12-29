@@ -47,14 +47,14 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	}
 
 	rsp := new(proto.PlayerLoginScRsp)
-	rsp.Stamina = g.Player.Stamina
+	rsp.Stamina = g.Player.DbItem.MaterialMap[11].Num
 	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.CurTimezone = 8 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
 		Nickname:   g.Player.NickName,
 		Level:      g.Player.Level,
 		Exp:        g.Player.Exp,
-		Stamina:    g.Player.Stamina,
+		Stamina:    g.Player.DbItem.MaterialMap[11].Num,
 		Mcoin:      g.Player.Mcoin,
 		Hcoin:      g.Player.DbItem.MaterialMap[1].Num,
 		Scoin:      g.Player.DbItem.MaterialMap[2].Num,
@@ -109,52 +109,6 @@ func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
 	rsp.Retcode = 0
 
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
-}
-
-func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
-	// TODO
-	beginTime := time.Now().AddDate(0, 0, -1).Unix()
-	endTime := beginTime + int64(time.Hour.Seconds()*24*8)
-	rsp := new(proto.GetRogueInfoScRsp)
-	rogueInfo := &proto.RogueInfo{
-		BeginTime: beginTime,
-		EndTime:   endTime,
-		SeasonId:  75,
-		RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
-			RogueAbilityPoint: 0,
-		},
-		RogueScoreInfo: &proto.RogueScoreRewardInfo{
-			PoolId:               20 + g.Player.WorldLevel,
-			HasTakenInitialScore: true,
-			PoolRefreshed:        true,
-		},
-		RogueData: &proto.RogueInfoData{
-			RogueSeasonInfo: &proto.RogueSeasonInfo{
-				BeginTime: beginTime,
-				SeasonId:  75,
-				EndTime:   endTime,
-			},
-			RogueScoreInfo: &proto.RogueScoreRewardInfo{
-				PoolId:               20 + g.Player.WorldLevel,
-				HasTakenInitialScore: true,
-				PoolRefreshed:        true,
-			},
-		},
-		RogueAreaList: make([]*proto.RogueArea, 0),
-	}
-	for _, rogueArea := range gdconf.GetRogueAreaMap() {
-		if rogueArea.RogueAreaID > 1000 {
-			continue
-		}
-		RogueArea := &proto.RogueArea{
-			AreaId:          rogueArea.RogueAreaID,
-			RogueAreaStatus: proto.RogueAreaStatus_ROGUE_AREA_STATUS_FIRST_PASS,
-		}
-		rogueInfo.RogueAreaList = append(rogueInfo.RogueAreaList, RogueArea)
-	}
-	rsp.RogueInfo = rogueInfo
-
-	g.Send(cmd.GetRogueInfoScRsp, rsp)
 }
 
 func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {
