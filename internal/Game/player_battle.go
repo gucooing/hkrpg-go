@@ -331,6 +331,263 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartRogueCsReq, payloadMsg)
 	req := msg.(*proto.StartRogueCsReq)
 
+	if req.BaseAvatarIdList == nil {
+		req.BaseAvatarIdList = g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList
+	}
+
+	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
+	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	// 获取地图
+	rogueAreaConfig := gdconf.GetRogueAreaConfigById(strconv.Itoa(int(req.AreaId)))
+	if rogueAreaConfig == nil {
+		rsp := &proto.StartRogueScRsp{
+			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+		}
+		g.Send(cmd.StartRogueScRsp, rsp)
+		return
+	}
+	rogueMapID := (rogueAreaConfig.AreaProgress * 100) + rogueAreaConfig.Difficulty
+	rogueMapStart := gdconf.GetRogueMapStartById(strconv.Itoa(int(rogueMapID)))
+	if rogueMapStart == nil {
+		rsp := &proto.StartRogueScRsp{
+			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+		}
+		g.Send(cmd.StartRogueScRsp, rsp)
+		return
+	}
+	// 获取映射信息
+	rogueMap := gdconf.GetRogueRoomIDBySiteID()
+
+	beginTime := time.Now().AddDate(0, 0, -1).Unix()
+	endTime := beginTime + int64(time.Hour.Seconds()*24*8)
+
+	// 可独立成单独的方法
+	rogueScoreInfo := &proto.RogueScoreRewardInfo{
+		HasTakenInitialScore: true, // 已取得初始积分？
+		RogueImmersifier:     0,
+		Score:                0,
+		PoolRefreshed:        true, // 刷新？
+		TakenScoreRewardList: nil,
+		PoolId:               20 + g.Player.WorldLevel,
+	}
+	// 可独立成单独的方法
+	roomMap := &proto.RogueMapInfo{
+		MapId:     rogueMapID,
+		AreaId:    req.AreaId,
+		CurSiteId: rogueMapStart.SiteID,
+		CurRoomId: rogueMap[1],
+		RoomList:  make([]*proto.RogueRoom, 0),
+	}
+	for id, rogue := range rogueMap {
+		roomList := &proto.RogueRoom{
+			SiteId: id,
+			RoomId: rogue,
+		}
+		if id == rogueMapStart.SiteID {
+			roomList.RoomStatus = proto.RogueRoomStatus_ROGUE_ROOM_STATUS_PLAY
+		} else {
+			roomList.RoomStatus = proto.RogueRoomStatus_ROGUE_ROOM_STATUS_NONE
+		}
+
+		roomMap.RoomList = append(roomMap.RoomList, roomList)
+	}
+	// 可独立成单独的方法
+	rogueAreaList := make([]*proto.RogueArea, 0)
+	for _, rogueArea := range gdconf.GetRogueAreaMap() {
+		RogueArea := &proto.RogueArea{
+			AreaId:          rogueArea.RogueAreaID,
+			RogueAreaStatus: proto.RogueAreaStatus_ROGUE_AREA_STATUS_FIRST_PASS,
+		}
+		rogueAreaList = append(rogueAreaList, RogueArea)
+	}
+	// 可独立成单独的方法
+	rogueRoom := gdconf.GetRogueRoomById(strconv.Itoa(int(rogueMap[rogueMapStart.SiteID])))
+	if rogueRoom == nil {
+		rsp := &proto.StartRogueScRsp{
+			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+		}
+		g.Send(cmd.StartRogueScRsp, rsp)
+		return
+	}
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(rogueRoom.MapEntrance)))
+	if mapEntrance == nil {
+		rsp := &proto.StartRogueScRsp{
+			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+		}
+		g.Send(cmd.StartRogueScRsp, rsp)
+		return
+	}
+	scene := &proto.SceneInfo{
+		ClientPosVersion:   0,
+		PlaneId:            mapEntrance.PlaneID,
+		FloorId:            mapEntrance.FloorID,
+		LeaderEntityId:     leaderEntityId,
+		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		EntryId:            rogueRoom.MapEntrance,
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
+		GroupIdList:        nil,
+		LightenSectionList: nil,
+		EntityList:         nil,
+		GroupStateList:     nil,
+	}
+
+	entityGroupList := &proto.SceneEntityGroupInfo{
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+
+	// 添加角色信息
+	startGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, rogueRoom.GroupID)
+	anchor := startGroup.AnchorList[0]
+	for id, avatarId := range req.BaseAvatarIdList {
+		if avatarId == 0 {
+			continue
+		}
+		entityId := uint32(g.GetNextGameObjectGuid())
+		entityList := &proto.SceneEntityInfo{
+			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+				BaseAvatarId: avatarId,
+			}},
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: int32(anchor.PosX * 1000),
+					Y: int32(anchor.PosY * 1000),
+					Z: int32(anchor.PosZ * 1000),
+				},
+				Rot: &proto.Vector{
+					X: int32(anchor.RotX * 1000),
+					Y: int32(anchor.RotY * 1000),
+					Z: int32(anchor.RotZ * 1000),
+				},
+			},
+		}
+		// 为进入场景的角色设置与上面相同的实体id
+		if id == 0 {
+			entityList.EntityId = leaderEntityId
+			entityMap[leaderEntityId] = &EntityList{
+				Entity:  avatarId,
+				GroupId: rogueRoom.GroupID,
+			}
+		} else {
+			entityList.EntityId = entityId
+			entityMap[entityId] = &EntityList{
+				Entity:  avatarId,
+				GroupId: rogueRoom.GroupID,
+			}
+		}
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+	}
+
+	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupList)
+
+	// 获取场景实体
+	for groupID, _ := range rogueRoom.GroupWithContent {
+		sceneGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, stou32(groupID))
+		if sceneGroup == nil {
+			continue
+		}
+		scene.GroupIdList = append(scene.GroupIdList, stou32(groupID))
+
+		sceneGroupState := &proto.SceneGroupState{
+			GroupId:   stou32(groupID),
+			IsDefault: true,
+		}
+
+		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
+
+		entityGroupLists := &proto.SceneEntityGroupInfo{
+			GroupId:    stou32(groupID),
+			EntityList: make([]*proto.SceneEntityInfo, 0),
+		}
+		// 添加物品实体
+		for _, propList := range sceneGroup.PropList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  stou32(groupID), // 文件名后那个G
+				InstId:   propList.ID,     // ID
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(propList.PosX * 1000),
+						Y: int32(propList.PosY * 1000),
+						Z: int32(propList.PosZ * 1000),
+					},
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(propList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+					PropId:    propList.PropID, // PropID
+					PropState: gdconf.GetStateValue(propList.State),
+				}},
+			}
+			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		}
+		// 添加怪物实体
+		for _, monsterList := range sceneGroup.MonsterList {
+			entityId := uint32(g.GetNextGameObjectGuid())
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  stou32(groupID),
+				InstId:   monsterList.ID,
+				EntityId: entityId,
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(monsterList.PosX * 1000),
+						Y: int32(monsterList.PosY * 1000),
+						Z: int32(monsterList.PosZ * 1000),
+					},
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(monsterList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
+					WorldLevel: g.Player.WorldLevel,
+					MonsterId:  monsterList.NPCMonsterID,
+					EventId:    monsterList.EventID,
+				}},
+			}
+			entityMap[entityId] = &EntityList{
+				Entity:  monsterList.EventID,
+				GroupId: stou32(groupID),
+			}
+			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		}
+
+		// 添加NPC实体
+		for _, npcList := range sceneGroup.NPCList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  stou32(groupID),
+				InstId:   npcList.ID,
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(npcList.PosX * 1000),
+						Y: int32(npcList.PosY * 1000),
+						Z: int32(npcList.PosZ * 1000),
+					},
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(npcList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
+					NpcId: npcList.NPCID,
+				}},
+			}
+			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		}
+
+		if len(entityGroupLists.EntityList) == 0 {
+			continue
+		}
+		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
+	}
+
 	// 先更新队伍
 	for id, avatarid := range req.BaseAvatarIdList {
 		g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList[id] = avatarid
@@ -340,7 +597,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	g.SyncLineupNotify(g.Player.DbLineUp.MainLineUp)
 
 	rsp := &proto.StartRogueScRsp{
-		Scene: nil,
+		Scene: scene,
 		Lineup: &proto.LineupInfo{
 			AvatarList:      make([]*proto.LineupAvatar, 0),
 			ExtraLineupType: proto.ExtraLineupType_LINEUP_ROGUE,
@@ -348,19 +605,50 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 			Mp:              5,
 		},
 		RogueInfo: &proto.RogueInfo{
-			RogueData:            nil,
-			RogueVirtualItemInfo: nil,
-			RogueScoreInfo:       nil,
-			RoomMap:              nil,
-			RogueAreaList:        nil,
-			Status:               0,
-			SeasonId:             0,
-			RogueProgress:        nil,
-			RogueAeonInfo:        nil,
-			EndTime:              0,
-			BaseAvatarIdList:     nil,
-			BeginTime:            0,
-			RogueCoin:            0,
+			RogueData: &proto.RogueInfoData{
+				RogueScoreInfo: rogueScoreInfo,
+				RogueSeasonInfo: &proto.RogueSeasonInfo{
+					BeginTime: beginTime,
+					SeasonId:  77,
+					EndTime:   endTime,
+				},
+			},
+			RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
+				RoguePumanCoupon:  0,
+				RogueCoin:         0,
+				RogueImmersifier:  0,
+				RogueAbilityPoint: 0,
+			},
+			RogueScoreInfo: rogueScoreInfo,
+			RoomMap:        roomMap,
+			RogueAreaList:  rogueAreaList,
+			Status:         proto.RogueStatus_ROGUE_STATUS_DOING,
+			SeasonId:       77,
+			RogueProgress: &proto.RogueCurrentInfo{
+				RogueAvatarInfo: &proto.RogueAvatarInfo{
+					BaseAvatarIdList: req.BaseAvatarIdList,
+				},
+				RoomMap: roomMap,
+				Status:  proto.RogueStatus_ROGUE_STATUS_DOING,
+				RogueBuffInfo: &proto.RogueBuffInfo{
+					BuffSelectInfo: nil,
+					MazeBuffList:   nil,
+				},
+				RogueMiracleInfo: &proto.RogueMiracleInfo{
+					MiracleSelectInfo: nil,
+					RogueMiracleInfo:  nil,
+				},
+			},
+			RogueAeonInfo: &proto.RogueAeonInfo{
+				UnlockAeonEnhanceNum: 0,
+				UnlockAeonNum:        0,
+				SelectedAeonId:       0,
+				AeonIdList:           nil,
+			},
+			EndTime:          endTime,
+			BaseAvatarIdList: req.BaseAvatarIdList,
+			BeginTime:        beginTime,
+			RogueCoin:        0,
 		},
 	}
 
@@ -382,6 +670,8 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 		rsp.Lineup.AvatarList = append(rsp.Lineup.AvatarList, lineupAvatar)
 	}
 
+	g.Player.EntityList = entityMap
+	g.Player.IsRogue = true
 	g.Send(cmd.StartRogueScRsp, rsp)
 }
 
@@ -402,6 +692,12 @@ func (g *Game) GetRogueTalentInfoCsReq() {
 	}
 
 	g.Send(cmd.GetRogueTalentInfoScRsp, rsp)
+}
+
+func (g *Game) LeaveRogueCsReq(payloadMsg []byte) {
+}
+
+func (g *Game) QuitRogueCsReq(payloadMsg []byte) {
 }
 
 /***********************************关卡/副本***********************************/

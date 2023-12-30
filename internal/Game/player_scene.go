@@ -112,6 +112,9 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
 	// 添加队伍角色进实体列表，并设置坐标
+	if foorMap.Groups[groupID] == nil {
+		return
+	}
 	for _, anchor := range foorMap.Groups[groupID].AnchorList {
 		if anchor.ID == anchorID {
 			for id, avatarid := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
@@ -174,18 +177,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	// 获取场景实体
 	for _, levelGroup := range foorMap.Groups {
 
-		if levelGroup.GroupName == "RogueBase_Common" {
-			continue
-		}
-
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
-
-		sceneGroupState := &proto.SceneGroupState{
-			GroupId:   levelGroup.GroupId,
-			IsDefault: true,
-		}
-
-		rsp.Scene.GroupStateList = append(rsp.Scene.GroupStateList, sceneGroupState)
 
 		entityGroupList := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
@@ -247,32 +239,32 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			}
 			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 		}
-		/*
-			// 添加NPC实体
-			for _, npcList := range levelGroup.NPCList {
-				entityList := &proto.SceneEntityInfo{
-					GroupId:  levelGroup.GroupId,
-					InstId:   npcList.ID,
-					EntityId: uint32(g.GetNextGameObjectGuid()),
-					Motion: &proto.MotionInfo{
-						Pos: &proto.Vector{
-							X: int32(npcList.PosX * 1000),
-							Y: int32(npcList.PosY * 1000),
-							Z: int32(npcList.PosZ * 1000),
-						},
-						Rot: &proto.Vector{
-							X: 0,
-							Y: int32(npcList.RotY * 1000),
-							Z: 0,
-						},
+
+		// 添加NPC实体
+		for _, npcList := range levelGroup.NPCList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  levelGroup.GroupId,
+				InstId:   npcList.ID,
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(npcList.PosX * 1000),
+						Y: int32(npcList.PosY * 1000),
+						Z: int32(npcList.PosZ * 1000),
 					},
-					EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
-						NpcId: npcList.NPCID,
-					}},
-				}
-				entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(npcList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
+					NpcId: npcList.NPCID,
+				}},
 			}
-		*/
+			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+		}
+
 		if len(entityGroupList.EntityList) == 0 {
 			continue
 		}
@@ -377,7 +369,11 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
 
 	// 获取场景实体
-	for _, levelGroup := range gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID) {
+	foorMap := gdconf.GetFloorById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	if foorMap == nil {
+		return
+	}
+	for _, levelGroup := range foorMap.Groups {
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		sceneGroupState := &proto.SceneGroupState{
@@ -447,32 +443,32 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 			}
 			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 		}
-		/*
-			// 添加NPC实体
-			for _, npcList := range levelGroup.NPCList {
-				entityList := &proto.SceneEntityInfo{
-					GroupId:  levelGroup.GroupId,
-					InstId:   npcList.ID,
-					EntityId: uint32(g.GetNextGameObjectGuid()),
-					Motion: &proto.MotionInfo{
-						Pos: &proto.Vector{
-							X: int32(npcList.PosX * 1000),
-							Y: int32(npcList.PosY * 1000),
-							Z: int32(npcList.PosZ * 1000),
-						},
-						Rot: &proto.Vector{
-							X: 0,
-							Y: int32(npcList.RotY * 1000),
-							Z: 0,
-						},
+
+		// 添加NPC实体
+		for _, npcList := range levelGroup.NPCList {
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  levelGroup.GroupId,
+				InstId:   npcList.ID,
+				EntityId: uint32(g.GetNextGameObjectGuid()),
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(npcList.PosX * 1000),
+						Y: int32(npcList.PosY * 1000),
+						Z: int32(npcList.PosZ * 1000),
 					},
-					EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
-						NpcId: npcList.NPCID,
-					}},
-				}
-				entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(npcList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
+					NpcId: npcList.NPCID,
+				}},
 			}
-		*/
+			entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+		}
+
 		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
 	}
 

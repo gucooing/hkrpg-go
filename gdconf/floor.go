@@ -75,7 +75,7 @@ func (g *GameDataConfig) loadFloor() {
 		}
 
 		g.FloorMap[planeId][floorId] = levelFloor
-		g.FloorMap[planeId][floorId].Groups = g.GroupMap[planeId][floorId]
+		g.FloorMap[planeId][floorId].Groups = GetSceneByPF(planeId, floorId)
 
 	}
 

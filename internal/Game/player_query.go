@@ -15,21 +15,23 @@ func (g *Game) SceneEntityMoveCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneEntityMoveCsReq, payloadMsg)
 	req := msg.(*proto.SceneEntityMoveCsReq)
 
-	for _, entryId := range req.EntityMotionList {
-		if g.Player.EntityList[entryId.EntityId] == nil {
-			break
-		}
-		if g.Player.EntityList[entryId.EntityId].Entity == g.GetSceneAvatarId() {
-			g.Player.Pos = &Vector{
-				X: int(entryId.Motion.Pos.X),
-				Y: int(entryId.Motion.Pos.Y),
-				Z: int(entryId.Motion.Pos.Z),
+	if !g.Player.IsRogue {
+		for _, entryId := range req.EntityMotionList {
+			if g.Player.EntityList[entryId.EntityId] == nil {
+				break
 			}
+			if g.Player.EntityList[entryId.EntityId].Entity == g.GetSceneAvatarId() {
+				g.Player.Pos = &Vector{
+					X: int(entryId.Motion.Pos.X),
+					Y: int(entryId.Motion.Pos.Y),
+					Z: int(entryId.Motion.Pos.Z),
+				}
 
-			g.Player.Rot = &Vector{
-				X: int(entryId.Motion.Rot.X),
-				Y: int(entryId.Motion.Rot.Y),
-				Z: int(entryId.Motion.Rot.Z),
+				g.Player.Rot = &Vector{
+					X: int(entryId.Motion.Rot.X),
+					Y: int(entryId.Motion.Rot.Y),
+					Z: int(entryId.Motion.Rot.Z),
+				}
 			}
 		}
 	}

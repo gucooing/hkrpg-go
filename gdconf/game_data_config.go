@@ -16,6 +16,7 @@ type GameDataConfig struct {
 	// 配置表路径前缀
 	excelPrefix  string
 	configPrefix string
+	dataPrefix   string
 	// 配置表数据
 	AvatarDataMap               map[string]*AvatarData                          // 角色
 	AvatarExpItemConfigMap      map[string]*AvatarExpItemConfig                 // 角色升级经验材料配置
@@ -28,13 +29,19 @@ type GameDataConfig struct {
 	ItemConfigMap               map[string]*ItemConfig                          // 材料
 	ItemConfigEquipmentMap      map[string]*ItemConfigEquipment                 // 背包光锥配置
 	ItemConfigRelicMap          map[string]*ItemConfigRelic                     // 背包遗器配置
-	RogueAreaMap                map[string]*RogueArea                           // 模拟宇宙配置
 	RogueTalentMap              map[string]*RogueTalent                         // 模拟宇宙天赋
+	RogueMapGenMap              map[string][]uint32                             // 模拟宇宙id场景映射表
+	RogueAreaConfigMap          map[string]*RogueAreaConfig                     // 模拟宇宙关卡配置
+	RogueMapMap                 map[string]map[string]*RogueMap                 // 模拟宇宙关卡地图表
+	RogueRoomMap                map[string]*RogueRoom                           // 模拟宇宙地图配置表
 	CocoonConfigMap             map[string]map[string]*CocoonConfig             // 挑战/周本
 	MappingInfoMap              map[string]map[string]*MappingInfo              // 挑战/周本奖励
 	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
 	MazeBuffMap                 map[string]map[string]*MazeBuff                 // 技能buff库
 	MazePlaneMap                map[string]*MazePlane                           // 场景id
+	NPCMonsterDataMap           map[string]*NPCMonsterData                      // NPC怪物表？
+	MazePropMap                 map[string]*MazeProp                            // 实体列表？
+	NPCDataMap                  map[string]*NPCData                             // NPC列表？
 	GroupMap                    map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                    map[uint32]map[uint32]*LevelFloor               // ?
 	MapEntranceMap              map[string]*MapEntrance                         // 地图入口
@@ -86,6 +93,14 @@ func (g *GameDataConfig) loadAll() {
 	}
 	g.configPrefix += "/"
 
+	g.dataPrefix = "data"
+	dirInfo, err = os.Stat(g.dataPrefix)
+	if err != nil || !dirInfo.IsDir() {
+		info := fmt.Sprintf("open game data config data dir error: %v", err)
+		panic(info)
+	}
+	g.dataPrefix += "/"
+
 	g.load()
 }
 
@@ -101,13 +116,19 @@ func (g *GameDataConfig) load() {
 	g.loadItemConfig()               // 材料
 	g.loadItemConfigEquipment()      // 背包光锥配置
 	g.loadItemConfigRelic()          // 背包遗器配置
-	g.loadRogueArea()                // 模拟宇宙配置
 	g.loadRogueTalent()              // 模拟宇宙天赋
+	g.loadRogueMapGen()              // 模拟宇宙id场景映射表
+	g.loadRogueAreaConfig()          // 模拟宇宙关卡配置
+	g.loadRogueMap()                 // 模拟宇宙关卡地图表
+	g.loadRogueRoom()                // 模拟宇宙地图配置表
 	g.loadCocoonConfig()             // 挑战/周本
 	g.loadMappingInfo()              // 挑战/周本奖励
 	g.loadAvatarSkilltree()          // 技能库
 	g.loadMazeBuff()                 // 技能buff库
 	g.loadMazePlane()                // 场景id
+	g.loadNPCMonsterData()           // NPC怪物表？
+	g.loadMazeProp()                 // 实体列表？
+	g.loadNPCData()                  // NPC列表？
 	g.loadGroup()                    // 场景实体
 	g.loadFloor()                    // ?
 	g.loadMapEntrance()              // 地图入口

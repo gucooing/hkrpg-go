@@ -31,6 +31,7 @@ type PropList struct {
 	RotZ                     float64 `json:"RotZ "`
 	Name                     string  `json:"Name"`
 	PropID                   uint32  `json:"PropID"`
+	IsDelete                 bool    `json:"IsDelete"`
 	IsOverrideInitLevelGraph bool    `json:"IsOverrideInitLevelGraph"`
 	CampID                   uint32  `json:"CampID"`
 	EventID                  uint32  `json:"EventID"`
@@ -62,6 +63,7 @@ type MonsterList struct {
 	RotX         float64 `json:"RotX"`
 	RotY         float64 `json:"RotY"`
 	RotZ         float64 `json:"RotZ "`
+	IsDelete     bool    `json:"IsDelete"`
 	NPCMonsterID uint32  `json:"NPCMonsterID"`
 	CampID       uint32  `json:"CampID"`
 	EventID      uint32  `json:"EventID"`
@@ -77,6 +79,7 @@ type NPCList struct {
 	RotY           float64  `json:"RotY"`
 	RotZ           float64  `json:"RotZ "`
 	NPCID          uint32   `json:"NPCID"`
+	IsDelete       bool     `json:"IsDelete"`
 	DialogueGroups []uint32 `json:"DialogueGroups"`
 	MapLayerID     uint32   `json:"MapLayerID"`
 	BoardShowList  []uint32 `json:"BoardShowList"`
@@ -120,6 +123,10 @@ func (g *GameDataConfig) loadGroup() {
 	}
 
 	logger.Info("load %v Groups", len(g.GroupMap))
+}
+
+func GetNGroupById(planeId, floorId, groupId uint32) *LevelGroup {
+	return CONF.GroupMap[planeId][floorId][groupId]
 }
 
 func GetGroupById(planeId, floorId uint32) map[uint32]*LevelGroup {
@@ -214,4 +221,89 @@ func GetStateValue(state string) uint32 {
 	}
 
 	return value
+}
+
+func LoadMonster(planeId, floorId, groupId uint32) []*MonsterList {
+	var monsterList []*MonsterList
+	groupList := CONF.GroupMap[planeId][floorId][groupId]
+	if groupList.MonsterList == nil || len(groupList.MonsterList) == 0 {
+		return nil
+	}
+	for _, monster := range groupList.MonsterList {
+		if monster.IsDelete {
+			continue
+		}
+		npcMonsterExcel := GetNPCMonsterId(strconv.Itoa(int(monster.NPCMonsterID)))
+		if npcMonsterExcel == nil {
+			continue
+		}
+
+		monsterList = append(monsterList, monster)
+	}
+
+	return monsterList
+}
+
+func LoadProp(planeId, floorId, groupId uint32) []*PropList {
+	var propList []*PropList
+	groupList := CONF.GroupMap[planeId][floorId][groupId]
+	if groupList.PropList == nil || len(groupList.PropList) == 0 {
+		return nil
+	}
+	for _, prop := range groupList.PropList {
+		if prop.IsDelete {
+			continue
+		}
+		MazePropExcel := GetMazePropId(strconv.Itoa(int(prop.PropID)))
+		if MazePropExcel == nil {
+			continue
+		}
+
+		propList = append(propList, prop)
+	}
+	return propList
+}
+
+func LoadNpc(planeId, floorId, groupId uint32) []*NPCList {
+	var nPCList []*NPCList
+	groupList := CONF.GroupMap[planeId][floorId][groupId]
+	for _, npc := range groupList.NPCList {
+		if npc.IsDelete {
+			continue
+		}
+		NPCDataExcel := GetNPCDataId(strconv.Itoa(int(npc.NPCID)))
+		if NPCDataExcel == nil {
+			continue
+		}
+
+		for _, npcl := range nPCList {
+			if npcl.NPCID == npc.NPCID {
+			} else {
+				nPCList = append(nPCList, npc)
+			}
+		}
+	}
+
+	return nPCList
+}
+
+func GetSceneByPF(planeId, floorId uint32) map[uint32]*LevelGroup {
+	var levelGroup map[uint32]*LevelGroup
+	levelGroup = make(map[uint32]*LevelGroup)
+	for _, groupList := range CONF.GroupMap[planeId][floorId] {
+		group := new(LevelGroup)
+		group.AnchorList = groupList.AnchorList
+		if groupList.LoadSide != "Server" {
+		} else {
+			group.GroupId = groupList.GroupId
+			group.GroupName = groupList.GroupName
+			group.LoadSide = groupList.LoadSide
+			group.LoadOnInitial = groupList.LoadOnInitial
+			group.PropList = LoadProp(planeId, floorId, groupList.GroupId)
+			group.MonsterList = LoadMonster(planeId, floorId, groupList.GroupId)
+			group.NPCList = LoadNpc(planeId, floorId, groupList.GroupId)
+		}
+		levelGroup[groupList.GroupId] = group
+	}
+	return levelGroup
 }

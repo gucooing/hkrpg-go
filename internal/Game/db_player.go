@@ -29,6 +29,7 @@ type PlayerData struct {
 	GameObjectGuidCounter uint64                 `json:"-"` // 游戏对象guid计数器
 	IsNickName            bool                   `json:"-"` // 是否修改昵称
 	EntityList            map[uint32]*EntityList `json:"-"` // 实体ID映射表
+	IsRogue               bool                   `json:"-"` // 是否正在进行模拟宇宙
 }
 
 type Vector struct {

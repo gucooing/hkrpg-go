@@ -107,6 +107,10 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetRogueInfoCsReq(payloadMsg) // 获取模拟宇宙
 	case cmd.StartRogueCsReq:
 		g.StartRogueCsReq(payloadMsg) // 模拟宇宙,启动!
+	case cmd.LeaveRogueCsReq:
+		g.LeaveRogueCsReq(payloadMsg) // 模拟宇宙撤离请求
+	case cmd.QuitRogueCsReq:
+		g.QuitRogueCsReq(payloadMsg) // 模拟宇宙结算请求
 	case cmd.GetRogueTalentInfoCsReq:
 		g.GetRogueTalentInfoCsReq() // 获取天赋信息
 	case cmd.StartCocoonStageCsReq:

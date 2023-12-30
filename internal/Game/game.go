@@ -2,6 +2,7 @@ package Game
 
 import (
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/internal/DataBase"
@@ -37,10 +38,10 @@ type NetMsg struct {
 
 func (g *Game) Send(cmdid uint16, playerMsg pb.Message) {
 	// 打印需要的数据包
-	// if cmdid == 0 {
-	data := protojson.Format(playerMsg)
-	logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
-	// }
+	if cmdid == 1448 {
+		data := protojson.Format(playerMsg)
+		logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
+	}
 	netMsg := new(NetMsg)
 	netMsg.G = g
 	netMsg.CmdId = cmdid
@@ -61,10 +62,10 @@ func (g *Game) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		return nil
 	}
 	// 打印需要的数据包
-	// if cmdId == 1439 {
-	data := protojson.Format(protoObj)
-	logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
-	// }
+	if cmdId == 0 {
+		data := protojson.Format(protoObj)
+		logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
+	}
 	// logger.Debug("[UID:%v] C --> S : NAME: %s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
 	return protoObj
 }
@@ -137,4 +138,12 @@ func (g *Game) ChangePlayer() {
 		g.NetMsgInput <- netMsg
 	}
 	return
+}
+
+func stou32(msg string) uint32 {
+	if msg == "" {
+		return 0
+	}
+	ms, _ := strconv.ParseUint(msg, 10, 32)
+	return uint32(ms)
 }
