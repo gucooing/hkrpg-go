@@ -341,7 +341,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	rogueAreaConfig := gdconf.GetRogueAreaConfigById(strconv.Itoa(int(req.AreaId)))
 	if rogueAreaConfig == nil {
 		rsp := &proto.StartRogueScRsp{
-			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
 		}
 		g.Send(cmd.StartRogueScRsp, rsp)
 		return
@@ -350,7 +350,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	rogueMapStart := gdconf.GetRogueMapStartById(strconv.Itoa(int(rogueMapID)))
 	if rogueMapStart == nil {
 		rsp := &proto.StartRogueScRsp{
-			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
 		}
 		g.Send(cmd.StartRogueScRsp, rsp)
 		return
@@ -404,7 +404,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	rogueRoom := gdconf.GetRogueRoomById(strconv.Itoa(int(rogueMap[rogueMapStart.SiteID])))
 	if rogueRoom == nil {
 		rsp := &proto.StartRogueScRsp{
-			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
 		}
 		g.Send(cmd.StartRogueScRsp, rsp)
 		return
@@ -412,7 +412,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(rogueRoom.MapEntrance)))
 	if mapEntrance == nil {
 		rsp := &proto.StartRogueScRsp{
-			Retcode: uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
 		}
 		g.Send(cmd.StartRogueScRsp, rsp)
 		return
@@ -715,7 +715,7 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	cocoonConfig := gdconf.GetCocoonConfigById(req.CocoonId, req.WorldLevel)
 
 	if len(cocoonConfig.DropList) == 0 {
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
 		g.Send(cmd.StartCocoonStageScRsp, rsp)
 		return
 	}

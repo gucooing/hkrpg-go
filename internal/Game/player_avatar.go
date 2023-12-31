@@ -272,7 +272,7 @@ func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
 	avatarId := req.PointId / 1000 // 获取要升级技能的角色Id
 	if g.Player.DbAvatar.Avatar[avatarId] == nil {
 		rsp := &proto.UnlockSkilltreeScRsp{
-			Retcode: uint32(proto.Retcode_RETCODE_RET_FAIL),
+			Retcode: uint32(proto.Retcode_RET_FAIL),
 		}
 		g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 	}
@@ -315,7 +315,7 @@ func (g *Game) TakePromotionRewardCsReq(payloadMsg []byte) {
 
 	if g.Player.DbAvatar.Avatar[req.BaseAvatarId] == nil {
 		rsp := &proto.TakePromotionRewardScRsp{
-			Retcode: uint32(proto.Retcode_RETCODE_RET_FAIL),
+			Retcode: uint32(proto.Retcode_RET_FAIL),
 		}
 		g.Send(cmd.TakePromotionRewardScRsp, rsp)
 	}

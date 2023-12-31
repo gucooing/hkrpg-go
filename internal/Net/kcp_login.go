@@ -24,7 +24,7 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 	if config.GetConfig().Account.MaxPlayer != -1 {
 		if CLIENT_CONN_NUM >= config.GetConfig().Account.MaxPlayer {
 			rsp.Uid = 0
-			rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_REACH_MAX_PLAYER_NUM)
+			rsp.Retcode = uint32(proto.Retcode_RET_REACH_MAX_PLAYER_NUM)
 			rsp.Msg = "当前服务器人数过多，请稍后再试。"
 			g.Send(cmd.PlayerGetTokenScRsp, rsp)
 			return
@@ -45,7 +45,7 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 	// token验证
 	if uidPlayer.ComboToken != req.Token {
 		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_VERIFY_ERROR)
+		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 		rsp.Msg = "token验证失败"
 		g.Send(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Info("登录账号:%v,token验证失败", accountUid)
@@ -55,7 +55,7 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 	// 封禁验证
 	if uidPlayer.IsBan {
 		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_IN_GM_BIND_ACCESS)
+		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)
 		rsp.Msg = "该账号正处于封禁状态，暂时无法登录，详情可联系客服。"
 		g.Send(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Info("登录账号:%v,已被封禁", accountUid)
@@ -81,7 +81,7 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 	err = DataBase.DBASE.UpdateUidPlayer(uidPlayer.AccountId, newuidPlayer)
 	if err != nil {
 		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RETCODE_RET_ACCOUNT_PARA_ERROR)
+		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_PARA_ERROR)
 		rsp.Msg = "账号刷新失败"
 		g.Send(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Error("登录账号:%v,账号刷新失败", accountUid)
