@@ -24,22 +24,34 @@ type Server struct {
 func (s *Server) Start() error {
 	// 初始化路由
 	s.InitRouter()
-	// 获取地址
-	addr := s.Config.Http.Addr
-	fullAddr := addr + ":" + strconv.FormatInt(s.Config.Http.Port, 10)
-	go s.startServer(fullAddr, "HTTP")
+
+	// 启动 HTTP 服务器
+	httpAddr := s.Config.Http.Addr + ":" + strconv.FormatInt(s.Config.Http.Port, 10)
+	go s.startServer(httpAddr, "HTTP")
+
+	// 根据配置决定是否启动 HTTPS 服务器
+	if s.Config.Https != nil && s.Config.Https.Enable {
+		httpsAddr := s.Config.Https.Addr + ":" + strconv.FormatInt(s.Config.Https.Port, 10)
+		go s.startServer(httpsAddr, "HTTPS")
+	}
 
 	return nil
 }
 
-// startServer 启动一个 HTTP 服务器
+// startServer 启动一个 HTTP/HTTPS 服务器
 func (s *Server) startServer(addr string, serverType string) {
-	s.server = &http.Server{Addr: addr, Handler: s.Router}
-	logger.Info("hkrpg-go SDK 服务器在%s启动", addr)
+	server := &http.Server{Addr: addr, Handler: s.Router}
+	logger.Info("hkrpg-go SDK 服务器在 %s 启动 (%s)", addr, serverType)
 
-	if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		logger.Error("hkrpg-go SDK 服务器启动失败,原因:%s", err)
+	var err error
+	if serverType == "HTTPS" {
+		err = server.ListenAndServeTLS(s.Config.Https.CertFile, s.Config.Https.KeyFile)
+	} else {
+		err = server.ListenAndServe()
+	}
 
+	if err != nil && err != http.ErrServerClosed {
+		logger.Error("hkrpg-go SDK 服务器启动失败, 原因: %s", err)
 	}
 }
 
