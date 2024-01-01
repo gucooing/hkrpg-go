@@ -15,6 +15,7 @@ type DbItem struct {
 	RelicMap     map[uint32]*Relic     // 遗器
 	EquipmentMap map[uint32]*Equipment // 光锥
 	MaterialMap  map[uint32]*Material  // 材料
+	HeadIcon     []uint32              // 头像
 }
 
 type Relic struct {
@@ -126,13 +127,19 @@ func (g *Game) AddRelic(tid uint32) {
 		Tid:          tid,
 		UniqueId:     uniqueId,
 		Exp:          0,
-		Level:        1,
-		MainAffixId:  relic.MainAffixGroup, // TODO 应该是要去其他表获取的,等写遗器的时候再处理这部分
+		Level:        0,
+		MainAffixId:  gdconf.GetRelicMainAffixConfigById(relic.MainAffixGroup),
 		RelicAffix:   make([]*RelicAffix, 0),
 		BaseAvatarId: 0,
 		IsProtected:  false,
 	}
-	g.ScenePlaneEventScNotify(tid, 1)
+	// g.RelicPlayerSyncScNotify(tid, uniqueId)
+	g.RelicScenePlaneEventScNotify(uniqueId)
+}
+
+func (g *Game) AddHeadIcon(headIconId uint32) {
+	g.Player.DbItem.HeadIcon = append(g.Player.DbItem.HeadIcon, headIconId)
+	// g.ScenePlaneEventScNotify(headIconId, 1)
 }
 
 func (g *Game) EquipmentPlayerSyncScNotify(tid, uniqueId uint32) {
@@ -165,6 +172,34 @@ func (g *Game) MaterialPlayerSyncScNotify(tid uint32) {
 		Num: materialdb.Num,
 	}
 	notify.MaterialList = append(notify.MaterialList, material)
+
+	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
+func (g *Game) RelicPlayerSyncScNotify(tid, uniqueId uint32) {
+	notify := &proto.PlayerSyncScNotify{
+		RelicList: make([]*proto.Relic, 0),
+	}
+	relicItme := g.Player.DbItem.RelicMap[uniqueId]
+	relic := &proto.Relic{
+		Tid:          relicItme.Tid,
+		SubAffixList: make([]*proto.RelicAffix, 0),
+		BaseAvatarId: relicItme.BaseAvatarId,
+		UniqueId:     relicItme.UniqueId,
+		Level:        relicItme.Level,
+		IsProtected:  relicItme.IsProtected,
+		MainAffixId:  relicItme.MainAffixId,
+		Exp:          relicItme.Exp,
+	}
+	for _, subAffixList := range relicItme.RelicAffix {
+		relicAffix := &proto.RelicAffix{
+			AffixId: subAffixList.AffixId,
+			Cnt:     subAffixList.Cnt,
+			Step:    subAffixList.Step,
+		}
+		relic.SubAffixList = append(relic.SubAffixList, relicAffix)
+	}
+	notify.RelicList = append(notify.RelicList, relic)
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }

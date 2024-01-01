@@ -94,7 +94,7 @@ func (g *Game) AddAvatar(avatarId uint32) {
 
 	g.Player.DbAvatar.Avatar[avatarId] = avatar
 	g.AvatarPlayerSyncScNotify(avatarId)
-	g.ScenePlaneEventScNotify(avatarId, 1)
+	// g.ScenePlaneEventScNotify(avatarId, 1)
 }
 
 func (g *Game) GetSkilltree(avatarId uint32) []*proto.AvatarSkillTree {

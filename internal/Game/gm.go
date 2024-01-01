@@ -12,62 +12,78 @@ import (
 
 func (g *Game) GmGive(payloadMsg pb.Message) {
 	req := payloadMsg.(*gmpb.GmGive)
+	itemConf := gdconf.GetItemConfigMap()
 	if req.GiveAll {
-		for _, avatar := range gdconf.GetAvatarList() {
-			if avatar == 0 {
-				continue
-			}
+		// add avatar
+		for _, avatar := range itemConf.Avatar {
 			// 过滤主角
-			if avatar/100 == 80 {
+			if avatar.ID/100 == 80 {
 				continue
 			}
-			g.AddAvatar(avatar)
-			g.AddMaterial(avatar+10000, 6)
-		}
-		for _, equipment := range gdconf.GetEquipmentList() {
-			if equipment == 0 {
-				continue
-			}
-			g.AddEquipment(equipment)
+			g.AddAvatar(avatar.ID)
 			time.Sleep(10 * time.Millisecond)
 		}
-		for _, item := range gdconf.GetItemList() {
-			if item == 0 {
-				continue
-			}
-			g.AddMaterial(item, 99999)
+		// add playerIcon
+		for _, playerIcon := range itemConf.AvatarPlayerIcon {
+			g.AddHeadIcon(playerIcon.ID)
+			time.Sleep(10 * time.Millisecond)
+		}
+		// add rank
+		for _, rank := range itemConf.AvatarRank {
+			g.AddMaterial(rank.ID, 6)
+			time.Sleep(10 * time.Millisecond)
+		}
+		// add equipment
+		for _, equipment := range itemConf.Equipment {
+			g.AddEquipment(equipment.ID)
+			time.Sleep(10 * time.Millisecond)
+		}
+		// add item
+		for _, item := range itemConf.Item {
+			g.AddMaterial(item.ID, 99999)
+			time.Sleep(10 * time.Millisecond)
+		}
+		// add relic
+		for _, relic := range itemConf.Relic {
+			g.AddRelic(relic.ID)
 			time.Sleep(10 * time.Millisecond)
 		}
 	} else {
-		for _, item := range gdconf.GetItemList() {
-			if item == 0 {
-				continue
-			}
-			if item == req.ItemId {
-				g.AddMaterial(item, req.ItemCount)
-			}
-		}
-		for _, avatar := range gdconf.GetAvatarList() {
-			if avatar == 0 {
-				continue
-			}
-			if avatar == req.ItemId {
-				g.AddAvatar(avatar)
+		for _, item := range itemConf.Item {
+			if item.ID == req.ItemId {
+				g.AddMaterial(item.ID, req.ItemCount)
 				return
 			}
 		}
-		for _, equipment := range gdconf.GetEquipmentList() {
-			if equipment == 0 {
-				continue
-			}
-			if equipment == req.ItemId {
-				g.AddEquipment(equipment)
+		for _, avatar := range itemConf.Avatar {
+			if avatar.ID == req.ItemId {
+				g.AddAvatar(avatar.ID)
 				return
 			}
 		}
-		// 特殊物品(不再EquipmentList表中的物品)
-		if req.ItemId/10000 == 1 {
-			g.AddMaterial(req.ItemId, req.ItemCount)
+		for _, avatar := range itemConf.AvatarRank {
+			if avatar.ID == req.ItemId {
+				g.AddMaterial(avatar.ID, req.ItemCount)
+				return
+			}
+		}
+		for _, avatar := range itemConf.AvatarPlayerIcon {
+			if avatar.ID == req.ItemId {
+				g.AddHeadIcon(avatar.ID)
+				return
+			}
+		}
+		for _, equipment := range itemConf.Equipment {
+			if equipment.ID == req.ItemId {
+				g.AddEquipment(equipment.ID)
+				return
+			}
+		}
+		for _, relic := range itemConf.Relic {
+			if relic.ID == req.ItemId {
+				g.AddRelic(relic.ID)
+				return
+			}
 		}
 	}
 }
@@ -87,6 +103,27 @@ func (g *Game) ScenePlaneEventScNotify(id, num uint32) {
 		Rank:        0,
 		Promotion:   0,
 		UniqueId:    0,
+	}
+	notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
+	g.Send(cmd.ScenePlaneEventScNotify, notify)
+}
+
+func (g *Game) RelicScenePlaneEventScNotify(uniqueId uint32) {
+	relicItme := g.Player.DbItem.RelicMap[uniqueId]
+	// 通知客户端增加了物品
+	notify := &proto.ScenePlaneEventScNotify{
+		GetItemList: &proto.ItemList{
+			ItemList: make([]*proto.Item, 0),
+		},
+	}
+	item := &proto.Item{
+		ItemId:      relicItme.Tid,
+		Level:       relicItme.Level,
+		Num:         1,
+		MainAffixId: relicItme.MainAffixId,
+		Rank:        0,
+		Promotion:   0,
+		UniqueId:    relicItme.UniqueId,
 	}
 	notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
 	g.Send(cmd.ScenePlaneEventScNotify, notify)

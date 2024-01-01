@@ -67,9 +67,9 @@ func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 		Unk1:                 "",
 	}
 
-	for _, avatar := range g.Player.DbAvatar.Avatar {
+	for _, avatar := range g.Player.DbItem.HeadIcon {
 		headIcon := &proto.HeadIcon{
-			Id: avatar.AvatarId + 200000,
+			Id: avatar,
 		}
 		rsp.UnlockedHeadIconList = append(rsp.UnlockedHeadIconList, headIcon)
 	}

@@ -264,9 +264,12 @@ func LoadProp(planeId, floorId, groupId uint32) []*PropList {
 	return propList
 }
 
-func LoadNpc(planeId, floorId, groupId uint32) []*NPCList {
-	var nPCList []*NPCList
+func LoadNpc(planeId, floorId, groupId uint32, nPCList []*NPCList) ([]*NPCList, []*NPCList) {
+	var npcList []*NPCList
 	groupList := CONF.GroupMap[planeId][floorId][groupId]
+	if groupList.NPCList == nil || len(groupList.NPCList) == 0 {
+		return nil, nPCList
+	}
 	for _, npc := range groupList.NPCList {
 		if npc.IsDelete {
 			continue
@@ -276,19 +279,27 @@ func LoadNpc(planeId, floorId, groupId uint32) []*NPCList {
 			continue
 		}
 
+		repeatNpc := false
 		for _, npcl := range nPCList {
 			if npcl.NPCID == npc.NPCID {
-			} else {
-				nPCList = append(nPCList, npc)
+				repeatNpc = true
+				break
 			}
 		}
+		if repeatNpc {
+			continue
+		}
+
+		nPCList = append(nPCList, npc)
+		npcList = append(npcList, npc)
 	}
 
-	return nPCList
+	return npcList, nPCList
 }
 
 func GetSceneByPF(planeId, floorId uint32) map[uint32]*LevelGroup {
 	var levelGroup map[uint32]*LevelGroup
+	var nPCList []*NPCList
 	levelGroup = make(map[uint32]*LevelGroup)
 	for _, groupList := range CONF.GroupMap[planeId][floorId] {
 		group := new(LevelGroup)
@@ -301,7 +312,7 @@ func GetSceneByPF(planeId, floorId uint32) map[uint32]*LevelGroup {
 			group.LoadOnInitial = groupList.LoadOnInitial
 			group.PropList = LoadProp(planeId, floorId, groupList.GroupId)
 			group.MonsterList = LoadMonster(planeId, floorId, groupList.GroupId)
-			group.NPCList = LoadNpc(planeId, floorId, groupList.GroupId)
+			group.NPCList, nPCList = LoadNpc(planeId, floorId, groupList.GroupId, nPCList)
 		}
 		levelGroup[groupList.GroupId] = group
 	}

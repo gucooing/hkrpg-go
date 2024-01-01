@@ -176,7 +176,9 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 
 	// 获取场景实体
 	for _, levelGroup := range foorMap.Groups {
-
+		if levelGroup.GroupId == 0 {
+			continue
+		}
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		entityGroupList := &proto.SceneEntityGroupInfo{
@@ -374,14 +376,10 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		return
 	}
 	for _, levelGroup := range foorMap.Groups {
-		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
-
-		sceneGroupState := &proto.SceneGroupState{
-			GroupId:   levelGroup.GroupId,
-			IsDefault: true,
+		if levelGroup.GroupId == 0 {
+			continue
 		}
-
-		rsp.Scene.GroupStateList = append(rsp.Scene.GroupStateList, sceneGroupState)
+		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		entityGroupList := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
