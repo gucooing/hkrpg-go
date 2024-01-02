@@ -6,8 +6,7 @@ type DbScene struct {
 
 func NewScene(data *PlayerData) *PlayerData {
 	dbScene := new(DbScene)
-	// dbScene.EntryId = 1010101
-	dbScene.EntryId = 2000201
+	dbScene.EntryId = 1010101
 
 	data.DbScene = dbScene
 	return data

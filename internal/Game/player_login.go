@@ -41,23 +41,24 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		err := json.Unmarshal(dbPlayer.PlayerData, &playerData)
 		if err != nil {
 			logger.Error("账号数据反序列化失败:", err)
+			g.KcpConn.Close()
 			return
 		}
 		g.Player = playerData
 	}
 
 	rsp := new(proto.PlayerLoginScRsp)
-	rsp.Stamina = g.Player.DbItem.MaterialMap[11].Num
+	rsp.Stamina = g.Player.DbItem.MaterialMap[11]
 	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.CurTimezone = 8 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
 		Nickname:   g.Player.NickName,
 		Level:      g.Player.Level,
 		Exp:        g.Player.Exp,
-		Stamina:    g.Player.DbItem.MaterialMap[11].Num,
+		Stamina:    g.Player.DbItem.MaterialMap[11],
 		Mcoin:      g.Player.Mcoin,
-		Hcoin:      g.Player.DbItem.MaterialMap[1].Num,
-		Scoin:      g.Player.DbItem.MaterialMap[2].Num,
+		Hcoin:      g.Player.DbItem.MaterialMap[1],
+		Scoin:      g.Player.DbItem.MaterialMap[2],
 		WorldLevel: g.Player.WorldLevel,
 	}
 

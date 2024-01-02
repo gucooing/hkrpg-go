@@ -1,15 +1,12 @@
 package Game
 
 import (
-	"time"
-
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	pb "google.golang.org/protobuf/proto"
 )
 
 func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
-	g.LastActiveTime = time.Now().Unix()
 	switch cmdId {
 	case cmd.GetBasicInfoCsReq:
 		g.HandleGetBasicInfoCsReq()
@@ -85,6 +82,11 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.RankUpEquipmentCsReq(payloadMsg) // 光锥叠影
 	case cmd.PromoteEquipmentCsReq:
 		g.PromoteEquipmentCsReq(payloadMsg) // 光锥突破
+	// 圣遗物
+	case cmd.DressRelicAvatarCsReq:
+		g.DressRelicAvatarCsReq(payloadMsg) // 圣遗物装备
+	case cmd.ExpUpRelicCsReq:
+		g.ExpUpRelicCsReq(payloadMsg) // 圣遗物升级
 	// 场景
 	case cmd.GetSceneMapInfoCsReq:
 		g.HanldeGetSceneMapInfoCsReq(payloadMsg) // 获取地图信息
@@ -115,7 +117,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetRogueTalentInfoCsReq() // 获取天赋信息
 	case cmd.StartCocoonStageCsReq:
 		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
-
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品

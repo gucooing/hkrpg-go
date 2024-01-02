@@ -18,7 +18,7 @@ func (g *Game) ExchangeHcoinCsReq(payloadMsg []byte) {
 
 	g.Player.Mcoin -= req.Num
 
-	g.Player.DbItem.MaterialMap[1].Num += req.Num
+	g.Player.DbItem.MaterialMap[1] += req.Num
 
 	g.PlayerPlayerSyncScNotify()
 

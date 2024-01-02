@@ -9,6 +9,78 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+func (g *Game) DressAvatarCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
+	req := msg.(*proto.DressAvatarCsReq)
+
+	g.DressAvatarPlayerSyncScNotify(req.BaseAvatarId, req.EquipmentUniqueId)
+
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+	g.Send(cmd.DressAvatarScRsp, rsp)
+}
+
+// 光锥交换通知
+func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32) {
+	notify := &proto.PlayerSyncScNotify{
+		AvatarSync:    &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
+		EquipmentList: make([]*proto.Equipment, 0),
+	}
+
+	avatardb := g.Player.DbAvatar.Avatar[avatarId]
+
+	// 目标光锥是否已被装备
+	if g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId != 0 {
+		avatardbs := g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId]
+		avatardbs.EquipmentUniqueId = avatardb.EquipmentUniqueId
+		// 获取要装备的角色光锥,与目标光锥角色交换
+		avatar := g.GetAvatar(avatardbs.AvatarId)
+		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
+		// 交换光锥
+		g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
+		if avatardb.EquipmentUniqueId == 0 {
+		} else {
+			equipments := g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId]
+			equipmentLists := &proto.Equipment{
+				Exp:          equipments.Exp,
+				Promotion:    equipments.Promotion,
+				Level:        equipments.Level,
+				BaseAvatarId: avatardbs.AvatarId,
+				IsProtected:  equipments.IsProtected,
+				Rank:         equipments.Rank,
+				UniqueId:     equipments.UniqueId,
+				Tid:          equipments.Tid,
+			}
+			notify.EquipmentList = append(notify.EquipmentList, equipmentLists)
+			g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = avatardbs.AvatarId
+		}
+	}
+
+	g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId = avatarId
+	g.Player.DbAvatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
+
+	avatar := g.GetAvatar(avatarId)
+
+	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
+
+	equipment := g.Player.DbItem.EquipmentMap[equipmentUniqueId]
+
+	equipmentList := &proto.Equipment{
+		Exp:          equipment.Exp,
+		Promotion:    equipment.Promotion,
+		Level:        equipment.Level,
+		BaseAvatarId: equipment.BaseAvatarId,
+		IsProtected:  equipment.IsProtected,
+		Rank:         equipment.Rank,
+		UniqueId:     equipment.UniqueId,
+		Tid:          equipment.Tid,
+	}
+
+	notify.EquipmentList = append(notify.EquipmentList, equipmentList)
+
+	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
 func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.ExpUpEquipmentCsReq, payloadMsg)
 	req := msg.(*proto.ExpUpEquipmentCsReq)
@@ -93,7 +165,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+	g.Player.DbItem.MaterialMap[2] -= delScoin
 	// 更新需要升级的光锥状态
 	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Level = level
 	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Exp = exp
@@ -121,10 +193,10 @@ func (g *Game) PlayerPlayerSyncScNotify() {
 			Nickname:   g.Player.NickName,
 			Level:      g.Player.Level,
 			Exp:        g.Player.Exp,
-			Stamina:    g.Player.DbItem.MaterialMap[11].Num,
+			Stamina:    g.Player.DbItem.MaterialMap[11],
 			Mcoin:      g.Player.Mcoin,
-			Hcoin:      g.Player.DbItem.MaterialMap[1].Num,
-			Scoin:      g.Player.DbItem.MaterialMap[2].Num,
+			Hcoin:      g.Player.DbItem.MaterialMap[1],
+			Scoin:      g.Player.DbItem.MaterialMap[2],
 			WorldLevel: g.Player.WorldLevel,
 		},
 	}
@@ -145,10 +217,10 @@ func (g *Game) DelMaterialPlayerSyncScNotify(pileItem []*Material) {
 	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
 
 	for _, item := range pileItem {
-		g.Player.DbItem.MaterialMap[item.Tid].Num -= item.Num
+		g.Player.DbItem.MaterialMap[item.Tid] -= item.Num
 		material := &proto.Material{
 			Tid: item.Tid,
-			Num: g.Player.DbItem.MaterialMap[item.Tid].Num,
+			Num: g.Player.DbItem.MaterialMap[item.Tid],
 		}
 		notify.MaterialList = append(notify.MaterialList, material)
 	}
@@ -269,7 +341,7 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	// 增加突破等级
 	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Promotion++
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+	g.Player.DbItem.MaterialMap[2] -= delScoin
 	// 通知突破后光锥消息
 	g.EquipmentPlayerSyncScNotify(dbEquipment.Tid, req.EquipmentUniqueId)
 	// 通知角色还有多少信用点

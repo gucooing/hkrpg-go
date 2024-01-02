@@ -11,8 +11,8 @@ import (
 func (g *Game) StaminaInfoScNotify() {
 	notify := &proto.StaminaInfoScNotify{
 		NextRecoverTime: 0,
-		Stamina:         g.Player.DbItem.MaterialMap[11].Num,
-		ReserveStamina:  g.Player.DbItem.MaterialMap[12].Num,
+		Stamina:         g.Player.DbItem.MaterialMap[11],
+		ReserveStamina:  g.Player.DbItem.MaterialMap[12],
 	}
 	g.Send(cmd.StaminaInfoScNotify, notify)
 }
@@ -246,6 +246,8 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	rsp := new(proto.PlayerHeartbeatScRsp)
 	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.ClientTimeMs = req.ClientTimeMs
+
+	g.LastActiveTime = time.Now().Unix()
 
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }

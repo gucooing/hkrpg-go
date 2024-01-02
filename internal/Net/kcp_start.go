@@ -134,7 +134,11 @@ func recvHandle(g *Game.Game) {
 					HandlePlayerGetTokenCsReq(g, v.ProtoData)
 				} else {
 					g.XorKey = nil
-					g.KcpConn.Close()
+					netMsg := new(Game.NetMsg)
+					netMsg.G = g
+					netMsg.Type = Game.Close
+					g.NetMsgInput <- netMsg
+					return
 				}
 			}
 		}
@@ -180,14 +184,21 @@ func (k *KcpConnManager) sendNet(g *Game.Game) {
 	for {
 		netMsg := <-g.NetMsgInput
 		switch netMsg.Type {
-		case "KcpMsg":
+		case Game.KcpMsg:
 			k.SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
-		case "Close":
+		case Game.Close:
+			if g.Uid != 0 {
+				g.KcpConn.Close()
+				delete(k.sessionMap, g.Uid)
+				g.Seed = 0
+				CLIENT_CONN_NUM = int32(len(k.sessionMap))
+				return
+			}
 			g.KcpConn.Close()
-			delete(k.sessionMap, g.Uid)
-			CLIENT_CONN_NUM = int32(len(k.sessionMap))
-		case "Change":
+			return
+		case Game.Change:
 			g.KcpConn.Close()
+			return
 		}
 	}
 }

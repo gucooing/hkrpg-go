@@ -33,8 +33,14 @@ type NetMsg struct {
 	G         *Game
 	CmdId     uint16
 	PlayerMsg pb.Message
-	Type      string
+	Type      int
 }
+
+const (
+	KcpMsg = 1
+	Close  = 2
+	Change = 3
+)
 
 func (g *Game) Send(cmdid uint16, playerMsg pb.Message) {
 	// 打印需要的数据包
@@ -46,7 +52,7 @@ func (g *Game) Send(cmdid uint16, playerMsg pb.Message) {
 	netMsg.G = g
 	netMsg.CmdId = cmdid
 	netMsg.PlayerMsg = playerMsg
-	netMsg.Type = "KcpMsg"
+	netMsg.Type = KcpMsg
 	g.NetMsgInput <- netMsg
 }
 
@@ -98,16 +104,20 @@ func (g *Game) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		<-ticker.C
-		timestamp := time.Now().Unix()
-		if timestamp-g.LastActiveTime >= 120 {
-			g.KickPlayer()
+		if g.Seed == 0 {
 			return
 		}
-		if g.KcpConn == nil {
+		lastActiveTime := g.getLastActiveTime()
+		timestamp := time.Now().Unix()
+		if timestamp-lastActiveTime >= 120 {
 			g.KickPlayer()
 			return
 		}
 	}
+}
+
+func (g *Game) getLastActiveTime() int64 {
+	return g.LastActiveTime
 }
 
 func (g *Game) KickPlayer() error {
@@ -119,7 +129,7 @@ func (g *Game) KickPlayer() error {
 		logger.Info("[UID:%v] || 玩家已离线", g.Uid)
 		netMsg := new(NetMsg)
 		netMsg.G = g
-		netMsg.Type = "Close"
+		netMsg.Type = Close
 		g.NetMsgInput <- netMsg
 	}
 	return nil
@@ -134,7 +144,7 @@ func (g *Game) ChangePlayer() {
 		logger.Info("[UID:%v] || 玩家重复登录", g.Uid)
 		netMsg := new(NetMsg)
 		netMsg.G = g
-		netMsg.Type = "Change"
+		netMsg.Type = Change
 		g.NetMsgInput <- netMsg
 	}
 	return

@@ -1,6 +1,8 @@
 package Game
 
 import (
+	"math"
+	"math/rand"
 	"strconv"
 	"sync"
 
@@ -14,7 +16,7 @@ var syncGD sync.Mutex
 type DbItem struct {
 	RelicMap     map[uint32]*Relic     // 遗器
 	EquipmentMap map[uint32]*Equipment // 光锥
-	MaterialMap  map[uint32]*Material  // 材料
+	MaterialMap  map[uint32]uint32     // 材料
 	HeadIcon     []uint32              // 头像
 }
 
@@ -53,14 +55,15 @@ type Material struct {
 
 func NewItem(data *PlayerData) *PlayerData {
 	dbItem := new(DbItem)
-	dbItem.MaterialMap = make(map[uint32]*Material)
+	dbItem.MaterialMap = make(map[uint32]uint32)
 	dbItem.EquipmentMap = make(map[uint32]*Equipment)
 	dbItem.RelicMap = make(map[uint32]*Relic)
-	dbItem.MaterialMap[1] = &Material{Tid: 1, Num: 0}
-	dbItem.MaterialMap[2] = &Material{Tid: 2, Num: 0}
-	dbItem.MaterialMap[11] = &Material{Tid: 11, Num: 240}
-	dbItem.MaterialMap[12] = &Material{Tid: 12, Num: 0}
-	dbItem.MaterialMap[22] = &Material{Tid: 22, Num: 0}
+	dbItem.HeadIcon = append(dbItem.HeadIcon, data.HeadImage)
+	dbItem.MaterialMap[1] = 0
+	dbItem.MaterialMap[2] = 0
+	dbItem.MaterialMap[11] = 240
+	dbItem.MaterialMap[12] = 0
+	dbItem.MaterialMap[22] = 0
 
 	data.DbItem = dbItem
 
@@ -71,15 +74,15 @@ func (g *Game) AddMaterial(tid, num uint32) {
 	// 特殊物品处理
 	switch tid {
 	case 11:
-		g.Player.DbItem.MaterialMap[tid].Num += num
-		if g.Player.DbItem.MaterialMap[tid].Num > 240 {
-			g.Player.DbItem.MaterialMap[tid].Num = 240
+		g.Player.DbItem.MaterialMap[tid] += num
+		if g.Player.DbItem.MaterialMap[tid] > 240 {
+			g.Player.DbItem.MaterialMap[tid] = 240
 		}
 		return
 	case 12:
-		g.Player.DbItem.MaterialMap[tid].Num += num
-		if g.Player.DbItem.MaterialMap[tid].Num > 2400 {
-			g.Player.DbItem.MaterialMap[tid].Num = 2400
+		g.Player.DbItem.MaterialMap[tid] += num
+		if g.Player.DbItem.MaterialMap[tid] > 2400 {
+			g.Player.DbItem.MaterialMap[tid] = 2400
 		}
 		return
 	case 22:
@@ -88,11 +91,11 @@ func (g *Game) AddMaterial(tid, num uint32) {
 	}
 
 	material := g.Player.DbItem.MaterialMap[tid]
-	if material == nil {
-		g.Player.DbItem.MaterialMap[tid] = &Material{Tid: tid, Num: num}
+	if material == 0 {
+		g.Player.DbItem.MaterialMap[tid] = num
 	} else {
 		syncGD.Lock()
-		g.Player.DbItem.MaterialMap[tid] = &Material{Tid: tid, Num: material.Num + num}
+		g.Player.DbItem.MaterialMap[tid] = num
 		syncGD.Unlock()
 	}
 
@@ -100,8 +103,7 @@ func (g *Game) AddMaterial(tid, num uint32) {
 }
 
 func (g *Game) SubtractMaterial(tid, num uint32) {
-	material := g.Player.DbItem.MaterialMap[tid]
-	g.Player.DbItem.MaterialMap[tid] = &Material{Tid: tid, Num: material.Num - num}
+	g.Player.DbItem.MaterialMap[tid] -= num
 	g.MaterialPlayerSyncScNotify(tid)
 }
 
@@ -123,7 +125,7 @@ func (g *Game) AddEquipment(tid uint32) {
 func (g *Game) AddRelic(tid uint32) {
 	uniqueId := uint32(SNOWFLAKE.GenId())
 	relic := gdconf.GetRelicById(strconv.Itoa(int(tid)))
-	g.Player.DbItem.RelicMap[uniqueId] = &Relic{
+	relicdb := &Relic{
 		Tid:          tid,
 		UniqueId:     uniqueId,
 		Exp:          0,
@@ -133,12 +135,51 @@ func (g *Game) AddRelic(tid uint32) {
 		BaseAvatarId: 0,
 		IsProtected:  false,
 	}
-	// g.RelicPlayerSyncScNotify(tid, uniqueId)
-	g.RelicScenePlaneEventScNotify(uniqueId)
+	baseSubAffixes := math.Min(math.Max(float64(relic.Type-2), 0), 3)
+	addSubAffixes := rand.Intn(1) + int(baseSubAffixes)
+	for i := 0; i < addSubAffixes; i++ {
+		affixId := gdconf.GetRelicSubAffixConfigById(relic.SubAffixGroup)
+		relicAffix := &RelicAffix{
+			AffixId: affixId,
+			Cnt:     1,
+			Step:    0,
+		}
+		relicdb.RelicAffix = append(relicdb.RelicAffix, relicAffix)
+	}
+
+	g.Player.DbItem.RelicMap[uniqueId] = relicdb
+	g.RelicPlayerSyncScNotify(tid, uniqueId)
+}
+
+func (g *Game) GetRelic(uniqueId uint32) *proto.Relic {
+	relicdb := g.Player.DbItem.RelicMap[uniqueId]
+	if relicdb == nil {
+		return nil
+	}
+	relicList := &proto.Relic{
+		Tid:          relicdb.Tid,
+		SubAffixList: make([]*proto.RelicAffix, 0),
+		BaseAvatarId: relicdb.BaseAvatarId,
+		UniqueId:     relicdb.UniqueId,
+		Level:        relicdb.Level,
+		IsProtected:  relicdb.IsProtected,
+		MainAffixId:  relicdb.MainAffixId,
+		Exp:          relicdb.Exp,
+	}
+	for _, subAddix := range relicdb.RelicAffix {
+		relicAffix := &proto.RelicAffix{
+			AffixId: subAddix.AffixId,
+			Cnt:     subAddix.Cnt,
+			Step:    subAddix.Step,
+		}
+		relicList.SubAffixList = append(relicList.SubAffixList, relicAffix)
+	}
+	return relicList
 }
 
 func (g *Game) AddHeadIcon(headIconId uint32) {
 	g.Player.DbItem.HeadIcon = append(g.Player.DbItem.HeadIcon, headIconId)
+	// TODO
 	// g.ScenePlaneEventScNotify(headIconId, 1)
 }
 
@@ -169,7 +210,7 @@ func (g *Game) MaterialPlayerSyncScNotify(tid uint32) {
 	materialdb := g.Player.DbItem.MaterialMap[tid]
 	material := &proto.Material{
 		Tid: tid,
-		Num: materialdb.Num,
+		Num: materialdb,
 	}
 	notify.MaterialList = append(notify.MaterialList, material)
 

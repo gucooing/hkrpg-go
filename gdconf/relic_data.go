@@ -37,18 +37,18 @@ func (g *GameDataConfig) loadRelic() {
 		panic(info)
 	}
 	for _, relic := range g.RelicMap {
-		switch relic.TypeS {
-		case "HEAD":
+		switch relic.Rarity {
+		case "CombatPowerRelicRarity1":
 			relic.Type = 1
-		case "HAND":
+		case "CombatPowerRelicRarity2":
 			relic.Type = 2
-		case "BODY":
+		case "CombatPowerRelicRarity3":
 			relic.Type = 3
-		case "FOOT":
+		case "CombatPowerRelicRarity4":
 			relic.Type = 4
-		case "NECK":
+		case "CombatPowerRelicRarity5":
 			relic.Type = 5
-		case "OBJECT":
+		case "CombatPowerRelicRarity6":
 			relic.Type = 6
 		}
 	}

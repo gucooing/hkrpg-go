@@ -105,6 +105,25 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 				MaxSp: avatar.SpBar.MaxSp,
 			},
 		}
+		for _, relic := range avatar.EquipRelic {
+			relicdb := g.Player.DbItem.RelicMap[relic]
+			equipRelic := &proto.BattleRelic{
+				Id:           relicdb.Tid,
+				Level:        relicdb.Level,
+				MainAffixId:  relicdb.MainAffixId,
+				SubAffixList: make([]*proto.RelicAffix, 0),
+				UniqueId:     relicdb.UniqueId,
+			}
+			for _, subAddix := range relicdb.RelicAffix {
+				relicAffix := &proto.RelicAffix{
+					AffixId: subAddix.AffixId,
+					Cnt:     subAddix.Cnt,
+					Step:    subAddix.Step,
+				}
+				equipRelic.SubAffixList = append(equipRelic.SubAffixList, relicAffix)
+			}
+			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
+		}
 		// 获取角色装备的光锥
 		if avatar.EquipmentUniqueId != 0 {
 			equipment := g.Player.DbItem.EquipmentMap[avatar.EquipmentUniqueId]
@@ -213,7 +232,7 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 			delete(g.Player.EntityList, battle.EventID)
 		}
 
-		g.Player.DbItem.MaterialMap[11].Num -= battle.StaminaCost * battle.Wave // 扣除体力
+		g.Player.DbItem.MaterialMap[11] -= battle.StaminaCost * battle.Wave // 扣除体力
 
 		// 获取奖励
 		rsp.DropData = &proto.ItemList{ItemList: make([]*proto.Item, 0)}
@@ -770,6 +789,25 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 				CurSp: avatar.SpBar.CurSp,
 				MaxSp: avatar.SpBar.MaxSp,
 			},
+		}
+		for _, relic := range avatar.EquipRelic {
+			relicdb := g.Player.DbItem.RelicMap[relic]
+			equipRelic := &proto.BattleRelic{
+				Id:           relicdb.Tid,
+				Level:        relicdb.Level,
+				MainAffixId:  relicdb.MainAffixId,
+				SubAffixList: make([]*proto.RelicAffix, 0),
+				UniqueId:     relicdb.UniqueId,
+			}
+			for _, subAddix := range relicdb.RelicAffix {
+				relicAffix := &proto.RelicAffix{
+					AffixId: subAddix.AffixId,
+					Cnt:     subAddix.Cnt,
+					Step:    subAddix.Step,
+				}
+				equipRelic.SubAffixList = append(equipRelic.SubAffixList, relicAffix)
+			}
+			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}
 		// 获取角色装备的光锥
 		if avatar.EquipmentUniqueId != 0 {

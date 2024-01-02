@@ -16,8 +16,8 @@ func (g *Game) GmGive(payloadMsg pb.Message) {
 	if req.GiveAll {
 		// add avatar
 		for _, avatar := range itemConf.Avatar {
-			// 过滤主角
-			if avatar.ID/100 == 80 {
+			// 过滤非live角色
+			if avatar.ID/1000 != 1 {
 				continue
 			}
 			g.AddAvatar(avatar.ID)

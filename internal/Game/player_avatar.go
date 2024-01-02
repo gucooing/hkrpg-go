@@ -13,18 +13,8 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 	rsp.IsGetAll = true
 	rsp.AvatarList = make([]*proto.Avatar, 0)
 
-	for _, a := range g.Player.DbAvatar.Avatar {
-		avatarList := new(proto.Avatar)
-		avatarList.FirstMetTimestamp = a.FirstMetTimestamp
-		avatarList.EquipmentUniqueId = a.EquipmentUniqueId
-		avatarList.EquipRelicList = make([]*proto.EquipRelic, 0)
-		avatarList.TakenRewards = a.TakenRewards
-		avatarList.BaseAvatarId = a.AvatarId
-		avatarList.Promotion = a.Promotion
-		avatarList.Rank = a.Rank
-		avatarList.Level = a.Level
-		avatarList.Exp = a.Exp
-		avatarList.SkilltreeList = g.GetSkilltree(a.AvatarId)
+	for avatarId, _ := range g.Player.DbAvatar.Avatar {
+		avatarList := g.GetAvatar(avatarId)
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 
@@ -41,98 +31,6 @@ func (g *Game) RankUpAvatarCsReq(payloadMsg []byte) {
 
 	rsp := new(proto.GetChallengeScRsp)
 	g.Send(cmd.RankUpAvatarScRsp, rsp)
-}
-
-func (g *Game) DressAvatarCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
-	req := msg.(*proto.DressAvatarCsReq)
-
-	g.DressAvatarPlayerSyncScNotify(req.BaseAvatarId, req.EquipmentUniqueId)
-
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.DressAvatarScRsp, rsp)
-}
-
-// 光锥交换通知
-func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32) {
-	notify := &proto.PlayerSyncScNotify{
-		AvatarSync:    &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
-		EquipmentList: make([]*proto.Equipment, 0),
-	}
-
-	avatardb := g.Player.DbAvatar.Avatar[avatarId]
-
-	// 目标光锥是否已被装备
-	if g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId != 0 {
-		avatardbs := g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId]
-		// 获取要装备的角色光锥,与目标光锥角色交换
-		avatar := &proto.Avatar{
-			SkilltreeList:     g.GetSkilltree(avatardbs.AvatarId),
-			Exp:               avatardbs.Exp,
-			BaseAvatarId:      avatardbs.AvatarId,
-			Rank:              avatardbs.Rank,
-			EquipmentUniqueId: avatardb.EquipmentUniqueId, // 设置成目标角色的光锥
-			EquipRelicList:    make([]*proto.EquipRelic, 0),
-			TakenRewards:      avatardb.TakenRewards,
-			FirstMetTimestamp: avatardbs.FirstMetTimestamp,
-			Promotion:         avatardbs.Promotion,
-			Level:             avatardbs.Level,
-		}
-		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-		// 交换光锥
-		g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
-		if avatardb.EquipmentUniqueId == 0 {
-		} else {
-			equipments := g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId]
-			equipmentLists := &proto.Equipment{
-				Exp:          equipments.Exp,
-				Promotion:    equipments.Promotion,
-				Level:        equipments.Level,
-				BaseAvatarId: avatardbs.AvatarId,
-				IsProtected:  equipments.IsProtected,
-				Rank:         equipments.Rank,
-				UniqueId:     equipments.UniqueId,
-				Tid:          equipments.Tid,
-			}
-			notify.EquipmentList = append(notify.EquipmentList, equipmentLists)
-			g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = avatardbs.AvatarId
-		}
-	}
-
-	g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId = avatarId
-	g.Player.DbAvatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
-	avatar := &proto.Avatar{
-		SkilltreeList:     g.GetSkilltree(avatarId),
-		Exp:               avatardb.Exp,
-		BaseAvatarId:      avatarId,
-		Rank:              avatardb.Rank,
-		EquipmentUniqueId: avatardb.EquipmentUniqueId,
-		EquipRelicList:    make([]*proto.EquipRelic, 0),
-		TakenRewards:      avatardb.TakenRewards,
-		FirstMetTimestamp: avatardb.FirstMetTimestamp,
-		Promotion:         avatardb.Promotion,
-		Level:             avatardb.Level,
-	}
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-
-	equipment := g.Player.DbItem.EquipmentMap[equipmentUniqueId]
-
-	equipmentList := &proto.Equipment{
-		Exp:          equipment.Exp,
-		Promotion:    equipment.Promotion,
-		Level:        equipment.Level,
-		BaseAvatarId: equipment.BaseAvatarId,
-		IsProtected:  equipment.IsProtected,
-		Rank:         equipment.Rank,
-		UniqueId:     equipment.UniqueId,
-		Tid:          equipment.Tid,
-	}
-
-	notify.EquipmentList = append(notify.EquipmentList, equipmentList)
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
-
 }
 
 func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
@@ -196,7 +94,7 @@ func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
 	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Level = level
 
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+	g.Player.DbItem.MaterialMap[2] -= delScoin
 
 	// 删除用来升级的材料
 	if len(pileItem) != 0 {
@@ -255,7 +153,7 @@ func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
 	// 增加突破等级
 	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Promotion++
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2].Num -= delScoin
+	g.Player.DbItem.MaterialMap[2] -= delScoin
 	// 通知升级后角色消息
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 	rsp := new(proto.GetChallengeScRsp)

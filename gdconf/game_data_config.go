@@ -27,6 +27,7 @@ type GameDataConfig struct {
 	EquipmentPromotionConfigMap map[string]map[string]*EquipmentPromotionConfig // 光锥突破配置
 	RelicMap                    map[string]*Relic                               // 遗器
 	RelicMainAffixConfigMap     map[uint32]map[uint32]*RelicMainAffixConfig     // 圣遗物主属性配置
+	RelicSubAffixConfigMap      map[uint32]map[uint32]*RelicSubAffixConfig      // 圣遗物副属性配置
 	ItemConfigMap               *ItemList                                       // 材料
 	ItemConfigEquipmentMap      map[string]*ItemConfigEquipment                 // 背包光锥配置
 	ItemConfigRelicMap          map[string]*ItemConfigRelic                     // 背包遗器配置
@@ -115,6 +116,7 @@ func (g *GameDataConfig) load() {
 	g.loadEquipmentPromotionConfig() // 光锥突破配置
 	g.loadRelic()                    // 遗器
 	g.loadRelicMainAffixConfig()     // 圣遗物主属性配置
+	g.loadRelicSubAffixConfig()      // 圣遗物副属性配置
 	g.loadItemConfig()               // 材料
 	g.loadItemConfigEquipment()      // 背包光锥配置
 	g.loadItemConfigRelic()          // 背包遗器配置
