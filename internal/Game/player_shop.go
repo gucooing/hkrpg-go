@@ -1,13 +1,40 @@
 package Game
 
 import (
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
 func (g *Game) GetShopListCsReq() {
 	rsp := new(proto.GetShopListScRsp)
-	rsp.ShopType = 0
+	rsp.ShopList = make([]*proto.Shop, 0)
+
+	for id, shopConf := range gdconf.GetShopGoodsConfigMap() {
+		if id == 503 || id == 502 {
+			continue
+		}
+		shop := &proto.Shop{
+			CityLevel:            1,
+			BeginTime:            1622145600,
+			EndTime:              4102257600,
+			GoodsList:            make([]*proto.Goods, 0),
+			CityExp:              0,
+			CityTakenLevelReward: 0,
+			ShopId:               id,
+		}
+		for _, shopc := range shopConf {
+			goods := &proto.Goods{
+				BeginTime: 1622145600,
+				EndTime:   4102257600,
+				BuyTimes:  0,
+				GoodsId:   shopc.GoodsID,
+				ItemId:    shopc.ItemID,
+			}
+			shop.GoodsList = append(shop.GoodsList, goods)
+		}
+		rsp.ShopList = append(rsp.ShopList, shop)
+	}
 
 	g.Send(cmd.GetShopListScRsp, rsp)
 }

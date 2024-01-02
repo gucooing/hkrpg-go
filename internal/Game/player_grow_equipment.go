@@ -162,6 +162,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	if level == 0 && exp == 0 {
 		rsp := &proto.ExpUpEquipmentScRsp{}
 		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
+		return
 	}
 
 	// 扣除本次升级需要的信用点

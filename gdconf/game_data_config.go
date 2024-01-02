@@ -28,6 +28,7 @@ type GameDataConfig struct {
 	RelicMap                    map[string]*Relic                               // 遗器
 	RelicMainAffixConfigMap     map[uint32]map[uint32]*RelicMainAffixConfig     // 圣遗物主属性配置
 	RelicSubAffixConfigMap      map[uint32]map[uint32]*RelicSubAffixConfig      // 圣遗物副属性配置
+	RelicExpTypeMap             map[string]map[string]*RelicExpType             // 圣遗物经验配置
 	ItemConfigMap               *ItemList                                       // 材料
 	ItemConfigEquipmentMap      map[string]*ItemConfigEquipment                 // 背包光锥配置
 	ItemConfigRelicMap          map[string]*ItemConfigRelic                     // 背包遗器配置
@@ -58,6 +59,7 @@ type GameDataConfig struct {
 	PlaneEventMap               map[string]map[string]*PlaneEvent               // 大世界怪物信息
 	StageConfigMap              map[string]*StageConfig                         // 具体怪物群信息
 	LoadingDescMap              map[string]*LoadingDesc                         // 战斗随机种子
+	ShopGoodsConfigMap          map[uint32][]*ShopGoodsConfig                   // 商品配置
 }
 
 func InitGameDataConfig() {
@@ -117,6 +119,7 @@ func (g *GameDataConfig) load() {
 	g.loadRelic()                    // 遗器
 	g.loadRelicMainAffixConfig()     // 圣遗物主属性配置
 	g.loadRelicSubAffixConfig()      // 圣遗物副属性配置
+	g.loadRelicExpType()             // 圣遗物经验配置
 	g.loadItemConfig()               // 材料
 	g.loadItemConfigEquipment()      // 背包光锥配置
 	g.loadItemConfigRelic()          // 背包遗器配置
@@ -147,4 +150,5 @@ func (g *GameDataConfig) load() {
 	g.loadPlaneEvent()               // 大世界怪物信息
 	g.loadStageConfig()              // 具体怪物群信息
 	g.loadLoadingDesc()              // 战斗随机种子
+	g.loadShopGoodsConfig()          // 商品配置
 }

@@ -1,6 +1,8 @@
 package Game
 
 import (
+	"math"
+	"math/rand"
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
@@ -75,10 +77,11 @@ func (g *Game) ExpUpRelicCsReq(payloadMsg []byte) {
 		return
 	}
 
-	// var relicList []uint32   // 需要删除的relicList
-	// var pileItem []*Material // 需要删除的升级材料
-	// var delScoin uint32      // 扣除的信用点
-	// var addExp uint32        // 增加的经验
+	var relicList []uint32   // 需要删除的relicList
+	var pileItem []*Material // 需要删除的升级材料
+	var delScoin uint32      // 扣除的信用点
+	var addExp uint32        // 增加的经验
+	var oldLevel uint32      // 升级前等级
 
 	// 从背包获取需要升级的圣遗物
 	dbRelic := g.Player.DbItem.RelicMap[req.RelicUniqueId]
@@ -87,6 +90,7 @@ func (g *Game) ExpUpRelicCsReq(payloadMsg []byte) {
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
 		return
 	}
+	oldLevel = dbRelic.Level
 	// 获取需要升级圣遗物的配置信息
 	relicConf := gdconf.GetRelicById(strconv.Itoa(int(dbRelic.Tid)))
 	if relicConf == nil {
@@ -94,4 +98,110 @@ func (g *Game) ExpUpRelicCsReq(payloadMsg []byte) {
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
 		return
 	}
+
+	// 遍历用来升级的材料
+	for _, pileList := range req.ItemCostList.ItemList {
+		// 如果没有则退出
+		if pileList.GetPileItem() == nil {
+			continue
+		}
+		pile := new(Material)
+		pile.Tid = pileList.GetPileItem().ItemId
+		pile.Num = pileList.GetPileItem().ItemNum
+
+		pileItem = append(pileItem, pile)
+		// 获取材料配置
+		pileconf := gdconf.GetRelicById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		if pileconf == nil {
+			rsp := &proto.ExpUpRelicScRsp{}
+			g.Send(cmd.ExpUpRelicScRsp, rsp)
+			return
+		}
+		// 获取要扣多少信用点
+		delScoin += pileconf.CoinCost * pileList.GetPileItem().ItemNum
+		// 获取能添加多少经验
+		addExp += pileconf.ExpProvide * pileList.GetPileItem().ItemNum
+	}
+
+	// 遍历用来升级的光锥
+	for _, relic := range req.ItemCostList.ItemList {
+		// 如果没有则退出
+		if relic.GetRelicUniqueId() == 0 {
+			continue
+		}
+		relicList = append(relicList, relic.GetRelicUniqueId())
+		// 获取光锥配置
+		relicconfig := gdconf.GetRelicById(strconv.Itoa(int(g.Player.DbItem.RelicMap[relic.GetRelicUniqueId()].Tid)))
+		if relicconfig == nil {
+			rsp := &proto.ExpUpRelicScRsp{}
+			g.Send(cmd.ExpUpRelicScRsp, rsp)
+			return
+		}
+		// 获取要扣多少信用点
+		delScoin += relicconfig.CoinCost
+		// 获取能添加多少经验
+		addExp += relicconfig.ExpProvide
+	}
+
+	// 计算添加后有多少经验
+	exp := addExp + dbRelic.Exp
+
+	// 获取能升级到的等级和升级后经验
+	level, exp := gdconf.GetRelicExpByLevel(relicConf.ExpType, exp, dbRelic.Level, dbRelic.Tid)
+	if level == 0 && exp == 0 {
+		rsp := &proto.ExpUpRelicScRsp{}
+		g.Send(cmd.ExpUpRelicScRsp, rsp)
+		return
+	}
+
+	// 添加副属性
+	addex := (level - oldLevel) / 3
+	// TODO 不应与主属性相同
+	addSubAffixes := math.Min(float64(relicConf.Type-1), float64(uint32(len(dbRelic.RelicAffix))+(addex)))
+	for i := 0; i < int(addSubAffixes)-len(dbRelic.RelicAffix); i++ {
+		affixId := gdconf.GetRelicSubAffixConfigById(relicConf.SubAffixGroup)
+		relicAffix := &RelicAffix{
+			AffixId: affixId,
+			Cnt:     1,
+			Step:    0,
+		}
+		addex--
+		g.Player.DbItem.RelicMap[req.RelicUniqueId].RelicAffix = append(g.Player.DbItem.RelicMap[req.RelicUniqueId].RelicAffix, relicAffix)
+	}
+	// 升级属性
+	var i uint32
+	for i = 0; i < addex; i++ {
+		idIndex := rand.Intn(len(dbRelic.RelicAffix))
+		dbRelic.RelicAffix[idIndex].Cnt++
+	}
+
+	// 扣除本次升级需要的信用点
+	g.Player.DbItem.MaterialMap[2] -= delScoin
+	// 更新需要升级的圣遗物状态
+	g.Player.DbItem.RelicMap[req.RelicUniqueId].Level = level
+	g.Player.DbItem.RelicMap[req.RelicUniqueId].Exp = exp
+
+	// 删除用来升级的材料
+	if len(pileItem) != 0 {
+		g.DelMaterialPlayerSyncScNotify(pileItem)
+	}
+	if len(relicList) != 0 {
+		// 删除用来升级的圣遗物
+		g.DelRelicPlayerSyncScNotify(relicList)
+	}
+	// 通知角色还有多少信用点
+	g.PlayerPlayerSyncScNotify()
+	// 通知升级后圣遗物消息
+	g.RelicPlayerSyncScNotify(dbRelic.Tid, req.RelicUniqueId)
+	rsp := &proto.ExpUpRelicScRsp{}
+	g.Send(cmd.ExpUpRelicScRsp, rsp)
+}
+
+func (g *Game) DelRelicPlayerSyncScNotify(relicList []uint32) {
+	for _, relic := range relicList {
+		delete(g.Player.DbItem.RelicMap, relic)
+	}
+
+	notify := &proto.PlayerSyncScNotify{DelRelicList: relicList}
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }

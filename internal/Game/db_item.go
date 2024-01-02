@@ -136,7 +136,8 @@ func (g *Game) AddRelic(tid uint32) {
 		IsProtected:  false,
 	}
 	baseSubAffixes := math.Min(math.Max(float64(relic.Type-2), 0), 3)
-	addSubAffixes := rand.Intn(1) + int(baseSubAffixes)
+	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
+	// TODO 不应与主属性相同
 	for i := 0; i < addSubAffixes; i++ {
 		affixId := gdconf.GetRelicSubAffixConfigById(relic.SubAffixGroup)
 		relicAffix := &RelicAffix{

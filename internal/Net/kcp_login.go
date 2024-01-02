@@ -69,6 +69,7 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 		// 重复登录下线通知
 		player.Send(cmd.PlayerKickOutScNotify, notify)
 		player.ChangePlayer()
+		player.KickPlayer()
 	}
 
 	newuidPlayer := &DataBase.UidPlayer{
