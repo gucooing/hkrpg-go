@@ -12,6 +12,7 @@ import (
 type DbAvatar struct {
 	Avatar         map[uint32]*Avatar
 	MainAvatar     proto.HeroBasicType // 默认主角
+	Gender         proto.Gender        // 性别
 	MainAvatarList []uint32            // 主角们
 }
 
@@ -70,6 +71,10 @@ func (g *Game) GetAvatar(avatarId uint32) *proto.Avatar {
 		avatar.EquipRelicList = append(avatar.EquipRelicList, equipRelic)
 	}
 
+	if avatarId/1000 == 8 {
+		avatar.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
+	}
+
 	return avatar
 }
 
@@ -86,6 +91,7 @@ func (g *Game) GetAvatarHp(avatarId uint32) uint32 {
 func NewAvatar(data *PlayerData, mainAvatar proto.HeroBasicType) *PlayerData {
 	data.DbAvatar = new(DbAvatar)
 	data.DbAvatar.MainAvatar = mainAvatar
+	data.DbAvatar.Gender = proto.Gender_GenderMan
 	data.DbAvatar.MainAvatarList = []uint32{8001, 8002, 8003, 8004}
 	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
 

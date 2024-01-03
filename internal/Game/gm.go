@@ -24,10 +24,11 @@ func (g *Game) GmGive(payloadMsg pb.Message) {
 			time.Sleep(10 * time.Millisecond)
 		}
 		// add playerIcon
+		var playerIconList []uint32
 		for _, playerIcon := range itemConf.AvatarPlayerIcon {
-			g.AddHeadIcon(playerIcon.ID)
-			time.Sleep(10 * time.Millisecond)
+			playerIconList = append(playerIconList, playerIcon.ID)
 		}
+		g.Player.DbItem.HeadIcon = playerIconList
 		// add rank
 		for _, rank := range itemConf.AvatarRank {
 			g.AddMaterial(rank.ID, 6)

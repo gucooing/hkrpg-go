@@ -29,16 +29,24 @@ func (g *Game) HandleGetBasicInfoCsReq() {
 
 func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetArchiveDataScRsp)
-	var archiveAvatarIdList []uint32
-	for _, a := range g.Player.DbAvatar.Avatar {
-		archiveAvatarIdList = append(archiveAvatarIdList, a.AvatarId)
-	}
 	archiveData := &proto.ArchiveData{
 		ArchiveAvatarIdList:    make([]uint32, 0),
 		ArchiveEquipmentIdList: make([]uint32, 0),
 		ArchiveMonsterIdList:   make([]*proto.MonsterArchive, 0),
 		ArchiveRelicList:       make([]*proto.RelicArchive, 0),
 	}
+
+	for _, avatar := range g.Player.DbAvatar.Avatar {
+		if avatar.AvatarId/1000 == 8 && avatar.AvatarId != uint32(g.Player.DbAvatar.MainAvatar) {
+			continue
+		}
+		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.AvatarId)
+	}
+
+	for _, equipment := range gdconf.GetItemConfigEquipmentMap() {
+		archiveData.ArchiveEquipmentIdList = append(archiveData.ArchiveEquipmentIdList, equipment.ID)
+	}
+
 	for _, monsterList := range gdconf.GetMonsterConfigMap() {
 		archiveMonsterIdList := &proto.MonsterArchive{
 			Num:       1,
@@ -46,6 +54,7 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		}
 		archiveData.ArchiveMonsterIdList = append(archiveData.ArchiveMonsterIdList, archiveMonsterIdList)
 	}
+
 	for _, relicList := range gdconf.GetRelicMap() {
 		archiveRelicList := &proto.RelicArchive{
 			RelicId: relicList.ID,
@@ -57,6 +66,12 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	rsp.ArchiveData = archiveData
 
 	g.Send(cmd.GetArchiveDataScRsp, rsp)
+}
+
+func (g *Game) GetUpdatedArchiveDataCsReq() {
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+	g.Send(cmd.GetUpdatedArchiveDataScRsp, rsp)
 }
 
 func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
@@ -107,7 +122,7 @@ func (g *Game) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 
 func (g *Game) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetFriendLoginInfoScRsp)
-	rsp.FriendUidList = []uint32{99}
+	rsp.FriendUidList = []uint32{1}
 
 	g.Send(cmd.GetFriendLoginInfoScRsp, rsp)
 }
@@ -167,12 +182,6 @@ func (g *Game) SetClientPausedCsReq() {
 	rsp.Paused = g.Player.IsPaused
 
 	g.Send(cmd.SetClientPausedScRsp, rsp)
-}
-
-func (g *Game) GetFirstTalkNpcCsReq() {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetFirstTalkNpcScRsp, rsp)
 }
 
 func (g *Game) HandleGetJukeboxDataCsReq(payloadMsg []byte) {

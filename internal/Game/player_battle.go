@@ -690,7 +690,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	}
 
 	g.Player.EntityList = entityMap
-	g.Player.IsRogue = true
+	g.Player.IsBattle = true
 	g.Send(cmd.StartRogueScRsp, rsp)
 }
 
@@ -862,4 +862,275 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	g.Player.Battle[rsp.BattleInfo.BattleId] = battle
 
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
+}
+
+/***********************************忘却之庭***********************************/
+
+func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
+	req := msg.(*proto.StartChallengeCsReq)
+
+	challengeInfo := &proto.ChallengeInfo{
+		ChallengeId:     req.ChallengeId,
+		Status:          proto.ChallengeStatus_CHALLENGE_DOING,
+		RoundCount:      0,
+		ExtraLineupType: g.Player.Challenge.Lineup[g.Player.Challenge.Type].ExtraLineupType,
+	}
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(strconv.Itoa(int(req.ChallengeId)))
+	if challengeInfo == nil {
+		rsp := &proto.StartChallengeScRsp{
+			Retcode: 2,
+		}
+		g.Send(cmd.StartChallengeScRsp, rsp)
+		return
+	}
+	g.Player.Challenge.EntranceID = challengeMazeConfig.MapEntranceID
+	g.Player.Challenge.Lineup[0].GroupID = challengeMazeConfig.MazeGroupID1
+	g.Player.Challenge.Lineup[1].GroupID = challengeMazeConfig.MazeGroupID1
+	g.Player.Challenge.BuffID = challengeMazeConfig.MazeBuffID
+
+	scene := g.GetChallengeScene()
+
+	lineup := g.GetChallengeLineUp()
+
+	rsp := &proto.StartChallengeScRsp{
+		ChallengeInfo: challengeInfo,
+		Scene:         scene,
+		Lineup:        lineup,
+	}
+
+	g.Player.IsBattle = true
+	g.Send(cmd.StartChallengeScRsp, rsp)
+}
+
+func (g *Game) NewChallengeLineUp(req *proto.ReplaceLineupCsReq) {
+	challengeLineUp := &ChallengeLineUp{
+		ExtraLineupType: req.ExtraLineupType,
+		Slots:           make([]*ChallengeSlots, 0),
+	}
+	for _, slots := range req.Slots {
+		slot := &ChallengeSlots{
+			Slot:     slots.Slot,
+			AvatarId: slots.Id,
+			Type:     slots.AvatarType,
+		}
+		challengeLineUp.Slots = append(challengeLineUp.Slots, slot)
+	}
+	if req.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
+		g.Player.Challenge.Lineup[0] = challengeLineUp
+		g.ChallengeSyncLineupNotify(0)
+	}
+	if req.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE_2 {
+		g.Player.Challenge.Lineup[1] = challengeLineUp
+		g.ChallengeSyncLineupNotify(1)
+	}
+	g.Player.Challenge.Type = 0
+}
+
+func (g *Game) ChallengeSyncLineupNotify(index uint32) {
+	notify := new(proto.SyncLineupNotify)
+	lineUp := g.Player.Challenge.Lineup[index]
+	lineupList := &proto.LineupInfo{
+		IsVirtual:       false,
+		LeaderSlot:      0,
+		AvatarList:      make([]*proto.LineupAvatar, 0),
+		Index:           index,
+		ExtraLineupType: proto.ExtraLineupType(index),
+		MaxMp:           5,
+		Mp:              5,
+		PlaneId:         0,
+	}
+	for _, slots := range lineUp.Slots {
+		if slots.AvatarId == 0 {
+			continue
+		}
+		avatar := g.Player.DbAvatar.Avatar[slots.AvatarId]
+		lineupAvatar := &proto.LineupAvatar{
+			AvatarType: slots.Type,
+			Slot:       slots.Slot,
+			Satiety:    0,
+			Hp:         avatar.Hp,
+			Id:         slots.AvatarId,
+			SpBar: &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.MaxSp,
+			},
+		}
+		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
+	}
+	notify.Lineup = lineupList
+
+	g.Send(cmd.SyncLineupNotify, notify)
+}
+
+func (g *Game) GetChallengeScene() *proto.SceneInfo {
+	entryId := g.Player.Challenge.EntranceID
+	groupID := g.Player.Challenge.Lineup[g.Player.Challenge.Type].GroupID
+	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
+	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	// 获取映射信息
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+	sceneGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, groupID)
+	if len(sceneGroup.AnchorList) == 0 {
+		return nil
+	}
+	anchor := sceneGroup.AnchorList[0]
+	scene := &proto.SceneInfo{
+		ClientPosVersion:   0,
+		PlaneId:            mapEntrance.PlaneID,
+		FloorId:            mapEntrance.FloorID,
+		LeaderEntityId:     leaderEntityId,
+		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		EntryId:            entryId,
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
+		GroupIdList:        nil,
+		LightenSectionList: nil,
+		EntityList:         nil,
+		GroupStateList:     nil,
+	}
+
+	// 将进入场景的角色添加到实体列表里
+	entityGroup := &proto.SceneEntityGroupInfo{
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	for id, slots := range g.Player.Challenge.Lineup[g.Player.Challenge.Type].Slots {
+		if slots == nil {
+			continue
+		}
+		entityId := uint32(g.GetNextGameObjectGuid())
+		entityList := &proto.SceneEntityInfo{
+			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+				AvatarType:   slots.Type,
+				BaseAvatarId: slots.AvatarId,
+			}},
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: int32(anchor.PosY * 1000),
+					Y: int32(anchor.PosY * 1000),
+					Z: int32(anchor.PosZ * 1000),
+				},
+				Rot: &proto.Vector{
+					X: int32(anchor.RotX * 1000),
+					Y: int32(anchor.RotY * 1000),
+					Z: int32(anchor.RotZ * 1000),
+				},
+			},
+		}
+		// 为进入场景的角色设置与上面相同的实体id
+		if id == 0 {
+			entityList.EntityId = leaderEntityId
+			entityMap[leaderEntityId] = &EntityList{
+				Entity:  slots.Slot,
+				GroupId: 0,
+			}
+		} else {
+			entityMap[entityId] = &EntityList{
+				Entity:  slots.Slot,
+				GroupId: 0,
+			}
+			entityList.EntityId = entityId
+		}
+		entityGroup.EntityList = append(entityGroup.EntityList, entityList)
+	}
+	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
+
+	// 获取场景实体
+	scene.GroupIdList = append(scene.GroupIdList, groupID)
+
+	sceneGroupState := &proto.SceneGroupState{
+		GroupId:   groupID,
+		IsDefault: true,
+	}
+
+	scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
+
+	entityGroupLists := &proto.SceneEntityGroupInfo{
+		GroupId:    groupID,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	// 添加物品实体
+	for _, propList := range sceneGroup.PropList {
+		entityList := &proto.SceneEntityInfo{
+			GroupId:  groupID,     // 文件名后那个G
+			InstId:   propList.ID, // ID
+			EntityId: uint32(g.GetNextGameObjectGuid()),
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: int32(propList.PosX * 1000),
+					Y: int32(propList.PosY * 1000),
+					Z: int32(propList.PosZ * 1000),
+				},
+				Rot: &proto.Vector{
+					X: 0,
+					Y: int32(propList.RotY * 1000),
+					Z: 0,
+				},
+			},
+			EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+				PropId:    propList.PropID, // PropID
+				PropState: gdconf.GetStateValue(propList.State),
+			}},
+		}
+		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+	}
+	// 添加怪物实体
+	for _, monsterList := range sceneGroup.MonsterList {
+		entityId := uint32(g.GetNextGameObjectGuid())
+		entityList := &proto.SceneEntityInfo{
+			GroupId:  groupID,
+			InstId:   monsterList.ID,
+			EntityId: entityId,
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: int32(monsterList.PosX * 1000),
+					Y: int32(monsterList.PosY * 1000),
+					Z: int32(monsterList.PosZ * 1000),
+				},
+				Rot: &proto.Vector{
+					X: 0,
+					Y: int32(monsterList.RotY * 1000),
+					Z: 0,
+				},
+			},
+			EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
+				WorldLevel: g.Player.WorldLevel,
+				MonsterId:  monsterList.NPCMonsterID,
+				EventId:    monsterList.EventID,
+			}},
+		}
+		entityMap[entityId] = &EntityList{
+			Entity:  monsterList.EventID,
+			GroupId: groupID,
+		}
+		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+	}
+
+	// 添加NPC实体
+	for _, npcList := range sceneGroup.NPCList {
+		entityList := &proto.SceneEntityInfo{
+			GroupId:  groupID,
+			InstId:   npcList.ID,
+			EntityId: uint32(g.GetNextGameObjectGuid()),
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: int32(npcList.PosX * 1000),
+					Y: int32(npcList.PosY * 1000),
+					Z: int32(npcList.PosZ * 1000),
+				},
+				Rot: &proto.Vector{
+					X: 0,
+					Y: int32(npcList.RotY * 1000),
+					Z: 0,
+				},
+			},
+			EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
+				NpcId: npcList.NPCID,
+			}},
+		}
+		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+	}
+	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
+	g.Player.EntityList = entityMap
+	return scene
 }

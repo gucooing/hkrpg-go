@@ -8,12 +8,37 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
+	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
+	rsp.Gender = g.Player.DbAvatar.Gender
+	rsp.CurBasicType = g.Player.DbAvatar.MainAvatar
+	var mainAvatarList []uint32
+	if rsp.Gender == proto.Gender_GenderMan {
+		mainAvatarList = []uint32{8001, 8003}
+	} else {
+		mainAvatarList = []uint32{8002, 8004}
+	}
+	for _, id := range mainAvatarList {
+		basicTypeInfoList := &proto.HeroBasicTypeInfo{
+			BasicType:     proto.HeroBasicType(id),
+			SkillTreeList: gdconf.GetMainAvatarSkilltreeListById(id),
+			Rank:          6,
+		}
+		rsp.BasicTypeInfoList = append(rsp.BasicTypeInfoList, basicTypeInfoList)
+	}
+
+	g.Send(cmd.GetHeroBasicTypeInfoScRsp, rsp)
+}
+
 func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetAvatarDataScRsp)
 	rsp.IsGetAll = true
 	rsp.AvatarList = make([]*proto.Avatar, 0)
 
 	for avatarId, _ := range g.Player.DbAvatar.Avatar {
+		if avatarId/1000 == 8 && avatarId != uint32(g.Player.DbAvatar.MainAvatar) {
+			continue
+		}
 		avatarList := g.GetAvatar(avatarId)
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}

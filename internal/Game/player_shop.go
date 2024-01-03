@@ -54,3 +54,9 @@ func (g *Game) ExchangeHcoinCsReq(payloadMsg []byte) {
 	}
 	g.Send(cmd.ExchangeHcoinScRsp, rsp)
 }
+
+func (g *Game) ExchangeRogueRewardKeyCsReq(payloadMsg []byte) {
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+	g.Send(cmd.ExchangeRogueRewardKeyScRsp, rsp)
+}

@@ -22,6 +22,7 @@ type PlayerData struct {
 	DbItem     *DbItem            // 背包
 	DbGacha    *Dbgacha           // 卡池抽取情况
 	Battle     map[uint32]*Battle // 正在进行的战斗
+	Challenge  *Challenge         // 忘却之庭
 	// 下面是在线数据
 	BattleId              uint32                 `json:"-"` // 战斗id
 	EntityBattleId        uint32                 `json:"-"` // 攻击实体id
@@ -29,7 +30,7 @@ type PlayerData struct {
 	GameObjectGuidCounter uint64                 `json:"-"` // 游戏对象guid计数器
 	IsNickName            bool                   `json:"-"` // 是否修改昵称
 	EntityList            map[uint32]*EntityList `json:"-"` // 实体ID映射表
-	IsRogue               bool                   `json:"-"` // 是否正在进行模拟宇宙
+	IsBattle              bool                   `json:"-"` // 是否在战斗场景中
 }
 
 type Vector struct {
@@ -81,6 +82,7 @@ func (g *Game) AddPalyerData(uid uint32) *PlayerData {
 	data = NewDbLineUp(data)
 	data = NewItem(data)
 	data = NewGaCha(data)
+	data = NewChallenge(data)
 
 	return data
 }

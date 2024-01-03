@@ -233,6 +233,20 @@ func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
 func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
 	req := msg.(*proto.ReplaceLineupCsReq)
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+
+	switch req.ExtraLineupType {
+	case proto.ExtraLineupType_LINEUP_CHALLENGE:
+		g.NewChallengeLineUp(req)
+		g.Send(cmd.ReplaceLineupScRsp, rsp)
+		return
+	case proto.ExtraLineupType_LINEUP_CHALLENGE_2:
+		g.NewChallengeLineUp(req)
+		g.Send(cmd.ReplaceLineupScRsp, rsp)
+		return
+	}
+
 	g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList = []uint32{0, 0, 0, 0}
 	for _, avatarid := range req.Slots {
 		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[avatarid.Slot] = avatarid.Id
@@ -243,8 +257,6 @@ func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
 
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
 	g.Send(cmd.ReplaceLineupScRsp, rsp)
 }
 

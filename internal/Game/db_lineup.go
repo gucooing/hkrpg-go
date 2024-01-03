@@ -7,7 +7,8 @@ type DbLineUp struct {
 }
 
 type LineUp struct {
-	Name         string
+	Name string
+	// ExtraLineupType proto.ExtraLineupType
 	AvatarIdList []uint32
 }
 

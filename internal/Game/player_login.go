@@ -20,7 +20,10 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 
 		g.Player = playerData
 		// 添加主角
-		g.AddAvatar(uint32(g.Player.DbAvatar.MainAvatar))
+		for _, avatar := range g.Player.DbAvatar.MainAvatarList {
+			g.AddAvatar(avatar)
+		}
+
 		// 将主角写入队伍
 		g.Player.DbLineUp.LineUpList[0].AvatarIdList[0] = uint32(g.Player.DbAvatar.MainAvatar)
 
@@ -68,22 +71,6 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	g.StaminaInfoScNotify()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
 
-}
-
-func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
-	rsp.Gender = proto.Gender_GenderMan
-	rsp.CurBasicType = g.Player.DbAvatar.MainAvatar
-	for _, id := range g.Player.DbAvatar.MainAvatarList {
-		basicTypeInfoList := &proto.HeroBasicTypeInfo{
-			BasicType:     proto.HeroBasicType(id),
-			SkillTreeList: gdconf.GetMainAvatarSkilltreeListById(id),
-			Rank:          0,
-		}
-		rsp.BasicTypeInfoList = append(rsp.BasicTypeInfoList, basicTypeInfoList)
-	}
-
-	g.Send(cmd.GetHeroBasicTypeInfoScRsp, rsp)
 }
 
 func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
