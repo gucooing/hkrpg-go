@@ -39,7 +39,7 @@ func DecodePayloadToProto(g *Game.Game, msg *KcpMsg) (protoObj pb.Message) {
 }
 
 func DecodeGmPayloadToProto(g *Game.Game, msg *GmMsg) (protoObj pb.Message) {
-	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(uint16(msg.CmdId))
+	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(msg.CmdId)
 	if protoObj == nil {
 		logger.Error("get new proto object is nil")
 		return nil

@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	gmpb "github.com/gucooing/hkrpg-go/protocol/gmpb"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 const (
@@ -1278,6 +1278,6 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
 	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
 	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
-	c.regMsg(GmGive, func() any { return new(gmpb.GmGive) })
-	c.regMsg(GmWorldLevel, func() any { return new(gmpb.GmWorldLevel) })
+	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
+	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
 }

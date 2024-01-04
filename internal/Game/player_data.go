@@ -6,13 +6,14 @@ import (
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *Game) StaminaInfoScNotify() {
 	notify := &proto.StaminaInfoScNotify{
 		NextRecoverTime: 0,
-		Stamina:         g.Player.DbItem.MaterialMap[11],
-		ReserveStamina:  g.Player.DbItem.MaterialMap[12],
+		Stamina:         g.GetItem().MaterialMap[11],
+		ReserveStamina:  g.GetItem().MaterialMap[12],
 	}
 	g.Send(cmd.StaminaInfoScNotify, notify)
 }
@@ -21,7 +22,7 @@ func (g *Game) HandleGetBasicInfoCsReq() {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
 	rsp.NextRecoverTime = 1698768000
-	rsp.GameplayBirthday = g.Player.Birthday
+	rsp.GameplayBirthday = g.PlayerPb.Birthday
 	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
 
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
@@ -36,10 +37,7 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		ArchiveRelicList:       make([]*proto.RelicArchive, 0),
 	}
 
-	for _, avatar := range g.Player.DbAvatar.Avatar {
-		if avatar.AvatarId/1000 == 8 && avatar.AvatarId != uint32(g.Player.DbAvatar.MainAvatar) {
-			continue
-		}
+	for _, avatar := range g.PlayerPb.Avatar.Avatar {
 		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.AvatarId)
 	}
 
@@ -76,13 +74,13 @@ func (g *Game) GetUpdatedArchiveDataCsReq() {
 
 func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.Player.HeadImage,
+		CurrentHeadIconId:    g.PlayerPb.HeadImageAvatarId,
 		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
-		Signature:            g.Player.Signature,
+		Signature:            g.PlayerPb.Signature,
 		Unk1:                 "",
 	}
 
-	for _, avatar := range g.Player.DbItem.HeadIcon {
+	for _, avatar := range g.GetHeadIconList() {
 		headIcon := &proto.HeadIcon{
 			Id: avatar,
 		}
@@ -96,7 +94,7 @@ func (g *Game) SetHeadIconCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeadIconCsReq, payloadMsg)
 	req := msg.(*proto.SetHeadIconCsReq)
 
-	g.Player.HeadImage = req.Id
+	g.PlayerPb.HeadImageAvatarId = req.Id
 
 	rsp := &proto.SetHeadIconScRsp{
 		CurrentHeadIconId: req.Id,
@@ -110,7 +108,7 @@ func (g *Game) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeroBasicTypeCsReq, payloadMsg)
 	req := msg.(*proto.SetHeroBasicTypeCsReq)
 
-	g.Player.DbAvatar.MainAvatar = req.BasicType
+	g.PlayerPb.Avatar.CurMainAvatar = spb.HeroBasicType(req.BasicType)
 
 	rsp := &proto.SetHeroBasicTypeScRsp{
 		BasicType: req.BasicType,
@@ -214,7 +212,7 @@ func (g *Game) SetNicknameCsReq(payloadMsg []byte) {
 	req := msg.(*proto.SetNicknameCsReq)
 
 	if g.Player.IsNickName {
-		g.Player.NickName = req.Nickname
+		g.PlayerPb.Nickname = req.Nickname
 	}
 
 	g.Player.IsNickName = !g.Player.IsNickName
@@ -230,7 +228,7 @@ func (g *Game) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetGameplayBirthdayCsReq, payloadMsg)
 	req := msg.(*proto.SetGameplayBirthdayCsReq)
 
-	g.Player.Birthday = req.Birthday
+	g.PlayerPb.Birthday = req.Birthday
 
 	rsp := &proto.SetGameplayBirthdayScRsp{Birthday: req.Birthday}
 
@@ -241,7 +239,7 @@ func (g *Game) SetSignatureCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetSignatureCsReq, payloadMsg)
 	req := msg.(*proto.SetSignatureCsReq)
 
-	g.Player.Signature = req.Signature
+	g.PlayerPb.Signature = req.Signature
 
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
 

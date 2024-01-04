@@ -12,8 +12,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetBasicInfoCsReq()
 	case cmd.GetPlayerBoardDataCsReq:
 		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
-	case cmd.GetCurChallengeCsReq:
-		g.GetCurChallengeCsReq(payloadMsg) // 获取忘却之庭
 	case cmd.GetEnteredSceneCsReq:
 		g.HandleGetEnteredSceneCsReq(payloadMsg)
 	case cmd.QueryProductInfoCsReq:
@@ -119,6 +117,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
 	case cmd.StartChallengeCsReq:
 		g.StartChallengeCsReq(payloadMsg) // 忘却之庭,启动!
+	case cmd.GetCurChallengeCsReq:
+		g.GetCurChallengeCsReq(payloadMsg) // 获取忘却之庭状态
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品

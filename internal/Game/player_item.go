@@ -8,7 +8,7 @@ import (
 func (g *Game) HandleGetBagCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBagScRsp)
 	// 获取背包材料
-	for id, materia := range g.Player.DbItem.MaterialMap {
+	for id, materia := range g.GetItem().MaterialMap {
 		materialList := &proto.Material{
 			Tid: id,
 			Num: materia,
@@ -16,22 +16,13 @@ func (g *Game) HandleGetBagCsReq(payloadMsg []byte) {
 		rsp.MaterialList = append(rsp.MaterialList, materialList)
 	}
 	// 获取背包光锥
-	for _, equipment := range g.Player.DbItem.EquipmentMap {
-		equipmentList := &proto.Equipment{
-			Exp:          equipment.Exp,
-			Promotion:    equipment.Promotion,
-			Level:        equipment.Level,
-			BaseAvatarId: equipment.BaseAvatarId,
-			IsProtected:  equipment.IsProtected,
-			Rank:         equipment.Rank,
-			UniqueId:     equipment.UniqueId,
-			Tid:          equipment.Tid,
-		}
+	for _, equipment := range g.GetItem().EquipmentMap {
+		equipmentList := g.GetEquipment(equipment.UniqueId)
 		rsp.EquipmentList = append(rsp.EquipmentList, equipmentList)
 	}
 	// 获取背包遗器
-	for uniqueId, _ := range g.Player.DbItem.RelicMap {
-		relicList := g.GetRelic(uniqueId)
+	for uniqueId, _ := range g.GetItem().RelicMap {
+		relicList := g.GetRelicById(uniqueId)
 		rsp.RelicList = append(rsp.RelicList, relicList)
 	}
 

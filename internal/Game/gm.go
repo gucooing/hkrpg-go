@@ -5,13 +5,13 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	gmpb "github.com/gucooing/hkrpg-go/protocol/gmpb"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
 func (g *Game) GmGive(payloadMsg pb.Message) {
-	req := payloadMsg.(*gmpb.GmGive)
+	req := payloadMsg.(*spb.GmGive)
 	itemConf := gdconf.GetItemConfigMap()
 	if req.GiveAll {
 		// add avatar
@@ -28,7 +28,7 @@ func (g *Game) GmGive(payloadMsg pb.Message) {
 		for _, playerIcon := range itemConf.AvatarPlayerIcon {
 			playerIconList = append(playerIconList, playerIcon.ID)
 		}
-		g.Player.DbItem.HeadIcon = playerIconList
+		g.GetItem().HeadIcon = playerIconList
 		// add rank
 		for _, rank := range itemConf.AvatarRank {
 			g.AddMaterial(rank.ID, 6)
@@ -110,7 +110,7 @@ func (g *Game) ScenePlaneEventScNotify(id, num uint32) {
 }
 
 func (g *Game) RelicScenePlaneEventScNotify(uniqueId uint32) {
-	relicItme := g.Player.DbItem.RelicMap[uniqueId]
+	relicItme := g.GetRelicById(uniqueId)
 	// 通知客户端增加了物品
 	notify := &proto.ScenePlaneEventScNotify{
 		GetItemList: &proto.ItemList{
@@ -131,9 +131,9 @@ func (g *Game) RelicScenePlaneEventScNotify(uniqueId uint32) {
 }
 
 func (g *Game) GmWorldLevel(payloadMsg pb.Message) {
-	req := payloadMsg.(*gmpb.GmWorldLevel)
+	req := payloadMsg.(*spb.GmWorldLevel)
 
-	g.Player.WorldLevel = req.WorldLevel
+	g.PlayerPb.WorldLevel = req.WorldLevel
 
 	// 账号状态通知
 	g.PlayerPlayerSyncScNotify()

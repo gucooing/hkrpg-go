@@ -43,9 +43,9 @@ func (g *Game) ExchangeHcoinCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.ExchangeHcoinCsReq, payloadMsg)
 	req := msg.(*proto.ExchangeHcoinCsReq)
 
-	g.Player.Mcoin -= req.Num
+	g.PlayerPb.Mcoin -= req.Num
 
-	g.Player.DbItem.MaterialMap[1] += req.Num
+	g.GetItem().MaterialMap[1] += req.Num
 
 	g.PlayerPlayerSyncScNotify()
 

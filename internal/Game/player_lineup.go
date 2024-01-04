@@ -8,7 +8,7 @@ import (
 // 队伍更新通知
 func (g *Game) SyncLineupNotify(index uint32) {
 	rsq := new(proto.SyncLineupNotify)
-	lineUp := g.Player.DbLineUp.LineUpList[index]
+	lineUp := g.GetLineUpById(index)
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,
 		LeaderSlot:      0,
@@ -24,9 +24,9 @@ func (g *Game) SyncLineupNotify(index uint32) {
 		if avatarId == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[avatarId]
+		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: avatar.Type,
+			AvatarType: proto.AvatarType(avatar.AvatarType),
 			Slot:       uint32(slot),
 			Satiety:    0,
 			Hp:         avatar.Hp,
@@ -51,9 +51,9 @@ func (g *Game) SceneGroupRefreshScNotify() {
 	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
 	}
-	pos := g.Player.Pos
-	rot := g.Player.Rot
-	for _, lineup := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
+	pos := g.GetPos()
+	rot := g.GetRot()
+	for _, lineup := range g.PlayerPb.LineUp.LineUpList[g.PlayerPb.LineUp.MainLineUp].AvatarIdList {
 		if lineup == 0 {
 			continue
 		}
@@ -62,19 +62,19 @@ func (g *Game) SceneGroupRefreshScNotify() {
 			UpdateType: &proto.SceneEntityRefreshInfo_AddEntity{
 				AddEntity: &proto.SceneEntityInfo{
 					EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
-						AvatarType:   g.Player.DbAvatar.Avatar[lineup].Type,
+						AvatarType:   proto.AvatarType(g.PlayerPb.Avatar.Avatar[lineup].AvatarType),
 						BaseAvatarId: lineup,
 					}},
 					Motion: &proto.MotionInfo{
 						Pos: &proto.Vector{
-							X: int32(pos.X),
-							Y: int32(pos.Y),
-							Z: int32(pos.Z),
+							X: pos.X,
+							Y: pos.Y,
+							Z: pos.Z,
 						},
 						Rot: &proto.Vector{
-							X: int32(rot.X),
-							Y: int32(rot.Y),
-							Z: int32(rot.Z),
+							X: rot.X,
+							Y: rot.Y,
+							Z: rot.Z,
 						},
 					},
 					EntityId: entityId,
@@ -97,13 +97,14 @@ func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 	rsp.LineupList = make([]*proto.LineupInfo, 0)
 	rsp.CurIndex = 0
 
-	for index, lineUp := range g.Player.DbLineUp.LineUpList {
+	for i := 0; i < 6; i++ {
+		lineUp := g.GetLineUpById(uint32(i))
 		lineupList := &proto.LineupInfo{
 			IsVirtual:       false,
 			LeaderSlot:      0,
 			AvatarList:      make([]*proto.LineupAvatar, 0),
-			Index:           uint32(index),
-			ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
+			Index:           uint32(i),
+			ExtraLineupType: proto.ExtraLineupType(lineUp.ExtraLineupType),
 			MaxMp:           5,
 			Mp:              5,
 			Name:            lineUp.Name,
@@ -113,9 +114,9 @@ func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 			if avatarId == 0 {
 				continue
 			}
-			avatar := g.Player.DbAvatar.Avatar[avatarId]
+			avatar := g.PlayerPb.Avatar.Avatar[avatarId]
 			lineupAvatar := &proto.LineupAvatar{
-				AvatarType: avatar.Type,
+				AvatarType: proto.AvatarType(avatar.AvatarType),
 				Slot:       uint32(slot),
 				Satiety:    0,
 				Hp:         avatar.Hp,
@@ -135,12 +136,12 @@ func (g *Game) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 
 func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetCurLineupDataScRsp)
-	lineUp := g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp]
+	lineUp := g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp)
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,
 		LeaderSlot:      0,
 		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           g.Player.DbLineUp.MainLineUp,
+		Index:           g.PlayerPb.LineUp.MainLineUp,
 		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
 		MaxMp:           5,
 		Mp:              5,
@@ -151,9 +152,9 @@ func (g *Game) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 		if avatarId == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[avatarId]
+		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: avatar.Type,
+			AvatarType: proto.AvatarType(avatar.AvatarType),
 			Slot:       uint32(slot),
 			Satiety:    0,
 			Hp:         avatar.Hp,
@@ -175,7 +176,7 @@ func (g *Game) HandleJoinLineupCsReq(payloadMsg []byte) {
 	req := msg.(*proto.JoinLineupCsReq)
 
 	g.UnDbLineUp(req.Index, req.Slot, req.BaseAvatarId)
-	g.Player.DbLineUp.MainAvatarId = 0
+	g.PlayerPb.LineUp.MainAvatarId = 0
 
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
@@ -188,8 +189,8 @@ func (g *Game) HandleSwitchLineupIndexCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SwitchLineupIndexCsReq, payloadMsg)
 	req := msg.(*proto.SwitchLineupIndexCsReq)
 
-	g.Player.DbLineUp.MainLineUp = req.Index
-	g.Player.DbLineUp.MainAvatarId = 0
+	g.PlayerPb.LineUp.MainLineUp = req.Index
+	g.PlayerPb.LineUp.MainAvatarId = 0
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
 
@@ -204,7 +205,7 @@ func (g *Game) HandleSwapLineupCsReq(payloadMsg []byte) {
 
 	// 交换角色
 	g.SwapLineup(req.Index, req.SrcSlot, req.DstSlot)
-	g.Player.DbLineUp.MainAvatarId = 0
+	g.PlayerPb.LineUp.MainAvatarId = 0
 
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
@@ -217,7 +218,7 @@ func (g *Game) HandleSwapLineupCsReq(payloadMsg []byte) {
 func (g *Game) SetLineupNameCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetLineupNameCsReq, payloadMsg)
 	req := msg.(*proto.SetLineupNameCsReq)
-	g.Player.DbLineUp.LineUpList[req.Index].Name = req.Name
+	g.PlayerPb.LineUp.LineUpList[req.Index].Name = req.Name
 
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
@@ -247,12 +248,12 @@ func (g *Game) ReplaceLineupCsReq(payloadMsg []byte) {
 		return
 	}
 
-	g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList = []uint32{0, 0, 0, 0}
+	g.PlayerPb.LineUp.LineUpList[req.Index].AvatarIdList = []uint32{0, 0, 0, 0}
 	for _, avatarid := range req.Slots {
-		g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[avatarid.Slot] = avatarid.Id
+		g.PlayerPb.LineUp.LineUpList[req.Index].AvatarIdList[avatarid.Slot] = avatarid.Id
 	}
 
-	g.Player.DbLineUp.MainAvatarId = 0
+	g.PlayerPb.LineUp.MainAvatarId = 0
 
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
@@ -266,7 +267,7 @@ func (g *Game) ChangeLineupLeaderCsReq(payloadMsg []byte) {
 
 	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
 
-	g.Player.DbLineUp.MainAvatarId = req.Slot
+	g.PlayerPb.LineUp.MainAvatarId = req.Slot
 
 	g.Send(cmd.ChangeLineupLeaderScRsp, rsp)
 }
@@ -275,13 +276,13 @@ func (g *Game) QuitLineupCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.QuitLineupCsReq, payloadMsg)
 	req := msg.(*proto.QuitLineupCsReq)
 
-	for id, avatarId := range g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList {
+	for id, avatarId := range g.PlayerPb.LineUp.LineUpList[req.Index].AvatarIdList {
 		if avatarId == req.BaseAvatarId {
-			g.Player.DbLineUp.LineUpList[req.Index].AvatarIdList[id] = 0
+			g.PlayerPb.LineUp.LineUpList[req.Index].AvatarIdList[id] = 0
 		}
 	}
 
-	g.Player.DbLineUp.MainAvatarId = 0
+	g.PlayerPb.LineUp.MainAvatarId = 0
 	// 队伍更新通知
 	g.SyncLineupNotify(req.Index)
 

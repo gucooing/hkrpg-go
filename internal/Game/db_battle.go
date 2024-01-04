@@ -25,6 +25,10 @@ type Challenge struct {
 	Lineup     map[uint32]*ChallengeLineUp
 	EntranceID uint32
 	BuffID     uint32
+	//
+	ChallengeId uint32
+	Status      proto.ChallengeStatus
+	RoundCount  uint32
 }
 type ChallengeLineUp struct {
 	GroupID         uint32
@@ -61,7 +65,7 @@ func (g *Game) GetChallengeLineUp() *proto.LineupInfo {
 		if slots.AvatarId == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[slots.AvatarId]
+		avatar := g.PlayerPb.Avatar.Avatar[slots.AvatarId]
 		lineupAvatar := &proto.LineupAvatar{
 			AvatarType: slots.Type,
 			Slot:       slots.Slot,

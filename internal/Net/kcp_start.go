@@ -107,7 +107,7 @@ func recvHandle(g *Game.Game) {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			if g.Player != nil {
-				logger.Error("the motherfucker player uid: %v", g.Player.PlayerId)
+				logger.Error("the motherfucker player uid: %v", g.PlayerPb.Uid)
 				g.KickPlayer()
 			}
 		}

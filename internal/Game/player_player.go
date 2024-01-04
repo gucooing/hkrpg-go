@@ -5,13 +5,13 @@ import (
 )
 
 func (g *Game) AddTrailblazerExp(num uint32) {
-	g.Player.Exp += num
-	level, exp := gdconf.GetPlayerLevelConfigByLevel(g.Player.Exp, g.Player.Level, g.Player.WorldLevel)
+	g.PlayerPb.Exp += num
+	level, exp := gdconf.GetPlayerLevelConfigByLevel(g.PlayerPb.Exp, g.PlayerPb.Level, g.PlayerPb.WorldLevel)
 	if level == 0 && exp == 0 {
 		return
 	} else {
-		g.Player.Exp = exp
-		g.Player.Level = level
+		g.PlayerPb.Exp = exp
+		g.PlayerPb.Level = level
 		g.PlayerPlayerSyncScNotify()
 	}
 

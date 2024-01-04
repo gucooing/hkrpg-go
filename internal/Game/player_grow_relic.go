@@ -8,6 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *Game) DressRelicAvatarCsReq(payloadMsg []byte) {
@@ -25,44 +26,47 @@ func (g *Game) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramList []*
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		RelicList:  make([]*proto.Relic, 0),
 	}
-	avatardb := g.Player.DbAvatar.Avatar[avatarId]
+	avatardb := g.PlayerPb.Avatar.Avatar[avatarId]
 	// 是否已被装备
 	for _, relic := range paramList {
-		relicdb := g.Player.DbItem.RelicMap[relic.RelicUniqueId]
+		relicdb := g.GetRelicById(relic.RelicUniqueId)
 		if relicdb == nil {
 			return
 		}
 		if relicdb.BaseAvatarId != 0 {
 			// 进入交换
-			avatardbs := g.Player.DbAvatar.Avatar[relicdb.BaseAvatarId]
+			avatardbs := g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId]
 			if avatardb.EquipRelic[relic.Slot] == 0 {
-				delete(g.Player.DbAvatar.Avatar[relicdb.BaseAvatarId].EquipRelic, relic.Slot)
+				delete(g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId].EquipRelic, relic.Slot)
 			} else {
-				g.Player.DbAvatar.Avatar[relicdb.BaseAvatarId].EquipRelic[relic.Slot] = avatardb.EquipRelic[relic.Slot]
-				g.Player.DbItem.RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = avatardbs.AvatarId
+				g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId].EquipRelic[relic.Slot] = avatardb.EquipRelic[relic.Slot]
+				g.GetRelicById(avatardb.EquipRelic[relic.Slot]).BaseAvatarId = avatardbs.AvatarId
 
-				relicList := g.GetRelic(avatardb.EquipRelic[relic.Slot])
+				relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
 				notify.RelicList = append(notify.RelicList, relicList)
 			}
-			avatar := g.GetAvatar(avatardbs.AvatarId)
+			avatar := g.GetAvatarById(avatardbs.AvatarId)
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		}
 
 		if avatardb.EquipRelic[relic.Slot] != 0 {
-			if g.Player.DbItem.RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId == avatarId {
-				g.Player.DbItem.RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = 0
-				relicList := g.GetRelic(avatardb.EquipRelic[relic.Slot])
+			if g.GetRelicById(avatardb.EquipRelic[relic.Slot]).BaseAvatarId == avatarId {
+				g.GetRelicById(avatardb.EquipRelic[relic.Slot]).BaseAvatarId = 0
+				relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
 				notify.RelicList = append(notify.RelicList, relicList)
 			}
 		}
-		g.Player.DbItem.RelicMap[relic.RelicUniqueId].BaseAvatarId = avatarId
-		g.Player.DbAvatar.Avatar[avatarId].EquipRelic[relic.Slot] = relic.RelicUniqueId
+		g.GetRelicById(relic.RelicUniqueId).BaseAvatarId = avatarId
+		if g.PlayerPb.Avatar.Avatar[avatarId].EquipRelic == nil {
+			g.PlayerPb.Avatar.Avatar[avatarId].EquipRelic = make(map[uint32]uint32)
+		}
+		g.PlayerPb.Avatar.Avatar[avatarId].EquipRelic[relic.Slot] = relic.RelicUniqueId
 
-		relicList := g.GetRelic(relic.RelicUniqueId)
+		relicList := g.GetRelicById(relic.RelicUniqueId)
 		notify.RelicList = append(notify.RelicList, relicList)
 	}
 
-	avatar := g.GetAvatar(avatarId)
+	avatar := g.GetAvatarById(avatarId)
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
@@ -84,7 +88,7 @@ func (g *Game) ExpUpRelicCsReq(payloadMsg []byte) {
 	var oldLevel uint32      // 升级前等级
 
 	// 从背包获取需要升级的圣遗物
-	dbRelic := g.Player.DbItem.RelicMap[req.RelicUniqueId]
+	dbRelic := g.GetRelicById(req.RelicUniqueId)
 	if dbRelic == nil {
 		rsp := &proto.ExpUpRelicScRsp{}
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -131,7 +135,7 @@ func (g *Game) ExpUpRelicCsReq(payloadMsg []byte) {
 		}
 		relicList = append(relicList, relic.GetRelicUniqueId())
 		// 获取光锥配置
-		relicconfig := gdconf.GetRelicById(strconv.Itoa(int(g.Player.DbItem.RelicMap[relic.GetRelicUniqueId()].Tid)))
+		relicconfig := gdconf.GetRelicById(strconv.Itoa(int(g.GetRelicById(relic.GetRelicUniqueId()).Tid)))
 		if relicconfig == nil {
 			rsp := &proto.ExpUpRelicScRsp{}
 			g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -157,29 +161,29 @@ func (g *Game) ExpUpRelicCsReq(payloadMsg []byte) {
 	// 添加副属性
 	addex := (level - oldLevel) / 3
 	// TODO 不应与主属性相同
-	addSubAffixes := math.Min(float64(relicConf.Type-1), float64(uint32(len(dbRelic.RelicAffix))+(addex)))
-	for i := 0; i < int(addSubAffixes)-len(dbRelic.RelicAffix); i++ {
+	addSubAffixes := math.Min(float64(relicConf.Type-1), float64(uint32(len(dbRelic.SubAffixList))+(addex)))
+	for i := 0; i < int(addSubAffixes)-len(dbRelic.SubAffixList); i++ {
 		affixId := gdconf.GetRelicSubAffixConfigById(relicConf.SubAffixGroup)
-		relicAffix := &RelicAffix{
+		relicAffix := &spb.RelicAffix{
 			AffixId: affixId,
 			Cnt:     1,
 			Step:    0,
 		}
 		addex--
-		g.Player.DbItem.RelicMap[req.RelicUniqueId].RelicAffix = append(g.Player.DbItem.RelicMap[req.RelicUniqueId].RelicAffix, relicAffix)
+		g.GetItem().RelicMap[req.RelicUniqueId].RelicAffix = append(g.GetItem().RelicMap[req.RelicUniqueId].RelicAffix, relicAffix)
 	}
 	// 升级属性
 	var i uint32
 	for i = 0; i < addex; i++ {
-		idIndex := rand.Intn(len(dbRelic.RelicAffix))
-		dbRelic.RelicAffix[idIndex].Cnt++
+		idIndex := rand.Intn(len(dbRelic.SubAffixList))
+		g.GetItem().RelicMap[req.RelicUniqueId].RelicAffix[idIndex].Cnt++
 	}
 
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2] -= delScoin
+	g.GetItem().MaterialMap[2] -= delScoin
 	// 更新需要升级的圣遗物状态
-	g.Player.DbItem.RelicMap[req.RelicUniqueId].Level = level
-	g.Player.DbItem.RelicMap[req.RelicUniqueId].Exp = exp
+	g.GetItem().RelicMap[req.RelicUniqueId].Level = level
+	g.GetItem().RelicMap[req.RelicUniqueId].Exp = exp
 
 	// 删除用来升级的材料
 	if len(pileItem) != 0 {
@@ -192,14 +196,14 @@ func (g *Game) ExpUpRelicCsReq(payloadMsg []byte) {
 	// 通知角色还有多少信用点
 	g.PlayerPlayerSyncScNotify()
 	// 通知升级后圣遗物消息
-	g.RelicPlayerSyncScNotify(dbRelic.Tid, req.RelicUniqueId)
+	g.RelicPlayerSyncScNotify(req.RelicUniqueId)
 	rsp := &proto.ExpUpRelicScRsp{}
 	g.Send(cmd.ExpUpRelicScRsp, rsp)
 }
 
 func (g *Game) DelRelicPlayerSyncScNotify(relicList []uint32) {
 	for _, relic := range relicList {
-		delete(g.Player.DbItem.RelicMap, relic)
+		delete(g.GetItem().RelicMap, relic)
 	}
 
 	notify := &proto.PlayerSyncScNotify{DelRelicList: relicList}

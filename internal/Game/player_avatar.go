@@ -10,19 +10,23 @@ import (
 
 func (g *Game) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
-	rsp.Gender = g.Player.DbAvatar.Gender
-	rsp.CurBasicType = g.Player.DbAvatar.MainAvatar
-	var mainAvatarList []uint32
-	if rsp.Gender == proto.Gender_GenderMan {
-		mainAvatarList = []uint32{8001, 8003}
-	} else {
-		mainAvatarList = []uint32{8002, 8004}
-	}
-	for _, id := range mainAvatarList {
+	rsp.Gender = proto.Gender(g.PlayerPb.Avatar.Gender)
+	rsp.CurBasicType = proto.HeroBasicType(g.PlayerPb.Avatar.CurMainAvatar)
+	for _, heroBasic := range g.GetHeroBasicTypeInfo() {
 		basicTypeInfoList := &proto.HeroBasicTypeInfo{
-			BasicType:     proto.HeroBasicType(id),
-			SkillTreeList: gdconf.GetMainAvatarSkilltreeListById(id),
-			Rank:          6,
+			BasicType:     proto.HeroBasicType(heroBasic.BasicType),
+			SkillTreeList: make([]*proto.AvatarSkillTree, 0),
+			Rank:          heroBasic.Rank,
+		}
+		for _, skill := range heroBasic.SkillTreeList {
+			if skill.Level == 0 {
+				continue
+			}
+			avatarSkillTree := &proto.AvatarSkillTree{
+				PointId: skill.PointId,
+				Level:   skill.Level,
+			}
+			basicTypeInfoList.SkillTreeList = append(basicTypeInfoList.SkillTreeList, avatarSkillTree)
 		}
 		rsp.BasicTypeInfoList = append(rsp.BasicTypeInfoList, basicTypeInfoList)
 	}
@@ -35,11 +39,13 @@ func (g *Game) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 	rsp.IsGetAll = true
 	rsp.AvatarList = make([]*proto.Avatar, 0)
 
-	for avatarId, _ := range g.Player.DbAvatar.Avatar {
-		if avatarId/1000 == 8 && avatarId != uint32(g.Player.DbAvatar.MainAvatar) {
-			continue
+	avatarDb := g.GetAvatar()
+
+	for avatarId, _ := range avatarDb.Avatar {
+		avatarList := g.GetAvatarById(avatarId)
+		if avatarId/1000 == 8 {
+			avatarList.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
 		}
-		avatarList := g.GetAvatar(avatarId)
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 
@@ -50,7 +56,7 @@ func (g *Game) RankUpAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
 	req := msg.(*proto.RankUpAvatarCsReq)
 
-	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Rank++
+	g.GetAvatar().Avatar[req.BaseAvatarId].Rank++
 	g.SubtractMaterial(req.BaseAvatarId+10000, 1)
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 
@@ -72,7 +78,7 @@ func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
 	var addExp uint32        // 增加的经验
 
 	// 从背包获取需要升级的角色
-	dbAvatar := g.Player.DbAvatar.Avatar[req.BaseAvatarId]
+	dbAvatar := g.GetAvatar().Avatar[req.BaseAvatarId]
 	if dbAvatar == nil {
 		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
@@ -109,17 +115,17 @@ func (g *Game) AvatarExpUpCsReq(payloadMsg []byte) {
 	exp := addExp + dbAvatar.Exp
 
 	// 获取能升级到的等级和升级后经验
-	level, exp, newExp := gdconf.GetExpTypeByLevel(gdconfAvatar.ExpGroup, exp, dbAvatar.Level, dbAvatar.Promotion, dbAvatar.AvatarId)
+	level, exp, newExp := gdconf.GetExpTypeByLevel(gdconfAvatar.ExpGroup, exp, dbAvatar.Level, dbAvatar.PromoteLevel, dbAvatar.AvatarId)
 	if level == 0 && exp == 0 {
 		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 	}
 
-	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Exp = exp
-	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Level = level
+	dbAvatar.Exp = exp
+	dbAvatar.Level = level
 
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2] -= delScoin
+	g.GetItem().MaterialMap[2] -= delScoin
 
 	// 删除用来升级的材料
 	if len(pileItem) != 0 {
@@ -150,7 +156,7 @@ func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
 	var delScoin uint32      // 扣除的信用点
 
 	// 从背包获取需要升级的角色
-	dbAvatar := g.Player.DbAvatar.Avatar[req.BaseAvatarId]
+	dbAvatar := g.GetAvatar().Avatar[req.BaseAvatarId]
 	if dbAvatar == nil {
 		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
@@ -174,11 +180,11 @@ func (g *Game) PromoteAvatarCsReq(payloadMsg []byte) {
 		g.DelMaterialPlayerSyncScNotify(pileItem)
 	}
 	// 计算需要扣除的信用点
-	delScoin = gdconf.GetAvatarPromotionConfigByLevel(dbAvatar.AvatarId, dbAvatar.Promotion)
+	delScoin = gdconf.GetAvatarPromotionConfigByLevel(dbAvatar.AvatarId, dbAvatar.PromoteLevel)
 	// 增加突破等级
-	g.Player.DbAvatar.Avatar[req.BaseAvatarId].Promotion++
+	dbAvatar.PromoteLevel++
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2] -= delScoin
+	g.GetItem().MaterialMap[2] -= delScoin
 	// 通知升级后角色消息
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 	rsp := new(proto.GetChallengeScRsp)
@@ -193,7 +199,9 @@ func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
 	var pileItem []*Material // 需要删除的升级材料
 
 	avatarId := req.PointId / 1000 // 获取要升级技能的角色Id
-	if g.Player.DbAvatar.Avatar[avatarId] == nil {
+	// TODO 此处要做主角特殊处理
+	avatarDb := g.GetAvatar().Avatar[avatarId]
+	if avatarDb == nil {
 		rsp := &proto.UnlockSkilltreeScRsp{
 			Retcode: uint32(proto.Retcode_RET_FAIL),
 		}
@@ -217,9 +225,9 @@ func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
 		g.DelMaterialPlayerSyncScNotify(pileItem)
 	}
 	// 升级
-	for id, skilltree := range g.Player.DbAvatar.Avatar[avatarId].SkilltreeList {
+	for id, skilltree := range g.PlayerPb.Avatar.Avatar[avatarId].SkilltreeList {
 		if skilltree.PointId == req.PointId {
-			g.Player.DbAvatar.Avatar[avatarId].SkilltreeList[id].Level = req.Level
+			avatarDb.SkilltreeList[id].Level = req.Level
 		}
 	}
 	// 通知升级后角色消息
@@ -235,14 +243,14 @@ func (g *Game) UnlockSkilltreeCsReq(payloadMsg []byte) {
 func (g *Game) TakePromotionRewardCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.TakePromotionRewardCsReq, payloadMsg)
 	req := msg.(*proto.TakePromotionRewardCsReq)
-
-	if g.Player.DbAvatar.Avatar[req.BaseAvatarId] == nil {
+	avatarDb := g.GetAvatar().Avatar[req.BaseAvatarId]
+	if avatarDb == nil {
 		rsp := &proto.TakePromotionRewardScRsp{
 			Retcode: uint32(proto.Retcode_RET_FAIL),
 		}
 		g.Send(cmd.TakePromotionRewardScRsp, rsp)
 	}
-	g.Player.DbAvatar.Avatar[req.BaseAvatarId].TakenRewards = append(g.Player.DbAvatar.Avatar[req.BaseAvatarId].TakenRewards, req.Promotion)
+	avatarDb.TakenRewards = append(avatarDb.TakenRewards, req.Promotion)
 	// 通知升级后角色信息
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 

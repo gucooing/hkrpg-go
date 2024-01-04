@@ -10,6 +10,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -24,7 +25,8 @@ type Game struct {
 	KcpConn        *kcp.UDPSession
 	LastActiveTime int64 // 最近一次的活跃时间
 	// 玩家数据
-	Player *PlayerData
+	Player   *PlayerData
+	PlayerPb *spb.PlayerBasicCompBin // 玩家pb数据
 	// 密钥
 	XorKey []byte
 }
@@ -91,10 +93,17 @@ func (g *Game) UpDataPlayer() error {
 		logger.Error("json to bin error:%s", err)
 		return err
 	}
+
+	dbDate.PlayerDataPb, err = pb.Marshal(g.PlayerPb)
+	if err != nil {
+		logger.Error("pb marshal error: %v", err)
+	}
+
 	if err = DataBase.DBASE.UpdatePlayer(dbDate); err != nil {
 		logger.Error("Update Player error")
 		return err
 	}
+
 	logger.Info("数据库账号:%v 数据更新", g.Uid)
 	return nil
 }

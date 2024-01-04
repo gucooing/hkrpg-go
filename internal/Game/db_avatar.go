@@ -1,64 +1,102 @@
 package Game
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-type DbAvatar struct {
-	Avatar         map[uint32]*Avatar
-	MainAvatar     proto.HeroBasicType // 默认主角
-	Gender         proto.Gender        // 性别
-	MainAvatarList []uint32            // 主角们
+func (g *Game) GetAvatar() *spb.Avatar {
+	if g.PlayerPb.Avatar == nil {
+		g.PlayerPb.Avatar = &spb.Avatar{
+			Avatar:            make(map[uint32]*spb.AvatarBin),
+			Gender:            spb.Gender_GenderMan,
+			CurMainAvatar:     spb.HeroBasicType_BoyWarrior,
+			HeroBasicTypeInfo: g.GetHeroBasicTypeInfo(),
+		}
+	}
+	return g.PlayerPb.Avatar
 }
 
-type Avatar struct {
-	AvatarId          uint32            // 角色id
-	Exp               uint32            // 经验
-	Level             uint32            // 等级
-	Type              proto.AvatarType  // 角色状态
-	FirstMetTimestamp uint64            // 获得时间戳
-	Promotion         uint32            // 突破等阶
-	Rank              uint32            // 命座
-	Hp                uint32            // 血量
-	SpBar             *SpBarInfo        // 能量
-	SkilltreeList     []*Skilltree      // 技能等级数据 [id]level
-	EquipmentUniqueId uint32            // 装备光锥
-	EquipRelic        map[uint32]uint32 // 装备圣遗物
-	TakenRewards      []uint32          // 已领取的突破奖励
-	BuffList          uint32            // 开启战斗的buff
+func (g *Game) GetHeroBasicTypeInfo() []*spb.HeroBasicTypeInfo {
+	heroBasic := make([]*spb.HeroBasicTypeInfo, 0)
+	if g.PlayerPb.Avatar == nil || g.PlayerPb.Avatar.HeroBasicTypeInfo == nil {
+		heroBasicTypeInfo := &spb.HeroBasicTypeInfo{
+			Rank:          0,
+			BasicType:     spb.HeroBasicType_BoyWarrior,
+			SkillTreeList: g.GetSkillTreeList(uint32(spb.HeroBasicType_BoyWarrior)),
+		}
+		heroBasic = append(heroBasic, heroBasicTypeInfo)
+
+		heroBasicTypeInfo = &spb.HeroBasicTypeInfo{
+			Rank:          0,
+			BasicType:     spb.HeroBasicType_BoyKnight,
+			SkillTreeList: g.GetSkillTreeList(uint32(spb.HeroBasicType_BoyKnight)),
+		}
+		heroBasic = append(heroBasic, heroBasicTypeInfo)
+	} else {
+		g.PlayerPb.Avatar.HeroBasicTypeInfo = heroBasic
+	}
+	return heroBasic
 }
 
-type Skilltree struct {
-	PointId uint32
-	Level   uint32
+func (g *Game) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
+	skilltreeList := make([]*spb.AvatarSkillBin, 0)
+	if avatarId/1000 == 8 || g.PlayerPb.Avatar.Avatar[avatarId] == nil {
+		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
+			avatarSkillBin := &spb.AvatarSkillBin{
+				PointId: id,
+				Level:   level,
+			}
+			skilltreeList = append(skilltreeList, avatarSkillBin)
+		}
+		return skilltreeList
+	}
+	if g.PlayerPb.Avatar.Avatar[avatarId].SkilltreeList == nil {
+		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
+			avatarSkillBin := &spb.AvatarSkillBin{
+				PointId: id,
+				Level:   level,
+			}
+			skilltreeList = append(skilltreeList, avatarSkillBin)
+		}
+		g.PlayerPb.Avatar.Avatar[avatarId].SkilltreeList = skilltreeList
+	}
+	return g.PlayerPb.Avatar.Avatar[avatarId].SkilltreeList
 }
 
-type SpBarInfo struct {
-	CurSp uint32
-	MaxSp uint32
-}
-
-func (g *Game) GetAvatar(avatarId uint32) *proto.Avatar {
-	avatardb := g.Player.DbAvatar.Avatar[avatarId]
+func (g *Game) GetAvatarById(avatarId uint32) *proto.Avatar {
+	avatardb := g.PlayerPb.Avatar.Avatar[avatarId]
 	if avatardb == nil {
 		return nil
 	}
 	avatar := &proto.Avatar{
-		SkilltreeList:     g.GetSkilltree(avatarId),
+		SkilltreeList:     make([]*proto.AvatarSkillTree, 0),
 		Exp:               avatardb.Exp,
 		BaseAvatarId:      avatardb.AvatarId,
 		Rank:              avatardb.Rank,
 		EquipmentUniqueId: avatardb.EquipmentUniqueId,
 		EquipRelicList:    make([]*proto.EquipRelic, 0),
 		TakenRewards:      avatardb.TakenRewards,
-		FirstMetTimestamp: avatardb.FirstMetTimestamp,
-		Promotion:         avatardb.Promotion,
+		FirstMetTimestamp: avatardb.FirstMetTimeStamp,
+		Promotion:         avatardb.PromoteLevel,
 		Level:             avatardb.Level,
+	}
+	for _, skill := range g.GetSkillTreeList(avatarId) {
+		if avatarId/1000 == 8 {
+			break
+		}
+		if skill.Level == 0 {
+			continue
+		}
+		avatarSkillTree := &proto.AvatarSkillTree{
+			PointId: skill.PointId,
+			Level:   skill.Level,
+		}
+		avatar.SkilltreeList = append(avatar.SkilltreeList, avatarSkillTree)
 	}
 	for id, relic := range avatardb.EquipRelic {
 		if relic == 0 {
@@ -71,90 +109,43 @@ func (g *Game) GetAvatar(avatarId uint32) *proto.Avatar {
 		avatar.EquipRelicList = append(avatar.EquipRelicList, equipRelic)
 	}
 
-	if avatarId/1000 == 8 {
-		avatar.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
-	}
-
 	return avatar
 }
 
-func (g *Game) GetAvatarHp(avatarId uint32) uint32 {
-	level := g.Player.DbAvatar.Avatar[avatarId].Level
-	promotion := g.Player.DbAvatar.Avatar[avatarId].Promotion
-
-	avatarPromotion := gdconf.GetAvatarPromotionConfigMap()[strconv.Itoa(int(avatarId))][strconv.Itoa(int(promotion))]
-
-	hp := avatarPromotion.HPBase.Value + (avatarPromotion.HPAdd.Value * float64(level))
-	return uint32(hp)
-}
-
-func NewAvatar(data *PlayerData, mainAvatar proto.HeroBasicType) *PlayerData {
-	data.DbAvatar = new(DbAvatar)
-	data.DbAvatar.MainAvatar = mainAvatar
-	data.DbAvatar.Gender = proto.Gender_GenderMan
-	data.DbAvatar.MainAvatarList = []uint32{8001, 8002, 8003, 8004}
-	data.DbAvatar.Avatar = make(map[uint32]*Avatar)
-
-	return data
-}
-
 func (g *Game) AddAvatar(avatarId uint32) {
-	for _, avatar := range g.Player.DbAvatar.Avatar {
-		if avatar.AvatarId == avatarId {
-			g.AddMaterial(avatarId+10000, 1)
-			return
-		}
-	}
-	avatar := new(Avatar)
-	// TODO
-	avatar.AvatarId = avatarId
-	avatar.Exp = 0
-	avatar.Level = 1
-	avatar.Type = proto.AvatarType_AVATAR_FORMAL_TYPE
-	avatar.FirstMetTimestamp = uint64(time.Now().Unix())
-	avatar.Promotion = 0
-	avatar.Rank = 0
-	avatar.Hp = 10000
-	avatar.EquipmentUniqueId = 0
-	avatar.SpBar = &SpBarInfo{
-		CurSp: 10000,
-		MaxSp: 10000,
-	}
-	avatar.EquipRelic = make(map[uint32]uint32, 6)
-	avatar.TakenRewards = make([]uint32, 0)
-	avatar.BuffList = 0
-	for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
-		skilltreeList := &Skilltree{
-			PointId: id,
-			Level:   level,
-		}
-		avatar.SkilltreeList = append(avatar.SkilltreeList, skilltreeList)
+	if g.PlayerPb.Avatar.Avatar[avatarId] != nil {
+		g.AddMaterial(avatarId+10000, 1)
+		return
 	}
 
-	g.Player.DbAvatar.Avatar[avatarId] = avatar
+	g.PlayerPb.Avatar.Avatar[avatarId] = &spb.AvatarBin{
+		AvatarId:          avatarId,
+		Exp:               0,
+		Level:             1,
+		AvatarType:        uint32(spb.AvatarType_AVATAR_FORMAL_TYPE),
+		FirstMetTimeStamp: uint64(time.Now().Unix()),
+		PromoteLevel:      0,
+		Rank:              0,
+		Hp:                10000,
+		SpBar: &spb.AvatarSpBarInfo{
+			CurSp: 10000,
+			MaxSp: 10000,
+		},
+		SkilltreeList:     g.GetSkillTreeList(avatarId),
+		EquipmentUniqueId: 0,
+		EquipRelic:        make(map[uint32]uint32),
+		TakenRewards:      make([]uint32, 0),
+		BuffList:          0,
+	}
+
 	g.AvatarPlayerSyncScNotify(avatarId)
-}
-
-func (g *Game) GetSkilltree(avatarId uint32) []*proto.AvatarSkillTree {
-	skilltreeList := make([]*proto.AvatarSkillTree, 0)
-	for _, dbSkilltreeList := range g.Player.DbAvatar.Avatar[avatarId].SkilltreeList {
-		if dbSkilltreeList.Level == 0 {
-			continue
-		}
-		skilltree := &proto.AvatarSkillTree{
-			PointId: dbSkilltreeList.PointId,
-			Level:   dbSkilltreeList.Level,
-		}
-		skilltreeList = append(skilltreeList, skilltree)
-	}
-	return skilltreeList
 }
 
 func (g *Game) AvatarPlayerSyncScNotify(avatarId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 	}
-	avatar := g.GetAvatar(avatarId)
+	avatar := g.GetAvatarById(avatarId)
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
 	g.Send(cmd.PlayerSyncScNotify, notify)

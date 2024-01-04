@@ -2,7 +2,7 @@ package Gm
 
 import (
 	"github.com/gin-gonic/gin"
-	proto "github.com/gucooing/hkrpg-go/protocol/gmpb"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func Give(c *gin.Context) {
@@ -18,7 +18,7 @@ func Give(c *gin.Context) {
 	itemId := c.Query("item_id")
 	itemCount := c.Query("item_count") // 数量
 
-	message := &proto.GmGive{
+	message := &spb.GmGive{
 		ItemId:    stou32(itemId),
 		ItemCount: stou32(itemCount),
 	}

@@ -6,26 +6,28 @@ import (
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 // 当前坐标通知
 func (g *Game) SceneEntityMoveScNotify() {
-	pos := g.Player.Pos
-	rot := g.Player.Rot
+	pos := g.GetPos()
+	rot := g.GetRot()
+	entryId := g.GetScene()
 
 	notify := &proto.SceneEntityMoveScNotify{
-		EntryId:          g.Player.DbScene.EntryId,
+		EntryId:          entryId.EntryId,
 		ClientPosVersion: 0,
 		Motion: &proto.MotionInfo{
 			Pos: &proto.Vector{
-				X: int32(pos.X),
-				Y: int32(pos.Y),
-				Z: int32(pos.Z),
+				X: pos.X,
+				Y: pos.Y,
+				Z: pos.Z,
 			},
 			Rot: &proto.Vector{
-				X: int32(rot.X),
-				Y: int32(rot.Y),
-				Z: int32(rot.Z),
+				X: rot.X,
+				Y: rot.Y,
+				Z: rot.Z,
 			},
 		},
 	}
@@ -59,12 +61,12 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 
 	// 获取队伍
-	lineUp := g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp]
+	lineUp := g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp)
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,
 		LeaderSlot:      0,
 		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           g.Player.DbLineUp.MainLineUp,
+		Index:           g.PlayerPb.LineUp.MainLineUp,
 		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
 		MaxMp:           5,
 		Mp:              5,
@@ -75,9 +77,9 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		if avatarId == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[avatarId]
+		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: avatar.Type,
+			AvatarType: proto.AvatarType(avatar.AvatarType),
 			Slot:       uint32(slot),
 			Satiety:    0,
 			Hp:         avatar.Hp,
@@ -117,7 +119,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 	for _, anchor := range foorMap.Groups[groupID].AnchorList {
 		if anchor.ID == anchorID {
-			for id, avatarid := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
+			for id, avatarid := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
 				if avatarid == 0 {
 					continue
 				}
@@ -158,17 +160,17 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			}
 
 			// TODO 数据保存问题？
-			g.Player.Pos = &Vector{
-				X: int(anchor.PosX * 1000),
-				Y: int(anchor.PosY * 1000),
-				Z: int(anchor.PosZ * 1000),
+			g.PlayerPb.Pos = &spb.VectorBin{
+				X: int32(anchor.PosX * 1000),
+				Y: int32(anchor.PosY * 1000),
+				Z: int32(anchor.PosZ * 1000),
 			}
-			g.Player.Rot = &Vector{
-				X: int(anchor.RotX * 1000),
-				Y: int(anchor.RotY * 1000),
-				Z: int(anchor.RotZ * 1000),
+			g.PlayerPb.Rot = &spb.VectorBin{
+				X: int32(anchor.RotX * 1000),
+				Y: int32(anchor.RotY * 1000),
+				Z: int32(anchor.RotZ * 1000),
 			}
-			g.Player.DbScene.EntryId = entryId
+			g.PlayerPb.Scene.EntryId = entryId
 			break
 		}
 	}
@@ -230,7 +232,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 					},
 				},
 				EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
-					WorldLevel: g.Player.WorldLevel,
+					WorldLevel: g.PlayerPb.WorldLevel,
 					MonsterId:  monsterList.NPCMonsterID,
 					EventId:    monsterList.EventID,
 				}},
@@ -301,20 +303,21 @@ func (g *Game) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 
 // 客户端登录需要的包，不是传送的通知包
 func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(g.Player.DbScene.EntryId)))
+	rsp := new(proto.GetCurSceneInfoScRsp)
+	pos := g.GetPos()
+	rot := g.GetRot()
+	dbScene := g.GetScene()
+	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(dbScene.EntryId)))
 	entityMap := make(map[uint32]*EntityList)
 
-	rsp := new(proto.GetCurSceneInfoScRsp)
-	pos := g.Player.Pos
-	rot := g.Player.Rot
-	leaderEntityId := uint32(g.GetNextGameObjectGuid())
 	rsp.Scene = &proto.SceneInfo{
 		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,                        // 世界id
 		LeaderEntityId:     leaderEntityId,                                                                                 // 进入场景的角色实体id
 		FloorId:            mapEntrance.FloorID,                                                                            // 上面表查询到的，对应文件名中F开头后面的数字
 		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType), // 未知
 		PlaneId:            mapEntrance.PlaneID,                                                                            // 上面表查询到的，对应文件名中P开头后面的数字
-		EntryId:            g.Player.DbScene.EntryId,                                                                       // 应该是具体的场景条目
+		EntryId:            dbScene.EntryId,                                                                                // 应该是具体的场景条目
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),                                                         // 实体列表
 		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
@@ -329,26 +332,26 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
 	// 将进入场景的角色添加到实体列表里
-	for id, avatarid := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
+	for id, avatarid := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
 		if avatarid == 0 {
 			continue
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
 			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
-				AvatarType:   g.Player.DbAvatar.Avatar[avatarid].Type,
+				AvatarType:   proto.AvatarType(g.PlayerPb.Avatar.Avatar[avatarid].AvatarType),
 				BaseAvatarId: avatarid,
 			}},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
-					X: int32(pos.X),
-					Y: int32(pos.Y),
-					Z: int32(pos.Z),
+					X: pos.X,
+					Y: pos.Y,
+					Z: pos.Z,
 				},
 				Rot: &proto.Vector{
-					X: int32(rot.X),
-					Y: int32(rot.Y),
-					Z: int32(rot.Z),
+					X: rot.X,
+					Y: rot.Y,
+					Z: rot.Z,
 				},
 			},
 		}
@@ -430,7 +433,7 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 					},
 				},
 				EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
-					WorldLevel: g.Player.WorldLevel,
+					WorldLevel: g.PlayerPb.WorldLevel,
 					MonsterId:  monsterList.NPCMonsterID,
 					EventId:    monsterList.EventID,
 				}},

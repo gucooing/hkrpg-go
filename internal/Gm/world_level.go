@@ -2,7 +2,7 @@ package Gm
 
 import (
 	"github.com/gin-gonic/gin"
-	proto "github.com/gucooing/hkrpg-go/protocol/gmpb"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func WorldLevel(c *gin.Context) {
@@ -16,7 +16,7 @@ func WorldLevel(c *gin.Context) {
 		return
 	}
 
-	message := &proto.GmWorldLevel{
+	message := &spb.GmWorldLevel{
 		WorldLevel: worldLevel,
 	}
 

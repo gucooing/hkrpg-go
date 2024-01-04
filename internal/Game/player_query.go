@@ -3,6 +3,7 @@ package Game
 import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *Game) HandleQueryProductInfoCsReq(payloadMsg []byte) {
@@ -21,16 +22,16 @@ func (g *Game) SceneEntityMoveCsReq(payloadMsg []byte) {
 				break
 			}
 			if g.Player.EntityList[entryId.EntityId].Entity == g.GetSceneAvatarId() {
-				g.Player.Pos = &Vector{
-					X: int(entryId.Motion.Pos.X),
-					Y: int(entryId.Motion.Pos.Y),
-					Z: int(entryId.Motion.Pos.Z),
+				g.PlayerPb.Pos = &spb.VectorBin{
+					X: entryId.Motion.Pos.X,
+					Y: entryId.Motion.Pos.Y,
+					Z: entryId.Motion.Pos.Z,
 				}
 
-				g.Player.Rot = &Vector{
-					X: int(entryId.Motion.Rot.X),
-					Y: int(entryId.Motion.Rot.Y),
-					Z: int(entryId.Motion.Rot.Z),
+				g.PlayerPb.Rot = &spb.VectorBin{
+					X: entryId.Motion.Rot.X,
+					Y: entryId.Motion.Rot.Y,
+					Z: entryId.Motion.Rot.Z,
 				}
 			}
 		}

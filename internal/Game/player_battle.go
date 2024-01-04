@@ -23,7 +23,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		avatarId := g.Player.EntityList[req.CasterId].Entity
 		skillId := (avatarId * 100) + req.SkillIndex
 		if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
-			g.Player.DbAvatar.Avatar[avatarId].BuffList = skillId
+			g.PlayerPb.Avatar.Avatar[avatarId].BuffList = skillId
 		} else {
 			// 技能处理，有的技能并不会增加buff而是回复生命等功能
 		}
@@ -44,10 +44,10 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		return
 	}
 	entity := g.Player.EntityList[req.HitTargetIdList[0]]
-	stageID = gdconf.GetPlaneEventById(entity.Entity, g.Player.WorldLevel)
+	stageID = gdconf.GetPlaneEventById(entity.Entity, g.PlayerPb.WorldLevel)
 	if stageID == nil {
 		newEntity := g.Player.EntityList[req.CasterId]
-		stageID = gdconf.GetPlaneEventById(newEntity.Entity, g.Player.WorldLevel)
+		stageID = gdconf.GetPlaneEventById(newEntity.Entity, g.PlayerPb.WorldLevel)
 		stageConfig = gdconf.GetStageConfigById(stageID.StageID)
 	} else {
 		stageConfig = gdconf.GetStageConfigById(stageID.StageID)
@@ -61,7 +61,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			LogicRandomSeed:  gdconf.GetLoadingDesc(),      // 逻辑随机种子
 			StageId:          stageID.StageID,              // 阶段id
 			TurnSnapshotList: nil,                          // 打开快照列表？
-			WorldLevel:       g.Player.WorldLevel,
+			WorldLevel:       g.PlayerPb.WorldLevel,
 			RoundsLimit:      0,                              // 回合限制
 			BattleId:         g.GetBattleIdGuid(),            // 战斗Id
 			BattleAvatarList: make([]*proto.BattleAvatar, 0), // 战斗角色列表
@@ -83,11 +83,11 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
 	}
 	// 添加角色
-	for id, Lineup := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
+	for id, Lineup := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
 		if Lineup == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[Lineup]
+		avatar := g.PlayerPb.Avatar.Avatar[Lineup]
 
 		battleAvatar := &proto.BattleAvatar{
 			AvatarType:    proto.AvatarType_AVATAR_FORMAL_TYPE,
@@ -95,18 +95,28 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			Level:         avatar.Level,
 			Rank:          avatar.Rank,
 			Index:         uint32(id),
-			SkilltreeList: g.GetSkilltree(avatar.AvatarId),
+			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
 			Hp:            avatar.Hp,
-			Promotion:     avatar.Promotion,
+			Promotion:     avatar.PromoteLevel,
 			RelicList:     make([]*proto.BattleRelic, 0),
-			WorldLevel:    g.Player.WorldLevel,
+			WorldLevel:    g.PlayerPb.WorldLevel,
 			SpBar: &proto.SpBarInfo{
 				CurSp: avatar.SpBar.CurSp,
 				MaxSp: avatar.SpBar.MaxSp,
 			},
 		}
+		for _, skill := range g.GetSkillTreeList(avatar.AvatarId) {
+			if skill.Level == 0 {
+				continue
+			}
+			avatarSkillTree := &proto.AvatarSkillTree{
+				PointId: skill.PointId,
+				Level:   skill.Level,
+			}
+			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
+		}
 		for _, relic := range avatar.EquipRelic {
-			relicdb := g.Player.DbItem.RelicMap[relic]
+			relicdb := g.GetRelicById(relic)
 			equipRelic := &proto.BattleRelic{
 				Id:           relicdb.Tid,
 				Level:        relicdb.Level,
@@ -114,7 +124,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 				SubAffixList: make([]*proto.RelicAffix, 0),
 				UniqueId:     relicdb.UniqueId,
 			}
-			for _, subAddix := range relicdb.RelicAffix {
+			for _, subAddix := range relicdb.SubAffixList {
 				relicAffix := &proto.RelicAffix{
 					AffixId: subAddix.AffixId,
 					Cnt:     subAddix.Cnt,
@@ -126,7 +136,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		}
 		// 获取角色装备的光锥
 		if avatar.EquipmentUniqueId != 0 {
-			equipment := g.Player.DbItem.EquipmentMap[avatar.EquipmentUniqueId]
+			equipment := g.GetEquipment(avatar.EquipmentUniqueId)
 			equipmentList := &proto.BattleEquipment{
 				Id:        equipment.Tid,
 				Level:     equipment.Level,
@@ -147,7 +157,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			}
 			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 			targetIndex++
-			g.Player.DbAvatar.Avatar[Lineup].BuffList = 0
+			g.PlayerPb.Avatar.Avatar[Lineup].BuffList = 0
 		}
 	}
 
@@ -193,17 +203,17 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 
 	// 更新角色状态
 	for _, avatar := range req.Stt.BattleAvatarList {
-		g.Player.DbAvatar.Avatar[avatar.Id].Type = avatar.AvatarType
-		g.Player.DbAvatar.Avatar[avatar.Id].SpBar.CurSp = uint32((avatar.AvatarStatus.LeftSp / avatar.AvatarStatus.MaxSp) * 10000)
+		g.PlayerPb.Avatar.Avatar[avatar.Id].AvatarType = uint32(avatar.AvatarType)
+		g.PlayerPb.Avatar.Avatar[avatar.Id].SpBar.CurSp = uint32((avatar.AvatarStatus.LeftSp / avatar.AvatarStatus.MaxSp) * 10000)
 		if avatar.AvatarStatus.LeftHp == float64(0) {
-			g.Player.DbAvatar.Avatar[avatar.Id].Hp = 2000
-			g.Player.DbAvatar.Avatar[avatar.Id].Type = proto.AvatarType_AVATAR_FORMAL_TYPE
+			g.PlayerPb.Avatar.Avatar[avatar.Id].Hp = 2000
+			g.PlayerPb.Avatar.Avatar[avatar.Id].AvatarType = uint32(proto.AvatarType_AVATAR_FORMAL_TYPE)
 		} else {
-			g.Player.DbAvatar.Avatar[avatar.Id].Hp = uint32((avatar.AvatarStatus.LeftHp / avatar.AvatarStatus.MaxHp) * 10000)
+			g.PlayerPb.Avatar.Avatar[avatar.Id].Hp = uint32((avatar.AvatarStatus.LeftHp / avatar.AvatarStatus.MaxHp) * 10000)
 		}
 	}
 	// 更新队伍状态
-	g.BattleSyncLineupNotify(g.Player.DbLineUp.MainLineUp)
+	g.BattleSyncLineupNotify(g.PlayerPb.LineUp.MainLineUp)
 
 	// 账号状态改变通知
 	g.PlayerPlayerSyncScNotify()
@@ -232,7 +242,7 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 			delete(g.Player.EntityList, battle.EventID)
 		}
 
-		g.Player.DbItem.MaterialMap[11] -= battle.StaminaCost * battle.Wave // 扣除体力
+		g.GetItem().MaterialMap[11] -= battle.StaminaCost * battle.Wave // 扣除体力
 
 		// 获取奖励
 		rsp.DropData = &proto.ItemList{ItemList: make([]*proto.Item, 0)}
@@ -267,7 +277,7 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 // 队伍更新通知
 func (g *Game) BattleSyncLineupNotify(index uint32) {
 	rsq := new(proto.SyncLineupNotify)
-	lineUp := g.Player.DbLineUp.LineUpList[index]
+	lineUp := g.GetLineUpById(index)
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,
 		LeaderSlot:      0,
@@ -283,9 +293,9 @@ func (g *Game) BattleSyncLineupNotify(index uint32) {
 		if avatarId == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[avatarId]
+		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: avatar.Type,
+			AvatarType: proto.AvatarType(avatar.AvatarType),
 			Slot:       uint32(slot),
 			Satiety:    0,
 			Hp:         avatar.Hp,
@@ -316,7 +326,7 @@ func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 			RogueAbilityPoint: 0,
 		},
 		RogueScoreInfo: &proto.RogueScoreRewardInfo{
-			PoolId:               20 + g.Player.WorldLevel,
+			PoolId:               20 + g.PlayerPb.WorldLevel,
 			HasTakenInitialScore: true,
 			PoolRefreshed:        true,
 		},
@@ -327,7 +337,7 @@ func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 				EndTime:   endTime,
 			},
 			RogueScoreInfo: &proto.RogueScoreRewardInfo{
-				PoolId:               20 + g.Player.WorldLevel,
+				PoolId:               20 + g.PlayerPb.WorldLevel,
 				HasTakenInitialScore: true,
 				PoolRefreshed:        true,
 			},
@@ -351,7 +361,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	req := msg.(*proto.StartRogueCsReq)
 
 	if req.BaseAvatarIdList == nil {
-		req.BaseAvatarIdList = g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList
+		req.BaseAvatarIdList = g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList
 	}
 
 	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
@@ -387,7 +397,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 		Score:                0,
 		PoolRefreshed:        true, // 刷新？
 		TakenScoreRewardList: nil,
-		PoolId:               20 + g.Player.WorldLevel,
+		PoolId:               20 + g.PlayerPb.WorldLevel,
 	}
 	// 可独立成单独的方法
 	roomMap := &proto.RogueMapInfo{
@@ -564,7 +574,7 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 					},
 				},
 				EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
-					WorldLevel: g.Player.WorldLevel,
+					WorldLevel: g.PlayerPb.WorldLevel,
 					MonsterId:  monsterList.NPCMonsterID,
 					EventId:    monsterList.EventID,
 				}},
@@ -609,11 +619,11 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 
 	// 先更新队伍
 	for id, avatarid := range req.BaseAvatarIdList {
-		g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList[id] = avatarid
+		g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList[id] = avatarid
 	}
-	g.Player.DbLineUp.MainAvatarId = 0
+	g.PlayerPb.LineUp.MainAvatarId = 0
 	// 队伍更新通知
-	g.SyncLineupNotify(g.Player.DbLineUp.MainLineUp)
+	g.SyncLineupNotify(g.PlayerPb.LineUp.MainLineUp)
 
 	rsp := &proto.StartRogueScRsp{
 		Scene: scene,
@@ -675,9 +685,9 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 		if avatarId == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[avatarId]
+		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: avatar.Type,
+			AvatarType: proto.AvatarType(avatar.AvatarType),
 			Slot:       uint32(slot),
 			Hp:         avatar.Hp,
 			Id:         avatarId,
@@ -743,7 +753,7 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	rsp.BattleInfo.LogicRandomSeed = gdconf.GetLoadingDesc()
 	rsp.BattleInfo.BattleId = g.GetBattleIdGuid() // 战斗Id
 	rsp.BattleInfo.StageId = cocoonConfig.StageID
-	rsp.BattleInfo.WorldLevel = g.Player.WorldLevel
+	rsp.BattleInfo.WorldLevel = g.PlayerPb.WorldLevel
 
 	if rsp.BattleInfo.StageId == 0 {
 		rsp.BattleInfo.StageId = cocoonConfig.StageIDList[0]
@@ -768,11 +778,11 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	}
 
 	// 添加角色
-	for id, Lineup := range g.Player.DbLineUp.LineUpList[g.Player.DbLineUp.MainLineUp].AvatarIdList {
+	for id, Lineup := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
 		if Lineup == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[Lineup]
+		avatar := g.PlayerPb.Avatar.Avatar[Lineup]
 
 		battleAvatar := &proto.BattleAvatar{
 			AvatarType:    proto.AvatarType_AVATAR_FORMAL_TYPE,
@@ -780,18 +790,28 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 			Level:         avatar.Level,
 			Rank:          avatar.Rank,
 			Index:         uint32(id),
-			SkilltreeList: g.GetSkilltree(avatar.AvatarId),
+			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
 			Hp:            avatar.Hp,
-			Promotion:     avatar.Promotion,
+			Promotion:     avatar.PromoteLevel,
 			RelicList:     make([]*proto.BattleRelic, 0),
-			WorldLevel:    g.Player.WorldLevel,
+			WorldLevel:    g.PlayerPb.WorldLevel,
 			SpBar: &proto.SpBarInfo{
 				CurSp: avatar.SpBar.CurSp,
 				MaxSp: avatar.SpBar.MaxSp,
 			},
 		}
+		for _, skill := range g.GetSkillTreeList(avatar.AvatarId) {
+			if skill.Level == 0 {
+				continue
+			}
+			avatarSkillTree := &proto.AvatarSkillTree{
+				PointId: skill.PointId,
+				Level:   skill.Level,
+			}
+			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
+		}
 		for _, relic := range avatar.EquipRelic {
-			relicdb := g.Player.DbItem.RelicMap[relic]
+			relicdb := g.GetRelicById(relic)
 			equipRelic := &proto.BattleRelic{
 				Id:           relicdb.Tid,
 				Level:        relicdb.Level,
@@ -799,7 +819,7 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 				SubAffixList: make([]*proto.RelicAffix, 0),
 				UniqueId:     relicdb.UniqueId,
 			}
-			for _, subAddix := range relicdb.RelicAffix {
+			for _, subAddix := range relicdb.SubAffixList {
 				relicAffix := &proto.RelicAffix{
 					AffixId: subAddix.AffixId,
 					Cnt:     subAddix.Cnt,
@@ -811,7 +831,7 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 		}
 		// 获取角色装备的光锥
 		if avatar.EquipmentUniqueId != 0 {
-			equipment := g.Player.DbItem.EquipmentMap[avatar.EquipmentUniqueId]
+			equipment := g.GetEquipment(avatar.EquipmentUniqueId)
 			equipmentList := &proto.BattleEquipment{
 				Id:        equipment.Tid,
 				Level:     equipment.Level,
@@ -832,7 +852,7 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 			}
 			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 			targetIndex++
-			g.Player.DbAvatar.Avatar[Lineup].BuffList = 0
+			g.PlayerPb.Avatar.Avatar[Lineup].BuffList = 0
 		}
 	}
 
@@ -849,7 +869,7 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 		BattleAvatarList: rsp.BattleInfo.BattleAvatarList,
 	}
 	// 添加奖励
-	for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.Player.WorldLevel).DisplayItemList {
+	for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.PlayerPb.WorldLevel).DisplayItemList {
 		material := &Material{
 			Tid: displayItem.ItemID,
 			Num: displayItem.ItemNum,
@@ -866,14 +886,36 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 
 /***********************************忘却之庭***********************************/
 
+func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
+	rsp := new(proto.GetCurChallengeScRsp)
+
+	if g.Player.Challenge.ChallengeId != 0 {
+		rsp.ChallengeInfo = &proto.ChallengeInfo{
+			ChallengeId:     g.Player.Challenge.ChallengeId,
+			Status:          g.Player.Challenge.Status,
+			RoundCount:      g.Player.Challenge.RoundCount,
+			ExtraLineupType: g.Player.Challenge.Lineup[g.Player.Challenge.Type].ExtraLineupType,
+		}
+	}
+
+	g.Send(cmd.GetCurChallengeScRsp, rsp)
+}
+
 func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
 	req := msg.(*proto.StartChallengeCsReq)
 
+	// 如果是新战斗就添加
+	if g.Player.Challenge.ChallengeId == 0 {
+		g.Player.Challenge.ChallengeId = req.ChallengeId
+		g.Player.Challenge.Status = proto.ChallengeStatus_CHALLENGE_DOING
+		g.Player.Challenge.RoundCount = 0
+	}
+
 	challengeInfo := &proto.ChallengeInfo{
-		ChallengeId:     req.ChallengeId,
-		Status:          proto.ChallengeStatus_CHALLENGE_DOING,
-		RoundCount:      0,
+		ChallengeId:     g.Player.Challenge.ChallengeId,
+		Status:          g.Player.Challenge.Status,
+		RoundCount:      g.Player.Challenge.RoundCount,
 		ExtraLineupType: g.Player.Challenge.Lineup[g.Player.Challenge.Type].ExtraLineupType,
 	}
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(strconv.Itoa(int(req.ChallengeId)))
@@ -886,7 +928,7 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	}
 	g.Player.Challenge.EntranceID = challengeMazeConfig.MapEntranceID
 	g.Player.Challenge.Lineup[0].GroupID = challengeMazeConfig.MazeGroupID1
-	g.Player.Challenge.Lineup[1].GroupID = challengeMazeConfig.MazeGroupID1
+	g.Player.Challenge.Lineup[1].GroupID = challengeMazeConfig.MazeGroupID2
 	g.Player.Challenge.BuffID = challengeMazeConfig.MazeBuffID
 
 	scene := g.GetChallengeScene()
@@ -944,7 +986,7 @@ func (g *Game) ChallengeSyncLineupNotify(index uint32) {
 		if slots.AvatarId == 0 {
 			continue
 		}
-		avatar := g.Player.DbAvatar.Avatar[slots.AvatarId]
+		avatar := g.PlayerPb.Avatar.Avatar[slots.AvatarId]
 		lineupAvatar := &proto.LineupAvatar{
 			AvatarType: slots.Type,
 			Slot:       slots.Slot,
@@ -1094,7 +1136,7 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 				},
 			},
 			EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.Player.WorldLevel,
+				WorldLevel: g.PlayerPb.WorldLevel,
 				MonsterId:  monsterList.NPCMonsterID,
 				EventId:    monsterList.EventID,
 			}},

@@ -9,23 +9,20 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	playerData := new(PlayerData)
+
 	dbPlayer := DataBase.DBASE.QueryAccountUidByFieldPlayer(g.Uid)
 	if dbPlayer.PlayerData == nil || string(dbPlayer.PlayerData) == "null" {
 		logger.Info("新账号登录，进入初始化流程")
 		playerData = g.AddPalyerData(g.Uid)
+		playerDataPb := g.NewPlayer(g.Uid)
 
 		g.Player = playerData
-		// 添加主角
-		for _, avatar := range g.Player.DbAvatar.MainAvatarList {
-			g.AddAvatar(avatar)
-		}
-
-		// 将主角写入队伍
-		g.Player.DbLineUp.LineUpList[0].AvatarIdList[0] = uint32(g.Player.DbAvatar.MainAvatar)
 
 		// 保存账号数据
 		dbData, err := json.Marshal(g.Player)
@@ -35,6 +32,12 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		}
 		dbPlayer.AccountUid = g.Uid
 		dbPlayer.PlayerData = dbData
+
+		dbPlayer.PlayerDataPb, err = pb.Marshal(playerDataPb)
+		if err != nil {
+			logger.Error("pb marshal error: %v", err)
+		}
+
 		err = DataBase.DBASE.AddDatePlayerFieldByFieldName(dbPlayer)
 		if err != nil {
 			logger.Error("账号数据储存失败")
@@ -47,22 +50,31 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 			g.KcpConn.Close()
 			return
 		}
+
+		g.PlayerPb = new(spb.PlayerBasicCompBin)
+
+		err = pb.Unmarshal(dbPlayer.PlayerDataPb, g.PlayerPb)
+		if err != nil {
+			logger.Error("unmarshal proto data err: %v", err)
+			return
+		}
+
 		g.Player = playerData
 	}
 
 	rsp := new(proto.PlayerLoginScRsp)
-	rsp.Stamina = g.Player.DbItem.MaterialMap[11]
+	rsp.Stamina = g.GetItem().MaterialMap[11]
 	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.CurTimezone = 8 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
-		Nickname:   g.Player.NickName,
-		Level:      g.Player.Level,
-		Exp:        g.Player.Exp,
-		Stamina:    g.Player.DbItem.MaterialMap[11],
-		Mcoin:      g.Player.Mcoin,
-		Hcoin:      g.Player.DbItem.MaterialMap[1],
-		Scoin:      g.Player.DbItem.MaterialMap[2],
-		WorldLevel: g.Player.WorldLevel,
+		Nickname:   g.PlayerPb.Nickname,
+		Level:      g.PlayerPb.Level,
+		Exp:        g.PlayerPb.Exp,
+		Stamina:    g.GetItem().MaterialMap[11],
+		Mcoin:      g.PlayerPb.Mcoin,
+		Hcoin:      g.GetItem().MaterialMap[1],
+		Scoin:      g.GetItem().MaterialMap[2],
+		WorldLevel: g.PlayerPb.WorldLevel,
 	}
 
 	// 开启数据定时保存
@@ -90,13 +102,6 @@ func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	}
 
 	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
-}
-
-func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetCurChallengeScRsp)
-	rsp.Retcode = 0
-
-	g.Send(cmd.GetCurChallengeScRsp, rsp)
 }
 
 func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {

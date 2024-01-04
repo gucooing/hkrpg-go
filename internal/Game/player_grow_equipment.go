@@ -27,54 +27,34 @@ func (g *Game) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32)
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
 
-	avatardb := g.Player.DbAvatar.Avatar[avatarId]
+	avatardb := g.PlayerPb.Avatar.Avatar[avatarId]
+	equipmentdb := g.GetItem().EquipmentMap[equipmentUniqueId]
 
 	// 目标光锥是否已被装备
-	if g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId != 0 {
-		avatardbs := g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId]
+	if equipmentdb.BaseAvatarId != 0 {
+		avatardbs := g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId]
 		avatardbs.EquipmentUniqueId = avatardb.EquipmentUniqueId
 		// 获取要装备的角色光锥,与目标光锥角色交换
-		avatar := g.GetAvatar(avatardbs.AvatarId)
+		avatar := g.GetAvatarById(avatardbs.AvatarId)
 		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		// 交换光锥
-		g.Player.DbAvatar.Avatar[g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
+		g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
 		if avatardb.EquipmentUniqueId == 0 {
 		} else {
-			equipments := g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId]
-			equipmentLists := &proto.Equipment{
-				Exp:          equipments.Exp,
-				Promotion:    equipments.Promotion,
-				Level:        equipments.Level,
-				BaseAvatarId: avatardbs.AvatarId,
-				IsProtected:  equipments.IsProtected,
-				Rank:         equipments.Rank,
-				UniqueId:     equipments.UniqueId,
-				Tid:          equipments.Tid,
-			}
+			equipmentLists := g.GetEquipment(avatardb.EquipmentUniqueId)
 			notify.EquipmentList = append(notify.EquipmentList, equipmentLists)
-			g.Player.DbItem.EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = avatardbs.AvatarId
+			g.GetItem().EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = avatardbs.AvatarId
 		}
 	}
 
-	g.Player.DbItem.EquipmentMap[equipmentUniqueId].BaseAvatarId = avatarId
-	g.Player.DbAvatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
+	equipmentdb.BaseAvatarId = avatarId
+	g.PlayerPb.Avatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
 
-	avatar := g.GetAvatar(avatarId)
+	avatar := g.GetAvatarById(avatarId)
 
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
-	equipment := g.Player.DbItem.EquipmentMap[equipmentUniqueId]
-
-	equipmentList := &proto.Equipment{
-		Exp:          equipment.Exp,
-		Promotion:    equipment.Promotion,
-		Level:        equipment.Level,
-		BaseAvatarId: equipment.BaseAvatarId,
-		IsProtected:  equipment.IsProtected,
-		Rank:         equipment.Rank,
-		UniqueId:     equipment.UniqueId,
-		Tid:          equipment.Tid,
-	}
+	equipmentList := g.GetEquipment(equipmentUniqueId)
 
 	notify.EquipmentList = append(notify.EquipmentList, equipmentList)
 
@@ -96,7 +76,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	var addExp uint32          // 增加的经验
 
 	// 从背包获取需要升级的光锥
-	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
+	dbEquipment := g.GetItem().EquipmentMap[req.EquipmentUniqueId]
 	if dbEquipment == nil {
 		rsp := &proto.ExpUpEquipmentScRsp{}
 		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -142,7 +122,7 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		}
 		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
 		// 获取光锥配置
-		equipmentconfig := gdconf.GetEquipmentConfigById(strconv.Itoa(int(g.Player.DbItem.EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)))
+		equipmentconfig := gdconf.GetEquipmentConfigById(strconv.Itoa(int(g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)))
 		if equipmentconfig == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
 			g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -166,10 +146,10 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2] -= delScoin
+	g.GetItem().MaterialMap[2] -= delScoin
 	// 更新需要升级的光锥状态
-	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Level = level
-	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Exp = exp
+	dbEquipment.Level = level
+	dbEquipment.Exp = exp
 
 	// 删除用来升级的材料
 	if len(pileItem) != 0 {
@@ -191,14 +171,14 @@ func (g *Game) ExpUpEquipmentCsReq(payloadMsg []byte) {
 func (g *Game) PlayerPlayerSyncScNotify() {
 	notify := &proto.PlayerSyncScNotify{
 		BasicInfo: &proto.PlayerBasicInfo{
-			Nickname:   g.Player.NickName,
-			Level:      g.Player.Level,
-			Exp:        g.Player.Exp,
-			Stamina:    g.Player.DbItem.MaterialMap[11],
-			Mcoin:      g.Player.Mcoin,
-			Hcoin:      g.Player.DbItem.MaterialMap[1],
-			Scoin:      g.Player.DbItem.MaterialMap[2],
-			WorldLevel: g.Player.WorldLevel,
+			Nickname:   g.PlayerPb.Nickname,
+			Level:      g.PlayerPb.Level,
+			Exp:        g.PlayerPb.Exp,
+			Stamina:    g.GetItem().MaterialMap[11],
+			Mcoin:      g.PlayerPb.Mcoin,
+			Hcoin:      g.GetItem().MaterialMap[1],
+			Scoin:      g.GetItem().MaterialMap[2],
+			WorldLevel: g.PlayerPb.WorldLevel,
 		},
 	}
 
@@ -207,7 +187,7 @@ func (g *Game) PlayerPlayerSyncScNotify() {
 
 func (g *Game) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
 	for _, equipment := range equipmentList {
-		delete(g.Player.DbItem.EquipmentMap, equipment)
+		delete(g.GetItem().EquipmentMap, equipment)
 	}
 
 	notify := &proto.PlayerSyncScNotify{DelEquipmentList: equipmentList}
@@ -218,10 +198,10 @@ func (g *Game) DelMaterialPlayerSyncScNotify(pileItem []*Material) {
 	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
 
 	for _, item := range pileItem {
-		g.Player.DbItem.MaterialMap[item.Tid] -= item.Num
+		g.GetItem().MaterialMap[item.Tid] -= item.Num
 		material := &proto.Material{
 			Tid: item.Tid,
-			Num: g.Player.DbItem.MaterialMap[item.Tid],
+			Num: g.GetItem().MaterialMap[item.Tid],
 		}
 		notify.MaterialList = append(notify.MaterialList, material)
 	}
@@ -236,7 +216,7 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 	var pileItem []*Material   // 需要删除的叠影材料
 
 	// 从背包获取需要叠影的光锥
-	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
+	dbEquipment := g.GetItem().EquipmentMap[req.EquipmentUniqueId]
 	if dbEquipment == nil {
 		rsp := new(proto.GetChallengeScRsp)
 		g.Send(cmd.RankUpEquipmentScRsp, rsp)
@@ -274,7 +254,7 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 		pile.Num = pileList.GetPileItem().ItemNum
 		pileItem = append(pileItem, pile)
 
-		g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Rank += pileList.GetPileItem().ItemNum
+		dbEquipment.Rank += pileList.GetPileItem().ItemNum
 	}
 
 	// 遍历用来叠影的光锥
@@ -283,13 +263,13 @@ func (g *Game) RankUpEquipmentCsReq(payloadMsg []byte) {
 		if equipment.GetEquipmentUniqueId() == 0 {
 			continue
 		}
-		if g.Player.DbItem.EquipmentMap[equipment.GetEquipmentUniqueId()].Tid != dbEquipment.Tid {
+		if g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid != dbEquipment.Tid {
 			rsp := new(proto.GetChallengeScRsp)
 			g.Send(cmd.RankUpEquipmentScRsp, rsp)
 			return
 		}
 		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
-		g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Rank++
+		dbEquipment.Rank++
 	}
 
 	// 删除用来突破的材料
@@ -315,7 +295,7 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	var delScoin uint32      // 扣除的信用点
 
 	// 从背包获取需要突破的光锥
-	dbEquipment := g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId]
+	dbEquipment := g.GetItem().EquipmentMap[req.EquipmentUniqueId]
 	if dbEquipment == nil {
 		rsp := new(proto.GetChallengeScRsp)
 		g.Send(cmd.PromoteEquipmentScRsp, rsp)
@@ -340,9 +320,9 @@ func (g *Game) PromoteEquipmentCsReq(payloadMsg []byte) {
 	// 计算需要扣除的信用点
 	delScoin = gdconf.GetEquipmentPromotionConfigByLevel(dbEquipment.Tid, dbEquipment.Promotion)
 	// 增加突破等级
-	g.Player.DbItem.EquipmentMap[req.EquipmentUniqueId].Promotion++
+	dbEquipment.Promotion++
 	// 扣除本次升级需要的信用点
-	g.Player.DbItem.MaterialMap[2] -= delScoin
+	g.GetItem().MaterialMap[2] -= delScoin
 	// 通知突破后光锥消息
 	g.EquipmentPlayerSyncScNotify(dbEquipment.Tid, req.EquipmentUniqueId)
 	// 通知角色还有多少信用点

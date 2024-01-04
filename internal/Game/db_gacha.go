@@ -1,26 +1,25 @@
 package Game
 
-type Dbgacha struct {
-	GachaMap map[uint32]*Num // [GachaType]*CeilingNum
-}
+import (
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
+)
 
-type Num struct {
-	CeilingNum               uint32 // 抽取次数
-	Pity4                    uint32 // 几抽未四星up
-	FailedFeaturedItemPulls4 bool
-	FailedFeaturedItemPulls5 bool // 是否保底
-}
-
-func NewGaCha(data *PlayerData) *PlayerData {
-	if data.DbGacha == nil {
-		data.DbGacha = &Dbgacha{GachaMap: make(map[uint32]*Num)}
+func (g *Game) GetGacha() *spb.Gacha {
+	if g.PlayerPb.Gacha == nil {
+		g.PlayerPb.Gacha = &spb.Gacha{
+			GachaMap: make(map[uint32]*spb.GachaNum),
+		}
 	}
-	return data
+	if g.PlayerPb.Gacha.GachaMap == nil {
+		g.PlayerPb.Gacha.GachaMap = make(map[uint32]*spb.GachaNum)
+	}
+	return g.PlayerPb.Gacha
 }
 
-func (g *Game) GetGacha(gachaId uint32) *Num {
-	if g.Player.DbGacha.GachaMap[gachaId] == nil {
-		g.Player.DbGacha.GachaMap[gachaId] = &Num{
+func (g *Game) GetDbGacha(gachaId uint32) *spb.GachaNum {
+	gaCha := g.GetGacha()
+	if gaCha.GachaMap[gachaId] == nil {
+		gaCha.GachaMap[gachaId] = &spb.GachaNum{
 			CeilingNum:               0,
 			Pity4:                    0,
 			FailedFeaturedItemPulls4: false,
@@ -28,7 +27,7 @@ func (g *Game) GetGacha(gachaId uint32) *Num {
 		}
 	}
 
-	return g.Player.DbGacha.GachaMap[gachaId]
+	return gaCha.GachaMap[gachaId]
 }
 
 func (g *Game) AddGachaItem(id uint32) (bool, bool) {
@@ -36,7 +35,7 @@ func (g *Game) AddGachaItem(id uint32) (bool, bool) {
 		g.AddEquipment(id)
 		return false, false
 	} else {
-		if g.Player.DbAvatar.Avatar[id] != nil {
+		if g.PlayerPb.Avatar.Avatar[id] != nil {
 			g.AddMaterial(id+10000, 1)
 			g.AddMaterial(252, 8)
 			return true, false
