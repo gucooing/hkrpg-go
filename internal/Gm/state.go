@@ -31,7 +31,7 @@ func GetPlayer(c *gin.Context) {
 	playerPb := Net.GetPlayerBin(uid)
 	if playerPb.Uid == uid {
 		protojson.Format(playerPb)
-		c.JSON(200, protojson.Format(playerPb))
+		c.IndentedJSON(200, playerPb)
 		return
 	}
 	dbPlayer := DataBase.DBASE.QueryAccountUidByFieldPlayer(uid)

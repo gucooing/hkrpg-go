@@ -525,96 +525,14 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 
 		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
-		entityGroupLists := &proto.SceneEntityGroupInfo{
-			GroupId:    stou32(groupID),
-			EntityList: make([]*proto.SceneEntityInfo, 0),
-		}
 		// 添加物品实体
-		for _, propList := range sceneGroup.PropList {
-			entityList := &proto.SceneEntityInfo{
-				GroupId:  stou32(groupID), // 文件名后那个G
-				InstId:   propList.ID,     // ID
-				EntityId: uint32(g.GetNextGameObjectGuid()),
-				Motion: &proto.MotionInfo{
-					Pos: &proto.Vector{
-						X: int32(propList.PosX * 1000),
-						Y: int32(propList.PosY * 1000),
-						Z: int32(propList.PosZ * 1000),
-					},
-					Rot: &proto.Vector{
-						X: 0,
-						Y: int32(propList.RotY * 1000),
-						Z: 0,
-					},
-				},
-				EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
-					PropId:    propList.PropID, // PropID
-					PropState: gdconf.GetStateValue(propList.State),
-				}},
-			}
-			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
-		}
+		scene.EntityGroupList = append(scene.EntityGroupList, g.GetPropByID(sceneGroup, stou32(groupID)))
 		// 添加怪物实体
-		for _, monsterList := range sceneGroup.MonsterList {
-			entityId := uint32(g.GetNextGameObjectGuid())
-			entityList := &proto.SceneEntityInfo{
-				GroupId:  stou32(groupID),
-				InstId:   monsterList.ID,
-				EntityId: entityId,
-				Motion: &proto.MotionInfo{
-					Pos: &proto.Vector{
-						X: int32(monsterList.PosX * 1000),
-						Y: int32(monsterList.PosY * 1000),
-						Z: int32(monsterList.PosZ * 1000),
-					},
-					Rot: &proto.Vector{
-						X: 0,
-						Y: int32(monsterList.RotY * 1000),
-						Z: 0,
-					},
-				},
-				EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
-					WorldLevel: g.PlayerPb.WorldLevel,
-					MonsterId:  monsterList.NPCMonsterID,
-					EventId:    monsterList.EventID,
-				}},
-			}
-			entityMap[entityId] = &EntityList{
-				Entity:  monsterList.EventID,
-				GroupId: stou32(groupID),
-			}
-			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
-		}
-
+		nPCMonsterList, x := g.GetNPCMonsterByID(sceneGroup, stou32(groupID), entityMap)
+		entityMap = x
+		scene.EntityGroupList = append(scene.EntityGroupList, nPCMonsterList)
 		// 添加NPC实体
-		for _, npcList := range sceneGroup.NPCList {
-			entityList := &proto.SceneEntityInfo{
-				GroupId:  stou32(groupID),
-				InstId:   npcList.ID,
-				EntityId: uint32(g.GetNextGameObjectGuid()),
-				Motion: &proto.MotionInfo{
-					Pos: &proto.Vector{
-						X: int32(npcList.PosX * 1000),
-						Y: int32(npcList.PosY * 1000),
-						Z: int32(npcList.PosZ * 1000),
-					},
-					Rot: &proto.Vector{
-						X: 0,
-						Y: int32(npcList.RotY * 1000),
-						Z: 0,
-					},
-				},
-				EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
-					NpcId: npcList.NPCID,
-				}},
-			}
-			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
-		}
-
-		if len(entityGroupLists.EntityList) == 0 {
-			continue
-		}
-		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
+		scene.EntityGroupList = append(scene.EntityGroupList, g.GetNPCByID(sceneGroup, stou32(groupID)))
 	}
 
 	// 先更新队伍
@@ -889,12 +807,14 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetCurChallengeScRsp)
 
-	if g.Player.Challenge.ChallengeId != 0 {
+	challengeState := g.GetChallengeState()
+
+	if challengeState != nil {
 		rsp.ChallengeInfo = &proto.ChallengeInfo{
-			ChallengeId:     g.Player.Challenge.ChallengeId,
-			Status:          g.Player.Challenge.Status,
-			RoundCount:      g.Player.Challenge.RoundCount,
-			ExtraLineupType: g.Player.Challenge.Lineup[g.Player.Challenge.Type].ExtraLineupType,
+			ChallengeId:     challengeState.ChallengeId,
+			Status:          challengeState.Status,
+			RoundCount:      challengeState.RoundCount,
+			ExtraLineupType: challengeState.ExtraLineupType,
 		}
 	}
 
@@ -904,19 +824,22 @@ func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
 func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
 	req := msg.(*proto.StartChallengeCsReq)
+	var lineUpId uint32
+	challengeState := g.GetChallengeState()
 
 	// 如果是新战斗就添加
-	if g.Player.Challenge.ChallengeId == 0 {
-		g.Player.Challenge.ChallengeId = req.ChallengeId
-		g.Player.Challenge.Status = proto.ChallengeStatus_CHALLENGE_DOING
-		g.Player.Challenge.RoundCount = 0
+	if challengeState.ChallengeId == 0 {
+		challengeState.ChallengeId = req.ChallengeId
+		challengeState.Status = proto.ChallengeStatus_CHALLENGE_DOING
+		challengeState.RoundCount = 0
+		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE
 	}
 
 	challengeInfo := &proto.ChallengeInfo{
-		ChallengeId:     g.Player.Challenge.ChallengeId,
-		Status:          g.Player.Challenge.Status,
-		RoundCount:      g.Player.Challenge.RoundCount,
-		ExtraLineupType: g.Player.Challenge.Lineup[g.Player.Challenge.Type].ExtraLineupType,
+		ChallengeId:     challengeState.ChallengeId,
+		Status:          challengeState.Status,
+		RoundCount:      challengeState.RoundCount,
+		ExtraLineupType: challengeState.ExtraLineupType,
 	}
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(strconv.Itoa(int(req.ChallengeId)))
 	if challengeInfo == nil {
@@ -926,14 +849,22 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 		g.Send(cmd.StartChallengeScRsp, rsp)
 		return
 	}
-	g.Player.Challenge.EntranceID = challengeMazeConfig.MapEntranceID
-	g.Player.Challenge.Lineup[0].GroupID = challengeMazeConfig.MazeGroupID1
-	g.Player.Challenge.Lineup[1].GroupID = challengeMazeConfig.MazeGroupID2
-	g.Player.Challenge.BuffID = challengeMazeConfig.MazeBuffID
+	challengeState.EntranceID = challengeMazeConfig.MapEntranceID
+	challengeState.MazeGroupID1 = challengeMazeConfig.MazeGroupID1
+	challengeState.MazeGroupID2 = challengeMazeConfig.MazeGroupID2
+	challengeState.BuffID = challengeMazeConfig.MazeBuffID
 
 	scene := g.GetChallengeScene()
 
-	lineup := g.GetChallengeLineUp()
+	switch challengeState.ExtraLineupType {
+	case proto.ExtraLineupType_LINEUP_CHALLENGE:
+		lineUpId = 6
+	case proto.ExtraLineupType_LINEUP_CHALLENGE_2:
+		lineUpId = 7
+	case proto.ExtraLineupType_LINEUP_CHALLENGE_3:
+		lineUpId = 8
+	}
+	lineup := g.GetLineUpPb(lineUpId)
 
 	rsp := &proto.StartChallengeScRsp{
 		ChallengeInfo: challengeInfo,
@@ -945,70 +876,26 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartChallengeScRsp, rsp)
 }
 
-func (g *Game) NewChallengeLineUp(req *proto.ReplaceLineupCsReq) {
-	challengeLineUp := &ChallengeLineUp{
-		ExtraLineupType: req.ExtraLineupType,
-		Slots:           make([]*ChallengeSlots, 0),
-	}
-	for _, slots := range req.Slots {
-		slot := &ChallengeSlots{
-			Slot:     slots.Slot,
-			AvatarId: slots.Id,
-			Type:     slots.AvatarType,
-		}
-		challengeLineUp.Slots = append(challengeLineUp.Slots, slot)
-	}
-	if req.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		g.Player.Challenge.Lineup[0] = challengeLineUp
-		g.ChallengeSyncLineupNotify(0)
-	}
-	if req.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE_2 {
-		g.Player.Challenge.Lineup[1] = challengeLineUp
-		g.ChallengeSyncLineupNotify(1)
-	}
-	g.Player.Challenge.Type = 0
-}
-
-func (g *Game) ChallengeSyncLineupNotify(index uint32) {
-	notify := new(proto.SyncLineupNotify)
-	lineUp := g.Player.Challenge.Lineup[index]
-	lineupList := &proto.LineupInfo{
-		IsVirtual:       false,
-		LeaderSlot:      0,
-		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           index,
-		ExtraLineupType: proto.ExtraLineupType(index),
-		MaxMp:           5,
-		Mp:              5,
-		PlaneId:         0,
-	}
-	for _, slots := range lineUp.Slots {
-		if slots.AvatarId == 0 {
-			continue
-		}
-		avatar := g.PlayerPb.Avatar.Avatar[slots.AvatarId]
-		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: slots.Type,
-			Slot:       slots.Slot,
-			Satiety:    0,
-			Hp:         avatar.Hp,
-			Id:         slots.AvatarId,
-			SpBar: &proto.SpBarInfo{
-				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.MaxSp,
-			},
-		}
-		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
-	}
-	notify.Lineup = lineupList
-
-	g.Send(cmd.SyncLineupNotify, notify)
-}
-
 func (g *Game) GetChallengeScene() *proto.SceneInfo {
-	entryId := g.Player.Challenge.EntranceID
-	groupID := g.Player.Challenge.Lineup[g.Player.Challenge.Type].GroupID
+	challengeState := g.GetChallengeState()
+	var groupID uint32
+	var lineUpId uint32
+
+	entryId := challengeState.EntranceID
+	switch challengeState.ExtraLineupType {
+	case proto.ExtraLineupType_LINEUP_CHALLENGE:
+		groupID = challengeState.MazeGroupID1
+		lineUpId = 6
+	case proto.ExtraLineupType_LINEUP_CHALLENGE_2:
+		groupID = challengeState.MazeGroupID2
+		lineUpId = 7
+	case proto.ExtraLineupType_LINEUP_CHALLENGE_3:
+		groupID = challengeState.MazeGroupID2 // TODO
+		lineUpId = 8
+	}
+
 	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
+
 	leaderEntityId := uint32(g.GetNextGameObjectGuid())
 	// 获取映射信息
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
@@ -1036,15 +923,15 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	for id, slots := range g.Player.Challenge.Lineup[g.Player.Challenge.Type].Slots {
+	for id, slots := range g.GetLineUpPb(lineUpId).AvatarList {
 		if slots == nil {
 			continue
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
 			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
-				AvatarType:   slots.Type,
-				BaseAvatarId: slots.AvatarId,
+				AvatarType:   slots.AvatarType, // TODO
+				BaseAvatarId: slots.Id,
 			}},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
@@ -1087,92 +974,14 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 
 	scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    groupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
 	// 添加物品实体
-	for _, propList := range sceneGroup.PropList {
-		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,     // 文件名后那个G
-			InstId:   propList.ID, // ID
-			EntityId: uint32(g.GetNextGameObjectGuid()),
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(propList.PosX * 1000),
-					Y: int32(propList.PosY * 1000),
-					Z: int32(propList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: int32(propList.RotY * 1000),
-					Z: 0,
-				},
-			},
-			EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
-				PropId:    propList.PropID, // PropID
-				PropState: gdconf.GetStateValue(propList.State),
-			}},
-		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
-	}
+	scene.EntityGroupList = append(scene.EntityGroupList, g.GetPropByID(sceneGroup, groupID))
 	// 添加怪物实体
-	for _, monsterList := range sceneGroup.MonsterList {
-		entityId := uint32(g.GetNextGameObjectGuid())
-		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,
-			InstId:   monsterList.ID,
-			EntityId: entityId,
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(monsterList.PosX * 1000),
-					Y: int32(monsterList.PosY * 1000),
-					Z: int32(monsterList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: int32(monsterList.RotY * 1000),
-					Z: 0,
-				},
-			},
-			EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.PlayerPb.WorldLevel,
-				MonsterId:  monsterList.NPCMonsterID,
-				EventId:    monsterList.EventID,
-			}},
-		}
-		entityMap[entityId] = &EntityList{
-			Entity:  monsterList.EventID,
-			GroupId: groupID,
-		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
-	}
-
+	nPCMonsterList, entityMap := g.GetNPCMonsterByID(sceneGroup, groupID, entityMap)
+	scene.EntityGroupList = append(scene.EntityGroupList, nPCMonsterList)
 	// 添加NPC实体
-	for _, npcList := range sceneGroup.NPCList {
-		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,
-			InstId:   npcList.ID,
-			EntityId: uint32(g.GetNextGameObjectGuid()),
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(npcList.PosX * 1000),
-					Y: int32(npcList.PosY * 1000),
-					Z: int32(npcList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: int32(npcList.RotY * 1000),
-					Z: 0,
-				},
-			},
-			EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
-				NpcId: npcList.NPCID,
-			}},
-		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
-	}
-	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
+	scene.EntityGroupList = append(scene.EntityGroupList, g.GetNPCByID(sceneGroup, groupID))
+
 	g.Player.EntityList = entityMap
 	return scene
 }

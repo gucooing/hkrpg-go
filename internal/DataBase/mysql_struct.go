@@ -26,6 +26,5 @@ type UidPlayer struct {
 
 type Player struct {
 	AccountUid   uint32
-	PlayerData   []byte
 	PlayerDataPb []byte
 }

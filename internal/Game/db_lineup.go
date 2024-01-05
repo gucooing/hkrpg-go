@@ -1,6 +1,7 @@
 package Game
 
 import (
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
@@ -29,12 +30,51 @@ func (g *Game) GetLineUp() *spb.LineUp {
 		g.PlayerPb.LineUp.LineUpList[3] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
 		g.PlayerPb.LineUp.LineUpList[4] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
 		g.PlayerPb.LineUp.LineUpList[5] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
+		g.PlayerPb.LineUp.LineUpList[6] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_CHALLENGE}
+		g.PlayerPb.LineUp.LineUpList[7] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_CHALLENGE_2}
+		g.PlayerPb.LineUp.LineUpList[8] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_CHALLENGE_3}
+		g.PlayerPb.LineUp.LineUpList[9] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_ROGUE}
+		g.PlayerPb.LineUp.LineUpList[10] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_STAGE_TRIAL}
 	}
 	return g.PlayerPb.LineUp
 }
 
 func (g *Game) GetLineUpById(index uint32) *spb.Line {
-	return g.PlayerPb.LineUp.LineUpList[index]
+	return g.GetLineUp().LineUpList[index]
+}
+
+func (g *Game) GetLineUpPb(id uint32) *proto.LineupInfo {
+	lineUp := g.GetLineUpById(id)
+	lineupList := &proto.LineupInfo{
+		IsVirtual:       false,
+		LeaderSlot:      0,
+		AvatarList:      make([]*proto.LineupAvatar, 0),
+		Index:           id,
+		ExtraLineupType: proto.ExtraLineupType(lineUp.ExtraLineupType),
+		MaxMp:           5,
+		Mp:              5,
+		Name:            lineUp.Name,
+		PlaneId:         0,
+	}
+	for slot, avatarId := range lineUp.AvatarIdList {
+		if avatarId == 0 {
+			continue
+		}
+		avatar := g.GetAvatar().Avatar[avatarId]
+		lineupAvatar := &proto.LineupAvatar{
+			AvatarType: proto.AvatarType(avatar.AvatarType),
+			Slot:       uint32(slot),
+			Satiety:    0,
+			Hp:         avatar.Hp,
+			Id:         avatarId,
+			SpBar: &proto.SpBarInfo{
+				CurSp: avatar.SpBar.CurSp,
+				MaxSp: avatar.SpBar.MaxSp,
+			},
+		}
+		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
+	}
+	return lineupList
 }
 
 // 队伍更新

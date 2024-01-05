@@ -1,7 +1,6 @@
 package Game
 
 import (
-	"encoding/json"
 	"strconv"
 	"time"
 
@@ -87,12 +86,6 @@ func (g *Game) UpDataPlayer() error {
 	}
 	dbDate := new(DataBase.Player)
 	dbDate.AccountUid = g.Uid
-	data := g.Player
-	dbDate.PlayerData, err = json.Marshal(data)
-	if err != nil {
-		logger.Error("json to bin error:%s", err)
-		return err
-	}
 
 	dbDate.PlayerDataPb, err = pb.Marshal(g.PlayerPb)
 	if err != nil {
@@ -134,6 +127,7 @@ func (g *Game) KickPlayer() error {
 		if err != nil {
 			return err
 		}
+		g.Seed = 0
 		logger.Info("[UID:%v] || 玩家已离线", g.Uid)
 		netMsg := new(NetMsg)
 		netMsg.G = g

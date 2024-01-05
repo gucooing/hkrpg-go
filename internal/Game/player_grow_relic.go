@@ -29,38 +29,38 @@ func (g *Game) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramList []*
 	avatardb := g.PlayerPb.Avatar.Avatar[avatarId]
 	// 是否已被装备
 	for _, relic := range paramList {
-		relicdb := g.GetRelicById(relic.RelicUniqueId)
+		relicdb := g.GetItem().RelicMap[relic.RelicUniqueId]
 		if relicdb == nil {
 			return
 		}
 		if relicdb.BaseAvatarId != 0 {
 			// 进入交换
-			avatardbs := g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId]
+			avatarDbs := g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId]
 			if avatardb.EquipRelic[relic.Slot] == 0 {
-				delete(g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId].EquipRelic, relic.Slot)
+				delete(avatarDbs.EquipRelic, relic.Slot)
 			} else {
-				g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId].EquipRelic[relic.Slot] = avatardb.EquipRelic[relic.Slot]
-				g.GetRelicById(avatardb.EquipRelic[relic.Slot]).BaseAvatarId = avatardbs.AvatarId
+				avatarDbs.EquipRelic[relic.Slot] = avatardb.EquipRelic[relic.Slot]
+				g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = avatarDbs.AvatarId
 
 				relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
 				notify.RelicList = append(notify.RelicList, relicList)
 			}
-			avatar := g.GetAvatarById(avatardbs.AvatarId)
+			avatar := g.GetAvatarById(avatarDbs.AvatarId)
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		}
 
 		if avatardb.EquipRelic[relic.Slot] != 0 {
-			if g.GetRelicById(avatardb.EquipRelic[relic.Slot]).BaseAvatarId == avatarId {
-				g.GetRelicById(avatardb.EquipRelic[relic.Slot]).BaseAvatarId = 0
+			if g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId == avatarId {
+				g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = 0
 				relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
 				notify.RelicList = append(notify.RelicList, relicList)
 			}
 		}
-		g.GetRelicById(relic.RelicUniqueId).BaseAvatarId = avatarId
-		if g.PlayerPb.Avatar.Avatar[avatarId].EquipRelic == nil {
-			g.PlayerPb.Avatar.Avatar[avatarId].EquipRelic = make(map[uint32]uint32)
+		relicdb.BaseAvatarId = avatarId
+		if avatardb.EquipRelic == nil {
+			avatardb.EquipRelic = make(map[uint32]uint32)
 		}
-		g.PlayerPb.Avatar.Avatar[avatarId].EquipRelic[relic.Slot] = relic.RelicUniqueId
+		avatardb.EquipRelic[relic.Slot] = relic.RelicUniqueId
 
 		relicList := g.GetRelicById(relic.RelicUniqueId)
 		notify.RelicList = append(notify.RelicList, relicList)

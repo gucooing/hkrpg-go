@@ -5,8 +5,8 @@ import (
 )
 
 type PlayerData struct {
-	Battle    map[uint32]*Battle // 正在进行的战斗
-	Challenge *Challenge         // 忘却之庭
+	Battle      map[uint32]*Battle // 正在进行的战斗
+	BattleState *BattleState
 	// 下面是在线数据
 	BattleId              uint32                 `json:"-"` // 战斗id
 	EntityBattleId        uint32                 `json:"-"` // 攻击实体id
@@ -30,14 +30,6 @@ func (g *Game) GetNextGameObjectGuid() uint64 {
 func (g *Game) GetBattleIdGuid() uint32 {
 	g.Player.BattleId++
 	return 1 + g.Player.BattleId
-}
-
-// 初始化账号数据
-func (g *Game) AddPalyerData(uid uint32) *PlayerData {
-	data := new(PlayerData)
-	data = NewChallenge(data)
-
-	return data
 }
 
 func (g *Game) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {

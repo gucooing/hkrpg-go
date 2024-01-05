@@ -1,7 +1,6 @@
 package Game
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
@@ -14,25 +13,16 @@ import (
 )
 
 func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
+	var err error
 	playerData := new(PlayerData)
 
 	dbPlayer := DataBase.DBASE.QueryAccountUidByFieldPlayer(g.Uid)
-	if dbPlayer.PlayerData == nil || string(dbPlayer.PlayerData) == "null" {
+	if dbPlayer.PlayerDataPb == nil {
 		logger.Info("新账号登录，进入初始化流程")
-		playerData = g.AddPalyerData(g.Uid)
 		playerDataPb := g.NewPlayer(g.Uid)
-
 		g.Player = playerData
-
 		// 保存账号数据
-		dbData, err := json.Marshal(g.Player)
-		if err != nil {
-			logger.Error("账号数据序列化失败")
-			return
-		}
 		dbPlayer.AccountUid = g.Uid
-		dbPlayer.PlayerData = dbData
-
 		dbPlayer.PlayerDataPb, err = pb.Marshal(playerDataPb)
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
@@ -44,13 +34,6 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 			return
 		}
 	} else {
-		err := json.Unmarshal(dbPlayer.PlayerData, &playerData)
-		if err != nil {
-			logger.Error("账号数据反序列化失败:", err)
-			g.KcpConn.Close()
-			return
-		}
-
 		g.PlayerPb = new(spb.PlayerBasicCompBin)
 
 		err = pb.Unmarshal(dbPlayer.PlayerDataPb, g.PlayerPb)
@@ -58,8 +41,6 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 			logger.Error("unmarshal proto data err: %v", err)
 			return
 		}
-
-		g.Player = playerData
 	}
 
 	rsp := new(proto.PlayerLoginScRsp)
@@ -75,6 +56,13 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Hcoin:      g.GetItem().MaterialMap[1],
 		Scoin:      g.GetItem().MaterialMap[2],
 		WorldLevel: g.PlayerPb.WorldLevel,
+	}
+
+	g.Player = &PlayerData{
+		Battle: make(map[uint32]*Battle),
+		BattleState: &BattleState{
+			ChallengeState: &ChallengeState{},
+		},
 	}
 
 	// 开启数据定时保存
