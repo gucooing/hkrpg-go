@@ -17,6 +17,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -249,6 +250,14 @@ func GmToGs(uid uint32, gmMsg *GmMsg) bool {
 	payloadMsg := DecodeGmPayloadToProto(game, gmMsg)
 	go game.GMRegisterMessage(gmMsg.CmdId, payloadMsg)
 	return true
+}
+
+func GetPlayerBin(uid uint32) *spb.PlayerBasicCompBin {
+	if KCPCONNMANAGER.sessionMap[uid] == nil {
+		return &spb.PlayerBasicCompBin{}
+	}
+	playerDb := KCPCONNMANAGER.sessionMap[uid].PlayerPb
+	return playerDb
 }
 
 func Close() error {

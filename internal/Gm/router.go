@@ -14,6 +14,10 @@ func InitRouter(c *gin.Context) {
 	switch cmdId {
 	case 1001:
 		WorldLevel(c)
+	case 1004:
+		GetPlayer(c)
+	case 1005:
+		GetPlayerBin(c)
 	case 1101:
 		State(c)
 	case 1127:
