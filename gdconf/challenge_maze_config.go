@@ -18,7 +18,7 @@ type ChallengeMazeConfig struct {
 	DamageType1        []string `json:"DamageType1"`
 	DamageType2        []string `json:"DamageType2"`
 	ChallengeTargetID  []uint32 `json:"ChallengeTargetID"`
-	StageNum           uint32   `json:"StageNum"`
+	StageNum           uint32   `json:"StageNum"` // 波次
 	ChallengeCountDown uint32   `json:"ChallengeCountDown"`
 	MazeGroupID1       uint32   `json:"MazeGroupID1"`
 	ConfigList1        []uint32 `json:"ConfigList1"`

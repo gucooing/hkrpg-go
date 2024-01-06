@@ -9,32 +9,6 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-// 当前坐标通知
-func (g *Game) SceneEntityMoveScNotify() {
-	pos := g.GetPos()
-	rot := g.GetRot()
-	entryId := g.GetScene()
-
-	notify := &proto.SceneEntityMoveScNotify{
-		EntryId:          entryId.EntryId,
-		ClientPosVersion: 0,
-		Motion: &proto.MotionInfo{
-			Pos: &proto.Vector{
-				X: pos.X,
-				Y: pos.Y,
-				Z: pos.Z,
-			},
-			Rot: &proto.Vector{
-				X: rot.X,
-				Y: rot.Y,
-				Z: rot.Z,
-			},
-		},
-	}
-
-	g.Send(cmd.SceneEntityMoveScNotify, notify)
-}
-
 // 通知客户端进入场景
 func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	rsp := new(proto.EnterSceneByServerScNotify)
@@ -181,16 +155,27 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		if levelGroup.GroupId == 0 {
 			continue
 		}
+		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
+			continue
+		}
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		// 添加物品实体
-		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, g.GetPropByID(levelGroup, levelGroup.GroupId))
+		propList := g.GetPropByID(levelGroup, levelGroup.GroupId)
+		if len(propList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
+		}
 		// 添加怪物实体
 		nPCMonsterList, x := g.GetNPCMonsterByID(levelGroup, levelGroup.GroupId, entityMap)
 		entityMap = x
-		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
+		if len(nPCMonsterList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
+		}
 		// 添加NPC实体
-		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, g.GetNPCByID(levelGroup, levelGroup.GroupId))
+		nPCList := g.GetNPCByID(levelGroup, levelGroup.GroupId)
+		if len(nPCList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
+		}
 	}
 
 	g.Player.EntityList = entityMap
@@ -300,16 +285,27 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		if levelGroup.GroupId == 0 {
 			continue
 		}
+		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
+			continue
+		}
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		// 添加物品实体
-		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, g.GetPropByID(levelGroup, levelGroup.GroupId))
+		propList := g.GetPropByID(levelGroup, levelGroup.GroupId)
+		if len(propList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
+		}
 		// 添加怪物实体
 		nPCMonsterList, x := g.GetNPCMonsterByID(levelGroup, levelGroup.GroupId, entityMap)
 		entityMap = x
-		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
+		if len(nPCMonsterList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
+		}
 		// 添加NPC实体
-		rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, g.GetNPCByID(levelGroup, levelGroup.GroupId))
+		nPCList := g.GetNPCByID(levelGroup, levelGroup.GroupId)
+		if len(nPCList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
+		}
 	}
 
 	g.Player.EntityList = entityMap

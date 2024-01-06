@@ -58,11 +58,13 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		WorldLevel: g.PlayerPb.WorldLevel,
 	}
 
-	g.Player = &PlayerData{
-		Battle: make(map[uint32]*Battle),
-		BattleState: &BattleState{
-			ChallengeState: &ChallengeState{},
-		},
+	if g.Player == nil {
+		g.Player = &PlayerData{
+			Battle: make(map[uint32]*Battle),
+			BattleState: &BattleState{
+				ChallengeState: &ChallengeState{},
+			},
+		}
 	}
 
 	// 开启数据定时保存

@@ -1,24 +1,32 @@
 // 记录战斗关键数据并储存，用于战斗结算和重连重新开启战斗
+
 package Game
 
 import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 type BattleState struct {
+	BattleType     spb.BattleType
 	ChallengeState *ChallengeState // ChallengeState
+	BuffList       []uint32        // 进入战斗需要添加的buff
 }
 type ChallengeState struct {
+	ChallengeCount uint32 // 波数
+	// 回包
 	ChallengeId     uint32
 	Status          proto.ChallengeStatus
 	RoundCount      uint32
 	ExtraLineupType proto.ExtraLineupType
-
-	Type         uint32
-	EntranceID   uint32
-	BuffID       uint32
-	MazeGroupID1 uint32
-	MazeGroupID2 uint32
+	// 缓存状态
+	Pos               *spb.VectorBin
+	Rot               *spb.VectorBin
+	CurChallengeCount uint32 // 当前波次
+	EntranceID        uint32 // 场景
+	MazeGroupID1      uint32 // 区块1
+	MazeGroupID2      uint32 // 区块2
+	MazeGroupID3      uint32 // 区块3
 }
 
 type Battle struct {
@@ -34,6 +42,10 @@ type Battle struct {
 }
 
 type Rogue struct {
+}
+
+func (g *Game) GetBattleState() *BattleState {
+	return g.Player.BattleState
 }
 
 func (g *Game) GetChallengeState() *ChallengeState {

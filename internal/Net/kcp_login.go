@@ -68,6 +68,8 @@ func HandlePlayerGetTokenCsReq(g *Game.Game, payloadMsg []byte) {
 		// TODO 是的，没错，还是同样的原因
 		// 重复登录下线通知
 		player.Send(cmd.PlayerKickOutScNotify, notify)
+		// 继承在线数据
+		g.Player = player.Player
 		player.ChangePlayer()
 		player.KickPlayer()
 	}

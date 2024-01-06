@@ -14,7 +14,6 @@ type PlayerData struct {
 	GameObjectGuidCounter uint64                 `json:"-"` // 游戏对象guid计数器
 	IsNickName            bool                   `json:"-"` // 是否修改昵称
 	EntityList            map[uint32]*EntityList `json:"-"` // 实体ID映射表
-	IsBattle              bool                   `json:"-"` // 是否在战斗场景中
 }
 
 type EntityList struct {
