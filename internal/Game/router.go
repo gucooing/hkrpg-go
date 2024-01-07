@@ -119,6 +119,9 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.StartChallengeCsReq(payloadMsg) // 忘却之庭,启动!
 	case cmd.GetCurChallengeCsReq:
 		g.GetCurChallengeCsReq(payloadMsg) // 获取忘却之庭状态
+	case cmd.LeaveChallengeCsReq:
+		g.LeaveChallengeCsReq() // 退出忘却之庭
+
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品

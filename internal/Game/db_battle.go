@@ -32,7 +32,6 @@ type ChallengeState struct {
 }
 
 type CurChallengeBattle struct {
-	Stars        uint32
 	NPCMonsterID uint32
 	EventID      uint32
 	GroupID      uint32

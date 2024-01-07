@@ -259,21 +259,31 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_ROGUE:
 		logger.Info("正在进行模拟宇宙")
 	case spb.BattleType_Battle_CHALLENGE:
-		if battleState.ChallengeState.CurChallengeCount == battleState.ChallengeState.ChallengeCount {
-			// 战斗正常结束进入结算
-		} else {
-			// 还差一波
-			pos = battleState.ChallengeState.Pos
-			rot = battleState.ChallengeState.Rot
-			// battleState.ChallengeState.RoundCount += uint32(len(req.OpList))
-			battleState.ChallengeState.CurChallengeCount++
-			battleState.ChallengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-			g.HandleBattleChallenge()
+		// 撤退
+		if req.EndStatus == proto.BattleEndStatus_BATTLE_END_QUIT {
+			// 删除储存的战斗信息
+			delete(g.Player.Battle, req.BattleId)
+			g.Send(cmd.PVEBattleResultScRsp, rsp)
+			return
+		}
+		// 战斗胜利
+		if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+			if battleState.ChallengeState.CurChallengeCount == battleState.ChallengeState.ChallengeCount {
+				// 战斗正常结束进入结算
+			} else {
+				// 还差一波
+				pos = battleState.ChallengeState.Pos
+				rot = battleState.ChallengeState.Rot
+				// battleState.ChallengeState.RoundCount += uint32(len(req.OpList))
+				battleState.ChallengeState.CurChallengeCount++
+				battleState.ChallengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
+				g.HandleBattleChallenge()
 
-			challengeLineupNotify := &proto.ChallengeLineupNotify{
-				ExtraLineupType: proto.ExtraLineupType_LINEUP_CHALLENGE_2,
+				challengeLineupNotify := &proto.ChallengeLineupNotify{
+					ExtraLineupType: proto.ExtraLineupType_LINEUP_CHALLENGE_2,
+				}
+				g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
 			}
-			g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
 		}
 	}
 
@@ -1107,7 +1117,6 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	challengeState.CurChallengeBattle = make(map[uint32]*CurChallengeBattle)
 	for id, challengeRoom := range challengeMazeConfig.ChallengeState {
 		curChallengeBattle := &CurChallengeBattle{
-			Stars:        0,
 			NPCMonsterID: challengeRoom.NPCMonsterID,
 			EventID:      challengeRoom.EventID,
 			GroupID:      challengeRoom.GroupID,
@@ -1234,4 +1243,16 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 
 	g.Player.EntityList = entityMap
 	return scene
+}
+
+func (g *Game) LeaveChallengeCsReq() {
+	rsp := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+
+	g.Send(cmd.QuitBattleScNotify, rsp)
+	g.Send(cmd.LeaveChallengeScRsp, rsp)
+	g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
+	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
+	g.GetBattleState().ChallengeState.ChallengeId = 0
+	g.GetBattleState().BuffList = make([]uint32, 0)
 }
