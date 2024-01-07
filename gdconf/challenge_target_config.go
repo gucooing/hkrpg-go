@@ -31,7 +31,7 @@ func (g *GameDataConfig) loadChallengeTargetConfig() {
 		panic(info)
 	}
 
-	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeTargetConfigMap))
+	logger.Info("load %v ChallengeTargetConfig", len(g.ChallengeTargetConfigMap))
 }
 
 func GetChallengeTargetConfigById(id uint32) *ChallengeTargetConfig {
