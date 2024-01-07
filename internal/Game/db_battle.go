@@ -13,20 +13,30 @@ type BattleState struct {
 	BuffList       []uint32        // 进入战斗需要添加的buff
 }
 type ChallengeState struct {
-	ChallengeCount uint32 // 波数
+	ChallengeCount    uint32 // 波数
+	CurChallengeCount uint32 // 当前波次
 	// 回包
 	ChallengeId     uint32
 	Status          proto.ChallengeStatus
 	RoundCount      uint32
 	ExtraLineupType proto.ExtraLineupType
 	// 缓存状态
-	Pos               *spb.VectorBin
-	Rot               *spb.VectorBin
-	CurChallengeCount uint32 // 当前波次
-	EntranceID        uint32 // 场景
-	MazeGroupID1      uint32 // 区块1
-	MazeGroupID2      uint32 // 区块2
-	MazeGroupID3      uint32 // 区块3
+	Pos                *spb.VectorBin
+	Rot                *spb.VectorBin
+	NPCMonsterPos      *spb.VectorBin
+	NPCMonsterRot      *spb.VectorBin
+	PlaneID            uint32
+	FloorID            uint32
+	EntranceID         uint32
+	CurChallengeBattle map[uint32]*CurChallengeBattle
+}
+
+type CurChallengeBattle struct {
+	Stars        uint32
+	NPCMonsterID uint32
+	EventID      uint32
+	GroupID      uint32
+	ConfigID     uint32
 }
 
 type Battle struct {
