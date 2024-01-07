@@ -10,8 +10,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	switch cmdId {
 	case cmd.GetBasicInfoCsReq:
 		g.HandleGetBasicInfoCsReq()
-	case cmd.GetPlayerBoardDataCsReq:
-		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
 	case cmd.GetEnteredSceneCsReq:
 		g.HandleGetEnteredSceneCsReq(payloadMsg)
 	case cmd.QueryProductInfoCsReq:
@@ -96,6 +94,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetRogueScoreRewardInfoCsReq()
 	case cmd.EnterSceneCsReq:
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
+	case cmd.GetUnlockTeleportCsReq:
+		g.GetUnlockTeleportCsReq() // 获取解锁的传送点
 	// 战斗
 	case cmd.GetChallengeCsReq:
 		g.HandleGetChallengeCsReq(payloadMsg) // 获取挑战id列表
@@ -169,6 +169,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.SetGameplayBirthdayCsReq(payloadMsg) // 修改生日请求
 	case cmd.SetSignatureCsReq:
 		g.SetSignatureCsReq(payloadMsg) // 简介修改请求
+	case cmd.GetPlayerBoardDataCsReq:
+		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
 	// 成就
 	case cmd.GetArchiveDataCsReq:
 		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取收集

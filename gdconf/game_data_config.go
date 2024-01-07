@@ -52,7 +52,8 @@ type GameDataConfig struct {
 	ActivityPanelMap            map[string]*ActivityPanel                       // 活动
 	QuestDataMap                map[string]*QuestData                           // 任务
 	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
-	ChallengeMazeConfigMap      map[string]*ChallengeMazeConfig                 // 挑战配置
+	ChallengeMazeConfigMap      map[string]*ChallengeMazeConfig                 // 忘却之庭配置
+	ChallengeTargetConfigMap    map[string]*ChallengeTargetConfig               // 忘却之庭结算配置
 	BackGroundMusicMap          map[string]*BackGroundMusic                     // 背景音乐
 	PlayerLevelConfigMap        map[string]*PlayerLevelConfig                   // 账号等级经验配置
 	TextJoinConfigMap           map[string]*TextJoinConfig                      // 文本？
@@ -143,7 +144,8 @@ func (g *GameDataConfig) load() {
 	g.loadActivityPanel()            // 活动
 	g.loadQuestData()                // 任务
 	g.loadMonsterConfig()            // 怪物配置
-	g.loadChallengeMazeConfig()      // 挑战配置
+	g.loadChallengeMazeConfig()      // 忘却之庭配置
+	g.loadChallengeTargetConfig()    // 忘却之庭结算配置
 	g.loadBackGroundMusic()          // 背景音乐
 	g.loadPlayerLevelConfig()        // 账号等级经验配置
 	g.loadTextJoinConfig()           // 文本？

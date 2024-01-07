@@ -259,22 +259,38 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_ROGUE:
 		logger.Info("正在进行模拟宇宙")
 	case spb.BattleType_Battle_CHALLENGE:
-		// 撤退
-		if req.EndStatus == proto.BattleEndStatus_BATTLE_END_QUIT {
-			// 删除储存的战斗信息
-			delete(g.Player.Battle, req.BattleId)
-			g.Send(cmd.PVEBattleResultScRsp, rsp)
-			return
-		}
 		// 战斗胜利
 		if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+			battleState.ChallengeState.RoundCount += req.Stt.CocoonDeadWave
 			if battleState.ChallengeState.CurChallengeCount == battleState.ChallengeState.ChallengeCount {
 				// 战斗正常结束进入结算
+				logger.Info("战斗完全结束，进入结算")
+				var stage uint32 = 0
+				for _, challengeTargetID := range battleState.ChallengeState.ChallengeTargetID {
+					challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
+					if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
+						// 是否有角色死亡
+						stage += 3
+					} else {
+						if (battleState.ChallengeState.ChallengeCountDown - battleState.ChallengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
+							stage += 2
+						}
+					}
+				}
+				challengeSettleNotify := &proto.ChallengeSettleNotify{
+					Stars:       stage,
+					Reward:      nil,
+					ChallengeId: battleState.ChallengeState.ChallengeId,
+					IsWin:       true,
+				}
+				g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
+				battleState.BattleType = spb.BattleType_Battle_NONE
+				battleState.ChallengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
+				battleState.BuffList = make([]uint32, 0)
 			} else {
 				// 还差一波
 				pos = battleState.ChallengeState.Pos
 				rot = battleState.ChallengeState.Rot
-				// battleState.ChallengeState.RoundCount += uint32(len(req.OpList))
 				battleState.ChallengeState.CurChallengeCount++
 				battleState.ChallengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
 				g.HandleBattleChallenge()
@@ -1054,7 +1070,7 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	challengeState := g.GetChallengeState()
 
 	// 如果是新战斗就添加
-	if challengeState.ChallengeId == 0 {
+	if battleState.BattleType != spb.BattleType_Battle_CHALLENGE {
 		challengeState.ChallengeId = req.ChallengeId
 		challengeState.Status = proto.ChallengeStatus_CHALLENGE_DOING
 		challengeState.RoundCount = 0
@@ -1112,6 +1128,8 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 
 	challengeState.ChallengeCount = challengeMazeConfig.StageNum
 	challengeState.CurChallengeCount = 1
+	challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
+	challengeState.ChallengeCountDown = challengeMazeConfig.ChallengeCountDown
 	battleState.BuffList = append(battleState.BuffList, challengeMazeConfig.MazeBuffID)
 	// 添加波次
 	challengeState.CurChallengeBattle = make(map[uint32]*CurChallengeBattle)
@@ -1248,11 +1266,12 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 func (g *Game) LeaveChallengeCsReq() {
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
-
-	g.Send(cmd.QuitBattleScNotify, rsp)
+	if g.GetBattleState().ChallengeState.Status == proto.ChallengeStatus_CHALLENGE_DOING {
+		g.Send(cmd.QuitBattleScNotify, rsp)
+	}
 	g.Send(cmd.LeaveChallengeScRsp, rsp)
+
 	g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
 	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
-	g.GetBattleState().ChallengeState.ChallengeId = 0
 	g.GetBattleState().BuffList = make([]uint32, 0)
 }

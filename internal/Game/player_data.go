@@ -277,3 +277,7 @@ func (g *Game) TextJoinQueryCsReq() {
 
 	g.Send(cmd.TextJoinQueryScRsp, rsp)
 }
+
+func (g *Game) GetUnlockTeleportCsReq() {
+
+}

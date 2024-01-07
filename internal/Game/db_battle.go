@@ -13,8 +13,10 @@ type BattleState struct {
 	BuffList       []uint32        // 进入战斗需要添加的buff
 }
 type ChallengeState struct {
-	ChallengeCount    uint32 // 波数
-	CurChallengeCount uint32 // 当前波次
+	ChallengeCount     uint32   // 波数
+	CurChallengeCount  uint32   // 当前波次
+	ChallengeTargetID  []uint32 // 满星条件
+	ChallengeCountDown uint32
 	// 回包
 	ChallengeId     uint32
 	Status          proto.ChallengeStatus
