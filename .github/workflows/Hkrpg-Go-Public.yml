@@ -11,6 +11,7 @@ jobs:
       - name: Trigger Actions in Target Repo
         uses: peter-evans/repository-dispatch@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: gucooing/hkrpg-go-public
           event-type: HKRPG-Go-Publish
           client-payload: '{}'
