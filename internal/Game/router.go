@@ -96,6 +96,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
 	case cmd.GetUnlockTeleportCsReq:
 		g.GetUnlockTeleportCsReq() // 获取解锁的传送点
+	case cmd.InteractPropCsReq:
+		g.InteractPropCsReq(payloadMsg) // 实体交互
 	// 战斗
 	case cmd.SceneCastSkillCsReq:
 		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
@@ -121,17 +123,18 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetCurChallengeCsReq(payloadMsg) // 获取忘却之庭状态
 	case cmd.LeaveChallengeCsReq:
 		g.LeaveChallengeCsReq() // 退出忘却之庭
-
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品
 	// 交易
 	case cmd.GetShopListCsReq:
-		g.GetShopListCsReq() // 获取商店物品列表
+		g.GetShopListCsReq(payloadMsg) // 获取商店物品列表
 	case cmd.ExchangeHcoinCsReq:
 		g.ExchangeHcoinCsReq(payloadMsg) // 梦华兑换
 	case cmd.ExchangeRogueRewardKeyCsReq:
 		g.ExchangeRogueRewardKeyCsReq(payloadMsg) // 储存沉浸器
+	case cmd.BuyGoodsCsReq:
+		g.BuyGoodsCsReq(payloadMsg) // 商店交易
 	// 社交
 	case cmd.GetMailCsReq:
 		g.GetMailCsReq() // 获取邮件
@@ -183,9 +186,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetNpcTakenRewardCsReq(payloadMsg) // NPC对话
 	case cmd.GetFirstTalkByPerformanceNpcCsReq:
 		g.GetFirstTalkByPerformanceNpcCsReq(payloadMsg) // NPC商店
-	// 乱七八糟
-	case cmd.InteractPropCsReq:
-		g.InteractPropCsReq()
 	default:
 		logger.Debug("C --> S error router: %v", cmdId)
 	}

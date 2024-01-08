@@ -51,10 +51,10 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Nickname:   g.PlayerPb.Nickname,
 		Level:      g.PlayerPb.Level,
 		Exp:        g.PlayerPb.Exp,
-		Stamina:    g.GetItem().MaterialMap[11],
-		Mcoin:      g.PlayerPb.Mcoin,
 		Hcoin:      g.GetItem().MaterialMap[1],
 		Scoin:      g.GetItem().MaterialMap[2],
+		Mcoin:      g.GetItem().MaterialMap[3],
+		Stamina:    g.GetItem().MaterialMap[11],
 		WorldLevel: g.PlayerPb.WorldLevel,
 	}
 

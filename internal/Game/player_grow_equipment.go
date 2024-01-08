@@ -174,10 +174,10 @@ func (g *Game) PlayerPlayerSyncScNotify() {
 			Nickname:   g.PlayerPb.Nickname,
 			Level:      g.PlayerPb.Level,
 			Exp:        g.PlayerPb.Exp,
-			Stamina:    g.GetItem().MaterialMap[11],
-			Mcoin:      g.PlayerPb.Mcoin,
 			Hcoin:      g.GetItem().MaterialMap[1],
 			Scoin:      g.GetItem().MaterialMap[2],
+			Mcoin:      g.GetItem().MaterialMap[3],
+			Stamina:    g.GetItem().MaterialMap[11],
 			WorldLevel: g.PlayerPb.WorldLevel,
 		},
 	}
@@ -191,20 +191,6 @@ func (g *Game) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
 	}
 
 	notify := &proto.PlayerSyncScNotify{DelEquipmentList: equipmentList}
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
-func (g *Game) DelMaterialPlayerSyncScNotify(pileItem []*Material) {
-	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
-
-	for _, item := range pileItem {
-		g.GetItem().MaterialMap[item.Tid] -= item.Num
-		material := &proto.Material{
-			Tid: item.Tid,
-			Num: g.GetItem().MaterialMap[item.Tid],
-		}
-		notify.MaterialList = append(notify.MaterialList, material)
-	}
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 

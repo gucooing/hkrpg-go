@@ -63,6 +63,20 @@ func (g *Game) AddMaterial(tid, num uint32) {
 	g.MaterialPlayerSyncScNotify(tid)
 }
 
+func (g *Game) DelMaterialPlayerSyncScNotify(pileItem []*Material) {
+	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
+
+	for _, item := range pileItem {
+		g.GetItem().MaterialMap[item.Tid] -= item.Num
+		material := &proto.Material{
+			Tid: item.Tid,
+			Num: g.GetItem().MaterialMap[item.Tid],
+		}
+		notify.MaterialList = append(notify.MaterialList, material)
+	}
+	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
 func (g *Game) GetHeadIconList() []uint32 {
 	return g.GetItem().HeadIcon
 }

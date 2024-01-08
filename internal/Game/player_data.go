@@ -269,12 +269,6 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }
 
-func (g *Game) InteractPropCsReq() {
-	rsp := new(proto.InteractPropScRsp)
-
-	g.Send(cmd.InteractPropScRsp, rsp)
-}
-
 func (g *Game) TextJoinQueryCsReq() {
 	rsp := new(proto.TextJoinQueryScRsp)
 	for _, textJoin := range gdconf.GetTextJoinConfigMap() {

@@ -380,3 +380,13 @@ func (g *Game) EnterSceneCsReq(payloadMsg []byte) {
 	g.Send(cmd.EnterSceneScRsp, rsp)
 	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
 }
+
+func (g *Game) InteractPropCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.InteractPropCsReq, payloadMsg)
+	req := msg.(*proto.InteractPropCsReq)
+
+	rsp := new(proto.InteractPropScRsp)
+	rsp.PropEntityId = req.PropEntityId
+
+	g.Send(cmd.InteractPropScRsp, rsp)
+}

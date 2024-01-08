@@ -22,7 +22,7 @@ type ShopGoodsConfig struct {
 }
 
 func (g *GameDataConfig) loadShopGoodsConfig() {
-	g.ShopGoodsConfigMap = make(map[uint32][]*ShopGoodsConfig)
+	g.ShopGoodsConfigMap = make(map[uint32]map[uint32]*ShopGoodsConfig)
 	shopGoodsConfigMap := make(map[string]*ShopGoodsConfig)
 	playerElementsFilePath := g.excelPrefix + "ShopGoodsConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
@@ -39,14 +39,22 @@ func (g *GameDataConfig) loadShopGoodsConfig() {
 
 	for _, shopGoodsConfig := range shopGoodsConfigMap {
 		if g.ShopGoodsConfigMap[shopGoodsConfig.ShopID] == nil {
-			g.ShopGoodsConfigMap[shopGoodsConfig.ShopID] = make([]*ShopGoodsConfig, 0)
+			g.ShopGoodsConfigMap[shopGoodsConfig.ShopID] = make(map[uint32]*ShopGoodsConfig)
 		}
-		g.ShopGoodsConfigMap[shopGoodsConfig.ShopID] = append(g.ShopGoodsConfigMap[shopGoodsConfig.ShopID], shopGoodsConfig)
+		g.ShopGoodsConfigMap[shopGoodsConfig.ShopID][shopGoodsConfig.GoodsID] = shopGoodsConfig
 	}
 
 	logger.Info("load %v ShopGoodsConfig", len(g.ShopGoodsConfigMap))
 }
 
-func GetShopGoodsConfigMap() map[uint32][]*ShopGoodsConfig {
+func GetShopGoodsConfigMap() map[uint32]map[uint32]*ShopGoodsConfig {
 	return CONF.ShopGoodsConfigMap
+}
+
+func GetShopGoodsConfigById(Id uint32) map[uint32]*ShopGoodsConfig {
+	return CONF.ShopGoodsConfigMap[Id]
+}
+
+func GetShopGoodsConfigByGoodsID(shopId, goodsID uint32) *ShopGoodsConfig {
+	return CONF.ShopGoodsConfigMap[shopId][goodsID]
 }

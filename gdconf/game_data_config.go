@@ -60,7 +60,8 @@ type GameDataConfig struct {
 	PlaneEventMap               map[string]map[string]*PlaneEvent               // 大世界怪物信息
 	StageConfigMap              map[string]*StageConfig                         // 具体怪物群信息
 	LoadingDescMap              map[string]*LoadingDesc                         // 战斗随机种子
-	ShopGoodsConfigMap          map[uint32][]*ShopGoodsConfig                   // 商品配置
+	ShopConfigMap               map[uint32][]uint32                             // 商店配置
+	ShopGoodsConfigMap          map[uint32]map[uint32]*ShopGoodsConfig          // 商品配置
 }
 
 func InitGameDataConfig() {
@@ -152,5 +153,6 @@ func (g *GameDataConfig) load() {
 	g.loadPlaneEvent()               // 大世界怪物信息
 	g.loadStageConfig()              // 具体怪物群信息
 	g.loadLoadingDesc()              // 战斗随机种子
+	g.loadShopConfig()               // 商店配置
 	g.loadShopGoodsConfig()          // 商品配置
 }

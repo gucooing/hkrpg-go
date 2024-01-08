@@ -49,12 +49,12 @@ func (g *Game) GetBattleIdGuid() uint32 {
 func (g *Game) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {
 	g.PlayerPb = new(spb.PlayerBasicCompBin)
 	g.PlayerPb = &spb.PlayerBasicCompBin{
-		Uid:                     uid,
-		Level:                   1,
-		Exp:                     0,
-		Nickname:                "hkrpg-go",
-		WorldLevel:              0,
-		Mcoin:                   0,
+		Uid:        uid,
+		Level:      1,
+		Exp:        0,
+		Nickname:   "hkrpg-go",
+		WorldLevel: 0,
+		// Mcoin:                   0,
 		Signature:               "签名",
 		HeadImageAvatarId:       208001,
 		Birthday:                0,
