@@ -13,5 +13,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: gucooing/hkrpg-go-public
-          event-type: HKRPG-Go-Publish
+          ref: "main"
+          event-type: hkrpg-go pull
           client-payload: '{}'
