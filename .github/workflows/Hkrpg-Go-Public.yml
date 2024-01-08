@@ -11,7 +11,7 @@ jobs:
       - name: Trigger Actions in Target Repo
         uses: peter-evans/repository-dispatch@v2
         with:
-          ssh-key: ${{ secrets.HKPRGGOPUBLIC }}
+          token: ${{ secrets.HKPRGGOPUBLIC }}
           repository: gucooing/hkrpg-go-public
           event-type: hkrpg-go pull
           client-payload: '{}'
