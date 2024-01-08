@@ -12,6 +12,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          repository: hkrpg-go-public
+          repository: gucooing/hkrpg-go-public
           event-type: hkrpggopull
           client-payload: '{}'
