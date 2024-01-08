@@ -14,7 +14,21 @@ func (g *Game) GetFirstTalkNpcCsReq() {
 func (g *Game) GetNpcTakenRewardCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetNpcTakenRewardCsReq, payloadMsg)
 	req := msg.(*proto.GetNpcTakenRewardCsReq)
+	rsp := new(proto.GetNpcTakenRewardScRsp)
+	rsp.NpcId = req.NpcId
 
-	rsp := &proto.GetNpcTakenRewardScRsp{NpcId: req.NpcId}
 	g.Send(cmd.GetNpcTakenRewardScRsp, rsp)
+}
+
+func (g *Game) GetFirstTalkByPerformanceNpcCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetFirstTalkByPerformanceNpcCsReq, payloadMsg)
+	req := msg.(*proto.GetFirstTalkByPerformanceNpcCsReq)
+	rsp := &proto.GetFirstTalkByPerformanceNpcScRsp{
+		NpcTalkInfoList: make([]*proto.NpcTalkInfo, 0),
+	}
+	for _, getNpcList := range req.NpcTalkList {
+		npcTalkInfo := &proto.NpcTalkInfo{NpcTalkId: getNpcList}
+		rsp.NpcTalkInfoList = append(rsp.NpcTalkInfoList, npcTalkInfo)
+	}
+	g.Send(cmd.GetFirstTalkByPerformanceNpcScRsp, rsp)
 }

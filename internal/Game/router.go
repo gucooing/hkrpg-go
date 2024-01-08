@@ -97,8 +97,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.GetUnlockTeleportCsReq:
 		g.GetUnlockTeleportCsReq() // 获取解锁的传送点
 	// 战斗
-	case cmd.GetChallengeCsReq:
-		g.HandleGetChallengeCsReq(payloadMsg) // 获取挑战id列表
 	case cmd.SceneCastSkillCsReq:
 		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
 	case cmd.PVEBattleResultCsReq:
@@ -115,6 +113,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetRogueTalentInfoCsReq() // 获取天赋信息
 	case cmd.StartCocoonStageCsReq:
 		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
+	case cmd.GetChallengeCsReq:
+		g.HandleGetChallengeCsReq(payloadMsg) // 获取忘却之庭挑战完成信息
 	case cmd.StartChallengeCsReq:
 		g.StartChallengeCsReq(payloadMsg) // 忘却之庭,启动!
 	case cmd.GetCurChallengeCsReq:
@@ -181,6 +181,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetFirstTalkNpcCsReq()
 	case cmd.GetNpcTakenRewardCsReq:
 		g.GetNpcTakenRewardCsReq(payloadMsg) // NPC对话
+	case cmd.GetFirstTalkByPerformanceNpcCsReq:
+		g.GetFirstTalkByPerformanceNpcCsReq(payloadMsg) // NPC商店
 	// 乱七八糟
 	case cmd.InteractPropCsReq:
 		g.InteractPropCsReq()

@@ -70,20 +70,21 @@ type MonsterList struct {
 }
 
 type NPCList struct {
-	ID             uint32   `json:"ID"`
-	PosX           float64  `json:"PosX"`
-	PosY           float64  `json:"PosY"`
-	PosZ           float64  `json:"PosZ"`
-	Name           string   `json:"Name"`
-	RotX           float64  `json:"RotX"`
-	RotY           float64  `json:"RotY"`
-	RotZ           float64  `json:"RotZ "`
-	NPCID          uint32   `json:"NPCID"`
-	IsDelete       bool     `json:"IsDelete"`
-	DialogueGroups []uint32 `json:"DialogueGroups"`
-	MapLayerID     uint32   `json:"MapLayerID"`
-	BoardShowList  []uint32 `json:"BoardShowList"`
-	RaidID         uint32   `json:"RaidID"`
+	ID                   uint32   `json:"ID"`
+	PosX                 float64  `json:"PosX"`
+	PosY                 float64  `json:"PosY"`
+	PosZ                 float64  `json:"PosZ"`
+	Name                 string   `json:"Name"`
+	RotX                 float64  `json:"RotX"`
+	RotY                 float64  `json:"RotY"`
+	RotZ                 float64  `json:"RotZ "`
+	NPCID                uint32   `json:"NPCID"`
+	IsDelete             bool     `json:"IsDelete"`
+	DialogueGroups       []uint32 `json:"DialogueGroups"`
+	MapLayerID           uint32   `json:"MapLayerID"`
+	BoardShowList        []uint32 `json:"BoardShowList"`
+	RaidID               uint32   `json:"RaidID"`
+	FirstDialogueGroupID uint32   `json:"FirstDialogueGroupID"`
 }
 
 func (g *GameDataConfig) loadGroup() {

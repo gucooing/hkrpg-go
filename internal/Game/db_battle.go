@@ -62,3 +62,27 @@ func (g *Game) GetBattleState() *BattleState {
 func (g *Game) GetChallengeState() *ChallengeState {
 	return g.Player.BattleState.ChallengeState
 }
+
+func (g *Game) GetBattle() *spb.Battle {
+	if g.PlayerPb.Battle == nil {
+		g.PlayerPb.Battle = &spb.Battle{}
+	}
+	if g.PlayerPb.Battle.Challenge == nil {
+		g.PlayerPb.Battle.Challenge = &spb.Challenge{
+			ChallengeList:       make(map[uint32]uint32),
+			ChallengeRewardList: make(map[uint64]uint32),
+		}
+	}
+	return g.PlayerPb.Battle
+}
+
+func (g *Game) GetChallenge() *spb.Challenge {
+	battle := g.GetBattle()
+	if battle.Challenge.ChallengeList == nil {
+		battle.Challenge.ChallengeList = make(map[uint32]uint32)
+	}
+	if battle.Challenge.ChallengeRewardList == nil {
+		battle.Challenge.ChallengeRewardList = make(map[uint64]uint32)
+	}
+	return battle.Challenge
+}

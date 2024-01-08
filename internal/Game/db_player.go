@@ -5,20 +5,35 @@ import (
 )
 
 type PlayerData struct {
-	Battle      map[uint32]*Battle // 正在进行的战斗
-	BattleState *BattleState
-	// 下面是在线数据
-	BattleId              uint32                 `json:"-"` // 战斗id
-	EntityBattleId        uint32                 `json:"-"` // 攻击实体id
-	IsPaused              bool                   `json:"-"` // 是否暂停
-	GameObjectGuidCounter uint64                 `json:"-"` // 游戏对象guid计数器
-	IsNickName            bool                   `json:"-"` // 是否修改昵称
-	EntityList            map[uint32]*EntityList `json:"-"` // 实体ID映射表
+	Battle                map[uint32]*Battle     // 正在进行的战斗
+	BattleState           *BattleState           // 战斗情况
+	BattleId              uint32                 // 战斗id
+	EntityBattleId        uint32                 // 攻击实体id
+	IsPaused              bool                   // 是否暂停
+	GameObjectGuidCounter uint64                 // 游戏对象guid计数器
+	IsNickName            bool                   // 是否修改昵称
+	EntityList            map[uint32]*EntityList // 实体ID映射表
+	NpcList               map[uint32]uint32
 }
 
 type EntityList struct {
 	Entity  uint32 // 实体Id
 	GroupId uint32 // 地图块
+	Pos     *Vector
+	Rot     *Vector
+}
+
+type Vector struct {
+	X int32
+	Y int32
+	Z int32
+}
+
+func (g *Game) GetSceneNpcList() map[uint32]uint32 {
+	if g.Player.NpcList == nil {
+		g.Player.NpcList = make(map[uint32]uint32)
+	}
+	return g.Player.NpcList
 }
 
 func (g *Game) GetNextGameObjectGuid() uint64 {
@@ -50,7 +65,7 @@ func (g *Game) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {
 		LineUp:                  g.GetLineUp(),
 		Item:                    g.GetItem(),
 		Gacha:                   g.GetGacha(),
-		Battle:                  nil,
+		Battle:                  g.GetBattle(),
 		RewardTakenLevelList:    nil,
 		OpenStateMap:            nil,
 		RegisterTime:            0,

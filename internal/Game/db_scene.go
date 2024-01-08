@@ -97,9 +97,20 @@ func (g *Game) GetNPCMonsterByID(sceneGroup *gdconf.LevelGroup, groupID uint32, 
 				EventId:    monsterList.EventID,
 			}},
 		}
+		// 添加实体
 		entityMap[entityId] = &EntityList{
 			Entity:  monsterList.EventID,
 			GroupId: groupID,
+			Pos: &Vector{
+				X: int32(monsterList.PosX * 1000),
+				Y: int32(monsterList.PosY * 1000),
+				Z: int32(monsterList.PosZ * 1000),
+			},
+			Rot: &Vector{
+				X: 0,
+				Y: int32(monsterList.RotY * 1000),
+				Z: 0,
+			},
 		}
 		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
 	}
@@ -131,6 +142,9 @@ func (g *Game) GetNPCByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.
 			EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
 				NpcId: npcList.NPCID,
 			}},
+		}
+		if npcList.FirstDialogueGroupID != 0 {
+			g.GetSceneNpcList()[npcList.NPCID] = npcList.FirstDialogueGroupID
 		}
 		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
 	}

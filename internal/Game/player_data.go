@@ -139,11 +139,21 @@ func (g *Game) HandleGetRogueHandbookDataCsReq(payloadMsg []byte) {
 func (g *Game) HandleGetChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
-	for _, challengeList := range gdconf.GetChallengeMazeConfigMap() {
+	rsp.ChallengeRewardList = make([]*proto.ChallengeReward, 0)
+	challengeDb := g.GetChallenge()
+	for id, stars := range challengeDb.ChallengeList {
 		challenge := &proto.Challenge{
-			ChallengeId: challengeList.ID,
+			ChallengeId: id,
+			Stars:       stars,
 		}
 		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
+	}
+	for taken, id := range challengeDb.ChallengeRewardList {
+		challengeReward := &proto.ChallengeReward{
+			TakenChallengeReward: taken,
+			GroupId:              id,
+		}
+		rsp.ChallengeRewardList = append(rsp.ChallengeRewardList, challengeReward)
 	}
 	g.Send(cmd.GetChallengeScRsp, rsp)
 }

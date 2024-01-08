@@ -56,18 +56,6 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	} else {
 		stageConfig = gdconf.GetStageConfigById(stageID.StageID)
 	}
-	switch battleState.BattleType {
-	case spb.BattleType_Battle_NONE:
-
-	case spb.BattleType_Battle_ROGUE:
-		logger.Info("正在进行模拟宇宙")
-	case spb.BattleType_Battle_CHALLENGE:
-		if battleState.ChallengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-			lineUp = 6
-		} else {
-			lineUp = 7
-		}
-	}
 
 	// 构造回复包
 	rsp := &proto.SceneCastSkillScRsp{
@@ -82,6 +70,19 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			BattleId:         g.GetBattleIdGuid(),            // 战斗Id
 			BattleAvatarList: make([]*proto.BattleAvatar, 0), // 战斗角色列表
 		},
+	}
+	switch battleState.BattleType {
+	case spb.BattleType_Battle_NONE:
+
+	case spb.BattleType_Battle_ROGUE:
+		logger.Info("正在进行模拟宇宙")
+	case spb.BattleType_Battle_CHALLENGE:
+		if battleState.ChallengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
+			lineUp = 6
+		} else {
+			lineUp = 7
+		}
+		rsp.BattleInfo.RoundsLimit = battleState.ChallengeState.ChallengeCountDown
 	}
 
 	// 怪物波列表
@@ -264,7 +265,7 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 			battleState.ChallengeState.RoundCount += req.Stt.CocoonDeadWave
 			if battleState.ChallengeState.CurChallengeCount == battleState.ChallengeState.ChallengeCount {
 				// 战斗正常结束进入结算
-				logger.Info("战斗完全结束，进入结算")
+				challengeDb := g.GetChallenge()
 				var stage uint32 = 0
 				for _, challengeTargetID := range battleState.ChallengeState.ChallengeTargetID {
 					challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
@@ -276,6 +277,10 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 							stage += 2
 						}
 					}
+				}
+
+				if challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] < stage {
+					challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] = stage
 				}
 				challengeSettleNotify := &proto.ChallengeSettleNotify{
 					Stars:       stage,
