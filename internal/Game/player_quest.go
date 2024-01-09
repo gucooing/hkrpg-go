@@ -33,11 +33,32 @@ func (g *Game) GetQuestDataCsReq(payloadMsg []byte) {
 		quest := &proto.Quest{
 			FinishTime: 10000,
 			Progress:   questList.QuestType,
-			Status:     proto.Quest_QUEST_CLOSE,
+			Status:     proto.QuestStatus_QUEST_CLOSE,
 			Id:         questList.QuestID,
 		}
 		rsp.QuestList = append(rsp.QuestList, quest)
 	}
 
 	g.Send(cmd.GetQuestDataScRsp, rsp)
+}
+
+func (g *Game) GetDailyActiveInfoCsReq(payloadMsg []byte) {
+	dailyActiveQuestIdList := []uint32{2100132, 2100133, 2100134, 2100139, 2100150, 2100152, 2100153, 2100154}
+	rsp := &proto.GetDailyActiveInfoScRsp{
+		DailyActiveLevelList:   make([]*proto.DailyActivityInfo, 0),
+		DailyActiveQuestIdList: dailyActiveQuestIdList,
+		DailyActivePoint:       500,
+	}
+
+	for i := 1; i < 5; i++ {
+		dailyActivityInfo := &proto.DailyActivityInfo{
+			WorldLevel:       g.PlayerPb.WorldLevel,
+			Level:            uint32(i),
+			DailyActivePoint: uint32(i * 100),
+			IsHasTaken:       false,
+		}
+		rsp.DailyActiveLevelList = append(rsp.DailyActiveLevelList, dailyActivityInfo)
+	}
+
+	g.Send(cmd.GetDailyActiveInfoScRsp, rsp)
 }

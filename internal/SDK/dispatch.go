@@ -48,7 +48,6 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.Unk3 = true
 	queryGateway.Unk4 = true
 	queryGateway.Unk5 = true
-	queryGateway.Unk6 = true
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {

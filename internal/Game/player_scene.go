@@ -99,10 +99,10 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 				}
 				entityId := uint32(g.GetNextGameObjectGuid())
 				entityList := &proto.SceneEntityInfo{
-					EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+					Actor: &proto.SceneActorInfo{
 						AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 						BaseAvatarId: avatarid,
-					}},
+					},
 					Motion: &proto.MotionInfo{
 						Pos: &proto.Vector{
 							X: int32(anchor.PosX * 1000),
@@ -241,10 +241,10 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
-			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType(g.PlayerPb.Avatar.Avatar[avatarid].AvatarType),
 				BaseAvatarId: avatarid,
-			}},
+			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
 					X: pos.X,
@@ -306,6 +306,7 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		if len(nPCList.EntityList) != 0 {
 			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
 		}
+
 	}
 
 	g.Player.EntityList = entityMap

@@ -32,7 +32,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			// 技能处理，有的技能并不会增加buff而是回复生命等功能
 		}
 	}
-	if len(req.HitTargetIdList) == 0 {
+	if len(req.HitTargetEntityIdList) == 0 {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
 		}
@@ -40,14 +40,14 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		return
 	}
 
-	if g.Player.EntityList[req.HitTargetIdList[0]] == nil {
+	if g.Player.EntityList[req.HitTargetEntityIdList[0]] == nil {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
 		}
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
-	entity := g.Player.EntityList[req.HitTargetIdList[0]]
+	entity := g.Player.EntityList[req.HitTargetEntityIdList[0]]
 	stageID = gdconf.GetPlaneEventById(entity.Entity, g.PlayerPb.WorldLevel)
 	if stageID == nil {
 		newEntity := g.Player.EntityList[req.CasterId]
@@ -61,10 +61,10 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	rsp := &proto.SceneCastSkillScRsp{
 		AttackedGroupId: req.AttackedGroupId,
 		BattleInfo: &proto.SceneBattleInfo{
-			BuffList:         make([]*proto.BattleBuff, 0), // Buff列表
-			LogicRandomSeed:  gdconf.GetLoadingDesc(),      // 逻辑随机种子
-			StageId:          stageID.StageID,              // 阶段id
-			TurnSnapshotList: nil,                          // 打开快照列表？
+			BuffList:        make([]*proto.BattleBuff, 0), // Buff列表
+			LogicRandomSeed: gdconf.GetLoadingDesc(),      // 逻辑随机种子
+			StageId:         stageID.StageID,              // 阶段id
+			// TurnSnapshotList: nil,                          // 打开快照列表？
 			WorldLevel:       g.PlayerPb.WorldLevel,
 			RoundsLimit:      0,                              // 回合限制
 			BattleId:         g.GetBattleIdGuid(),            // 战斗Id
@@ -196,7 +196,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	g.Player.Battle = make(map[uint32]*Battle)
 	battle := &Battle{
 		BattleId:         rsp.BattleInfo.BattleId,
-		EventID:          req.HitTargetIdList[0],
+		EventID:          req.HitTargetEntityIdList[0],
 		LogicRandomSeed:  rsp.BattleInfo.LogicRandomSeed,
 		RoundsLimit:      rsp.BattleInfo.RoundsLimit,
 		BuffList:         rsp.BattleInfo.BuffList,
@@ -324,9 +324,7 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 					GroupId: entity.GroupId,
 					RefreshEntity: []*proto.SceneEntityRefreshInfo{
 						{
-							UpdateType: &proto.SceneEntityRefreshInfo_DelEntity{
-								DelEntity: battle.EventID,
-							},
+							DelEntity: battle.EventID,
 						},
 					},
 				},
@@ -483,26 +481,24 @@ func (g *Game) ChallengeAddSceneGroupRefreshScNotify() {
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-			UpdateType: &proto.SceneEntityRefreshInfo_AddEntity{
-				AddEntity: &proto.SceneEntityInfo{
-					EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
-						AvatarType:   proto.AvatarType(g.GetAvatar().Avatar[avatarId].AvatarType),
-						BaseAvatarId: avatarId,
-					}},
-					Motion: &proto.MotionInfo{
-						Pos: &proto.Vector{
-							X: pos.X,
-							Y: pos.Y,
-							Z: pos.Z,
-						},
-						Rot: &proto.Vector{
-							X: rot.X,
-							Y: rot.Y,
-							Z: rot.Z,
-						},
-					},
-					EntityId: entityId,
+			AddEntity: &proto.SceneEntityInfo{
+				Actor: &proto.SceneActorInfo{
+					AvatarType:   proto.AvatarType(g.GetAvatar().Avatar[avatarId].AvatarType),
+					BaseAvatarId: avatarId,
 				},
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: pos.X,
+						Y: pos.Y,
+						Z: pos.Z,
+					},
+					Rot: &proto.Vector{
+						X: rot.X,
+						Y: rot.Y,
+						Z: rot.Z,
+					},
+				},
+				EntityId: entityId,
 			},
 		}
 		g.Player.EntityList[entityId] = &EntityList{
@@ -514,28 +510,26 @@ func (g *Game) ChallengeAddSceneGroupRefreshScNotify() {
 	// 添加怪物实体
 	entityId := uint32(g.GetNextGameObjectGuid())
 	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-		UpdateType: &proto.SceneEntityRefreshInfo_AddEntity{
-			AddEntity: &proto.SceneEntityInfo{
-				GroupId:  curChallengeBattle.GroupID,
-				InstId:   curChallengeBattle.ConfigID,
-				EntityId: entityId,
-				Motion: &proto.MotionInfo{
-					Pos: &proto.Vector{
-						X: nPCMonsterPos.X,
-						Y: nPCMonsterPos.Y,
-						Z: nPCMonsterPos.Z,
-					},
-					Rot: &proto.Vector{
-						X: 0,
-						Y: nPCMonsterRot.Y,
-						Z: 0,
-					},
+		AddEntity: &proto.SceneEntityInfo{
+			GroupId:  curChallengeBattle.GroupID,
+			InstId:   curChallengeBattle.ConfigID,
+			EntityId: entityId,
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: nPCMonsterPos.X,
+					Y: nPCMonsterPos.Y,
+					Z: nPCMonsterPos.Z,
 				},
-				EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
-					WorldLevel: g.PlayerPb.WorldLevel,
-					MonsterId:  curChallengeBattle.NPCMonsterID,
-					EventId:    curChallengeBattle.EventID,
-				}},
+				Rot: &proto.Vector{
+					X: 0,
+					Y: nPCMonsterRot.Y,
+					Z: 0,
+				},
+			},
+			NpcMonster: &proto.SceneNpcMonsterInfo{
+				WorldLevel: g.PlayerPb.WorldLevel,
+				MonsterId:  curChallengeBattle.NPCMonsterID,
+				EventId:    curChallengeBattle.EventID,
 			},
 		},
 	}
@@ -632,7 +626,6 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	// 可独立成单独的方法
 	rogueScoreInfo := &proto.RogueScoreRewardInfo{
 		HasTakenInitialScore: true, // 已取得初始积分？
-		RogueImmersifier:     0,
 		Score:                0,
 		PoolRefreshed:        true, // 刷新？
 		TakenScoreRewardList: nil,
@@ -713,10 +706,10 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
-			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 				BaseAvatarId: avatarId,
-			}},
+			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
 					X: int32(anchor.PosX * 1000),
@@ -1199,10 +1192,10 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
-			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+			Actor: &proto.SceneActorInfo{
 				AvatarType:   slots.AvatarType, // TODO
 				BaseAvatarId: slots.Id,
-			}},
+			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
 					X: anchorPos.X,
@@ -1252,11 +1245,11 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 				Z: 0,
 			},
 		},
-		EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
+		NpcMonster: &proto.SceneNpcMonsterInfo{
 			WorldLevel: g.PlayerPb.WorldLevel,
 			MonsterId:  curChallengeBattle.NPCMonsterID,
 			EventId:    curChallengeBattle.EventID,
-		}},
+		},
 	}
 	entityMap[entityId] = &EntityList{
 		Entity:  curChallengeBattle.EventID,

@@ -45,7 +45,7 @@ const (
 
 func (g *Game) Send(cmdid uint16, playerMsg pb.Message) {
 	// 打印需要的数据包
-	if cmdid != 1468 {
+	if cmdid != cmd.SceneEntityMoveScRsp {
 		data := protojson.Format(playerMsg)
 		logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
 	}
@@ -69,7 +69,7 @@ func (g *Game) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		return nil
 	}
 	// 打印需要的数据包
-	if cmdId != 1452 {
+	if cmdId != cmd.SceneEntityMoveCsReq {
 		data := protojson.Format(protoObj)
 		logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
 	}

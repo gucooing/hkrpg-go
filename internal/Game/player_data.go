@@ -34,7 +34,7 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		ArchiveAvatarIdList:    make([]uint32, 0),
 		ArchiveEquipmentIdList: make([]uint32, 0),
 		ArchiveMonsterIdList:   make([]*proto.MonsterArchive, 0),
-		ArchiveRelicList:       make([]*proto.RelicArchive, 0),
+		RelicList:              make([]*proto.RelicArchive, 0),
 	}
 
 	for _, avatar := range g.PlayerPb.Avatar.Avatar {
@@ -56,9 +56,9 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	for _, relicList := range gdconf.GetRelicMap() {
 		archiveRelicList := &proto.RelicArchive{
 			RelicId: relicList.ID,
-			Type:    relicList.Type,
+			Slot:    relicList.Type,
 		}
-		archiveData.ArchiveRelicList = append(archiveData.ArchiveRelicList, archiveRelicList)
+		archiveData.RelicList = append(archiveData.RelicList, archiveRelicList)
 	}
 
 	rsp.ArchiveData = archiveData
@@ -77,7 +77,11 @@ func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 		CurrentHeadIconId:    g.PlayerPb.HeadImageAvatarId,
 		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
 		Signature:            g.PlayerPb.Signature,
-		Unk1:                 "",
+		// TODO
+		DisplayAvatarVec: &proto.DisplayAvatarVec{
+			DisplayAvatarList: nil,
+			IsDisplay:         false,
+		},
 	}
 
 	for _, avatar := range g.GetHeadIconList() {
@@ -195,9 +199,9 @@ func (g *Game) SetClientPausedCsReq() {
 func (g *Game) HandleGetJukeboxDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetJukeboxDataScRsp)
 	rsp.PlayingId = 210000
-	rsp.MusicList = make([]*proto.GetJukeboxDataScRsp_UnlockedMusic, 0)
+	rsp.MusicList = make([]*proto.UnlockedMusic, 0)
 	for _, backMusicList := range gdconf.GetBackGroundMusicMap() {
-		musicList := &proto.GetJukeboxDataScRsp_UnlockedMusic{
+		musicList := &proto.UnlockedMusic{
 			GroupId: backMusicList.GroupID,
 			Unkbool: true,
 			Id:      backMusicList.ID,
@@ -272,7 +276,7 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 func (g *Game) TextJoinQueryCsReq() {
 	rsp := new(proto.TextJoinQueryScRsp)
 	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
-		textJoinList := &proto.TextJoinQueryScRsp_TextJoinInfo{
+		textJoinList := &proto.TextJoinInfo{
 			TextItemId:       textJoin.TextJoinID,
 			TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
 		}
@@ -284,4 +288,24 @@ func (g *Game) TextJoinQueryCsReq() {
 
 func (g *Game) GetUnlockTeleportCsReq() {
 
+}
+
+func (g *Game) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetFarmStageGachaInfoCsReq, payloadMsg)
+	req := msg.(*proto.GetFarmStageGachaInfoCsReq)
+
+	rsp := &proto.GetFarmStageGachaInfoScRsp{
+		FarmStageGachaInfoList: make([]*proto.FarmStageGachaInfo, 0),
+	}
+
+	for _, farmStageGachaId := range req.FarmStageGachaIdList {
+		farmStageGachaInfo := &proto.FarmStageGachaInfo{
+			BeginTime: 1664308800,
+			GachaId:   farmStageGachaId,
+			EndTime:   4294967295,
+		}
+		rsp.FarmStageGachaInfoList = append(rsp.FarmStageGachaInfoList, farmStageGachaInfo)
+	}
+
+	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
 }

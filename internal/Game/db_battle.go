@@ -67,7 +67,10 @@ func (g *Game) GetBattleState() *BattleState {
 }
 
 func (g *Game) GetChallengeState() *ChallengeState {
-	return g.Player.BattleState.ChallengeState
+	if g.GetBattleState().ChallengeState == nil {
+		g.GetBattleState().ChallengeState = &ChallengeState{}
+	}
+	return g.GetBattleState().ChallengeState
 }
 
 func (g *Game) GetBattle() *spb.Battle {

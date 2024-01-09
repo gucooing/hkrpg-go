@@ -34,7 +34,7 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.PlayerLogoutCsReq:
 		g.PlayerLogoutCsReq() // 客户端退出游戏通知
 	case cmd.GetDailyActiveInfoCsReq:
-		// TODO 每日任务
+		g.GetDailyActiveInfoCsReq(payloadMsg) // 每日任务
 	// 队伍
 	case cmd.GetAllLineupDataCsReq:
 		g.HandleGetAllLineupDataCsReq(payloadMsg) // 获取队伍信息请求
@@ -175,7 +175,9 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	case cmd.SetSignatureCsReq:
 		g.SetSignatureCsReq(payloadMsg) // 简介修改请求
 	case cmd.GetPlayerBoardDataCsReq:
-		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
+		g.HandleGetPlayerBoardDataCsReq(payloadMsg) // 获取角色名片页信息
+	case cmd.GetFarmStageGachaInfoCsReq:
+		g.GetFarmStageGachaInfoCsReq(payloadMsg) // 获取怪物刷新情况
 	// 成就
 	case cmd.GetArchiveDataCsReq:
 		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取收集

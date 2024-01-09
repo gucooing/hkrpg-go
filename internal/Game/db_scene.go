@@ -57,10 +57,10 @@ func (g *Game) GetPropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto
 					Z: 0,
 				},
 			},
-			EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
 				PropState: gdconf.GetStateValue(propList.State),
-			}},
+			},
 		}
 		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
 	}
@@ -91,11 +91,11 @@ func (g *Game) GetNPCMonsterByID(sceneGroup *gdconf.LevelGroup, groupID uint32, 
 					Z: 0,
 				},
 			},
-			EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
+			NpcMonster: &proto.SceneNpcMonsterInfo{
 				WorldLevel: g.PlayerPb.WorldLevel,
 				MonsterId:  monsterList.NPCMonsterID,
 				EventId:    monsterList.EventID,
-			}},
+			},
 		}
 		// 添加实体
 		entityMap[entityId] = &EntityList{
@@ -139,9 +139,10 @@ func (g *Game) GetNPCByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.
 					Z: 0,
 				},
 			},
-			EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
-				NpcId: npcList.NPCID,
-			}},
+			Npc: &proto.SceneNpcInfo{
+				ExtraInfo: nil,
+				NpcId:     npcList.NPCID,
+			},
 		}
 		if npcList.FirstDialogueGroupID != 0 {
 			g.GetSceneNpcList()[npcList.NPCID] = npcList.FirstDialogueGroupID
