@@ -31,6 +31,8 @@ type ChallengeState struct {
 	FloorID            uint32
 	EntranceID         uint32
 	CurChallengeBattle map[uint32]*CurChallengeBattle
+	StoryBuffOne       uint32
+	StoryBuffTwo       uint32
 }
 
 type CurChallengeBattle struct {

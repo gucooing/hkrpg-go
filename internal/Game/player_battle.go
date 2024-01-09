@@ -552,37 +552,47 @@ func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 	endTime := beginTime + int64(time.Hour.Seconds()*24*8)
 	rsp := new(proto.GetRogueInfoScRsp)
 	rogueInfo := &proto.RogueInfo{
-		BeginTime: beginTime,
-		EndTime:   endTime,
-		SeasonId:  77,
-		RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
-			RogueAbilityPoint: 0,
-		},
-		RogueScoreInfo: &proto.RogueScoreRewardInfo{
-			PoolId:               20 + g.PlayerPb.WorldLevel,
-			HasTakenInitialScore: true,
-			PoolRefreshed:        true,
-		},
-		RogueData: &proto.RogueInfoData{
-			RogueSeasonInfo: &proto.RogueSeasonInfo{
+		RogueInfos: &proto.RogueInfos{
+			RogueInfoScheduling: &proto.RogueInfoScheduling{
 				BeginTime: beginTime,
-				SeasonId:  77,
 				EndTime:   endTime,
+				SeasonId:  78,
 			},
 			RogueScoreInfo: &proto.RogueScoreRewardInfo{
 				PoolId:               20 + g.PlayerPb.WorldLevel,
 				HasTakenInitialScore: true,
 				PoolRefreshed:        true,
 			},
+			RogueAreaList: make([]*proto.RogueArea, 0),
+			RogueData: &proto.RogueInfoData{
+				RogueSeasonInfo: &proto.RogueSeasonInfo{
+					BeginTime: beginTime,
+					SeasonId:  78,
+					EndTime:   endTime,
+				},
+				RogueScoreInfo: &proto.RogueScoreRewardInfo{
+					PoolId:               20 + g.PlayerPb.WorldLevel,
+					HasTakenInitialScore: true,
+					PoolRefreshed:        true,
+				},
+			},
+			RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
+				RogueAbilityPoint: 0,
+			},
+			RoomMap:          nil,
+			Status:           0,
+			RogueProgress:    nil,
+			RogueAeonInfo:    nil,
+			BaseAvatarIdList: nil,
+			RogueCoin:        0,
 		},
-		RogueAreaList: make([]*proto.RogueArea, 0),
 	}
 	for _, rogueArea := range gdconf.GetRogueAreaMap() {
 		RogueArea := &proto.RogueArea{
 			AreaId:          rogueArea.RogueAreaID,
 			RogueAreaStatus: proto.RogueAreaStatus_ROGUE_AREA_STATUS_FIRST_PASS,
 		}
-		rogueInfo.RogueAreaList = append(rogueInfo.RogueAreaList, RogueArea)
+		rogueInfo.RogueInfos.RogueAreaList = append(rogueInfo.RogueInfos.RogueAreaList, RogueArea)
 	}
 	rsp.RogueInfo = rogueInfo
 
@@ -792,50 +802,36 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 			Mp:              5,
 		},
 		RogueInfo: &proto.RogueInfo{
-			RogueData: &proto.RogueInfoData{
-				RogueScoreInfo: rogueScoreInfo,
-				RogueSeasonInfo: &proto.RogueSeasonInfo{
+			RogueInfos: &proto.RogueInfos{
+				RogueInfoScheduling: &proto.RogueInfoScheduling{
 					BeginTime: beginTime,
-					SeasonId:  77,
 					EndTime:   endTime,
+					SeasonId:  78,
 				},
-			},
-			RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
-				RoguePumanCoupon:  0,
-				RogueCoin:         0,
-				RogueImmersifier:  0,
-				RogueAbilityPoint: 0,
-			},
-			RogueScoreInfo: rogueScoreInfo,
-			RoomMap:        roomMap,
-			RogueAreaList:  rogueAreaList,
-			Status:         proto.RogueStatus_ROGUE_STATUS_DOING,
-			SeasonId:       77,
-			RogueProgress: &proto.RogueCurrentInfo{
-				RogueAvatarInfo: &proto.RogueAvatarInfo{
-					BaseAvatarIdList: req.BaseAvatarIdList,
+				RogueScoreInfo: rogueScoreInfo,
+				RogueAreaList:  make([]*proto.RogueArea, 0),
+				RogueData: &proto.RogueInfoData{
+					RogueSeasonInfo: &proto.RogueSeasonInfo{
+						BeginTime: beginTime,
+						SeasonId:  78,
+						EndTime:   endTime,
+					},
+					RogueScoreInfo: &proto.RogueScoreRewardInfo{
+						PoolId:               20 + g.PlayerPb.WorldLevel,
+						HasTakenInitialScore: true,
+						PoolRefreshed:        true,
+					},
 				},
-				RoomMap: roomMap,
-				Status:  proto.RogueStatus_ROGUE_STATUS_DOING,
-				RogueBuffInfo: &proto.RogueBuffInfo{
-					BuffSelectInfo: nil,
-					MazeBuffList:   nil,
+				RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
+					RogueAbilityPoint: 0,
 				},
-				RogueMiracleInfo: &proto.RogueMiracleInfo{
-					MiracleSelectInfo: nil,
-					RogueMiracleInfo:  nil,
-				},
+				RoomMap:          nil,
+				Status:           0,
+				RogueProgress:    nil,
+				RogueAeonInfo:    nil,
+				BaseAvatarIdList: nil,
+				RogueCoin:        0,
 			},
-			RogueAeonInfo: &proto.RogueAeonInfo{
-				UnlockAeonEnhanceNum: 0,
-				UnlockAeonNum:        0,
-				SelectedAeonId:       0,
-				AeonIdList:           nil,
-			},
-			EndTime:          endTime,
-			BaseAvatarIdList: req.BaseAvatarIdList,
-			BeginTime:        beginTime,
-			RogueCoin:        0,
 		},
 	}
 
@@ -1049,13 +1045,17 @@ func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
 
 	challengeState := g.GetChallengeState()
 
-	if challengeState != nil {
-		rsp.ChallengeInfo = &proto.ChallengeInfo{
-			ChallengeId:     challengeState.ChallengeId,
-			Status:          challengeState.Status,
-			RoundCount:      challengeState.RoundCount,
-			ExtraLineupType: challengeState.ExtraLineupType,
-		}
+	rsp.ChallengeInfo = &proto.ChallengeInfo{
+		ChallengeId:     challengeState.ChallengeId,
+		Status:          challengeState.Status,
+		RoundCount:      challengeState.RoundCount,
+		ExtraLineupType: challengeState.ExtraLineupType,
+		StoryInfo:       &proto.ChallengeStoryInfo{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}},
+	}
+	if challengeState.ChallengeCount == 1 {
+		rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
+	} else {
+		rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffTwo)
 	}
 
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
@@ -1073,6 +1073,8 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 		challengeState.Status = proto.ChallengeStatus_CHALLENGE_DOING
 		challengeState.RoundCount = 0
 		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE
+		challengeState.StoryBuffOne = req.StoryInfo.StoryBuffInfo.StoryBuffOne
+		challengeState.StoryBuffTwo = req.StoryInfo.StoryBuffInfo.StoryBuffTwo
 	}
 
 	challengeInfo := &proto.ChallengeInfo{
@@ -1082,7 +1084,7 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 		ExtraLineupType: challengeState.ExtraLineupType,
 	}
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(strconv.Itoa(int(req.ChallengeId)))
-	if challengeInfo == nil {
+	if challengeInfo == nil || challengeMazeConfig == nil {
 		rsp := &proto.StartChallengeScRsp{
 			Retcode: 2,
 		}
@@ -1228,6 +1230,10 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 
 	// 添加怪物实体
+	entityGroupNPCMonster := &proto.SceneEntityGroupInfo{
+		GroupId:    curChallengeBattle.GroupID,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
 	entityId := uint32(g.GetNextGameObjectGuid())
 	entityList := &proto.SceneEntityInfo{
 		GroupId:  curChallengeBattle.GroupID,
@@ -1255,7 +1261,8 @@ func (g *Game) GetChallengeScene() *proto.SceneInfo {
 		Entity:  curChallengeBattle.EventID,
 		GroupId: curChallengeBattle.GroupID,
 	}
-	entityGroup.EntityList = append(entityGroup.EntityList, entityList)
+	entityGroupNPCMonster.EntityList = append(entityGroupNPCMonster.EntityList, entityList)
+	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupNPCMonster)
 
 	g.Player.EntityList = entityMap
 	return scene
