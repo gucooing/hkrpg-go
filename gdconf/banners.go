@@ -20,7 +20,7 @@ type Banners struct {
 func (g *GameDataConfig) loadBanners() {
 	g.BannersMap = make(map[uint32]*Banners)
 	banners := make([]*Banners, 0)
-	playerElementsFilePath := "data/Banners.json"
+	playerElementsFilePath := g.dataPrefix + "Banners.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)

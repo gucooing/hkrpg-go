@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,8 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 )
+
+var LoginOnce sync.Mutex
 
 /*
 登录流程
@@ -27,9 +30,10 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 	}
 	loginrsq := new(Login)
 
+	s.AutoCreate.Lock()
 	account := s.Store.QueryAccountByFieldUsername(requestData.Account)
 	if account.Username == "" {
-		logger.Debug("在数据库中没有找到登录的账号")
+		logger.Warn("在数据库中没有找到登录的账号")
 		if s.Config.Account.AutoCreate {
 			// 生成新的token
 			token := base64.StdEncoding.EncodeToString(random.GetRandomByte(24))
@@ -38,6 +42,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 				Token:      token,
 				CreateTime: time.Now().Unix(),
 			}
+
 			accountid, err := s.Store.UpdateAccountFieldByFieldName(account)
 			if err != nil {
 				logger.Error("自动注册账号添加失败:%s", err)
@@ -47,6 +52,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 				c.JSON(200, loginrsq)
 				return
 			}
+			defer s.AutoCreate.Unlock()
 
 			loginrsq.Retcode = 0
 			loginrsq.Message = "OK"
@@ -64,9 +70,10 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 			}
 			loginrsq.Data = repLoginData
 			c.JSON(200, loginrsq)
-			logger.Debug("账号 %s 自动注册成功", account.Username)
+			logger.Info("账号 %s 自动注册成功", account.Username)
 			return
 		} else {
+			s.AutoCreate.Unlock()
 			loginrsq.Data = nil
 			loginrsq.Message = "hkrpg-go\b账号不存在\n已关闭自动注册\n请手动注册"
 			loginrsq.Retcode = -107
@@ -74,6 +81,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 			return
 		}
 	}
+	s.AutoCreate.Unlock()
 	loginrsq.Retcode = 0
 	loginrsq.Message = "OK"
 	rspaccount := &LoginAccount{
@@ -89,6 +97,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 		RealnameOperation: "None",
 	}
 	loginrsq.Data = repLoginData
+	logger.Info("账号 %s 登录成功", account.Username)
 	c.JSON(200, loginrsq)
 }
 
@@ -169,14 +178,14 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 	responseData := new(ComboTokenRsp)
 	account := s.Store.QueryAccountByFieldAccountId(uint(uid))
 	if account.Username == "" {
-		logger.Error("查询不到此账户,uid: %s", loginData.Uid)
+		logger.Warn("查询不到此账户,uid: %s", loginData.Uid)
 		c.Header("Content-type", "application/json")
 		_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"游戏信息账号缓存错误\",\"retcode\":-103}")
 		return
 	} else {
 		if account.Token == loginData.Token {
 			combotoken := random.GetRandomByteHexStr(20)
-			logger.Info("combo token:%s", combotoken)
+			logger.Info("账号 %s 自动登录成功", account.Username)
 			uidPlayer := &DataBase.UidPlayer{
 				AccountId:  account.AccountId,
 				IsBan:      false,

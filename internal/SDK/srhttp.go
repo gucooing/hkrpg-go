@@ -46,9 +46,9 @@ func (s *Server) SdkDataUploadHandler(c *gin.Context) {
 
 func (s *Server) apmdataUpload(c *gin.Context) {
 	req := c.Request
-	body, err := ioutil.ReadAll(req.Body)
+	_, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		logger.Error("", body)
+		logger.Error("", err)
 		return
 	}
 	// logger.Debug("/apm/dataUpload", string(body))
@@ -59,9 +59,9 @@ func (s *Server) apmdataUpload(c *gin.Context) {
 
 func (s *Server) commonh5log(c *gin.Context) {
 	req := c.Request
-	body, err := ioutil.ReadAll(req.Body)
+	_, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		logger.Error("", body)
+		logger.Error("", err)
 		return
 	}
 	// logger.Debug("/common/h5log/log/batch", string(body))

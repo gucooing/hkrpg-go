@@ -84,8 +84,9 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 		logger.Error("", err)
 	}
 
-	dispatch.Ip = "127.0.0.1"
-	dispatch.Port = 10001
+	dispatch.Ip = s.Config.Game.Addr
+	dispatch.Port = s.Config.Game.Port
+	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Config.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)
 

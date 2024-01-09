@@ -12,8 +12,10 @@ type AvatarData struct {
 	AvatarId       uint32        `json:"AvatarID"`       // 角色id
 	Rarity         string        `json:"Rarity"`         // 星级
 	RankIDList     []uint32      `json:"RankIDList"`     // 命座id
+	ExpGroup       uint32        `json:"ExpGroup"`       // 经验ID
 	RewardList     []*RewardList `json:"RewardList"`     // 升级奖励
 	AvatarBaseType string        `json:"AvatarBaseType"` // 角色类型
+	SkillList      []uint32      `json:"SkillList"`
 }
 
 type RewardList struct {

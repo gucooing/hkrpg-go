@@ -41,3 +41,24 @@ func GetMazePlaneById(planeID string) *MazePlane {
 func GetMazePlaneMap() map[string]*MazePlane {
 	return CONF.MazePlaneMap
 }
+
+func GetPlaneType(state string) uint32 {
+	stateMap := map[string]uint32{
+		"Unknown":       0,
+		"Town":          1,
+		"Maze":          2,
+		"Train":         3,
+		"Challenge":     4,
+		"Rogue":         5,
+		"Raid":          6,
+		"AetherDivide":  7,
+		"TrialActivity": 8,
+	}
+
+	value, ok := stateMap[state]
+	if !ok {
+		return 0
+	}
+
+	return value
+}

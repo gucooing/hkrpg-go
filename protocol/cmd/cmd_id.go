@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	gmpb "github.com/gucooing/hkrpg-go/protocol/gmpb"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 const (
@@ -1070,7 +1070,8 @@ const (
 )
 
 const (
-	GmGive = 11127
+	GmGive       = 11127
+	GmWorldLevel = 11001
 )
 
 func (c *CmdProtoMap) registerAllMessage() {
@@ -1195,6 +1196,9 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(RankUpEquipmentCsReq, func() any { return new(proto.RankUpEquipmentCsReq) })
 	c.regMsg(ReEnterLastElementStageCsReq, func() any { return new(proto.ReEnterLastElementStageCsReq) })
 	c.regMsg(ReEnterLastElementStageScRsp, func() any { return new(proto.ReEnterLastElementStageScRsp) })
+	c.regMsg(RefreshTriggerByClientCsReq, func() any { return new(proto.RefreshTriggerByClientCsReq) })
+	c.regMsg(RefreshTriggerByClientScNotify, func() any { return new(proto.RefreshTriggerByClientScNotify) })
+	c.regMsg(RefreshTriggerByClientScRsp, func() any { return new(proto.RefreshTriggerByClientScRsp) })
 	c.regMsg(ReplaceLineupCsReq, func() any { return new(proto.ReplaceLineupCsReq) })
 	c.regMsg(ReserveStaminaExchangeCsReq, func() any { return new(proto.ReserveStaminaExchangeCsReq) })
 	c.regMsg(ReserveStaminaExchangeScRsp, func() any { return new(proto.ReserveStaminaExchangeScRsp) })
@@ -1250,6 +1254,7 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(SyncClientResVersionCsReq, func() any { return new(proto.SyncClientResVersionCsReq) })
 	c.regMsg(SyncClientResVersionScRsp, func() any { return new(proto.SyncClientResVersionScRsp) })
 	c.regMsg(SyncDeleteFriendScNotify, func() any { return new(proto.SyncDeleteFriendScNotify) })
+	c.regMsg(SyncEntityBuffChangeListScNotify, func() any { return new(proto.SyncEntityBuffChangeListScNotify) })
 	c.regMsg(SyncHandleFriendScNotify, func() any { return new(proto.SyncHandleFriendScNotify) })
 	c.regMsg(SyncLineupNotify, func() any { return new(proto.SyncLineupNotify) })
 	c.regMsg(SyncRogueBuffSelectInfoScNotify, func() any { return new(proto.SyncRogueBuffSelectInfoScNotify) })
@@ -1273,5 +1278,6 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
 	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
 	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
-	c.regMsg(GmGive, func() any { return new(gmpb.GmGive) })
+	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
+	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
 }

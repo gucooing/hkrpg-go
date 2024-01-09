@@ -3,6 +3,7 @@ package gdconf
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -37,21 +38,34 @@ func (g *GameDataConfig) loadRelic() {
 		panic(info)
 	}
 	for _, relic := range g.RelicMap {
-		switch relic.TypeS {
-		case "HEAD":
+		switch relic.Rarity {
+		case "CombatPowerRelicRarity1":
 			relic.Type = 1
-		case "HAND":
+		case "CombatPowerRelicRarity2":
 			relic.Type = 2
-		case "BODY":
+		case "CombatPowerRelicRarity3":
 			relic.Type = 3
-		case "FOOT":
+		case "CombatPowerRelicRarity4":
 			relic.Type = 4
-		case "NECK":
+		case "CombatPowerRelicRarity5":
 			relic.Type = 5
-		case "OBJECT":
+		case "CombatPowerRelicRarity6":
 			relic.Type = 6
 		}
 	}
+
+	playerElementsFilePaths := g.excelPrefix + "RelicExpItem.json"
+	playerElementsFiles, err := os.ReadFile(playerElementsFilePaths)
+	if err != nil {
+		info := fmt.Sprintf("open file error: %v", err)
+		panic(info)
+	}
+	err = hjson.Unmarshal(playerElementsFiles, &g.RelicMap)
+	if err != nil {
+		info := fmt.Sprintf("parse file error: %v", err)
+		panic(info)
+	}
+
 	logger.Info("load %v RelicConfig", len(g.RelicMap))
 }
 
@@ -61,4 +75,9 @@ func GetRelicById(ID string) *Relic {
 
 func GetRelicMap() map[string]*Relic {
 	return CONF.RelicMap
+}
+
+func GetRelicMaxLevel(relicId uint32) uint32 {
+	promotionConfig := CONF.RelicMap[strconv.Itoa(int(relicId))]
+	return promotionConfig.MaxLevel
 }

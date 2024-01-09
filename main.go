@@ -51,26 +51,33 @@ func main() {
 
 	// 启动SDK服务
 	go func() {
-		if err := newserver.Start(); err != nil {
+		if err = newserver.Start(); err != nil {
 			logger.Error("无法启动SDK服务器")
 		}
 	}()
 
 	// 启动game服务
 	go func() {
-		if err := Net.Run(); err != nil {
-			logger.Error("无法启动GAME服务器")
+		if err = Net.Run(); err != nil {
+			logger.Error("无法启动Game服务器")
 		}
 	}()
 
 	go func() {
 		select {
 		case <-done:
-			logger.Info("SDK服务正在关闭")
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
-			if err := newserver.Shutdown(ctx); err != nil {
-				logger.Error("无法正常关闭HTTP服务")
+
+			logger.Info("Game服务正在关闭")
+			if err = Net.Close(); err != nil {
+				logger.Error("无法正常关闭Game服务")
+			}
+			logger.Info("Game服务已停止")
+
+			logger.Info("SDK服务正在关闭")
+			if err = newserver.Shutdown(ctx); err != nil {
+				logger.Error("无法正常关闭SDK服务")
 			}
 			logger.Info("SDK服务已停止")
 			logger.CloseLogger()

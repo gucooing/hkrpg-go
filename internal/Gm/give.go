@@ -2,17 +2,23 @@ package Gm
 
 import (
 	"github.com/gin-gonic/gin"
-	proto "github.com/gucooing/hkrpg-go/protocol/gmpb"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func Give(c *gin.Context) {
 	cmd := stou32(c.Query("cmd"))
 	uid := stou32(c.Query("uid"))
+	if uid == 0 {
+		c.JSON(404, gin.H{
+			"code": -1,
+		})
+		return
+	}
 	all := stou32(c.Query("all"))
 	itemId := c.Query("item_id")
 	itemCount := c.Query("item_count") // 数量
 
-	message := &proto.GmGive{
+	message := &spb.GmGive{
 		ItemId:    stou32(itemId),
 		ItemCount: stou32(itemCount),
 	}

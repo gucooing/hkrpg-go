@@ -9,40 +9,48 @@ import (
 )
 
 type Config struct {
-	LogLevel           string `json:"logLevel"`
-	GameDataConfigPath string `toml:"GameDataConfigPath"` // 配置表路径
-	MysqlDsn           string `json:"MysqlDsn"`
-	Account            *Account
-	Http               *Http
-	Dispatch           []Dispatch
-	Game               *Game
-	GmKey              string `json:"GmKey"`
-	Email              *email
-	Ec2b               *random.Ec2b
+	LogLevel           string       `json:"LogLevel"`
+	GameDataConfigPath string       `toml:"GameDataConfigPath"`
+	MysqlDsn           string       `json:"MysqlDsn"`
+	Account            *Account     `json:"Account"`
+	Http               *Http        `json:"Http"`
+	Https              *Https       `json:"Https"`
+	Dispatch           []Dispatch   `json:"Dispatch"`
+	Game               *Game        `json:"Game"`
+	GmKey              string       `json:"GmKey"`
+	Email              *email       `json:"Email"`
+	Ec2b               *random.Ec2b `json:"Ec2B"`
 }
 type Account struct {
 	AutoCreate bool  `json:"autoCreate"`
-	MaxPlayer  int64 `json:"maxPlayer"`
+	MaxPlayer  int32 `json:"maxPlayer"`
 }
 type Dispatch struct {
-	Name        string
-	Title       string
-	Type        string
-	DispatchUrl string
+	Name        string `json:"name"`
+	Title       string `json:"title"`
+	Type        string `json:"type"`
+	DispatchUrl string `json:"dispatchUrl"`
 }
 type Http struct {
 	Addr string `json:"addr"`
 	Port int64  `json:"port"`
+}
+type Https struct {
+	Enable   bool   `json:"enable"`   // 是否启动 HTTPS
+	Addr     string `json:"addr"`     // HTTPS 服务地址
+	Port     int64  `json:"port"`     // HTTPS 服务端口
+	CertFile string `json:"certFile"` // 证书文件路径
+	KeyFile  string `json:"keyFile"`  // 密钥文件路径
 }
 type Game struct {
 	Addr string `json:"addr"`
 	Port uint32 `json:"port"`
 }
 type email struct {
-	From     string `json:"From"`
-	Addr     string `json:"Addr"`
-	Host     string `json:"Host"`
-	Identity string `json:"Identity"`
+	From     string `json:"from"`
+	Addr     string `json:"addr"`
+	Host     string `json:"host"`
+	Identity string `json:"identity"`
 }
 
 var CONF *Config = nil
@@ -86,12 +94,25 @@ var DefaultConfig = &Config{
 		Addr: "0.0.0.0",
 		Port: 8080,
 	},
+	Https: &Https{
+		Enable:   true,
+		Addr:     "0.0.0.0",
+		Port:     8443,
+		CertFile: "data/localhost.crt",
+		KeyFile:  "data/localhost.key",
+	},
 	Dispatch: []Dispatch{
 		{
 			Name:        "hkrpg-go",
 			Title:       "os_usa",
 			Type:        "2",
 			DispatchUrl: "http://127.0.0.1:8080/query_gateway",
+		},
+		{
+			Name:        "hkrpg-official",
+			Title:       "os_usa",
+			Type:        "2",
+			DispatchUrl: "http://127.0.0.1:8080/query_gateway_capture",
 		},
 	},
 	Game: &Game{

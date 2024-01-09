@@ -32,49 +32,15 @@ func (g *GameDataConfig) loadEquipmentExpType() {
 	logger.Info("load %v EquipmentExpType", len(g.EquipmentExpTypeMap))
 }
 
-func GetEquipmentExpByLevel(equipmentType, exp, level, promotion uint32) (uint32, uint32) {
-	for ; level < 81; level++ {
+func GetEquipmentExpByLevel(equipmentType, exp, level, promotion, equipmentId uint32) (uint32, uint32) {
+	maxLevel := GetEquipmentMaxLevel(equipmentId, promotion)
+	for ; level <= maxLevel; level++ {
 		if exp < CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Exp {
-			switch promotion {
-			case 0:
-				if level >= 20 {
-					return 20, CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(20)].Exp
-				} else {
-					return CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Level, exp
-				}
-			case 1:
-				if level >= 40 {
-					return 40, CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(40)].Exp
-				} else {
-					return CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Level, exp
-				}
-			case 2:
-				if level >= 50 {
-					return 50, CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(50)].Exp
-				} else {
-					return CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Level, exp
-				}
-			case 3:
-				if level >= 60 {
-					return 60, CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(60)].Exp
-				} else {
-					return CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Level, exp
-				}
-			case 4:
-				if level >= 70 {
-					return 70, CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(70)].Exp
-				} else {
-					return CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Level, exp
-				}
-			}
-			if level >= 80 {
-				return 80, CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(80)].Exp
-			} else {
-				return CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Level, exp
-			}
+			return level, exp
 		} else {
 			exp -= CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Exp
 		}
 	}
-	return 0, 0
+	newExp := CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(maxLevel))].Exp
+	return maxLevel, newExp
 }

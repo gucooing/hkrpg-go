@@ -9,11 +9,7 @@ import (
 func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
 	switch cmdId {
 	case cmd.GetBasicInfoCsReq:
-		g.HandleGetBasicInfoCsReq(payloadMsg)
-	case cmd.GetPlayerBoardDataCsReq:
-		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
-	case cmd.GetCurChallengeCsReq:
-		g.GetCurChallengeCsReq(payloadMsg)
+		g.HandleGetBasicInfoCsReq()
 	case cmd.GetEnteredSceneCsReq:
 		g.HandleGetEnteredSceneCsReq(payloadMsg)
 	case cmd.QueryProductInfoCsReq:
@@ -24,21 +20,21 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetRogueHandbookDataCsReq(payloadMsg) // 获取帮助手册
 	case cmd.GetChatEmojiListCsReq:
 		g.HandleGetChatEmojiListCsReq(payloadMsg) // 获取聊天表情
-	case cmd.GetChallengeCsReq:
-		g.HandleGetChallengeCsReq(payloadMsg) // 获取挑战id列表
 	case cmd.GetJukeboxDataCsReq:
 		g.HandleGetJukeboxDataCsReq(payloadMsg) // 点歌？
 	case cmd.GetPhoneDataCsReq:
 		g.HandleGetPhoneDataCsReq(payloadMsg) // 获取手机信息?
+	case cmd.TextJoinQueryCsReq:
+		g.TextJoinQueryCsReq() //
 	// 登录
-	case cmd.PlayerGetTokenCsReq:
-		g.HandlePlayerGetTokenCsReq(payloadMsg) // 获取玩家token请求 第一个登录包
 	case cmd.PlayerLoginCsReq:
 		g.HandlePlayerLoginCsReq(payloadMsg) // 玩家登录请求 第二个登录包
 	case cmd.PlayerLoginFinishCsReq:
 		g.HandlePlayerLoginFinishCsReq(payloadMsg) // 登录完成包
 	case cmd.PlayerLogoutCsReq:
 		g.PlayerLogoutCsReq() // 客户端退出游戏通知
+	case cmd.GetDailyActiveInfoCsReq:
+		// TODO 每日任务
 	// 队伍
 	case cmd.GetAllLineupDataCsReq:
 		g.HandleGetAllLineupDataCsReq(payloadMsg) // 获取队伍信息请求
@@ -65,17 +61,31 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetAvatarDataCsReq(payloadMsg) // 请求全部角色信息
 	case cmd.RankUpAvatarCsReq:
 		g.RankUpAvatarCsReq(payloadMsg) // 提高角色命座
+	case cmd.AvatarExpUpCsReq:
+		g.AvatarExpUpCsReq(payloadMsg) // 角色升级
+	case cmd.PromoteAvatarCsReq:
+		g.PromoteAvatarCsReq(payloadMsg) // 角色突破
+	case cmd.UnlockSkilltreeCsReq:
+		g.UnlockSkilltreeCsReq(payloadMsg) // 行迹升级
+	case cmd.TakePromotionRewardCsReq:
+		g.TakePromotionRewardCsReq(payloadMsg) // 领取角色突破奖励
+	// 光锥
 	case cmd.DressAvatarCsReq:
 		g.DressAvatarCsReq(payloadMsg) // 角色光锥装备
 	case cmd.ExpUpEquipmentCsReq:
 		g.ExpUpEquipmentCsReq(payloadMsg) // 光锥升级
 	case cmd.RankUpEquipmentCsReq:
 		g.RankUpEquipmentCsReq(payloadMsg) // 光锥叠影
+	case cmd.PromoteEquipmentCsReq:
+		g.PromoteEquipmentCsReq(payloadMsg) // 光锥突破
+	// 圣遗物
+	case cmd.DressRelicAvatarCsReq:
+		g.DressRelicAvatarCsReq(payloadMsg) // 圣遗物装备
+	case cmd.ExpUpRelicCsReq:
+		g.ExpUpRelicCsReq(payloadMsg) // 圣遗物升级
 	// 场景
 	case cmd.GetSceneMapInfoCsReq:
 		g.HanldeGetSceneMapInfoCsReq(payloadMsg) // 获取地图信息
-	case cmd.GetRogueInfoCsReq:
-		g.GetRogueInfoCsReq(payloadMsg) // 获取副本库
 	case cmd.GetCurSceneInfoCsReq:
 		g.HandleGetCurSceneInfoCsReq(payloadMsg) // 获取场景信息(关键包)
 	case cmd.SceneEntityMoveCsReq:
@@ -84,12 +94,47 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetRogueScoreRewardInfoCsReq()
 	case cmd.EnterSceneCsReq:
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
+	case cmd.GetUnlockTeleportCsReq:
+		g.GetUnlockTeleportCsReq() // 获取解锁的传送点
+	case cmd.InteractPropCsReq:
+		g.InteractPropCsReq(payloadMsg) // 实体交互
+	// 战斗
+	case cmd.SceneCastSkillCsReq:
+		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
+	case cmd.PVEBattleResultCsReq:
+		g.PVEBattleResultCsReq(payloadMsg) // PVE战斗结算
+	case cmd.GetRogueInfoCsReq:
+		g.GetRogueInfoCsReq(payloadMsg) // 获取模拟宇宙
+	case cmd.StartRogueCsReq:
+		g.StartRogueCsReq(payloadMsg) // 模拟宇宙,启动!
+	case cmd.LeaveRogueCsReq:
+		g.LeaveRogueCsReq(payloadMsg) // 模拟宇宙撤离请求
+	case cmd.QuitRogueCsReq:
+		g.QuitRogueCsReq(payloadMsg) // 模拟宇宙结算请求
+	case cmd.GetRogueTalentInfoCsReq:
+		g.GetRogueTalentInfoCsReq() // 获取天赋信息
+	case cmd.StartCocoonStageCsReq:
+		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
+	case cmd.GetChallengeCsReq:
+		g.HandleGetChallengeCsReq(payloadMsg) // 获取忘却之庭挑战完成信息
+	case cmd.StartChallengeCsReq:
+		g.StartChallengeCsReq(payloadMsg) // 忘却之庭,启动!
+	case cmd.GetCurChallengeCsReq:
+		g.GetCurChallengeCsReq(payloadMsg) // 获取忘却之庭状态
+	case cmd.LeaveChallengeCsReq:
+		g.LeaveChallengeCsReq() // 退出忘却之庭
 	// 背包
 	case cmd.GetBagCsReq:
 		g.HandleGetBagCsReq(payloadMsg) // 获取背包物品
 	// 交易
 	case cmd.GetShopListCsReq:
-		g.GetShopListCsReq() // 获取商店物品列表
+		g.GetShopListCsReq(payloadMsg) // 获取商店物品列表
+	case cmd.ExchangeHcoinCsReq:
+		g.ExchangeHcoinCsReq(payloadMsg) // 梦华兑换
+	case cmd.ExchangeRogueRewardKeyCsReq:
+		g.ExchangeRogueRewardKeyCsReq(payloadMsg) // 储存沉浸器
+	case cmd.BuyGoodsCsReq:
+		g.BuyGoodsCsReq(payloadMsg) // 商店交易
 	// 社交
 	case cmd.GetMailCsReq:
 		g.GetMailCsReq() // 获取邮件
@@ -107,7 +152,9 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetMissionStatusCsReq(payloadMsg)
 	// 活动
 	case cmd.GetActivityScheduleConfigCsReq:
-		g.HandleGetActivityScheduleConfigCsReq(payloadMsg) // 活动配置请求
+		g.HandleGetActivityScheduleConfigCsReq(payloadMsg) // 活动排期请求
+	case cmd.StartTrialActivityCsReq:
+		g.StartTrialActivityCsReq(payloadMsg) // 角色试用
 	// 基础
 	case cmd.SetClientPausedCsReq:
 		g.SetClientPausedCsReq() // 客户端暂停请求
@@ -127,16 +174,22 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.SetGameplayBirthdayCsReq(payloadMsg) // 修改生日请求
 	case cmd.SetSignatureCsReq:
 		g.SetSignatureCsReq(payloadMsg) // 简介修改请求
+	case cmd.GetPlayerBoardDataCsReq:
+		g.HandleGetPlayerBoardDataCsReq(payloadMsg)
 	// 成就
 	case cmd.GetArchiveDataCsReq:
-		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取成就
-	// 乱七八糟
-	case cmd.InteractPropCsReq:
-		g.InteractPropCsReq()
+		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取收集
+	case cmd.GetUpdatedArchiveDataCsReq:
+		g.GetUpdatedArchiveDataCsReq() // 更新收集
+	// NPC
 	case cmd.GetFirstTalkNpcCsReq:
 		g.GetFirstTalkNpcCsReq()
+	case cmd.GetNpcTakenRewardCsReq:
+		g.GetNpcTakenRewardCsReq(payloadMsg) // NPC对话
+	case cmd.GetFirstTalkByPerformanceNpcCsReq:
+		g.GetFirstTalkByPerformanceNpcCsReq(payloadMsg) // NPC商店
 	default:
-		logger.Error("C --> S error router: %v", cmdId)
+		logger.Debug("C --> S error router: %v", cmdId)
 	}
 	return
 }
@@ -145,5 +198,7 @@ func (g *Game) GMRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 	switch cmdId {
 	case cmd.GmGive:
 		g.GmGive(payloadMsg) // 获取物品
+	case cmd.GmWorldLevel:
+		g.GmWorldLevel(payloadMsg) // 设置世界等级
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/internal/Game"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/config"
@@ -18,6 +17,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -31,6 +31,7 @@ var KCPCONNMANAGER *KcpConnManager
 
 type KcpConnManager struct {
 	kcpListener *kcp.Listener
+	kcpFin      bool
 	// 会话
 	sessionIdCounter uint32
 	sessionMap       map[uint32]*Game.Game
@@ -50,7 +51,8 @@ type GmMsg struct {
 }
 
 func Run() error {
-	k := KcpConnManager{}
+	k := new(KcpConnManager)
+	KCPCONNMANAGER = k
 	k.sessionMap = make(map[uint32]*Game.Game)
 
 	addr := "0.0.0.0:" + strconv.Itoa(int(config.GetConfig().Game.Port))
@@ -59,13 +61,18 @@ func Run() error {
 		logger.Error("listen kcp err: %v", err)
 		return err
 	}
-	logger.Info("kcp服务在 %s 上启动", addr)
+	logger.Info("hkrpg-go KCP 服务在 %s 上启动", addr)
 	k.kcpListener = kcpListener
+	Game.SNOWFLAKE = alg.NewSnowflakeWorker(int64(1))
 	go k.kcpNetInfo()
 	go k.kcpEnetHandle(kcpListener)
 
 	for {
 		kcpConn, err := kcpListener.AcceptKCP()
+		if k.kcpFin {
+			logger.Info("kcp error")
+			break
+		}
 		if err != nil {
 			logger.Error("accept kcp err: %v", err)
 			continue
@@ -78,13 +85,10 @@ func Run() error {
 		// 读取密钥相关文件
 		g := NewGame(kcpConn)
 		g.XorKey = config.GetConfig().Ec2b.XorKey()
-		g.Db = DataBase.DBASE
-		g.Snowflake = alg.NewSnowflakeWorker(int64(1))
-		CLIENT_CONN_NUM++
-		go g.AutoUpDataPlayer()
-		go k.recvHandle(g)
+		go recvHandle(g)
 		go k.sendNet(g)
 	}
+	return nil
 }
 
 func NewGame(kcpConn *kcp.UDPSession) *Game.Game {
@@ -94,8 +98,21 @@ func NewGame(kcpConn *kcp.UDPSession) *Game.Game {
 	return g
 }
 
-func (k *KcpConnManager) recvHandle(g *Game.Game) {
+func recvHandle(g *Game.Game) {
 	payload := make([]byte, PacketMaxLen)
+
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GAME MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			if g.Player != nil {
+				logger.Error("the motherfucker player uid: %v", g.PlayerPb.Uid)
+				g.KickPlayer()
+			}
+		}
+	}()
 
 	for {
 		var bin []byte = nil
@@ -111,14 +128,26 @@ func (k *KcpConnManager) recvHandle(g *Game.Game) {
 			// name := g.ServerCmdProtoMap.GetCmdNameByCmdId(v.CmdId)
 			// logger.Error("C --> S: %v", v.CmdId)
 			// payloadMsg := DecodePayloadToProto(g, v) TODO 由于 req 大部分缺失，所以不预处理数据
-			g.RegisterMessage(v.CmdId, v.ProtoData)
+			if g.IsToken {
+				g.RegisterMessage(v.CmdId, v.ProtoData)
+			} else {
+				if v.CmdId == cmd.PlayerGetTokenCsReq {
+					HandlePlayerGetTokenCsReq(g, v.ProtoData)
+				} else {
+					g.XorKey = nil
+					netMsg := new(Game.NetMsg)
+					netMsg.G = g
+					netMsg.Type = Game.Close
+					g.NetMsgInput <- netMsg
+					return
+				}
+			}
 		}
 	}
 }
 
 // kcp连接事件处理函数
 func (k *KcpConnManager) kcpEnetHandle(listener *kcp.Listener) {
-	KCPCONNMANAGER = k
 	logger.Info("kcp enet handle start")
 	for {
 		enetNotify := <-listener.GetEnetNotifyChan()
@@ -145,6 +174,8 @@ func (k *KcpConnManager) kcpEnetHandle(listener *kcp.Listener) {
 				EventId:      KcpConnAddrChangeNotify,
 				EventMessage: enetNotify.Addr,
 			}
+		case kcp.ConnEnetFin:
+			// 连接断开通知
 		default:
 		}
 	}
@@ -154,12 +185,20 @@ func (k *KcpConnManager) sendNet(g *Game.Game) {
 	for {
 		netMsg := <-g.NetMsgInput
 		switch netMsg.Type {
-		case "KcpMsg":
+		case Game.KcpMsg:
 			k.SendHandle(netMsg.G, netMsg.CmdId, netMsg.PlayerMsg)
-		case "Close":
-			atomic.AddInt32(&CLIENT_CONN_NUM, -1)
+		case Game.Close:
+			if g.Uid != 0 {
+				g.KcpConn.Close()
+				delete(k.sessionMap, g.Uid)
+				g.Seed = 0
+				CLIENT_CONN_NUM = int32(len(k.sessionMap))
+				return
+			}
 			g.KcpConn.Close()
-			delete(k.sessionMap, g.Uid)
+			return
+		case Game.Change:
+			g.KcpConn.Close()
 			return
 		}
 	}
@@ -174,7 +213,6 @@ func (k *KcpConnManager) SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Mes
 	if kcpMsg.CmdId == 0 {
 		logger.Error("cmdid error")
 	}
-	// logger.Debug("S --> C: %v", kcpMsg.CmdId)
 	binMsg := EncodePayloadToBin(kcpMsg, g.XorKey)
 	_, err := g.KcpConn.Write(binMsg)
 	if err != nil {
@@ -190,6 +228,7 @@ func (k *KcpConnManager) SendHandle(g *Game.Game, cmdid uint16, playerMsg pb.Mes
 		logger.Info("uid:%v,seed:%v,密钥交换成功", g.Uid, g.Seed)
 		if k.sessionMap[g.Uid] == nil {
 			k.sessionMap[g.Uid] = g
+			CLIENT_CONN_NUM = int32(len(k.sessionMap))
 		}
 		// 如果不为空则是断线重连
 	}
@@ -211,6 +250,26 @@ func GmToGs(uid uint32, gmMsg *GmMsg) bool {
 	payloadMsg := DecodeGmPayloadToProto(game, gmMsg)
 	go game.GMRegisterMessage(gmMsg.CmdId, payloadMsg)
 	return true
+}
+
+func GetPlayerBin(uid uint32) *spb.PlayerBasicCompBin {
+	if KCPCONNMANAGER.sessionMap[uid] == nil {
+		return &spb.PlayerBasicCompBin{}
+	}
+	playerDb := KCPCONNMANAGER.sessionMap[uid].PlayerPb
+	return playerDb
+}
+
+func Close() error {
+	KCPCONNMANAGER.kcpFin = true
+	for _, player := range KCPCONNMANAGER.sessionMap {
+		err := player.KickPlayer()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (k *KcpConnManager) kcpNetInfo() {

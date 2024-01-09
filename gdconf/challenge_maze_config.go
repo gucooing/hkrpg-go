@@ -18,7 +18,7 @@ type ChallengeMazeConfig struct {
 	DamageType1        []string `json:"DamageType1"`
 	DamageType2        []string `json:"DamageType2"`
 	ChallengeTargetID  []uint32 `json:"ChallengeTargetID"`
-	StageNum           uint32   `json:"StageNum"`
+	StageNum           uint32   `json:"StageNum"` // 波次
 	ChallengeCountDown uint32   `json:"ChallengeCountDown"`
 	MazeGroupID1       uint32   `json:"MazeGroupID1"`
 	ConfigList1        []uint32 `json:"ConfigList1"`
@@ -29,6 +29,14 @@ type ChallengeMazeConfig struct {
 	NpcMonsterIDList2  []uint32 `json:"NpcMonsterIDList2"`
 	EventIDList2       []uint32 `json:"EventIDList2"`
 	MazeBuffID         uint32   `json:"MazeBuffID"`
+	ChallengeState     map[uint32]*ChallengeState
+}
+
+type ChallengeState struct {
+	NPCMonsterID uint32
+	EventID      uint32
+	GroupID      uint32
+	ConfigID     uint32
 }
 
 func (g *GameDataConfig) loadChallengeMazeConfig() {
@@ -45,6 +53,27 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+
+	for _, challengeMazeConfig := range g.ChallengeMazeConfigMap {
+		challengeMazeConfig.ChallengeState = make(map[uint32]*ChallengeState)
+		if challengeMazeConfig.StageNum == 2 {
+			challengeState := &ChallengeState{
+				NPCMonsterID: challengeMazeConfig.NpcMonsterIDList2[0],
+				EventID:      challengeMazeConfig.EventIDList2[0],
+				GroupID:      challengeMazeConfig.MazeGroupID2,
+				ConfigID:     challengeMazeConfig.ConfigList2[0],
+			}
+			challengeMazeConfig.ChallengeState[2] = challengeState
+		}
+		challengeState := &ChallengeState{
+			NPCMonsterID: challengeMazeConfig.NpcMonsterIDList1[0],
+			EventID:      challengeMazeConfig.EventIDList1[0],
+			GroupID:      challengeMazeConfig.MazeGroupID1,
+			ConfigID:     challengeMazeConfig.ConfigList1[0],
+		}
+		challengeMazeConfig.ChallengeState[1] = challengeState
+	}
+
 	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeMazeConfigMap))
 }
 
