@@ -152,7 +152,9 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetMissionStatusCsReq(payloadMsg)
 	// 活动
 	case cmd.GetActivityScheduleConfigCsReq:
-		g.HandleGetActivityScheduleConfigCsReq(payloadMsg) // 活动配置请求
+		g.HandleGetActivityScheduleConfigCsReq(payloadMsg) // 活动排期请求
+	case cmd.StartTrialActivityCsReq:
+		g.StartTrialActivityCsReq(payloadMsg) // 角色试用
 	// 基础
 	case cmd.SetClientPausedCsReq:
 		g.SetClientPausedCsReq() // 客户端暂停请求

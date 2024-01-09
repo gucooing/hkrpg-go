@@ -50,6 +50,7 @@ type GameDataConfig struct {
 	MapEntranceMap              map[string]*MapEntrance                         // 地图入口
 	BannersMap                  map[uint32]*Banners                             // 卡池信息
 	ActivityPanelMap            map[string]*ActivityPanel                       // 活动
+	ActivitySchedulingMap       []*ActivityScheduling                           // 活动排期
 	QuestDataMap                map[string]*QuestData                           // 任务
 	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
 	ChallengeMazeConfigMap      map[string]*ChallengeMazeConfig                 // 忘却之庭配置
@@ -143,6 +144,7 @@ func (g *GameDataConfig) load() {
 	g.loadMapEntrance()              // 地图入口
 	g.loadBanners()                  // 卡池信息
 	g.loadActivityPanel()            // 活动
+	g.loadActivityScheduling()       // 活动排期
 	g.loadQuestData()                // 任务
 	g.loadMonsterConfig()            // 怪物配置
 	g.loadChallengeMazeConfig()      // 忘却之庭配置

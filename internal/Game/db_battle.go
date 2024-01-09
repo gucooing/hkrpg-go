@@ -56,6 +56,13 @@ type Rogue struct {
 }
 
 func (g *Game) GetBattleState() *BattleState {
+	if g.Player.BattleState == nil {
+		g.Player.BattleState = &BattleState{
+			BattleType:     0,
+			ChallengeState: nil,
+			BuffList:       nil,
+		}
+	}
 	return g.Player.BattleState
 }
 

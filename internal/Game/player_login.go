@@ -3,7 +3,6 @@ package Game
 import (
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/internal/DataBase"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -13,6 +12,11 @@ import (
 )
 
 func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
+	req := msg.(*proto.PlayerLoginCsReq)
+
+	logger.Info("登录的系统是:%s", req.SystemVersion)
+
 	var err error
 	playerData := new(PlayerData)
 
@@ -73,25 +77,6 @@ func (g *Game) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	g.StaminaInfoScNotify()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
 
-}
-
-func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetActivityScheduleConfigScRsp)
-	rsp.ActivityScheduleList = make([]*proto.ActivityScheduleInfo, 0)
-	for _, activity := range gdconf.GetActivityPanelMap() {
-		if activity.Type != 18 {
-			continue
-		}
-		activityScheduleList := &proto.ActivityScheduleInfo{
-			ActivityId: activity.PanelID,
-			EndTime:    4294967295,
-			ModuleId:   activity.ActivityModuleID,
-			BeginTime:  1664308800,
-		}
-		rsp.ActivityScheduleList = append(rsp.ActivityScheduleList, activityScheduleList)
-	}
-
-	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }
 
 func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {
