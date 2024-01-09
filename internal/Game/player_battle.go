@@ -552,18 +552,20 @@ func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 	endTime := beginTime + int64(time.Hour.Seconds()*24*8)
 	rsp := new(proto.GetRogueInfoScRsp)
 	rogueInfo := &proto.RogueInfo{
-		RogueInfos: &proto.RogueInfos{
-			RogueInfoScheduling: &proto.RogueInfoScheduling{
-				BeginTime: beginTime,
-				EndTime:   endTime,
+		RogueGetInfo: &proto.RogueGetInfo{
+			RogueSeasonInfo: &proto.RogueSeasonInfo{
+				BeginTime: 1704052800,
+				EndTime:   4070894399,
 				SeasonId:  78,
 			},
-			RogueScoreInfo: &proto.RogueScoreRewardInfo{
+			RogueScoreRewardInfo: &proto.RogueScoreRewardInfo{
+				BeginTime:            beginTime,
+				EndTime:              endTime,
 				PoolId:               20 + g.PlayerPb.WorldLevel,
 				HasTakenInitialScore: true,
 				PoolRefreshed:        true,
 			},
-			RogueAreaList: make([]*proto.RogueArea, 0),
+			RogueAreaList: &proto.RogueAreaList{RogueArea: make([]*proto.RogueArea, 0)},
 			RogueData: &proto.RogueInfoData{
 				RogueSeasonInfo: &proto.RogueSeasonInfo{
 					BeginTime: beginTime,
@@ -592,7 +594,7 @@ func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 			AreaId:          rogueArea.RogueAreaID,
 			RogueAreaStatus: proto.RogueAreaStatus_ROGUE_AREA_STATUS_FIRST_PASS,
 		}
-		rogueInfo.RogueInfos.RogueAreaList = append(rogueInfo.RogueInfos.RogueAreaList, RogueArea)
+		rogueInfo.RogueGetInfo.RogueAreaList.RogueArea = append(rogueInfo.RogueGetInfo.RogueAreaList.RogueArea, RogueArea)
 	}
 	rsp.RogueInfo = rogueInfo
 
@@ -634,13 +636,15 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 	endTime := beginTime + int64(time.Hour.Seconds()*24*8)
 
 	// 可独立成单独的方法
-	rogueScoreInfo := &proto.RogueScoreRewardInfo{
-		HasTakenInitialScore: true, // 已取得初始积分？
-		Score:                0,
-		PoolRefreshed:        true, // 刷新？
-		TakenScoreRewardList: nil,
-		PoolId:               20 + g.PlayerPb.WorldLevel,
-	}
+	/*
+		rogueScoreInfo := &proto.RogueScoreRewardInfo{
+			HasTakenInitialScore: true, // 已取得初始积分？
+			Score:                0,
+			PoolRefreshed:        true, // 刷新？
+			TakenScoreRewardList: nil,
+			PoolId:               20 + g.PlayerPb.WorldLevel,
+		}
+	*/
 	// 可独立成单独的方法
 	roomMap := &proto.RogueMapInfo{
 		MapId:     rogueMapID,
@@ -802,21 +806,29 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 			Mp:              5,
 		},
 		RogueInfo: &proto.RogueInfo{
-			RogueInfos: &proto.RogueInfos{
-				RogueInfoScheduling: &proto.RogueInfoScheduling{
-					BeginTime: beginTime,
-					EndTime:   endTime,
+			RogueGetInfo: &proto.RogueGetInfo{
+				RogueSeasonInfo: &proto.RogueSeasonInfo{
+					BeginTime: 1704052800,
+					EndTime:   4070894399,
 					SeasonId:  78,
 				},
-				RogueScoreInfo: rogueScoreInfo,
-				RogueAreaList:  make([]*proto.RogueArea, 0),
+				RogueScoreRewardInfo: &proto.RogueScoreRewardInfo{
+					BeginTime:            beginTime,
+					EndTime:              endTime,
+					PoolId:               20 + g.PlayerPb.WorldLevel,
+					HasTakenInitialScore: true,
+					PoolRefreshed:        true,
+				},
+				RogueAreaList: &proto.RogueAreaList{RogueArea: make([]*proto.RogueArea, 0)},
 				RogueData: &proto.RogueInfoData{
 					RogueSeasonInfo: &proto.RogueSeasonInfo{
-						BeginTime: beginTime,
+						BeginTime: 1704052800,
+						EndTime:   4070894399,
 						SeasonId:  78,
-						EndTime:   endTime,
 					},
 					RogueScoreInfo: &proto.RogueScoreRewardInfo{
+						BeginTime:            beginTime,
+						EndTime:              endTime,
 						PoolId:               20 + g.PlayerPb.WorldLevel,
 						HasTakenInitialScore: true,
 						PoolRefreshed:        true,
