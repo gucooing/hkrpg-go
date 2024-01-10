@@ -30,8 +30,8 @@ func (s *Server) Start() error {
 	go s.startServer(httpAddr, "HTTP")
 
 	// 根据配置决定是否启动 HTTPS 服务器
-	if s.Config.Https != nil && s.Config.Https.Enable {
-		httpsAddr := s.Config.Https.Addr + ":" + strconv.FormatInt(s.Config.Https.Port, 10)
+	if s.Config.Http.EnableHttps {
+		httpsAddr := s.Config.Http.Addr + ":" + strconv.FormatInt(s.Config.Http.HttpsPort, 10)
 		go s.startServer(httpsAddr, "HTTPS")
 	}
 
@@ -45,7 +45,7 @@ func (s *Server) startServer(addr string, serverType string) {
 
 	var err error
 	if serverType == "HTTPS" {
-		err = server.ListenAndServeTLS(s.Config.Https.CertFile, s.Config.Https.KeyFile)
+		err = server.ListenAndServeTLS(s.Config.Http.CertFile, s.Config.Http.KeyFile)
 	} else {
 		err = server.ListenAndServe()
 	}

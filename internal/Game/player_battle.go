@@ -73,6 +73,20 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			BattleTargetInfo: make(map[uint32]*proto.BattleTargetList),
 		},
 	}
+	// 怪物波列表
+	for id, monsterListMap := range stageConfig.MonsterList {
+		monsterWaveList := &proto.SceneMonsterWave{
+			StageId: stageID.StageID,
+			WaveId:  uint32(id + 1),
+		}
+		for _, monsterList := range monsterListMap {
+			sceneMonster := &proto.SceneMonster{
+				MonsterId: monsterList,
+			}
+			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
+		}
+		rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
+	}
 	switch battleState.BattleType {
 	case spb.BattleType_Battle_NONE:
 
@@ -88,23 +102,10 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 		}
 		rsp.BattleInfo.RoundsLimit = battleState.ChallengeState.ChallengeCountDown
 	case spb.BattleType_Battle_TrialActivity:
-		lineUp = 10
+		g.TrialActivitySceneCastSkillScRsp(rsp)
+		return
 	}
 
-	// 怪物波列表
-	for id, monsterListMap := range stageConfig.MonsterList {
-		monsterWaveList := &proto.SceneMonsterWave{
-			StageId: stageID.StageID,
-			WaveId:  uint32(id + 1),
-		}
-		for _, monsterList := range monsterListMap {
-			sceneMonster := &proto.SceneMonster{
-				MonsterId: monsterList,
-			}
-			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
-		}
-		rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
-	}
 	// 添加角色
 	for id, avatarId := range g.GetLineUpById(lineUp).AvatarIdList {
 		if avatarId == 0 {
@@ -177,7 +178,9 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 				OwnerId:         targetIndex,
 				TargetIndexList: []uint32{targetIndex},
 				WaveFlag:        4294967295, // 失效时间
+				DynamicValues:   make(map[string]float32),
 			}
+			buffList.DynamicValues["SkillIndex"] = 1
 			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 			targetIndex++
 			g.PlayerPb.Avatar.Avatar[avatarId].BuffList = 0
@@ -192,7 +195,9 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			OwnerId:         targetIndex,
 			TargetIndexList: []uint32{targetIndex},
 			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
 		}
+		buffList.DynamicValues["SkillIndex"] = 1
 		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 		targetIndex++
 	}
@@ -207,7 +212,9 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			OwnerId:         targetIndex,
 			TargetIndexList: []uint32{targetIndex},
 			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
 		}
+		buffList.DynamicValues["SkillIndex"] = 1
 		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 		targetIndex++
 	}
@@ -252,6 +259,11 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	rsp.CheckIdentical = true     // 反作弊验证
 	rsp.BinVersion = ""
 	rsp.ResVersion = strconv.Itoa(int(req.ClientResVersion)) // 版本验证
+	switch battleState.BattleType {
+	case spb.BattleType_Battle_TrialActivity:
+		g.TrialActivityPVEBattleResultScRsp(rsp)
+		return
+	}
 
 	// 更新角色状态
 	for _, avatarStt := range req.Stt.BattleAvatarList {

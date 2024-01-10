@@ -10,10 +10,20 @@ import (
 )
 
 type SpecialAvatar struct {
-	SpecialAvatarID uint32 `json:"SpecialAvatarID"`
-	WorldLevel      uint32 `json:"WorldLevel"`
-	PlayerID        uint32 `json:"PlayerID"`
-	AvatarID        uint32 `json:"AvatarID"`
+	SpecialAvatarID    uint32 `json:"SpecialAvatarID"`
+	WorldLevel         uint32 `json:"WorldLevel"`
+	PlayerID           uint32 `json:"PlayerID"`
+	AvatarID           uint32 `json:"AvatarID"`
+	Level              uint32 `json:"Level"`
+	Promotion          uint32 `json:"Promotion"`
+	HaveActionDelay    bool   `json:"HaveActionDelay"`
+	EquipmentID        uint32 `json:"EquipmentID"`
+	EquipmentLevel     uint32 `json:"EquipmentLevel"`
+	EquipmentPromotion uint32 `json:"EquipmentPromotion"`
+	EquipmentRank      uint32 `json:"EquipmentRank"`
+	RelicPropertyType  uint32 `json:"RelicPropertyType"`
+	RelicMainValue     uint32 `json:"RelicMainValue"`
+	RelicSubValue      uint32 `json:"RelicSubValue"`
 }
 
 func (g *GameDataConfig) loadSpecialAvatar() {

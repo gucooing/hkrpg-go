@@ -8,9 +8,10 @@ import (
 )
 
 type BattleState struct {
-	BattleType     spb.BattleType
-	ChallengeState *ChallengeState // ChallengeState
-	BuffList       []uint32        // 进入战斗需要添加的buff
+	BattleType         spb.BattleType
+	ChallengeState     *ChallengeState // ChallengeState
+	TrialActivityState *TrialActivityState
+	BuffList           []uint32 // 进入战斗需要添加的buff
 }
 type ChallengeState struct {
 	ChallengeCount     uint32   // 波数
@@ -34,6 +35,19 @@ type ChallengeState struct {
 	CurChallengeBattle map[uint32]*CurChallengeBattle
 	StoryBuffOne       uint32
 	StoryBuffTwo       uint32
+}
+type TrialActivityState struct {
+	AvatarDemoId  uint32
+	NPCMonsterPos *spb.VectorBin
+	NPCMonsterRot *spb.VectorBin
+	PlaneID       uint32
+	FloorID       uint32
+	EntranceID    uint32
+
+	NPCMonsterID uint32
+	EventID      uint32
+	GroupID      uint32
+	ConfigID     uint32
 }
 
 type CurChallengeBattle struct {
@@ -61,9 +75,10 @@ type Rogue struct {
 func (g *Game) GetBattleState() *BattleState {
 	if g.Player.BattleState == nil {
 		g.Player.BattleState = &BattleState{
-			BattleType:     0,
-			ChallengeState: nil,
-			BuffList:       nil,
+			BattleType:         0,
+			ChallengeState:     nil,
+			BuffList:           nil,
+			TrialActivityState: nil,
 		}
 	}
 	return g.Player.BattleState
@@ -74,6 +89,13 @@ func (g *Game) GetChallengeState() *ChallengeState {
 		g.GetBattleState().ChallengeState = &ChallengeState{}
 	}
 	return g.GetBattleState().ChallengeState
+}
+
+func (g *Game) GetTrialActivityState() *TrialActivityState {
+	if g.GetBattleState().TrialActivityState == nil {
+		g.GetBattleState().TrialActivityState = &TrialActivityState{}
+	}
+	return g.GetBattleState().TrialActivityState
 }
 
 func (g *Game) GetBattle() *spb.Battle {

@@ -13,30 +13,44 @@ func (g *Game) StartTrialActivityCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
 	req := msg.(*proto.StartTrialActivityCsReq)
 
-	avatarDemo := gdconf.GetAvatarDemoConfigById(req.AvatarDemoId)
+	avatarDemo := gdconf.GetAvatarDemoConfigById(req.TrialActivityId)
 	lineup := g.GetLineUpById(10)
+
+	trialActivityState := g.GetTrialActivityState()
+	trialActivityState.AvatarDemoId = req.TrialActivityId
+	// 记录场景
+	trialActivityState.PlaneID = avatarDemo.PlaneID
+	trialActivityState.FloorID = avatarDemo.FloorID
+	trialActivityState.EntranceID = avatarDemo.MapEntranceID
+	// 记录怪物信息
+	trialActivityState.EventID = avatarDemo.EventIDList1[0]
+	trialActivityState.ConfigID = avatarDemo.ConfigList1[0]
+	trialActivityState.NPCMonsterID = avatarDemo.NpcMonsterIDList1[0]
+	trialActivityState.GroupID = avatarDemo.MazeGroupID1
 
 	lineup.AvatarIdList = []uint32{0, 0, 0, 0}
 	for id, avatarId := range avatarDemo.TrialAvatarList {
 		lineup.AvatarIdList[id] = avatarId
 	}
 
-	// g.Send(cmd.SyncServerSceneChangeNotify, req)
+	g.Send(cmd.SyncServerSceneChangeNotify, req)
 
 	g.SyncLineupNotify(10)
 
-	g.StartTrialEnterSceneByServerScNotify(avatarDemo.MapEntranceID, 0)
+	g.StartTrialEnterSceneByServerScNotify()
 
-	// EnterSceneByServerScNotify
+	g.GetBattleState().BattleType = spb.BattleType_Battle_TrialActivity
 
-	rsp := &proto.StartTrialActivityScRsp{AvatarDemoId: req.AvatarDemoId}
+	rsp := &proto.StartTrialActivityScRsp{TrialActivityId: req.TrialActivityId}
 	g.Send(cmd.StartTrialActivityScRsp, rsp)
 }
 
-func (g *Game) StartTrialEnterSceneByServerScNotify(entryId, teleportId uint32) {
+func (g *Game) StartTrialEnterSceneByServerScNotify() {
 	rsp := new(proto.EnterSceneByServerScNotify)
 	leaderEntityId := uint32(g.GetNextGameObjectGuid())
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+	trialActivityState := g.GetTrialActivityState()
+
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(trialActivityState.EntranceID)))
 	if mapEntrance == nil {
 		return
 	}
@@ -45,32 +59,52 @@ func (g *Game) StartTrialEnterSceneByServerScNotify(entryId, teleportId uint32) 
 		return
 	}
 
-	var groupID = mapEntrance.StartGroupID
 	var anchorID = mapEntrance.StartAnchorID
 	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
 
-	if teleportId != 0 {
-		groupID = foorMap.Teleports[teleportId].AnchorGroupID
-		anchorID = foorMap.Teleports[teleportId].AnchorID
-	} else if anchorID == 0 {
-		groupID = foorMap.StartGroupID
-		anchorID = foorMap.StartAnchorID
-	}
+	anchorID = foorMap.StartAnchorID
 
 	// 获取队伍
-	rsp.Lineup = g.GetLineUpPb(10)
+	lineup := g.GetLineUpById(10)
+	lineupList := &proto.LineupInfo{
+		IsVirtual:       false,
+		LeaderSlot:      0,
+		AvatarList:      make([]*proto.LineupAvatar, 0),
+		ExtraLineupType: proto.ExtraLineupType(lineup.ExtraLineupType),
+		MaxMp:           5,
+		Mp:              5,
+		PlaneId:         0,
+	}
+	for slot, avatarId := range lineup.AvatarIdList {
+		if avatarId == 0 {
+			continue
+		}
+		lineupAvatar := &proto.LineupAvatar{
+			AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
+			Slot:       uint32(slot),
+			Satiety:    0,
+			Hp:         10000,
+			Id:         avatarId,
+			SpBar: &proto.SpBarInfo{
+				CurSp: 5000,
+				MaxSp: 10000,
+			},
+		}
+		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
+	}
+
+	rsp.Lineup = lineupList
 
 	rsp.Scene = &proto.SceneInfo{
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
-		LeaderEntityId:     leaderEntityId,
-		FloorId:            mapEntrance.FloorID,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
-		PlaneId:            mapEntrance.PlaneID,
-		EntryId:            entryId,
-		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        make([]uint32, 0),
-		LightenSectionList: make([]uint32, 0),
+		ClientPosVersion:   5,
+		EntryId:            trialActivityState.EntranceID,
+		FloorId:            trialActivityState.FloorID,
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(trialActivityState.PlaneID))).PlaneType),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
+		LeaderEntityId:     leaderEntityId,
+		LightenSectionList: make([]uint32, 0),
+		PlaneId:            trialActivityState.PlaneID,
+		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(trialActivityState.PlaneID))).WorldID,
 	}
 
 	for i := uint32(0); i < 100; i++ {
@@ -81,10 +115,10 @@ func (g *Game) StartTrialEnterSceneByServerScNotify(entryId, teleportId uint32) 
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
 	// 添加队伍角色进实体列表，并设置坐标
-	if foorMap.Groups[groupID] == nil {
+	if foorMap.Groups[trialActivityState.GroupID] == nil {
 		return
 	}
-	for _, anchor := range foorMap.Groups[groupID].AnchorList {
+	for _, anchor := range foorMap.Groups[trialActivityState.GroupID].AnchorList {
 		if anchor.ID == anchorID {
 			for id, avatarid := range g.GetLineUpById(10).AvatarIdList {
 				if avatarid == 0 {
@@ -94,7 +128,7 @@ func (g *Game) StartTrialEnterSceneByServerScNotify(entryId, teleportId uint32) 
 				entityId := uint32(g.GetNextGameObjectGuid())
 				entityList := &proto.SceneEntityInfo{
 					Actor: &proto.SceneActorInfo{
-						AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+						AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
 						BaseAvatarId: avatarid,
 					},
 					Motion: &proto.MotionInfo{
@@ -115,13 +149,13 @@ func (g *Game) StartTrialEnterSceneByServerScNotify(entryId, teleportId uint32) 
 					entityList.EntityId = leaderEntityId
 					entityMap[leaderEntityId] = &EntityList{
 						Entity:  avatarid,
-						GroupId: groupID,
+						GroupId: trialActivityState.GroupID,
 					}
 				} else {
 					entityList.EntityId = entityId
 					entityMap[entityId] = &EntityList{
 						Entity:  avatarid,
-						GroupId: groupID,
+						GroupId: trialActivityState.GroupID,
 					}
 				}
 				entityGroup.EntityList = append(entityGroup.EntityList, entityList)
@@ -146,20 +180,166 @@ func (g *Game) StartTrialEnterSceneByServerScNotify(entryId, teleportId uint32) 
 		if len(propList.EntityList) != 0 {
 			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
 		}
-		// 添加怪物实体
-		nPCMonsterList, x := g.GetNPCMonsterByID(levelGroup, levelGroup.GroupId, entityMap)
-		entityMap = x
-		if len(nPCMonsterList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
-		}
-		// 添加NPC实体
-		nPCList := g.GetNPCByID(levelGroup, levelGroup.GroupId)
-		if len(nPCList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
-		}
 	}
 
-	g.GetBattleState().BattleType = spb.BattleType_Battle_TrialActivity
+	// 添加怪物实体
+	// [实体id]怪物群id
+	entityGroupLists := &proto.SceneEntityGroupInfo{
+		GroupId:    trialActivityState.GroupID,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	for _, monsterList := range foorMap.Groups[trialActivityState.GroupID].MonsterList {
+		if monsterList.ID == trialActivityState.ConfigID {
+			entityId := uint32(g.GetNextGameObjectGuid())
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  trialActivityState.GroupID,
+				InstId:   trialActivityState.ConfigID,
+				EntityId: entityId,
+				Motion: &proto.MotionInfo{
+					Pos: &proto.Vector{
+						X: int32(monsterList.PosX * 1000),
+						Y: int32(monsterList.PosY * 1000),
+						Z: int32(monsterList.PosZ * 1000),
+					},
+					Rot: &proto.Vector{
+						X: 0,
+						Y: int32(monsterList.RotY * 1000),
+						Z: 0,
+					},
+				},
+				NpcMonster: &proto.SceneNpcMonsterInfo{
+					WorldLevel: g.PlayerPb.WorldLevel,
+					MonsterId:  trialActivityState.NPCMonsterID,
+					EventId:    trialActivityState.EventID,
+				},
+			}
+			// 添加实体
+			entityMap[entityId] = &EntityList{
+				Entity:  trialActivityState.EventID,
+				GroupId: trialActivityState.GroupID,
+				Pos: &Vector{
+					X: int32(monsterList.PosX * 1000),
+					Y: int32(monsterList.PosY * 1000),
+					Z: int32(monsterList.PosZ * 1000),
+				},
+				Rot: &Vector{
+					X: 0,
+					Y: int32(monsterList.RotY * 1000),
+					Z: 0,
+				},
+			}
+			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+			break
+		} else {
+			continue
+		}
+	}
+	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupLists)
+	g.Player.EntityList = entityMap
 
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
+}
+
+func (g *Game) TrialActivitySceneCastSkillScRsp(rsp *proto.SceneCastSkillScRsp) {
+	// 添加角色
+	rsp.BattleInfo.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
+	// 检查是否有提前释放的技能，添加到buff里
+	buffList := &proto.BattleBuff{
+		Id:              1000113,
+		Level:           1,
+		OwnerId:         0,
+		TargetIndexList: []uint32{0},
+		WaveFlag:        4294967295, // 失效时间
+		DynamicValues:   make(map[string]float32),
+	}
+	buffList.DynamicValues["SkillIndex"] = 1
+	rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+
+	g.Send(cmd.SceneCastSkillScRsp, rsp)
+}
+
+func (g *Game) TrialActivityGetBattleAvatarList() []*proto.BattleAvatar {
+	battleAvatarList := make([]*proto.BattleAvatar, 0)
+	for id, avatarId := range g.GetLineUpById(10).AvatarIdList {
+		if avatarId == 0 {
+			continue
+		}
+		avatar := gdconf.GetSpecialAvatarById(avatarId)
+
+		battleAvatar := &proto.BattleAvatar{
+			AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
+			Id:            avatarId,
+			Level:         avatar.Level,
+			Rank:          0,
+			Index:         uint32(id),
+			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
+			Hp:            10000,
+			Promotion:     avatar.Promotion,
+			RelicList:     make([]*proto.BattleRelic, 0),
+			WorldLevel:    g.PlayerPb.WorldLevel,
+			SpBar: &proto.SpBarInfo{
+				CurSp: 5000,
+				MaxSp: 10000,
+			},
+		}
+		for _, skill := range g.TrialActivityGetSkillTreeList(avatar.AvatarID) {
+			if skill.Level == 0 {
+				continue
+			}
+			avatarSkillTree := &proto.AvatarSkillTree{
+				PointId: skill.PointId,
+				Level:   skill.Level,
+			}
+			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
+		}
+		// 获取角色装备的光锥
+		if avatar.EquipmentID != 0 {
+			equipmentList := &proto.BattleEquipment{
+				Id:        avatar.EquipmentID,
+				Level:     avatar.EquipmentLevel,
+				Promotion: avatar.EquipmentPromotion,
+				Rank:      avatar.EquipmentRank,
+			}
+			battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
+		}
+		battleAvatarList = append(battleAvatarList, battleAvatar)
+	}
+	return battleAvatarList
+}
+
+func (g *Game) TrialActivityGetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
+	skilltreeList := make([]*spb.AvatarSkillBin, 0)
+	for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
+		avatarSkillBin := &spb.AvatarSkillBin{
+			PointId: id,
+			Level:   level,
+		}
+		skilltreeList = append(skilltreeList, avatarSkillBin)
+	}
+	return skilltreeList
+
+}
+
+func (g *Game) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResultScRsp) {
+	rsp.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
+	if rsp.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+		g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
+
+		g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, g.GetTrialActivityState().AvatarDemoId)
+
+		g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
+		scNotify := &proto.TrialActivityDataChangeScNotify{
+			TrialActivityInfo: &proto.TrialActivityInfo{
+				TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
+				TakenReward:     false,
+			},
+		}
+		g.Send(cmd.TrialActivityDataChangeScNotify, scNotify)
+		notify := &proto.CurTrialActivityScNotify{
+			TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
+			Status:          proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
+		}
+		g.Send(cmd.CurTrialActivityScNotify, notify)
+	}
+	g.Send(cmd.PVEBattleResultScRsp, rsp)
 }

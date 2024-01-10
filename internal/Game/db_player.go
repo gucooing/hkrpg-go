@@ -5,6 +5,7 @@ import (
 )
 
 type PlayerData struct {
+	LoginToday            bool                   // 是否是今天第一次登录
 	Battle                map[uint32]*Battle     // 正在进行的战斗
 	BattleState           *BattleState           // 战斗情况
 	BattleId              uint32                 // 战斗id
@@ -49,12 +50,12 @@ func (g *Game) GetBattleIdGuid() uint32 {
 func (g *Game) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {
 	g.PlayerPb = new(spb.PlayerBasicCompBin)
 	g.PlayerPb = &spb.PlayerBasicCompBin{
-		Uid:        uid,
-		Level:      1,
-		Exp:        0,
-		Nickname:   "hkrpg-go",
-		WorldLevel: 0,
-		// Mcoin:                   0,
+		Uid:                     uid,
+		Level:                   1,
+		Exp:                     0,
+		Nickname:                "hkrpg-go",
+		WorldLevel:              0,
+		Activity:                g.GetActivity(),
 		Signature:               "签名",
 		HeadImageAvatarId:       208001,
 		Birthday:                0,
