@@ -35,37 +35,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 
 	// 获取队伍
-	lineUp := g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp)
-	lineupList := &proto.LineupInfo{
-		IsVirtual:       false,
-		LeaderSlot:      0,
-		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           g.PlayerPb.LineUp.MainLineUp,
-		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
-		MaxMp:           5,
-		Mp:              5,
-		Name:            lineUp.Name,
-		PlaneId:         0,
-	}
-	for slot, avatarId := range lineUp.AvatarIdList {
-		if avatarId == 0 {
-			continue
-		}
-		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
-		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: proto.AvatarType(avatar.AvatarType),
-			Slot:       uint32(slot),
-			Satiety:    0,
-			Hp:         avatar.Hp,
-			Id:         avatarId,
-			SpBar: &proto.SpBarInfo{
-				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.MaxSp,
-			},
-		}
-		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
-	}
-	rsp.Lineup = lineupList
+	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
 
 	rsp.Scene = &proto.SceneInfo{
 		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
@@ -93,7 +63,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 	for _, anchor := range foorMap.Groups[groupID].AnchorList {
 		if anchor.ID == anchorID {
-			for id, avatarid := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
+			for id, avatarid := range g.GetLineUpById(g.GetLineUp().MainLineUp).AvatarIdList {
 				if avatarid == 0 {
 					continue
 				}

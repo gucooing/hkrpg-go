@@ -50,6 +50,8 @@ type GameDataConfig struct {
 	MapEntranceMap              map[string]*MapEntrance                         // 地图入口
 	BannersMap                  map[uint32]*Banners                             // 卡池信息
 	ActivityPanelMap            map[string]*ActivityPanel                       // 活动
+	AvatarDemoConfigMap         map[string]*AvatarDemoConfig                    // 角色试用信息
+	SpecialAvatarMap            map[string]map[string]*SpecialAvatar            // 预设角色映射表
 	ActivitySchedulingMap       []*ActivityScheduling                           // 活动排期
 	QuestDataMap                map[string]*QuestData                           // 任务
 	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
@@ -144,6 +146,8 @@ func (g *GameDataConfig) load() {
 	g.loadMapEntrance()              // 地图入口
 	g.loadBanners()                  // 卡池信息
 	g.loadActivityPanel()            // 活动
+	g.loadAvatarDemoConfig()         // 角色试用信息
+	g.loadSpecialAvatar()            // 预设角色映射表
 	g.loadActivityScheduling()       // 活动排期
 	g.loadQuestData()                // 任务
 	g.loadMonsterConfig()            // 怪物配置

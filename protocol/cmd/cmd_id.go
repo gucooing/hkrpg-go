@@ -1219,6 +1219,8 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(SetSignatureCsReq, func() any { return new(proto.SetSignatureCsReq) })
 	c.regMsg(SetSignatureScRsp, func() any { return new(proto.SetSignatureScRsp) })
 	c.regMsg(StaminaInfoScNotify, func() any { return new(proto.StaminaInfoScNotify) })
+	c.regMsg(StartTrialActivityCsReq, func() any { return new(proto.StartTrialActivityCsReq) })
+	c.regMsg(StartTrialActivityScRsp, func() any { return new(proto.StartTrialActivityScRsp) })
 	c.regMsg(StartChallengeCsReq, func() any { return new(proto.StartChallengeCsReq) })
 	c.regMsg(StartChallengeScRsp, func() any { return new(proto.StartChallengeScRsp) })
 	c.regMsg(StartCocoonStageCsReq, func() any { return new(proto.StartCocoonStageCsReq) })

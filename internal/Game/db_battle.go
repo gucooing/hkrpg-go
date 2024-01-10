@@ -22,6 +22,7 @@ type ChallengeState struct {
 	Status          proto.ChallengeStatus
 	RoundCount      uint32
 	ExtraLineupType proto.ExtraLineupType
+	ChallengeScore  uint32
 	// 缓存状态
 	Pos                *spb.VectorBin
 	Rot                *spb.VectorBin

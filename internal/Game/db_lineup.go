@@ -61,18 +61,33 @@ func (g *Game) GetLineUpPb(id uint32) *proto.LineupInfo {
 			continue
 		}
 		avatar := g.GetAvatar().Avatar[avatarId]
-		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: proto.AvatarType(avatar.AvatarType),
-			Slot:       uint32(slot),
-			Satiety:    0,
-			Hp:         avatar.Hp,
-			Id:         avatarId,
-			SpBar: &proto.SpBarInfo{
-				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.MaxSp,
-			},
+		if avatar == nil {
+			lineupAvatar := &proto.LineupAvatar{
+				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
+				Slot:       uint32(slot),
+				Satiety:    0,
+				Hp:         10000,
+				Id:         avatarId,
+				SpBar: &proto.SpBarInfo{
+					CurSp: 5000,
+					MaxSp: 10000,
+				},
+			}
+			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
+		} else {
+			lineupAvatar := &proto.LineupAvatar{
+				AvatarType: proto.AvatarType(avatar.AvatarType),
+				Slot:       uint32(slot),
+				Satiety:    0,
+				Hp:         avatar.Hp,
+				Id:         avatarId,
+				SpBar: &proto.SpBarInfo{
+					CurSp: avatar.SpBar.CurSp,
+					MaxSp: avatar.SpBar.MaxSp,
+				},
+			}
+			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 		}
-		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 	}
 	return lineupList
 }

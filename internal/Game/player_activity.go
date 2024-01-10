@@ -21,8 +21,3 @@ func (g *Game) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }
-
-func (g *Game) StartTrialActivityCsReq(payloadMsg []byte) {
-	// msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
-	// req := msg.(*proto.StartTrialActivityCsReq)
-}

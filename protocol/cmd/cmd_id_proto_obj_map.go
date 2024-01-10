@@ -207,6 +207,8 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(SetNicknameCsReq, func() any { return new(proto.SetNicknameCsReq) })
 	c.regMsg(SetSignatureCsReq, func() any { return new(proto.SetSignatureCsReq) })
 	c.regMsg(SetSignatureScRsp, func() any { return new(proto.SetSignatureScRsp) })
+	c.regMsg(StartTrialActivityCsReq, func() any { return new(proto.StartTrialActivityCsReq) })
+	c.regMsg(StartTrialActivityScRsp, func() any { return new(proto.StartTrialActivityScRsp) })
 	c.regMsg(StaminaInfoScNotify, func() any { return new(proto.StaminaInfoScNotify) })
 	c.regMsg(StartChallengeCsReq, func() any { return new(proto.StartChallengeCsReq) })
 	c.regMsg(StartChallengeScRsp, func() any { return new(proto.StartChallengeScRsp) })

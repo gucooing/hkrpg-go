@@ -20,6 +20,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	var targetIndex uint32 = 0
 	var stageConfig *gdconf.StageConfig
 	var stageID *gdconf.PlaneEvent
+	var buffLists []uint32
 	lineUp := g.GetLineUp().MainLineUp
 	battleState := g.GetBattleState()
 
@@ -69,6 +70,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 			RoundsLimit:      0,                              // 回合限制
 			BattleId:         g.GetBattleIdGuid(),            // 战斗Id
 			BattleAvatarList: make([]*proto.BattleAvatar, 0), // 战斗角色列表
+			BattleTargetInfo: make(map[uint32]*proto.BattleTargetList),
 		},
 	}
 	switch battleState.BattleType {
@@ -79,10 +81,14 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_CHALLENGE:
 		if battleState.ChallengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
 			lineUp = 6
+			buffLists = append(buffLists, battleState.ChallengeState.StoryBuffOne)
 		} else {
 			lineUp = 7
+			buffLists = append(buffLists, battleState.ChallengeState.StoryBuffTwo)
 		}
 		rsp.BattleInfo.RoundsLimit = battleState.ChallengeState.ChallengeCountDown
+	case spb.BattleType_Battle_TrialActivity:
+		lineUp = 10
 	}
 
 	// 怪物波列表
@@ -179,8 +185,22 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	}
 
 	// 检查场景buff
-
 	for _, buffId := range g.Player.BattleState.BuffList {
+		buffList := &proto.BattleBuff{
+			Id:              buffId,
+			Level:           1,
+			OwnerId:         targetIndex,
+			TargetIndexList: []uint32{targetIndex},
+			WaveFlag:        4294967295, // 失效时间
+		}
+		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+		targetIndex++
+	}
+	// 添加临时buff
+	for _, buffId := range buffLists {
+		if buffId == 0 {
+			continue
+		}
 		buffList := &proto.BattleBuff{
 			Id:              buffId,
 			Level:           1,
@@ -260,52 +280,53 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_ROGUE:
 		logger.Info("正在进行模拟宇宙")
 	case spb.BattleType_Battle_CHALLENGE:
+		pos = battleState.ChallengeState.Pos
+		rot = battleState.ChallengeState.Rot
 		// 战斗胜利
-		if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
-			battleState.ChallengeState.RoundCount += req.Stt.CocoonDeadWave
-			if battleState.ChallengeState.CurChallengeCount == battleState.ChallengeState.ChallengeCount {
-				// 战斗正常结束进入结算
-				challengeDb := g.GetChallenge()
-				var stage uint32 = 0
-				for _, challengeTargetID := range battleState.ChallengeState.ChallengeTargetID {
-					challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
-					if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
-						// 是否有角色死亡
-						stage += 3
-					} else {
-						if (battleState.ChallengeState.ChallengeCountDown - battleState.ChallengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
-							stage += 2
-						}
+		// if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+		battleState.ChallengeState.RoundCount += req.Stt.CocoonDeadWave
+		battleState.ChallengeState.ChallengeScore = req.Stt.ChallengeScore
+		if battleState.ChallengeState.CurChallengeCount == battleState.ChallengeState.ChallengeCount {
+			// 战斗正常结束进入结算
+			challengeDb := g.GetChallenge()
+			var stage uint32 = 0
+			for _, challengeTargetID := range battleState.ChallengeState.ChallengeTargetID {
+				challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
+				if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
+					// 是否有角色死亡
+					stage += 3
+				} else {
+					if (battleState.ChallengeState.ChallengeCountDown - battleState.ChallengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
+						stage += 2
 					}
 				}
-
-				if challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] < stage {
-					challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] = stage
-				}
-				challengeSettleNotify := &proto.ChallengeSettleNotify{
-					Stars:       stage,
-					Reward:      nil,
-					ChallengeId: battleState.ChallengeState.ChallengeId,
-					IsWin:       true,
-				}
-				g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
-				battleState.BattleType = spb.BattleType_Battle_NONE
-				battleState.ChallengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
-				battleState.BuffList = make([]uint32, 0)
-			} else {
-				// 还差一波
-				pos = battleState.ChallengeState.Pos
-				rot = battleState.ChallengeState.Rot
-				battleState.ChallengeState.CurChallengeCount++
-				battleState.ChallengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-				g.HandleBattleChallenge()
-
-				challengeLineupNotify := &proto.ChallengeLineupNotify{
-					ExtraLineupType: proto.ExtraLineupType_LINEUP_CHALLENGE_2,
-				}
-				g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
 			}
+
+			if challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] < stage {
+				challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] = stage
+			}
+			challengeSettleNotify := &proto.ChallengeSettleNotify{
+				Stars:       stage,
+				Reward:      nil,
+				ChallengeId: battleState.ChallengeState.ChallengeId,
+				IsWin:       true,
+			}
+			g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
+			battleState.BattleType = spb.BattleType_Battle_NONE
+			battleState.ChallengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
+			battleState.BuffList = make([]uint32, 0)
+		} else {
+			// 还差一波
+			battleState.ChallengeState.CurChallengeCount++
+			battleState.ChallengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
+			g.HandleBattleChallenge()
+
+			challengeLineupNotify := &proto.ChallengeLineupNotify{
+				ExtraLineupType: proto.ExtraLineupType_LINEUP_CHALLENGE_2,
+			}
+			g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
 		}
+		// }
 	}
 
 	// 账号状态改变通知
@@ -586,7 +607,7 @@ func (g *Game) GetRogueInfoCsReq(payloadMsg []byte) {
 			RogueProgress:    nil,
 			RogueAeonInfo:    nil,
 			BaseAvatarIdList: nil,
-			RogueCoin:        0,
+			RogueCoin:        5,
 		},
 	}
 	for _, rogueArea := range gdconf.GetRogueAreaMap() {
@@ -1048,247 +1069,4 @@ func (g *Game) StartCocoonStageCsReq(payloadMsg []byte) {
 	g.Player.Battle[rsp.BattleInfo.BattleId] = battle
 
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
-}
-
-/***********************************忘却之庭***********************************/
-
-func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetCurChallengeScRsp)
-
-	challengeState := g.GetChallengeState()
-
-	rsp.ChallengeInfo = &proto.ChallengeInfo{
-		ChallengeId:     challengeState.ChallengeId,
-		Status:          challengeState.Status,
-		RoundCount:      challengeState.RoundCount,
-		ExtraLineupType: challengeState.ExtraLineupType,
-		StoryInfo:       &proto.ChallengeStoryInfo{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}},
-	}
-	if challengeState.ChallengeCount == 1 {
-		rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
-	} else {
-		rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffTwo)
-	}
-
-	g.Send(cmd.GetCurChallengeScRsp, rsp)
-}
-
-func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
-	req := msg.(*proto.StartChallengeCsReq)
-	battleState := g.GetBattleState()
-	challengeState := g.GetChallengeState()
-
-	// 如果是新战斗就添加
-	if battleState.BattleType != spb.BattleType_Battle_CHALLENGE {
-		challengeState.ChallengeId = req.ChallengeId
-		challengeState.Status = proto.ChallengeStatus_CHALLENGE_DOING
-		challengeState.RoundCount = 0
-		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE
-		challengeState.StoryBuffOne = req.StoryInfo.StoryBuffInfo.StoryBuffOne
-		challengeState.StoryBuffTwo = req.StoryInfo.StoryBuffInfo.StoryBuffTwo
-	}
-
-	challengeInfo := &proto.ChallengeInfo{
-		ChallengeId:     challengeState.ChallengeId,
-		Status:          challengeState.Status,
-		RoundCount:      challengeState.RoundCount,
-		ExtraLineupType: challengeState.ExtraLineupType,
-	}
-	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(strconv.Itoa(int(req.ChallengeId)))
-	if challengeInfo == nil || challengeMazeConfig == nil {
-		rsp := &proto.StartChallengeScRsp{
-			Retcode: 2,
-		}
-		g.Send(cmd.StartChallengeScRsp, rsp)
-		return
-	}
-	// 获取映射信息
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
-	sceneGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, challengeMazeConfig.MazeGroupID1)
-	if sceneGroup.AnchorList == nil {
-		rsp := &proto.StartChallengeScRsp{
-			Retcode: 2,
-		}
-		g.Send(cmd.StartChallengeScRsp, rsp)
-		return
-	}
-	// 获取坐标信息
-	challengeState.Pos = &spb.VectorBin{
-		X: int32(sceneGroup.AnchorList[0].PosX * 1000),
-		Y: int32(sceneGroup.AnchorList[0].PosY * 1000),
-		Z: int32(sceneGroup.AnchorList[0].PosZ * 1000),
-	}
-	challengeState.Rot = &spb.VectorBin{
-		X: int32(sceneGroup.AnchorList[0].RotX * 1000),
-		Y: int32(sceneGroup.AnchorList[0].RotY * 1000),
-		Z: int32(sceneGroup.AnchorList[0].RotZ * 1000),
-	}
-	challengeState.NPCMonsterPos = &spb.VectorBin{
-		X: int32(sceneGroup.MonsterList[0].PosX * 1000),
-		Y: int32(sceneGroup.MonsterList[0].PosY * 1000),
-		Z: int32(sceneGroup.MonsterList[0].PosZ * 1000),
-	}
-	challengeState.NPCMonsterRot = &spb.VectorBin{
-		X: int32(sceneGroup.MonsterList[0].RotX * 1000),
-		Y: int32(sceneGroup.MonsterList[0].RotY * 1000),
-		Z: int32(sceneGroup.MonsterList[0].RotZ * 1000),
-	}
-	challengeState.PlaneID = mapEntrance.PlaneID
-	challengeState.FloorID = mapEntrance.FloorID
-	challengeState.EntranceID = challengeMazeConfig.MapEntranceID
-
-	challengeState.ChallengeCount = challengeMazeConfig.StageNum
-	challengeState.CurChallengeCount = 1
-	challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
-	challengeState.ChallengeCountDown = challengeMazeConfig.ChallengeCountDown
-	battleState.BuffList = append(battleState.BuffList, challengeMazeConfig.MazeBuffID)
-	// 添加波次
-	challengeState.CurChallengeBattle = make(map[uint32]*CurChallengeBattle)
-	for id, challengeRoom := range challengeMazeConfig.ChallengeState {
-		curChallengeBattle := &CurChallengeBattle{
-			NPCMonsterID: challengeRoom.NPCMonsterID,
-			EventID:      challengeRoom.EventID,
-			GroupID:      challengeRoom.GroupID,
-			ConfigID:     challengeRoom.ConfigID,
-		}
-		challengeState.CurChallengeBattle[id] = curChallengeBattle
-	}
-
-	scene := g.GetChallengeScene()
-
-	lineup := g.GetLineUpPb(6)
-
-	rsp := &proto.StartChallengeScRsp{
-		ChallengeInfo: challengeInfo,
-		Scene:         scene,
-		Lineup:        lineup,
-	}
-
-	battleState.BattleType = spb.BattleType_Battle_CHALLENGE
-	g.Send(cmd.StartChallengeScRsp, rsp)
-}
-
-func (g *Game) GetChallengeScene() *proto.SceneInfo {
-	challengeState := g.GetChallengeState()
-
-	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
-
-	leaderEntityId := uint32(g.GetNextGameObjectGuid())
-	// 获取映射信息
-
-	anchorPos := challengeState.Pos
-	anchorRot := challengeState.Rot
-	curChallengeBattle := challengeState.CurChallengeBattle[1]
-	scene := &proto.SceneInfo{
-		ClientPosVersion:   0,
-		PlaneId:            challengeState.PlaneID,
-		FloorId:            challengeState.FloorID,
-		LeaderEntityId:     leaderEntityId,
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(challengeState.PlaneID))).WorldID,
-		EntryId:            challengeState.EntranceID,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(challengeState.PlaneID))).PlaneType),
-		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
-		LightenSectionList: nil,
-		EntityList:         nil,
-		GroupStateList:     nil,
-	}
-
-	// 将进入场景的角色添加到实体列表里
-	entityGroup := &proto.SceneEntityGroupInfo{
-		GroupId:    0,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
-	for id, slots := range g.GetLineUpPb(6).AvatarList {
-		if slots == nil {
-			continue
-		}
-		entityId := uint32(g.GetNextGameObjectGuid())
-		entityList := &proto.SceneEntityInfo{
-			Actor: &proto.SceneActorInfo{
-				AvatarType:   slots.AvatarType, // TODO
-				BaseAvatarId: slots.Id,
-			},
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: anchorPos.X,
-					Y: anchorPos.Y,
-					Z: anchorPos.Z,
-				},
-				Rot: &proto.Vector{
-					X: anchorRot.X,
-					Y: anchorRot.Y,
-					Z: anchorRot.Z,
-				},
-			},
-		}
-		// 为进入场景的角色设置与上面相同的实体id
-		if id == 0 {
-			entityList.EntityId = leaderEntityId
-			entityMap[leaderEntityId] = &EntityList{
-				Entity:  slots.Slot,
-				GroupId: 0,
-			}
-		} else {
-			entityMap[entityId] = &EntityList{
-				Entity:  slots.Slot,
-				GroupId: 0,
-			}
-			entityList.EntityId = entityId
-		}
-		entityGroup.EntityList = append(entityGroup.EntityList, entityList)
-	}
-	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
-
-	// 添加怪物实体
-	entityGroupNPCMonster := &proto.SceneEntityGroupInfo{
-		GroupId:    curChallengeBattle.GroupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
-	entityId := uint32(g.GetNextGameObjectGuid())
-	entityList := &proto.SceneEntityInfo{
-		GroupId:  curChallengeBattle.GroupID,
-		InstId:   curChallengeBattle.ConfigID,
-		EntityId: entityId,
-		Motion: &proto.MotionInfo{
-			Pos: &proto.Vector{
-				X: challengeState.NPCMonsterPos.X,
-				Y: challengeState.NPCMonsterPos.Y,
-				Z: challengeState.NPCMonsterPos.Z,
-			},
-			Rot: &proto.Vector{
-				X: 0,
-				Y: challengeState.NPCMonsterRot.Y,
-				Z: 0,
-			},
-		},
-		NpcMonster: &proto.SceneNpcMonsterInfo{
-			WorldLevel: g.PlayerPb.WorldLevel,
-			MonsterId:  curChallengeBattle.NPCMonsterID,
-			EventId:    curChallengeBattle.EventID,
-		},
-	}
-	entityMap[entityId] = &EntityList{
-		Entity:  curChallengeBattle.EventID,
-		GroupId: curChallengeBattle.GroupID,
-	}
-	entityGroupNPCMonster.EntityList = append(entityGroupNPCMonster.EntityList, entityList)
-	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupNPCMonster)
-
-	g.Player.EntityList = entityMap
-	return scene
-}
-
-func (g *Game) LeaveChallengeCsReq() {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	if g.GetBattleState().ChallengeState.Status == proto.ChallengeStatus_CHALLENGE_DOING {
-		g.Send(cmd.QuitBattleScNotify, rsp)
-	}
-	g.Send(cmd.LeaveChallengeScRsp, rsp)
-
-	g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
-	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
-	g.GetBattleState().BuffList = make([]uint32, 0)
 }
