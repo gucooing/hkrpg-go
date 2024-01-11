@@ -69,7 +69,7 @@ func (g *Game) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 }
 
 func (g *Game) GetAvatarById(avatarId uint32) *proto.Avatar {
-	avatardb := g.PlayerPb.Avatar.Avatar[avatarId]
+	avatardb := g.GetAvatar().Avatar[avatarId]
 	if avatardb == nil {
 		return nil
 	}

@@ -24,15 +24,51 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	lineUp := g.GetLineUp().MainLineUp
 	battleState := g.GetBattleState()
 
-	if req.SkillIndex == 1 {
-		avatarId := g.Player.EntityList[req.CasterId].Entity
-		skillId := (avatarId * 100) + req.SkillIndex
-		if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
-			g.PlayerPb.Avatar.Avatar[avatarId].BuffList = skillId
-		} else {
-			// 技能处理，有的技能并不会增加buff而是回复生命等功能
+	// 添加buff
+	switch battleState.BattleType {
+	case spb.BattleType_Battle_NONE:
+		if req.SkillIndex == 1 {
+			avatarId := g.Player.EntityList[req.CasterId].Entity
+			skillId := (avatarId * 100) + req.SkillIndex
+			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+				g.PlayerPb.Avatar.Avatar[avatarId].BuffList = skillId
+			} else {
+				// 技能处理，有的技能并不会增加buff而是回复生命等功能
+			}
+		}
+	case spb.BattleType_Battle_ROGUE:
+	case spb.BattleType_Battle_CHALLENGE:
+		if req.SkillIndex == 1 {
+			avatarId := g.Player.EntityList[req.CasterId].Entity
+			skillId := (avatarId * 100) + req.SkillIndex
+			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+				battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
+			} else {
+				// 技能处理，有的技能并不会增加buff而是回复生命等功能
+			}
+		}
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		if req.SkillIndex == 1 {
+			avatarId := g.Player.EntityList[req.CasterId].Entity
+			skillId := (avatarId * 100) + req.SkillIndex
+			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+				battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
+			} else {
+				// 技能处理，有的技能并不会增加buff而是回复生命等功能
+			}
+		}
+	case spb.BattleType_Battle_TrialActivity:
+		if req.SkillIndex == 1 {
+			avatarId := g.Player.EntityList[req.CasterId].Entity
+			skillId := (avatarId * 100) + req.SkillIndex
+			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+				battleState.TrialActivityState.AvatarBuffList = append(battleState.TrialActivityState.AvatarBuffList, skillId)
+			} else {
+				// 技能处理，有的技能并不会增加buff而是回复生命等功能
+			}
 		}
 	}
+
 	if len(req.HitTargetEntityIdList) == 0 {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
@@ -93,14 +129,15 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_ROGUE:
 		logger.Info("正在进行模拟宇宙")
 	case spb.BattleType_Battle_CHALLENGE:
-		if battleState.ChallengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-			lineUp = 6
-			buffLists = append(buffLists, battleState.ChallengeState.StoryBuffOne)
-		} else {
-			lineUp = 7
-			buffLists = append(buffLists, battleState.ChallengeState.StoryBuffTwo)
-		}
-		rsp.BattleInfo.RoundsLimit = battleState.ChallengeState.ChallengeCountDown
+		// 缓存当前战斗实体
+		battleState.ChallengeState.EventID = req.HitTargetEntityIdList[0]
+		g.ChallengeSceneCastSkillCsReq(rsp)
+		return
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		// 缓存当前战斗实体
+		battleState.ChallengeState.EventID = req.HitTargetEntityIdList[0]
+		g.ChallengeStoryPVEBattleResultCsReq(rsp)
+		return
 	case spb.BattleType_Battle_TrialActivity:
 		g.TrialActivitySceneCastSkillScRsp(rsp)
 		return
@@ -240,43 +277,18 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.PVEBattleResultCsReq, payloadMsg)
 	req := msg.(*proto.PVEBattleResultCsReq)
 
-	rsp := new(proto.PVEBattleResultScRsp)
+	rsp := &proto.PVEBattleResultScRsp{
+		BattleId:       req.BattleId,
+		StageId:        req.StageId,
+		EndStatus:      req.EndStatus, // 战斗结算状态
+		CheckIdentical: true,          // 反作弊验证
+		BinVersion:     "",
+		ResVersion:     strconv.Itoa(int(req.ClientResVersion)), // 版本验证
+	}
 	pos := g.GetPos()
 	rot := g.GetRot()
 	lineUp := g.GetLineUp().MainLineUp
 	battleState := g.GetBattleState()
-
-	// 要记得扣体力,和回复奖励
-	/*
-		主逻辑处理需要处理提前获取
-		1.队伍
-		2.坐标
-	*/
-
-	rsp.BattleId = req.BattleId
-	rsp.StageId = req.StageId
-	rsp.EndStatus = req.EndStatus // 战斗结算状态
-	rsp.CheckIdentical = true     // 反作弊验证
-	rsp.BinVersion = ""
-	rsp.ResVersion = strconv.Itoa(int(req.ClientResVersion)) // 版本验证
-	switch battleState.BattleType {
-	case spb.BattleType_Battle_TrialActivity:
-		g.TrialActivityPVEBattleResultScRsp(rsp)
-		return
-	}
-
-	// 更新角色状态
-	for _, avatarStt := range req.Stt.BattleAvatarList {
-		avatar := g.GetAvatar().Avatar[avatarStt.Id]
-		avatar.AvatarType = uint32(avatarStt.AvatarType)
-		avatar.SpBar.CurSp = uint32((avatarStt.AvatarStatus.LeftSp / avatarStt.AvatarStatus.MaxSp) * 10000)
-		if avatarStt.AvatarStatus.LeftHp == float64(0) {
-			avatar.Hp = 2000
-			avatar.AvatarType = uint32(proto.AvatarType_AVATAR_FORMAL_TYPE)
-		} else {
-			avatar.Hp = uint32((avatarStt.AvatarStatus.LeftHp / avatarStt.AvatarStatus.MaxHp) * 10000)
-		}
-	}
 
 	switch battleState.BattleType {
 	case spb.BattleType_Battle_NONE:
@@ -292,53 +304,28 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_ROGUE:
 		logger.Info("正在进行模拟宇宙")
 	case spb.BattleType_Battle_CHALLENGE:
-		pos = battleState.ChallengeState.Pos
-		rot = battleState.ChallengeState.Rot
-		// 战斗胜利
-		// if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
-		battleState.ChallengeState.RoundCount += req.Stt.CocoonDeadWave
-		battleState.ChallengeState.ChallengeScore = req.Stt.ChallengeScore
-		if battleState.ChallengeState.CurChallengeCount == battleState.ChallengeState.ChallengeCount {
-			// 战斗正常结束进入结算
-			challengeDb := g.GetChallenge()
-			var stage uint32 = 0
-			for _, challengeTargetID := range battleState.ChallengeState.ChallengeTargetID {
-				challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
-				if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
-					// 是否有角色死亡
-					stage += 3
-				} else {
-					if (battleState.ChallengeState.ChallengeCountDown - battleState.ChallengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
-						stage += 2
-					}
-				}
-			}
+		g.ChallengePVEBattleResultCsReq(req)
+		g.Send(cmd.PVEBattleResultScRsp, rsp)
+		return
+	case spb.BattleType_Battle_CHALLENGE_Story:
 
-			if challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] < stage {
-				challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] = stage
-			}
-			challengeSettleNotify := &proto.ChallengeSettleNotify{
-				Stars:       stage,
-				Reward:      nil,
-				ChallengeId: battleState.ChallengeState.ChallengeId,
-				IsWin:       true,
-			}
-			g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
-			battleState.BattleType = spb.BattleType_Battle_NONE
-			battleState.ChallengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
-			battleState.BuffList = make([]uint32, 0)
+	case spb.BattleType_Battle_TrialActivity:
+		g.TrialActivityPVEBattleResultScRsp(rsp)
+		return
+
+	}
+
+	// 更新角色状态
+	for _, avatarStt := range req.Stt.BattleAvatarList {
+		avatar := g.GetAvatar().Avatar[avatarStt.Id]
+		avatar.AvatarType = uint32(avatarStt.AvatarType)
+		avatar.SpBar.CurSp = uint32((avatarStt.AvatarStatus.LeftSp / avatarStt.AvatarStatus.MaxSp) * 10000)
+		if avatarStt.AvatarStatus.LeftHp == float64(0) {
+			avatar.Hp = 2000
+			avatar.AvatarType = uint32(proto.AvatarType_AVATAR_FORMAL_TYPE)
 		} else {
-			// 还差一波
-			battleState.ChallengeState.CurChallengeCount++
-			battleState.ChallengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-			g.HandleBattleChallenge()
-
-			challengeLineupNotify := &proto.ChallengeLineupNotify{
-				ExtraLineupType: proto.ExtraLineupType_LINEUP_CHALLENGE_2,
-			}
-			g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
+			avatar.Hp = uint32((avatarStt.AvatarStatus.LeftHp / avatarStt.AvatarStatus.MaxHp) * 10000)
 		}
-		// }
 	}
 
 	// 账号状态改变通知
@@ -387,7 +374,7 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 	}
 
 	// 当前坐标通知(失败情况应该是移动到最近锚点)
-	g.SceneEntityMoveScNotify(pos, rot)
+	g.SceneEntityMoveScNotify(pos, rot, g.GetScene().EntryId)
 
 	// 体力改变通知
 	g.StaminaInfoScNotify()
@@ -404,24 +391,6 @@ func (g *Game) HandleBattleNone() {
 
 func (g *Game) HandleBattleRogue() {
 
-}
-
-func (g *Game) HandleBattleChallenge() {
-	/*
-		*1.删除原来的实体 1460 delEntity
-		*2.发送奖励物品 652
-		*3.通知账号信息
-		*4.更新原来的队伍 709
-		5.添加下一阶段的实体 1460 addEntity
-		6.添加下一阶段队伍实体 1460 addEntity
-		7.通知下一阶段队伍 709
-		8.通知队伍变更 1770
-		9.客户端位置更新通知 1409
-		*10.正常回复pve包
-	*/
-	// 更新新的队伍
-	g.BattleSyncLineupNotify(7)
-	g.ChallengeAddSceneGroupRefreshScNotify()
 }
 
 // 队伍更新通知
@@ -463,17 +432,16 @@ func (g *Game) BattleSyncLineupNotify(index uint32) {
 }
 
 // 当前坐标通知
-func (g *Game) SceneEntityMoveScNotify(pos, rot *spb.VectorBin) {
+func (g *Game) SceneEntityMoveScNotify(pos, rot *spb.VectorBin, entryId uint32) {
 	if pos == nil {
 		pos = g.GetPos()
 	}
 	if rot == nil {
 		rot = g.GetRot()
 	}
-	entryId := g.GetScene()
 
 	notify := &proto.SceneEntityMoveScNotify{
-		EntryId:          entryId.EntryId,
+		EntryId:          entryId,
 		ClientPosVersion: 0,
 		Motion: &proto.MotionInfo{
 			Pos: &proto.Vector{
@@ -490,92 +458,6 @@ func (g *Game) SceneEntityMoveScNotify(pos, rot *spb.VectorBin) {
 	}
 
 	g.Send(cmd.SceneEntityMoveScNotify, notify)
-}
-
-func (g *Game) ChallengeAddSceneGroupRefreshScNotify() {
-	challengeState := g.GetChallengeState()
-	pos := challengeState.Pos
-	rot := challengeState.Rot
-	nPCMonsterPos := challengeState.NPCMonsterPos
-	nPCMonsterRot := challengeState.NPCMonsterRot
-
-	curChallengeBattle := challengeState.CurChallengeBattle[challengeState.CurChallengeCount]
-
-	notify := new(proto.SceneGroupRefreshScNotify)
-	notify.GroupRefreshInfo = make([]*proto.SceneGroupRefreshInfo, 0)
-	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
-		GroupId:       curChallengeBattle.GroupID,
-		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
-	}
-
-	for _, avatarId := range g.GetLineUp().LineUpList[7].AvatarIdList {
-		if avatarId == 0 {
-			continue
-		}
-		entityId := uint32(g.GetNextGameObjectGuid())
-		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				Actor: &proto.SceneActorInfo{
-					AvatarType:   proto.AvatarType(g.GetAvatar().Avatar[avatarId].AvatarType),
-					BaseAvatarId: avatarId,
-				},
-				Motion: &proto.MotionInfo{
-					Pos: &proto.Vector{
-						X: pos.X,
-						Y: pos.Y,
-						Z: pos.Z,
-					},
-					Rot: &proto.Vector{
-						X: rot.X,
-						Y: rot.Y,
-						Z: rot.Z,
-					},
-				},
-				EntityId: entityId,
-			},
-		}
-		g.Player.EntityList[entityId] = &EntityList{
-			Entity:  avatarId,
-			GroupId: 0,
-		}
-		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
-	}
-	// 添加怪物实体
-	entityId := uint32(g.GetNextGameObjectGuid())
-	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-		AddEntity: &proto.SceneEntityInfo{
-			GroupId:  curChallengeBattle.GroupID,
-			InstId:   curChallengeBattle.ConfigID,
-			EntityId: entityId,
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: nPCMonsterPos.X,
-					Y: nPCMonsterPos.Y,
-					Z: nPCMonsterPos.Z,
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: nPCMonsterRot.Y,
-					Z: 0,
-				},
-			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.PlayerPb.WorldLevel,
-				MonsterId:  curChallengeBattle.NPCMonsterID,
-				EventId:    curChallengeBattle.EventID,
-			},
-		},
-	}
-
-	g.Player.EntityList[entityId] = &EntityList{
-		Entity:  curChallengeBattle.EventID,
-		GroupId: curChallengeBattle.GroupID,
-	}
-	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
-
-	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
-
-	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
 
 /***********************************模拟宇宙***********************************/

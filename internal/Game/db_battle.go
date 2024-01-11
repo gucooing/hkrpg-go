@@ -9,21 +9,17 @@ import (
 
 type BattleState struct {
 	BattleType         spb.BattleType
-	ChallengeState     *ChallengeState // ChallengeState
+	ChallengeState     *ChallengeState
 	TrialActivityState *TrialActivityState
 	BuffList           []uint32 // 进入战斗需要添加的buff
 }
 type ChallengeState struct {
-	ChallengeCount     uint32   // 波数
-	CurChallengeCount  uint32   // 当前波次
-	ChallengeTargetID  []uint32 // 满星条件
-	ChallengeCountDown uint32
 	// 回包
-	ChallengeId     uint32
-	Status          proto.ChallengeStatus
-	RoundCount      uint32
-	ExtraLineupType proto.ExtraLineupType
-	ChallengeScore  uint32
+	ChallengeId     uint32                // 关卡id
+	Status          proto.ChallengeStatus // 状态
+	RoundCount      uint32                // 已使用的回合数
+	ExtraLineupType proto.ExtraLineupType // 哪个队伍
+	ChallengeScore  uint32                // 活动分数
 	// 缓存状态
 	Pos                *spb.VectorBin
 	Rot                *spb.VectorBin
@@ -32,17 +28,27 @@ type ChallengeState struct {
 	PlaneID            uint32
 	FloorID            uint32
 	EntranceID         uint32
-	CurChallengeBattle map[uint32]*CurChallengeBattle
-	StoryBuffOne       uint32
-	StoryBuffTwo       uint32
+	CurChallengeBattle map[uint32]*CurChallengeBattle // 每一波关卡配置
+	SceneBuffList      []uint32                       // 场景buff
+	AvatarBuffList     []uint32                       // 角色buff
+	EventID            uint32                         // 当前战斗实体id
+	// 下面是普通
+	ChallengeCount     uint32   // 波数
+	CurChallengeCount  uint32   // 当前波次
+	ChallengeTargetID  []uint32 // 满星条件
+	ChallengeCountDown uint32   // 总回合限制
+	// 下面是活动
+	StoryBuffOne uint32 // 第一个buff
+	StoryBuffTwo uint32 // 第二个buff
 }
 type TrialActivityState struct {
-	AvatarDemoId  uint32
-	NPCMonsterPos *spb.VectorBin
-	NPCMonsterRot *spb.VectorBin
-	PlaneID       uint32
-	FloorID       uint32
-	EntranceID    uint32
+	AvatarDemoId   uint32
+	NPCMonsterPos  *spb.VectorBin
+	NPCMonsterRot  *spb.VectorBin
+	PlaneID        uint32
+	FloorID        uint32
+	EntranceID     uint32
+	AvatarBuffList []uint32 // 角色buff
 
 	NPCMonsterID uint32
 	EventID      uint32

@@ -69,7 +69,7 @@ func (g *Game) GetLineUpPb(id uint32) *proto.LineupInfo {
 				Hp:         10000,
 				Id:         avatarId,
 				SpBar: &proto.SpBarInfo{
-					CurSp: 5000,
+					CurSp: 6000,
 					MaxSp: 10000,
 				},
 			}

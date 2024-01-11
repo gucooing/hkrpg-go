@@ -241,19 +241,24 @@ func (g *Game) StartTrialEnterSceneByServerScNotify() {
 }
 
 func (g *Game) TrialActivitySceneCastSkillScRsp(rsp *proto.SceneCastSkillScRsp) {
+	var targetIndex uint32 = 0
+	trialActivityState := g.GetTrialActivityState()
 	// 添加角色
 	rsp.BattleInfo.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
-	// 检查是否有提前释放的技能，添加到buff里
-	buffList := &proto.BattleBuff{
-		Id:              1000113,
-		Level:           1,
-		OwnerId:         0,
-		TargetIndexList: []uint32{0},
-		WaveFlag:        4294967295, // 失效时间
-		DynamicValues:   make(map[string]float32),
+	// 添加角色buff
+	for _, buffId := range trialActivityState.AvatarBuffList {
+		buffList := &proto.BattleBuff{
+			Id:              buffId,
+			Level:           1,
+			OwnerId:         targetIndex,
+			TargetIndexList: []uint32{targetIndex},
+			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
+		}
+		buffList.DynamicValues["SkillIndex"] = 1
+		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+		targetIndex++
 	}
-	buffList.DynamicValues["SkillIndex"] = 1
-	rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
 }
@@ -278,7 +283,7 @@ func (g *Game) TrialActivityGetBattleAvatarList() []*proto.BattleAvatar {
 			RelicList:     make([]*proto.BattleRelic, 0),
 			WorldLevel:    g.PlayerPb.WorldLevel,
 			SpBar: &proto.SpBarInfo{
-				CurSp: 5000,
+				CurSp: 6000,
 				MaxSp: 10000,
 			},
 		}
@@ -323,11 +328,11 @@ func (g *Game) TrialActivityGetSkillTreeList(avatarId uint32) []*spb.AvatarSkill
 func (g *Game) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResultScRsp) {
 	rsp.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
 	if rsp.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+		// 传送回原来的场景
 		g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
-
+		// 储存通关状态
 		g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, g.GetTrialActivityState().AvatarDemoId)
-
-		g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
+		// 发送通关通知
 		scNotify := &proto.TrialActivityDataChangeScNotify{
 			TrialActivityInfo: &proto.TrialActivityInfo{
 				TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
@@ -340,6 +345,8 @@ func (g *Game) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResultScRsp
 			Status:          proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
 		}
 		g.Send(cmd.CurTrialActivityScNotify, notify)
+		// 恢复战斗状态为空
+		g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
 	}
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
 }
