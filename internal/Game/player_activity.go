@@ -87,8 +87,22 @@ func (g *Game) GetTrialActivityDataCsReq() {
 
 }
 
-/*
-TakeTrialActivityRewardCsReq MMaNEw==
+func (g *Game) TakeTrialActivityRewardCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.TakeTrialActivityRewardCsReq, payloadMsg)
+	req := msg.(*proto.TakeTrialActivityRewardCsReq)
 
-TakeTrialActivityRewardScRsp SMaNE2oVagQgFGgBagUgA2jUAWoGIAVo6fIG
-*/
+	rsp := &proto.TakeTrialActivityRewardScRsp{
+		TrialActivityId: req.TrialActivityId,
+		Reward: &proto.ItemList{
+			ItemList: make([]*proto.Item, 0),
+		},
+	}
+	item := &proto.Item{
+		ItemId: 102,
+		Num:    100,
+	}
+	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item)
+	g.AddMaterial(102, 100)
+
+	g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
+}

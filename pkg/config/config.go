@@ -33,10 +33,9 @@ type Dispatch struct {
 type Http struct {
 	Addr        string `json:"addr"`
 	Port        int64  `json:"port"`
-	EnableHttps bool   `json:"enable"`    // 是否启动 HTTPS
-	HttpsPort   int64  `json:"httpsPort"` // HTTPS 服务端口
-	CertFile    string `json:"certFile"`  // 证书文件路径
-	KeyFile     string `json:"keyFile"`   // 密钥文件路径
+	EnableHttps bool   `json:"enable"`
+	CertFile    string `json:"certFile"`
+	KeyFile     string `json:"keyFile"`
 }
 type Game struct {
 	Addr string `json:"addr"`
@@ -90,7 +89,6 @@ var DefaultConfig = &Config{
 		Addr:        "0.0.0.0",
 		Port:        8080,
 		EnableHttps: true,
-		HttpsPort:   8443,
 		CertFile:    "data/localhost.crt",
 		KeyFile:     "data/localhost.key",
 	},

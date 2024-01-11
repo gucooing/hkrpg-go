@@ -33,12 +33,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandlePlayerLoginFinishCsReq(payloadMsg) // 登录完成包
 	case cmd.PlayerLogoutCsReq:
 		g.PlayerLogoutCsReq() // 客户端退出游戏通知
-	case cmd.GetDailyActiveInfoCsReq:
-		g.GetDailyActiveInfoCsReq(payloadMsg) // 每日任务
-	case cmd.GetLoginActivityCsReq:
-		g.GetLoginActivityCsReq() // 登录活动完成情况
-	case cmd.GetTrialActivityDataCsReq:
-		g.GetTrialActivityDataCsReq() // 角色试用完成情况
 	// 队伍
 	case cmd.GetAllLineupDataCsReq:
 		g.HandleGetAllLineupDataCsReq(payloadMsg) // 获取队伍信息请求
@@ -157,10 +151,18 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 	// 活动
 	case cmd.GetActivityScheduleConfigCsReq:
 		g.HandleGetActivityScheduleConfigCsReq(payloadMsg) // 活动排期请求
+	case cmd.GetDailyActiveInfoCsReq:
+		g.GetDailyActiveInfoCsReq(payloadMsg) // 每日任务
+	case cmd.GetLoginActivityCsReq:
+		g.GetLoginActivityCsReq() // 登录活动完成情况
+	case cmd.GetTrialActivityDataCsReq:
+		g.GetTrialActivityDataCsReq() // 角色试用完成情况
 	case cmd.StartTrialActivityCsReq:
 		g.StartTrialActivityCsReq(payloadMsg) // 角色试用
 	case cmd.TakeLoginActivityRewardCsReq:
 		g.TakeLoginActivityRewardCsReq(payloadMsg) // 领取登录活动奖励
+	case cmd.TakeTrialActivityRewardCsReq:
+		g.TakeTrialActivityRewardCsReq(payloadMsg) // 角色试用奖励领取
 	// 基础
 	case cmd.SetClientPausedCsReq:
 		g.SetClientPausedCsReq() // 客户端暂停请求
