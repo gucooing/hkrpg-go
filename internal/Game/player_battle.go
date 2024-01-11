@@ -136,7 +136,7 @@ func (g *Game) SceneCastSkillCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		// 缓存当前战斗实体
 		battleState.ChallengeState.EventID = req.HitTargetEntityIdList[0]
-		g.ChallengeStoryPVEBattleResultCsReq(rsp)
+		g.ChallengeStorySceneCastSkillCsReq(rsp)
 		return
 	case spb.BattleType_Battle_TrialActivity:
 		g.TrialActivitySceneCastSkillScRsp(rsp)
@@ -308,7 +308,10 @@ func (g *Game) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.Send(cmd.PVEBattleResultScRsp, rsp)
 		return
 	case spb.BattleType_Battle_CHALLENGE_Story:
-
+		// g.ChallengeStoryPVEBattleResultCsReq(req)
+		g.ChallengeStoryPVEBattleResultCsReq(req)
+		g.Send(cmd.PVEBattleResultScRsp, rsp)
+		return
 	case spb.BattleType_Battle_TrialActivity:
 		g.TrialActivityPVEBattleResultScRsp(rsp)
 		return

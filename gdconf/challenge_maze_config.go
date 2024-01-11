@@ -54,7 +54,6 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
-	// challengeStoryMazeConfig := make(map[string]*ChallengeMazeConfig)
 	playerElementsFilePathStory := g.excelPrefix + "ChallengeStoryMazeConfig.json"
 	playerElementsFileStory, err := os.ReadFile(playerElementsFilePathStory)
 	if err != nil {

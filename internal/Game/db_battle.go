@@ -40,6 +40,8 @@ type ChallengeState struct {
 	// 下面是活动
 	StoryBuffOne uint32 // 第一个buff
 	StoryBuffTwo uint32 // 第二个buff
+	ScoreOne     uint32
+	ScoreTwo     uint32
 }
 type TrialActivityState struct {
 	AvatarDemoId   uint32
@@ -82,12 +84,17 @@ func (g *Game) GetBattleState() *BattleState {
 	if g.Player.BattleState == nil {
 		g.Player.BattleState = &BattleState{
 			BattleType:         0,
-			ChallengeState:     nil,
-			BuffList:           nil,
-			TrialActivityState: nil,
+			ChallengeState:     &ChallengeState{},
+			BuffList:           make([]uint32, 0),
+			TrialActivityState: &TrialActivityState{},
 		}
 	}
 	return g.Player.BattleState
+}
+
+func (g *Game) NewChallengeState() *ChallengeState {
+	g.GetBattleState().ChallengeState = &ChallengeState{}
+	return g.GetBattleState().ChallengeState
 }
 
 func (g *Game) GetChallengeState() *ChallengeState {
@@ -110,7 +117,7 @@ func (g *Game) GetBattle() *spb.Battle {
 	}
 	if g.PlayerPb.Battle.Challenge == nil {
 		g.PlayerPb.Battle.Challenge = &spb.Challenge{
-			ChallengeList:       make(map[uint32]uint32),
+			ChallengeList:       make(map[uint32]*spb.ChallengeList),
 			ChallengeRewardList: make(map[uint64]uint32),
 		}
 	}
@@ -120,10 +127,18 @@ func (g *Game) GetBattle() *spb.Battle {
 func (g *Game) GetChallenge() *spb.Challenge {
 	battle := g.GetBattle()
 	if battle.Challenge.ChallengeList == nil {
-		battle.Challenge.ChallengeList = make(map[uint32]uint32)
+		battle.Challenge.ChallengeList = make(map[uint32]*spb.ChallengeList)
 	}
 	if battle.Challenge.ChallengeRewardList == nil {
 		battle.Challenge.ChallengeRewardList = make(map[uint64]uint32)
 	}
 	return battle.Challenge
+}
+
+func (g *Game) GetChallengeById(id uint32) *spb.ChallengeList {
+	battle := g.GetChallenge()
+	if battle.ChallengeList[id] == nil {
+		battle.ChallengeList[id] = &spb.ChallengeList{}
+	}
+	return battle.ChallengeList[id]
 }

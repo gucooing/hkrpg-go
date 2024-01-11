@@ -23,8 +23,8 @@ func (g *Game) GetCurChallengeCsReq(payloadMsg []byte) {
 		Status:          challengeState.Status,
 		RoundCount:      challengeState.RoundCount,
 		ExtraLineupType: challengeState.ExtraLineupType,
-		Score:           challengeState.ChallengeScore,
-		ScoreTwo:        0,
+		Score:           challengeState.ScoreOne,
+		ScoreTwo:        challengeState.ScoreTwo,
 		StoryInfo:       &proto.ChallengeStoryInfo{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}},
 	}
 	if challengeState.ChallengeCount == 1 {
@@ -42,7 +42,7 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
 	req := msg.(*proto.StartChallengeCsReq)
 	battleState := g.GetBattleState()
-	challengeState := g.GetChallengeState()
+	challengeState := g.NewChallengeState()
 
 	// 设置战斗类型
 	if req.StoryInfo != nil {
@@ -102,15 +102,17 @@ func (g *Game) StartChallengeCsReq(payloadMsg []byte) {
 	challengeState.FloorID = mapEntrance.FloorID
 	challengeState.EntranceID = challengeMazeConfig.MapEntranceID
 	challengeState.ChallengeCount = challengeMazeConfig.StageNum
+	challengeState.CurChallengeCount = 1
+	// 添加场景buff到buff列表
+	challengeState.SceneBuffList = append(challengeState.SceneBuffList, challengeMazeConfig.MazeBuffID)
 	switch battleState.BattleType {
 	case spb.BattleType_Battle_CHALLENGE:
-		challengeState.CurChallengeCount = 1
 		challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
 		challengeState.ChallengeCountDown = challengeMazeConfig.ChallengeCountDown
-		// 添加场景buff到buff列表
-		challengeState.SceneBuffList = append(challengeState.SceneBuffList, challengeMazeConfig.MazeBuffID)
 	case spb.BattleType_Battle_CHALLENGE_Story:
-
+		storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
+		challengeState.ChallengeCountDown = storyMazeExtra.TurnLimit
+		challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
 	}
 
 	// 添加波次
@@ -282,9 +284,9 @@ func (g *Game) LeaveChallengeCsReq() {
 // 忘却之庭世界发生攻击事件
 
 func (g *Game) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
-	battleState := g.GetBattleState()
+	// battleState := g.GetBattleState()
 	challengeState := g.GetChallengeState()
-	lineUpId := g.GetLineUp().MainLineUp
+	var lineUpId uint32 = 6
 	var targetIndex uint32 = 0
 
 	// 通过波次获取队伍
@@ -294,13 +296,10 @@ func (g *Game) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 		lineUpId = 7
 	}
 
-	switch battleState.BattleType {
-	case spb.BattleType_Battle_CHALLENGE:
-		// 添加角色
-		rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
-		// 添加回合限制
-		rsp.BattleInfo.RoundsLimit = challengeState.ChallengeCountDown
-	}
+	// 添加角色
+	rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
+	// 添加回合限制
+	rsp.BattleInfo.RoundsLimit = challengeState.ChallengeCountDown
 
 	// 添加场景buff
 	for _, buffId := range challengeState.SceneBuffList {
@@ -432,80 +431,77 @@ func (g *Game) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
 		return
 	}
 
-	switch battleState.BattleType {
-	case spb.BattleType_Battle_CHALLENGE:
-		// 删除实体
-		entity := g.Player.EntityList[challengeState.EventID]
-		if entity != nil {
-			nitify := new(proto.SceneGroupRefreshScNotify)
-			nitify.GroupRefreshInfo = []*proto.SceneGroupRefreshInfo{
-				{
-					GroupId: entity.GroupId,
-					RefreshEntity: []*proto.SceneEntityRefreshInfo{
-						{
-							DelEntity: challengeState.EventID,
-						},
+	// 删除实体
+	entity := g.Player.EntityList[challengeState.EventID]
+	if entity != nil {
+		nitify := new(proto.SceneGroupRefreshScNotify)
+		nitify.GroupRefreshInfo = []*proto.SceneGroupRefreshInfo{
+			{
+				GroupId: entity.GroupId,
+				RefreshEntity: []*proto.SceneEntityRefreshInfo{
+					{
+						DelEntity: challengeState.EventID,
 					},
 				},
-			}
-			g.Send(cmd.SceneGroupRefreshScNotify, nitify)
-			delete(g.Player.EntityList, challengeState.EventID)
+			},
 		}
+		g.Send(cmd.SceneGroupRefreshScNotify, nitify)
+		delete(g.Player.EntityList, challengeState.EventID)
+	}
 
-		// 获取已使用回合数
-		challengeState.RoundCount += req.Stt.CocoonDeadWave
-		// 通过波次数判断是否还有一关
-		if challengeState.CurChallengeCount == challengeState.ChallengeCount {
-			// 战斗正常结束进入结算
+	// 获取已使用回合数
+	challengeState.RoundCount += req.Stt.RoundCnt
+	// 通过波次数判断是否还有一关
+	if challengeState.CurChallengeCount == challengeState.ChallengeCount {
+		// 战斗正常结束进入结算
 
-			// 计算分数
-			var stage uint32 = 0
-			for _, challengeTargetID := range challengeState.ChallengeTargetID {
-				challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
-				if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
-					// 是否有角色死亡
-					stage += 3
-				} else {
-					if (challengeState.ChallengeCountDown - challengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
-						stage += 2
-					}
+		// 计算分数
+		var stage uint32 = 0
+		for _, challengeTargetID := range challengeState.ChallengeTargetID {
+			challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
+			if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
+				// 是否有角色死亡
+				stage += 3
+			} else {
+				if (challengeState.ChallengeCountDown - challengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
+					stage += 2
 				}
 			}
-
-			// 将战斗结果储存到数据库
-			challengeDb := g.GetChallenge()
-			if challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] < stage {
-				challengeDb.ChallengeList[battleState.ChallengeState.ChallengeId] = stage
-			}
-			// 发送战斗胜利通知
-			challengeSettleNotify := &proto.ChallengeSettleNotify{
-				Stars:       stage,
-				Reward:      nil, // TODO 记得发奖励
-				ChallengeId: battleState.ChallengeState.ChallengeId,
-				IsWin:       true,
-			}
-			g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
-			// 战斗正式结束，还原战斗信息
-			battleState.BattleType = spb.BattleType_Battle_NONE
-			battleState.ChallengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
-		} else {
-			// 还差一波
-			challengeState.CurChallengeCount++
-			challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-			// 添加怪物
-			g.ChallengeAddSceneGroupRefreshScNotify()
-			// 添加角色
-			g.ChallengeAddAvatarSceneGroupRefreshScNotify()
-			// 更新新的队伍
-			g.ChallengeSyncLineupNotify(7)
-			// 通知当前战斗的队伍
-			challengeLineupNotify := &proto.ChallengeLineupNotify{
-				ExtraLineupType: challengeState.ExtraLineupType,
-			}
-			g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
-			// 通知坐标
-			g.SceneEntityMoveScNotify(pos, rot, challengeState.EntranceID)
 		}
+
+		// 将战斗结果储存到数据库
+		challengeDb := g.GetChallengeById(challengeState.ChallengeId)
+		if challengeDb.Stars < stage {
+			challengeDb.Stars = stage
+		}
+		// 发送战斗胜利通知
+		challengeSettleNotify := &proto.ChallengeSettleNotify{
+			Stars:       stage,
+			Reward:      nil, // TODO 记得发奖励
+			ChallengeId: challengeState.ChallengeId,
+			IsWin:       true,
+		}
+		g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
+		// 战斗正式结束，还原战斗信息
+		battleState.BattleType = spb.BattleType_Battle_NONE
+		challengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
+	} else {
+		// 还差一波
+		challengeState.CurChallengeCount++
+		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
+		// 添加怪物
+		g.ChallengeAddSceneGroupRefreshScNotify()
+		// 添加角色
+		g.ChallengeAddAvatarSceneGroupRefreshScNotify()
+		// 更新新的队伍
+		g.ChallengeSyncLineupNotify(7)
+		// 通知当前战斗的队伍
+		challengeLineupNotify := &proto.ChallengeLineupNotify{
+			ExtraLineupType: challengeState.ExtraLineupType,
+		}
+		g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
+		// 通知坐标
+		g.SceneEntityMoveScNotify(pos, rot, challengeState.EntranceID)
 	}
 }
 
@@ -647,6 +643,194 @@ func (g *Game) ChallengeAddSceneGroupRefreshScNotify() {
 
 // 下面是活动
 
-func (g *Game) ChallengeStoryPVEBattleResultCsReq(rsp *proto.SceneCastSkillScRsp) {
+func (g *Game) ChallengeStorySceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
+	challengeState := g.GetChallengeState()
+	var lineUpId uint32 = 6
+	var targetIndex uint32 = 0
+	storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
+
+	// 通过波次获取队伍
+	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
+		lineUpId = 6
+	} else {
+		lineUpId = 7
+	}
+
+	// 添加角色
+	rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
+	// 添加回合限制
+	rsp.BattleInfo.RoundsLimit = challengeState.ChallengeCountDown
+
+	// 添加关卡buff
+	if challengeState.CurChallengeCount == 1 {
+		buffListStory := &proto.BattleBuff{
+			Id:              challengeState.StoryBuffOne,
+			Level:           1,
+			OwnerId:         targetIndex,
+			TargetIndexList: []uint32{targetIndex},
+			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
+		}
+		buffListStory.DynamicValues["SkillIndex"] = 1
+		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffListStory)
+		targetIndex++
+	} else {
+		buffListStory := &proto.BattleBuff{
+			Id:              challengeState.StoryBuffTwo,
+			Level:           1,
+			OwnerId:         targetIndex,
+			TargetIndexList: []uint32{targetIndex},
+			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
+		}
+		buffListStory.DynamicValues["SkillIndex"] = 1
+		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffListStory)
+		targetIndex++
+	}
+
+	// 添加场景buff
+	for _, buffId := range challengeState.SceneBuffList {
+		buffList := &proto.BattleBuff{
+			Id:              buffId,
+			Level:           1,
+			OwnerId:         targetIndex,
+			TargetIndexList: []uint32{targetIndex},
+			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
+		}
+		buffList.DynamicValues["SkillIndex"] = 1
+		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+		targetIndex++
+	}
+	// 添加角色buff
+	for _, buffId := range challengeState.AvatarBuffList {
+		buffList := &proto.BattleBuff{
+			Id:              buffId,
+			Level:           1,
+			OwnerId:         targetIndex,
+			TargetIndexList: []uint32{targetIndex},
+			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
+		}
+		buffList.DynamicValues["SkillIndex"] = 1
+		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+		targetIndex++
+	}
+	rsp.BattleInfo.BattleTargetInfo = make(map[uint32]*proto.BattleTargetList)
+	rsp.BattleInfo.BattleTargetInfo[1] = &proto.BattleTargetList{
+		BattleTargetList: []*proto.BattleTarget{{
+			Id: 10001,
+		}},
+	}
+	battleTargetList := make([]*proto.BattleTarget, 0)
+	for _, id := range storyMazeExtra.BattleTargetID {
+		battleTarget := &proto.BattleTarget{
+			Id:          id,
+			Progress:    0,
+			CDLKMKKOGLL: 0,
+		}
+		battleTargetList = append(battleTargetList, battleTarget)
+	}
+	rsp.BattleInfo.BattleTargetInfo[5] = &proto.BattleTargetList{
+		BattleTargetList: battleTargetList,
+	}
+
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
+}
+
+func (g *Game) ChallengeStoryPVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
+	battleState := g.GetBattleState()
+	challengeState := g.GetChallengeState()
+	pos := challengeState.Pos
+	rot := challengeState.Rot
+
+	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
+		g.ChallengeSyncLineupNotify(6)
+	} else {
+		g.ChallengeSyncLineupNotify(7)
+	}
+
+	// 删除实体
+	entity := g.Player.EntityList[challengeState.EventID]
+	if entity != nil {
+		nitify := new(proto.SceneGroupRefreshScNotify)
+		nitify.GroupRefreshInfo = []*proto.SceneGroupRefreshInfo{
+			{
+				GroupId: entity.GroupId,
+				RefreshEntity: []*proto.SceneEntityRefreshInfo{
+					{
+						DelEntity: challengeState.EventID,
+					},
+				},
+			},
+		}
+		g.Send(cmd.SceneGroupRefreshScNotify, nitify)
+		delete(g.Player.EntityList, challengeState.EventID)
+	}
+
+	// 获取分数
+	challengeState.ChallengeScore += req.Stt.ChallengeScore
+	if challengeState.CurChallengeCount == 1 {
+		challengeState.ScoreOne = req.Stt.ChallengeScore
+	} else {
+		challengeState.ScoreTwo = req.Stt.ChallengeScore
+	}
+	// 通过波次数判断是否还有一关
+	if challengeState.CurChallengeCount == challengeState.ChallengeCount {
+		// 战斗正常结束进入结算
+
+		// 计算分数
+		var stage uint32 = 0
+		if challengeState.ChallengeScore >= 30000 {
+			stage++
+		}
+		for _, challengeTargetID := range challengeState.ChallengeTargetID {
+			challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
+			if challengeState.ChallengeScore >= challengeTargetConfig.ChallengeTargetParam1 {
+				stage += 2
+			}
+		}
+
+		// 将战斗结果储存到数据库
+		challengeDb := g.GetChallengeById(challengeState.ChallengeId)
+		if challengeDb.Stars < stage {
+			challengeDb.Stars = stage
+		}
+		if challengeDb.ScoreOne < challengeState.ScoreOne {
+			challengeDb.ScoreOne = challengeState.ScoreOne
+		}
+		if challengeDb.ScoreTwo < challengeState.ScoreTwo {
+			challengeDb.ScoreTwo = challengeState.ScoreTwo
+		}
+		// 发送战斗胜利通知
+		challengeSettleNotify := &proto.ChallengeSettleNotify{
+			Stars:          stage,
+			Reward:         nil, // TODO 记得发奖励
+			ChallengeId:    challengeState.ChallengeId,
+			IsWin:          true,
+			ChallengeScore: challengeState.ScoreOne,
+			ScoreTwo:       challengeState.ScoreTwo,
+		}
+		g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
+		// 战斗正式结束，还原战斗信息
+		battleState.BattleType = spb.BattleType_Battle_NONE
+		challengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
+	} else {
+		// 还差一波
+		challengeState.CurChallengeCount++
+		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
+		// 添加怪物
+		g.ChallengeAddSceneGroupRefreshScNotify()
+		// 添加角色
+		g.ChallengeAddAvatarSceneGroupRefreshScNotify()
+		// 更新新的队伍
+		g.ChallengeSyncLineupNotify(7)
+		// 通知当前战斗的队伍
+		challengeLineupNotify := &proto.ChallengeLineupNotify{
+			ExtraLineupType: challengeState.ExtraLineupType,
+		}
+		g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
+		// 通知坐标
+		g.SceneEntityMoveScNotify(pos, rot, challengeState.EntranceID)
+	}
 }

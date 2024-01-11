@@ -58,6 +58,7 @@ type GameDataConfig struct {
 	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
 	ChallengeMazeConfigMap      map[string]*ChallengeMazeConfig                 // 忘却之庭配置
 	ChallengeTargetConfigMap    map[string]*ChallengeTargetConfig               // 忘却之庭结算配置
+	ChallengeStoryMazeExtraMap  map[string]*ChallengeStoryMazeExtra             // 忘却之庭活动积分规则
 	BackGroundMusicMap          map[string]*BackGroundMusic                     // 背景音乐
 	PlayerLevelConfigMap        map[string]*PlayerLevelConfig                   // 账号等级经验配置
 	TextJoinConfigMap           map[string]*TextJoinConfig                      // 文本？
@@ -156,6 +157,7 @@ func (g *GameDataConfig) load() {
 	g.loadMonsterConfig()            // 怪物配置
 	g.loadChallengeMazeConfig()      // 忘却之庭配置
 	g.loadChallengeTargetConfig()    // 忘却之庭结算配置
+	g.loadChallengeStoryMazeExtra()  // 忘却之庭活动积分规则
 	g.loadBackGroundMusic()          // 背景音乐
 	g.loadPlayerLevelConfig()        // 账号等级经验配置
 	g.loadTextJoinConfig()           // 文本？

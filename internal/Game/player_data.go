@@ -148,7 +148,9 @@ func (g *Game) HandleGetChallengeCsReq(payloadMsg []byte) {
 	for id, stars := range challengeDb.ChallengeList {
 		challenge := &proto.Challenge{
 			ChallengeId: id,
-			Stars:       stars,
+			Stars:       stars.Stars,
+			Score:       stars.ScoreOne,
+			ScoreTwo:    stars.ScoreTwo,
 		}
 		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
 	}
