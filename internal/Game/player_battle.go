@@ -690,20 +690,14 @@ func (g *Game) StartRogueCsReq(payloadMsg []byte) {
 		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
 		// 添加物品实体
-		propList := g.GetPropByID(sceneGroup, stou32(groupID))
-		if len(propList.EntityList) != 0 {
-			scene.EntityGroupList = append(scene.EntityGroupList, propList)
-		}
+		entityGroupLists := g.GetPropByID(sceneGroup, stou32(groupID))
 		// 添加怪物实体
-		nPCMonsterList, x := g.GetNPCMonsterByID(sceneGroup, stou32(groupID), entityMap)
+		entityGroupLists, x := g.GetNPCMonsterByID(entityGroupLists, sceneGroup, stou32(groupID), entityMap)
 		entityMap = x
-		if len(nPCMonsterList.EntityList) != 0 {
-			scene.EntityGroupList = append(scene.EntityGroupList, nPCMonsterList)
-		}
 		// 添加NPC实体
-		nPCList := g.GetNPCByID(sceneGroup, stou32(groupID))
-		if len(nPCList.EntityList) != 0 {
-			scene.EntityGroupList = append(scene.EntityGroupList, nPCList)
+		entityGroupLists = g.GetNPCByID(entityGroupLists, sceneGroup, stou32(groupID))
+		if len(entityGroupLists.EntityList) != 0 {
+			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 		}
 	}
 

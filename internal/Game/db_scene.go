@@ -67,12 +67,7 @@ func (g *Game) GetPropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto
 	return entityGroupLists
 }
 
-func (g *Game) GetNPCMonsterByID(sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*EntityList) (*proto.SceneEntityGroupInfo, map[uint32]*EntityList) {
-	// [实体id]怪物群id
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    groupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
+func (g *Game) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*EntityList) (*proto.SceneEntityGroupInfo, map[uint32]*EntityList) {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
@@ -112,16 +107,12 @@ func (g *Game) GetNPCMonsterByID(sceneGroup *gdconf.LevelGroup, groupID uint32, 
 				Z: 0,
 			},
 		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
-	return entityGroupLists, entityMap
+	return entityGroupList, entityMap
 }
 
-func (g *Game) GetNPCByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    groupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
+func (g *Game) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
 	for _, npcList := range sceneGroup.NPCList {
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  groupID,
@@ -147,7 +138,7 @@ func (g *Game) GetNPCByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.
 		if npcList.FirstDialogueGroupID != 0 {
 			g.GetSceneNpcList()[npcList.NPCID] = npcList.FirstDialogueGroupID
 		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
-	return entityGroupLists
+	return entityGroupList
 }

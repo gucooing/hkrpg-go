@@ -131,20 +131,14 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		// 添加物品实体
-		propList := g.GetPropByID(levelGroup, levelGroup.GroupId)
-		if len(propList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
-		}
+		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
 		// 添加怪物实体
-		nPCMonsterList, x := g.GetNPCMonsterByID(levelGroup, levelGroup.GroupId, entityMap)
+		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, entityMap)
 		entityMap = x
-		if len(nPCMonsterList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
-		}
 		// 添加NPC实体
-		nPCList := g.GetNPCByID(levelGroup, levelGroup.GroupId)
-		if len(nPCList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
+		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
+		if len(entityGroupList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
 		}
 	}
 
@@ -261,20 +255,14 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		// 添加物品实体
-		propList := g.GetPropByID(levelGroup, levelGroup.GroupId)
-		if len(propList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
-		}
+		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
 		// 添加怪物实体
-		nPCMonsterList, x := g.GetNPCMonsterByID(levelGroup, levelGroup.GroupId, entityMap)
+		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, entityMap)
 		entityMap = x
-		if len(nPCMonsterList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
-		}
 		// 添加NPC实体
-		nPCList := g.GetNPCByID(levelGroup, levelGroup.GroupId)
-		if len(nPCList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
+		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
+		if len(entityGroupList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
 		}
 
 	}
