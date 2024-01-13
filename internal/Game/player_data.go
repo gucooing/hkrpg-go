@@ -296,7 +296,7 @@ func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	rsp := new(proto.PlayerHeartbeatScRsp)
 	// TODO 逆天了，proto太残了，没办法
 	g.Send(cmd.PlayerLoginFinishScRsp, rsp)
-	g.HandleGetArchiveDataCsReq(nil) //客户端不会向服务器发送GetArchiveDataCsReq包，因此需要在PlayerLoginFinighCsReq中发送
+	g.HandleGetArchiveDataCsReq(nil) //客户端不会向服务器发送GetArchiveDataCsReq包，因此需要在PlayerLoginFinighCsReq中额外发送
 
 	// 战斗通行证信息通知
 	notify := &proto.BattlePassInfoNotify{
