@@ -1,45 +1,33 @@
-hkrpg-go
+![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
 
-某动漫游戏的服务端再实现
+ 随机首包密钥，随机生成seed，使数据更加安全
 
-随机首包密钥，随机生成seed，使数据更加安全
+### 已实现的功能：
+- 走路模拟器
+- 队伍管理
+- 传送
+- 抽卡模拟器
+- 背包
+- 初级战斗
+- 养成
+- 初级模拟宇宙（1.6.0不支持）
+- 副本/周本/挑战
+- 忘却之庭
 
-目前实现功能：
+### 已实现的活动：
+- 角色试用
+- 巡星之礼
+- 忘却之庭-虚构叙事
 
-     1.走路模拟器
-     2.队伍管理
-     3.传送
-     4.抽卡模拟器
-     5.背包
-     6.初级战斗
-     7.养成
-     8.初级模拟宇宙
-     9.副本/周本/挑战
-     10.忘却之庭
-
-目前已实现功能中的bug:(因本人能力不足虽已尝试解决，但无法解决)
-
-    1.角色无语音ui
-
-使用方法 ：
-
-1. 安装mysql
-2. 拉取项目文件
-3. 编译
-4. 运行后修改config.json
-5. 运行
-
-编译
-
-   ```bash
-   go mod tidy
-   go build main.go
-   ```
-运行
-```bash
-  run main.exe / main
+### 使用方法：
+1. 拉取项目文件
+2. run
+```
+  go mod tidy 
+  go build main.go
+  main / main.exe
 ```
 
-注：
-
+### 注：
 * 如果你想帮助此项目，欢迎提交
+* 欢迎加入我们的 [Discord](https://discord.gg/ZJGTU8ZFGW)

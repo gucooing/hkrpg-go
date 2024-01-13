@@ -89,29 +89,6 @@ func (g *Game) SyncClientResVersionCsReq(payloadMsg []byte) {
 	g.Send(cmd.SyncClientResVersionScRsp, rsp)
 }
 
-func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
-	rsp := new(proto.PlayerHeartbeatScRsp)
-	// TODO 逆天了，proto太残了，没办法
-	g.Send(cmd.PlayerLoginFinishScRsp, rsp)
-
-	// 战斗通行证信息通知
-	notify := &proto.BattlePassInfoNotify{
-		TakenPremiumExtendedReward: 127,
-		TakenFreeExtendedReward:    127,
-		Unkfield:                   4,
-		TakenPremiumReward2:        2251799813685246,
-		TakenFreeReward:            1,
-		TakenPremiumReward1:        1,
-		TakenPremiumOptionalReward: 2251799813685246,
-		Exp:                        800,
-		Level:                      70,
-		CurBpId:                    5,
-		CurWeekAddExpSum:           8000,
-		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
-	}
-	g.Send(cmd.BattlePassInfoNotify, notify)
-}
-
 // 账号离线
 func (g *Game) PlayerLogoutCsReq() {
 	g.KickPlayer()

@@ -9,10 +9,10 @@ import (
 )
 
 type ActivityPanel struct {
-	PanelID          uint32              `json:"PanelID"`
-	Type             uint32              `json:"Type"`
-	ActivityModuleID uint32              `json:"ActivityModuleID"`
-	UnlockConditions []*UnlockConditions `json:"UnlockConditions"` // 解锁条件
+	PanelID          uint32 `json:"PanelID"`
+	Type             uint32 `json:"Type"`
+	ActivityModuleID uint32 `json:"ActivityModuleID"`
+	UnlockConditions string `json:"UnlockConditions"` // 解锁条件
 }
 
 type UnlockConditions struct {

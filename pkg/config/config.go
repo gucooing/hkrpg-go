@@ -14,7 +14,6 @@ type Config struct {
 	MysqlDsn           string       `json:"MysqlDsn"`
 	Account            *Account     `json:"Account"`
 	Http               *Http        `json:"Http"`
-	Https              *Https       `json:"Https"`
 	Dispatch           []Dispatch   `json:"Dispatch"`
 	Game               *Game        `json:"Game"`
 	GmKey              string       `json:"GmKey"`
@@ -32,15 +31,11 @@ type Dispatch struct {
 	DispatchUrl string `json:"dispatchUrl"`
 }
 type Http struct {
-	Addr string `json:"addr"`
-	Port int64  `json:"port"`
-}
-type Https struct {
-	Enable   bool   `json:"enable"`   // 是否启动 HTTPS
-	Addr     string `json:"addr"`     // HTTPS 服务地址
-	Port     int64  `json:"port"`     // HTTPS 服务端口
-	CertFile string `json:"certFile"` // 证书文件路径
-	KeyFile  string `json:"keyFile"`  // 密钥文件路径
+	Addr        string `json:"addr"`
+	Port        int64  `json:"port"`
+	EnableHttps bool   `json:"enable"`
+	CertFile    string `json:"certFile"`
+	KeyFile     string `json:"keyFile"`
 }
 type Game struct {
 	Addr string `json:"addr"`
@@ -91,15 +86,11 @@ var DefaultConfig = &Config{
 		MaxPlayer:  -1,
 	},
 	Http: &Http{
-		Addr: "0.0.0.0",
-		Port: 8080,
-	},
-	Https: &Https{
-		Enable:   true,
-		Addr:     "0.0.0.0",
-		Port:     8443,
-		CertFile: "data/localhost.crt",
-		KeyFile:  "data/localhost.key",
+		Addr:        "0.0.0.0",
+		Port:        8080,
+		EnableHttps: true,
+		CertFile:    "data/localhost.crt",
+		KeyFile:     "data/localhost.key",
 	},
 	Dispatch: []Dispatch{
 		{

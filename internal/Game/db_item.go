@@ -87,6 +87,35 @@ func (g *Game) AddHeadIcon(headIconId uint32) {
 	// g.ScenePlaneEventScNotify(headIconId, 1)
 }
 
+func (g *Game) AddRelic(tid uint32) {
+	uniqueId := uint32(SNOWFLAKE.GenId())
+	relic := gdconf.GetRelicById(strconv.Itoa(int(tid)))
+	g.GetItem().RelicMap[uniqueId] = &spb.Relic{
+		Tid:          tid,
+		UniqueId:     uniqueId,
+		Exp:          0,
+		Level:        0,
+		MainAffixId:  gdconf.GetRelicMainAffixConfigById(relic.MainAffixGroup),
+		RelicAffix:   make([]*spb.RelicAffix, 0),
+		BaseAvatarId: 0,
+		IsProtected:  false,
+	}
+	baseSubAffixes := math.Min(math.Max(float64(relic.Type-2), 0), 3)
+	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
+	// TODO 不应与主属性相同
+	for i := 0; i < addSubAffixes; i++ {
+		affixId := gdconf.GetRelicSubAffixConfigById(relic.SubAffixGroup)
+		relicAffix := &spb.RelicAffix{
+			AffixId: affixId,
+			Cnt:     200,
+			Step:    0,
+		}
+		g.GetItem().RelicMap[uniqueId].RelicAffix = append(g.GetItem().RelicMap[uniqueId].RelicAffix, relicAffix)
+	}
+
+	g.RelicPlayerSyncScNotify(uniqueId)
+}
+
 func (g *Game) GetRelicById(uniqueId uint32) *proto.Relic {
 	if g.GetItem().RelicMap[uniqueId] == nil {
 		return nil
@@ -112,35 +141,6 @@ func (g *Game) GetRelicById(uniqueId uint32) *proto.Relic {
 	}
 
 	return relic
-}
-
-func (g *Game) AddRelic(tid uint32) {
-	uniqueId := uint32(SNOWFLAKE.GenId())
-	relic := gdconf.GetRelicById(strconv.Itoa(int(tid)))
-	g.GetItem().RelicMap[uniqueId] = &spb.Relic{
-		Tid:          tid,
-		UniqueId:     uniqueId,
-		Exp:          0,
-		Level:        0,
-		MainAffixId:  gdconf.GetRelicMainAffixConfigById(relic.MainAffixGroup),
-		RelicAffix:   make([]*spb.RelicAffix, 0),
-		BaseAvatarId: 0,
-		IsProtected:  false,
-	}
-	baseSubAffixes := math.Min(math.Max(float64(relic.Type-2), 0), 3)
-	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
-	// TODO 不应与主属性相同
-	for i := 0; i < addSubAffixes; i++ {
-		affixId := gdconf.GetRelicSubAffixConfigById(relic.SubAffixGroup)
-		relicAffix := &spb.RelicAffix{
-			AffixId: affixId,
-			Cnt:     1,
-			Step:    0,
-		}
-		g.GetItem().RelicMap[uniqueId].RelicAffix = append(g.GetItem().RelicMap[uniqueId].RelicAffix, relicAffix)
-	}
-
-	g.RelicPlayerSyncScNotify(uniqueId)
 }
 
 func (g *Game) SubtractMaterial(tid, num uint32) {

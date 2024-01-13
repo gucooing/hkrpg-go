@@ -50,11 +50,15 @@ type GameDataConfig struct {
 	MapEntranceMap              map[string]*MapEntrance                         // 地图入口
 	BannersMap                  map[uint32]*Banners                             // 卡池信息
 	ActivityPanelMap            map[string]*ActivityPanel                       // 活动
+	ActivityLoginConfigMap      map[string]*ActivityLoginConfig                 // 登录活动表
+	AvatarDemoConfigMap         map[string]*AvatarDemoConfig                    // 角色试用信息
+	SpecialAvatarMap            map[string]map[string]*SpecialAvatar            // 预设角色映射表
 	ActivitySchedulingMap       []*ActivityScheduling                           // 活动排期
 	QuestDataMap                map[string]*QuestData                           // 任务
 	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
 	ChallengeMazeConfigMap      map[string]*ChallengeMazeConfig                 // 忘却之庭配置
 	ChallengeTargetConfigMap    map[string]*ChallengeTargetConfig               // 忘却之庭结算配置
+	ChallengeStoryMazeExtraMap  map[string]*ChallengeStoryMazeExtra             // 忘却之庭活动积分规则
 	BackGroundMusicMap          map[string]*BackGroundMusic                     // 背景音乐
 	PlayerLevelConfigMap        map[string]*PlayerLevelConfig                   // 账号等级经验配置
 	TextJoinConfigMap           map[string]*TextJoinConfig                      // 文本？
@@ -63,6 +67,7 @@ type GameDataConfig struct {
 	LoadingDescMap              map[string]*LoadingDesc                         // 战斗随机种子
 	ShopConfigMap               map[uint32][]uint32                             // 商店配置
 	ShopGoodsConfigMap          map[uint32]map[uint32]*ShopGoodsConfig          // 商品配置
+	RewardDataMap               map[string]*RewardData                          // 奖励配置
 }
 
 func InitGameDataConfig() {
@@ -144,11 +149,15 @@ func (g *GameDataConfig) load() {
 	g.loadMapEntrance()              // 地图入口
 	g.loadBanners()                  // 卡池信息
 	g.loadActivityPanel()            // 活动
+	g.loadAvatarDemoConfig()         // 角色试用信息
+	g.loadSpecialAvatar()            // 预设角色映射表
 	g.loadActivityScheduling()       // 活动排期
+	g.loadActivityLoginConfig()      // 登录活动表
 	g.loadQuestData()                // 任务
 	g.loadMonsterConfig()            // 怪物配置
 	g.loadChallengeMazeConfig()      // 忘却之庭配置
 	g.loadChallengeTargetConfig()    // 忘却之庭结算配置
+	g.loadChallengeStoryMazeExtra()  // 忘却之庭活动积分规则
 	g.loadBackGroundMusic()          // 背景音乐
 	g.loadPlayerLevelConfig()        // 账号等级经验配置
 	g.loadTextJoinConfig()           // 文本？
@@ -157,4 +166,5 @@ func (g *GameDataConfig) load() {
 	g.loadLoadingDesc()              // 战斗随机种子
 	g.loadShopConfig()               // 商店配置
 	g.loadShopGoodsConfig()          // 商品配置
+	g.loadRewardData()               // 奖励配置
 }

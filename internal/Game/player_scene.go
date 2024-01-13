@@ -35,37 +35,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 
 	// 获取队伍
-	lineUp := g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp)
-	lineupList := &proto.LineupInfo{
-		IsVirtual:       false,
-		LeaderSlot:      0,
-		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           g.PlayerPb.LineUp.MainLineUp,
-		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
-		MaxMp:           5,
-		Mp:              5,
-		Name:            lineUp.Name,
-		PlaneId:         0,
-	}
-	for slot, avatarId := range lineUp.AvatarIdList {
-		if avatarId == 0 {
-			continue
-		}
-		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
-		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: proto.AvatarType(avatar.AvatarType),
-			Slot:       uint32(slot),
-			Satiety:    0,
-			Hp:         avatar.Hp,
-			Id:         avatarId,
-			SpBar: &proto.SpBarInfo{
-				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.MaxSp,
-			},
-		}
-		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
-	}
-	rsp.Lineup = lineupList
+	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
 
 	rsp.Scene = &proto.SceneInfo{
 		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
@@ -93,16 +63,16 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 	for _, anchor := range foorMap.Groups[groupID].AnchorList {
 		if anchor.ID == anchorID {
-			for id, avatarid := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
+			for id, avatarid := range g.GetLineUpById(g.GetLineUp().MainLineUp).AvatarIdList {
 				if avatarid == 0 {
 					continue
 				}
 				entityId := uint32(g.GetNextGameObjectGuid())
 				entityList := &proto.SceneEntityInfo{
-					EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+					Actor: &proto.SceneActorInfo{
 						AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 						BaseAvatarId: avatarid,
-					}},
+					},
 					Motion: &proto.MotionInfo{
 						Pos: &proto.Vector{
 							X: int32(anchor.PosX * 1000),
@@ -161,20 +131,14 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		// 添加物品实体
-		propList := g.GetPropByID(levelGroup, levelGroup.GroupId)
-		if len(propList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
-		}
+		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
 		// 添加怪物实体
-		nPCMonsterList, x := g.GetNPCMonsterByID(levelGroup, levelGroup.GroupId, entityMap)
+		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, entityMap)
 		entityMap = x
-		if len(nPCMonsterList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
-		}
 		// 添加NPC实体
-		nPCList := g.GetNPCByID(levelGroup, levelGroup.GroupId)
-		if len(nPCList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
+		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
+		if len(entityGroupList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
 		}
 	}
 
@@ -241,10 +205,10 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
-			EntityCase: &proto.SceneEntityInfo_Actor{Actor: &proto.SceneActorInfo{
+			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType(g.PlayerPb.Avatar.Avatar[avatarid].AvatarType),
 				BaseAvatarId: avatarid,
-			}},
+			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
 					X: pos.X,
@@ -291,21 +255,16 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		// 添加物品实体
-		propList := g.GetPropByID(levelGroup, levelGroup.GroupId)
-		if len(propList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
-		}
+		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
 		// 添加怪物实体
-		nPCMonsterList, x := g.GetNPCMonsterByID(levelGroup, levelGroup.GroupId, entityMap)
+		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, entityMap)
 		entityMap = x
-		if len(nPCMonsterList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCMonsterList)
-		}
 		// 添加NPC实体
-		nPCList := g.GetNPCByID(levelGroup, levelGroup.GroupId)
-		if len(nPCList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, nPCList)
+		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
+		if len(entityGroupList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
 		}
+
 	}
 
 	g.Player.EntityList = entityMap

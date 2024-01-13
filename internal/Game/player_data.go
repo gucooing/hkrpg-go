@@ -28,13 +28,13 @@ func (g *Game) HandleGetBasicInfoCsReq() {
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
 
-func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
+func (g *Game) HandleGetArchiveDataCsReq() {
 	rsp := new(proto.GetArchiveDataScRsp)
 	archiveData := &proto.ArchiveData{
 		ArchiveAvatarIdList:    make([]uint32, 0),
 		ArchiveEquipmentIdList: make([]uint32, 0),
 		ArchiveMonsterIdList:   make([]*proto.MonsterArchive, 0),
-		ArchiveRelicList:       make([]*proto.RelicArchive, 0),
+		RelicList:              make([]*proto.RelicArchive, 0),
 	}
 
 	for _, avatar := range g.PlayerPb.Avatar.Avatar {
@@ -56,9 +56,9 @@ func (g *Game) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	for _, relicList := range gdconf.GetRelicMap() {
 		archiveRelicList := &proto.RelicArchive{
 			RelicId: relicList.ID,
-			Type:    relicList.Type,
+			Slot:    relicList.Type,
 		}
-		archiveData.ArchiveRelicList = append(archiveData.ArchiveRelicList, archiveRelicList)
+		archiveData.RelicList = append(archiveData.RelicList, archiveRelicList)
 	}
 
 	rsp.ArchiveData = archiveData
@@ -77,7 +77,11 @@ func (g *Game) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 		CurrentHeadIconId:    g.PlayerPb.HeadImageAvatarId,
 		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
 		Signature:            g.PlayerPb.Signature,
-		Unk1:                 "",
+		// TODO
+		DisplayAvatarVec: &proto.DisplayAvatarVec{
+			DisplayAvatarList: nil,
+			IsDisplay:         false,
+		},
 	}
 
 	for _, avatar := range g.GetHeadIconList() {
@@ -144,7 +148,9 @@ func (g *Game) HandleGetChallengeCsReq(payloadMsg []byte) {
 	for id, stars := range challengeDb.ChallengeList {
 		challenge := &proto.Challenge{
 			ChallengeId: id,
-			Stars:       stars,
+			Stars:       stars.Stars,
+			Score:       stars.ScoreOne,
+			ScoreTwo:    stars.ScoreTwo,
 		}
 		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
 	}
@@ -195,9 +201,9 @@ func (g *Game) SetClientPausedCsReq() {
 func (g *Game) HandleGetJukeboxDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetJukeboxDataScRsp)
 	rsp.PlayingId = 210000
-	rsp.MusicList = make([]*proto.GetJukeboxDataScRsp_UnlockedMusic, 0)
+	rsp.MusicList = make([]*proto.UnlockedMusic, 0)
 	for _, backMusicList := range gdconf.GetBackGroundMusicMap() {
-		musicList := &proto.GetJukeboxDataScRsp_UnlockedMusic{
+		musicList := &proto.UnlockedMusic{
 			GroupId: backMusicList.GroupID,
 			Unkbool: true,
 			Id:      backMusicList.ID,
@@ -272,7 +278,7 @@ func (g *Game) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 func (g *Game) TextJoinQueryCsReq() {
 	rsp := new(proto.TextJoinQueryScRsp)
 	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
-		textJoinList := &proto.TextJoinQueryScRsp_TextJoinInfo{
+		textJoinList := &proto.TextJoinInfo{
 			TextItemId:       textJoin.TextJoinID,
 			TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
 		}
@@ -284,4 +290,49 @@ func (g *Game) TextJoinQueryCsReq() {
 
 func (g *Game) GetUnlockTeleportCsReq() {
 
+}
+
+func (g *Game) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
+	rsp := new(proto.PlayerHeartbeatScRsp)
+	// TODO 逆天了，proto太残了，没办法
+	g.Send(cmd.PlayerLoginFinishScRsp, rsp)
+	// TODO 主动调用
+	g.HandleGetArchiveDataCsReq()
+
+	// 战斗通行证信息通知
+	notify := &proto.BattlePassInfoNotify{
+		TakenPremiumExtendedReward: 127,
+		TakenFreeExtendedReward:    127,
+		Unkfield:                   4,
+		TakenPremiumReward2:        2251799813685246,
+		TakenFreeReward:            1,
+		TakenPremiumReward1:        1,
+		TakenPremiumOptionalReward: 2251799813685246,
+		Exp:                        800,
+		Level:                      70,
+		CurBpId:                    5,
+		CurWeekAddExpSum:           8000,
+		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
+	}
+	g.Send(cmd.BattlePassInfoNotify, notify)
+}
+
+func (g *Game) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetFarmStageGachaInfoCsReq, payloadMsg)
+	req := msg.(*proto.GetFarmStageGachaInfoCsReq)
+
+	rsp := &proto.GetFarmStageGachaInfoScRsp{
+		FarmStageGachaInfoList: make([]*proto.FarmStageGachaInfo, 0),
+	}
+
+	for _, farmStageGachaId := range req.FarmStageGachaIdList {
+		farmStageGachaInfo := &proto.FarmStageGachaInfo{
+			BeginTime: 1664308800,
+			GachaId:   farmStageGachaId,
+			EndTime:   4294967295,
+		}
+		rsp.FarmStageGachaInfoList = append(rsp.FarmStageGachaInfoList, farmStageGachaInfo)
+	}
+
+	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
 }

@@ -57,22 +57,17 @@ func (g *Game) GetPropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto
 					Z: 0,
 				},
 			},
-			EntityCase: &proto.SceneEntityInfo_Prop{Prop: &proto.ScenePropInfo{
+			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
 				PropState: gdconf.GetStateValue(propList.State),
-			}},
+			},
 		}
 		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
 	}
 	return entityGroupLists
 }
 
-func (g *Game) GetNPCMonsterByID(sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*EntityList) (*proto.SceneEntityGroupInfo, map[uint32]*EntityList) {
-	// [实体id]怪物群id
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    groupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
+func (g *Game) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*EntityList) (*proto.SceneEntityGroupInfo, map[uint32]*EntityList) {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
@@ -91,11 +86,11 @@ func (g *Game) GetNPCMonsterByID(sceneGroup *gdconf.LevelGroup, groupID uint32, 
 					Z: 0,
 				},
 			},
-			EntityCase: &proto.SceneEntityInfo_NpcMonster{NpcMonster: &proto.SceneNpcMonsterInfo{
+			NpcMonster: &proto.SceneNpcMonsterInfo{
 				WorldLevel: g.PlayerPb.WorldLevel,
 				MonsterId:  monsterList.NPCMonsterID,
 				EventId:    monsterList.EventID,
-			}},
+			},
 		}
 		// 添加实体
 		entityMap[entityId] = &EntityList{
@@ -112,16 +107,12 @@ func (g *Game) GetNPCMonsterByID(sceneGroup *gdconf.LevelGroup, groupID uint32, 
 				Z: 0,
 			},
 		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
-	return entityGroupLists, entityMap
+	return entityGroupList, entityMap
 }
 
-func (g *Game) GetNPCByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    groupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
+func (g *Game) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
 	for _, npcList := range sceneGroup.NPCList {
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  groupID,
@@ -139,14 +130,15 @@ func (g *Game) GetNPCByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.
 					Z: 0,
 				},
 			},
-			EntityCase: &proto.SceneEntityInfo_Npc{Npc: &proto.SceneNpcInfo{
-				NpcId: npcList.NPCID,
-			}},
+			Npc: &proto.SceneNpcInfo{
+				ExtraInfo: nil,
+				NpcId:     npcList.NPCID,
+			},
 		}
 		if npcList.FirstDialogueGroupID != 0 {
 			g.GetSceneNpcList()[npcList.NPCID] = npcList.FirstDialogueGroupID
 		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
-	return entityGroupLists
+	return entityGroupList
 }

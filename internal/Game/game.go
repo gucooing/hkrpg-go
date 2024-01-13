@@ -43,9 +43,19 @@ const (
 	Change = 3
 )
 
+var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatCsReq, cmd.PlayerHeartBeatScRsp} // 黑名单
+func isValid(cmdid uint16) bool {
+	for _, value := range blacklist {
+		if cmdid == value {
+			return false
+		}
+	}
+	return true
+}
+
 func (g *Game) Send(cmdid uint16, playerMsg pb.Message) {
 	// 打印需要的数据包
-	if cmdid != 1468 {
+	if isValid(cmdid) {
 		data := protojson.Format(playerMsg)
 		logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdid, data)
 	}
@@ -69,7 +79,7 @@ func (g *Game) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Messa
 		return nil
 	}
 	// 打印需要的数据包
-	if cmdId != 1452 {
+	if isValid(cmdId) {
 		data := protojson.Format(protoObj)
 		logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
 	}
