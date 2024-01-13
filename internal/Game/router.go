@@ -88,8 +88,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetCurSceneInfoCsReq(payloadMsg) // 获取场景信息(关键包)
 	case cmd.SceneEntityMoveCsReq:
 		g.SceneEntityMoveCsReq(payloadMsg) // 场景实体移动
-	case cmd.GetRogueScoreRewardInfoCsReq:
-		g.GetRogueScoreRewardInfoCsReq()
 	case cmd.EnterSceneCsReq:
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
 	case cmd.GetUnlockTeleportCsReq:
@@ -103,6 +101,8 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.PVEBattleResultCsReq(payloadMsg) // PVE战斗结算
 	case cmd.GetRogueInfoCsReq:
 		g.GetRogueInfoCsReq(payloadMsg) // 获取模拟宇宙
+	case cmd.GetRogueScoreRewardInfoCsReq:
+		g.GetRogueScoreRewardInfoCsReq()
 	case cmd.StartRogueCsReq:
 		g.StartRogueCsReq(payloadMsg) // 模拟宇宙,启动!
 	case cmd.LeaveRogueCsReq:

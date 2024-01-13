@@ -113,6 +113,7 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			g.GetScene().EntryId = entryId
 			g.GetScene().PlaneId = mapEntrance.PlaneID
 			g.GetScene().FloorId = mapEntrance.FloorID
+			g.GetLineUp().MainAvatarId = 0
 			break
 		}
 	}
@@ -239,6 +240,7 @@ func (g *Game) SceneByServerScNotify(entryId uint32, pos, rot *spb.VectorBin) {
 	g.GetScene().EntryId = entryId
 	g.GetScene().PlaneId = mapEntrance.PlaneID
 	g.GetScene().FloorId = mapEntrance.FloorID
+	g.GetLineUp().MainAvatarId = 0
 
 	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
 
@@ -380,6 +382,7 @@ func (g *Game) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	}
 
 	g.Player.EntityList = entityMap
+	g.GetLineUp().MainAvatarId = 0
 	g.Send(cmd.GetCurSceneInfoScRsp, rsp)
 }
 

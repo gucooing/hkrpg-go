@@ -16,7 +16,7 @@ func (g *Game) SceneEntityMoveCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneEntityMoveCsReq, payloadMsg)
 	req := msg.(*proto.SceneEntityMoveCsReq)
 
-	if g.GetBattleState().BattleType == 0 {
+	if g.GetBattleState().BattleType == spb.BattleType_Battle_NONE {
 		for _, entryId := range req.EntityMotionList {
 			if g.Player.EntityList[entryId.EntityId] == nil {
 				break
