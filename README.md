@@ -1,5 +1,7 @@
 ![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
 
+**注意:** 如果需要支持，请加入我们的 [Discord](https://discord.gg/ZJGTU8ZFGW).
+
 ### 已实现的功能：
 - 走路模拟器
 - 队伍管理
@@ -27,9 +29,9 @@
 1. 拉取项目文件
 2. 打开终端，使用`go mod tidy&&go build main.go`编译服务端核心
 3. 下载resources
-5. 启动mysql并创建名为`hkrpg-go`的数据库，首次运行时会自动初始化所需要的表
-6. 首次运行服务端后会生成一个名为config.json的文件，请修改`MysqlDsn`中password的值以及`GmKey`的值
-7. 再次运行`main.exe`即可启动服务器
+4. 启动mysql并创建名为`hkrpg-go`的数据库，首次运行时会自动初始化所需要的表
+5. 首次运行服务端后会生成一个名为config.json的文件，请修改`MysqlDsn`中password的值以及`GmKey`的值
+6. 再次运行`main.exe`即可启动服务器
 
 ### 与客户端（Fiddler）连接
 1. 安装并运行 [Fiddler Classic](https://www.telerik.com/fiddler)。
