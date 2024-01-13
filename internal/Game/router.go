@@ -188,7 +188,7 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.GetFarmStageGachaInfoCsReq(payloadMsg) // 获取怪物刷新情况
 	// 成就
 	case cmd.GetArchiveDataCsReq:
-		g.HandleGetArchiveDataCsReq(payloadMsg) // 获取收集
+		g.HandleGetArchiveDataCsReq() // 获取收集
 	case cmd.GetUpdatedArchiveDataCsReq:
 		g.GetUpdatedArchiveDataCsReq() // 更新收集
 	// NPC
