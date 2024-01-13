@@ -104,17 +104,15 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			}
 
 			// TODO 数据保存问题？
-			g.PlayerPb.Pos = &spb.VectorBin{
-				X: int32(anchor.PosX * 1000),
-				Y: int32(anchor.PosY * 1000),
-				Z: int32(anchor.PosZ * 1000),
-			}
-			g.PlayerPb.Rot = &spb.VectorBin{
-				X: int32(anchor.RotX * 1000),
-				Y: int32(anchor.RotY * 1000),
-				Z: int32(anchor.RotZ * 1000),
-			}
-			g.PlayerPb.Scene.EntryId = entryId
+			g.GetPos().X = int32(anchor.PosX * 1000)
+			g.GetPos().Y = int32(anchor.PosY * 1000)
+			g.GetPos().Z = int32(anchor.PosZ * 1000)
+			g.GetRot().X = int32(anchor.RotX * 1000)
+			g.GetRot().Y = int32(anchor.RotY * 1000)
+			g.GetRot().Z = int32(anchor.RotZ * 1000)
+			g.GetScene().EntryId = entryId
+			g.GetScene().PlaneId = mapEntrance.PlaneID
+			g.GetScene().FloorId = mapEntrance.FloorID
 			break
 		}
 	}
@@ -146,22 +144,136 @@ func (g *Game) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
 
-func (g *Game) GetRogueScoreRewardInfoCsReq() {
-	rsp := new(proto.GetRogueScoreRewardInfoScRsp)
-	rsp.ScoreRewardInfo = &proto.RogueScoreRewardInfo{
-		HasTakenInitialScore: true,
-		PoolRefreshed:        true,
-		PoolId:               22,
+// 传送到指定位置
+func (g *Game) SceneByServerScNotify(entryId uint32, pos, rot *spb.VectorBin) {
+	rsp := new(proto.EnterSceneByServerScNotify)
+	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+	if mapEntrance == nil {
+		return
+	}
+	foorMap := gdconf.GetFloorById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	if foorMap == nil {
+		return
 	}
 
-	g.Send(cmd.GetRogueScoreRewardInfoScRsp, rsp)
+	var groupID = mapEntrance.StartGroupID
+	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
+	groupID = foorMap.StartGroupID
+
+	// 获取队伍
+	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
+
+	rsp.Scene = &proto.SceneInfo{
+		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		LeaderEntityId:     leaderEntityId,
+		FloorId:            mapEntrance.FloorID,
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		PlaneId:            mapEntrance.PlaneID,
+		EntryId:            entryId,
+		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
+		GroupIdList:        make([]uint32, 0),
+		LightenSectionList: make([]uint32, 0),
+		GroupStateList:     make([]*proto.SceneGroupState, 0),
+	}
+
+	for i := uint32(0); i < 100; i++ {
+		rsp.Scene.LightenSectionList = append(rsp.Scene.LightenSectionList, i)
+	}
+
+	entityGroup := &proto.SceneEntityGroupInfo{
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	// 添加队伍角色进实体列表，并设置坐标
+	if foorMap.Groups[groupID] == nil {
+		return
+	}
+
+	for id, avatarid := range g.GetLineUpById(g.GetLineUp().MainLineUp).AvatarIdList {
+		if avatarid == 0 {
+			continue
+		}
+		entityId := uint32(g.GetNextGameObjectGuid())
+		entityList := &proto.SceneEntityInfo{
+			Actor: &proto.SceneActorInfo{
+				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+				BaseAvatarId: avatarid,
+			},
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: pos.X,
+					Y: pos.Y,
+					Z: pos.Z,
+				},
+				Rot: &proto.Vector{
+					X: rot.X,
+					Y: rot.Y,
+					Z: rot.Z,
+				},
+			},
+		}
+		// 为进入场景的角色设置与上面相同的实体id
+		if id == 0 {
+			entityList.EntityId = leaderEntityId
+			entityMap[leaderEntityId] = &EntityList{
+				Entity:  avatarid,
+				GroupId: groupID,
+			}
+		} else {
+			entityList.EntityId = entityId
+			entityMap[entityId] = &EntityList{
+				Entity:  avatarid,
+				GroupId: groupID,
+			}
+		}
+		entityGroup.EntityList = append(entityGroup.EntityList, entityList)
+	}
+
+	// TODO 数据保存问题？
+	g.GetPos().X = pos.X
+	g.GetPos().Y = pos.Y
+	g.GetPos().Z = pos.Z
+	g.GetRot().X = rot.X
+	g.GetRot().Y = rot.Y
+	g.GetRot().Z = rot.Z
+	g.GetScene().EntryId = entryId
+	g.GetScene().PlaneId = mapEntrance.PlaneID
+	g.GetScene().FloorId = mapEntrance.FloorID
+
+	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroup)
+
+	// 获取场景实体
+	for _, levelGroup := range foorMap.Groups {
+		if levelGroup.GroupId == 0 {
+			continue
+		}
+		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
+			continue
+		}
+		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
+
+		// 添加物品实体
+		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
+		// 添加怪物实体
+		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, entityMap)
+		entityMap = x
+		// 添加NPC实体
+		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
+		if len(entityGroupList.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
+		}
+	}
+
+	g.Player.EntityList = entityMap
+	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
 
 func (g *Game) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetEnteredSceneScRsp)
+	scene := g.GetScene()
 	enteredSceneInfo := &proto.EnteredSceneInfo{
-		FloorId: 20001001,
-		PlaneId: 20001,
+		FloorId: scene.FloorId,
+		PlaneId: scene.PlaneId,
 	}
 	rsp.EnteredSceneInfo = []*proto.EnteredSceneInfo{enteredSceneInfo}
 

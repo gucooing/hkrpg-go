@@ -8,7 +8,11 @@ import (
 
 func (g *Game) GetScene() *spb.Scene {
 	if g.PlayerPb.Scene == nil {
-		g.PlayerPb.Scene = &spb.Scene{EntryId: 1010101}
+		g.PlayerPb.Scene = &spb.Scene{
+			EntryId: 1010101,
+			PlaneId: 10101,
+			FloorId: 10101001,
+		}
 	}
 	return g.PlayerPb.Scene
 }

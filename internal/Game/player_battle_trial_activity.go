@@ -329,7 +329,7 @@ func (g *Game) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResultScRsp
 	rsp.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
 	if rsp.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
 		// 传送回原来的场景
-		g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
+		g.SceneByServerScNotify(g.GetScene().EntryId, g.GetPos(), g.GetRot())
 		// 储存通关状态
 		g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, g.GetTrialActivityState().AvatarDemoId)
 		// 发送通关通知
