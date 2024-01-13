@@ -30,3 +30,4 @@
 
 ### 注：
 * 如果你想帮助此项目，欢迎提交
+* 欢迎加入我们的 [Discord](https://discord.gg/ZJGTU8ZFGW)
