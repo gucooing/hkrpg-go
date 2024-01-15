@@ -14,8 +14,6 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetEnteredSceneCsReq(payloadMsg)
 	case cmd.QueryProductInfoCsReq:
 		g.HandleQueryProductInfoCsReq(payloadMsg)
-	case cmd.GetFriendLoginInfoCsReq:
-		g.HandleGetFriendLoginInfoCsReq(payloadMsg) // 获取好友登录信息
 	case cmd.GetRogueHandbookDataCsReq:
 		g.HandleGetRogueHandbookDataCsReq(payloadMsg) // 获取帮助手册
 	case cmd.GetChatEmojiListCsReq:
@@ -186,6 +184,11 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetPlayerBoardDataCsReq(payloadMsg) // 获取角色名片页信息
 	case cmd.GetFarmStageGachaInfoCsReq:
 		g.GetFarmStageGachaInfoCsReq(payloadMsg) // 获取怪物刷新情况
+	// 好友
+	case cmd.GetFriendLoginInfoCsReq:
+		g.HandleGetFriendLoginInfoCsReq(payloadMsg) // 获取好友信息列表
+	case cmd.GetFriendListInfoCsReq:
+		g.GetFriendListInfoCsReq() // 获取好友信息
 	// 成就
 	case cmd.GetArchiveDataCsReq:
 		g.HandleGetArchiveDataCsReq() // 获取收集
