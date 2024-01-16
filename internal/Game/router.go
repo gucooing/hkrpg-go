@@ -189,6 +189,10 @@ func (g *Game) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.M
 		g.HandleGetFriendLoginInfoCsReq(payloadMsg) // 获取好友信息列表
 	case cmd.GetFriendListInfoCsReq:
 		g.GetFriendListInfoCsReq() // 获取好友信息
+	case cmd.GetPrivateChatHistoryCsReq:
+		g.GetPrivateChatHistoryCsReq(payloadMsg) // 获取私聊记录
+	case cmd.SendMsgCsReq:
+		g.SendMsgCsReq(payloadMsg) // 发送聊天信息
 	// 成就
 	case cmd.GetArchiveDataCsReq:
 		g.HandleGetArchiveDataCsReq() // 获取收集
