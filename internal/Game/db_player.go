@@ -56,7 +56,7 @@ func (g *Game) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {
 		Nickname:                "hkrpg-go",
 		WorldLevel:              0,
 		Activity:                g.GetActivity(),
-		Signature:               "签名",
+		Signature:               "",
 		HeadImageAvatarId:       208001,
 		Birthday:                0,
 		Scene:                   g.GetScene(),
