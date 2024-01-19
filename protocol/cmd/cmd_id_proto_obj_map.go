@@ -1,10 +1,10 @@
 package cmd
 
 import (
+	"log"
 	"reflect"
 	"sync"
 
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -255,14 +255,25 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
 	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
 	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
+	// server
 	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
 	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
+	c.regMsg(ServiceConnectionReq, func() any { return new(spb.ServiceConnectionReq) })
+	c.regMsg(ServiceConnectionRsp, func() any { return new(spb.ServiceConnectionRsp) })
+	c.regMsg(PlayerLoginReq, func() any { return new(spb.PlayerLoginReq) })
+	c.regMsg(PlayerLoginRsp, func() any { return new(spb.PlayerLoginRsp) })
+	c.regMsg(PlayerToGameByGateReq, func() any { return new(spb.PlayerToGameByGateReq) })
+	c.regMsg(PlayerToGameByGateRsp, func() any { return new(spb.PlayerToGameByGateRsp) })
+	c.regMsg(GetGateOuterAddrReq, func() any { return new(spb.GetGateOuterAddrReq) })
+	c.regMsg(GetGateOuterAddrRsp, func() any { return new(spb.GetGateOuterAddrRsp) })
+	c.regMsg(GetGameOuterAddrReq, func() any { return new(spb.GetGameOuterAddrReq) })
+	c.regMsg(GetGameOuterAddrRsp, func() any { return new(spb.GetGameOuterAddrRsp) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
 	_, exist := c.cmdDeDupMap[cmdId]
 	if exist {
-		logger.Debug("reg dup msg, cmd id: %v", cmdId)
+		log.Printf("reg dup msg, cmd id: %v\n", cmdId)
 		return
 	} else {
 		c.cmdDeDupMap[cmdId] = true
@@ -292,7 +303,7 @@ func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
 func (c *CmdProtoMap) GetProtoObjCacheByCmdId(cmdId uint16) pb.Message {
 	cachePool, exist := c.cmdIdProtoObjCacheMap[cmdId]
 	if !exist {
-		logger.Debug("unknown cmd id: %v", cmdId)
+		log.Printf("unknown cmd id: %v\n", cmdId)
 		return nil
 	}
 	protoObj := cachePool.Get().(pb.Message)
@@ -303,7 +314,7 @@ func (c *CmdProtoMap) GetProtoObjCacheByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) PutProtoObjCache(cmdId uint16, protoObj pb.Message) {
 	cachePool, exist := c.cmdIdProtoObjCacheMap[cmdId]
 	if !exist {
-		logger.Debug("unknown cmd id: %v", cmdId)
+		log.Printf("unknown cmd id: %v\n", cmdId)
 		return
 	}
 	cachePool.Put(protoObj)
@@ -312,7 +323,7 @@ func (c *CmdProtoMap) PutProtoObjCache(cmdId uint16, protoObj pb.Message) {
 func (c *CmdProtoMap) GetProtoObjFastNewByCmdId(cmdId uint16) pb.Message {
 	fn, exist := c.cmdIdProtoObjFastNewMap[cmdId]
 	if !exist {
-		logger.Debug("unknown cmd id: %v", cmdId)
+		log.Printf("unknown cmd id: %v\n", cmdId)
 		return nil
 	}
 	protoObj := fn().(pb.Message)
@@ -324,7 +335,7 @@ func (c *CmdProtoMap) GetProtoObjFastNewByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) GetProtoObjByCmdId(cmdId uint16) pb.Message {
 	refType, exist := c.cmdIdProtoObjMap[cmdId]
 	if !exist {
-		logger.Debug("unknown cmd id: %v", cmdId)
+		log.Printf("unknown cmd id: %v\n", cmdId)
 		return nil
 	}
 	protoObjInst := reflect.New(refType.Elem())
@@ -335,7 +346,7 @@ func (c *CmdProtoMap) GetProtoObjByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) GetCmdIdByProtoObj(protoObj pb.Message) uint16 {
 	cmdId, exist := c.protoObjCmdIdMap[reflect.TypeOf(protoObj)]
 	if !exist {
-		logger.Debug("unknown proto object: %v", protoObj)
+		log.Printf("unknown proto object: %v\n", protoObj)
 		return 0
 	}
 	return cmdId
@@ -344,7 +355,7 @@ func (c *CmdProtoMap) GetCmdIdByProtoObj(protoObj pb.Message) uint16 {
 func (c *CmdProtoMap) GetCmdNameByCmdId(cmdId uint16) string {
 	cmdName, exist := c.cmdIdCmdNameMap[cmdId]
 	if !exist {
-		logger.Debug("unknown cmd id: %v", cmdId)
+		log.Printf("unknown cmd id: %v\n", cmdId)
 		return ""
 	}
 	return cmdName
@@ -353,7 +364,7 @@ func (c *CmdProtoMap) GetCmdNameByCmdId(cmdId uint16) string {
 func (c *CmdProtoMap) GetCmdIdByCmdName(cmdName string) uint16 {
 	cmdId, exist := c.cmdNameCmdIdMap[cmdName]
 	if !exist {
-		logger.Debug("unknown cmd name: %v", cmdName)
+		log.Printf("unknown cmd name: %v\n", cmdName)
 		return 0
 	}
 	return cmdId

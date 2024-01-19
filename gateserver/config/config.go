@@ -1,0 +1,89 @@
+package config
+
+import (
+	"encoding/json"
+	"errors"
+	"os"
+
+	"github.com/gucooing/hkrpg-go/pkg/random"
+)
+
+type Config struct {
+	LogLevel   string             `json:"LogLevel"`
+	MysqlDsn   string             `json:"MysqlDsn"`
+	MaxPlayer  int32              `json:"maxPlayer"`
+	AutoCreate bool               `json:"AutoCreate"`
+	OuterIp    string             `json:"OuterIp"`
+	AppList    map[string]AppList `json:"AppList"`
+	NetConf    map[string]string  `json:"NetConf"`
+	Ec2b       *random.Ec2b       `json:"Ec2B"`
+}
+type AppList struct {
+	App map[string]App `json:"app"`
+}
+type App struct {
+	Port string `json:"port"`
+}
+
+type NetConf struct {
+}
+
+var CONF *Config = nil
+
+func GetConfig() *Config {
+	return CONF
+}
+
+var FileNotExist = errors.New("config file not found")
+
+func LoadConfig(confName string) error {
+	filePath := "./" + confName
+	f, err := os.Open(filePath)
+	if err != nil {
+		return FileNotExist
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+	c := new(Config)
+	d := json.NewDecoder(f)
+	if err := d.Decode(c); err != nil {
+		return err
+	}
+	CONF = c
+	return nil
+}
+
+var DefaultConfig = &Config{
+	LogLevel:   "Info",
+	MysqlDsn:   "root:password@tcp(127.0.0.1:3306)/hkrpg-go?charset=utf8mb4&parseTime=True&loc=Local",
+	MaxPlayer:  -1,
+	AutoCreate: true,
+	OuterIp:    "127.0.0.1",
+	AppList: map[string]AppList{
+		"9001.1.1.1": {
+			App: map[string]App{
+				"port_player": {
+					Port: "20041",
+				},
+			},
+		},
+		"9001.2.1.1": {
+			App: map[string]App{
+				"port_gt": {
+					Port: "20071",
+				},
+			},
+		},
+		"9001.3.1.1": {
+			App: map[string]App{
+				"port_service": {
+					Port: "20081",
+				},
+			},
+		},
+	},
+	NetConf: map[string]string{
+		"Node": "127.0.0.1:20081",
+	},
+}
