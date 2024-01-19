@@ -7,16 +7,24 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (s *Service) GetGateOuterAddrReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GetGateOuterAddrReq)
+func (s *Service) GetServerOuterAddrReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GetServerOuterAddrReq)
+	var serverType spb.ServerType
 	if req.AppId != s.AppId {
 		logger.Debug("Service registration failed")
 		s.killService()
 		return
 	}
-	rsp := &spb.GetGateOuterAddrRsp{
-		ServerType: req.ServerType,
-		GateAddr:   getMinService(spb.ServerType_SERVICE_GETA),
+	s.PlayerNum = req.PlayerNum
+	switch req.ServerType {
+	case spb.ServerType_SERVICE_DISCORD:
+		serverType = spb.ServerType_SERVICE_GETA
+	case spb.ServerType_SERVICE_GETA:
+		serverType = spb.ServerType_SERVICE_GAME
 	}
-	s.sendHandle(cmd.GetGateOuterAddrRsp, rsp)
+	rsp := &spb.GetServerOuterAddrRsp{
+		ServerType: req.ServerType,
+		Addr:       getMinService(serverType),
+	}
+	s.sendHandle(cmd.GetServerOuterAddrRsp, rsp)
 }

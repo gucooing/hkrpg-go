@@ -28,7 +28,7 @@ func (s *GateServer) sendNode(cmdId uint16, playerMsg pb.Message) {
 	rspMsg.PayloadMessage = playerMsg
 	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
 	if tcpMsg.CmdId == 0 {
-		logger.Error("cmdid error")
+		logger.Error("cmdId error")
 	}
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
 	_, err := s.nodeConn.Write(binMsg)
@@ -64,25 +64,27 @@ func (s *GateServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 	if rsp.ServerType == spb.ServerType_SERVICE_GETA && rsp.AppId == s.AppId {
 		logger.Info("已向node注册成功！")
 	}
-	// 获取game地址
-	go s.GetGameOuterAddrReq()
+	// 获取game地址/心跳包
+	go s.GetServerOuterAddrReq()
 }
 
-func (s *GateServer) GetGameOuterAddrReq() {
+func (s *GateServer) GetServerOuterAddrReq() {
+	// 心跳包
 	for {
-		req := &spb.GetGameOuterAddrReq{
+		req := &spb.GetServerOuterAddrReq{
 			ServerType: spb.ServerType_SERVICE_GETA,
 			AppId:      s.AppId,
+			PlayerNum:  uint64(len(s.sessionMap)),
 		}
-		s.sendNode(cmd.GetGameOuterAddrReq, req)
+		s.sendNode(cmd.GetServerOuterAddrReq, req)
 		time.Sleep(time.Microsecond * 5)
 	}
 }
 
-func (s *GateServer) GetGameOuterAddrRsp(serviceMsg pb.Message) {
-	rsp := serviceMsg.(*spb.GetGameOuterAddrRsp)
+func (s *GateServer) GetServerOuterAddrRsp(serviceMsg pb.Message) {
+	rsp := serviceMsg.(*spb.GetServerOuterAddrRsp)
 	if rsp.ServerType != spb.ServerType_SERVICE_GETA {
 		return
 	}
-	s.gameAddr = rsp.GameAddr
+	s.gameAddr = rsp.Addr
 }

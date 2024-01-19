@@ -342,17 +342,18 @@ func (x *PlayerToGameByGateRsp) GetPlayerBin() []byte {
 	return nil
 }
 
-type GetGateOuterAddrReq struct {
+type GetServerOuterAddrReq struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	ServerType ServerType `protobuf:"varint,1,opt,name=server_type,json=serverType,proto3,enum=proto.ServerType" json:"server_type,omitempty"`
 	AppId      string     `protobuf:"bytes,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
+	PlayerNum  uint64     `protobuf:"varint,3,opt,name=player_num,json=playerNum,proto3" json:"player_num,omitempty"`
 }
 
-func (x *GetGateOuterAddrReq) Reset() {
-	*x = GetGateOuterAddrReq{}
+func (x *GetServerOuterAddrReq) Reset() {
+	*x = GetServerOuterAddrReq{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cmd_server_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -360,13 +361,13 @@ func (x *GetGateOuterAddrReq) Reset() {
 	}
 }
 
-func (x *GetGateOuterAddrReq) String() string {
+func (x *GetServerOuterAddrReq) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetGateOuterAddrReq) ProtoMessage() {}
+func (*GetServerOuterAddrReq) ProtoMessage() {}
 
-func (x *GetGateOuterAddrReq) ProtoReflect() protoreflect.Message {
+func (x *GetServerOuterAddrReq) ProtoReflect() protoreflect.Message {
 	mi := &file_cmd_server_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -378,36 +379,43 @@ func (x *GetGateOuterAddrReq) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetGateOuterAddrReq.ProtoReflect.Descriptor instead.
-func (*GetGateOuterAddrReq) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetServerOuterAddrReq.ProtoReflect.Descriptor instead.
+func (*GetServerOuterAddrReq) Descriptor() ([]byte, []int) {
 	return file_cmd_server_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetGateOuterAddrReq) GetServerType() ServerType {
+func (x *GetServerOuterAddrReq) GetServerType() ServerType {
 	if x != nil {
 		return x.ServerType
 	}
 	return ServerType_SERVICE_NONE
 }
 
-func (x *GetGateOuterAddrReq) GetAppId() string {
+func (x *GetServerOuterAddrReq) GetAppId() string {
 	if x != nil {
 		return x.AppId
 	}
 	return ""
 }
 
-type GetGateOuterAddrRsp struct {
+func (x *GetServerOuterAddrReq) GetPlayerNum() uint64 {
+	if x != nil {
+		return x.PlayerNum
+	}
+	return 0
+}
+
+type GetServerOuterAddrRsp struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	ServerType ServerType `protobuf:"varint,1,opt,name=server_type,json=serverType,proto3,enum=proto.ServerType" json:"server_type,omitempty"`
-	GateAddr   string     `protobuf:"bytes,2,opt,name=gate_addr,json=gateAddr,proto3" json:"gate_addr,omitempty"`
+	Addr       string     `protobuf:"bytes,2,opt,name=addr,proto3" json:"addr,omitempty"`
 }
 
-func (x *GetGateOuterAddrRsp) Reset() {
-	*x = GetGateOuterAddrRsp{}
+func (x *GetServerOuterAddrRsp) Reset() {
+	*x = GetServerOuterAddrRsp{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cmd_server_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -415,13 +423,13 @@ func (x *GetGateOuterAddrRsp) Reset() {
 	}
 }
 
-func (x *GetGateOuterAddrRsp) String() string {
+func (x *GetServerOuterAddrRsp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetGateOuterAddrRsp) ProtoMessage() {}
+func (*GetServerOuterAddrRsp) ProtoMessage() {}
 
-func (x *GetGateOuterAddrRsp) ProtoReflect() protoreflect.Message {
+func (x *GetServerOuterAddrRsp) ProtoReflect() protoreflect.Message {
 	mi := &file_cmd_server_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -433,131 +441,21 @@ func (x *GetGateOuterAddrRsp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetGateOuterAddrRsp.ProtoReflect.Descriptor instead.
-func (*GetGateOuterAddrRsp) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetServerOuterAddrRsp.ProtoReflect.Descriptor instead.
+func (*GetServerOuterAddrRsp) Descriptor() ([]byte, []int) {
 	return file_cmd_server_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *GetGateOuterAddrRsp) GetServerType() ServerType {
+func (x *GetServerOuterAddrRsp) GetServerType() ServerType {
 	if x != nil {
 		return x.ServerType
 	}
 	return ServerType_SERVICE_NONE
 }
 
-func (x *GetGateOuterAddrRsp) GetGateAddr() string {
+func (x *GetServerOuterAddrRsp) GetAddr() string {
 	if x != nil {
-		return x.GateAddr
-	}
-	return ""
-}
-
-type GetGameOuterAddrReq struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	ServerType ServerType `protobuf:"varint,1,opt,name=server_type,json=serverType,proto3,enum=proto.ServerType" json:"server_type,omitempty"`
-	AppId      string     `protobuf:"bytes,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`
-}
-
-func (x *GetGameOuterAddrReq) Reset() {
-	*x = GetGameOuterAddrReq{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cmd_server_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetGameOuterAddrReq) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetGameOuterAddrReq) ProtoMessage() {}
-
-func (x *GetGameOuterAddrReq) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_server_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetGameOuterAddrReq.ProtoReflect.Descriptor instead.
-func (*GetGameOuterAddrReq) Descriptor() ([]byte, []int) {
-	return file_cmd_server_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *GetGameOuterAddrReq) GetServerType() ServerType {
-	if x != nil {
-		return x.ServerType
-	}
-	return ServerType_SERVICE_NONE
-}
-
-func (x *GetGameOuterAddrReq) GetAppId() string {
-	if x != nil {
-		return x.AppId
-	}
-	return ""
-}
-
-type GetGameOuterAddrRsp struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	ServerType ServerType `protobuf:"varint,1,opt,name=server_type,json=serverType,proto3,enum=proto.ServerType" json:"server_type,omitempty"`
-	GameAddr   string     `protobuf:"bytes,2,opt,name=game_addr,json=gameAddr,proto3" json:"game_addr,omitempty"`
-}
-
-func (x *GetGameOuterAddrRsp) Reset() {
-	*x = GetGameOuterAddrRsp{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cmd_server_proto_msgTypes[9]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetGameOuterAddrRsp) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetGameOuterAddrRsp) ProtoMessage() {}
-
-func (x *GetGameOuterAddrRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_server_proto_msgTypes[9]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetGameOuterAddrRsp.ProtoReflect.Descriptor instead.
-func (*GetGameOuterAddrRsp) Descriptor() ([]byte, []int) {
-	return file_cmd_server_proto_rawDescGZIP(), []int{9}
-}
-
-func (x *GetGameOuterAddrRsp) GetServerType() ServerType {
-	if x != nil {
-		return x.ServerType
-	}
-	return ServerType_SERVICE_NONE
-}
-
-func (x *GetGameOuterAddrRsp) GetGameAddr() string {
-	if x != nil {
-		return x.GameAddr
+		return x.Addr
 	}
 	return ""
 }
@@ -598,34 +496,23 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x03, 0x52, 0x0b, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12,
 	0x1d, 0x0a, 0x0a, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x62, 0x69, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x42, 0x69, 0x6e, 0x22, 0x60,
-	0x0a, 0x13, 0x47, 0x65, 0x74, 0x47, 0x61, 0x74, 0x65, 0x4f, 0x75, 0x74, 0x65, 0x72, 0x41, 0x64,
-	0x64, 0x72, 0x52, 0x65, 0x71, 0x12, 0x32, 0x0a, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f,
-	0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0a, 0x73,
-	0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70,
-	0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64,
-	0x22, 0x66, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x47, 0x61, 0x74, 0x65, 0x4f, 0x75, 0x74, 0x65, 0x72,
-	0x41, 0x64, 0x64, 0x72, 0x52, 0x73, 0x70, 0x12, 0x32, 0x0a, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x65,
-	0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52,
-	0x0a, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x67,
-	0x61, 0x74, 0x65, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08,
-	0x67, 0x61, 0x74, 0x65, 0x41, 0x64, 0x64, 0x72, 0x22, 0x60, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x47,
-	0x61, 0x6d, 0x65, 0x4f, 0x75, 0x74, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x52, 0x65, 0x71, 0x12,
-	0x32, 0x0a, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72,
-	0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0a, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54,
-	0x79, 0x70, 0x65, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x22, 0x66, 0x0a, 0x13, 0x47, 0x65,
-	0x74, 0x47, 0x61, 0x6d, 0x65, 0x4f, 0x75, 0x74, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x52, 0x73,
-	0x70, 0x12, 0x32, 0x0a, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53,
-	0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0a, 0x73, 0x65, 0x72, 0x76, 0x65,
-	0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x1b, 0x0a, 0x09, 0x67, 0x61, 0x6d, 0x65, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x67, 0x61, 0x6d, 0x65, 0x41, 0x64,
-	0x64, 0x72, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x01, 0x28, 0x0c, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x42, 0x69, 0x6e, 0x22, 0x81,
+	0x01, 0x0a, 0x15, 0x47, 0x65, 0x74, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x4f, 0x75, 0x74, 0x65,
+	0x72, 0x41, 0x64, 0x64, 0x72, 0x52, 0x65, 0x71, 0x12, 0x32, 0x0a, 0x0b, 0x73, 0x65, 0x72, 0x76,
+	0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65,
+	0x52, 0x0a, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12, 0x15, 0x0a, 0x06,
+	0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x70,
+	0x70, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x6e, 0x75,
+	0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4e,
+	0x75, 0x6d, 0x22, 0x5f, 0x0a, 0x15, 0x47, 0x65, 0x74, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x4f,
+	0x75, 0x74, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x52, 0x73, 0x70, 0x12, 0x32, 0x0a, 0x0b, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e,
+	0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54,
+	0x79, 0x70, 0x65, 0x52, 0x0a, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x12,
+	0x12, 0x0a, 0x04, 0x61, 0x64, 0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61,
+	0x64, 0x64, 0x72, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -640,7 +527,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),  // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),  // 1: proto.ServiceConnectionRsp
@@ -648,24 +535,20 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*PlayerLoginRsp)(nil),        // 3: proto.PlayerLoginRsp
 	(*PlayerToGameByGateReq)(nil), // 4: proto.PlayerToGameByGateReq
 	(*PlayerToGameByGateRsp)(nil), // 5: proto.PlayerToGameByGateRsp
-	(*GetGateOuterAddrReq)(nil),   // 6: proto.GetGateOuterAddrReq
-	(*GetGateOuterAddrRsp)(nil),   // 7: proto.GetGateOuterAddrRsp
-	(*GetGameOuterAddrReq)(nil),   // 8: proto.GetGameOuterAddrReq
-	(*GetGameOuterAddrRsp)(nil),   // 9: proto.GetGameOuterAddrRsp
-	(ServerType)(0),               // 10: proto.ServerType
+	(*GetServerOuterAddrReq)(nil), // 6: proto.GetServerOuterAddrReq
+	(*GetServerOuterAddrRsp)(nil), // 7: proto.GetServerOuterAddrRsp
+	(ServerType)(0),               // 8: proto.ServerType
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	10, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	10, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	10, // 2: proto.GetGateOuterAddrReq.server_type:type_name -> proto.ServerType
-	10, // 3: proto.GetGateOuterAddrRsp.server_type:type_name -> proto.ServerType
-	10, // 4: proto.GetGameOuterAddrReq.server_type:type_name -> proto.ServerType
-	10, // 5: proto.GetGameOuterAddrRsp.server_type:type_name -> proto.ServerType
-	6,  // [6:6] is the sub-list for method output_type
-	6,  // [6:6] is the sub-list for method input_type
-	6,  // [6:6] is the sub-list for extension type_name
-	6,  // [6:6] is the sub-list for extension extendee
-	0,  // [0:6] is the sub-list for field type_name
+	8, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	8, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	8, // 2: proto.GetServerOuterAddrReq.server_type:type_name -> proto.ServerType
+	8, // 3: proto.GetServerOuterAddrRsp.server_type:type_name -> proto.ServerType
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_cmd_server_proto_init() }
@@ -748,7 +631,7 @@ func file_cmd_server_proto_init() {
 			}
 		}
 		file_cmd_server_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetGateOuterAddrReq); i {
+			switch v := v.(*GetServerOuterAddrReq); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -760,31 +643,7 @@ func file_cmd_server_proto_init() {
 			}
 		}
 		file_cmd_server_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetGateOuterAddrRsp); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cmd_server_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetGameOuterAddrReq); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cmd_server_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetGameOuterAddrRsp); i {
+			switch v := v.(*GetServerOuterAddrRsp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -802,7 +661,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -264,10 +264,8 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(PlayerLoginRsp, func() any { return new(spb.PlayerLoginRsp) })
 	c.regMsg(PlayerToGameByGateReq, func() any { return new(spb.PlayerToGameByGateReq) })
 	c.regMsg(PlayerToGameByGateRsp, func() any { return new(spb.PlayerToGameByGateRsp) })
-	c.regMsg(GetGateOuterAddrReq, func() any { return new(spb.GetGateOuterAddrReq) })
-	c.regMsg(GetGateOuterAddrRsp, func() any { return new(spb.GetGateOuterAddrRsp) })
-	c.regMsg(GetGameOuterAddrReq, func() any { return new(spb.GetGameOuterAddrReq) })
-	c.regMsg(GetGameOuterAddrRsp, func() any { return new(spb.GetGameOuterAddrRsp) })
+	c.regMsg(GetServerOuterAddrReq, func() any { return new(spb.GetServerOuterAddrReq) })
+	c.regMsg(GetServerOuterAddrRsp, func() any { return new(spb.GetServerOuterAddrRsp) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {

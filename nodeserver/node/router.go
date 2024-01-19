@@ -9,9 +9,7 @@ func (s *Service) RegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionReq:
 		s.ServiceConnectionReq(serviceMsg)
-	case cmd.GetGateOuterAddrReq:
-		s.GetGateOuterAddrReq(serviceMsg)
-	case cmd.GetGameOuterAddrReq:
-		s.GetGameOuterAddrReq(serviceMsg)
+	case cmd.GetServerOuterAddrReq:
+		s.GetServerOuterAddrReq(serviceMsg)
 	}
 }

@@ -20,23 +20,6 @@ func (s *GameServer) Connection() {
 	s.sendNode(cmd.ServiceConnectionReq, req)
 }
 
-// 发送到node
-func (s *GameServer) sendNode(cmdId uint16, playerMsg pb.Message) {
-	rspMsg := new(alg.ProtoMsg)
-	rspMsg.CmdId = cmdId
-	rspMsg.PayloadMessage = playerMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
-	if tcpMsg.CmdId == 0 {
-		logger.Error("cmdid error")
-	}
-	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-	_, err := s.nodeConn.Write(binMsg)
-	if err != nil {
-		logger.Debug("exit send loop, conn write err: %v", err)
-		return
-	}
-}
-
 // 从node接收消息
 func (s *GameServer) recvNode() {
 	nodeMsg := make([]byte, player.PacketMaxLen)
@@ -58,10 +41,27 @@ func (s *GameServer) recvNode() {
 	}
 }
 
+// 发送到node
+func (s *GameServer) sendNode(cmdId uint16, playerMsg pb.Message) {
+	rspMsg := new(alg.ProtoMsg)
+	rspMsg.CmdId = cmdId
+	rspMsg.PayloadMessage = playerMsg
+	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	if tcpMsg.CmdId == 0 {
+		logger.Error("cmdId error")
+	}
+	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
+	_, err := s.nodeConn.Write(binMsg)
+	if err != nil {
+		logger.Debug("exit send loop, conn write err: %v", err)
+		return
+	}
+}
+
 func (s *GameServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.ServiceConnectionRsp)
 	if rsp.ServerType == spb.ServerType_SERVICE_GAME && rsp.AppId == s.AppId {
 		logger.Info("已向node注册成功！")
 	}
-	// TODO 发送game地址
+	// TODO 发送心跳包
 }
