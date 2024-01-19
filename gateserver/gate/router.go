@@ -10,8 +10,8 @@ func (s *GateServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp:
 		s.ServiceConnectionRsp(serviceMsg)
-	case cmd.GetGameOuterAddrRsp:
-		s.GetGameOuterAddrRsp(serviceMsg)
+	case cmd.GetServerOuterAddrRsp:
+		s.GetServerOuterAddrRsp(serviceMsg)
 	default:
 
 	}

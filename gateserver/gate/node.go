@@ -13,7 +13,7 @@ import (
 // 向node注册
 func (s *GateServer) Connection() {
 	req := &spb.ServiceConnectionReq{
-		ServerType: spb.ServerType_SERVICE_GETA,
+		ServerType: spb.ServerType_SERVICE_GATE,
 		AppId:      s.AppId,
 		Addr:       s.Config.OuterIp + ":" + s.Port,
 	}
@@ -61,7 +61,7 @@ func (s *GateServer) recvNode() {
 
 func (s *GateServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.ServiceConnectionRsp)
-	if rsp.ServerType == spb.ServerType_SERVICE_GETA && rsp.AppId == s.AppId {
+	if rsp.ServerType == spb.ServerType_SERVICE_GATE && rsp.AppId == s.AppId {
 		logger.Info("已向node注册成功！")
 	}
 	// 获取game地址/心跳包
@@ -72,7 +72,7 @@ func (s *GateServer) GetServerOuterAddrReq() {
 	// 心跳包
 	for {
 		req := &spb.GetServerOuterAddrReq{
-			ServerType: spb.ServerType_SERVICE_GETA,
+			ServerType: spb.ServerType_SERVICE_GATE,
 			AppId:      s.AppId,
 			PlayerNum:  uint64(len(s.sessionMap)),
 		}
@@ -83,7 +83,7 @@ func (s *GateServer) GetServerOuterAddrReq() {
 
 func (s *GateServer) GetServerOuterAddrRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.GetServerOuterAddrRsp)
-	if rsp.ServerType != spb.ServerType_SERVICE_GETA {
+	if rsp.ServerType != spb.ServerType_SERVICE_GATE {
 		return
 	}
 	s.gameAddr = rsp.Addr
