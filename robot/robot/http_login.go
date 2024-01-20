@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/discord/sdk"
+	"github.com/gucooing/hkrpg-go/dispatch/sdk"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	"github.com/gucooing/hkrpg-go/robot/config"

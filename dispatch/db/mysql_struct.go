@@ -1,7 +1,7 @@
 package db
 
 import (
-	"github.com/gucooing/hkrpg-go/discord/config"
+	"github.com/gucooing/hkrpg-go/dispatch/config"
 	"gorm.io/gorm"
 )
 

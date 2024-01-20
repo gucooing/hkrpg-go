@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/hkrpg-go/discord/db"
-	"github.com/gucooing/hkrpg-go/discord/logger"
+	"github.com/gucooing/hkrpg-go/dispatch/db"
+	"github.com/gucooing/hkrpg-go/dispatch/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 

@@ -7,9 +7,9 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/hkrpg-go/discord/config"
-	"github.com/gucooing/hkrpg-go/discord/db"
-	"github.com/gucooing/hkrpg-go/discord/logger"
+	"github.com/gucooing/hkrpg-go/dispatch/config"
+	"github.com/gucooing/hkrpg-go/dispatch/db"
+	"github.com/gucooing/hkrpg-go/dispatch/logger"
 )
 
 type Server struct {

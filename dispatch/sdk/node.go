@@ -3,7 +3,7 @@ package sdk
 import (
 	"time"
 
-	"github.com/gucooing/hkrpg-go/discord/logger"
+	"github.com/gucooing/hkrpg-go/dispatch/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -66,7 +66,7 @@ func (s *Server) sendNode(cmdId uint16, playerMsg pb.Message) {
 // 向node注册
 func (s *Server) Connection() {
 	req := &spb.ServiceConnectionReq{
-		ServerType: spb.ServerType_SERVICE_DISCORD,
+		ServerType: spb.ServerType_SERVICE_DISPATCH,
 		AppId:      s.AppId,
 		Addr:       s.Config.OuterIp,
 		Port:       s.Port,
@@ -77,7 +77,7 @@ func (s *Server) Connection() {
 
 func (s *Server) ServiceConnectionRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.ServiceConnectionRsp)
-	if rsp.ServerType == spb.ServerType_SERVICE_DISCORD && rsp.AppId == s.AppId {
+	if rsp.ServerType == spb.ServerType_SERVICE_DISPATCH && rsp.AppId == s.AppId {
 		logger.Info("已向node注册成功！")
 	}
 	// 获取game地址/心跳包
@@ -88,7 +88,7 @@ func (s *Server) GetServerOuterAddrReq() {
 	// 心跳包
 	for {
 		req := &spb.GetServerOuterAddrReq{
-			ServerType: spb.ServerType_SERVICE_DISCORD,
+			ServerType: spb.ServerType_SERVICE_DISPATCH,
 			AppId:      s.AppId,
 		}
 		s.sendNode(cmd.GetServerOuterAddrReq, req)
@@ -98,7 +98,7 @@ func (s *Server) GetServerOuterAddrReq() {
 
 func (s *Server) GetServerOuterAddrRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.GetServerOuterAddrRsp)
-	if rsp.ServerType != spb.ServerType_SERVICE_DISCORD {
+	if rsp.ServerType != spb.ServerType_SERVICE_DISPATCH {
 		return
 	}
 	s.GateAddr = rsp.Addr

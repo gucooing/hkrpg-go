@@ -57,7 +57,7 @@ func (s *Service) GetServerOuterAddrReq(serviceMsg pb.Message) {
 	}
 	s.PlayerNum = req.PlayerNum
 	switch req.ServerType {
-	case spb.ServerType_SERVICE_DISCORD:
+	case spb.ServerType_SERVICE_DISPATCH:
 		serverType = spb.ServerType_SERVICE_GATE
 	case spb.ServerType_SERVICE_GATE:
 		serverType = spb.ServerType_SERVICE_GAME

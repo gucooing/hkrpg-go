@@ -65,7 +65,7 @@ type LogInfo struct {
 func InitLogger() {
 	log.SetFlags(0)
 	LOG = new(Logger)
-	LOG.AppName = "discord"
+	LOG.AppName = "dispatch"
 	LOG.Level = LOG.getLevelInt("DEBUG")
 	LOG.Mode = LOG.getModeInt("BOTH")
 	LOG.Track = true

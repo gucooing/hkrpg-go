@@ -10,14 +10,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/discord"
-	"github.com/gucooing/hkrpg-go/discord/config"
-	"github.com/gucooing/hkrpg-go/discord/logger"
+	"github.com/gucooing/hkrpg-go/dispatch"
+	"github.com/gucooing/hkrpg-go/dispatch/config"
+	"github.com/gucooing/hkrpg-go/dispatch/logger"
 )
 
 func main() {
 	// 启动读取配置
-	confName := "discord.json"
+	confName := "dispatch.json"
 	err := config.LoadConfig(confName)
 	if err != nil {
 		if err == config.FileNotExist {
@@ -38,7 +38,7 @@ func main() {
 
 	cfg := config.GetConfig()
 	// 初始化
-	newserver := discord.NewServer(cfg)
+	newserver := dispatch.NewServer(cfg)
 	if newserver == nil {
 		logger.Error("服务器初始化失败")
 		return
@@ -50,7 +50,7 @@ func main() {
 	// 启动SDK服务
 	go func() {
 		if err = newserver.Start(); err != nil {
-			logger.Error("无法启动SDK服务器")
+			logger.Error("无法启动dispatch服务器")
 		}
 	}()
 
@@ -60,11 +60,11 @@ func main() {
 			ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
 
-			logger.Info("SDK服务正在关闭")
+			logger.Info("dispatch服务正在关闭")
 			if err = newserver.Shutdown(ctx); err != nil {
-				logger.Error("无法正常关闭SDK服务")
+				logger.Error("无法正常关闭dispatch服务")
 			}
-			logger.Info("SDK服务已停止")
+			logger.Info("dispatch服务已停止")
 			logger.CloseLogger()
 			os.Exit(0)
 		}
