@@ -35,7 +35,6 @@ func main() {
 	logger.InitLogger()
 	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
-	// logger.Info("AppId:%s", alg.GetAppId())
 
 	cfg := config.GetConfig()
 	// 初始化

@@ -12,10 +12,10 @@ type Config struct {
 	LogLevel   string             `json:"LogLevel"`
 	MysqlDsn   string             `json:"MysqlDsn"`
 	AutoCreate bool               `json:"AutoCreate"`
-	Http       *Http              `json:"Http"`
 	Dispatch   []Dispatch         `json:"Dispatch"`
-	Game       *Game              `json:"Game"`
+	OuterIp    string             `json:"OuterIp"`
 	AppList    map[string]AppList `json:"AppList"`
+	NetConf    map[string]string  `json:"NetConf"`
 	Email      *email             `json:"Email"`
 	Ec2b       *random.Ec2b       `json:"Ec2B"`
 }
@@ -24,13 +24,6 @@ type Dispatch struct {
 	Title       string `json:"title"`
 	Type        string `json:"type"`
 	DispatchUrl string `json:"dispatchUrl"`
-}
-type Http struct {
-	Addr        string `json:"addr"`
-	Port        int64  `json:"port"`
-	EnableHttps bool   `json:"enable"`
-	CertFile    string `json:"certFile"`
-	KeyFile     string `json:"keyFile"`
 }
 type Game struct {
 	Addr string `json:"addr"`
@@ -78,13 +71,6 @@ func LoadConfig(confName string) error {
 var DefaultConfig = &Config{
 	LogLevel: "Info",
 	MysqlDsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go?charset=utf8mb4&parseTime=True&loc=Local",
-	Http: &Http{
-		Addr:        "0.0.0.0",
-		Port:        8080,
-		EnableHttps: false,
-		CertFile:    "data/localhost.crt",
-		KeyFile:     "data/localhost.key",
-	},
 	Dispatch: []Dispatch{
 		{
 			Name:        "hkrpg-go",
@@ -99,10 +85,7 @@ var DefaultConfig = &Config{
 			DispatchUrl: "http://127.0.0.1:8080/query_gateway_capture",
 		},
 	},
-	Game: &Game{
-		Addr: "127.0.0.1",
-		Port: 22102,
-	},
+	OuterIp: "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
 			App: map[string]App{
@@ -125,6 +108,16 @@ var DefaultConfig = &Config{
 				},
 			},
 		},
+		"9001.4.1.1": {
+			App: map[string]App{
+				"port_http": {
+					Port: "8080",
+				},
+			},
+		},
+	},
+	NetConf: map[string]string{
+		"Node": "127.0.0.1:20081",
 	},
 	Email: &email{
 		From:     "123456789@qq.com",

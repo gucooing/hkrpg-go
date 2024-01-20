@@ -15,7 +15,8 @@ func (s *GateServer) Connection() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_GATE,
 		AppId:      s.AppId,
-		Addr:       s.Config.OuterIp + ":" + s.Port,
+		Addr:       s.Config.OuterIp,
+		Port:       s.Port,
 	}
 
 	s.sendNode(cmd.ServiceConnectionReq, req)
@@ -77,7 +78,7 @@ func (s *GateServer) GetServerOuterAddrReq() {
 			PlayerNum:  uint64(len(s.sessionMap)),
 		}
 		s.sendNode(cmd.GetServerOuterAddrReq, req)
-		time.Sleep(time.Microsecond * 5)
+		time.Sleep(time.Second * 5)
 	}
 }
 
@@ -86,5 +87,5 @@ func (s *GateServer) GetServerOuterAddrRsp(serviceMsg pb.Message) {
 	if rsp.ServerType != spb.ServerType_SERVICE_GATE {
 		return
 	}
-	s.gameAddr = rsp.Addr
+	s.gameAddr = rsp.Addr + ":" + rsp.Port
 }

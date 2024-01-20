@@ -101,7 +101,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	p.IsToken = true
 
 	// 登录成功，拉取game
-	if s.gameAddr == "" {
+	if s.gameAddr == ":" {
 		rsp.Uid = p.Uid
 		rsp.Retcode = uint32(proto.Retcode_RET_SYSTEM_BUSY)
 		rsp.Msg = "game未启动"

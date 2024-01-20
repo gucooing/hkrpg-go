@@ -67,5 +67,12 @@ var DefaultConfig = &Config{
 				},
 			},
 		},
+		"9001.4.1.1": {
+			App: map[string]App{
+				"port_http": {
+					Port: "8080",
+				},
+			},
+		},
 	},
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/discord/config"
@@ -37,11 +38,15 @@ func (s *Server) QueryDispatchHandler(c *gin.Context) {
 }
 
 func (s *Server) QueryGatewayHandler(c *gin.Context) {
+	if s.GateAddr == "" {
+		s.ErrorGate(c)
+		return
+	}
 	queryGateway := new(proto.Gateserver)
 	queryGateway.Msg = "OK"
-	queryGateway.Ip = s.Config.Game.Addr
+	queryGateway.Ip = s.GateAddr
 	queryGateway.RegionName = "hkrpg-go"
-	queryGateway.Port = s.Config.Game.Port
+	queryGateway.Port = stou32(s.GatePort)
 	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Config.Ec2b.Bytes())
 	queryGateway.Unk1 = true
 	queryGateway.Unk2 = true
@@ -59,6 +64,10 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 }
 
 func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
+	if s.GateAddr == "" {
+		s.ErrorGate(c)
+		return
+	}
 	urlPath := c.Request.URL.RawQuery
 
 	rsps, err := http.Get("https://prod-official-asia-dp01.starrails.com/query_gateway?" + urlPath)
@@ -83,8 +92,8 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 		logger.Error("", err)
 	}
 
-	dispatch.Ip = s.Config.Game.Addr
-	dispatch.Port = s.Config.Game.Port
+	dispatch.Ip = s.GateAddr
+	dispatch.Port = stou32(s.GatePort)
 	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Config.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)
@@ -92,4 +101,28 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 	dispatchb64 := base64.StdEncoding.EncodeToString(rspbin)
 
 	c.String(200, dispatchb64)
+}
+
+func (s *Server) ErrorGate(c *gin.Context) {
+	queryGateway := new(proto.Gateserver)
+	queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
+	queryGateway.RegionName = "hkrpg-go"
+	queryGateway.Msg = "gate error"
+	queryGateway.MsgError = "游戏正在维护中，详情请关注官方公告。"
+
+	reqdata, err := pb.Marshal(queryGateway)
+	if err != nil {
+		logger.Error("pb marshal Gateserver error: %v", err)
+		return
+	}
+	reqdataBase64 := base64.StdEncoding.EncodeToString(reqdata)
+	c.String(200, reqdataBase64)
+}
+
+func stou32(msg string) uint32 {
+	if msg == "" {
+		return 0
+	}
+	ms, _ := strconv.ParseUint(msg, 10, 32)
+	return uint32(ms)
 }

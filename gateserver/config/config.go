@@ -82,6 +82,13 @@ var DefaultConfig = &Config{
 				},
 			},
 		},
+		"9001.4.1.1": {
+			App: map[string]App{
+				"port_http": {
+					Port: "8080",
+				},
+			},
+		},
 	},
 	NetConf: map[string]string{
 		"Node": "127.0.0.1:20081",

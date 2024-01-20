@@ -2,10 +2,8 @@ package sdk
 
 import (
 	"context"
-	"crypto/tls"
 	"net"
 	"net/http"
-	"strconv"
 	"sync"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +13,11 @@ import (
 )
 
 type Server struct {
+	AppId      string
+	Port       string
+	NodeConn   net.Conn
+	GateAddr   string
+	GatePort   string
 	Config     *config.Config
 	Store      *db.Store
 	Router     *gin.Engine
@@ -25,7 +28,7 @@ type Server struct {
 func (s *Server) Start() error {
 	// 初始化路由
 	s.InitRouter()
-	httpsAddr := s.Config.Http.Addr + ":" + strconv.FormatInt(s.Config.Http.Port, 10)
+	httpsAddr := s.Config.OuterIp + ":" + s.Port
 	err := s.startServer(httpsAddr)
 	return err
 }
@@ -33,15 +36,8 @@ func (s *Server) Start() error {
 func (s *Server) startServer(addr string) error {
 	var err error
 	server := &http.Server{Addr: addr, Handler: s.Router}
-
-	if s.Config.Http.EnableHttps {
-		logger.Info("hkrpg-go SDK Https 在 %s 启动", addr)
-		server.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-		err = server.ListenAndServeTLS(s.Config.Http.CertFile, s.Config.Http.KeyFile)
-	} else {
-		logger.Info("hkrpg-go SDK Http 在 %s 启动", addr)
-		err = server.ListenAndServe()
-	}
+	logger.Info("hkrpg-go SDK Http 在 %s 启动", addr)
+	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
 		logger.Error("hkrpg-go SDK 服务器启动失败, 原因: %s", err)
 		return err

@@ -14,7 +14,8 @@ func (s *GameServer) Connection() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_GAME,
 		AppId:      s.AppId,
-		Addr:       s.Config.OuterIp + ":" + s.Port,
+		Addr:       s.Config.OuterIp,
+		Port:       s.Port,
 	}
 
 	s.sendNode(cmd.ServiceConnectionReq, req)
