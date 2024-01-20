@@ -88,4 +88,5 @@ func (s *GateServer) GetServerOuterAddrRsp(serviceMsg pb.Message) {
 		return
 	}
 	s.gameAddr = rsp.Addr + ":" + rsp.Port
+	s.gameAppId = rsp.AppId
 }

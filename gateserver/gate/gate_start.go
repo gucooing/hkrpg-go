@@ -38,6 +38,7 @@ type GateServer struct {
 	sessionMap       map[uint32]*PlayerGame
 	kcpEventChan     chan *KcpEvent
 	gameAddr         string // 从node哪里拉取的game地址
+	gameAppId        string // 上面地址的appid
 }
 
 type PlayerGame struct {
@@ -76,8 +77,6 @@ func NewGate(cfg *config.Config) *GateServer {
 		panic("GateServer Port error")
 	}
 	s.Port = port
-
-	// s.gameAddr = "127.0.0.1:20071"
 
 	addr := "0.0.0.0:" + s.Port
 	kcpListener, err := kcp.ListenWithOptions(addr)

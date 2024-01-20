@@ -16,6 +16,9 @@ func getMinService(ServerType spb.ServerType) string {
 	}
 
 	for _, service := range NODE.MapService[ServerType] {
+		if minService == "" {
+			minService = service.AppId
+		}
 		if service.PlayerNum == 0 || service.PlayerNum < minNum {
 			minService = service.AppId
 		}
@@ -73,7 +76,36 @@ func (s *Service) GetServerOuterAddrReq(serviceMsg pb.Message) {
 	} else {
 		rsp.Addr = NODE.MapService[serverType][appId].Addr
 		rsp.Port = NODE.MapService[serverType][appId].Port
+		rsp.AppId = appId
 	}
 
 	s.sendHandle(cmd.GetServerOuterAddrRsp, rsp)
+}
+
+// 注意！只有gate能发登录通知包
+func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLoginReq)
+	rsp := new(spb.PlayerLoginRsp)
+	if req.PlayerUid == 0 {
+		s.sendHandle(cmd.PlayerLoginRsp, rsp)
+		return
+	}
+	if NODE.PlayerMap[req.PlayerUid] == nil {
+		rsp.PlayerUid = req.PlayerUid
+	} else {
+		// 发送重复登录下线通知
+		if s.ServerType == spb.ServerType_SERVICE_GATE {
+			// 旧gate服务玩家数减少
+			NODE.PlayerMap[req.PlayerUid].PlayerNum--
+			// 只有gate的登录注册包需要发重复登录下线通知
+		}
+	}
+	// 添加在线玩家列表到map
+	NODE.PlayerMap[req.PlayerUid] = s
+	// 目标game添加玩家数
+	NODE.MapService[spb.ServerType_SERVICE_GAME][req.AppId].PlayerNum++
+	// 目标gate添加玩家数
+	s.PlayerNum++
+
+	s.sendHandle(cmd.PlayerLoginRsp, rsp)
 }

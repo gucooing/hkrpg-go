@@ -36,10 +36,10 @@ func (s *Server) Start() error {
 func (s *Server) startServer(addr string) error {
 	var err error
 	server := &http.Server{Addr: addr, Handler: s.Router}
-	logger.Info("hkrpg-go SDK Http 在 %s 启动", addr)
+	logger.Info("dispatch 在 %s 启动", addr)
 	err = server.ListenAndServe()
 	if err != nil && err != http.ErrServerClosed {
-		logger.Error("hkrpg-go SDK 服务器启动失败, 原因: %s", err)
+		logger.Error("dispatch 服务器启动失败, 原因: %s", err)
 		return err
 	}
 	return nil

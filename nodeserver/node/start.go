@@ -22,6 +22,7 @@ type Node struct {
 	Port       string
 	Config     *config.Config
 	MapService map[spb.ServerType]map[string]*Service
+	PlayerMap  map[uint32]*Service
 }
 
 type Service struct {
@@ -44,6 +45,7 @@ func NewNode(cfg *config.Config) *Node {
 	}
 	NODE.Port = port
 	NODE.MapService = GetMapService()
+	NODE.PlayerMap = make(map[uint32]*Service)
 	return NODE
 }
 

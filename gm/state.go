@@ -4,8 +4,6 @@ import (
 	"encoding/hex"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/hkrpg-go/internal/DataBase"
-	"github.com/gucooing/hkrpg-go/internal/Net"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )

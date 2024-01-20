@@ -2,7 +2,6 @@ package robot
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"

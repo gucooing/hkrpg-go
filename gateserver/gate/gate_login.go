@@ -64,19 +64,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		return
 	}
 
-	// 重复登录验证
-	if player, ok := GAMESERVER.sessionMap[uint32(uidPlayer.AccountUid)]; ok {
-		notify := new(proto.GetChallengeScRsp)
-		// TODO 是的，没错，还是同样的原因
-		// 重复登录下线通知
-		GateToPlayer(player, cmd.PlayerKickOutScNotify, notify)
-		// 继承在线数据
-		/*
-			p.PlayerGame = player.PlayerGame
-			player.ChangePlayer()
-			player.KickPlayer()
-		*/
-	}
+	p.Uid = uint32(uidPlayer.AccountUid)
 
 	newuidPlayer := &UidPlayer{
 		AccountId:  uidPlayer.AccountId,
@@ -86,6 +74,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 
 	syncGD.Lock()
 	err = s.Store.UpdateUidPlayer(uidPlayer.AccountId, newuidPlayer)
+	syncGD.Unlock()
 	if err != nil {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_PARA_ERROR)
@@ -94,9 +83,6 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		logger.Error("登录账号:%v,账号刷新失败", accountUid)
 		return
 	}
-	syncGD.Unlock()
-
-	p.Uid = uint32(uidPlayer.AccountUid)
 
 	p.IsToken = true
 
@@ -109,11 +95,26 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		logger.Error("game未启动")
 		return
 	}
+
 	p.NewGame(s.gameAddr)
-	gamereq := &spb.PlayerLoginReq{PlayerUid: p.Uid}
+	gamereq := &spb.PlayerLoginReq{
+		PlayerUid: p.Uid,
+		AppId:     s.gameAppId,
+	}
 	p.sendGame(cmd.PlayerLoginReq, gamereq)
-	// 异步通知给node
-	go s.sendNode(cmd.PlayerLoginReq, gamereq)
+
+	// 本gate重复登录验证//不向node发送玩家登录通知
+	if player, ok := GAMESERVER.sessionMap[p.Uid]; ok {
+		notify := new(proto.GetChallengeScRsp)
+		// TODO 是的，没错，还是同样的原因
+		// 重复登录下线通知
+		GateToPlayer(player, cmd.PlayerKickOutScNotify, notify)
+		// 删除连接
+		player.GameConn.Close()
+	} else {
+		// 异步通知给node
+		go s.sendNode(cmd.PlayerLoginReq, gamereq)
+	}
 
 	// 构造回复内容
 	timeRand := random.GetTimeRand()

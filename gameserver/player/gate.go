@@ -45,6 +45,14 @@ func (g *GamePlayer) sendGate(cmdId uint16, playerMsg pb.Message) {
 	}
 }
 
+func (g *GamePlayer) PlayerLoginReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*spb.PlayerLoginReq)
+	if req.PlayerUid == 0 {
+		return
+	}
+	g.Uid = req.PlayerUid
+}
+
 // 从gate收到的玩家数据包
 func (g *GamePlayer) PlayerToGameByGateReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.PlayerToGameByGateReq)

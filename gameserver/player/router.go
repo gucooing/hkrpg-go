@@ -223,6 +223,7 @@ func (g *GamePlayer) GMRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 func (g *GamePlayer) GateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 	switch cmdId {
 	case cmd.PlayerLoginReq:
+		g.PlayerLoginReq(payloadMsg) // gate玩家登录通知
 	case cmd.PlayerToGameByGateReq:
 		g.PlayerToGameByGateReq(payloadMsg)
 	}
