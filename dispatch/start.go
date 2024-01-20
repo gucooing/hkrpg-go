@@ -25,7 +25,7 @@ func NewServer(cfg *config.Config) *sdk.Server {
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
-		logger.Error("node error:", err)
+		panic(err.Error())
 		return nil
 	}
 	s.NodeConn = tcpConn

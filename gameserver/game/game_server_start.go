@@ -42,7 +42,7 @@ func NewGameServer(cfg *config.Config) *GameServer {
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
-		panic(err)
+		panic(err.Error())
 		return nil
 	}
 	s.nodeConn = tcpConn
