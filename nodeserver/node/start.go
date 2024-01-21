@@ -57,7 +57,7 @@ func GetMapService() map[spb.ServerType]map[string]*Service {
 		NODE.MapService[spb.ServerType_SERVICE_GATE] = make(map[string]*Service)
 		NODE.MapService[spb.ServerType_SERVICE_DISPATCH] = make(map[string]*Service)
 		NODE.MapService[spb.ServerType_SERVICE_MULTI] = make(map[string]*Service)
-		NODE.MapService[spb.ServerType_SERVICE_GM] = make(map[string]*Service)
+		NODE.MapService[spb.ServerType_SERVICE_MUIP] = make(map[string]*Service)
 	}
 	return NODE.MapService
 }

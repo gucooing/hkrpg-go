@@ -8,13 +8,19 @@ import (
 
 type Config struct {
 	LogLevel string             `json:"LogLevel"`
+	RedisDsn string             `json:"RedisDsn"`
+	OuterIp  string             `json:"OuterIp"`
 	AppList  map[string]AppList `json:"AppList"`
+	NetConf  map[string]string  `json:"NetConf"`
 }
 type AppList struct {
 	App map[string]App `json:"app"`
 }
 type App struct {
 	Port string `json:"port"`
+}
+
+type NetConf struct {
 }
 
 var CONF *Config = nil
@@ -45,6 +51,8 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel: "Info",
+	RedisDsn: "redis://127.0.0.1:6379",
+	OuterIp:  "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
 			App: map[string]App{
@@ -81,5 +89,8 @@ var DefaultConfig = &Config{
 				},
 			},
 		},
+	},
+	NetConf: map[string]string{
+		"Node": "127.0.0.1:20081",
 	},
 }
