@@ -35,6 +35,7 @@ func (p *PlayerGame) recvGame() {
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
+			KickPlayer(p)
 			return
 		}
 		bin = nodeMsg[:recvLen]

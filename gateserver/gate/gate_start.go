@@ -16,6 +16,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
 const (
@@ -141,12 +142,8 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			logger.Error("!!! GATE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			/*
-				if g.PlayerGame != nil {
-					logger.Error("the motherfucker player uid: %v", g.PlayerPb.Uid)
-					g.KickPlayer()
-				}
-			*/
+			logger.Error("the motherfucker player uid: %v", p.Uid)
+			KickPlayer(p)
 		}
 	}()
 
@@ -243,16 +240,20 @@ func createXorPad(seed uint64) []byte {
 
 func Close() error {
 	GAMESERVER.kcpFin = true
-	/*
-		for _, player := range KCPCONNMANAGER.sessionMap {
-			err := player.KickPlayer()
-			if err != nil {
-				return err
-			}
-		}
-	*/
+	for _, player := range GAMESERVER.sessionMap {
+		KickPlayer(player)
+	}
 
 	return nil
+}
+
+func KickPlayer(p *PlayerGame) {
+	notify := new(proto.GetChallengeScRsp)
+	// TODO 是的，没错，还是同样的原因
+	GateToPlayer(p, cmd.PlayerKickOutScNotify, notify)
+	p.KcpConn.Close()
+	// 发送下线通知到game
+	p.GameConn.Close()
 }
 
 func (s *GateServer) kcpNetInfo() {

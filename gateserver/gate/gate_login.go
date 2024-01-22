@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"net"
 	"strconv"
 	"sync"
@@ -77,10 +76,10 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	syncGD.Unlock()
 	if err != nil {
 		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_PARA_ERROR)
-		rsp.Msg = "账号刷新失败"
+		rsp.Retcode = uint32(proto.Retcode_RET_PLAYER_DATA_ERROR)
+		rsp.Msg = "玩家数据错误"
 		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
-		logger.Error("登录账号:%v,账号刷新失败", accountUid)
+		logger.Error("登录账号:%v,玩家数据错误", accountUid)
 		return
 	}
 
@@ -129,7 +128,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 func (p *PlayerGame) NewGame(gameAddr string) {
 	gameConn, err := net.Dial("tcp", gameAddr)
 	if err != nil {
-		fmt.Println("无法连接到GAME:", err)
+		logger.Error("无法连接到GAME:", err)
 		return
 	}
 	p.GameConn = gameConn
