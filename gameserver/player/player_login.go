@@ -91,5 +91,5 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 
 // 账号离线
 func (g *GamePlayer) PlayerLogoutCsReq() {
-	// g.KickPlayer()
+	g.KickPlayer()
 }

@@ -4,6 +4,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -84,10 +85,20 @@ func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb
 	return protoObj
 }
 
-/*
-func (s *game.GameServer) UpDataPlayer(g *GamePlayer) error {
+func (g *GamePlayer) KickPlayer() {
+	/*
+		TODO
+		1.通知node game玩家下线
+		2.通知gate game玩家下线
+		3.保存数据到数据库
+		4.断开gate-game连接
+	*/
+	UpDataPlayer(g)
+}
+
+func UpDataPlayer(g *GamePlayer) error {
 	var err error
-	if g.KcpConn == nil {
+	if g.PlayerPb == nil {
 		return nil
 	}
 	if g.Uid == 0 {
@@ -101,7 +112,7 @@ func (s *game.GameServer) UpDataPlayer(g *GamePlayer) error {
 		logger.Error("pb marshal error: %v", err)
 	}
 
-	if err = s.Store.UpdatePlayer(dbDate); err != nil {
+	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
 		logger.Error("Update Player error")
 		return err
 	}
@@ -109,6 +120,8 @@ func (s *game.GameServer) UpDataPlayer(g *GamePlayer) error {
 	logger.Info("数据库账号:%v 数据更新", g.Uid)
 	return nil
 }
+
+/*
 
 func (g *GamePlayer) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
