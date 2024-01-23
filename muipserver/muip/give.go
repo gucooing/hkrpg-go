@@ -1,15 +1,15 @@
-package Gm
+package muip
 
 import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
 func Give(c *gin.Context) {
-	cmd := stou32(c.Query("cmd"))
 	uid := stou32(c.Query("uid"))
 	if uid == 0 {
 		c.JSON(404, gin.H{
@@ -22,6 +22,7 @@ func Give(c *gin.Context) {
 	itemCount := c.Query("item_count") // 数量
 
 	message := &spb.GmGive{
+		PlayerUid: uid,
 		ItemId:    stou32(itemId),
 		ItemCount: stou32(itemCount),
 	}
@@ -29,7 +30,7 @@ func Give(c *gin.Context) {
 		message.GiveAll = true
 	}
 
-	ToGate(c, uid, cmd, message)
+	ToNode(c, cmd.GmGive, message)
 }
 
 func stou32(msg string) uint32 {
@@ -40,17 +41,9 @@ func stou32(msg string) uint32 {
 	return uint32(ms)
 }
 
-func ToGate(c *gin.Context, uid, cmdId uint32, message pb.Message) {
-	cmdId = cmdId + 10000
-	// gmMsg := EncodeProtoToPayload(uint16(cmdId), message)
-	bot := true // Net.GmToGs(uid, gmMsg)
-	if bot {
-		c.JSON(200, gin.H{
-			"code": 0,
-		})
-	} else {
-		c.JSON(200, gin.H{
-			"code": -1,
-		})
-	}
+func ToNode(c *gin.Context, cmdId uint16, message pb.Message) {
+	MUIP.SendNode(cmdId, message)
+	c.JSON(200, gin.H{
+		"code": 0,
+	})
 }

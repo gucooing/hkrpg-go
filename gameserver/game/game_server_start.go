@@ -19,6 +19,7 @@ type GameServer struct {
 	AppId      string
 	GSListener net.Listener
 	nodeConn   net.Conn
+	PlayerMap  map[uint32]*player.GamePlayer
 }
 
 func NewGameServer(cfg *config.Config) *GameServer {
@@ -50,6 +51,7 @@ func NewGameServer(cfg *config.Config) *GameServer {
 		return nil
 	}
 	s.nodeConn = tcpConn
+	s.PlayerMap = make(map[uint32]*player.GamePlayer)
 	go s.recvNode()
 	// 向node注册
 	s.Connection()
@@ -65,7 +67,7 @@ func (s *GameServer) StartGameServer() error {
 			continue
 		}
 		g := NewPlayer(conn)
-		go g.RecvGate()
+		go s.recvGate(g)
 	}
 }
 

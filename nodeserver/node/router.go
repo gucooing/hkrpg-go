@@ -15,5 +15,10 @@ func (s *Service) RegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.PlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutReq: // 玩家退出登录通知
 		s.PlayerLogoutReq(serviceMsg)
+		// 下面是GM包
+	case cmd.GmGive:
+		s.GmGive(serviceMsg)
+	case cmd.GmWorldLevel:
+		s.GmWorldLevel(serviceMsg)
 	}
 }

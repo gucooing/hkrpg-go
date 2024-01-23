@@ -66,3 +66,53 @@ func (s *GameServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 	}
 	// TODO 发送心跳包
 }
+
+/************************************gate********************************/
+
+// 从gate接收消息
+func (s *GameServer) recvGate(g *player.GamePlayer) {
+	nodeMsg := make([]byte, player.PacketMaxLen)
+	for {
+		var bin []byte = nil
+		recvLen, err := g.GateConn.Read(nodeMsg)
+		if err != nil {
+			logger.Debug("exit recv loop, conn read err: %v", err)
+			return
+		}
+		bin = nodeMsg[:recvLen]
+		nodeMsgList := make([]*alg.PackMsg, 0)
+		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
+		for _, msg := range nodeMsgList {
+			serviceMsg := alg.DecodePayloadToProto(msg)
+			s.GateRegisterMessage(g, msg.CmdId, serviceMsg)
+		}
+	}
+}
+
+func (s *GameServer) GateRegisterMessage(g *player.GamePlayer, cmdId uint16, payloadMsg pb.Message) {
+	switch cmdId {
+	case cmd.PlayerLoginReq:
+		s.PlayerLoginReq(g, payloadMsg) // gate玩家登录通知
+	case cmd.PlayerToGameByGateReq:
+		s.PlayerToGameByGateReq(g, payloadMsg)
+	}
+}
+
+func (s *GameServer) PlayerLoginReq(g *player.GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*spb.PlayerLoginReq)
+	if req.PlayerUid == 0 {
+		return
+	}
+	s.PlayerMap[req.PlayerUid] = g
+	g.Uid = req.PlayerUid
+}
+
+// 从gate收到的玩家数据包
+func (s *GameServer) PlayerToGameByGateReq(g *player.GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*spb.PlayerToGameByGateReq)
+	playerMsgList := make([]*alg.PackMsg, 0)
+	alg.DecodeBinToPayload(req.PlayerBin, &playerMsgList, nil)
+	for _, msg := range playerMsgList {
+		g.RegisterMessage(msg.CmdId, msg.ProtoData)
+	}
+}

@@ -47,7 +47,7 @@ func (s *Muip) RecvNode() {
 }
 
 // 发送到node
-func (s *Muip) sendNode(cmdId uint16, playerMsg pb.Message) {
+func (s *Muip) SendNode(cmdId uint16, playerMsg pb.Message) {
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
@@ -56,7 +56,7 @@ func (s *Muip) sendNode(cmdId uint16, playerMsg pb.Message) {
 		logger.Error("cmdId error")
 	}
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-	_, err := s.NodeConn.Write(binMsg)
+	_, err = s.NodeConn.Write(binMsg)
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
 		return
@@ -72,7 +72,7 @@ func (s *Muip) Connection() {
 		Port:       s.Port,
 	}
 
-	s.sendNode(cmd.ServiceConnectionReq, req)
+	s.SendNode(cmd.ServiceConnectionReq, req)
 }
 
 func (s *Muip) ServiceConnectionRsp(serviceMsg pb.Message) {
@@ -91,7 +91,7 @@ func (s *Muip) GetServerOuterAddrReq() {
 			ServerType: spb.ServerType_SERVICE_MUIP,
 			AppId:      s.AppId,
 		}
-		s.sendNode(cmd.GetServerOuterAddrReq, req)
+		s.SendNode(cmd.GetServerOuterAddrReq, req)
 		time.Sleep(time.Second * 5)
 	}
 }

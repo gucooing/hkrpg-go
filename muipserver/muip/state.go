@@ -1,4 +1,4 @@
-package Gm
+package muip
 
 import (
 	"github.com/gin-gonic/gin"

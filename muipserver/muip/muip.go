@@ -9,6 +9,8 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 )
 
+var MUIP *Muip
+
 type Muip struct {
 	Config   *config.Config
 	AppId    string
@@ -19,6 +21,8 @@ type Muip struct {
 
 func NewMuip(cfg *config.Config) *Muip {
 	s := new(Muip)
+	MUIP = s
+
 	s.Config = cfg
 	s.AppId = alg.GetAppId()
 	logger.Info("MuipServer AppId:%s", s.AppId)

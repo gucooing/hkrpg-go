@@ -3,7 +3,6 @@ package player
 import (
 	"github.com/gucooing/hkrpg-go/gameserver/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	pb "google.golang.org/protobuf/proto"
 )
 
 func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
@@ -209,22 +208,4 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		logger.Debug("C --> S error router: %v", cmdId)
 	}
 	return
-}
-
-func (g *GamePlayer) GMRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
-	switch cmdId {
-	case cmd.GmGive:
-		g.GmGive(payloadMsg) // 获取物品
-	case cmd.GmWorldLevel:
-		g.GmWorldLevel(payloadMsg) // 设置世界等级
-	}
-}
-
-func (g *GamePlayer) GateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
-	switch cmdId {
-	case cmd.PlayerLoginReq:
-		g.PlayerLoginReq(payloadMsg) // gate玩家登录通知
-	case cmd.PlayerToGameByGateReq:
-		g.PlayerToGameByGateReq(payloadMsg)
-	}
 }

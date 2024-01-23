@@ -100,8 +100,8 @@ func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 			// 只有gate的登录注册包需要发重复登录下线通知
 		}
 	}
-	// 添加在线玩家列表到map
-	NODE.PlayerMap[req.PlayerUid] = s
+	// 添加在线玩家列表到map/game
+	NODE.PlayerMap[req.PlayerUid] = NODE.MapService[spb.ServerType_SERVICE_GAME][req.AppId]
 	// 目标game添加玩家数
 	NODE.MapService[spb.ServerType_SERVICE_GAME][req.AppId].PlayerNum++
 	// 目标gate添加玩家数
@@ -127,4 +127,12 @@ func (s *Service) PlayerLogoutReq(serviceMsg pb.Message) {
 	// 删除玩家
 	delete(NODE.PlayerMap, req.PlayerUid)
 	logger.Info("玩家UID:%v离线", req.PlayerUid)
+}
+
+func (s *Service) GmGive(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GmGive)
+}
+
+func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GmWorldLevel)
 }
