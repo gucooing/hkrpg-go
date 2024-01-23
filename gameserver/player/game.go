@@ -25,13 +25,6 @@ type GamePlayer struct {
 	GateConn net.Conn
 }
 
-type NetMsg struct {
-	G         *GamePlayer
-	CmdId     uint16
-	PlayerMsg pb.Message
-	Type      int
-}
-
 const (
 	PacketMaxLen = 343 * 1024 // 最大应用层包长度
 )
@@ -88,12 +81,11 @@ func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb
 func (g *GamePlayer) KickPlayer() {
 	/*
 		TODO
-		1.通知node game玩家下线
-		2.通知gate game玩家下线
-		3.保存数据到数据库
-		4.断开gate-game连接
+		1.保存数据到数据库
+		2.断开gate-game连接
 	*/
 	UpDataPlayer(g)
+	g.GateConn.Close()
 }
 
 func UpDataPlayer(g *GamePlayer) error {

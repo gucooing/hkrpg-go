@@ -106,6 +106,25 @@ func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 	NODE.MapService[spb.ServerType_SERVICE_GAME][req.AppId].PlayerNum++
 	// 目标gate添加玩家数
 	s.PlayerNum++
+	logger.Info("玩家UID:%v登录", req.PlayerUid)
 
 	s.sendHandle(cmd.PlayerLoginRsp, rsp)
+}
+
+// 注意！只有gate能发离线通知包
+func (s *Service) PlayerLogoutReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLogoutReq)
+	if req.PlayerUid == 0 {
+		return
+	}
+	if NODE.PlayerMap[req.PlayerUid] == nil {
+		return
+	}
+	// 减少gate人数
+	s.PlayerNum--
+	// 减少game人数
+	NODE.PlayerMap[req.PlayerUid].PlayerNum--
+	// 删除玩家
+	delete(NODE.PlayerMap, req.PlayerUid)
+	logger.Info("玩家UID:%v离线", req.PlayerUid)
 }

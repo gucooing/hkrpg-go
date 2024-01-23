@@ -10,6 +10,8 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 )
 
+var GAMESERVER *GameServer
+
 type GameServer struct {
 	Config     *config.Config
 	Store      *db.Store
@@ -21,6 +23,8 @@ type GameServer struct {
 
 func NewGameServer(cfg *config.Config) *GameServer {
 	s := new(GameServer)
+
+	GAMESERVER = s
 
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接

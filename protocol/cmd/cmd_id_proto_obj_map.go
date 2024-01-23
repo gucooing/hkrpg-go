@@ -266,6 +266,8 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(PlayerToGameByGateRsp, func() any { return new(spb.PlayerToGameByGateRsp) })
 	c.regMsg(GetServerOuterAddrReq, func() any { return new(spb.GetServerOuterAddrReq) })
 	c.regMsg(GetServerOuterAddrRsp, func() any { return new(spb.GetServerOuterAddrRsp) })
+	c.regMsg(PlayerLogoutReq, func() any { return new(spb.PlayerLogoutReq) })
+	c.regMsg(PlayerLogoutRsp, func() any { return new(spb.PlayerLogoutRsp) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {

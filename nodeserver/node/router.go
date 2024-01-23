@@ -13,5 +13,7 @@ func (s *Service) RegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.GetServerOuterAddrReq(serviceMsg)
 	case cmd.PlayerLoginReq: // 玩家登录通知
 		s.PlayerLoginReq(serviceMsg)
+	case cmd.PlayerLogoutReq: // 玩家退出登录通知
+		s.PlayerLogoutReq(serviceMsg)
 	}
 }
