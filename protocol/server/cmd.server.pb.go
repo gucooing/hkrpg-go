@@ -594,6 +594,187 @@ func (x *GetServerOuterAddrRsp) GetAppId() string {
 	return ""
 }
 
+type GetAllServiceReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ServiceType     ServerType `protobuf:"varint,1,opt,name=service_type,json=serviceType,proto3,enum=proto.ServerType" json:"service_type,omitempty"`
+	GetServiceType_ ServerType `protobuf:"varint,2,opt,name=get_service_type,json=getServiceType,proto3,enum=proto.ServerType" json:"get_service_type,omitempty"`
+}
+
+func (x *GetAllServiceReq) Reset() {
+	*x = GetAllServiceReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetAllServiceReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAllServiceReq) ProtoMessage() {}
+
+func (x *GetAllServiceReq) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAllServiceReq.ProtoReflect.Descriptor instead.
+func (*GetAllServiceReq) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *GetAllServiceReq) GetServiceType() ServerType {
+	if x != nil {
+		return x.ServiceType
+	}
+	return ServerType_SERVICE_NONE
+}
+
+func (x *GetAllServiceReq) GetGetServiceType_() ServerType {
+	if x != nil {
+		return x.GetServiceType_
+	}
+	return ServerType_SERVICE_NONE
+}
+
+type GetAllServiceRsp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ServiceType ServerType    `protobuf:"varint,1,opt,name=service_type,json=serviceType,proto3,enum=proto.ServerType" json:"service_type,omitempty"`
+	ServiceList []*ServiceAll `protobuf:"bytes,2,rep,name=service_list,json=serviceList,proto3" json:"service_list,omitempty"`
+}
+
+func (x *GetAllServiceRsp) Reset() {
+	*x = GetAllServiceRsp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetAllServiceRsp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetAllServiceRsp) ProtoMessage() {}
+
+func (x *GetAllServiceRsp) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetAllServiceRsp.ProtoReflect.Descriptor instead.
+func (*GetAllServiceRsp) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *GetAllServiceRsp) GetServiceType() ServerType {
+	if x != nil {
+		return x.ServiceType
+	}
+	return ServerType_SERVICE_NONE
+}
+
+func (x *GetAllServiceRsp) GetServiceList() []*ServiceAll {
+	if x != nil {
+		return x.ServiceList
+	}
+	return nil
+}
+
+type ServiceAll struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ServiceType ServerType `protobuf:"varint,1,opt,name=service_type,json=serviceType,proto3,enum=proto.ServerType" json:"service_type,omitempty"` // 服务id
+	Addr        string     `protobuf:"bytes,2,opt,name=addr,proto3" json:"addr,omitempty"`                                                         // 地址
+	PlayerNum   uint32     `protobuf:"varint,3,opt,name=player_num,json=playerNum,proto3" json:"player_num,omitempty"`                             // 在线人数
+	AppId       string     `protobuf:"bytes,4,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`                                          // app_id
+}
+
+func (x *ServiceAll) Reset() {
+	*x = ServiceAll{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ServiceAll) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ServiceAll) ProtoMessage() {}
+
+func (x *ServiceAll) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ServiceAll.ProtoReflect.Descriptor instead.
+func (*ServiceAll) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ServiceAll) GetServiceType() ServerType {
+	if x != nil {
+		return x.ServiceType
+	}
+	return ServerType_SERVICE_NONE
+}
+
+func (x *ServiceAll) GetAddr() string {
+	if x != nil {
+		return x.Addr
+	}
+	return ""
+}
+
+func (x *ServiceAll) GetPlayerNum() uint32 {
+	if x != nil {
+		return x.PlayerNum
+	}
+	return 0
+}
+
+func (x *ServiceAll) GetAppId() string {
+	if x != nil {
+		return x.AppId
+	}
+	return ""
+}
+
 var File_cmd_server_proto protoreflect.FileDescriptor
 
 var file_cmd_server_proto_rawDesc = []byte{
@@ -658,8 +839,34 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61, 0x64, 0x64, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x70,
 	0x6f, 0x72, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x12,
 	0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x22, 0x85, 0x01, 0x0a, 0x10, 0x47, 0x65, 0x74, 0x41, 0x6c,
+	0x6c, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x52, 0x65, 0x71, 0x12, 0x34, 0x0a, 0x0c, 0x73,
+	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72,
+	0x54, 0x79, 0x70, 0x65, 0x52, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x54, 0x79, 0x70,
+	0x65, 0x12, 0x3b, 0x0a, 0x10, 0x67, 0x65, 0x74, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65,
+	0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0e,
+	0x67, 0x65, 0x74, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x22, 0x7e,
+	0x0a, 0x10, 0x47, 0x65, 0x74, 0x41, 0x6c, 0x6c, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x52,
+	0x73, 0x70, 0x12, 0x34, 0x0a, 0x0c, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x74, 0x79,
+	0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0b, 0x73, 0x65, 0x72,
+	0x76, 0x69, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12, 0x34, 0x0a, 0x0c, 0x73, 0x65, 0x72, 0x76,
+	0x69, 0x63, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x11,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x41, 0x6c,
+	0x6c, 0x52, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x8c,
+	0x01, 0x0a, 0x0a, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x41, 0x6c, 0x6c, 0x12, 0x34, 0x0a,
+	0x0c, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76,
+	0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x54,
+	0x79, 0x70, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x61, 0x64, 0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x61, 0x64, 0x64, 0x72, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x5f, 0x6e, 0x75, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x4e, 0x75, 0x6d, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x42, 0x0a, 0x5a,
+	0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -674,7 +881,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 13)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),  // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),  // 1: proto.ServiceConnectionRsp
@@ -686,18 +893,26 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*PlayerToGameByGateRsp)(nil), // 7: proto.PlayerToGameByGateRsp
 	(*GetServerOuterAddrReq)(nil), // 8: proto.GetServerOuterAddrReq
 	(*GetServerOuterAddrRsp)(nil), // 9: proto.GetServerOuterAddrRsp
-	(ServerType)(0),               // 10: proto.ServerType
+	(*GetAllServiceReq)(nil),      // 10: proto.GetAllServiceReq
+	(*GetAllServiceRsp)(nil),      // 11: proto.GetAllServiceRsp
+	(*ServiceAll)(nil),            // 12: proto.ServiceAll
+	(ServerType)(0),               // 13: proto.ServerType
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	10, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	10, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	10, // 2: proto.GetServerOuterAddrReq.server_type:type_name -> proto.ServerType
-	10, // 3: proto.GetServerOuterAddrRsp.server_type:type_name -> proto.ServerType
-	4,  // [4:4] is the sub-list for method output_type
-	4,  // [4:4] is the sub-list for method input_type
-	4,  // [4:4] is the sub-list for extension type_name
-	4,  // [4:4] is the sub-list for extension extendee
-	0,  // [0:4] is the sub-list for field type_name
+	13, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	13, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	13, // 2: proto.GetServerOuterAddrReq.server_type:type_name -> proto.ServerType
+	13, // 3: proto.GetServerOuterAddrRsp.server_type:type_name -> proto.ServerType
+	13, // 4: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
+	13, // 5: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
+	13, // 6: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
+	12, // 7: proto.GetAllServiceRsp.service_list:type_name -> proto.ServiceAll
+	13, // 8: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	9,  // [9:9] is the sub-list for method output_type
+	9,  // [9:9] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_cmd_server_proto_init() }
@@ -827,6 +1042,42 @@ func file_cmd_server_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_server_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetAllServiceReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cmd_server_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetAllServiceRsp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cmd_server_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ServiceAll); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -834,7 +1085,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   10,
+			NumMessages:   13,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

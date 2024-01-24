@@ -1061,6 +1061,8 @@ const (
 	GetServerOuterAddrRsp = 10103
 	PlayerLogoutReq       = 10004
 	PlayerLogoutRsp       = 10104
+	GetAllServiceReq      = 10005
+	GetAllServiceRsp      = 10105
 )
 
 const (
@@ -1292,4 +1294,6 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GetServerOuterAddrRsp, func() any { return new(spb.GetServerOuterAddrRsp) })
 	c.regMsg(PlayerLogoutReq, func() any { return new(spb.PlayerLogoutReq) })
 	c.regMsg(PlayerLogoutRsp, func() any { return new(spb.PlayerLogoutRsp) })
+	c.regMsg(GetAllServiceReq, func() any { return new(spb.GetAllServiceReq) })
+	c.regMsg(GetAllServiceRsp, func() any { return new(spb.GetAllServiceRsp) })
 }

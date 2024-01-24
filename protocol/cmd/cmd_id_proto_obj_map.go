@@ -268,6 +268,8 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(GetServerOuterAddrRsp, func() any { return new(spb.GetServerOuterAddrRsp) })
 	c.regMsg(PlayerLogoutReq, func() any { return new(spb.PlayerLogoutReq) })
 	c.regMsg(PlayerLogoutRsp, func() any { return new(spb.PlayerLogoutRsp) })
+	c.regMsg(GetAllServiceReq, func() any { return new(spb.GetAllServiceReq) })
+	c.regMsg(GetAllServiceRsp, func() any { return new(spb.GetAllServiceRsp) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
