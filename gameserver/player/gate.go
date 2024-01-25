@@ -7,7 +7,7 @@ import (
 )
 
 // 发送到gate
-func (g *GamePlayer) sendGate(cmdId uint16, playerMsg pb.Message) {
+func (g *GamePlayer) SendGate(cmdId uint16, playerMsg pb.Message) {
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg

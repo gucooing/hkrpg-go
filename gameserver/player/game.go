@@ -56,7 +56,7 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 		PlayerBin:   binMsg,
 	}
 
-	g.sendGate(cmd.PlayerToGameByGateRsp, gtgMsg)
+	g.SendGate(cmd.PlayerToGameByGateRsp, gtgMsg)
 }
 
 func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {

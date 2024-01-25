@@ -51,6 +51,7 @@ type PlayerGame struct {
 	XorKey    []byte // 密钥
 	KcpConn   *kcp.UDPSession
 	GameConn  net.Conn
+	IsConnect bool
 }
 
 type KcpEvent struct {

@@ -20,6 +20,8 @@ func (s *GateServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 
 func (p *PlayerGame) GameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 	switch cmdId {
+	case cmd.PlayerLoginRsp:
+		p.IsConnect = true
 	default:
 		p.GameToGate(cmdId, playerMsg)
 	}

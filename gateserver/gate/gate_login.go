@@ -153,7 +153,7 @@ func (s *GateServer) GetGameAppId() string {
 	for _, appId := range s.errGameAppId {
 		if gameAppId == appId {
 			gameAppId = s.GetMinGameAppId()
-			delete(s.gameAll, appId)
+			// delete(s.gameAll, appId)
 		}
 	}
 

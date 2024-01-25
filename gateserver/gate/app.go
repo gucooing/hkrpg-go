@@ -19,23 +19,44 @@ func (p *PlayerGame) sendGame(cmdId uint16, playerMsg pb.Message) {
 		return
 	}
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-	_, err := p.GameConn.Write(binMsg)
-	if err != nil {
-		logger.Debug("exit send loop, conn write err: %v", err)
-		return
+	if cmdId == cmd.PlayerLoginReq || p.IsConnect {
+		_, err := p.GameConn.Write(binMsg)
+		if err != nil {
+			logger.Debug("exit send loop, conn write err: %v", err)
+			return
+		}
 	}
 }
 
 // 从game接收消息
 func (p *PlayerGame) recvGame() {
 	nodeMsg := make([]byte, PacketMaxLen)
+	// p.IsConnect = true
 
 	for {
 		var bin []byte = nil
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
+			p.IsConnect = false
 			logger.Debug("exit recv loop, conn read err: %v", err)
-			KickPlayer(p)
+			// KickPlayer(p)
+			//  下面是切gs
+			GAMESERVER.errGameAppId = append(GAMESERVER.errGameAppId, p.GameAppId)
+			gameAppId := GAMESERVER.GetGameAppId()
+			game := GAMESERVER.gameAll[gameAppId]
+			if gameAppId == "" || game == nil {
+				logger.Error("game未启动")
+				return
+			}
+			p.NewGame(game.addr)
+			p.GameAppId = game.appId
+			gamereq := &spb.PlayerLoginReq{
+				PlayerUid: p.Uid,
+				AppId:     GAMESERVER.gameAppId,
+			}
+			p.sendGame(cmd.PlayerLoginReq, gamereq)
+			p.recvGame()
+			// 为止
 			return
 		}
 		bin = nodeMsg[:recvLen]

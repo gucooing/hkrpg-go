@@ -105,6 +105,10 @@ func (s *GameServer) PlayerLoginReq(g *player.GamePlayer, payloadMsg pb.Message)
 	}
 	s.PlayerMap[req.PlayerUid] = g
 	g.Uid = req.PlayerUid
+	g.GetPlayerDate()
+
+	rsp := &spb.PlayerLoginRsp{PlayerUid: req.PlayerUid}
+	g.SendGate(cmd.PlayerLoginRsp, rsp)
 }
 
 // 从gate收到的玩家数据包

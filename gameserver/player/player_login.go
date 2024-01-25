@@ -11,12 +11,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
-	req := msg.(*proto.PlayerLoginCsReq)
-
-	logger.Info("登录的系统是:%s", req.SystemVersion)
-
+func (g *GamePlayer) GetPlayerDate() {
 	var err error
 	playerData := new(PlayerData)
 
@@ -47,6 +42,22 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		}
 	}
 
+	if g.Player == nil {
+		g.Player = &PlayerData{
+			Battle: make(map[uint32]*Battle),
+			BattleState: &BattleState{
+				ChallengeState: &ChallengeState{},
+			},
+		}
+	}
+}
+
+func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
+	req := msg.(*proto.PlayerLoginCsReq)
+
+	logger.Info("登录的系统是:%s", req.SystemVersion)
+
 	rsp := new(proto.PlayerLoginScRsp)
 	rsp.Stamina = g.GetItem().MaterialMap[11]
 	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
@@ -61,22 +72,11 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Stamina:    g.GetItem().MaterialMap[11],
 		WorldLevel: g.PlayerPb.WorldLevel,
 	}
-
-	if g.Player == nil {
-		g.Player = &PlayerData{
-			Battle: make(map[uint32]*Battle),
-			BattleState: &BattleState{
-				ChallengeState: &ChallengeState{},
-			},
-		}
-	}
-
 	// 开启数据定时保存
 	// go g.AutoUpDataPlayer()
 
 	g.StaminaInfoScNotify()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
-
 }
 
 func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
