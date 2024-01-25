@@ -15,6 +15,8 @@ func (s *Service) RegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.PlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutReq: // 玩家退出登录通知
 		s.PlayerLogoutReq(serviceMsg)
+	case cmd.GetAllServiceReq: // 获取目标服务所有
+		s.GetAllServiceReq(serviceMsg)
 		// 下面是GM包
 	case cmd.GmGive:
 		s.GmGive(serviceMsg)

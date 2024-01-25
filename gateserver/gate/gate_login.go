@@ -86,7 +86,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	p.IsToken = true
 
 	// 登录成功，拉取game
-	if s.gameAddr == ":" {
+	if s.gameAppId == "" || s.gameAll[s.gameAppId] == nil {
 		rsp.Uid = p.Uid
 		rsp.Retcode = uint32(proto.Retcode_RET_SYSTEM_BUSY)
 		rsp.Msg = "game未启动"
@@ -95,7 +95,19 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		return
 	}
 
-	p.NewGame(s.gameAddr)
+	gameAppId := s.GetGameAppId()
+	game := s.gameAll[gameAppId]
+	if game == nil {
+		rsp.Uid = p.Uid
+		rsp.Retcode = uint32(proto.Retcode_RET_SYSTEM_BUSY)
+		rsp.Msg = "game未启动"
+		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+		logger.Error("game未启动")
+		return
+	}
+
+	p.NewGame(game.addr)
+	p.GameAppId = game.appId
 	gamereq := &spb.PlayerLoginReq{
 		PlayerUid: p.Uid,
 		AppId:     s.gameAppId,
@@ -133,4 +145,29 @@ func (p *PlayerGame) NewGame(gameAddr string) {
 	}
 	p.GameConn = gameConn
 	go p.recvGame()
+}
+
+func (s *GateServer) GetGameAppId() string {
+	gameAppId := s.gameAppId
+
+	for _, appId := range s.errGameAppId {
+		if gameAppId == appId {
+			gameAppId = s.GetMinGameAppId()
+			delete(s.gameAll, appId)
+		}
+	}
+
+	return gameAppId
+}
+
+func (s *GateServer) GetMinGameAppId() string {
+	var minNum uint64
+	var minAppId string
+	for _, game := range s.gameAll {
+		if minAppId == "" || minNum > game.num {
+			minAppId = game.appId
+			minNum = game.num
+		}
+	}
+	return minAppId
 }

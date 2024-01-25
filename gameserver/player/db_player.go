@@ -14,6 +14,7 @@ type PlayerData struct {
 	GameObjectGuidCounter uint64                 // 游戏对象guid计数器
 	IsNickName            bool                   // 是否修改昵称
 	EntityList            map[uint32]*EntityList // 实体ID映射表
+	SceneEntity           *SceneEntity           // 场景实体管理
 	NpcList               map[uint32]uint32
 }
 
@@ -22,6 +23,33 @@ type EntityList struct {
 	GroupId uint32 // 地图块
 	Pos     *Vector
 	Rot     *Vector
+}
+
+type SceneEntity struct {
+	AvatarEntity  map[uint32]*AvatarEntity // [实体id]*AvatarEntity
+	NpcEntity     map[uint32]*NpcEntity
+	MonsterEntity map[uint32]*MonsterEntity
+}
+
+type AvatarEntity struct {
+	AvatarId uint32
+	GroupId  uint32
+	Pos      *Vector
+	Rot      *Vector
+}
+
+type NpcEntity struct {
+	NpcId   uint32
+	GroupId uint32
+	Pos     *Vector
+	Rot     *Vector
+}
+
+type MonsterEntity struct {
+	MonsterEId uint32
+	GroupId    uint32
+	Pos        *Vector
+	Rot        *Vector
 }
 
 type Vector struct {

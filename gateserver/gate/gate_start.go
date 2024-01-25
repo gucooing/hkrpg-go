@@ -38,17 +38,19 @@ type GateServer struct {
 	sessionIdCounter uint32
 	sessionMap       map[uint32]*PlayerGame
 	kcpEventChan     chan *KcpEvent
-	gameAddr         string // 从node哪里拉取的game地址
-	gameAppId        string // 上面地址的appid
+	gameAppId        string                  // 最优appid
+	gameAll          map[string]*serviceGame // 从node拉取的game列表
+	errGameAppId     []string
 }
 
 type PlayerGame struct {
-	IsToken  bool // 是否通过token验证
-	Uid      uint32
-	Seed     uint64
-	XorKey   []byte // 密钥
-	KcpConn  *kcp.UDPSession
-	GameConn net.Conn
+	GameAppId string
+	IsToken   bool // 是否通过token验证
+	Uid       uint32
+	Seed      uint64
+	XorKey    []byte // 密钥
+	KcpConn   *kcp.UDPSession
+	GameConn  net.Conn
 }
 
 type KcpEvent struct {
@@ -57,9 +59,10 @@ type KcpEvent struct {
 	EventMessage any
 }
 
-type GmMsg struct {
-	CmdId     uint16
-	ProtoData []byte
+type serviceGame struct {
+	addr  string
+	num   uint64
+	appId string
 }
 
 func NewGate(cfg *config.Config) *GateServer {
@@ -93,6 +96,8 @@ func NewGate(cfg *config.Config) *GateServer {
 		return nil
 	}
 	s.nodeConn = tcpConn
+	s.gameAll = make(map[string]*serviceGame)
+	s.errGameAppId = make([]string, 0)
 	go s.recvNode()
 	go s.kcpNetInfo()
 	go s.kcpEnetHandle(kcpListener)

@@ -66,27 +66,53 @@ func (s *GateServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 		logger.Info("已向node注册成功！")
 	}
 	// 获取game地址/心跳包
-	go s.GetServerOuterAddrReq()
+	go s.GetAllServiceReq()
 }
 
-func (s *GateServer) GetServerOuterAddrReq() {
+func (s *GateServer) GetAllServiceReq() {
 	// 心跳包
 	for {
-		req := &spb.GetServerOuterAddrReq{
-			ServerType: spb.ServerType_SERVICE_GATE,
-			AppId:      s.AppId,
-			PlayerNum:  uint64(len(s.sessionMap)),
+		req := &spb.GetAllServiceReq{
+			ServiceType:     spb.ServerType_SERVICE_GATE,
+			GetServiceType_: spb.ServerType_SERVICE_GAME,
 		}
-		s.sendNode(cmd.GetServerOuterAddrReq, req)
+		s.sendNode(cmd.GetAllServiceReq, req)
 		time.Sleep(time.Second * 5)
 	}
 }
 
-func (s *GateServer) GetServerOuterAddrRsp(serviceMsg pb.Message) {
-	rsp := serviceMsg.(*spb.GetServerOuterAddrRsp)
-	if rsp.ServerType != spb.ServerType_SERVICE_GATE {
+func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {
+	rsp := serviceMsg.(*spb.GetAllServiceRsp)
+	if rsp.ServiceType != spb.ServerType_SERVICE_GATE {
 		return
 	}
-	s.gameAddr = rsp.Addr + ":" + rsp.Port
-	s.gameAppId = rsp.AppId
+	gameAll := make(map[string]*serviceGame, 0)
+	var minGameAppId string
+	var minGameNum uint64 = 0
+	for _, service := range rsp.ServiceList {
+		if service.Addr == "" || service.AppId == "" || service.ServiceType != spb.ServerType_SERVICE_GAME {
+			return
+		}
+		if minGameAppId == "" {
+			minGameAppId = service.AppId
+			minGameNum = service.PlayerNum
+		} else {
+			if minGameNum > service.PlayerNum {
+				minGameAppId = service.AppId
+				minGameNum = service.PlayerNum
+			}
+		}
+		serviceG := &serviceGame{
+			addr:  service.Addr,
+			num:   service.PlayerNum,
+			appId: service.AppId,
+		}
+		gameAll[service.AppId] = serviceG
+	}
+	if len(gameAll) == 0 {
+		return
+	}
+	s.gameAll = gameAll
+	s.gameAppId = minGameAppId
+	s.errGameAppId = make([]string, 0)
 }

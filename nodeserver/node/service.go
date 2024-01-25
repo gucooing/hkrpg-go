@@ -82,6 +82,28 @@ func (s *Service) GetServerOuterAddrReq(serviceMsg pb.Message) {
 	s.sendHandle(cmd.GetServerOuterAddrRsp, rsp)
 }
 
+func (s *Service) GetAllServiceReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GetAllServiceReq)
+	if req.ServiceType == spb.ServerType_SERVICE_NONE || req.GetServiceType_ == spb.ServerType_SERVICE_NONE {
+		return
+	}
+	rsp := &spb.GetAllServiceRsp{
+		ServiceType: req.ServiceType,
+		ServiceList: make([]*spb.ServiceAll, 0),
+	}
+	for _, service := range NODE.MapService[req.GetServiceType_] {
+		serviceList := &spb.ServiceAll{
+			ServiceType: service.ServerType,
+			Addr:        service.Addr + ":" + service.Port,
+			PlayerNum:   service.PlayerNum,
+			AppId:       service.AppId,
+		}
+		rsp.ServiceList = append(rsp.ServiceList,serviceList)
+	}
+
+	s.sendHandle(cmd.GetAllServiceRsp, rsp)
+}
+
 // 注意！只有gate能发登录通知包
 func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLoginReq)
