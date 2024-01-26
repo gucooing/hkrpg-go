@@ -9,9 +9,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/robot/config"
 	"github.com/gucooing/hkrpg-go/robot/gdconf"
-	"github.com/gucooing/hkrpg-go/robot/logger"
 	"github.com/gucooing/hkrpg-go/robot/robot"
 	"golang.org/x/net/context"
 )
@@ -33,7 +34,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger()
+	logger.InitLogger("robot" + "[" + alg.GetAppId() + "]")
 	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-robot-go")
 

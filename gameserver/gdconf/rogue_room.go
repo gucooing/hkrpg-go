@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
 

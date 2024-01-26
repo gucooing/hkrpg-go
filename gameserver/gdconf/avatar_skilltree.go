@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	"github.com/hjson/hjson-go/v4"
 )

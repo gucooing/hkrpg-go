@@ -62,10 +62,10 @@ type LogInfo struct {
 	ThreadId    string
 }
 
-func InitLogger() {
+func InitLogger(name string) {
 	log.SetFlags(0)
 	LOG = new(Logger)
-	LOG.AppName = "gateserver"
+	LOG.AppName = name
 	LOG.Level = LOG.getLevelInt("DEBUG")
 	LOG.Mode = LOG.getModeInt("BOTH")
 	LOG.Track = true

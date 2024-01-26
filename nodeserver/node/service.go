@@ -1,7 +1,7 @@
 package node
 
 import (
-	"github.com/gucooing/hkrpg-go/nodeserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"

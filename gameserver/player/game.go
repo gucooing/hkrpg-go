@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gameserver/db"
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"

@@ -29,6 +29,8 @@ func (p *PlayerGame) GameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 
 func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	switch cmdId {
+	case cmd.PlayerHeartBeatCsReq:
+		p.HandlePlayerHeartBeatCsReq(tcpMsg.ProtoData) // 心跳包
 	case cmd.PlayerLogoutCsReq:
 		req := &spb.PlayerLogoutReq{
 			PlayerUid: p.Uid,

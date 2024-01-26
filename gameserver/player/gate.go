@@ -1,7 +1,7 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	pb "google.golang.org/protobuf/proto"
 )

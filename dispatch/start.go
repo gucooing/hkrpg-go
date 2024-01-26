@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/dispatch/config"
 	"github.com/gucooing/hkrpg-go/dispatch/db"
-	"github.com/gucooing/hkrpg-go/dispatch/logger"
 	"github.com/gucooing/hkrpg-go/dispatch/sdk"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 // 初始化所有服务

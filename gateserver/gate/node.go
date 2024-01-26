@@ -3,7 +3,7 @@ package gate
 import (
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gateserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -108,9 +108,6 @@ func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {
 			appId: service.AppId,
 		}
 		gameAll[service.AppId] = serviceG
-	}
-	if len(gameAll) == 0 {
-		return
 	}
 	s.gameAll = gameAll
 	s.gameAppId = minGameAppId

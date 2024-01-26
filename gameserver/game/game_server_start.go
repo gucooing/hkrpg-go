@@ -5,9 +5,9 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 var GAMESERVER *GameServer

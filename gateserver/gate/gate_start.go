@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
-	"github.com/gucooing/hkrpg-go/gateserver/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"

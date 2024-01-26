@@ -1,7 +1,7 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
 
@@ -163,8 +163,6 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 	// 基础
 	case cmd.SetClientPausedCsReq:
 		g.SetClientPausedCsReq() // 客户端暂停请求
-	case cmd.PlayerHeartBeatCsReq:
-		g.HandlePlayerHeartBeatCsReq(payloadMsg) // 心跳包
 	case cmd.SyncClientResVersionCsReq:
 		g.SyncClientResVersionCsReq(payloadMsg) // 版本同步
 	case cmd.GetAssistHistoryCsReq:

@@ -12,7 +12,8 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
 	"github.com/gucooing/hkrpg-go/gateserver/gate"
-	"github.com/gucooing/hkrpg-go/gateserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger()
+	logger.InitLogger("gateserver" + "[" + alg.GetAppId() + "]")
 	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	done := make(chan os.Signal, 1)

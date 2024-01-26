@@ -4,7 +4,7 @@ import (
 	"net/smtp"
 
 	"github.com/gucooing/hkrpg-go/dispatch/config"
-	"github.com/gucooing/hkrpg-go/dispatch/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func EmailSend(mailaccount, code string) {

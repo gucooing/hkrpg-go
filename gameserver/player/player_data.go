@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -306,19 +306,6 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
 
 	g.Send(cmd.SetSignatureScRsp, rsp)
-}
-
-func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.PlayerHeartBeatCsReq, payloadMsg)
-	req := msg.(*proto.PlayerHeartbeatCsReq)
-
-	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
-	rsp.ClientTimeMs = req.ClientTimeMs
-
-	g.LastActiveTime = time.Now().Unix()
-
-	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }
 
 func (g *GamePlayer) TextJoinQueryCsReq() {

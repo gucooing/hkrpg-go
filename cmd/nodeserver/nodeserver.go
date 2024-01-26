@@ -7,8 +7,9 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
-	"github.com/gucooing/hkrpg-go/nodeserver/logger"
 	"github.com/gucooing/hkrpg-go/nodeserver/node"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func main() {
@@ -28,7 +29,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger()
+	logger.InitLogger("nodeserver" + "[" + alg.GetAppId() + "]")
 	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	cfg := config.GetConfig()

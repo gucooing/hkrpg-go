@@ -12,7 +12,8 @@ import (
 
 	"github.com/gucooing/hkrpg-go/dispatch"
 	"github.com/gucooing/hkrpg-go/dispatch/config"
-	"github.com/gucooing/hkrpg-go/dispatch/logger"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger()
+	logger.InitLogger("discord" + "[" + alg.GetAppId() + "]")
 	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 

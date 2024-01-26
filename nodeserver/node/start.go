@@ -5,8 +5,8 @@ import (
 	"net"
 
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
-	"github.com/gucooing/hkrpg-go/nodeserver/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )

@@ -11,8 +11,9 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/muipserver/config"
-	"github.com/gucooing/hkrpg-go/muipserver/logger"
 	"github.com/gucooing/hkrpg-go/muipserver/muip"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func main() {
@@ -32,7 +33,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger()
+	logger.InitLogger("muipserver" + "[" + alg.GetAppId() + "]")
 	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 

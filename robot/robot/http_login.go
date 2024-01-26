@@ -11,7 +11,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	"github.com/gucooing/hkrpg-go/robot/config"
-	"github.com/gucooing/hkrpg-go/robot/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	pb "google.golang.org/protobuf/proto"
 
 	"github.com/go-resty/resty/v2"

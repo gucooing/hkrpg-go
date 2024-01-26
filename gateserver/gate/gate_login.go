@@ -4,9 +4,10 @@ import (
 	"net"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
-	"github.com/gucooing/hkrpg-go/gateserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -152,22 +153,35 @@ func (s *GateServer) GetGameAppId() string {
 
 	for _, appId := range s.errGameAppId {
 		if gameAppId == appId {
-			gameAppId = s.GetMinGameAppId()
-			// delete(s.gameAll, appId)
+			gameAppId = s.GetMinGameAppId(appId)
 		}
 	}
 
 	return gameAppId
 }
 
-func (s *GateServer) GetMinGameAppId() string {
+func (s *GateServer) GetMinGameAppId(errAppId string) string {
 	var minNum uint64
 	var minAppId string
 	for _, game := range s.gameAll {
+		if game.appId == errAppId {
+			continue
+		}
 		if minAppId == "" || minNum > game.num {
 			minAppId = game.appId
 			minNum = game.num
 		}
 	}
 	return minAppId
+}
+
+func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
+	req := new(proto.PlayerHeartbeatCsReq)
+	pb.Unmarshal(payloadMsg, req)
+
+	rsp := new(proto.PlayerHeartbeatScRsp)
+	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
+	rsp.ClientTimeMs = req.ClientTimeMs
+
+	GateToPlayer(p, cmd.PlayerHeartBeatScRsp, rsp)
 }

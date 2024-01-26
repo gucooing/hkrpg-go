@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
-	"github.com/gucooing/hkrpg-go/gameserver/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 var CONF *GameDataConfig = nil

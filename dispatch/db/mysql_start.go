@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/dispatch/config"
-	"github.com/gucooing/hkrpg-go/dispatch/logger"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
