@@ -586,6 +586,55 @@ func (ServerType) EnumDescriptor() ([]byte, []int) {
 	return file_enum_server_proto_rawDescGZIP(), []int{7}
 }
 
+type PlayerOfflineReason int32
+
+const (
+	PlayerOfflineReason_OFFLINE_DRIVING    PlayerOfflineReason = 0
+	PlayerOfflineReason_OFFLINE_TIMEOUT    PlayerOfflineReason = 1
+	PlayerOfflineReason_OFFLINE_GAME_ERROR PlayerOfflineReason = 2
+)
+
+// Enum value maps for PlayerOfflineReason.
+var (
+	PlayerOfflineReason_name = map[int32]string{
+		0: "OFFLINE_DRIVING",
+		1: "OFFLINE_TIMEOUT",
+		2: "OFFLINE_GAME_ERROR",
+	}
+	PlayerOfflineReason_value = map[string]int32{
+		"OFFLINE_DRIVING":    0,
+		"OFFLINE_TIMEOUT":    1,
+		"OFFLINE_GAME_ERROR": 2,
+	}
+)
+
+func (x PlayerOfflineReason) Enum() *PlayerOfflineReason {
+	p := new(PlayerOfflineReason)
+	*p = x
+	return p
+}
+
+func (x PlayerOfflineReason) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (PlayerOfflineReason) Descriptor() protoreflect.EnumDescriptor {
+	return file_enum_server_proto_enumTypes[8].Descriptor()
+}
+
+func (PlayerOfflineReason) Type() protoreflect.EnumType {
+	return &file_enum_server_proto_enumTypes[8]
+}
+
+func (x PlayerOfflineReason) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use PlayerOfflineReason.Descriptor instead.
+func (PlayerOfflineReason) EnumDescriptor() ([]byte, []int) {
+	return file_enum_server_proto_rawDescGZIP(), []int{8}
+}
+
 var File_enum_server_proto protoreflect.FileDescriptor
 
 var file_enum_server_proto_rawDesc = []byte{
@@ -690,8 +739,14 @@ var file_enum_server_proto_rawDesc = []byte{
 	0x0a, 0x10, 0x53, 0x45, 0x52, 0x56, 0x49, 0x43, 0x45, 0x5f, 0x44, 0x49, 0x53, 0x50, 0x41, 0x54,
 	0x43, 0x48, 0x10, 0x04, 0x12, 0x11, 0x0a, 0x0d, 0x53, 0x45, 0x52, 0x56, 0x49, 0x43, 0x45, 0x5f,
 	0x4d, 0x55, 0x4c, 0x54, 0x49, 0x10, 0x05, 0x12, 0x10, 0x0a, 0x0c, 0x53, 0x45, 0x52, 0x56, 0x49,
-	0x43, 0x45, 0x5f, 0x4d, 0x55, 0x49, 0x50, 0x10, 0x06, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x43, 0x45, 0x5f, 0x4d, 0x55, 0x49, 0x50, 0x10, 0x06, 0x2a, 0x57, 0x0a, 0x13, 0x50, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x4f, 0x66, 0x66, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x61, 0x73, 0x6f, 0x6e,
+	0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x46, 0x46, 0x4c, 0x49, 0x4e, 0x45, 0x5f, 0x44, 0x52, 0x49, 0x56,
+	0x49, 0x4e, 0x47, 0x10, 0x00, 0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x46, 0x46, 0x4c, 0x49, 0x4e, 0x45,
+	0x5f, 0x54, 0x49, 0x4d, 0x45, 0x4f, 0x55, 0x54, 0x10, 0x01, 0x12, 0x16, 0x0a, 0x12, 0x4f, 0x46,
+	0x46, 0x4c, 0x49, 0x4e, 0x45, 0x5f, 0x47, 0x41, 0x4d, 0x45, 0x5f, 0x45, 0x52, 0x52, 0x4f, 0x52,
+	0x10, 0x02, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -706,16 +761,17 @@ func file_enum_server_proto_rawDescGZIP() []byte {
 	return file_enum_server_proto_rawDescData
 }
 
-var file_enum_server_proto_enumTypes = make([]protoimpl.EnumInfo, 8)
+var file_enum_server_proto_enumTypes = make([]protoimpl.EnumInfo, 9)
 var file_enum_server_proto_goTypes = []interface{}{
-	(Gender)(0),          // 0: proto.Gender
-	(HeroBasicType)(0),   // 1: proto.HeroBasicType
-	(AvatarType)(0),      // 2: proto.AvatarType
-	(ExtraLineupType)(0), // 3: proto.ExtraLineupType
-	(BattleType)(0),      // 4: proto.BattleType
-	(LanguageType)(0),    // 5: proto.LanguageType
-	(PlatformType)(0),    // 6: proto.PlatformType
-	(ServerType)(0),      // 7: proto.ServerType
+	(Gender)(0),              // 0: proto.Gender
+	(HeroBasicType)(0),       // 1: proto.HeroBasicType
+	(AvatarType)(0),          // 2: proto.AvatarType
+	(ExtraLineupType)(0),     // 3: proto.ExtraLineupType
+	(BattleType)(0),          // 4: proto.BattleType
+	(LanguageType)(0),        // 5: proto.LanguageType
+	(PlatformType)(0),        // 6: proto.PlatformType
+	(ServerType)(0),          // 7: proto.ServerType
+	(PlayerOfflineReason)(0), // 8: proto.PlayerOfflineReason
 }
 var file_enum_server_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -735,7 +791,7 @@ func file_enum_server_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_enum_server_proto_rawDesc,
-			NumEnums:      8,
+			NumEnums:      9,
 			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   0,
