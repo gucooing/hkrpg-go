@@ -17,6 +17,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 const (
@@ -44,14 +45,16 @@ type GateServer struct {
 }
 
 type PlayerGame struct {
-	GameAppId string
-	IsToken   bool // 是否通过token验证
-	Uid       uint32
-	Seed      uint64
-	XorKey    []byte // 密钥
-	KcpConn   *kcp.UDPSession
-	GameConn  net.Conn
-	IsConnect bool
+	GameAppId           string
+	IsToken             bool // 是否通过token验证
+	Uid                 uint32
+	Seed                uint64
+	XorKey              []byte // 密钥
+	KcpConn             *kcp.UDPSession
+	GameConn            net.Conn
+	IsConnect           bool
+	PlayerOfflineReason spb.PlayerOfflineReason
+	LastActiveTime      int64 // 最近一次的活跃时间
 }
 
 type KcpEvent struct {
@@ -171,6 +174,7 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 				if msg.CmdId == cmd.PlayerGetTokenCsReq {
 					s.HandlePlayerGetTokenCsReq(p, msg.ProtoData)
 				} else {
+					p.KcpConn.Close()
 					return
 				}
 			}

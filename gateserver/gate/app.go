@@ -1,8 +1,10 @@
 package gate
 
 import (
-	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -31,32 +33,18 @@ func (p *PlayerGame) sendGame(cmdId uint16, playerMsg pb.Message) {
 // 从game接收消息
 func (p *PlayerGame) recvGame() {
 	nodeMsg := make([]byte, PacketMaxLen)
-	// p.IsConnect = true
 
 	for {
 		var bin []byte = nil
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
 			p.IsConnect = false
-			logger.Debug("exit recv loop, conn read err: %v", err)
-			// KickPlayer(p)
-			//  下面是切gs
-			GAMESERVER.errGameAppId = append(GAMESERVER.errGameAppId, p.GameAppId)
-			gameAppId := GAMESERVER.GetGameAppId()
-			game := GAMESERVER.gameAll[gameAppId]
-			if gameAppId == "" || game == nil {
-				logger.Error("game未启动")
+			logger.Debug("exit recv loop, conn read err: %s", err.Error())
+			if p.PlayerOfflineReason == spb.PlayerOfflineReason_OFFLINE_GAME_ERROR {
+				p.SwitchGame()
 				return
 			}
-			p.NewGame(game.addr)
-			p.GameAppId = game.appId
-			gamereq := &spb.PlayerLoginReq{
-				PlayerUid: p.Uid,
-				AppId:     GAMESERVER.gameAppId,
-			}
-			p.sendGame(cmd.PlayerLoginReq, gamereq)
-			p.recvGame()
-			// 为止
+			KickPlayer(p)
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -67,6 +55,29 @@ func (p *PlayerGame) recvGame() {
 			p.GameRegisterMessage(msg.CmdId, playerMsg)
 		}
 	}
+}
+
+func (p *PlayerGame) SwitchGame() {
+	GAMESERVER.errGameAppId = append(GAMESERVER.errGameAppId, p.GameAppId)
+	gameAppId := GAMESERVER.GetGameAppId()
+	game := GAMESERVER.gameAll[gameAppId]
+	if gameAppId == "" || game == nil {
+		logger.Error("GameServer未启动,5s后重启申请连接GameServer")
+		time.Sleep(time.Second * 5)
+		p.SwitchGame()
+		return
+	}
+	p.NewGame(game.addr)
+	p.GameAppId = game.appId
+	gamereq := &spb.PlayerLoginReq{
+		PlayerUid: p.Uid,
+		AppId:     GAMESERVER.gameAppId,
+	}
+	p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GAME_ERROR
+	logger.Info("[UID:%v]切换GameServer目标GameServer:%v", p.Uid, p.GameAppId)
+	p.sendGame(cmd.PlayerLoginReq, gamereq)
+	GAMESERVER.sendNode(cmd.PlayerLoginReq, gamereq)
+	p.recvGame()
 }
 
 // 将玩家消息转发到game

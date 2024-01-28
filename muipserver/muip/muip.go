@@ -5,18 +5,24 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/muipserver/config"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 var MUIP *Muip
 
 type Muip struct {
-	Config   *config.Config
-	AppId    string
-	Port     string
-	NodeConn net.Conn
-	Router   *gin.Engine
+	Config     *config.Config
+	AppId      string
+	Port       string
+	NodeConn   net.Conn
+	Router     *gin.Engine
+	AllService map[string][]*AllService
+}
+
+type AllService struct {
+	AppId     string
+	PlayerNum uint64
 }
 
 func NewMuip(cfg *config.Config) *Muip {
@@ -38,6 +44,7 @@ func NewMuip(cfg *config.Config) *Muip {
 		return nil
 	}
 	s.NodeConn = tcpConn
+	s.AllService = make(map[string][]*AllService)
 	go s.RecvNode()
 	// 向node注册
 	s.Connection()

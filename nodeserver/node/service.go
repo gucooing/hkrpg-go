@@ -84,7 +84,12 @@ func (s *Service) GetServerOuterAddrReq(serviceMsg pb.Message) {
 
 func (s *Service) GetAllServiceReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GetAllServiceReq)
-	if req.ServiceType == spb.ServerType_SERVICE_NONE || req.GetServiceType_ == spb.ServerType_SERVICE_NONE {
+	if req.ServiceType == spb.ServerType_SERVICE_NONE {
+		return
+	}
+	switch req.ServiceType {
+	case spb.ServerType_SERVICE_MUIP:
+		s.MuipGetAllServiceReq()
 		return
 	}
 	rsp := &spb.GetAllServiceRsp{
@@ -98,7 +103,27 @@ func (s *Service) GetAllServiceReq(serviceMsg pb.Message) {
 			PlayerNum:   service.PlayerNum,
 			AppId:       service.AppId,
 		}
-		rsp.ServiceList = append(rsp.ServiceList,serviceList)
+		rsp.ServiceList = append(rsp.ServiceList, serviceList)
+	}
+
+	s.sendHandle(cmd.GetAllServiceRsp, rsp)
+}
+
+func (s *Service) MuipGetAllServiceReq() {
+	rsp := &spb.GetAllServiceRsp{
+		ServiceType: spb.ServerType_SERVICE_MUIP,
+		ServiceList: make([]*spb.ServiceAll, 0),
+	}
+	for _, serviceList := range NODE.MapService {
+		for _, service := range serviceList {
+			serviceLists := &spb.ServiceAll{
+				ServiceType: service.ServerType,
+				Addr:        service.Addr + ":" + service.Port,
+				PlayerNum:   service.PlayerNum,
+				AppId:       service.AppId,
+			}
+			rsp.ServiceList = append(rsp.ServiceList, serviceLists)
+		}
 	}
 
 	s.sendHandle(cmd.GetAllServiceRsp, rsp)
@@ -117,7 +142,7 @@ func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 	} else {
 		// 发送重复登录下线通知
 		if s.ServerType == spb.ServerType_SERVICE_GATE {
-			// 旧gate服务玩家数减少
+			// 旧game服务玩家数减少
 			NODE.PlayerMap[req.PlayerUid].PlayerNum--
 			// 只有gate的登录注册包需要发重复登录下线通知
 		}
@@ -128,7 +153,7 @@ func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 	NODE.MapService[spb.ServerType_SERVICE_GAME][req.AppId].PlayerNum++
 	// 目标gate添加玩家数
 	s.PlayerNum++
-	logger.Info("玩家UID:%v登录", req.PlayerUid)
+	logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
 
 	s.sendHandle(cmd.PlayerLoginRsp, rsp)
 }
@@ -142,13 +167,15 @@ func (s *Service) PlayerLogoutReq(serviceMsg pb.Message) {
 	if NODE.PlayerMap[req.PlayerUid] == nil {
 		return
 	}
+	logger.Info("[UID:%v]离线目标GameServer:%v", req.PlayerUid, NODE.PlayerMap[req.PlayerUid].AppId)
+	// 通知game玩家离线
+	NODE.PlayerMap[req.PlayerUid].sendHandle(cmd.PlayerLogoutReq, serviceMsg)
 	// 减少gate人数
 	s.PlayerNum--
 	// 减少game人数
 	NODE.PlayerMap[req.PlayerUid].PlayerNum--
 	// 删除玩家
 	delete(NODE.PlayerMap, req.PlayerUid)
-	logger.Info("玩家UID:%v离线", req.PlayerUid)
 }
 
 func (s *Service) GmGive(serviceMsg pb.Message) {

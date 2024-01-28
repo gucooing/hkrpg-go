@@ -3,8 +3,8 @@ package muip
 import (
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -18,8 +18,8 @@ func (s *Muip) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp: // 注册回包
 		s.ServiceConnectionRsp(serviceMsg)
-	case cmd.GetServerOuterAddrRsp: // 心跳包
-		s.GetServerOuterAddrRsp(serviceMsg)
+	case cmd.GetAllServiceRsp: // 心跳包
+		s.GetAllServiceRsp(serviceMsg)
 	default:
 
 	}
@@ -34,6 +34,7 @@ func (s *Muip) RecvNode() {
 		recvLen, err := s.NodeConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
+			panic("node error")
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -81,24 +82,33 @@ func (s *Muip) ServiceConnectionRsp(serviceMsg pb.Message) {
 		logger.Info("已向node注册成功！")
 	}
 	// 获取game地址/心跳包
-	go s.GetServerOuterAddrReq()
+	go s.GetAllServiceReq()
 }
 
-func (s *Muip) GetServerOuterAddrReq() {
+func (s *Muip) GetAllServiceReq() {
 	// 心跳包
 	for {
-		req := &spb.GetServerOuterAddrReq{
-			ServerType: spb.ServerType_SERVICE_MUIP,
-			AppId:      s.AppId,
+		req := &spb.GetAllServiceReq{
+			ServiceType: spb.ServerType_SERVICE_MUIP,
 		}
-		s.SendNode(cmd.GetServerOuterAddrReq, req)
+		s.SendNode(cmd.GetAllServiceReq, req)
 		time.Sleep(time.Second * 5)
 	}
 }
 
-func (s *Muip) GetServerOuterAddrRsp(serviceMsg pb.Message) {
-	rsp := serviceMsg.(*spb.GetServerOuterAddrRsp)
-	if rsp.ServerType != spb.ServerType_SERVICE_MUIP {
+func (s *Muip) GetAllServiceRsp(serviceMsg pb.Message) {
+	rsp := serviceMsg.(*spb.GetAllServiceRsp)
+	if rsp.ServiceType != spb.ServerType_SERVICE_MUIP {
 		return
 	}
+	allService := make(map[string][]*AllService)
+
+	for _, service := range rsp.ServiceList {
+		allService[service.ServiceType.String()] = append(allService[service.ServiceType.String()], &AllService{
+			AppId:     service.AppId,
+			PlayerNum: service.PlayerNum,
+		})
+	}
+
+	s.AllService = allService
 }

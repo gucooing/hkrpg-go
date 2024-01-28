@@ -3,8 +3,8 @@ package gate
 import (
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -48,6 +48,7 @@ func (s *GateServer) recvNode() {
 		recvLen, err := s.nodeConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
+			panic("node error")
 			return
 		}
 		bin = nodeMsg[:recvLen]

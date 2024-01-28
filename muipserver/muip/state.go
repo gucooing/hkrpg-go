@@ -1,6 +1,8 @@
 package muip
 
 import (
+	"encoding/json"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,9 +11,8 @@ var (
 )
 
 func State(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"在线玩家": 6,
-	})
+	rsp, _ := json.Marshal(MUIP.AllService)
+	c.String(200, string(rsp))
 }
 
 func GetPlayer(c *gin.Context) {

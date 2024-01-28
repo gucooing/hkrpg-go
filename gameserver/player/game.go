@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gameserver/db"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -84,6 +84,7 @@ func (g *GamePlayer) KickPlayer() {
 		1.保存数据到数据库
 		2.断开gate-game连接
 	*/
+	logger.Info("[UID%v]玩家离线", g.Uid)
 	UpDataPlayer(g)
 	g.GateConn.Close()
 }
