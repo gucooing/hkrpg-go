@@ -1,7 +1,9 @@
 package dispatch
 
 import (
+	"log"
 	"net"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/dispatch/config"
@@ -19,14 +21,15 @@ func NewServer(cfg *config.Config) *sdk.Server {
 	logger.Info("Dispatch AppId:%s", s.AppId)
 	port := s.Config.AppList[s.AppId].App["port_http"].Port
 	if port == "" {
-		panic("Dispatch Port error")
+		log.Println("Dispatch Port error")
+		os.Exit(0)
 	}
 	s.Port = port
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
-		panic(err.Error())
-		return nil
+		log.Println("nodeserver error")
+		os.Exit(0)
 	}
 	s.NodeConn = tcpConn
 	go s.RecvNode()

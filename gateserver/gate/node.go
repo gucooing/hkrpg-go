@@ -114,3 +114,15 @@ func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {
 	s.gameAppId = minGameAppId
 	s.errGameAppId = make([]string, 0)
 }
+
+func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLogoutNotify)
+	if req.PlayerUid == 0 {
+		return
+	}
+	logger.Info("[UID:%v]离线", req.PlayerUid)
+	GAMESERVER.sessionMap[req.PlayerUid].PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
+	GAMESERVER.sessionMap[req.PlayerUid].KcpConn.Close()
+	GAMESERVER.sessionMap[req.PlayerUid].GameConn.Close()
+	delete(GAMESERVER.sessionMap, req.PlayerUid)
+}

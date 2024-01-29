@@ -143,14 +143,21 @@ func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 		// 发送重复登录下线通知
 		if s.ServerType == spb.ServerType_SERVICE_GATE {
 			// 旧game服务玩家数减少
-			NODE.PlayerMap[req.PlayerUid].PlayerNum--
-			// 只有gate的登录注册包需要发重复登录下线通知
+			GetPlayerGame(req.PlayerUid).PlayerNum--
+			// 通知旧gate玩家下线
+			notify := &spb.PlayerLogoutNotify{
+				PlayerUid: req.PlayerUid,
+			}
+			GetPlayerGate(req.PlayerUid).sendHandle(cmd.PlayerLogoutNotify, notify)
 		}
 	}
 	// 添加在线玩家列表到map/game
-	NODE.PlayerMap[req.PlayerUid] = NODE.MapService[spb.ServerType_SERVICE_GAME][req.AppId]
+	NODE.PlayerMap[req.PlayerUid] = &PlayerService{
+		GateAppId: s.AppId,
+		GameAppId: req.AppId,
+	}
 	// 目标game添加玩家数
-	NODE.MapService[spb.ServerType_SERVICE_GAME][req.AppId].PlayerNum++
+	GetPlayerGame(req.PlayerUid).PlayerNum++
 	// 目标gate添加玩家数
 	s.PlayerNum++
 	logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
@@ -161,19 +168,16 @@ func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 // 注意！只有gate能发离线通知包
 func (s *Service) PlayerLogoutReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutReq)
-	if req.PlayerUid == 0 {
+	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
 		return
 	}
-	if NODE.PlayerMap[req.PlayerUid] == nil {
-		return
-	}
-	logger.Info("[UID:%v]离线目标GameServer:%v", req.PlayerUid, NODE.PlayerMap[req.PlayerUid].AppId)
+	logger.Info("[UID:%v]离线目标GameServer:%v", req.PlayerUid, NODE.PlayerMap[req.PlayerUid].GameAppId)
 	// 通知game玩家离线
-	NODE.PlayerMap[req.PlayerUid].sendHandle(cmd.PlayerLogoutReq, serviceMsg)
+	GetPlayerGame(req.PlayerUid).sendHandle(cmd.PlayerLogoutReq, serviceMsg)
 	// 减少gate人数
 	s.PlayerNum--
 	// 减少game人数
-	NODE.PlayerMap[req.PlayerUid].PlayerNum--
+	GetPlayerGame(req.PlayerUid).PlayerNum--
 	// 删除玩家
 	delete(NODE.PlayerMap, req.PlayerUid)
 }
@@ -183,7 +187,7 @@ func (s *Service) GmGive(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
 		return
 	}
-	NODE.PlayerMap[req.PlayerUid].sendHandle(cmd.GmGive, serviceMsg)
+	GetPlayerGame(req.PlayerUid).sendHandle(cmd.GmGive, serviceMsg)
 }
 
 func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
@@ -191,5 +195,5 @@ func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
 		return
 	}
-	NODE.PlayerMap[req.PlayerUid].sendHandle(cmd.GmWorldLevel, serviceMsg)
+	GetPlayerGame(req.PlayerUid).sendHandle(cmd.GmWorldLevel, serviceMsg)
 }

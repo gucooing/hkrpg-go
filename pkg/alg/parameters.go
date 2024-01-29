@@ -1,6 +1,7 @@
 package alg
 
 import (
+	"log"
 	"os"
 )
 
@@ -15,7 +16,8 @@ func GetAppId() string {
 		}
 	}
 	if appId == "" {
-		panic("AppId error")
+		log.Println("AppId error")
+		os.Exit(0)
 	}
 	return appId
 }

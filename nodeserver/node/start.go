@@ -2,7 +2,9 @@ package node
 
 import (
 	"bufio"
+	"log"
 	"net"
+	"os"
 
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -22,7 +24,7 @@ type Node struct {
 	Port       string
 	Config     *config.Config
 	MapService map[spb.ServerType]map[string]*Service
-	PlayerMap  map[uint32]*Service
+	PlayerMap  map[uint32]*PlayerService // [uid][gateAppId][GameAppId]
 }
 
 type Service struct {
@@ -34,6 +36,25 @@ type Service struct {
 	PlayerNum  uint64
 }
 
+type PlayerService struct {
+	GateAppId string
+	GameAppId string
+}
+
+func GetPlayerGame(uid uint32) *Service {
+	if NODE.PlayerMap[uid] == nil {
+		return nil
+	}
+	return NODE.MapService[spb.ServerType_SERVICE_GAME][NODE.PlayerMap[uid].GameAppId]
+}
+
+func GetPlayerGate(uid uint32) *Service {
+	if NODE.PlayerMap[uid] == nil {
+		return nil
+	}
+	return NODE.MapService[spb.ServerType_SERVICE_GATE][NODE.PlayerMap[uid].GateAppId]
+}
+
 func NewNode(cfg *config.Config) *Node {
 	NODE = new(Node)
 	NODE.Config = cfg
@@ -41,11 +62,12 @@ func NewNode(cfg *config.Config) *Node {
 	logger.Info("NodeServer AppId:%s", NODE.AppId)
 	port := NODE.Config.AppList[NODE.AppId].App["port_service"].Port
 	if port == "" {
-		panic("Node port error")
+		log.Println("Node port error")
+		os.Exit(0)
 	}
 	NODE.Port = port
 	NODE.MapService = GetMapService()
-	NODE.PlayerMap = make(map[uint32]*Service)
+	NODE.PlayerMap = make(map[uint32]*PlayerService)
 	return NODE
 }
 
@@ -68,7 +90,7 @@ func (n *Node) NewNode() {
 	listen, err := net.Listen("tcp", "localhost:"+n.Port)
 	if err != nil {
 		logger.Error("NodeServer监听失败:%s", err.Error())
-		return
+		os.Exit(0)
 	}
 	defer listen.Close()
 

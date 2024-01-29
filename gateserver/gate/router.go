@@ -14,6 +14,8 @@ func (s *GateServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.ServiceConnectionRsp(serviceMsg)
 	case cmd.GetAllServiceRsp:
 		s.GetAllServiceRsp(serviceMsg)
+	case cmd.PlayerLogoutNotify:
+		s.PlayerLogoutNotify(serviceMsg)
 	default:
 
 	}
@@ -40,6 +42,7 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
 		GAMESERVER.sendNode(cmd.PlayerLogoutReq, req)
 		p.KcpConn.Close()
+		p.GameConn.Close()
 		delete(GAMESERVER.sessionMap, p.Uid)
 	case cmd.PlayerLoginCsReq:
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GAME_ERROR

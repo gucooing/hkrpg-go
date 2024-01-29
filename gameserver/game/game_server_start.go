@@ -1,7 +1,9 @@
 package game
 
 import (
+	"log"
 	"net"
+	"os"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
@@ -34,21 +36,22 @@ func NewGameServer(cfg *config.Config) *GameServer {
 	logger.Info("GameServer AppId:%s", s.AppId)
 	port := s.Config.AppList[s.AppId].App["port_gt"].Port
 	if port == "" {
-		panic("GameServer Port error")
+		log.Println("GameServer Port error")
+		os.Exit(0)
 	}
 	s.Port = port
 	addr := "0.0.0.0:" + port
 	gSListener, err := net.Listen("tcp", addr)
 	if err != nil {
-		panic(err.Error())
-		return nil
+		log.Println(err.Error())
+		os.Exit(0)
 	}
 	s.GSListener = gSListener
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
-		panic(err.Error())
-		return nil
+		log.Println("nodeserver error")
+		os.Exit(0)
 	}
 	s.nodeConn = tcpConn
 	s.PlayerMap = make(map[uint32]*player.GamePlayer)

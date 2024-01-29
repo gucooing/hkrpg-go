@@ -6,7 +6,9 @@ package gate
 
 import (
 	"encoding/binary"
+	"log"
 	"net"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -82,22 +84,23 @@ func NewGate(cfg *config.Config) *GateServer {
 	logger.Info("GateServer AppId:%s", s.AppId)
 	port := s.Config.AppList[s.AppId].App["port_player"].Port
 	if port == "" {
-		panic("GateServer Port error")
+		log.Println("GateServer Port error")
+		os.Exit(0)
 	}
 	s.Port = port
 
 	addr := "0.0.0.0:" + s.Port
 	kcpListener, err := kcp.ListenWithOptions(addr)
 	if err != nil {
-		logger.Error("listen kcp err: %v", err)
-		return nil
+		log.Printf("listen kcp err: %v\n", err)
+		os.Exit(0)
 	}
 	s.kcpListener = kcpListener
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
-		logger.Error("node error:", err)
-		return nil
+		log.Printf("nodeserver error:%s\n", err.Error())
+		os.Exit(0)
 	}
 	s.nodeConn = tcpConn
 	s.gameAll = make(map[string]*serviceGame)

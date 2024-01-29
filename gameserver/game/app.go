@@ -87,6 +87,18 @@ func (s *GameServer) GetAllServiceReq() {
 // 从gate接收消息
 func (s *GameServer) recvGate(g *player.GamePlayer) {
 	nodeMsg := make([]byte, player.PacketMaxLen)
+
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GATE MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			logger.Error("the motherfucker player uid: %v", g.Uid)
+			g.KickPlayer()
+		}
+	}()
+
 	for {
 		var bin []byte = nil
 		recvLen, err := g.GateConn.Read(nodeMsg)
