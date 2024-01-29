@@ -28,8 +28,6 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		g.HandlePlayerLoginCsReq(payloadMsg) // 玩家登录请求 第二个登录包
 	case cmd.PlayerLoginFinishCsReq:
 		g.HandlePlayerLoginFinishCsReq(payloadMsg) // 登录完成包
-	case cmd.PlayerLogoutCsReq:
-		g.PlayerLogoutCsReq() // 客户端退出游戏通知
 	// 队伍
 	case cmd.GetAllLineupDataCsReq:
 		g.HandleGetAllLineupDataCsReq(payloadMsg) // 获取队伍信息请求

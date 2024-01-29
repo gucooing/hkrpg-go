@@ -88,8 +88,3 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.SyncClientResVersionScRsp, rsp)
 }
-
-// 账号离线
-func (g *GamePlayer) PlayerLogoutCsReq() {
-	g.KickPlayer()
-}

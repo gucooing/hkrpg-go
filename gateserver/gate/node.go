@@ -121,7 +121,7 @@ func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {
 		return
 	}
 	logger.Info("[UID:%v]离线", req.PlayerUid)
-	GAMESERVER.sessionMap[req.PlayerUid].PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
+	GAMESERVER.sessionMap[req.PlayerUid].PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN
 	GAMESERVER.sessionMap[req.PlayerUid].KcpConn.Close()
 	GAMESERVER.sessionMap[req.PlayerUid].GameConn.Close()
 	delete(GAMESERVER.sessionMap, req.PlayerUid)

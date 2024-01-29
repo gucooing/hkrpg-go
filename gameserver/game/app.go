@@ -104,6 +104,7 @@ func (s *GameServer) recvGate(g *player.GamePlayer) {
 		recvLen, err := g.GateConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
+			g.KickPlayer()
 			return
 		}
 		bin = nodeMsg[:recvLen]
