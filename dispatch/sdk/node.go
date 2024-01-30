@@ -1,6 +1,8 @@
 package sdk
 
 import (
+	"log"
+	"os"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -33,9 +35,8 @@ func (s *Server) RecvNode() {
 		var bin []byte = nil
 		recvLen, err := s.NodeConn.Read(nodeMsg)
 		if err != nil {
-			logger.Debug("exit recv loop, conn read err: %v", err)
-			panic("node error")
-			return
+			log.Println("node error")
+			os.Exit(0)
 		}
 		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)

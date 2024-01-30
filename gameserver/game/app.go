@@ -1,8 +1,12 @@
 package game
 
 import (
+	"encoding/json"
+	"log"
+	"os"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -27,13 +31,23 @@ func (s *GameServer) Connection() {
 func (s *GameServer) recvNode() {
 	nodeMsg := make([]byte, player.PacketMaxLen)
 
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GAMESERVER MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			Close()
+			os.Exit(0)
+		}
+	}()
+
 	for {
 		var bin []byte = nil
 		recvLen, err := s.nodeConn.Read(nodeMsg)
 		if err != nil {
-			logger.Debug("exit recv loop, conn read err: %v", err)
-			panic("node error")
-			return
+			log.Println("node error")
+			os.Exit(0)
 		}
 		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)
@@ -95,7 +109,7 @@ func (s *GameServer) recvGate(g *player.GamePlayer) {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			logger.Error("the motherfucker player uid: %v", g.Uid)
-			g.KickPlayer()
+			KickPlayer(g)
 		}
 	}()
 
@@ -104,7 +118,7 @@ func (s *GameServer) recvGate(g *player.GamePlayer) {
 		recvLen, err := g.GateConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
-			g.KickPlayer()
+			KickPlayer(g)
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -131,10 +145,29 @@ func (s *GameServer) PlayerLoginReq(g *player.GamePlayer, payloadMsg pb.Message)
 	if req.PlayerUid == 0 {
 		return
 	}
+	if s.PlayerMap[req.PlayerUid] != nil {
+		KickPlayer(s.PlayerMap[req.PlayerUid])
+	}
 	logger.Info("[UID:%v]玩家登录gs", req.PlayerUid)
-	s.PlayerMap[req.PlayerUid] = g
 	g.Uid = req.PlayerUid
+	s.PlayerMap[req.PlayerUid] = g
+	// 拉取账户数据
 	g.GetPlayerDate()
+	if s.PlayerMap[req.PlayerUid].Player == nil {
+		s.PlayerMap[req.PlayerUid].Player = &player.PlayerData{
+			Battle: make(map[uint32]*player.Battle),
+			BattleState: &player.BattleState{
+				ChallengeState: &player.ChallengeState{},
+			},
+		}
+	}
+	// 异步向node同步在线数据
+	go func() {
+		pdsm := &spb.SyncPlayerOnlineDataNotify{
+			PlayerUid: g.Uid,
+		}
+		s.sendNode(cmd.SyncPlayerOnlineDataNotify, pdsm)
+	}()
 
 	rsp := &spb.PlayerLoginRsp{PlayerUid: req.PlayerUid}
 	g.SendGate(cmd.PlayerLoginRsp, rsp)
@@ -148,4 +181,52 @@ func (s *GameServer) PlayerToGameByGateReq(g *player.GamePlayer, payloadMsg pb.M
 	for _, msg := range playerMsgList {
 		g.RegisterMessage(msg.CmdId, msg.ProtoData)
 	}
+}
+
+func KickPlayer(g *player.GamePlayer) {
+	/*
+		TODO
+		1.保存数据到数据库
+		2.断开gate-game连接
+	*/
+	logger.Debug("[UID:%v]玩家离线", g.Uid)
+	GAMESERVER.SyncPlayerDate(g)
+	UpDataPlayer(g)
+	g.GateConn.Close()
+	delete(GAMESERVER.PlayerMap, g.Uid)
+}
+
+func UpDataPlayer(g *player.GamePlayer) error {
+	var err error
+	if g.PlayerPb == nil {
+		return nil
+	}
+	if g.Uid == 0 {
+		return nil
+	}
+	dbDate := new(db.Player)
+	dbDate.AccountUid = g.Uid
+
+	dbDate.PlayerDataPb, err = pb.Marshal(g.PlayerPb)
+	if err != nil {
+		logger.Error("pb marshal error: %v", err)
+	}
+
+	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
+		logger.Error("Update Player error")
+		return err
+	}
+
+	logger.Debug("数据库账号:%v 数据更新", g.Uid)
+	return nil
+}
+
+func (s *GameServer) SyncPlayerDate(g *player.GamePlayer) {
+	playerBin, _ := json.Marshal(g.Player)
+	pdsm := &spb.SyncPlayerOnlineDataNotify{
+		PlayerUid:        g.Uid,
+		PlayerOnlineData: playerBin,
+	}
+	s.sendNode(cmd.SyncPlayerOnlineDataNotify, pdsm)
+	logger.Debug("[UID:%v]在线数据已同步到node", g.Uid)
 }

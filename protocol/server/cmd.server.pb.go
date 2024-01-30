@@ -822,6 +822,61 @@ func (x *PlayerLogoutNotify) GetPlayerUid() uint32 {
 	return 0
 }
 
+type SyncPlayerOnlineDataNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PlayerUid        uint32 `protobuf:"varint,1,opt,name=player_uid,json=playerUid,proto3" json:"player_uid,omitempty"`
+	PlayerOnlineData []byte `protobuf:"bytes,2,opt,name=player_online_data,json=playerOnlineData,proto3" json:"player_online_data,omitempty"`
+}
+
+func (x *SyncPlayerOnlineDataNotify) Reset() {
+	*x = SyncPlayerOnlineDataNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SyncPlayerOnlineDataNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SyncPlayerOnlineDataNotify) ProtoMessage() {}
+
+func (x *SyncPlayerOnlineDataNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SyncPlayerOnlineDataNotify.ProtoReflect.Descriptor instead.
+func (*SyncPlayerOnlineDataNotify) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *SyncPlayerOnlineDataNotify) GetPlayerUid() uint32 {
+	if x != nil {
+		return x.PlayerUid
+	}
+	return 0
+}
+
+func (x *SyncPlayerOnlineDataNotify) GetPlayerOnlineData() []byte {
+	if x != nil {
+		return x.PlayerOnlineData
+	}
+	return nil
+}
+
 var File_cmd_server_proto protoreflect.FileDescriptor
 
 var file_cmd_server_proto_rawDesc = []byte{
@@ -915,8 +970,15 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x12, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x4e, 0x6f, 0x74,
 	0x69, 0x66, 0x79, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x75, 0x69,
 	0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x55,
-	0x69, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x64, 0x22, 0x69, 0x0a, 0x1a, 0x53, 0x79, 0x6e, 0x63, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x4f, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x44, 0x61, 0x74, 0x61, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79,
+	0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x55, 0x69, 0x64, 0x12,
+	0x2c, 0x0a, 0x12, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x6f, 0x6e, 0x6c, 0x69, 0x6e, 0x65,
+	0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x70, 0x6c, 0x61,
+	0x79, 0x65, 0x72, 0x4f, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x44, 0x61, 0x74, 0x61, 0x42, 0x0a, 0x5a,
+	0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -931,34 +993,35 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 15)
 var file_cmd_server_proto_goTypes = []interface{}{
-	(*ServiceConnectionReq)(nil),  // 0: proto.ServiceConnectionReq
-	(*ServiceConnectionRsp)(nil),  // 1: proto.ServiceConnectionRsp
-	(*PlayerLoginReq)(nil),        // 2: proto.PlayerLoginReq
-	(*PlayerLoginRsp)(nil),        // 3: proto.PlayerLoginRsp
-	(*PlayerLogoutReq)(nil),       // 4: proto.PlayerLogoutReq
-	(*PlayerLogoutRsp)(nil),       // 5: proto.PlayerLogoutRsp
-	(*PlayerToGameByGateReq)(nil), // 6: proto.PlayerToGameByGateReq
-	(*PlayerToGameByGateRsp)(nil), // 7: proto.PlayerToGameByGateRsp
-	(*GetServerOuterAddrReq)(nil), // 8: proto.GetServerOuterAddrReq
-	(*GetServerOuterAddrRsp)(nil), // 9: proto.GetServerOuterAddrRsp
-	(*GetAllServiceReq)(nil),      // 10: proto.GetAllServiceReq
-	(*GetAllServiceRsp)(nil),      // 11: proto.GetAllServiceRsp
-	(*ServiceAll)(nil),            // 12: proto.ServiceAll
-	(*PlayerLogoutNotify)(nil),    // 13: proto.PlayerLogoutNotify
-	(ServerType)(0),               // 14: proto.ServerType
+	(*ServiceConnectionReq)(nil),       // 0: proto.ServiceConnectionReq
+	(*ServiceConnectionRsp)(nil),       // 1: proto.ServiceConnectionRsp
+	(*PlayerLoginReq)(nil),             // 2: proto.PlayerLoginReq
+	(*PlayerLoginRsp)(nil),             // 3: proto.PlayerLoginRsp
+	(*PlayerLogoutReq)(nil),            // 4: proto.PlayerLogoutReq
+	(*PlayerLogoutRsp)(nil),            // 5: proto.PlayerLogoutRsp
+	(*PlayerToGameByGateReq)(nil),      // 6: proto.PlayerToGameByGateReq
+	(*PlayerToGameByGateRsp)(nil),      // 7: proto.PlayerToGameByGateRsp
+	(*GetServerOuterAddrReq)(nil),      // 8: proto.GetServerOuterAddrReq
+	(*GetServerOuterAddrRsp)(nil),      // 9: proto.GetServerOuterAddrRsp
+	(*GetAllServiceReq)(nil),           // 10: proto.GetAllServiceReq
+	(*GetAllServiceRsp)(nil),           // 11: proto.GetAllServiceRsp
+	(*ServiceAll)(nil),                 // 12: proto.ServiceAll
+	(*PlayerLogoutNotify)(nil),         // 13: proto.PlayerLogoutNotify
+	(*SyncPlayerOnlineDataNotify)(nil), // 14: proto.SyncPlayerOnlineDataNotify
+	(ServerType)(0),                    // 15: proto.ServerType
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	14, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	14, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	14, // 2: proto.GetServerOuterAddrReq.server_type:type_name -> proto.ServerType
-	14, // 3: proto.GetServerOuterAddrRsp.server_type:type_name -> proto.ServerType
-	14, // 4: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
-	14, // 5: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
-	14, // 6: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
+	15, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	15, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	15, // 2: proto.GetServerOuterAddrReq.server_type:type_name -> proto.ServerType
+	15, // 3: proto.GetServerOuterAddrRsp.server_type:type_name -> proto.ServerType
+	15, // 4: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
+	15, // 5: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
+	15, // 6: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
 	12, // 7: proto.GetAllServiceRsp.service_list:type_name -> proto.ServiceAll
-	14, // 8: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	15, // 8: proto.ServiceAll.service_type:type_name -> proto.ServerType
 	9,  // [9:9] is the sub-list for method output_type
 	9,  // [9:9] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
@@ -1141,6 +1204,18 @@ func file_cmd_server_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_server_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SyncPlayerOnlineDataNotify); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1148,7 +1223,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   15,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

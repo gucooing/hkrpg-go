@@ -15,7 +15,7 @@ func (s *GateServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	case cmd.GetAllServiceRsp:
 		s.GetAllServiceRsp(serviceMsg)
 	case cmd.PlayerLogoutNotify:
-		s.PlayerLogoutNotify(serviceMsg)
+		s.PlayerLogoutNotify(serviceMsg) // 异gate下线通知
 	default:
 
 	}
@@ -24,7 +24,7 @@ func (s *GateServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 func (p *PlayerGame) GameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 	switch cmdId {
 	case cmd.PlayerLoginRsp:
-		p.IsConnect = true
+		logger.Info("已在game登录")
 	default:
 		p.GameToGate(cmdId, playerMsg)
 	}
@@ -41,9 +41,7 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 		}
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
 		GAMESERVER.sendNode(cmd.PlayerLogoutReq, req)
-		p.KcpConn.Close()
-		p.GameConn.Close()
-		delete(GAMESERVER.sessionMap, p.Uid)
+		KickPlayer(p)
 	case cmd.PlayerLoginCsReq:
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GAME_ERROR
 		p.GateToGame(tcpMsg)

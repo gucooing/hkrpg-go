@@ -4,7 +4,6 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -77,61 +76,6 @@ func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb
 	}
 	return protoObj
 }
-
-func (g *GamePlayer) KickPlayer() {
-	/*
-		TODO
-		1.保存数据到数据库
-		2.断开gate-game连接
-	*/
-	logger.Info("[UID%v]玩家离线", g.Uid)
-	UpDataPlayer(g)
-	g.GateConn.Close()
-}
-
-func UpDataPlayer(g *GamePlayer) error {
-	var err error
-	if g.PlayerPb == nil {
-		return nil
-	}
-	if g.Uid == 0 {
-		return nil
-	}
-	dbDate := new(db.Player)
-	dbDate.AccountUid = g.Uid
-
-	dbDate.PlayerDataPb, err = pb.Marshal(g.PlayerPb)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-	}
-
-	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
-		logger.Error("Update Player error")
-		return err
-	}
-
-	logger.Info("数据库账号:%v 数据更新", g.Uid)
-	return nil
-}
-
-/*
-
-func (g *GamePlayer) AutoUpDataPlayer() {
-	ticker := time.NewTicker(time.Second * 60)
-	for {
-		<-ticker.C
-		if g.Seed == 0 {
-			return
-		}
-		lastActiveTime := g.LastActiveTime
-		timestamp := time.Now().Unix()
-		if timestamp-lastActiveTime >= 120 {
-			g.KickPlayer()
-			return
-		}
-	}
-}
-*/
 
 func stou32(msg string) uint32 {
 	if msg == "" {

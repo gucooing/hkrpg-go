@@ -18,7 +18,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
@@ -54,7 +53,6 @@ type PlayerGame struct {
 	XorKey              []byte // 密钥
 	KcpConn             *kcp.UDPSession
 	GameConn            net.Conn
-	IsConnect           bool
 	PlayerOfflineReason spb.PlayerOfflineReason
 	LastActiveTime      int64 // 最近一次的活跃时间
 }
@@ -105,9 +103,22 @@ func NewGate(cfg *config.Config) *GateServer {
 	s.nodeConn = tcpConn
 	s.gameAll = make(map[string]*serviceGame)
 	s.errGameAppId = make([]string, 0)
+
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			Close()
+			os.Exit(0)
+		}
+	}()
+
 	go s.recvNode()
 	go s.kcpNetInfo()
 	go s.kcpEnetHandle(kcpListener)
+	go s.AutoUpDataPlayer()
 	// 向node注册
 	s.Connection()
 
@@ -164,6 +175,7 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 		recvLen, err := p.KcpConn.Read(payload)
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
+			p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
 			return
 		}
 		bin = payload[:recvLen]
@@ -235,11 +247,7 @@ func SendHandle(p *PlayerGame, kcpMsg *alg.PackMsg) {
 		}
 		p.XorKey = createXorPad(p.Seed)
 		logger.Info("uid:%v,seed:%v,密钥交换成功", p.Uid, p.Seed)
-		if GAMESERVER.sessionMap[p.Uid] == nil {
-			GAMESERVER.sessionMap[p.Uid] = p
-			CLIENT_CONN_NUM = int32(len(GAMESERVER.sessionMap))
-		}
-		// 如果不为空则是断线重连
+		CLIENT_CONN_NUM = int32(len(GAMESERVER.sessionMap))
 	}
 }
 
@@ -254,19 +262,32 @@ func createXorPad(seed uint64) []byte {
 func Close() error {
 	GAMESERVER.kcpFin = true
 	for _, player := range GAMESERVER.sessionMap {
+		player.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GATE_ERROR
 		KickPlayer(player)
 	}
-
 	return nil
 }
 
 func KickPlayer(p *PlayerGame) {
-	notify := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	GateToPlayer(p, cmd.PlayerKickOutScNotify, notify)
+	GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
 	p.KcpConn.Close()
-	// 发送下线通知到game
 	p.GameConn.Close()
+	delete(GAMESERVER.sessionMap, p.Uid)
+	CLIENT_CONN_NUM = int32(len(GAMESERVER.sessionMap))
+}
+
+func (s *GateServer) AutoUpDataPlayer() {
+	ticker := time.NewTicker(time.Second * 60)
+	for {
+		<-ticker.C
+		for _, g := range GAMESERVER.sessionMap {
+			lastActiveTime := g.LastActiveTime
+			timestamp := time.Now().Unix()
+			if timestamp-lastActiveTime >= 60 {
+				KickPlayer(g)
+			}
+		}
+	}
 }
 
 func (s *GateServer) kcpNetInfo() {

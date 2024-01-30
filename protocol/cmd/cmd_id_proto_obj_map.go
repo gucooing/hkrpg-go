@@ -271,6 +271,7 @@ func (c *CmdProtoMap) registerMessage() {
 	c.regMsg(GetAllServiceReq, func() any { return new(spb.GetAllServiceReq) })
 	c.regMsg(GetAllServiceRsp, func() any { return new(spb.GetAllServiceRsp) })
 	c.regMsg(PlayerLogoutNotify, func() any { return new(spb.PlayerLogoutNotify) })
+	c.regMsg(SyncPlayerOnlineDataNotify, func() any { return new(spb.SyncPlayerOnlineDataNotify) })
 }
 
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {

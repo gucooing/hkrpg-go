@@ -1,6 +1,8 @@
 package gate
 
 import (
+	"log"
+	"os"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -47,9 +49,8 @@ func (s *GateServer) recvNode() {
 		var bin []byte = nil
 		recvLen, err := s.nodeConn.Read(nodeMsg)
 		if err != nil {
-			logger.Debug("exit recv loop, conn read err: %v", err)
-			panic("node error")
-			return
+			log.Println("node error")
+			os.Exit(0)
 		}
 		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)
@@ -113,6 +114,7 @@ func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {
 	s.gameAll = gameAll
 	s.gameAppId = minGameAppId
 	s.errGameAppId = make([]string, 0)
+	s.errGameAppId = []string{}
 }
 
 func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {
@@ -120,9 +122,10 @@ func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 {
 		return
 	}
-	logger.Info("[UID:%v]离线", req.PlayerUid)
+	logger.Info("[UID:%v]异网关重复登录离线", req.PlayerUid)
+	if GAMESERVER.sessionMap[req.PlayerUid] == nil {
+		return
+	}
 	GAMESERVER.sessionMap[req.PlayerUid].PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN
-	GAMESERVER.sessionMap[req.PlayerUid].KcpConn.Close()
-	GAMESERVER.sessionMap[req.PlayerUid].GameConn.Close()
-	delete(GAMESERVER.sessionMap, req.PlayerUid)
+	KickPlayer(GAMESERVER.sessionMap[req.PlayerUid])
 }

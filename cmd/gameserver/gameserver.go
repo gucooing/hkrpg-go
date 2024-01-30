@@ -63,6 +63,12 @@ func main() {
 			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
 
+			logger.Info("game服务正在关闭")
+			if err = game.Close(); err != nil {
+				logger.Error("无法正常关闭game服务")
+			}
+			logger.Info("game服务已停止")
+
 			logger.CloseLogger()
 			os.Exit(0)
 		}

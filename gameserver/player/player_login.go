@@ -13,13 +13,13 @@ import (
 
 func (g *GamePlayer) GetPlayerDate() {
 	var err error
-	playerData := new(PlayerData)
+	// playerData := new(PlayerData)
 
 	dbPlayer := db.DBASE.QueryAccountUidByFieldPlayer(g.Uid)
 	if dbPlayer.PlayerDataPb == nil {
 		logger.Info("新账号登录，进入初始化流程")
 		playerDataPb := g.NewPlayer(g.Uid)
-		g.Player = playerData
+		// g.Player = playerData
 		// 保存账号数据
 		dbPlayer.AccountUid = g.Uid
 		dbPlayer.PlayerDataPb, err = pb.Marshal(playerDataPb)
@@ -39,15 +39,6 @@ func (g *GamePlayer) GetPlayerDate() {
 		if err != nil {
 			logger.Error("unmarshal proto data err: %v", err)
 			return
-		}
-	}
-
-	if g.Player == nil {
-		g.Player = &PlayerData{
-			Battle: make(map[uint32]*Battle),
-			BattleState: &BattleState{
-				ChallengeState: &ChallengeState{},
-			},
 		}
 	}
 }

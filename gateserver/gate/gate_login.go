@@ -106,36 +106,36 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		logger.Error("game未启动")
 		return
 	}
-
 	p.NewGame(game.addr)
-	go p.recvGame()
 	p.GameAppId = game.appId
+	go p.recvGame()
+
+	// 生成seed
+	timeRand := random.GetTimeRand()
+	serverSeedUint64 := timeRand.Uint64()
+	p.Seed = serverSeedUint64
+
+	// 本gate重复登录验证//不向node发送玩家登录通知
+	if player, ok := GAMESERVER.sessionMap[p.Uid]; ok {
+		logger.Info("[UID%v]同网关重复登录", p.Uid)
+		// 重复登录下线通知
+		player.IsToken = false
+		player.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GATE_GS
+		KickPlayer(player)
+	}
+	// 异步通知给node
 	gamereq := &spb.PlayerLoginReq{
 		PlayerUid: p.Uid,
 		AppId:     s.gameAppId,
 	}
 	p.sendGame(cmd.PlayerLoginReq, gamereq)
+	go s.sendNode(cmd.PlayerLoginReq, gamereq)
 
-	// 本gate重复登录验证//不向node发送玩家登录通知
-	if player, ok := GAMESERVER.sessionMap[p.Uid]; ok {
-		notify := new(proto.GetChallengeScRsp)
-		// TODO 是的，没错，还是同样的原因
-		// 重复登录下线通知
-		GateToPlayer(player, cmd.PlayerKickOutScNotify, notify)
-		// 删除连接
-		player.GameConn.Close()
-	} else {
-		// 异步通知给node
-		go s.sendNode(cmd.PlayerLoginReq, gamereq)
-	}
-	go p.AutoUpDataPlayer()
+	GAMESERVER.sessionMap[p.Uid] = p
 
 	logger.Info("[UID:%v]登录目标GameServer:%v", p.Uid, s.gameAppId)
 
 	// 构造回复内容
-	timeRand := random.GetTimeRand()
-	serverSeedUint64 := timeRand.Uint64()
-	p.Seed = serverSeedUint64
 	rsp.Uid = p.Uid
 	rsp.SecretKeySeed = serverSeedUint64
 	rsp.BlackInfo = &proto.BlackInfo{}
@@ -188,20 +188,4 @@ func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	p.LastActiveTime = time.Now().Unix()
 
 	GateToPlayer(p, cmd.PlayerHeartBeatScRsp, rsp)
-}
-
-func (p *PlayerGame) AutoUpDataPlayer() {
-	ticker := time.NewTicker(time.Second * 60)
-	for {
-		<-ticker.C
-		if GAMESERVER.sessionMap[p.Uid] == nil {
-			return
-		}
-		lastActiveTime := p.LastActiveTime
-		timestamp := time.Now().Unix()
-		if timestamp-lastActiveTime >= 60 {
-			KickPlayer(p)
-			return
-		}
-	}
 }

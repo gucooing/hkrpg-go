@@ -21,12 +21,10 @@ func (p *PlayerGame) sendGame(cmdId uint16, playerMsg pb.Message) {
 		return
 	}
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-	if cmdId == cmd.PlayerLoginReq || p.IsConnect {
-		_, err := p.GameConn.Write(binMsg)
-		if err != nil {
-			logger.Debug("exit send loop, conn write err: %v", err)
-			return
-		}
+	_, err := p.GameConn.Write(binMsg)
+	if err != nil {
+		logger.Debug("exit send loop, conn write err: %v", err)
+		return
 	}
 }
 
@@ -38,13 +36,14 @@ func (p *PlayerGame) recvGame() {
 		var bin []byte = nil
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
-			p.IsConnect = false
 			logger.Debug("exit recv loop, conn read err: %s", err.Error())
-			if p.PlayerOfflineReason == spb.PlayerOfflineReason_OFFLINE_GAME_ERROR {
+			switch p.PlayerOfflineReason {
+			case spb.PlayerOfflineReason_OFFLINE_GAME_ERROR:
 				p.SwitchGame()
-				return
+			case spb.PlayerOfflineReason_OFFLINE_GATE_GS:
+			default:
+				KickPlayer(p)
 			}
-			KickPlayer(p)
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -88,7 +87,7 @@ func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
 		MessageType: 0,
 		PlayerBin:   binMsg,
 	}
-
+	logger.Debug("[C->S][UID:%v][CMDID:%v]", p.Uid, tcpMsg.CmdId)
 	// 发送到game
 	p.sendGame(cmd.PlayerToGameByGateReq, gtgMsg)
 }
@@ -100,6 +99,7 @@ func (p *PlayerGame) GameToGate(cmdId uint16, playerMsg pb.Message) {
 	alg.DecodeBinToPayload(rsp.PlayerBin, &playerMsgList, nil)
 	for _, msg := range playerMsgList {
 		// 发到玩家
+		logger.Debug("[S->C][UID:%v][CMDID:%v]", p.Uid, msg.CmdId)
 		SendHandle(p, msg)
 	}
 }
@@ -109,6 +109,5 @@ func GateToPlayer(p *PlayerGame, cmdId uint16, playerMsg pb.Message) {
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
 	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
-
 	SendHandle(p, tcpMsg)
 }

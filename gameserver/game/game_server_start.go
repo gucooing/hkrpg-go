@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
@@ -55,7 +56,9 @@ func NewGameServer(cfg *config.Config) *GameServer {
 	}
 	s.nodeConn = tcpConn
 	s.PlayerMap = make(map[uint32]*player.GamePlayer)
+
 	go s.recvNode()
+	go s.AutoUpDataPlayer()
 	// 向node注册
 	s.Connection()
 
@@ -79,4 +82,29 @@ func NewPlayer(conn net.Conn) *player.GamePlayer {
 	g.GateConn = conn
 
 	return g
+}
+
+func (s *GameServer) AutoUpDataPlayer() {
+	ticker := time.NewTicker(time.Second * 60)
+	for {
+		<-ticker.C
+		for _, g := range s.PlayerMap {
+			if g.Uid == 0 {
+				return
+			}
+			lastActiveTime := g.LastActiveTime
+			timestamp := time.Now().Unix()
+			if timestamp-lastActiveTime >= 120 {
+				KickPlayer(g)
+				return
+			}
+		}
+	}
+}
+
+func Close() error {
+	for _, gamePlayer := range GAMESERVER.PlayerMap {
+		KickPlayer(gamePlayer)
+	}
+	return nil
 }

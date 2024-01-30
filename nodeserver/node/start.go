@@ -37,8 +37,9 @@ type Service struct {
 }
 
 type PlayerService struct {
-	GateAppId string
-	GameAppId string
+	GateAppId        string
+	GameAppId        string
+	PlayerOnlineData []byte
 }
 
 func GetPlayerGame(uid uint32) *Service {

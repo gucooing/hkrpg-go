@@ -139,25 +139,42 @@ func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
 	}
 	if NODE.PlayerMap[req.PlayerUid] == nil {
 		rsp.PlayerUid = req.PlayerUid
+		NODE.PlayerMap[req.PlayerUid] = &PlayerService{
+			GateAppId: s.AppId,
+			GameAppId: req.AppId,
+		}
 	} else {
 		// 发送重复登录下线通知
 		if s.ServerType == spb.ServerType_SERVICE_GATE {
 			// 旧game服务玩家数减少
-			GetPlayerGame(req.PlayerUid).PlayerNum--
-			// 通知旧gate玩家下线
-			notify := &spb.PlayerLogoutNotify{
-				PlayerUid: req.PlayerUid,
+			if GetPlayerGame(req.PlayerUid) != nil {
+				GetPlayerGame(req.PlayerUid).PlayerNum--
+				if NODE.PlayerMap[req.PlayerUid].GameAppId != req.AppId {
+					// 通知旧game玩家下线
+					notify := &spb.PlayerLogoutNotify{
+						PlayerUid: req.PlayerUid,
+					}
+					GetPlayerGame(req.PlayerUid).sendHandle(cmd.PlayerLogoutNotify, notify)
+				}
 			}
-			GetPlayerGate(req.PlayerUid).sendHandle(cmd.PlayerLogoutNotify, notify)
+			if GetPlayerGate(req.PlayerUid) != nil {
+				GetPlayerGate(req.PlayerUid).PlayerNum--
+				if NODE.PlayerMap[req.PlayerUid].GateAppId != s.AppId {
+					// 通知旧gate玩家下线
+					notify := &spb.PlayerLogoutNotify{
+						PlayerUid: req.PlayerUid,
+					}
+					GetPlayerGate(req.PlayerUid).sendHandle(cmd.PlayerLogoutNotify, notify)
+				}
+			}
 		}
-	}
-	// 添加在线玩家列表到map/game
-	NODE.PlayerMap[req.PlayerUid] = &PlayerService{
-		GateAppId: s.AppId,
-		GameAppId: req.AppId,
+		NODE.PlayerMap[req.PlayerUid].GateAppId = s.AppId
+		NODE.PlayerMap[req.PlayerUid].GameAppId = req.AppId
 	}
 	// 目标game添加玩家数
-	GetPlayerGame(req.PlayerUid).PlayerNum++
+	if GetPlayerGame(req.PlayerUid) != nil {
+		GetPlayerGame(req.PlayerUid).PlayerNum++
+	}
 	// 目标gate添加玩家数
 	s.PlayerNum++
 	logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
@@ -173,13 +190,29 @@ func (s *Service) PlayerLogoutReq(serviceMsg pb.Message) {
 	}
 	logger.Info("[UID:%v]离线目标GameServer:%v", req.PlayerUid, NODE.PlayerMap[req.PlayerUid].GameAppId)
 	// 通知game玩家离线
-	GetPlayerGame(req.PlayerUid).sendHandle(cmd.PlayerLogoutReq, serviceMsg)
+	// GetPlayerGame(req.PlayerUid).sendHandle(cmd.PlayerLogoutReq, serviceMsg)
 	// 减少gate人数
 	s.PlayerNum--
 	// 减少game人数
 	GetPlayerGame(req.PlayerUid).PlayerNum--
 	// 删除玩家
 	delete(NODE.PlayerMap, req.PlayerUid)
+}
+
+func (s *Service) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
+	reqn := serviceMsg.(*spb.SyncPlayerOnlineDataNotify)
+	rspn := new(spb.SyncPlayerOnlineDataNotify)
+	if reqn.PlayerUid == 0 || NODE.PlayerMap[reqn.PlayerUid] == nil {
+		return
+	}
+	rspn.PlayerUid = reqn.PlayerUid
+	if reqn.PlayerOnlineData == nil {
+		rspn.PlayerOnlineData = NODE.PlayerMap[reqn.PlayerUid].PlayerOnlineData
+	} else {
+		NODE.PlayerMap[reqn.PlayerUid].PlayerOnlineData = reqn.PlayerOnlineData
+	}
+
+	s.sendHandle(cmd.SyncPlayerOnlineDataNotify, rspn)
 }
 
 func (s *Service) GmGive(serviceMsg pb.Message) {

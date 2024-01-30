@@ -1,11 +1,18 @@
 package player
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
 
 func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
+	if g.PlayerPb == nil || g.Player == nil {
+		time.Sleep(time.Second)
+		g.RegisterMessage(cmdId, payloadMsg)
+	}
+	g.LastActiveTime = time.Now().Unix()
 	switch cmdId {
 	case cmd.GetBasicInfoCsReq:
 		g.HandleGetBasicInfoCsReq()
