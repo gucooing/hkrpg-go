@@ -23,7 +23,7 @@ func (p *PlayerGame) sendGame(cmdId uint16, playerMsg pb.Message) {
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
 	_, err := p.GameConn.Write(binMsg)
 	if err != nil {
-		logger.Debug("exit send loop, conn write err: %v", err)
+		logger.Debug("[UID%v]gate->game error: %s", p.Uid, err.Error())
 		return
 	}
 }
@@ -36,11 +36,12 @@ func (p *PlayerGame) recvGame() {
 		var bin []byte = nil
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
-			logger.Debug("exit recv loop, conn read err: %s", err.Error())
+			logger.Debug("[UID%v]game->gate error: %s", p.Uid, err.Error())
 			switch p.PlayerOfflineReason {
 			case spb.PlayerOfflineReason_OFFLINE_GAME_ERROR:
 				p.SwitchGame()
 			case spb.PlayerOfflineReason_OFFLINE_GATE_GS:
+			case spb.PlayerOfflineReason_OFFLINE_DRIVING:
 			default:
 				KickPlayer(p)
 			}
@@ -58,14 +59,27 @@ func (p *PlayerGame) recvGame() {
 
 func (p *PlayerGame) SwitchGame() {
 	GAMESERVER.errGameAppId = append(GAMESERVER.errGameAppId, p.GameAppId)
-	gameAppId := GAMESERVER.GetGameAppId()
-	game := GAMESERVER.gameAll[gameAppId]
+	var gameAppId string
+	var game *serviceGame
+
+	// 等一分钟
+	for i := 0; i < 12; i++ {
+		gameAppId = GAMESERVER.GetGameAppId()
+		game = GAMESERVER.gameAll[gameAppId]
+		if gameAppId == "" || game == nil {
+			logger.Error("GameServer未启动,%vs后重启申请连接GameServer", (i+1)*5)
+			time.Sleep(time.Second * 5)
+		} else {
+			break
+		}
+	}
+
 	if gameAppId == "" || game == nil {
-		logger.Error("GameServer未启动,5s后重启申请连接GameServer")
-		time.Sleep(time.Second * 5)
-		p.SwitchGame()
+		logger.Info("[UID%v]game重连失败", p.Uid)
+		KickPlayer(p)
 		return
 	}
+
 	p.NewGame(game.addr)
 	p.GameAppId = game.appId
 	gamereq := &spb.PlayerLoginReq{

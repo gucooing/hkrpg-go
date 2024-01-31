@@ -269,7 +269,12 @@ func Close() error {
 }
 
 func KickPlayer(p *PlayerGame) {
+	logger.Info("[UID:%v]离线目标GameServer:%v", p.Uid, p.GameAppId)
 	GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
+	req := &spb.PlayerLogoutReq{
+		PlayerUid: p.Uid,
+	}
+	GAMESERVER.sendNode(cmd.PlayerLogoutReq, req)
 	p.KcpConn.Close()
 	p.GameConn.Close()
 	delete(GAMESERVER.sessionMap, p.Uid)

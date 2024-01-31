@@ -194,7 +194,9 @@ func (s *Service) PlayerLogoutReq(serviceMsg pb.Message) {
 	// 减少gate人数
 	s.PlayerNum--
 	// 减少game人数
-	GetPlayerGame(req.PlayerUid).PlayerNum--
+	if GetPlayerGame(req.PlayerUid) != nil {
+		GetPlayerGame(req.PlayerUid).PlayerNum--
+	}
 	// 删除玩家
 	delete(NODE.PlayerMap, req.PlayerUid)
 }

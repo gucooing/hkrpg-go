@@ -10,6 +10,10 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+func (g *GamePlayer) PlayerHeartBeatCsReq() {
+	g.LastActiveTime = time.Now().Unix()
+}
+
 func (g *GamePlayer) StaminaInfoScNotify() {
 	notify := &proto.StaminaInfoScNotify{
 		NextRecoverTime: 0,

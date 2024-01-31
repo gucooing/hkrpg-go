@@ -12,8 +12,9 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		time.Sleep(time.Second)
 		g.RegisterMessage(cmdId, payloadMsg)
 	}
-	g.LastActiveTime = time.Now().Unix()
 	switch cmdId {
+	case cmd.PlayerHeartBeatCsReq:
+		g.PlayerHeartBeatCsReq() // 心跳包
 	case cmd.GetBasicInfoCsReq:
 		g.HandleGetBasicInfoCsReq()
 	case cmd.GetEnteredSceneCsReq:

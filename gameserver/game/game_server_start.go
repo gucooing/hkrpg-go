@@ -95,8 +95,8 @@ func (s *GameServer) AutoUpDataPlayer() {
 			lastActiveTime := g.LastActiveTime
 			timestamp := time.Now().Unix()
 			if timestamp-lastActiveTime >= 120 {
+				logger.Info("[UID:%v]玩家超时离线", g.Uid)
 				KickPlayer(g)
-				return
 			}
 		}
 	}

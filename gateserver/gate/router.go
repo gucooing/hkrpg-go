@@ -34,13 +34,9 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	switch cmdId {
 	case cmd.PlayerHeartBeatCsReq:
 		p.HandlePlayerHeartBeatCsReq(tcpMsg.ProtoData) // 心跳包
+		p.GateToGame(tcpMsg)
 	case cmd.PlayerLogoutCsReq: // 退出游戏
-		logger.Info("[UID:%v]离线目标GameServer:%v", p.Uid, p.GameAppId)
-		req := &spb.PlayerLogoutReq{
-			PlayerUid: p.Uid,
-		}
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
-		GAMESERVER.sendNode(cmd.PlayerLogoutReq, req)
 		KickPlayer(p)
 	case cmd.PlayerLoginCsReq:
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GAME_ERROR
