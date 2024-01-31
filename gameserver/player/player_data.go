@@ -182,8 +182,8 @@ func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandleGetRogueHandbookDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetRogueHandbookDataScRsp)
 	handbookInfo := &proto.RogueHandbookData{
-		RogueCurrentVersion: 1,
-		IsMiracleUnlock:     true,
+		// RogueCurrentVersion: 1,
+		// IsMiracleUnlock:     true,
 	}
 	rsp.HandbookInfo = handbookInfo
 

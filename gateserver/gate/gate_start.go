@@ -289,6 +289,7 @@ func (s *GateServer) AutoUpDataPlayer() {
 			lastActiveTime := g.LastActiveTime
 			timestamp := time.Now().Unix()
 			if timestamp-lastActiveTime >= 60 {
+				g.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_TIMEOUT
 				KickPlayer(g)
 			}
 		}

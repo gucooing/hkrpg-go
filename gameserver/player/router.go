@@ -102,20 +102,22 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		g.SceneCastSkillCsReq(payloadMsg) // 场景开启战斗
 	case cmd.PVEBattleResultCsReq:
 		g.PVEBattleResultCsReq(payloadMsg) // PVE战斗结算
+	case cmd.StartCocoonStageCsReq:
+		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
+	// 模拟宇宙
+	case cmd.GetRogueScoreRewardInfoCsReq:
+		g.GetRogueScoreRewardInfoCsReq() // 获取模拟宇宙状态
+	case cmd.GetRogueTalentInfoCsReq:
+		g.GetRogueTalentInfoCsReq() // 获取天赋信息
 	case cmd.GetRogueInfoCsReq:
 		g.GetRogueInfoCsReq(payloadMsg) // 获取模拟宇宙
-	case cmd.GetRogueScoreRewardInfoCsReq:
-		g.GetRogueScoreRewardInfoCsReq()
 	case cmd.StartRogueCsReq:
 		g.StartRogueCsReq(payloadMsg) // 模拟宇宙,启动!
 	case cmd.LeaveRogueCsReq:
 		g.LeaveRogueCsReq(payloadMsg) // 模拟宇宙撤离请求
 	case cmd.QuitRogueCsReq:
 		g.QuitRogueCsReq(payloadMsg) // 模拟宇宙结算请求
-	case cmd.GetRogueTalentInfoCsReq:
-		g.GetRogueTalentInfoCsReq() // 获取天赋信息
-	case cmd.StartCocoonStageCsReq:
-		g.StartCocoonStageCsReq(payloadMsg) // 副本/周本等
+	// 忘却之庭
 	case cmd.GetChallengeCsReq:
 		g.HandleGetChallengeCsReq(payloadMsg) // 获取忘却之庭挑战完成信息
 	case cmd.StartChallengeCsReq:
