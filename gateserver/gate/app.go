@@ -37,6 +37,12 @@ func (p *PlayerGame) recvGame() {
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("[UID%v]game->gate error: %s", p.Uid, err.Error())
+
+			// TODO
+			if GAMESERVER.sessionMap[p.Uid] == nil {
+				return
+			}
+
 			switch p.PlayerOfflineReason {
 			case spb.PlayerOfflineReason_OFFLINE_GAME_ERROR:
 				p.SwitchGame()
