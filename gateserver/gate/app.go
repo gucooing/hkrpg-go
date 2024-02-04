@@ -46,8 +46,16 @@ func (p *PlayerGame) recvGame() {
 			switch p.PlayerOfflineReason {
 			case spb.PlayerOfflineReason_OFFLINE_GAME_ERROR:
 				p.SwitchGame()
-			case spb.PlayerOfflineReason_OFFLINE_GATE_GS:
 			case spb.PlayerOfflineReason_OFFLINE_DRIVING:
+				KickPlayer(p)
+			case spb.PlayerOfflineReason_OFFLINE_TIMEOUT:
+				KickPlayer(p)
+			case spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN:
+				KickPlayer(p)
+			case spb.PlayerOfflineReason_OFFLINE_GATE_GS:
+				KickPlayer(p)
+			case spb.PlayerOfflineReason_OFFLINE_GATE_ERROR:
+				KickPlayer(p)
 			default:
 				KickPlayer(p)
 			}
