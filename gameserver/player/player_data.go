@@ -1,6 +1,7 @@
 package player
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
@@ -325,8 +326,27 @@ func (g *GamePlayer) TextJoinQueryCsReq() {
 	g.Send(cmd.TextJoinQueryScRsp, rsp)
 }
 
-func (g *GamePlayer) GetUnlockTeleportCsReq() {
+func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetUnlockTeleportCsReq, payloadMsg)
+	req := msg.(*proto.GetUnlockTeleportCsReq)
+	rsp := &proto.GetUnlockTeleportScRsp{
+		UnlockedTeleportList: make([]uint32, 0),
+	}
 
+	for _, id := range req.EntryIdList {
+		excel := gdconf.GetMapEntranceById(strconv.Itoa(int(id)))
+		teleport := gdconf.GetTeleportsById(excel.PlaneID, excel.FloorID)
+		if teleport == nil {
+			continue
+		}
+		/*
+			for tid := range teleport {
+				rsp.UnlockedTeleportList = append(rsp.UnlockedTeleportList, tid)
+			}
+		*/
+	}
+
+	g.Send(cmd.GetUnlockTeleportScRsp, rsp)
 }
 
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
@@ -335,23 +355,6 @@ func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, rsp)
 	// TODO 主动调用
 	g.HandleGetArchiveDataCsReq()
-
-	// 战斗通行证信息通知
-	notify := &proto.BattlePassInfoNotify{
-		TakenPremiumExtendedReward: 127,
-		TakenFreeExtendedReward:    127,
-		Unkfield:                   4,
-		TakenPremiumReward2:        2251799813685246,
-		TakenFreeReward:            1,
-		TakenPremiumReward1:        1,
-		TakenPremiumOptionalReward: 2251799813685246,
-		Exp:                        800,
-		Level:                      70,
-		CurBpId:                    5,
-		CurWeekAddExpSum:           8000,
-		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
-	}
-	g.Send(cmd.BattlePassInfoNotify, notify)
 }
 
 func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {

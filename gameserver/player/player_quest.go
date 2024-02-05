@@ -6,6 +6,10 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+func (g *GamePlayer) GetMissionEventDataCsReq() {
+	g.Send(cmd.GetMissionEventDataScRsp, nil)
+}
+
 func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetMissionStatusCsReq, payloadMsg)
 	req := msg.(*proto.GetMissionStatusCsReq)
@@ -31,10 +35,10 @@ func (g *GamePlayer) GetQuestDataCsReq(payloadMsg []byte) {
 	rsp.QuestList = make([]*proto.Quest, 0)
 	for _, questList := range gdconf.GetQuestDataMap() {
 		quest := &proto.Quest{
-			FinishTime: 10000,
-			Progress:   questList.QuestType,
+			Progress:   1,
 			Status:     proto.QuestStatus_QUEST_CLOSE,
 			Id:         questList.QuestID,
+			FinishTime: 1699688465,
 		}
 		rsp.QuestList = append(rsp.QuestList, quest)
 	}
@@ -55,7 +59,7 @@ func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg []byte) {
 			WorldLevel:       g.PlayerPb.WorldLevel,
 			Level:            uint32(i),
 			DailyActivePoint: uint32(i * 100),
-			IsHasTaken:       false,
+			IsHasTaken:       true,
 		}
 		rsp.DailyActiveLevelList = append(rsp.DailyActiveLevelList, dailyActivityInfo)
 	}

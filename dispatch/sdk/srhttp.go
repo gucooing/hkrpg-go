@@ -65,9 +65,7 @@ func (s *Server) commonh5log(c *gin.Context) {
 		return
 	}
 	// logger.Debug("/common/h5log/log/batch", string(body))
-	c.JSON(200, gin.H{
-		"code": 0,
-	})
+	c.JSON(200, "{\"retcode\":0,\"message\":\"success\",\"data\":null}")
 }
 
 func (s *Server) GetAgreementInfos(c *gin.Context) {

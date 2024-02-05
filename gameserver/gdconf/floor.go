@@ -90,6 +90,10 @@ func GetFloorMap() map[uint32]map[uint32]*LevelFloor {
 	return CONF.FloorMap
 }
 
+func GetTeleportsById(planeId, floorId uint32) map[uint32]*PropList {
+	return CONF.FloorMap[planeId][floorId].Teleports
+}
+
 func extractNumbersFloor(filename string) (uint32, uint32) {
 	filename = strings.TrimSuffix(filename, ".json")
 

@@ -5,24 +5,16 @@ import (
 )
 
 type PlayerData struct {
-	LoginToday            bool                   // 是否是今天第一次登录
-	Battle                map[uint32]*Battle     // 正在进行的战斗
-	BattleState           *BattleState           // 战斗情况
-	BattleId              uint32                 // 战斗id
-	EntityBattleId        uint32                 // 攻击实体id
-	IsPaused              bool                   // 是否暂停
-	GameObjectGuidCounter uint64                 // 游戏对象guid计数器
-	IsNickName            bool                   // 是否修改昵称
-	EntityList            map[uint32]*EntityList // 实体ID映射表
-	SceneEntity           *SceneEntity           // 场景实体管理
+	LoginToday            bool               // 是否是今天第一次登录
+	Battle                map[uint32]*Battle // 正在进行的战斗
+	BattleState           *BattleState       // 战斗情况
+	BattleId              uint32             // 战斗id
+	EntityBattleId        uint32             // 攻击实体id
+	IsPaused              bool               // 是否暂停
+	GameObjectGuidCounter uint64             // 游戏对象guid计数器
+	IsNickName            bool               // 是否修改昵称
+	SceneEntity           *SceneEntity       // 场景实体管理
 	NpcList               map[uint32]uint32
-}
-
-type EntityList struct {
-	Entity  uint32 // 实体Id
-	GroupId uint32 // 地图块
-	Pos     *Vector
-	Rot     *Vector
 }
 
 type SceneEntity struct {
@@ -56,23 +48,6 @@ type Vector struct {
 	X int32
 	Y int32
 	Z int32
-}
-
-func (g *GamePlayer) GetSceneNpcList() map[uint32]uint32 {
-	if g.Player.NpcList == nil {
-		g.Player.NpcList = make(map[uint32]uint32)
-	}
-	return g.Player.NpcList
-}
-
-func (g *GamePlayer) GetNextGameObjectGuid() uint64 {
-	g.Player.GameObjectGuidCounter++
-	return 0 + g.Player.GameObjectGuidCounter
-}
-
-func (g *GamePlayer) GetBattleIdGuid() uint32 {
-	g.Player.BattleId++
-	return 1 + g.Player.BattleId
 }
 
 func (g *GamePlayer) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {
@@ -127,4 +102,52 @@ func (g *GamePlayer) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {
 	g.AddAvatar(uint32(g.GetAvatar().CurMainAvatar))
 
 	return g.PlayerPb
+}
+
+func (g *GamePlayer) GetPlayer() *PlayerData {
+	if g.Player == nil {
+		g.Player = &PlayerData{
+			LoginToday:            false,
+			Battle:                nil,
+			BattleState:           nil,
+			BattleId:              0,
+			EntityBattleId:        0,
+			IsPaused:              false,
+			GameObjectGuidCounter: 0,
+			IsNickName:            false,
+			SceneEntity:           nil,
+			NpcList:               nil,
+		}
+	}
+
+	return g.Player
+}
+
+func (g *GamePlayer) GetSceneNpcList() map[uint32]uint32 {
+	if g.Player.NpcList == nil {
+		g.Player.NpcList = make(map[uint32]uint32)
+	}
+	return g.Player.NpcList
+}
+
+func (g *GamePlayer) GetNextGameObjectGuid() uint64 {
+	g.Player.GameObjectGuidCounter++
+	return 0 + g.Player.GameObjectGuidCounter
+}
+
+func (g *GamePlayer) GetBattleIdGuid() uint32 {
+	g.Player.BattleId++
+	return 1 + g.Player.BattleId
+}
+
+func (g *GamePlayer) GetSceneEntity() *SceneEntity {
+	if g.GetPlayer().SceneEntity == nil {
+		g.GetPlayer().SceneEntity = &SceneEntity{
+			AvatarEntity:  make(map[uint32]*AvatarEntity),
+			NpcEntity:     make(map[uint32]*NpcEntity),
+			MonsterEntity: make(map[uint32]*MonsterEntity),
+		}
+	}
+
+	return g.GetPlayer().SceneEntity
 }

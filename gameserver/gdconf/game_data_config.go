@@ -34,9 +34,13 @@ type GameDataConfig struct {
 	ItemConfigRelicMap          map[string]*ItemConfigRelic                     // 背包遗器配置
 	RogueTalentMap              map[string]*RogueTalent                         // 模拟宇宙天赋
 	RogueMapGenMap              map[string][]uint32                             // 模拟宇宙id场景映射表
+	RogueManagerMap             *RogueManager                                   // 模拟宇宙排期表
+	RogueMonsterMap             map[uint32]*RogueMonster                        // 模拟宇宙怪物配置
+	RogueMonsterGroupMap        map[uint32]*RogueMonsterGroup                   // 模拟宇宙怪物生成配置
+	RogueBuffMap                *RogueBuffList                                  // 模拟宇宙buff列表
 	RogueAreaConfigMap          map[string]*RogueAreaConfig                     // 模拟宇宙关卡配置
-	RogueMapMap                 map[string]map[string]*RogueMap                 // 模拟宇宙关卡地图表
-	RogueRoomMap                map[string]*RogueRoom                           // 模拟宇宙地图配置表
+	RogueMap                    map[uint32]*RogueMap                            // 模拟宇宙关卡地图表
+	RogueRoomMap                map[uint32]*RogueRoom                           // 模拟宇宙地图配置表
 	CocoonConfigMap             map[string]map[string]*CocoonConfig             // 挑战/周本
 	MappingInfoMap              map[string]map[string]*MappingInfo              // 挑战/周本奖励
 	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
@@ -133,6 +137,10 @@ func (g *GameDataConfig) load() {
 	g.loadItemConfigRelic()          // 背包遗器配置
 	g.loadRogueTalent()              // 模拟宇宙天赋
 	g.loadRogueMapGen()              // 模拟宇宙id场景映射表
+	g.loadRogueManager()             // 模拟宇宙排期表
+	g.loadRogueMonster()             // 模拟宇宙怪物配置
+	g.loadRogueMonsterGroup()        // 模拟宇宙怪物生成配置
+	g.loadRogueBuff()                // 模拟宇宙buff列表
 	g.loadRogueAreaConfig()          // 模拟宇宙关卡配置
 	g.loadRogueMap()                 // 模拟宇宙关卡地图表
 	g.loadRogueRoom()                // 模拟宇宙地图配置表

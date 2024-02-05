@@ -94,7 +94,7 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 	case cmd.EnterSceneCsReq:
 		g.EnterSceneCsReq(payloadMsg) // 场景传送
 	case cmd.GetUnlockTeleportCsReq:
-		g.GetUnlockTeleportCsReq() // 获取解锁的传送点
+		g.GetUnlockTeleportCsReq(payloadMsg) // 获取解锁的传送点
 	case cmd.InteractPropCsReq:
 		g.InteractPropCsReq(payloadMsg) // 实体交互
 	// 战斗
@@ -109,6 +109,8 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		g.GetRogueScoreRewardInfoCsReq() // 获取模拟宇宙状态
 	case cmd.GetRogueTalentInfoCsReq:
 		g.GetRogueTalentInfoCsReq() // 获取天赋信息
+	case cmd.GetRogueHandbookDataScRsp:
+		g.GetRogueHandbookDataScRsp() // 图鉴
 	case cmd.GetRogueInfoCsReq:
 		g.GetRogueInfoCsReq(payloadMsg) // 获取模拟宇宙
 	case cmd.StartRogueCsReq:
@@ -117,6 +119,8 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		g.LeaveRogueCsReq(payloadMsg) // 模拟宇宙撤离请求
 	case cmd.QuitRogueCsReq:
 		g.QuitRogueCsReq(payloadMsg) // 模拟宇宙结算请求
+	case cmd.HandleRogueCommonPendingActionCsReq:
+		g.HandleRogueCommonPendingActionCsReq(payloadMsg) // 模拟宇宙常见操作请求
 	// 忘却之庭
 	case cmd.GetChallengeCsReq:
 		g.HandleGetChallengeCsReq(payloadMsg) // 获取忘却之庭挑战完成信息
@@ -149,6 +153,8 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 	case cmd.GetGachaCeilingCsReq:
 		g.HandleGetGachaCeilingCsReq(payloadMsg) // 基础卡池保底达到进度请求
 	// 任务
+	case cmd.GetMissionEventDataCsReq:
+		g.GetMissionEventDataCsReq()
 	case cmd.GetQuestDataCsReq:
 		g.GetQuestDataCsReq(payloadMsg) // 获取任务信息
 	case cmd.GetMissionStatusCsReq:

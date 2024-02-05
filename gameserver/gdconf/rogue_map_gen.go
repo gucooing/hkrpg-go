@@ -27,15 +27,12 @@ func (g *GameDataConfig) loadRogueMapGen() {
 	logger.Info("load %v RogueMapGen", len(g.RogueMapGenMap))
 }
 
-func GetRogueRoomIDBySiteID() map[uint32]uint32 {
-	var rogueMap map[uint32]uint32
-	rogueMap = make(map[uint32]uint32)
-	for id, rogue := range CONF.RogueMapGenMap {
-		idIndex := rand.Intn(len(rogue))
-		rogueMap[stou32(id)] = rogue[idIndex]
-	}
+func GetRogueRoomIDBySiteID(siteID uint32) uint32 {
+	rogue := CONF.RogueMapGenMap[strconv.Itoa(int(siteID))]
+	idIndex := rand.Intn(len(rogue))
+	rogueId := rogue[idIndex]
 
-	return rogueMap
+	return rogueId
 }
 
 func stou32(msg string) uint32 {

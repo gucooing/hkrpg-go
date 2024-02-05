@@ -18,21 +18,19 @@ func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg []byte) {
 
 	if g.GetBattleState().BattleType == spb.BattleType_Battle_NONE {
 		for _, entryId := range req.EntityMotionList {
-			if g.Player.EntityList[entryId.EntityId] == nil {
+			if g.GetSceneEntity().AvatarEntity[entryId.EntityId] == nil {
 				break
 			}
-			if g.Player.EntityList[entryId.EntityId].Entity == g.GetSceneAvatarId() {
-				g.PlayerPb.Pos = &spb.VectorBin{
-					X: entryId.Motion.Pos.X,
-					Y: entryId.Motion.Pos.Y,
-					Z: entryId.Motion.Pos.Z,
-				}
+			g.PlayerPb.Pos = &spb.VectorBin{
+				X: entryId.Motion.Pos.X,
+				Y: entryId.Motion.Pos.Y,
+				Z: entryId.Motion.Pos.Z,
+			}
 
-				g.PlayerPb.Rot = &spb.VectorBin{
-					X: entryId.Motion.Rot.X,
-					Y: entryId.Motion.Rot.Y,
-					Z: entryId.Motion.Rot.Z,
-				}
+			g.PlayerPb.Rot = &spb.VectorBin{
+				X: entryId.Motion.Rot.X,
+				Y: entryId.Motion.Rot.Y,
+				Z: entryId.Motion.Rot.Z,
 			}
 		}
 	}

@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -17,49 +16,43 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	req := msg.(*proto.SceneCastSkillCsReq)
 
 	var targetIndex uint32 = 0
-	var stageConfig *gdconf.StageConfig
-	var stageID *gdconf.PlaneEvent
 	var buffLists []uint32
+	var monsterEntityMap []uint32 // 目标怪物列表
 	lineUp := g.GetLineUp().MainLineUp
 	battleState := g.GetBattleState()
 
 	// 添加buff
-	switch battleState.BattleType {
-	case spb.BattleType_Battle_NONE:
-		if req.SkillIndex == 1 {
-			avatarId := g.Player.EntityList[req.CasterId].Entity
-			skillId := (avatarId * 100) + req.SkillIndex
+	switch req.SkillIndex {
+	case 1:
+		avatarId := g.GetSceneEntity().AvatarEntity[req.CasterId].AvatarId
+		skillId := (avatarId * 100) + req.SkillIndex
+		switch battleState.BattleType {
+		case spb.BattleType_Battle_NONE:
 			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
 				g.PlayerPb.Avatar.Avatar[avatarId].BuffList = skillId
 			} else {
 				// 技能处理，有的技能并不会增加buff而是回复生命等功能
 			}
-		}
-	case spb.BattleType_Battle_ROGUE:
-	case spb.BattleType_Battle_CHALLENGE:
-		if req.SkillIndex == 1 {
-			avatarId := g.Player.EntityList[req.CasterId].Entity
-			skillId := (avatarId * 100) + req.SkillIndex
+		case spb.BattleType_Battle_ROGUE:
+			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+				battleState.RogueState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
+			} else {
+				// 技能处理，有的技能并不会增加buff而是回复生命等功能
+			}
+		case spb.BattleType_Battle_CHALLENGE:
+
 			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
 				battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
 			} else {
 				// 技能处理，有的技能并不会增加buff而是回复生命等功能
 			}
-		}
-	case spb.BattleType_Battle_CHALLENGE_Story:
-		if req.SkillIndex == 1 {
-			avatarId := g.Player.EntityList[req.CasterId].Entity
-			skillId := (avatarId * 100) + req.SkillIndex
+		case spb.BattleType_Battle_CHALLENGE_Story:
 			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
 				battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
 			} else {
 				// 技能处理，有的技能并不会增加buff而是回复生命等功能
 			}
-		}
-	case spb.BattleType_Battle_TrialActivity:
-		if req.SkillIndex == 1 {
-			avatarId := g.Player.EntityList[req.CasterId].Entity
-			skillId := (avatarId * 100) + req.SkillIndex
+		case spb.BattleType_Battle_TrialActivity:
 			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
 				battleState.TrialActivityState.AvatarBuffList = append(battleState.TrialActivityState.AvatarBuffList, skillId)
 			} else {
@@ -68,29 +61,18 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		}
 	}
 
-	if len(req.HitTargetEntityIdList) == 0 {
-		rsp := &proto.SceneCastSkillScRsp{
-			AttackedGroupId: req.AttackedGroupId,
-		}
-		g.Send(cmd.SceneCastSkillScRsp, rsp)
-		return
+	if len(req.HitTargetEntityIdList) == 0 || g.GetSceneEntity().MonsterEntity[req.HitTargetEntityIdList[0]] == nil {
+		monsterEntityMap = append(monsterEntityMap, req.CasterId)
+	} else {
+		monsterEntityMap = req.HitTargetEntityIdList
 	}
 
-	if g.Player.EntityList[req.HitTargetEntityIdList[0]] == nil {
+	if g.GetSceneEntity().MonsterEntity[monsterEntityMap[0]] == nil {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
 		}
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
-	}
-	entity := g.Player.EntityList[req.HitTargetEntityIdList[0]]
-	stageID = gdconf.GetPlaneEventById(entity.Entity, g.PlayerPb.WorldLevel)
-	if stageID == nil {
-		newEntity := g.Player.EntityList[req.CasterId]
-		stageID = gdconf.GetPlaneEventById(newEntity.Entity, g.PlayerPb.WorldLevel)
-		stageConfig = gdconf.GetStageConfigById(stageID.StageID)
-	} else {
-		stageConfig = gdconf.GetStageConfigById(stageID.StageID)
 	}
 
 	// 构造回复包
@@ -99,7 +81,6 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		BattleInfo: &proto.SceneBattleInfo{
 			BuffList:        make([]*proto.BattleBuff, 0), // Buff列表
 			LogicRandomSeed: gdconf.GetLoadingDesc(),      // 逻辑随机种子
-			StageId:         stageID.StageID,              // 阶段id
 			// TurnSnapshotList: nil,                          // 打开快照列表？
 			WorldLevel:       g.PlayerPb.WorldLevel,
 			RoundsLimit:      0,                              // 回合限制
@@ -108,33 +89,53 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 			BattleTargetInfo: make(map[uint32]*proto.BattleTargetList),
 		},
 	}
+
 	// 怪物波列表
-	for id, monsterListMap := range stageConfig.MonsterList {
-		monsterWaveList := &proto.SceneMonsterWave{
-			StageId: stageID.StageID,
-			WaveId:  uint32(id + 1),
+	dbMonsterEntityMap := g.GetSceneEntity().MonsterEntity
+	for id, monsterEntity := range monsterEntityMap {
+		entity := dbMonsterEntityMap[monsterEntity]
+		if entity == nil {
+			continue
 		}
-		for _, monsterList := range monsterListMap {
-			sceneMonster := &proto.SceneMonster{
-				MonsterId: monsterList,
+		stageID := gdconf.GetPlaneEventById(entity.MonsterEId, g.PlayerPb.WorldLevel)
+		if stageID == nil {
+			return
+		}
+		if id == 0 {
+			rsp.BattleInfo.StageId = stageID.StageID // 阶段id
+		}
+		stageConfig := gdconf.GetStageConfigById(stageID.StageID)
+		for _, monsterListMap := range stageConfig.MonsterList {
+			monsterWaveList := &proto.SceneMonsterWave{
+				StageId: stageID.StageID,
+				WaveId:  1,
 			}
-			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
+			for _, monsterList := range monsterListMap {
+				sceneMonster := &proto.SceneMonster{
+					MonsterId: monsterList,
+				}
+				monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
+			}
+			rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
 		}
-		rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
 	}
+
 	switch battleState.BattleType {
 	case spb.BattleType_Battle_NONE:
 
 	case spb.BattleType_Battle_ROGUE:
-		logger.Info("正在进行模拟宇宙")
+		// 储存此次战斗
+		g.GetRogueBattle()[rsp.BattleInfo.BattleId] = &RogueBattle{monsterEntityMap: monsterEntityMap}
+		g.RogueSceneCastSkillCsReq(rsp)
+		return
 	case spb.BattleType_Battle_CHALLENGE:
 		// 缓存当前战斗实体
-		battleState.ChallengeState.EventID = req.HitTargetEntityIdList[0]
+		battleState.ChallengeState.MonsterEntityMap = monsterEntityMap
 		g.ChallengeSceneCastSkillCsReq(rsp)
 		return
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		// 缓存当前战斗实体
-		battleState.ChallengeState.EventID = req.HitTargetEntityIdList[0]
+		battleState.ChallengeState.MonsterEntityMap = monsterEntityMap
 		g.ChallengeStorySceneCastSkillCsReq(rsp)
 		return
 	case spb.BattleType_Battle_TrialActivity:
@@ -142,6 +143,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		return
 	}
 
+	/********************************下面开始就是普通战斗场景处理了*************************************/
 	// 添加角色
 	for id, avatarId := range g.GetLineUpById(lineUp).AvatarIdList {
 		if avatarId == 0 {
@@ -259,7 +261,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	g.Player.Battle = make(map[uint32]*Battle)
 	battle := &Battle{
 		BattleId:         rsp.BattleInfo.BattleId,
-		EventID:          req.HitTargetEntityIdList[0],
+		EventIDList:      monsterEntityMap,
 		LogicRandomSeed:  rsp.BattleInfo.LogicRandomSeed,
 		RoundsLimit:      rsp.BattleInfo.RoundsLimit,
 		BuffList:         rsp.BattleInfo.BuffList,
@@ -278,12 +280,13 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	var pileItem []*Material
 
 	rsp := &proto.PVEBattleResultScRsp{
-		BattleId:       req.BattleId,
-		StageId:        req.StageId,
-		EndStatus:      req.EndStatus, // 战斗结算状态
-		CheckIdentical: true,          // 反作弊验证
-		BinVersion:     "",
-		ResVersion:     strconv.Itoa(int(req.ClientResVersion)), // 版本验证
+		BattleAvatarList: make([]*proto.BattleAvatar, 0),
+		BattleId:         req.BattleId,
+		StageId:          req.StageId,
+		EndStatus:        req.EndStatus, // 战斗结算状态
+		CheckIdentical:   true,          // 反作弊验证
+		BinVersion:       "",
+		ResVersion:       strconv.Itoa(int(req.ClientResVersion)), // 版本验证
 	}
 	pos := g.GetPos()
 	rot := g.GetRot()
@@ -302,20 +305,19 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		// 更新队伍状态
 		g.BattleSyncLineupNotify(lineUp)
 	case spb.BattleType_Battle_ROGUE:
-		logger.Info("正在进行模拟宇宙")
+		g.RoguePVEBattleResultCsReq(req, rsp)
+		return
 	case spb.BattleType_Battle_CHALLENGE:
 		g.ChallengePVEBattleResultCsReq(req)
 		g.Send(cmd.PVEBattleResultScRsp, rsp)
 		return
 	case spb.BattleType_Battle_CHALLENGE_Story:
-		// g.ChallengeStoryPVEBattleResultCsReq(req)
 		g.ChallengeStoryPVEBattleResultCsReq(req)
 		g.Send(cmd.PVEBattleResultScRsp, rsp)
 		return
 	case spb.BattleType_Battle_TrialActivity:
 		g.TrialActivityPVEBattleResultScRsp(rsp)
 		return
-
 	}
 
 	// 更新角色状态
@@ -337,24 +339,27 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	// 胜利时获取奖励
 	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
 		battle := g.Player.Battle[req.BattleId]
-		entity := g.Player.EntityList[battle.EventID]
 
-		if entity != nil {
-			// 删除实体
-			nitify := new(proto.SceneGroupRefreshScNotify)
-			nitify.GroupRefreshInfo = []*proto.SceneGroupRefreshInfo{
-				{
+		// 删除实体
+		nitify := &proto.SceneGroupRefreshScNotify{
+			GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+		}
+		for _, eventId := range battle.EventIDList {
+			entity := g.GetSceneEntity().MonsterEntity[eventId]
+			if entity != nil {
+				groupRefreshInfo := &proto.SceneGroupRefreshInfo{
 					GroupId: entity.GroupId,
 					RefreshEntity: []*proto.SceneEntityRefreshInfo{
 						{
-							DelEntity: battle.EventID,
+							DelEntity: eventId,
 						},
 					},
-				},
+				}
+				nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
+				delete(g.GetSceneEntity().MonsterEntity, eventId)
 			}
-			g.Send(cmd.SceneGroupRefreshScNotify, nitify)
-			delete(g.Player.EntityList, battle.EventID)
 		}
+		g.Send(cmd.SceneGroupRefreshScNotify, nitify)
 
 		g.GetItem().MaterialMap[11] -= battle.StaminaCost * battle.Wave // 扣除体力
 
@@ -391,14 +396,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	delete(g.Player.Battle, req.BattleId)
 
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
-}
-
-func (g *GamePlayer) HandleBattleNone() {
-
-}
-
-func (g *GamePlayer) HandleBattleRogue() {
-
 }
 
 // 队伍更新通知
@@ -466,14 +463,6 @@ func (g *GamePlayer) SceneEntityMoveScNotify(pos, rot *spb.VectorBin, entryId ui
 	}
 
 	g.Send(cmd.SceneEntityMoveScNotify, notify)
-}
-
-/***********************************模拟宇宙***********************************/
-
-func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
-}
-
-func (g *GamePlayer) QuitRogueCsReq(payloadMsg []byte) {
 }
 
 /***********************************关卡/副本***********************************/
@@ -606,15 +595,16 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	// 储存战斗信息
 	g.Player.Battle = make(map[uint32]*Battle)
 	battle := &Battle{
-		BattleId:         rsp.BattleInfo.BattleId,
-		Wave:             req.Wave,
-		EventID:          req.CocoonId,
+		BattleId: rsp.BattleInfo.BattleId,
+		Wave:     req.Wave,
+		// EventIDList:          req.CocoonId,
 		LogicRandomSeed:  rsp.BattleInfo.LogicRandomSeed,
 		RoundsLimit:      rsp.BattleInfo.RoundsLimit,
 		StaminaCost:      cocoonConfig.StaminaCost,
 		BuffList:         rsp.BattleInfo.BuffList,
 		BattleAvatarList: rsp.BattleInfo.BattleAvatarList,
 	}
+	battle.EventIDList = append(battle.EventIDList, req.CocoonId)
 	// 添加奖励
 	for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.PlayerPb.WorldLevel).DisplayItemList {
 		material := &Material{

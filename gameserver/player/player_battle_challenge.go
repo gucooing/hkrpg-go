@@ -158,8 +158,6 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	challengeState := g.GetChallengeState()
 
-	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
-
 	leaderEntityId := uint32(g.GetNextGameObjectGuid())
 	// 获取映射信息
 
@@ -181,6 +179,9 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		GroupStateList:     nil,
 	}
 
+	monsterEntity := make(map[uint32]*MonsterEntity, 0)
+	avatarEntity := make(map[uint32]*AvatarEntity, 0)
+	npcEntity := make(map[uint32]*NpcEntity, 0)
 	// 将进入场景的角色添加到实体列表里
 	entityGroup := &proto.SceneEntityGroupInfo{
 		GroupId:    0,
@@ -212,14 +213,14 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		// 为进入场景的角色设置与上面相同的实体id
 		if id == 0 {
 			entityList.EntityId = leaderEntityId
-			entityMap[leaderEntityId] = &EntityList{
-				Entity:  slots.Id,
-				GroupId: 0,
+			avatarEntity[leaderEntityId] = &AvatarEntity{
+				AvatarId: slots.Id,
+				GroupId:  0,
 			}
 		} else {
-			entityMap[entityId] = &EntityList{
-				Entity:  slots.Id,
-				GroupId: 0,
+			avatarEntity[entityId] = &AvatarEntity{
+				AvatarId: slots.Id,
+				GroupId:  0,
 			}
 			entityList.EntityId = entityId
 		}
@@ -255,14 +256,16 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 			EventId:    curChallengeBattle.EventID,
 		},
 	}
-	entityMap[entityId] = &EntityList{
-		Entity:  curChallengeBattle.EventID,
-		GroupId: curChallengeBattle.GroupID,
+	monsterEntity[entityId] = &MonsterEntity{
+		MonsterEId: curChallengeBattle.EventID,
+		GroupId:    curChallengeBattle.GroupID,
 	}
 	entityGroupNPCMonster.EntityList = append(entityGroupNPCMonster.EntityList, entityList)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupNPCMonster)
+	g.GetSceneEntity().MonsterEntity = monsterEntity
+	g.GetSceneEntity().AvatarEntity = avatarEntity
+	g.GetSceneEntity().NpcEntity = npcEntity
 
-	g.Player.EntityList = entityMap
 	return scene
 }
 
@@ -426,22 +429,25 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	}
 
 	// 删除实体
-	entity := g.Player.EntityList[challengeState.EventID]
-	if entity != nil {
-		nitify := new(proto.SceneGroupRefreshScNotify)
-		nitify.GroupRefreshInfo = []*proto.SceneGroupRefreshInfo{
-			{
+	nitify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+	}
+	for _, eventId := range challengeState.MonsterEntityMap {
+		entity := g.GetSceneEntity().MonsterEntity[eventId]
+		if entity != nil {
+			groupRefreshInfo := &proto.SceneGroupRefreshInfo{
 				GroupId: entity.GroupId,
 				RefreshEntity: []*proto.SceneEntityRefreshInfo{
 					{
-						DelEntity: challengeState.EventID,
+						DelEntity: eventId,
 					},
 				},
-			},
+			}
+			nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
+			delete(g.GetSceneEntity().MonsterEntity, eventId)
 		}
-		g.Send(cmd.SceneGroupRefreshScNotify, nitify)
-		delete(g.Player.EntityList, challengeState.EventID)
 	}
+	g.Send(cmd.SceneGroupRefreshScNotify, nitify)
 
 	// 获取已使用回合数
 	challengeState.RoundCount += req.Stt.RoundCnt
@@ -573,9 +579,9 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 				EntityId: entityId,
 			},
 		}
-		g.Player.EntityList[entityId] = &EntityList{
-			Entity:  avatarId,
-			GroupId: 0,
+		g.GetSceneEntity().AvatarEntity[entityId] = &AvatarEntity{
+			AvatarId: avatarId,
+			GroupId:  0,
 		}
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	}
@@ -625,9 +631,9 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 		},
 	}
 
-	g.Player.EntityList[entityId] = &EntityList{
-		Entity:  curChallengeBattle.EventID,
-		GroupId: curChallengeBattle.GroupID,
+	g.GetSceneEntity().MonsterEntity[entityId] = &MonsterEntity{
+		MonsterEId: curChallengeBattle.EventID,
+		GroupId:    curChallengeBattle.GroupID,
 	}
 	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 
@@ -738,22 +744,25 @@ func (g *GamePlayer) ChallengeStoryPVEBattleResultCsReq(req *proto.PVEBattleResu
 	}
 
 	// 删除实体
-	entity := g.Player.EntityList[challengeState.EventID]
-	if entity != nil {
-		nitify := new(proto.SceneGroupRefreshScNotify)
-		nitify.GroupRefreshInfo = []*proto.SceneGroupRefreshInfo{
-			{
+	nitify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+	}
+	for _, eventId := range challengeState.MonsterEntityMap {
+		entity := g.GetSceneEntity().MonsterEntity[eventId]
+		if entity != nil {
+			groupRefreshInfo := &proto.SceneGroupRefreshInfo{
 				GroupId: entity.GroupId,
 				RefreshEntity: []*proto.SceneEntityRefreshInfo{
 					{
-						DelEntity: challengeState.EventID,
+						DelEntity: eventId,
 					},
 				},
-			},
+			}
+			nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
+			delete(g.GetSceneEntity().MonsterEntity, eventId)
 		}
-		g.Send(cmd.SceneGroupRefreshScNotify, nitify)
-		delete(g.Player.EntityList, challengeState.EventID)
 	}
+	g.Send(cmd.SceneGroupRefreshScNotify, nitify)
 
 	// 获取分数
 	challengeState.ChallengeScore += req.Stt.ChallengeScore

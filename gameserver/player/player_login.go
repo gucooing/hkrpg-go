@@ -63,11 +63,9 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Stamina:    g.GetItem().MaterialMap[11],
 		WorldLevel: g.PlayerPb.WorldLevel,
 	}
-	// 开启数据定时保存
-	// go g.AutoUpDataPlayer()
 
-	g.StaminaInfoScNotify()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
+	g.LoginNotify()
 }
 
 func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
@@ -78,4 +76,39 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 	rsp.ClientResVersion = req.ClientResVersion
 
 	g.Send(cmd.SyncClientResVersionScRsp, rsp)
+}
+
+func (g *GamePlayer) BattlePassInfoNotify() {
+	// 战斗通行证信息通知
+	notify := &proto.BattlePassInfoNotify{
+		TakenPremiumExtendedReward: 127,
+		TakenFreeExtendedReward:    2,
+		Unkfield:                   4,
+		TakenPremiumReward2:        7,
+		TakenFreeReward:            6,
+		TakenPremiumReward1:        2,
+		TakenPremiumOptionalReward: 2251799813685246,
+		Exp:                        1,
+		Level:                      70,
+		CurBpId:                    5,
+		CurWeekAddExpSum:           8000,
+		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
+	}
+	g.Send(cmd.BattlePassInfoNotify, notify)
+}
+
+// 登录通知包
+func (g *GamePlayer) LoginNotify() {
+	g.StaminaInfoScNotify()
+	g.Send(cmd.UpdateFeatureSwitchScNotify, nil)
+	g.Send(cmd.SyncServerSceneChangeNotify, nil)
+	g.Send(cmd.SyncTurnFoodNotify, nil)
+	g.Send(cmd.StaminaInfoScNotify, nil)
+	g.Send(cmd.DailyTaskDataScNotify, nil)
+	g.Send(cmd.RaidInfoNotify, nil)
+	g.BattlePassInfoNotify()
+	g.Send(cmd.ComposeLimitNumCompleteNotify, nil)
+	g.Send(cmd.GeneralVirtualItemDataNotify, nil)
+	g.Send(cmd.NewMailScNotify, nil)
+	g.Send(cmd.NewAssistHistoryNotify, nil)
 }

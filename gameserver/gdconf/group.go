@@ -55,18 +55,19 @@ type AnchorList struct {
 }
 
 type MonsterList struct {
-	ID           uint32  `json:"ID"`
-	PosX         float64 `json:"PosX"`
-	PosY         float64 `json:"PosY"`
-	PosZ         float64 `json:"PosZ"`
-	Name         string  `json:"Name"`
-	RotX         float64 `json:"RotX"`
-	RotY         float64 `json:"RotY"`
-	RotZ         float64 `json:"RotZ "`
-	IsDelete     bool    `json:"IsDelete"`
-	NPCMonsterID uint32  `json:"NPCMonsterID"`
-	CampID       uint32  `json:"CampID"`
-	EventID      uint32  `json:"EventID"`
+	ID           uint32      `json:"ID"`
+	PosX         float64     `json:"PosX"`
+	PosY         float64     `json:"PosY"`
+	PosZ         float64     `json:"PosZ"`
+	Name         string      `json:"Name"`
+	RotX         float64     `json:"RotX"`
+	RotY         float64     `json:"RotY"`
+	RotZ         float64     `json:"RotZ "`
+	IsDelete     bool        `json:"IsDelete"`
+	NPCMonsterID uint32      `json:"NPCMonsterID"`
+	CampID       uint32      `json:"CampID"`
+	EventID      uint32      `json:"EventID"`
+	BattleArea   *BattleArea `json:"BattleArea"`
 }
 
 type NPCList struct {
@@ -85,6 +86,11 @@ type NPCList struct {
 	BoardShowList        []uint32 `json:"BoardShowList"`
 	RaidID               uint32   `json:"RaidID"`
 	FirstDialogueGroupID uint32   `json:"FirstDialogueGroupID"`
+}
+
+type BattleArea struct {
+	GroupID uint32 `json:"GroupID"`
+	ID      uint32 `json:"ID"`
 }
 
 func (g *GameDataConfig) loadGroup() {

@@ -58,9 +58,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	if foorMap == nil {
 		return
 	}
-
 	var anchorID = mapEntrance.StartAnchorID
-	entityMap := make(map[uint32]*EntityList) // [实体id]怪物群id
 
 	anchorID = foorMap.StartAnchorID
 
@@ -111,6 +109,9 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 		rsp.Scene.LightenSectionList = append(rsp.Scene.LightenSectionList, i)
 	}
 
+	monsterEntity := make(map[uint32]*MonsterEntity, 0)
+	avatarEntity := make(map[uint32]*AvatarEntity, 0)
+	npcEntity := make(map[uint32]*NpcEntity, 0)
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
@@ -147,13 +148,13 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 				// 为进入场景的角色设置与上面相同的实体id
 				if id == 0 {
 					entityList.EntityId = leaderEntityId
-					entityMap[leaderEntityId] = &EntityList{
-						Entity: avatarid,
+					avatarEntity[leaderEntityId] = &AvatarEntity{
+						AvatarId: avatarid,
 					}
 				} else {
 					entityList.EntityId = entityId
-					entityMap[entityId] = &EntityList{
-						Entity: avatarid,
+					avatarEntity[entityId] = &AvatarEntity{
+						AvatarId: avatarid,
 					}
 				}
 				entityGroup.EntityList = append(entityGroup.EntityList, entityList)
@@ -212,9 +213,9 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 				},
 			}
 			// 添加实体
-			entityMap[entityId] = &EntityList{
-				Entity:  trialActivityState.EventID,
-				GroupId: trialActivityState.GroupID,
+			monsterEntity[entityId] = &MonsterEntity{
+				MonsterEId: trialActivityState.EventID,
+				GroupId:    trialActivityState.GroupID,
 				Pos: &Vector{
 					X: int32(monsterList.PosX * 1000),
 					Y: int32(monsterList.PosY * 1000),
@@ -233,7 +234,9 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 		}
 	}
 	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupLists)
-	g.Player.EntityList = entityMap
+	g.GetSceneEntity().MonsterEntity = monsterEntity
+	g.GetSceneEntity().AvatarEntity = avatarEntity
+	g.GetSceneEntity().NpcEntity = npcEntity
 
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }

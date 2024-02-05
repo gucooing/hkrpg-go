@@ -9,18 +9,24 @@ import (
 )
 
 type RogueMap struct {
+	StartId  uint32
+	SiteList map[uint32]*RogueMapList
+}
+
+type RogueMapList struct {
 	RogueMapID         uint32   `json:"RogueMapID"`
 	SiteID             uint32   `json:"SiteID"`
 	IsStart            bool     `json:"IsStart"`
 	PosX               int      `json:"PosX"`
 	PosY               int      `json:"PosY"`
-	NextSiteIDList     []uint32 `json:"NextSiteIDList"`
+	NextSiteIDList     []uint32 `json:"NextSiteIDList"` // 下一阶段id
 	HardLevelGroupList []uint32 `json:"HardLevelGroupList"`
 	LevelList          []uint32 `json:"LevelList"`
 }
 
 func (g *GameDataConfig) loadRogueMap() {
-	g.RogueMapMap = make(map[string]map[string]*RogueMap)
+	g.RogueMap = make(map[uint32]*RogueMap)
+	rogueMap := make(map[string]map[string]*RogueMapList)
 	playerElementsFilePath := g.excelPrefix + "RogueMap.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -28,23 +34,32 @@ func (g *GameDataConfig) loadRogueMap() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueMapMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	logger.Info("load %v RogueMap", len(g.RogueMapMap))
-}
 
-func GetRogueMapStartById(rogueMapID string) *RogueMap {
-	for _, rogueMap := range CONF.RogueMapMap[rogueMapID] {
-		if rogueMap.IsStart {
-			return rogueMap
+	for mapID, rogueList := range rogueMap {
+		g.RogueMap[stou32(mapID)] = &RogueMap{
+			StartId:  0,
+			SiteList: make(map[uint32]*RogueMapList),
+		}
+		for _, rogue := range rogueList {
+			if rogue.IsStart {
+				g.RogueMap[stou32(mapID)].StartId = rogue.SiteID
+			}
+			g.RogueMap[stou32(mapID)].SiteList[rogue.SiteID] = rogue
 		}
 	}
-	return nil
+
+	logger.Info("load %v RogueMap", len(g.RogueMap))
 }
 
-func GetRogueMapById(rogueMapID string, siteID string) *RogueMap {
-	return CONF.RogueMapMap[rogueMapID][siteID]
+func GetRogueMapSiteById(rogueMapID uint32) map[uint32]*RogueMapList {
+	return CONF.RogueMap[rogueMapID].SiteList
+}
+
+func GetRogueMapById(rogueMapID uint32) *RogueMap {
+	return CONF.RogueMap[rogueMapID]
 }

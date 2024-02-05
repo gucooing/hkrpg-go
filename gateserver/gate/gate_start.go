@@ -166,6 +166,7 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			logger.Error("the motherfucker player uid: %v", p.Uid)
+			p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GATE_ERROR
 			KickPlayer(p)
 		}
 	}()

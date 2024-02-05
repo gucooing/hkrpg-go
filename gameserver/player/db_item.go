@@ -55,6 +55,7 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 			}
 		case 22:
 			g.AddTrailblazerExp(material.Num)
+			return
 		default:
 			g.GetItem().MaterialMap[material.Tid] += material.Num
 		}

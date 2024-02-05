@@ -49,9 +49,9 @@ func (g *GamePlayer) SceneGroupRefreshScNotify() {
 				EntityId: entityId,
 			},
 		}
-		g.Player.EntityList[entityId] = &EntityList{
-			Entity:  lineup,
-			GroupId: 0,
+		g.GetSceneEntity().AvatarEntity[entityId] = &AvatarEntity{
+			AvatarId: lineup,
+			GroupId:  0,
 		}
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	}

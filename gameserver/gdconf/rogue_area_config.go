@@ -23,7 +23,7 @@ type RogueAreaConfig struct {
 	MapDisplayItemList       []*RewardList     `json:"MapDisplayItemList"`
 	ChestDisplayItemList     []*RewardList     `json:"ChestDisplayItemList"`
 	MonsterDisplayItemList   []*RewardList     `json:"MonsterDisplayItemList"`
-	ScoreMap                 map[string]uint32 `json:"ScoreMap"`
+	ScoreMap                 map[string]uint32 `json:"ScoreMap"` // 得分
 	RecommendSkillTreePoints uint32            `json:"RecommendSkillTreePoints"`
 	AreaTipsIcon             string            `json:"AreaTipsIcon"`
 }
