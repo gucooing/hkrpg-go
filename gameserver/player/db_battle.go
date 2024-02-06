@@ -81,6 +81,7 @@ type Battle struct {
 }
 
 type RogueState struct {
+	BuffNum        uint32
 	AvatarBuffList []uint32
 	BuffList       map[uint32]*RogueBuff
 	AvatarEntity   map[uint32]*AvatarEntity
@@ -197,6 +198,17 @@ func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
 	}
 
 	return rogue.RogueArea[areaId]
+}
+
+func (g *GamePlayer) NewRogueState() {
+	g.GetBattleState().RogueState = &RogueState{
+		BuffNum:        0,
+		AvatarBuffList: make([]uint32, 0),
+		AvatarEntity:   make(map[uint32]*AvatarEntity),
+		MonsterEntity:  make(map[uint32]*MonsterEntity),
+		Battle:         make(map[uint32]*RogueBattle),
+		BuffList:       make(map[uint32]*RogueBuff),
+	}
 }
 
 func (g *GamePlayer) GetRogue() *RogueState {

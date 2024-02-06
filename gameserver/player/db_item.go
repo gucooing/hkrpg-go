@@ -60,7 +60,7 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 			g.GetItem().MaterialMap[material.Tid] += material.Num
 		}
 	}
-
+	g.ScenePlaneEventScNotify(pileItem)
 	g.MaterialPlayerSyncScNotify(pileItem)
 }
 
