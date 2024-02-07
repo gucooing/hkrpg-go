@@ -68,7 +68,7 @@ func (g *GameDataConfig) loadFloor() {
 
 		for _, groupList := range g.GroupMap[planeId][floorId] {
 			for _, prop := range groupList.PropList {
-				if prop.MappingInfoID != 0 {
+				if prop.MappingInfoID != 0 && prop.AnchorID != 0 {
 					levelFloor.Teleports[prop.MappingInfoID] = prop
 				}
 			}

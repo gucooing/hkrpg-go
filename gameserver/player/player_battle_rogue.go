@@ -493,7 +493,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
 		// 添加物品实体
-		entityGroupLists := g.GetPropByID(sceneGroup, stou32(groupID))
+		entityGroupLists := g.GetRoguePropByID(sceneGroup, stou32(groupID))
 		// 添加怪物实体
 		entityGroupLists, x := g.GetRogueNPCMonsterByID(entityGroupLists, sceneGroup, stou32(groupID), monsterEntity, ida)
 		monsterEntity = x
@@ -505,6 +505,78 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	}
 
 	return scene, avatarEntity, monsterEntity
+}
+
+func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
+	entityGroupLists := &proto.SceneEntityGroupInfo{
+		GroupId:    groupID,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	for _, propList := range sceneGroup.PropList {
+		entityList := &proto.SceneEntityInfo{
+			GroupId:  groupID,     // 文件名后那个G
+			InstId:   propList.ID, // ID
+			EntityId: uint32(g.GetNextGameObjectGuid()),
+			Motion: &proto.MotionInfo{
+				Pos: &proto.Vector{
+					X: int32(propList.PosX * 1000),
+					Y: int32(propList.PosY * 1000),
+					Z: int32(propList.PosZ * 1000),
+				},
+				Rot: &proto.Vector{
+					X: 0,
+					Y: int32(propList.RotY * 1000),
+					Z: 0,
+				},
+			},
+			Prop: &proto.ScenePropInfo{
+				PropId:    propList.PropID, // PropID
+				PropState: gdconf.GetPropState(strconv.Itoa(int(propList.PropID))),
+			},
+		}
+		if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {
+			entityList.Prop.PropState = 8 // 解锁
+		}
+		if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
+			index := 0
+			if propList.Name == "Door2" {
+				index = 1
+			}
+			room := g.GetCurDbRoom()
+			if propList.Name == "Door1" || len(room.NextSiteIdList) == 1 {
+				continue
+			}
+			if len(room.NextSiteIdList) == 1 {
+				index = 0
+			}
+			if len(room.NextSiteIdList) > 0 {
+				siteId := room.NextSiteIdList[index]
+				nextRoom := g.GetDbRoomBySiteId(siteId)
+				exceRoom := gdconf.GetRogueRoomById(nextRoom.RoomId)
+
+				switch exceRoom.RogueRoomType {
+				case 3, 8:
+					entityList.Prop.PropId = 1022
+				case 5:
+					entityList.Prop.PropId = 1023
+				default:
+					entityList.Prop.PropId = 1021
+				}
+				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
+					RogueInfo: &proto.PropRogueInfo{
+						RoomId: nextRoom.RoomId,
+						SiteId: siteId,
+					},
+					AeonInfo: nil,
+				}
+			} else {
+				entityList.Prop.PropId = 1000
+			}
+			entityList.Prop.PropState = 1
+		}
+		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+	}
+	return entityGroupLists
 }
 
 func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {

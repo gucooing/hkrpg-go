@@ -339,11 +339,9 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 		if teleport == nil {
 			continue
 		}
-		/*
-			for tid := range teleport {
-				rsp.UnlockedTeleportList = append(rsp.UnlockedTeleportList, tid)
-			}
-		*/
+		for tid := range teleport {
+			rsp.UnlockedTeleportList = append(rsp.UnlockedTeleportList, tid)
+		}
 	}
 
 	g.Send(cmd.GetUnlockTeleportScRsp, rsp)
