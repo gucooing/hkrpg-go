@@ -348,9 +348,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
-	rsp := new(proto.PlayerHeartbeatScRsp)
-	// TODO 逆天了，proto太残了，没办法
-	g.Send(cmd.PlayerLoginFinishScRsp, rsp)
+	g.Send(cmd.PlayerLoginFinishScRsp, nil)
 	// TODO 主动调用
 	g.HandleGetArchiveDataCsReq()
 }

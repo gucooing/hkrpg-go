@@ -285,57 +285,58 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetSceneMapInfoCsReq, payloadMsg)
 	req := msg.(*proto.GetSceneMapInfoCsReq)
 
-	entryId := req.EntryIdList[0]
-
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+	// 1000101 1000001
 
 	rsp := new(proto.GetSceneMapInfoScRsp)
-
-	if mapEntrance != nil {
-		groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
-		if groupMap != nil {
-			if int(mapEntrance.StartGroupID) > len(groupMap) {
-				return
-			}
-
-			mapList := &proto.MazeMapData{
-				LightenSectionList: make([]uint32, 0),
-				UnlockedChestList: []*proto.MazeChest{
-					{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_NORMAL},
-					{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
-					{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
-				},
-				UnlockedTeleportList: make([]uint32, 0),
-			}
-
-			mapList.EntryId = entryId
-
-			for i := uint32(0); i < 100; i++ {
-				mapList.LightenSectionList = append(mapList.LightenSectionList, i)
-			}
-
-			for _, groupInfo := range groupMap {
-				mazeGroup := &proto.MazeGroup{GroupId: groupInfo.GroupId}
-				mapList.MazeGroupList = append(mapList.MazeGroupList, mazeGroup)
-			}
-
-			for _, groupMapList := range groupMap {
-				for _, propList := range groupMapList.PropList {
-					if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {
-						continue
-					}
-					mazeProp := &proto.MazeProp{
-						State:    gdconf.GetStateValue(propList.State),
-						GroupId:  groupMapList.GroupId,
-						ConfigId: propList.ID,
-					}
-					mapList.MazePropList = append(mapList.MazePropList, mazeProp)
-					mapList.UnlockedTeleportList = append(mapList.UnlockedTeleportList, propList.MappingInfoID)
+	for _, entryId := range req.EntryIdList {
+		mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+		if mapEntrance != nil {
+			groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
+			if groupMap != nil {
+				if int(mapEntrance.StartGroupID) > len(groupMap) {
+					return
 				}
+
+				mapList := &proto.MazeMapData{
+					LightenSectionList: make([]uint32, 0),
+					UnlockedChestList: []*proto.MazeChest{
+						{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_NORMAL},
+						{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
+						{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
+					},
+					UnlockedTeleportList: make([]uint32, 0),
+				}
+
+				mapList.EntryId = entryId
+
+				for i := uint32(0); i < 100; i++ {
+					mapList.LightenSectionList = append(mapList.LightenSectionList, i)
+				}
+
+				for _, groupInfo := range groupMap {
+					mazeGroup := &proto.MazeGroup{GroupId: groupInfo.GroupId}
+					mapList.MazeGroupList = append(mapList.MazeGroupList, mazeGroup)
+				}
+
+				for _, groupMapList := range groupMap {
+					for _, propList := range groupMapList.PropList {
+						if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {
+							continue
+						}
+						mazeProp := &proto.MazeProp{
+							State:    gdconf.GetStateValue(propList.State),
+							GroupId:  groupMapList.GroupId,
+							ConfigId: propList.ID,
+						}
+						mapList.MazePropList = append(mapList.MazePropList, mazeProp)
+						mapList.UnlockedTeleportList = append(mapList.UnlockedTeleportList, propList.MappingInfoID)
+					}
+				}
+				rsp.MapList = append(rsp.MapList, mapList)
 			}
-			rsp.MapList = append(rsp.MapList, mapList)
 		}
 	}
+
 	g.Send(cmd.GetSceneMapInfoScRsp, rsp)
 }
 

@@ -40,6 +40,7 @@ func (p *PlayerGame) recvGame() {
 
 			// TODO
 			if GAMESERVER.sessionMap[p.Uid] == nil {
+				KickPlayer(p)
 				return
 			}
 
@@ -78,6 +79,9 @@ func (p *PlayerGame) SwitchGame() {
 
 	// 等一分钟
 	for i := 0; i < 12; i++ {
+		if GAMESERVER.sessionMap[p.Uid] == nil {
+			return
+		}
 		gameAppId = GAMESERVER.GetGameAppId()
 		game = GAMESERVER.gameAll[gameAppId]
 		if gameAppId == "" || game == nil {
