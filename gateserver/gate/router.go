@@ -37,6 +37,7 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 		p.GateToGame(tcpMsg)
 	case cmd.PlayerLogoutCsReq: // 退出游戏
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
+		logger.Debug("[UID:%v]玩家主动离线", p.Uid)
 		KickPlayer(p)
 	case cmd.PlayerLoginCsReq:
 		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GAME_ERROR

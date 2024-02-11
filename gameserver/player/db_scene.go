@@ -65,7 +65,7 @@ func (g *GamePlayer) GetPropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) 
 			},
 			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
-				PropState: gdconf.GetPropState(strconv.Itoa(int(propList.PropID))),
+				PropState: 1,               // gdconf.GetPropState(strconv.Itoa(int(propList.PropID))),
 			},
 		}
 		if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {

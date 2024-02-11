@@ -122,7 +122,7 @@ func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 {
 		return
 	}
-	logger.Info("[UID:%v]异网关重复登录离线", req.PlayerUid)
+	logger.Info("[UID:%v]gate收到主动离线通知", req.PlayerUid)
 	if GAMESERVER.sessionMap[req.PlayerUid] == nil {
 		return
 	}

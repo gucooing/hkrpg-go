@@ -531,7 +531,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 			},
 			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
-				PropState: gdconf.GetPropState(strconv.Itoa(int(propList.PropID))),
+				PropState: 0,               // gdconf.GetPropState(strconv.Itoa(int(propList.PropID))),
 			},
 		}
 		if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {
@@ -543,7 +543,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 				index = 1
 			}
 			room := g.GetCurDbRoom()
-			if propList.Name == "Door1" || len(room.NextSiteIdList) == 1 {
+			if propList.Name == "Door1" && len(room.NextSiteIdList) == 1 {
 				continue
 			}
 			if len(room.NextSiteIdList) == 1 {
@@ -757,4 +757,37 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 	}
 
 	g.Send(cmd.HandleRogueCommonPendingActionScRsp, rsp)
+}
+
+func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.EnterRogueMapRoomCsReq, payloadMsg)
+	req := msg.(*proto.EnterRogueMapRoomCsReq)
+	curRogue := g.GetCurDbRogue()
+	if curRogue.RogueSceneMap[req.SiteId] == nil && curRogue.RogueSceneMap[req.SiteId].RoomId != req.RoomId {
+		return
+	}
+	curRogue.RogueSceneMap[curRogue.CurSiteId].RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_FINISH
+	curRogue.RogueSceneMap[req.SiteId].RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_PLAY
+	curRogue.CurSiteId = req.SiteId
+	// 更新通知
+	g.SyncRogueMapRoomScNotify()
+	scene, avatarEntity, monsterEntity := g.GetRogueScene(req.RoomId)
+	if scene == nil {
+		rsp := &proto.StartRogueScRsp{
+			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
+		}
+		g.Send(cmd.StartRogueScRsp, rsp)
+		return
+	}
+
+	g.GetSceneEntity().AvatarEntity = avatarEntity
+	g.GetSceneEntity().MonsterEntity = monsterEntity
+	rsp := &proto.EnterRogueMapRoomScRsp{
+		Lineup:    g.GetLineUpPb(9),
+		CurSiteId: req.SiteId,
+		Retcode:   0,
+		Scene:     scene,
+	}
+
+	g.Send(cmd.EnterRogueMapRoomScRsp, rsp)
 }

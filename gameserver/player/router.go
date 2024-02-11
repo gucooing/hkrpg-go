@@ -121,6 +121,8 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		g.QuitRogueCsReq(payloadMsg) // 模拟宇宙结算请求
 	case cmd.HandleRogueCommonPendingActionCsReq:
 		g.HandleRogueCommonPendingActionCsReq(payloadMsg) // 模拟宇宙常见操作请求
+	case cmd.EnterRogueMapRoomCsReq:
+		g.EnterRogueMapRoomCsReq(payloadMsg) // 模拟宇宙进入下一场景
 	// 忘却之庭
 	case cmd.GetChallengeCsReq:
 		g.HandleGetChallengeCsReq(payloadMsg) // 获取忘却之庭挑战完成信息

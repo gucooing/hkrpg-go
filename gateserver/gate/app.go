@@ -40,6 +40,7 @@ func (p *PlayerGame) recvGame() {
 
 			// TODO
 			if GAMESERVER.sessionMap[p.Uid] == nil {
+				logger.Debug("gate清理异常在线")
 				KickPlayer(p)
 				return
 			}
@@ -58,6 +59,7 @@ func (p *PlayerGame) recvGame() {
 			case spb.PlayerOfflineReason_OFFLINE_GATE_ERROR:
 				KickPlayer(p)
 			default:
+				logger.Debug("[UID:%v]未知离线原因", p.Uid)
 				KickPlayer(p)
 			}
 			return
