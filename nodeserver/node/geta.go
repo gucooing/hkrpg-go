@@ -42,7 +42,7 @@ func (s *Service) gateRecvHandle() {
 func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.PlayerLoginReq: // 玩家登录通知
-		s.playerLoginReq(serviceMsg)
+		s.gatePlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutReq: // 玩家退出回复
 		s.gatePlayerLogoutReq(serviceMsg)
 	default:
@@ -50,7 +50,7 @@ func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	}
 }
 
-func (s *Service) playerLoginReq(serviceMsg pb.Message) {
+func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLoginReq)
 	rsp := new(spb.PlayerLoginRsp)
 	if req.PlayerUid == 0 {

@@ -42,10 +42,20 @@ func (s *Service) gameRecvHandle() {
 func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.PlayerLoginReq: // 玩家登录通知
-		s.playerLoginReq(serviceMsg)
+		s.gamePlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutReq: // 玩家退出回复
 		s.gamePlayerLogoutReq(serviceMsg)
 		logger.Info("gameRegister error cmdid:%v", cmdId)
+	}
+}
+func (s *Service) gamePlayerLoginReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLoginReq)
+	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
+		if player.GameAppId == s.AppId {
+			s.PlayerNum++
+		} else {
+			logger.Info("[UID:%v]玩家异常登录", req.PlayerUid)
+		}
 	}
 }
 

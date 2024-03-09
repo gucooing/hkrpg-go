@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/dispatch/config"
@@ -23,6 +24,10 @@ type Server struct {
 	Router     *gin.Engine
 	server     *http.Server
 	AutoCreate sync.Mutex
+
+	RecvCh chan *TcpNodeMsg
+	Ticker *time.Ticker
+	Stop   chan struct{}
 }
 
 func (s *Server) Start() error {

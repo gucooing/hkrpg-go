@@ -163,6 +163,7 @@ func (s *GameServer) PlayerLoginReq(g *player.GamePlayer, payloadMsg pb.Message)
 	}
 	// 异步向node同步在线数据
 	go func() {
+		s.sendNode(cmd.PlayerLoginCsReq, &spb.PlayerLoginReq{PlayerUid: req.PlayerUid})
 		pdsm := &spb.SyncPlayerOnlineDataNotify{
 			PlayerUid: g.Uid,
 		}

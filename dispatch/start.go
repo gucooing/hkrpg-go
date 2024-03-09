@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/dispatch/config"
@@ -25,6 +26,17 @@ func NewServer(cfg *config.Config) *sdk.Server {
 		os.Exit(0)
 	}
 	s.Port = port
+	s.Store = db.NewStore(s.Config) // 初始化数据库连接
+	gin.SetMode(gin.ReleaseMode)    // 初始化gin
+	s.Router = gin.Default()        // gin.New()
+	s.Router.Use(gin.Recovery())
+	cfg.Ec2b = alg.GetEc2b() // 读取ec2b密钥
+
+	s.RecvCh = make(chan *sdk.TcpNodeMsg)
+	s.Ticker = time.NewTicker(5 * time.Second)
+	s.Stop = make(chan struct{})
+	s.ServiceStart()
+
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
@@ -35,12 +47,6 @@ func NewServer(cfg *config.Config) *sdk.Server {
 	go s.RecvNode()
 	// 向node注册
 	s.Connection()
-
-	s.Store = db.NewStore(s.Config) // 初始化数据库连接
-	gin.SetMode(gin.ReleaseMode)    // 初始化gin
-	s.Router = gin.Default()        // gin.New()
-	s.Router.Use(gin.Recovery())
-	cfg.Ec2b = alg.GetEc2b() // 读取ec2b密钥
 
 	return s
 }
