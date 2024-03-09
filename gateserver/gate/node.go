@@ -123,9 +123,30 @@ func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {
 		return
 	}
 	logger.Info("[UID:%v]gate收到主动离线通知", req.PlayerUid)
-	if GAMESERVER.sessionMap[req.PlayerUid] == nil {
+	if GATESERVER.sessionMap[req.PlayerUid] == nil {
 		return
 	}
-	GAMESERVER.sessionMap[req.PlayerUid].PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN
-	KickPlayer(GAMESERVER.sessionMap[req.PlayerUid])
+	GATESERVER.sessionMap[req.PlayerUid].Status = spb.PlayerStatus_PlayerStatus_Offline
+	KickPlayer(GATESERVER.sessionMap[req.PlayerUid])
+}
+
+func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLogoutNotify)
+	if req.PlayerUid == 0 {
+		return
+	}
+	switch req.OfflineReason {
+	case spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN:
+		logger.Info("[UID:%v]gate收到主动离线通知原因:重复登录下线", req.PlayerUid)
+	}
+
+	if player := s.sessionMap[req.PlayerUid]; player != nil {
+		player.Status = spb.PlayerStatus_PlayerStatus_Offline
+		KickPlayer(player)
+	}
+
+	rsp := &spb.PlayerLoginRsp{
+		PlayerUid: req.PlayerUid,
+	}
+	s.sendNode(cmd.PlayerLoginRsp, rsp)
 }

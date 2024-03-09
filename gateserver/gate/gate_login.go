@@ -21,6 +21,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	req := new(proto.PlayerGetTokenCsReq)
 	pb.Unmarshal(playerMsg, req)
 	rsp := new(proto.PlayerGetTokenScRsp)
+	p.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
 
 	// 人数验证
 	if config.GetConfig().MaxPlayer != -1 {
@@ -42,6 +43,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		logger.Error("get token uid error")
 		return
 	}
+	// 拉取db数据
 	uidPlayer := s.Store.QueryUidPlayerUidByFieldPlayer(uint32(accountUid))
 
 	// token验证
@@ -84,8 +86,6 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		return
 	}
 
-	p.IsToken = true
-
 	// 登录成功，拉取game
 	if s.gameAppId == "" || s.gameAll[s.gameAppId] == nil {
 		rsp.Uid = p.Uid
@@ -116,11 +116,10 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	p.Seed = serverSeedUint64
 
 	// 本gate重复登录验证//不向node发送玩家登录通知
-	if player, ok := GAMESERVER.sessionMap[p.Uid]; ok {
+	if player, ok := GATESERVER.sessionMap[p.Uid]; ok {
 		logger.Info("[UID%v]同网关重复登录", p.Uid)
 		// 重复登录下线通知
-		player.IsToken = false
-		player.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GATE_GS
+		player.Status = spb.PlayerStatus_PlayerStatus_Offline
 		KickPlayer(player)
 	}
 	// 异步通知给node
@@ -128,20 +127,23 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		PlayerUid: p.Uid,
 		AppId:     s.gameAppId,
 	}
-	p.sendGame(cmd.PlayerLoginReq, gamereq)
+	// p.sendGame(cmd.PlayerLoginReq, gamereq)
 	go s.sendNode(cmd.PlayerLoginReq, gamereq)
 
-	GAMESERVER.sessionMap[p.Uid] = p
+	GATESERVER.sessionMap[p.Uid] = p
 
 	logger.Info("[UID:%v]登录目标GameServer:%v", p.Uid, s.gameAppId)
 
-	// 构造回复内容
-	rsp.Uid = p.Uid
-	rsp.SecretKeySeed = serverSeedUint64
-	rsp.BlackInfo = &proto.BlackInfo{}
-	GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+	/*
+		// 构造回复内容
+		rsp.Uid = p.Uid
+		rsp.SecretKeySeed = serverSeedUint64
+		rsp.BlackInfo = &proto.BlackInfo{}
+		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+	*/
 }
 
+// 为玩家创建一个独立的新连接
 func (p *PlayerGame) NewGame(gameAddr string) {
 	gameConn, err := net.Dial("tcp", gameAddr)
 	if err != nil {
@@ -151,6 +153,7 @@ func (p *PlayerGame) NewGame(gameAddr string) {
 	p.GameConn = gameConn
 }
 
+// 获取gameserver
 func (s *GateServer) GetGameAppId() string {
 	gameAppId := s.gameAppId
 
@@ -163,6 +166,7 @@ func (s *GateServer) GetGameAppId() string {
 	return gameAppId
 }
 
+// 获取最低负载gameserver
 func (s *GateServer) GetMinGameAppId(errAppId string) string {
 	var minNum uint64
 	var minAppId string
@@ -178,6 +182,7 @@ func (s *GateServer) GetMinGameAppId(errAppId string) string {
 	return minAppId
 }
 
+// 玩家ping包处理
 func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	req := new(proto.PlayerHeartbeatCsReq)
 	pb.Unmarshal(payloadMsg, req)

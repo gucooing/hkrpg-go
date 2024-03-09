@@ -39,28 +39,15 @@ func (p *PlayerGame) recvGame() {
 			logger.Debug("[UID%v]game->gate error: %s", p.Uid, err.Error())
 
 			// TODO
-			if GAMESERVER.sessionMap[p.Uid] == nil {
+			if GATESERVER.sessionMap[p.Uid] == nil {
 				logger.Debug("gate清理异常在线")
 				KickPlayer(p)
 				return
 			}
 
-			switch p.PlayerOfflineReason {
-			case spb.PlayerOfflineReason_OFFLINE_GAME_ERROR:
+			switch p.Status {
+			case spb.PlayerStatus_PlayerStatus_PostLogin:
 				p.SwitchGame()
-			case spb.PlayerOfflineReason_OFFLINE_DRIVING:
-				KickPlayer(p)
-			case spb.PlayerOfflineReason_OFFLINE_TIMEOUT:
-				KickPlayer(p)
-			case spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN:
-				KickPlayer(p)
-			case spb.PlayerOfflineReason_OFFLINE_GATE_GS:
-				KickPlayer(p)
-			case spb.PlayerOfflineReason_OFFLINE_GATE_ERROR:
-				KickPlayer(p)
-			default:
-				logger.Debug("[UID:%v]未知离线原因", p.Uid)
-				KickPlayer(p)
 			}
 			return
 		}
@@ -75,17 +62,17 @@ func (p *PlayerGame) recvGame() {
 }
 
 func (p *PlayerGame) SwitchGame() {
-	GAMESERVER.errGameAppId = append(GAMESERVER.errGameAppId, p.GameAppId)
+	GATESERVER.errGameAppId = append(GATESERVER.errGameAppId, p.GameAppId)
 	var gameAppId string
 	var game *serviceGame
 
 	// 等一分钟
 	for i := 0; i < 12; i++ {
-		if GAMESERVER.sessionMap[p.Uid] == nil {
+		if GATESERVER.sessionMap[p.Uid] == nil {
 			return
 		}
-		gameAppId = GAMESERVER.GetGameAppId()
-		game = GAMESERVER.gameAll[gameAppId]
+		gameAppId = GATESERVER.GetGameAppId()
+		game = GATESERVER.gameAll[gameAppId]
 		if gameAppId == "" || game == nil {
 			logger.Error("GameServer未启动,%vs后重启申请连接GameServer", (i+1)*5)
 			time.Sleep(time.Second * 5)
@@ -104,12 +91,12 @@ func (p *PlayerGame) SwitchGame() {
 	p.GameAppId = game.appId
 	gamereq := &spb.PlayerLoginReq{
 		PlayerUid: p.Uid,
-		AppId:     GAMESERVER.gameAppId,
+		AppId:     GATESERVER.gameAppId,
 	}
-	p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GAME_ERROR
+	p.Status = spb.PlayerStatus_PlayerStatus_PreLogin
 	logger.Info("[UID:%v]切换GameServer目标GameServer:%v", p.Uid, p.GameAppId)
 	p.sendGame(cmd.PlayerLoginReq, gamereq)
-	GAMESERVER.sendNode(cmd.PlayerLoginReq, gamereq)
+	GATESERVER.sendNode(cmd.PlayerLoginReq, gamereq)
 	p.recvGame()
 }
 

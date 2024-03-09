@@ -9,6 +9,7 @@ import (
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -20,11 +21,12 @@ const (
 var NODE *Node = nil
 
 type Node struct {
-	AppId      string
-	Port       string
-	Config     *config.Config
-	MapService map[spb.ServerType]map[string]*Service
-	PlayerMap  map[uint32]*PlayerService // [uid][gateAppId][GameAppId]
+	AppId            string
+	Port             string
+	Config           *config.Config
+	MapService       map[spb.ServerType]map[string]*Service // [ServerType][appid][Service]
+	PlayerMap        map[uint32]*PlayerService              // [uid][gateAppId][GameAppId]
+	PlayerOfflineMap map[uint32]*PlayerOffline
 }
 
 type Service struct {
@@ -40,6 +42,11 @@ type PlayerService struct {
 	GateAppId        string
 	GameAppId        string
 	PlayerOnlineData []byte
+}
+
+type PlayerOffline struct {
+	gate bool
+	game bool
 }
 
 func GetPlayerGame(uid uint32) *Service {
@@ -103,9 +110,9 @@ func (n *Node) NewNode() {
 			logger.Error("NodeServer接受连接失败:%s", err.Error())
 			continue
 		}
-		logger.Info("未知服务尝试连接addr:%s", conn.RemoteAddr().String())
+		// logger.Info("未知服务尝试连接addr:%s", conn.RemoteAddr().String())
 		s := NewService(conn)
-		go s.recvHandle()
+		go recvHandle(s)
 	}
 }
 
@@ -115,32 +122,24 @@ func NewService(conn net.Conn) *Service {
 	return s
 }
 
-func (s *Service) recvHandle() {
+func recvHandle(s *Service) {
 	payload := make([]byte, PacketMaxLen)
-
-	// panic捕获
-	defer func() {
-		if err := recover(); err != nil {
-			logger.Error("!!! SERVICE MAIN LOOP PANIC !!!")
-			logger.Error("error: %v", err)
-			logger.Error("stack: %v", logger.Stack())
-			s.killService()
-		}
-	}()
-
-	for {
-		var bin []byte = nil
-		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
-		if err != nil {
-			s.killService()
-			break
-		}
-		bin = payload[:recvLen]
-		msgList := make([]*alg.PackMsg, 0)
-		alg.DecodeBinToPayload(bin, &msgList, nil)
-		for _, msg := range msgList {
-			serviceMsg := alg.DecodePayloadToProto(msg)
-			s.RegisterMessage(msg.CmdId, serviceMsg)
+	var bin []byte = nil
+	recvLen, err := bufio.NewReader(s.Conn).Read(payload)
+	if err != nil {
+		// s.killService()
+		return
+	}
+	bin = payload[:recvLen]
+	msgList := make([]*alg.PackMsg, 0)
+	alg.DecodeBinToPayload(bin, &msgList, nil)
+	for _, msg := range msgList {
+		serviceMsg := alg.DecodePayloadToProto(msg)
+		// s.RegisterMessage(msg.CmdId, serviceMsg)
+		if msg.CmdId == cmd.ServiceConnectionReq {
+			s.ServiceConnectionReq(serviceMsg)
+		} else {
+			continue
 		}
 	}
 }

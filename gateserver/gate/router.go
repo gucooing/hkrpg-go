@@ -16,6 +16,8 @@ func (s *GateServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.GetAllServiceRsp(serviceMsg)
 	case cmd.PlayerLogoutNotify:
 		s.PlayerLogoutNotify(serviceMsg) // 异gate下线通知
+	case cmd.PlayerLogoutReq:
+		s.PlayerLogoutReq(serviceMsg)
 	default:
 
 	}
@@ -36,11 +38,11 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 		p.HandlePlayerHeartBeatCsReq(tcpMsg.ProtoData) // 心跳包
 		p.GateToGame(tcpMsg)
 	case cmd.PlayerLogoutCsReq: // 退出游戏
-		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_DRIVING
+		p.Status = spb.PlayerStatus_PlayerStatus_Offline
 		logger.Debug("[UID:%v]玩家主动离线", p.Uid)
 		KickPlayer(p)
 	case cmd.PlayerLoginCsReq:
-		p.PlayerOfflineReason = spb.PlayerOfflineReason_OFFLINE_GAME_ERROR
+		p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 		p.GateToGame(tcpMsg)
 	default:
 		p.GateToGame(tcpMsg)

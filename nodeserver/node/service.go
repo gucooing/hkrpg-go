@@ -27,6 +27,7 @@ func getMinService(ServerType spb.ServerType) string {
 	return minService
 }
 
+// 公共服务注册方法
 func (s *Service) ServiceConnectionReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.ServiceConnectionReq)
 	if req.AppId == "" || req.ServerType == 0 {
@@ -41,6 +42,16 @@ func (s *Service) ServiceConnectionReq(serviceMsg pb.Message) {
 	NODE.MapService[s.ServerType][s.AppId] = s
 
 	logger.Info("AppId:%s Service:%s Service registration successful", s.AppId, s.ServerType)
+
+	switch req.ServerType {
+	case spb.ServerType_SERVICE_GATE:
+		go s.gateRecvHandle()
+	case spb.ServerType_SERVICE_GAME:
+		go s.gameRecvHandle()
+	default:
+		logger.Info("Service registration failed")
+		return
+	}
 
 	rsp := &spb.ServiceConnectionRsp{
 		ServerType: req.ServerType,
@@ -129,76 +140,16 @@ func (s *Service) MuipGetAllServiceReq() {
 	s.sendHandle(cmd.GetAllServiceRsp, rsp)
 }
 
-// 注意！只有gate能发登录通知包
-func (s *Service) PlayerLoginReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLoginReq)
-	rsp := new(spb.PlayerLoginRsp)
-	if req.PlayerUid == 0 {
-		s.sendHandle(cmd.PlayerLoginRsp, rsp)
-		return
-	}
-	if NODE.PlayerMap[req.PlayerUid] == nil {
-		rsp.PlayerUid = req.PlayerUid
-		NODE.PlayerMap[req.PlayerUid] = &PlayerService{
-			GateAppId: s.AppId,
-			GameAppId: req.AppId,
-		}
-	} else {
-		// 发送重复登录下线通知
-		if s.ServerType == spb.ServerType_SERVICE_GATE {
-			// 旧game服务玩家数减少
-			if GetPlayerGame(req.PlayerUid) != nil {
-				GetPlayerGame(req.PlayerUid).PlayerNum--
-				if NODE.PlayerMap[req.PlayerUid].GameAppId != req.AppId {
-					// 通知旧game玩家下线
-					notify := &spb.PlayerLogoutNotify{
-						PlayerUid: req.PlayerUid,
-					}
-					GetPlayerGame(req.PlayerUid).sendHandle(cmd.PlayerLogoutNotify, notify)
-				}
-			}
-			if GetPlayerGate(req.PlayerUid) != nil {
-				GetPlayerGate(req.PlayerUid).PlayerNum--
-				if NODE.PlayerMap[req.PlayerUid].GateAppId != s.AppId {
-					// 通知旧gate玩家下线
-					notify := &spb.PlayerLogoutNotify{
-						PlayerUid: req.PlayerUid,
-					}
-					GetPlayerGate(req.PlayerUid).sendHandle(cmd.PlayerLogoutNotify, notify)
-				}
+// 重复登录后处理结果处理
+func repeatLogin(uid uint32) {
+	if player := NODE.PlayerOfflineMap[uid]; player != nil {
+		if player.game && player.gate {
+			if gate := GetPlayerGate(uid); gate != nil {
+				gate.PlayerNum++
+				gate.sendHandle(cmd.PlayerLoginRsp, &spb.PlayerLoginRsp{PlayerUid: uid})
 			}
 		}
-		NODE.PlayerMap[req.PlayerUid].GateAppId = s.AppId
-		NODE.PlayerMap[req.PlayerUid].GameAppId = req.AppId
 	}
-	// 目标game添加玩家数
-	if GetPlayerGame(req.PlayerUid) != nil {
-		GetPlayerGame(req.PlayerUid).PlayerNum++
-	}
-	// 目标gate添加玩家数
-	s.PlayerNum++
-	logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
-
-	s.sendHandle(cmd.PlayerLoginRsp, rsp)
-}
-
-// 注意！只有gate能发离线通知包
-func (s *Service) PlayerLogoutReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutReq)
-	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
-		return
-	}
-	logger.Info("[UID:%v]离线目标GameServer:%v", req.PlayerUid, NODE.PlayerMap[req.PlayerUid].GameAppId)
-	// 通知game玩家离线
-	// GetPlayerGame(req.PlayerUid).sendHandle(cmd.PlayerLogoutReq, serviceMsg)
-	// 减少gate人数
-	s.PlayerNum--
-	// 减少game人数
-	if GetPlayerGame(req.PlayerUid) != nil {
-		GetPlayerGame(req.PlayerUid).PlayerNum--
-	}
-	// 删除玩家
-	delete(NODE.PlayerMap, req.PlayerUid)
 }
 
 func (s *Service) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
