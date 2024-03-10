@@ -46,7 +46,7 @@ func (s *Server) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	case cmd.GetAllServiceGateRsp: // 心跳包
 		s.GetAllServiceGateRsp(serviceMsg)
 	default:
-
+		logger.Info("nodeRegister error cmdid:%v", cmdId)
 	}
 }
 

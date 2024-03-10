@@ -54,6 +54,7 @@ func (s *Server) Shutdown(context.Context) error {
 	if s.server == nil {
 		return nil
 	}
+	close(s.Stop)
 	return s.server.Close()
 }
 

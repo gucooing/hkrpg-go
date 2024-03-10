@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -11,6 +12,23 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
+
+func (s *GateServer) ServiceStart() {
+	go func() {
+		for {
+			select {
+			case msg := <-s.RecvCh:
+				s.nodeRegisterMessage(msg.cmdId, msg.serviceMsg)
+			case <-s.Ticker.C:
+				s.gateGetAllServiceGameReq()
+			case <-s.Stop:
+				s.Ticker.Stop()
+				fmt.Println("Player goroutine stopped")
+				return
+			}
+		}
+	}()
+}
 
 // 向node注册
 func (s *GateServer) Connection() {
@@ -57,7 +75,10 @@ func (s *GateServer) recvNode() {
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			s.NodeRegisterMessage(msg.CmdId, serviceMsg)
+			newServiceMsg := new(TcpNodeMsg)
+			newServiceMsg.cmdId = msg.CmdId
+			newServiceMsg.serviceMsg = serviceMsg
+			s.RecvCh <- newServiceMsg
 		}
 	}
 }
@@ -67,20 +88,21 @@ func (s *GateServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 	if rsp.ServerType == spb.ServerType_SERVICE_GATE && rsp.AppId == s.AppId {
 		logger.Info("已向node注册成功！")
 	}
-	// 获取game地址/心跳包
-	go s.GetAllServiceReq()
 }
 
-func (s *GateServer) GetAllServiceReq() {
+func (s *GateServer) gateGetAllServiceGameReq() {
 	// 心跳包
-	for {
-		req := &spb.GetAllServiceReq{
-			ServiceType:     spb.ServerType_SERVICE_GATE,
-			GetServiceType_: spb.ServerType_SERVICE_GAME,
-		}
-		s.sendNode(cmd.GetAllServiceReq, req)
-		time.Sleep(time.Second * 5)
+	req := &spb.GetAllServiceGameReq{
+		ServiceType: spb.ServerType_SERVICE_GATE,
+		GateTime:    time.Now().UnixNano() / 1e6,
 	}
+	s.sendNode(cmd.GetAllServiceGameReq, req)
+}
+
+func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
+	rsp := serviceMsg.(*spb.GetAllServiceGameRsp)
+
+	logger.Info("gate <--> node ping:%v | min game:%s:%s", (rsp.NodeTime-rsp.GateTime)/2, "6", "6")
 }
 
 func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {

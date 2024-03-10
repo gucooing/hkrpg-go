@@ -2,6 +2,7 @@ package node
 
 import (
 	"bufio"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -45,6 +46,8 @@ func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.gatePlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutReq: // 玩家退出回复
 		s.gatePlayerLogoutReq(serviceMsg)
+	case cmd.GetAllServiceGameReq: // 心跳包
+		s.gateGetAllServiceGameReq(serviceMsg)
 	default:
 		logger.Info("gateRegister error cmdid:%v", cmdId)
 	}
@@ -97,4 +100,29 @@ func (s *Service) gatePlayerLogoutReq(serviceMsg pb.Message) {
 		player.gate = true
 	}
 	repeatLogin(req.PlayerUid)
+}
+
+func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GetAllServiceGameReq)
+	if req.ServiceType != s.ServerType {
+		logger.Debug("Service registration failed")
+		s.killService()
+		return
+	}
+	rsp := &spb.GetAllServiceGameRsp{
+		GameServiceList: make([]*spb.ServiceAll, 0),
+		GateTime:        req.GateTime,
+		NodeTime:        time.Now().UnixNano() / 1e6,
+	}
+	for _, service := range NODE.MapService[spb.ServerType_SERVICE_GAME] {
+		serviceAll := &spb.ServiceAll{
+			ServiceType: service.ServerType,
+			Addr:        service.Addr,
+			Port:        service.Port,
+			PlayerNum:   service.PlayerNum,
+			AppId:       service.AppId,
+		}
+		rsp.GameServiceList = append(rsp.GameServiceList, serviceAll)
+	}
+	s.sendHandle(cmd.GetAllServiceGameRsp, rsp)
 }

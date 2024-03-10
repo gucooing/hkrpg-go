@@ -8,18 +8,18 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (s *GateServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
+func (s *GateServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp:
 		s.ServiceConnectionRsp(serviceMsg)
-	case cmd.GetAllServiceRsp:
-		s.GetAllServiceRsp(serviceMsg)
+	case cmd.GetAllServiceGameRsp:
+		s.GetAllServiceGameRsp(serviceMsg)
 	case cmd.PlayerLogoutNotify:
-		s.PlayerLogoutNotify(serviceMsg) // 异gate下线通知
+		s.PlayerLogoutNotify(serviceMsg) // 玩家下线通知
 	case cmd.PlayerLogoutReq:
-		s.PlayerLogoutReq(serviceMsg)
+		s.PlayerLogoutReq(serviceMsg) // 玩家下线请求
 	default:
-
+		logger.Info("nodeRegister error cmdid:%v", cmdId)
 	}
 }
 

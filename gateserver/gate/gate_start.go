@@ -19,6 +19,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 const (
@@ -43,6 +44,10 @@ type GateServer struct {
 	gameAppId        string                  // 最优appid
 	gameAll          map[string]*serviceGame // 从node拉取的game列表
 	errGameAppId     []string
+
+	RecvCh chan *TcpNodeMsg
+	Ticker *time.Ticker
+	Stop   chan struct{}
 }
 
 type PlayerGame struct {
@@ -67,6 +72,11 @@ type serviceGame struct {
 	addr  string
 	num   uint64
 	appId string
+}
+
+type TcpNodeMsg struct {
+	cmdId      uint16
+	serviceMsg pb.Message
 }
 
 func NewGate(cfg *config.Config) *GateServer {
@@ -94,6 +104,12 @@ func NewGate(cfg *config.Config) *GateServer {
 		os.Exit(0)
 	}
 	s.kcpListener = kcpListener
+
+	s.RecvCh = make(chan *TcpNodeMsg)
+	s.Ticker = time.NewTicker(5 * time.Second)
+	s.Stop = make(chan struct{})
+	s.ServiceStart()
+
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
@@ -270,6 +286,7 @@ func Close() error {
 		player.Status = spb.PlayerStatus_PlayerStatus_PassiveOffline
 		KickPlayer(player)
 	}
+	close(GATESERVER.Stop)
 	return nil
 }
 
