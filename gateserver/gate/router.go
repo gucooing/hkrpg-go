@@ -11,9 +11,9 @@ import (
 func (s *GateServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp:
-		s.ServiceConnectionRsp(serviceMsg)
+		s.ServiceConnectionRsp(serviceMsg) // 注册包
 	case cmd.GetAllServiceGameRsp:
-		s.GetAllServiceGameRsp(serviceMsg)
+		s.GetAllServiceGameRsp(serviceMsg) // 心跳包
 	case cmd.PlayerLogoutNotify:
 		s.PlayerLogoutNotify(serviceMsg) // 玩家下线通知
 	case cmd.PlayerLogoutReq:

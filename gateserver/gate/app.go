@@ -87,7 +87,7 @@ func (p *PlayerGame) SwitchGame() {
 		return
 	}
 
-	p.NewGame(game.addr)
+	p.NewGame(game.addr + ":" + game.port)
 	p.GameAppId = game.appId
 	gamereq := &spb.PlayerLoginReq{
 		PlayerUid: p.Uid,

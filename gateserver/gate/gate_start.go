@@ -72,6 +72,7 @@ type serviceGame struct {
 	addr  string
 	num   uint64
 	appId string
+	port  string
 }
 
 type TcpNodeMsg struct {

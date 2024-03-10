@@ -101,19 +101,10 @@ func (s *GateServer) gateGetAllServiceGameReq() {
 
 func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.GetAllServiceGameRsp)
-
-	logger.Info("gate <--> node ping:%v | min game:%s:%s", (rsp.NodeTime-rsp.GateTime)/2, "6", "6")
-}
-
-func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {
-	rsp := serviceMsg.(*spb.GetAllServiceRsp)
-	if rsp.ServiceType != spb.ServerType_SERVICE_GATE {
-		return
-	}
 	gameAll := make(map[string]*serviceGame, 0)
 	var minGameAppId string
 	var minGameNum uint64 = 0
-	for _, service := range rsp.ServiceList {
+	for _, service := range rsp.GameServiceList {
 		if service.Addr == "" || service.AppId == "" || service.ServiceType != spb.ServerType_SERVICE_GAME {
 			return
 		}
@@ -130,6 +121,7 @@ func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {
 			addr:  service.Addr,
 			num:   service.PlayerNum,
 			appId: service.AppId,
+			port:  service.Port,
 		}
 		gameAll[service.AppId] = serviceG
 	}
@@ -137,6 +129,7 @@ func (s *GateServer) GetAllServiceRsp(serviceMsg pb.Message) {
 	s.gameAppId = minGameAppId
 	s.errGameAppId = make([]string, 0)
 	s.errGameAppId = []string{}
+	logger.Info("gate <--> node ping:%v | min gameappid:%s", (rsp.NodeTime-rsp.GateTime)/2, minGameAppId)
 }
 
 func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {

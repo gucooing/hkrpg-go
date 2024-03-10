@@ -106,7 +106,7 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		logger.Error("game未启动")
 		return
 	}
-	p.NewGame(game.addr)
+	p.NewGame(game.addr + ":" + game.port)
 	p.GameAppId = game.appId
 	go p.recvGame()
 
