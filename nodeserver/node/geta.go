@@ -60,6 +60,7 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 		return
 	}
 	if NODE.PlayerMap[req.PlayerUid] == nil {
+		rsp.PlayerUid = req.PlayerUid
 		logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
 		s.sendHandle(cmd.PlayerLoginRsp, rsp)
 	} else {

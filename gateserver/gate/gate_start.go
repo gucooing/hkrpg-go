@@ -204,13 +204,14 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			switch p.Status {
 			case spb.PlayerStatus_PlayerStatus_PreLogin:
 				if msg.CmdId == cmd.PlayerGetTokenCsReq {
+					p.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
 					s.HandlePlayerGetTokenCsReq(p, msg.ProtoData)
 				} else {
 					p.KcpConn.Close()
 					return
 				}
 			case spb.PlayerStatus_PlayerStatus_LoggingIn:
-				return
+				continue
 			case spb.PlayerStatus_PlayerStatus_PostLogin:
 				p.PlayerRegisterMessage(msg.CmdId, msg)
 			}

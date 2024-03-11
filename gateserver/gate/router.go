@@ -18,6 +18,8 @@ func (s *GateServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.PlayerLogoutNotify(serviceMsg) // 玩家下线通知
 	case cmd.PlayerLogoutReq:
 		s.PlayerLogoutReq(serviceMsg) // 玩家下线请求
+	case cmd.PlayerLoginRsp:
+		s.PlayerLoginRsp(serviceMsg) // node同意gate玩家登录
 	default:
 		logger.Info("nodeRegister error cmdid:%v", cmdId)
 	}

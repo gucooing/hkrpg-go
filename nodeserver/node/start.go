@@ -76,6 +76,7 @@ func NewNode(cfg *config.Config) *Node {
 	NODE.Port = port
 	NODE.MapService = GetMapService()
 	NODE.PlayerMap = make(map[uint32]*PlayerService)
+	NODE.PlayerOfflineMap = make(map[uint32]*PlayerOffline)
 	return NODE
 }
 

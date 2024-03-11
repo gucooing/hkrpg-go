@@ -21,7 +21,6 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	req := new(proto.PlayerGetTokenCsReq)
 	pb.Unmarshal(playerMsg, req)
 	rsp := new(proto.PlayerGetTokenScRsp)
-	p.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
 
 	// 人数验证
 	if config.GetConfig().MaxPlayer != -1 {

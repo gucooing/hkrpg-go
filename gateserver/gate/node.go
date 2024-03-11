@@ -9,6 +9,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -164,4 +165,21 @@ func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
 		PlayerUid: req.PlayerUid,
 	}
 	s.sendNode(cmd.PlayerLoginRsp, rsp)
+}
+
+func (s *GateServer) PlayerLoginRsp(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLoginRsp)
+	if player := s.sessionMap[req.PlayerUid]; player != nil {
+
+		// 通知gs玩家即将登录(要不要等gs准备好再发消息到gs呢？)
+		player.sendGame(cmd.PlayerLoginReq, &spb.PlayerLoginReq{PlayerUid: req.PlayerUid})
+
+		rsp := new(proto.PlayerGetTokenScRsp)
+		rsp.Uid = player.Uid
+		rsp.SecretKeySeed = player.Seed
+		rsp.BlackInfo = &proto.BlackInfo{}
+		player.Status = spb.PlayerStatus_PlayerStatus_PostLogin
+		GateToPlayer(player, cmd.PlayerGetTokenScRsp, rsp)
+		logger.Info("[UID:%v]登录gate", req.PlayerUid)
+	}
 }
