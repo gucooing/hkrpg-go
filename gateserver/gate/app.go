@@ -38,12 +38,14 @@ func (p *PlayerGame) recvGame() {
 		if err != nil {
 			logger.Debug("[UID%v]game->gate error: %s", p.Uid, err.Error())
 
-			// TODO
-			if GATESERVER.sessionMap[p.Uid] == nil {
-				logger.Debug("gate清理异常在线")
-				KickPlayer(p)
-				return
-			}
+			/*
+				// TODO
+				if GATESERVER.sessionMap[p.Uid] == nil {
+					logger.Debug("gate清理异常在线")
+					KickPlayer(p)
+					return
+				}
+			*/
 
 			switch p.Status {
 			case spb.PlayerStatus_PlayerStatus_PostLogin:

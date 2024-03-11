@@ -64,6 +64,7 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 		logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
 		s.sendHandle(cmd.PlayerLoginRsp, rsp)
 	} else {
+		logger.Info("[UID:%v]玩家重复登录，通知gate,node离线该玩家", req.PlayerUid)
 		NODE.PlayerOfflineMap[req.PlayerUid] = &PlayerOffline{
 			gate: false,
 			game: false,

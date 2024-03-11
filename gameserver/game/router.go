@@ -35,7 +35,11 @@ func (s *GameServer) PlayerLogoutReq(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 {
 		return
 	}
-	KickPlayer(s.PlayerMap[req.PlayerUid])
+	if pl := s.PlayerMap[req.PlayerUid]; pl != nil {
+		KickPlayer(s.PlayerMap[req.PlayerUid])
+	}
+
+	s.sendNode(cmd.PlayerLogoutRsp, &spb.PlayerLogoutRsp{PlayerUid: req.PlayerUid})
 }
 
 func (s *GameServer) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
