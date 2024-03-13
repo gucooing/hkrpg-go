@@ -111,11 +111,14 @@ func (s *Service) MuipGetAllServiceReq() {
 
 // 重复登录后处理结果处理
 func repeatLogin(uid uint32) {
-	if player := NODE.PlayerOfflineMap[uid]; player != nil {
-		if player.game && player.gate {
-			if gate := GetPlayerGate(uid); gate != nil {
-				gate.PlayerNum++
-				gate.sendHandle(cmd.PlayerLoginRsp, &spb.PlayerLoginRsp{PlayerUid: uid})
+	if player := NODE.PlayerMap[uid]; player != nil {
+		if status := player.PlayerStatus; status != nil {
+			if status.GateStatus == spb.PlayerGateStatus_PlayerGateStatus_GateLogout && status.GameStatus == spb.PlayerGameStatus_PlayerGameStatus_GameLogout {
+				if gate := GetPlayerGate(uid); gate != nil {
+					status.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
+					gate.PlayerNum++
+					gate.sendHandle(cmd.PlayerLoginRsp, &spb.PlayerLoginRsp{PlayerUid: uid})
+				}
 			}
 		}
 	}

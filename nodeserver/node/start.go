@@ -21,12 +21,11 @@ const (
 var NODE *Node = nil
 
 type Node struct {
-	AppId            string
-	Port             string
-	Config           *config.Config
-	MapService       map[spb.ServerType]map[string]*Service // [ServerType][appid][Service]
-	PlayerMap        map[uint32]*PlayerService              // [uid][gateAppId][GameAppId]
-	PlayerOfflineMap map[uint32]*PlayerOffline
+	AppId      string
+	Port       string
+	Config     *config.Config
+	MapService map[spb.ServerType]map[string]*Service // [ServerType][appid][Service]
+	PlayerMap  map[uint32]*PlayerService              // [uid][gateAppId][GameAppId]
 }
 
 type Service struct {
@@ -42,11 +41,13 @@ type PlayerService struct {
 	GateAppId        string
 	GameAppId        string
 	PlayerOnlineData []byte
+	PlayerStatus     *PlayerStatus
 }
 
-type PlayerOffline struct {
-	gate bool
-	game bool
+type PlayerStatus struct {
+	Status     spb.PlayerStatus
+	GateStatus spb.PlayerGateStatus
+	GameStatus spb.PlayerGameStatus
 }
 
 func GetPlayerGame(uid uint32) *Service {
@@ -76,7 +77,7 @@ func NewNode(cfg *config.Config) *Node {
 	NODE.Port = port
 	NODE.MapService = GetMapService()
 	NODE.PlayerMap = make(map[uint32]*PlayerService)
-	NODE.PlayerOfflineMap = make(map[uint32]*PlayerOffline)
+
 	return NODE
 }
 

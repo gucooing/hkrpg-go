@@ -53,6 +53,12 @@ func (s *Service) gamePlayerLoginReq(serviceMsg pb.Message) {
 	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
 		if player.GameAppId == s.AppId {
 			s.PlayerNum++
+			player.PlayerStatus = &PlayerStatus{
+				Status:     spb.PlayerStatus_PlayerStatus_PostLogin,
+				GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GatePlaying,
+				GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GamePlaying,
+			}
+			logger.Info("[UID%v]玩家已登录game", req.PlayerUid)
 		} else {
 			logger.Info("[UID:%v]玩家异常登录", req.PlayerUid)
 		}
@@ -61,9 +67,9 @@ func (s *Service) gamePlayerLoginReq(serviceMsg pb.Message) {
 
 func (s *Service) gamePlayerLogoutReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutReq)
-	if player := NODE.PlayerOfflineMap[req.PlayerUid]; player != nil {
+	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
 		logger.Info("[UID:%v]game退出登录成功", req.PlayerUid)
-		player.game = true
+		player.PlayerStatus.GameStatus = spb.PlayerGameStatus_PlayerGameStatus_GameLogout
 	}
 	repeatLogin(req.PlayerUid)
 }

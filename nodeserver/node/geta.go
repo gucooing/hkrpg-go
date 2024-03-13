@@ -59,15 +59,25 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 {
 		return
 	}
-	if NODE.PlayerMap[req.PlayerUid] == nil {
+	if player := NODE.PlayerMap[req.PlayerUid]; player == nil {
+		NODE.PlayerMap[req.PlayerUid] = &PlayerService{
+			GateAppId: s.AppId,
+			GameAppId: req.AppId,
+			PlayerStatus: &PlayerStatus{
+				Status:     spb.PlayerStatus_PlayerStatus_LoggingIn, // 登录中的状态
+				GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GateLogin,
+				GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GameLogin,
+			},
+		}
 		rsp.PlayerUid = req.PlayerUid
 		logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
 		s.sendHandle(cmd.PlayerLoginRsp, rsp)
 	} else {
 		logger.Info("[UID:%v]玩家重复登录，通知gate,node离线该玩家", req.PlayerUid)
-		NODE.PlayerOfflineMap[req.PlayerUid] = &PlayerOffline{
-			gate: false,
-			game: false,
+		player.PlayerStatus = &PlayerStatus{
+			Status:     spb.PlayerStatus_PlayerStatus_RepeatLogin, // 登录中的状态
+			GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GateWaitLogout,
+			GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GameWaitLogout,
 		}
 		notify := &spb.PlayerLogoutReq{
 			PlayerUid:     req.PlayerUid,
@@ -89,17 +99,13 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 		}
 	}
 	s.PlayerNum++
-	NODE.PlayerMap[req.PlayerUid] = &PlayerService{
-		GateAppId: s.AppId,
-		GameAppId: req.AppId,
-	}
 }
 
 func (s *Service) gatePlayerLogoutReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutReq)
-	if player := NODE.PlayerOfflineMap[req.PlayerUid]; player != nil {
+	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
 		logger.Info("[UID:%v]gate退出登录成功", req.PlayerUid)
-		player.gate = true
+		player.PlayerStatus.GateStatus = spb.PlayerGateStatus_PlayerGateStatus_GateLogout
 	}
 	repeatLogin(req.PlayerUid)
 }
