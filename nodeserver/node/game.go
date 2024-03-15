@@ -45,6 +45,8 @@ func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.gamePlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutReq: // 玩家退出回复
 		s.gamePlayerLogoutReq(serviceMsg)
+	case cmd.PlayerLogoutNotify:
+		s.gamePlayerLogoutNotify(serviceMsg)
 		logger.Info("gameRegister error cmdid:%v", cmdId)
 	}
 }
@@ -72,4 +74,10 @@ func (s *Service) gamePlayerLogoutReq(serviceMsg pb.Message) {
 		player.PlayerStatus.GameStatus = spb.PlayerGameStatus_PlayerGameStatus_GameLogout
 	}
 	repeatLogin(req.PlayerUid)
+}
+
+func (s *Service) gamePlayerLogoutNotify(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLogoutNotify)
+	s.PlayerNum--
+	logger.Info("[UID:%v]node game离线成功", req.PlayerUid)
 }

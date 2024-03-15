@@ -137,6 +137,8 @@ func (s *GameServer) GateRegisterMessage(g *player.GamePlayer, cmdId uint16, pay
 		s.PlayerLoginReq(g, payloadMsg) // gate玩家登录通知
 	case cmd.PlayerToGameByGateReq:
 		s.PlayerToGameByGateReq(g, payloadMsg)
+	case cmd.PlayerLogoutNotify:
+		s.PlayerLogoutNotify(g, payloadMsg)
 	}
 }
 
@@ -181,6 +183,15 @@ func (s *GameServer) PlayerToGameByGateReq(g *player.GamePlayer, payloadMsg pb.M
 	alg.DecodeBinToPayload(req.PlayerBin, &playerMsgList, nil)
 	for _, msg := range playerMsgList {
 		g.RegisterMessage(msg.CmdId, msg.ProtoData)
+	}
+}
+
+func (s *GameServer) PlayerLogoutNotify(g *player.GamePlayer, payloadMsg pb.Message) {
+	noti := payloadMsg.(*spb.PlayerLogoutNotify)
+	if players := s.PlayerMap[noti.PlayerUid]; players != nil {
+		s.sendNode(cmd.PlayerLogoutNotify, payloadMsg)
+		KickPlayer(g)
+		logger.Info("[UID:%v]game玩家离线成功", noti.PlayerUid)
 	}
 }
 

@@ -7,26 +7,6 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func getMinService(ServerType spb.ServerType) string {
-	var minService string
-	var minNum uint64
-
-	if len(NODE.MapService[ServerType]) == 0 {
-		return ""
-	}
-
-	for _, service := range NODE.MapService[ServerType] {
-		if minService == "" {
-			minService = service.AppId
-		}
-		if service.PlayerNum == 0 || service.PlayerNum < minNum {
-			minService = service.AppId
-		}
-	}
-
-	return minService
-}
-
 // 公共服务注册方法
 func (s *Service) ServiceConnectionReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.ServiceConnectionReq)

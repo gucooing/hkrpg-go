@@ -48,6 +48,8 @@ func (p *PlayerGame) recvGame() {
 			*/
 
 			switch p.Status {
+			case spb.PlayerStatus_PlayerStatus_Offline:
+				KickPlayer(p)
 			case spb.PlayerStatus_PlayerStatus_PostLogin:
 				p.SwitchGame()
 			}

@@ -18,8 +18,6 @@ func (s *GameServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.PlayerLogoutReq(serviceMsg) // 玩家离线通知
 	case cmd.SyncPlayerOnlineDataNotify:
 		s.SyncPlayerOnlineDataNotify(serviceMsg) // 在线数据同步
-	case cmd.PlayerLogoutNotify:
-		s.PlayerLogoutNotify(serviceMsg) // 异game登录下线通知
 	// 下面是gm
 	case cmd.GmGive:
 		s.GmGive(serviceMsg) // 获取物品
@@ -54,17 +52,6 @@ func (s *GameServer) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
 	}
 	logger.Info("[UID%v]在线数据同步成功", noti.PlayerUid)
 	s.PlayerMap[noti.PlayerUid].Player = data
-}
-
-func (s *GameServer) PlayerLogoutNotify(serviceMsg pb.Message) {
-	noti := serviceMsg.(*spb.PlayerLogoutNotify)
-	if noti.PlayerUid == 0 {
-		return
-	}
-	if s.PlayerMap[noti.PlayerUid] == nil {
-		return
-	}
-	KickPlayer(s.PlayerMap[noti.PlayerUid])
 }
 
 func (s *GameServer) GmGive(serviceMsg pb.Message) {

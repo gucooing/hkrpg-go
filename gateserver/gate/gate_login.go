@@ -120,14 +120,15 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		// 重复登录下线通知
 		player.Status = spb.PlayerStatus_PlayerStatus_Offline
 		KickPlayer(player)
+	} else {
+		// 异步通知给node
+		gamereq := &spb.PlayerLoginReq{
+			PlayerUid: p.Uid,
+			AppId:     s.gameAppId,
+		}
+		// p.sendGame(cmd.PlayerLoginReq, gamereq)
+		go s.sendNode(cmd.PlayerLoginReq, gamereq)
 	}
-	// 异步通知给node
-	gamereq := &spb.PlayerLoginReq{
-		PlayerUid: p.Uid,
-		AppId:     s.gameAppId,
-	}
-	// p.sendGame(cmd.PlayerLoginReq, gamereq)
-	go s.sendNode(cmd.PlayerLoginReq, gamereq)
 
 	GATESERVER.sessionMap[p.Uid] = p
 
@@ -192,4 +193,26 @@ func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	p.LastActiveTime = time.Now().Unix()
 
 	GateToPlayer(p, cmd.PlayerHeartBeatScRsp, rsp)
+}
+
+// 玩家主动离线处理
+func (p *PlayerGame) playerOffline() {
+	p.Status = spb.PlayerStatus_PlayerStatus_Offline
+	p.PlayerLogoutNotify()
+	logger.Debug("[UID:%v]玩家主动离线", p.Uid)
+	// 等待game收到消息后被动离线玩家
+	// KickPlayer(p)
+}
+
+/*
+gate -> node
+gate -> game
+*/
+func (p *PlayerGame) PlayerLogoutNotify() {
+	notify := &spb.PlayerLogoutNotify{
+		PlayerUid:     p.Uid,
+		OfflineReason: 0,
+	}
+	GATESERVER.sendNode(cmd.PlayerLogoutNotify, notify)
+	p.sendGame(cmd.PlayerLogoutNotify, notify)
 }

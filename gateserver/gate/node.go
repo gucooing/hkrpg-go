@@ -133,19 +133,6 @@ func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
 	logger.Info("gate <--> node ping:%v | min gameappid:%s", (rsp.NodeTime-rsp.GateTime)/2, minGameAppId)
 }
 
-func (s *GateServer) PlayerLogoutNotify(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutNotify)
-	if req.PlayerUid == 0 {
-		return
-	}
-	logger.Info("[UID:%v]gate收到主动离线通知", req.PlayerUid)
-	if GATESERVER.sessionMap[req.PlayerUid] == nil {
-		return
-	}
-	GATESERVER.sessionMap[req.PlayerUid].Status = spb.PlayerStatus_PlayerStatus_Offline
-	KickPlayer(GATESERVER.sessionMap[req.PlayerUid])
-}
-
 func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutNotify)
 	if req.PlayerUid == 0 {

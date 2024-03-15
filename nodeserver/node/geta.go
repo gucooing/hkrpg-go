@@ -48,6 +48,8 @@ func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.gatePlayerLogoutReq(serviceMsg)
 	case cmd.GetAllServiceGameReq: // 心跳包
 		s.gateGetAllServiceGameReq(serviceMsg)
+	case cmd.PlayerLogoutNotify:
+		s.gatePlayerLogoutNotify(serviceMsg)
 	default:
 		logger.Info("gateRegister error cmdid:%v", cmdId)
 	}
@@ -101,6 +103,7 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 	s.PlayerNum++
 }
 
+// node -> gate 玩家离线通知
 func (s *Service) gatePlayerLogoutReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutReq)
 	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
@@ -133,4 +136,13 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 		rsp.GameServiceList = append(rsp.GameServiceList, serviceAll)
 	}
 	s.sendHandle(cmd.GetAllServiceGameRsp, rsp)
+}
+
+func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLogoutNotify)
+	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
+		s.PlayerNum--
+		delete(NODE.PlayerMap, req.PlayerUid)
+		logger.Info("[UID:%v]node gate离线成功", req.PlayerUid)
+	}
 }
