@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -27,6 +28,7 @@ const (
 	KcpConnAddrChangeNotify = "KcpConnAddrChangeNotify"
 )
 
+var syncPl sync.Mutex
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
 var GATESERVER *GateServer
 
@@ -40,6 +42,7 @@ type GateServer struct {
 	kcpFin           bool
 	sessionIdCounter uint32
 	sessionMap       map[uint32]*PlayerGame
+	waitingLoginMap  map[uint32]*PlayerGame
 	kcpEventChan     chan *KcpEvent
 	gameAppId        string                  // 最优appid
 	gameAll          map[string]*serviceGame // 从node拉取的game列表
@@ -89,6 +92,7 @@ func NewGate(cfg *config.Config) *GateServer {
 	s.Config = cfg
 	s.Store = NewStore(s.Config) // 初始化数据库连接
 	s.sessionMap = make(map[uint32]*PlayerGame)
+	s.waitingLoginMap = make(map[uint32]*PlayerGame)
 	s.AppId = alg.GetAppId()
 	logger.Info("GateServer AppId:%s", s.AppId)
 	port := s.Config.AppList[s.AppId].App["port_player"].Port
@@ -270,7 +274,6 @@ func SendHandle(p *PlayerGame, kcpMsg *alg.PackMsg) {
 		}
 		p.XorKey = createXorPad(p.Seed)
 		logger.Info("uid:%v,seed:%v,密钥交换成功", p.Uid, p.Seed)
-		CLIENT_CONN_NUM = int32(len(GATESERVER.sessionMap))
 	}
 }
 
@@ -297,7 +300,9 @@ func KickPlayer(p *PlayerGame) {
 	GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
 	p.KcpConn.Close()
 	p.GameConn.Close()
+	syncPl.Lock()
 	delete(GATESERVER.sessionMap, p.Uid)
+	syncPl.Unlock()
 	CLIENT_CONN_NUM = int32(len(GATESERVER.sessionMap))
 }
 

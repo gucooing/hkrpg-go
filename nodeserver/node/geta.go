@@ -110,6 +110,9 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 			// 通知旧game玩家下线
 			game.sendHandle(cmd.PlayerLogoutReq, notify)
 		}
+
+		player.GateAppId = s.AppId
+		player.GameAppId = req.AppId
 	}
 }
 

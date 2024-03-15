@@ -47,6 +47,7 @@ func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.gamePlayerLogoutRsp(serviceMsg)
 	case cmd.PlayerLogoutNotify:
 		s.gamePlayerLogoutNotify(serviceMsg)
+	default:
 		logger.Info("gameRegister error cmdid:%v", cmdId)
 	}
 }
@@ -60,7 +61,7 @@ func (s *Service) gamePlayerLoginReq(serviceMsg pb.Message) {
 				GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GatePlaying,
 				GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GamePlaying,
 			}
-			logger.Info("[UID%v]玩家已登录game", req.PlayerUid)
+			logger.Info("[UID:%v]玩家已登录game", req.PlayerUid)
 		} else {
 			logger.Info("[UID:%v]玩家异常登录", req.PlayerUid)
 		}

@@ -156,8 +156,19 @@ func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
 
 func (s *GateServer) PlayerLoginRsp(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLoginRsp)
-	if player := s.sessionMap[req.PlayerUid]; player != nil {
-
+	if player := s.waitingLoginMap[req.PlayerUid]; player != nil {
+		// 同步等待原玩家下线，再将新玩家状态覆盖上去
+		for {
+			syncPl.Lock()
+			if _, ok := s.sessionMap[req.PlayerUid]; ok {
+				time.Sleep(10 * time.Millisecond)
+				continue
+			}
+			s.sessionMap[req.PlayerUid] = player
+			CLIENT_CONN_NUM = int32(len(GATESERVER.sessionMap))
+			syncPl.Unlock()
+			break
+		}
 		// 通知gs玩家即将登录(要不要等gs准备好再发消息到gs呢？)
 		player.sendGame(cmd.PlayerLoginReq, &spb.PlayerLoginReq{PlayerUid: req.PlayerUid})
 

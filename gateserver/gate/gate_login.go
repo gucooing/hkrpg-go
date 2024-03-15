@@ -123,15 +123,14 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 		KickPlayer(player)
 	}
 	// 异步通知给node
-	gamereq := &spb.PlayerLoginReq{
+	nodereq := &spb.PlayerLoginReq{
 		PlayerUid: p.Uid,
 		AppId:     s.gameAppId,
 	}
-	// p.sendGame(cmd.PlayerLoginReq, gamereq)
-	go s.sendNode(cmd.PlayerLoginReq, gamereq)
+	go s.sendNode(cmd.PlayerLoginReq, nodereq)
 
 	// TODO 还是得把待登录玩家添加到一个独立的map中，定时清理
-	GATESERVER.sessionMap[p.Uid] = p
+	GATESERVER.waitingLoginMap[p.Uid] = p
 
 	logger.Info("[UID:%v]登录目标GameServer:%v", p.Uid, s.gameAppId)
 
