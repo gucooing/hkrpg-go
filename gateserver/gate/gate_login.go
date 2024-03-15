@@ -114,22 +114,23 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	serverSeedUint64 := timeRand.Uint64()
 	p.Seed = serverSeedUint64
 
-	// 本gate重复登录验证//不向node发送玩家登录通知
+	// 本gate重复登录验证
 	if player, ok := GATESERVER.sessionMap[p.Uid]; ok {
+		// 同网关登录情况下，应舍去旧gs在线数据，相关协调交由node执行
 		logger.Info("[UID%v]同网关重复登录", p.Uid)
 		// 重复登录下线通知
 		player.Status = spb.PlayerStatus_PlayerStatus_Offline
 		KickPlayer(player)
-	} else {
-		// 异步通知给node
-		gamereq := &spb.PlayerLoginReq{
-			PlayerUid: p.Uid,
-			AppId:     s.gameAppId,
-		}
-		// p.sendGame(cmd.PlayerLoginReq, gamereq)
-		go s.sendNode(cmd.PlayerLoginReq, gamereq)
 	}
+	// 异步通知给node
+	gamereq := &spb.PlayerLoginReq{
+		PlayerUid: p.Uid,
+		AppId:     s.gameAppId,
+	}
+	// p.sendGame(cmd.PlayerLoginReq, gamereq)
+	go s.sendNode(cmd.PlayerLoginReq, gamereq)
 
+	// TODO 还是得把待登录玩家添加到一个独立的map中，定时清理
 	GATESERVER.sessionMap[p.Uid] = p
 
 	logger.Info("[UID:%v]登录目标GameServer:%v", p.Uid, s.gameAppId)

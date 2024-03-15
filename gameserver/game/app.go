@@ -147,7 +147,7 @@ func (s *GameServer) PlayerLoginReq(g *player.GamePlayer, payloadMsg pb.Message)
 	if req.PlayerUid == 0 {
 		return
 	}
-	if s.PlayerMap[req.PlayerUid] != nil {
+	if pla := s.PlayerMap[req.PlayerUid]; pla != nil {
 		KickPlayer(s.PlayerMap[req.PlayerUid])
 	}
 	logger.Info("[UID:%v]玩家登录gs", req.PlayerUid)

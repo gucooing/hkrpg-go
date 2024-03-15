@@ -74,33 +74,43 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 		rsp.PlayerUid = req.PlayerUid
 		logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
 		s.sendHandle(cmd.PlayerLoginRsp, rsp)
+		s.PlayerNum++
 	} else {
-		logger.Info("[UID:%v]玩家重复登录，通知gate,node离线该玩家", req.PlayerUid)
-		player.PlayerStatus = &PlayerStatus{
-			Status:     spb.PlayerStatus_PlayerStatus_RepeatLogin, // 登录中的状态
-			GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GateWaitLogout,
-			GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GameWaitLogout,
-		}
 		notify := &spb.PlayerLogoutReq{
 			PlayerUid:     req.PlayerUid,
 			OfflineReason: spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN,
 		}
-		if game := GetPlayerGame(req.PlayerUid); game != nil {
-			game.PlayerNum--
-			if NODE.PlayerMap[req.PlayerUid].GameAppId != req.AppId {
-				// 通知旧game玩家下线
-				game.sendHandle(cmd.PlayerLogoutReq, notify)
+		if player.GateAppId == s.AppId {
+			// 同网关登录情况
+			// TODO 此处状态问题，没有保存新game，如果是同gate，同game登录无事
+			logger.Info("[UID:%v]玩家同网关登录，通知game离线该玩家", req.PlayerUid)
+			player.PlayerStatus = &PlayerStatus{
+				Status:     spb.PlayerStatus_PlayerStatus_RepeatLogin, // 登录中的状态
+				GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GateLogout,
+				GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GameWaitLogout,
 			}
+		} else {
+			logger.Info("[UID:%v]玩家重复登录，通知gate,game离线该玩家", req.PlayerUid)
+			player.PlayerStatus = &PlayerStatus{
+				Status:     spb.PlayerStatus_PlayerStatus_RepeatLogin, // 登录中的状态
+				GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GateWaitLogout,
+				GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GameWaitLogout,
+			}
+			s.PlayerNum++
 		}
 		if gate := GetPlayerGate(req.PlayerUid); gate != nil {
-			gate.PlayerNum--
-			if NODE.PlayerMap[req.PlayerUid].GateAppId != s.AppId {
+			if gate.AppId != s.AppId {
 				// 通知旧gate玩家下线
+				gate.PlayerNum--
 				gate.sendHandle(cmd.PlayerLogoutReq, notify)
 			}
 		}
+		if game := GetPlayerGame(req.PlayerUid); game != nil {
+			game.PlayerNum--
+			// 通知旧game玩家下线
+			game.sendHandle(cmd.PlayerLogoutReq, notify)
+		}
 	}
-	s.PlayerNum++
 }
 
 // node -> gate 玩家离线通知
