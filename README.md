@@ -19,13 +19,17 @@
 - 巡星之礼
 - 忘却之庭-虚构叙事
 
+### 目前目标：
+- 服务之间通信添加状态，标明成功/失败/失败原因
+- 恢复muip的功能
+- 处理gs异常离线时，玩家的问题（在线数据的处理，是刷新还是继承
+
 ### 使用方法：
 1. 拉取项目文件
 2. run
 ```
-  go mod tidy 
-  go build main.go
-  main / main.exe
+  run build.bat / build.sh
+  run /build
 ```
 
 ### 注：

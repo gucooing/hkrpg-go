@@ -1,4 +1,13 @@
 #!/bin/bash
+if command -v go &> /dev/null; then
+    echo "Go 环境已安装"
+    go version
+else
+    echo "Go 环境未安装"
+    exit 1
+fi
+
+go mod tidy
 
 OUT_DIR=./build
 PROJECT_NAME=hkrpg-go
