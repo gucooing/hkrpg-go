@@ -63,6 +63,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	c.String(200, reqdataBase64)
 }
 
+// 其逻辑不适用于大流量使用，请仅在dev中/人数较少时使用
 func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 	if s.GateAddr == "" {
 		s.ErrorGate(c)

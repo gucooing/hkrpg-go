@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
-	"github.com/gucooing/hkrpg-go/gameserver/game"
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/gameserver/gs"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -41,8 +41,8 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	cfg := config.GetConfig()
 	// 初始化game
-	gs := game.NewGameServer(cfg)
-	if gs == nil {
+	gameserver := gs.NewGameServer(cfg)
+	if gameserver == nil {
 		logger.Error("game初始化失败")
 		return
 	}
@@ -52,7 +52,7 @@ func main() {
 
 	// 启动game
 	go func() {
-		if err = gs.StartGameServer(); err != nil {
+		if err = gameserver.StartGameServer(); err != nil {
 			logger.Error("无法启动game服务器")
 		}
 	}()
@@ -64,7 +64,7 @@ func main() {
 			defer cancel()
 
 			logger.Info("game服务正在关闭")
-			if err = game.Close(); err != nil {
+			if err = gs.Close(); err != nil {
 				logger.Error("无法正常关闭game服务")
 			}
 			logger.Info("game服务已停止")

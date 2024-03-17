@@ -1,4 +1,4 @@
-package game
+package gs
 
 import (
 	"log"
@@ -11,6 +11,11 @@ import (
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	pb "google.golang.org/protobuf/proto"
+)
+
+const (
+	Ticker = 5 // 心跳包间隔时间 / s
 )
 
 var GAMESERVER *GameServer
@@ -23,6 +28,15 @@ type GameServer struct {
 	GSListener net.Listener
 	nodeConn   net.Conn
 	PlayerMap  map[uint32]*player.GamePlayer
+
+	RecvCh chan *TcpNodeMsg
+	Ticker *time.Ticker
+	Stop   chan struct{}
+}
+
+type TcpNodeMsg struct {
+	cmdId      uint16
+	serviceMsg pb.Message
 }
 
 func NewGameServer(cfg *config.Config) *GameServer {
@@ -48,6 +62,12 @@ func NewGameServer(cfg *config.Config) *GameServer {
 		os.Exit(0)
 	}
 	s.GSListener = gSListener
+
+	s.RecvCh = make(chan *TcpNodeMsg)
+	s.Ticker = time.NewTicker(Ticker * time.Second)
+	s.Stop = make(chan struct{})
+	s.ServiceStart()
+
 	// 连接node
 	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
 	if err != nil {
@@ -60,7 +80,7 @@ func NewGameServer(cfg *config.Config) *GameServer {
 	go s.recvNode()
 	go s.AutoUpDataPlayer()
 	// 向node注册
-	s.Connection()
+	s.ServiceConnectionReq()
 
 	return s
 }
@@ -106,5 +126,42 @@ func Close() error {
 	for _, gamePlayer := range GAMESERVER.PlayerMap {
 		KickPlayer(gamePlayer)
 	}
+	return nil
+}
+
+func KickPlayer(g *player.GamePlayer) {
+	/*
+		1.保存数据到数据库
+		2.断开gate-game连接
+	*/
+	logger.Debug("[UID:%v]玩家离线", g.Uid)
+	GAMESERVER.SyncPlayerDate(g)
+	UpDataPlayer(g)
+	g.GateConn.Close()
+	delete(GAMESERVER.PlayerMap, g.Uid)
+}
+
+func UpDataPlayer(g *player.GamePlayer) error {
+	var err error
+	if g.PlayerPb == nil {
+		return nil
+	}
+	if g.Uid == 0 {
+		return nil
+	}
+	dbDate := new(db.Player)
+	dbDate.AccountUid = g.Uid
+
+	dbDate.PlayerDataPb, err = pb.Marshal(g.PlayerPb)
+	if err != nil {
+		logger.Error("pb marshal error: %v", err)
+	}
+
+	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
+		logger.Error("Update Player error")
+		return err
+	}
+
+	logger.Debug("[UID:%v]数据库 数据更新", g.Uid)
 	return nil
 }

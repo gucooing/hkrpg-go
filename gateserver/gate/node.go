@@ -9,7 +9,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -130,7 +129,7 @@ func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
 	s.gameAppId = minGameAppId
 	s.errGameAppId = make([]string, 0)
 	s.errGameAppId = []string{}
-	logger.Info("gate <--> node ping:%v | min gameappid:%s", (rsp.NodeTime-rsp.GateTime)/2, minGameAppId)
+	logger.Debug("gate <--> node ping:%v | min gameappid:%s", (rsp.NodeTime-rsp.GateTime)/2, minGameAppId)
 }
 
 func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
@@ -154,7 +153,7 @@ func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
 	s.sendNode(cmd.PlayerLoginRsp, rsp)
 }
 
-func (s *GateServer) PlayerLoginRsp(serviceMsg pb.Message) {
+func (s *GateServer) nodePlayerLoginRsp(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLoginRsp)
 	if player := s.waitingLoginMap[req.PlayerUid]; player != nil {
 		// 同步等待原玩家下线，再将新玩家状态覆盖上去
@@ -169,15 +168,7 @@ func (s *GateServer) PlayerLoginRsp(serviceMsg pb.Message) {
 			syncPl.Unlock()
 			break
 		}
-		// 通知gs玩家即将登录(要不要等gs准备好再发消息到gs呢？)
+		// 通知gs玩家即将登录
 		player.sendGame(cmd.PlayerLoginReq, &spb.PlayerLoginReq{PlayerUid: req.PlayerUid})
-
-		rsp := new(proto.PlayerGetTokenScRsp)
-		rsp.Uid = player.Uid
-		rsp.SecretKeySeed = player.Seed
-		rsp.BlackInfo = &proto.BlackInfo{}
-		player.Status = spb.PlayerStatus_PlayerStatus_PostLogin
-		GateToPlayer(player, cmd.PlayerGetTokenScRsp, rsp)
-		logger.Info("[UID:%v]登录gate", req.PlayerUid)
 	}
 }

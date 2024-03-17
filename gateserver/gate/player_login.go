@@ -206,7 +206,7 @@ func (p *PlayerGame) playerOffline() {
 
 /*
 gate -> node
-gate -> game
+gate -> gs
 */
 func (p *PlayerGame) PlayerLogoutNotify() {
 	notify := &spb.PlayerLogoutNotify{

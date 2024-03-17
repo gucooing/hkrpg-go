@@ -45,10 +45,12 @@ func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.gamePlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutRsp: // 玩家退出回复
 		s.gamePlayerLogoutRsp(serviceMsg)
-	case cmd.PlayerLogoutNotify:
+	case cmd.PlayerLogoutNotify: // 玩家下线成功通知
 		s.gamePlayerLogoutNotify(serviceMsg)
+	case cmd.GetAllServiceReq: // 获取目标服务所有
+		s.GetAllServiceReq(serviceMsg)
 	default:
-		logger.Info("gameRegister error cmdid:%v", cmdId)
+		logger.Info("game -> node error cmdid:%v", cmdId)
 	}
 }
 func (s *Service) gamePlayerLoginReq(serviceMsg pb.Message) {

@@ -10,10 +10,8 @@ func (s *Service) RegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionReq: // 服务注册
 		s.ServiceConnectionReq(serviceMsg)
-	case cmd.GetAllServiceReq: // 获取目标服务所有
-		s.GetAllServiceReq(serviceMsg)
 	case cmd.SyncPlayerOnlineDataNotify:
-		s.SyncPlayerOnlineDataNotify(serviceMsg) // 同步在线数据
+		s.SyncPlayerOnlineDataNotify(serviceMsg) // 同步在线数据 TODO 应改成堵塞
 		// 下面是GM包
 	case cmd.GmGive:
 		s.GmGive(serviceMsg)

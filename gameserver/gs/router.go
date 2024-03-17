@@ -1,4 +1,4 @@
-package game
+package gs
 
 import (
 	"encoding/json"
@@ -10,7 +10,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (s *GameServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
+func (s *GameServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp:
 		s.ServiceConnectionRsp(serviceMsg)
@@ -18,26 +18,16 @@ func (s *GameServer) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.PlayerLogoutReq(serviceMsg) // 玩家离线通知
 	case cmd.SyncPlayerOnlineDataNotify:
 		s.SyncPlayerOnlineDataNotify(serviceMsg) // 在线数据同步
+	case cmd.GetAllServiceRsp:
+		s.GetAllServiceRsp(serviceMsg)
 	// 下面是gm
 	case cmd.GmGive:
 		s.GmGive(serviceMsg) // 获取物品
 	case cmd.GmWorldLevel:
 		s.GmWorldLevel(serviceMsg) // 设置世界等级
 	default:
-
+		logger.Info("node -> game error cmdid:%v", cmdId)
 	}
-}
-
-func (s *GameServer) PlayerLogoutReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutReq)
-	if req.PlayerUid == 0 {
-		return
-	}
-	if pl := s.PlayerMap[req.PlayerUid]; pl != nil {
-		KickPlayer(s.PlayerMap[req.PlayerUid])
-	}
-
-	s.sendNode(cmd.PlayerLogoutRsp, &spb.PlayerLogoutRsp{PlayerUid: req.PlayerUid})
 }
 
 func (s *GameServer) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
@@ -50,22 +40,6 @@ func (s *GameServer) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
 	if err != nil {
 		return
 	}
-	logger.Info("[UID%v]在线数据同步成功", noti.PlayerUid)
+	logger.Info("[UID:%v]在线数据同步成功", noti.PlayerUid)
 	s.PlayerMap[noti.PlayerUid].Player = data
-}
-
-func (s *GameServer) GmGive(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GmGive)
-	if req.PlayerUid == 0 || s.PlayerMap[req.PlayerUid] == nil {
-		return
-	}
-	s.PlayerMap[req.PlayerUid].GmGive(serviceMsg)
-}
-
-func (s *GameServer) GmWorldLevel(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GmWorldLevel)
-	if req.PlayerUid == 0 || s.PlayerMap[req.PlayerUid] == nil {
-		return
-	}
-	s.PlayerMap[req.PlayerUid].GmWorldLevel(serviceMsg)
 }

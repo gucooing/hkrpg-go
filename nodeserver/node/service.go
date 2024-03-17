@@ -47,31 +47,8 @@ func (s *Service) GetAllServiceReq(serviceMsg pb.Message) {
 	if req.ServiceType == spb.ServerType_SERVICE_NONE {
 		return
 	}
-	switch req.ServiceType {
-	case spb.ServerType_SERVICE_MUIP:
-		s.MuipGetAllServiceReq()
-		return
-	}
 	rsp := &spb.GetAllServiceRsp{
 		ServiceType: req.ServiceType,
-		ServiceList: make([]*spb.ServiceAll, 0),
-	}
-	for _, service := range NODE.MapService[req.GetServiceType_] {
-		serviceList := &spb.ServiceAll{
-			ServiceType: service.ServerType,
-			Addr:        service.Addr + ":" + service.Port,
-			PlayerNum:   service.PlayerNum,
-			AppId:       service.AppId,
-		}
-		rsp.ServiceList = append(rsp.ServiceList, serviceList)
-	}
-
-	s.sendHandle(cmd.GetAllServiceRsp, rsp)
-}
-
-func (s *Service) MuipGetAllServiceReq() {
-	rsp := &spb.GetAllServiceRsp{
-		ServiceType: spb.ServerType_SERVICE_MUIP,
 		ServiceList: make([]*spb.ServiceAll, 0),
 	}
 	for _, serviceList := range NODE.MapService {
@@ -91,8 +68,9 @@ func (s *Service) MuipGetAllServiceReq() {
 
 // 重复登录后处理结果处理
 func repeatLogin(uid uint32) {
-	if player := NODE.PlayerMap[uid]; player != nil {
-		if status := player.PlayerStatus; status != nil {
+	if player := NODE.PlayerMap[uid]; player != nil { // 是否有这个玩家
+		if status := player.PlayerStatus; status != nil { // 是否有状态 （意义不明
+			// 是否符合登录条件
 			if status.GateStatus == spb.PlayerGateStatus_PlayerGateStatus_GateLogout && status.GameStatus == spb.PlayerGameStatus_PlayerGameStatus_GameLogout {
 				if gate := GetPlayerGate(uid); gate != nil {
 					status.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
@@ -118,20 +96,4 @@ func (s *Service) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
 	}
 
 	s.sendHandle(cmd.SyncPlayerOnlineDataNotify, rspn)
-}
-
-func (s *Service) GmGive(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GmGive)
-	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
-		return
-	}
-	GetPlayerGame(req.PlayerUid).sendHandle(cmd.GmGive, serviceMsg)
-}
-
-func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GmWorldLevel)
-	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
-		return
-	}
-	GetPlayerGame(req.PlayerUid).sendHandle(cmd.GmWorldLevel, serviceMsg)
 }

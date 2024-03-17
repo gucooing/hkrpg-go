@@ -46,7 +46,7 @@ func (s *Server) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	case cmd.GetAllServiceGateRsp: // 心跳包
 		s.GetAllServiceGateRsp(serviceMsg)
 	default:
-		logger.Info("nodeRegister error cmdid:%v", cmdId)
+		logger.Info("node -> dispatch error cmdid:%v", cmdId)
 	}
 }
 
@@ -142,5 +142,5 @@ func (s *Server) GetAllServiceGateRsp(serviceMsg pb.Message) {
 	s.GateAddr = minPlayerService.Addr
 	s.GatePort = minPlayerService.Port
 
-	logger.Info("dispatch <--> node ping:%v | min gate:%s:%s", (rsp.NodeTime-rsp.DispatchTime)/2, s.GateAddr, s.GatePort)
+	logger.Debug("dispatch <--> node ping:%v | min gate:%s:%s", (rsp.NodeTime-rsp.DispatchTime)/2, s.GateAddr, s.GatePort)
 }

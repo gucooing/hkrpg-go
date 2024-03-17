@@ -17,7 +17,7 @@ func (s *GateServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	case cmd.PlayerLogoutReq:
 		s.PlayerLogoutReq(serviceMsg) // 玩家下线请求
 	case cmd.PlayerLoginRsp:
-		s.PlayerLoginRsp(serviceMsg) // node同意gate玩家登录
+		s.nodePlayerLoginRsp(serviceMsg) // node同意gate玩家登录
 	default:
 		logger.Info("nodeRegister error cmdid:%v", cmdId)
 	}
@@ -26,7 +26,7 @@ func (s *GateServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 func (p *PlayerGame) GameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 	switch cmdId {
 	case cmd.PlayerLoginRsp:
-		logger.Info("已在game登录")
+		p.gamePlayerLoginRsp(playerMsg) // game同意gate玩家登录
 	default:
 		p.GameToGate(cmdId, playerMsg)
 	}

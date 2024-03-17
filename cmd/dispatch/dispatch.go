@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/dispatch"
 	"github.com/gucooing/hkrpg-go/dispatch/config"
+	"github.com/gucooing/hkrpg-go/dispatch/sdk"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -39,7 +39,7 @@ func main() {
 
 	cfg := config.GetConfig()
 	// 初始化
-	newserver := dispatch.NewServer(cfg)
+	newserver := sdk.NewServer(cfg)
 	if newserver == nil {
 		logger.Error("服务器初始化失败")
 		return

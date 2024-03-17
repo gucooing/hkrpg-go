@@ -5,7 +5,6 @@ import (
 	"math/rand"
 	"strconv"
 
-	// "github.com/gucooing/hkrpg-go/gameserver/game"
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"

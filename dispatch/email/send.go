@@ -4,11 +4,12 @@ import (
 	"net/smtp"
 
 	"github.com/gucooing/hkrpg-go/dispatch/config"
+	"github.com/gucooing/hkrpg-go/pkg/email"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func EmailSend(mailaccount, code string) {
-	e := NewEmail()
+	e := email.NewEmail()
 	e.From = config.GetConfig().Email.From
 	e.To = []string{mailaccount}
 	e.Subject = code + "是你的 Hkrpg-Go 验证码"

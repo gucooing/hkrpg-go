@@ -9,8 +9,8 @@ import (
 
 func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
 	if g.PlayerPb == nil || g.Player == nil {
-		time.Sleep(time.Second)
-		g.RegisterMessage(cmdId, payloadMsg)
+		time.Sleep(100 * time.Millisecond)
+		g.RegisterMessage(cmdId, payloadMsg) // 意义仅在于切gs，不过应该存进缓存里管理,或者由gate缓存，在gs未拉取到数据之前堵塞住
 	}
 	switch cmdId {
 	case cmd.PlayerHeartBeatCsReq:
