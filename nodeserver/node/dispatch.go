@@ -45,7 +45,7 @@ func (s *Service) dispatchRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	case cmd.GetAllServiceGateReq: // 心跳
 		s.dispatchGetAllServiceGateReq(serviceMsg)
 	default:
-		logger.Info("dispatchRegister error cmdid:%v", cmdId)
+		logger.Info("dispatch -> node error cmdid:%v", cmdId)
 	}
 }
 

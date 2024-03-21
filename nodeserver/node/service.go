@@ -22,6 +22,8 @@ func (s *Service) ServiceConnectionReq(serviceMsg pb.Message) {
 		go s.gameRecvHandle()
 	case spb.ServerType_SERVICE_DISPATCH:
 		go s.dispatchRecvHandle()
+	case spb.ServerType_SERVICE_MUIP:
+		go s.muipRecvHandle()
 	default:
 		logger.Info("Service registration failed")
 		return

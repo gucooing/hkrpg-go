@@ -162,6 +162,7 @@ func (s *GateServer) Run() error {
 		kcpConn.SetWriteDelay(false)
 		kcpConn.SetWindowSize(256, 256)
 		kcpConn.SetMtu(1200)
+		kcpConn.GetConv()
 		// 读取密钥相关文件
 		g := s.NewGame(kcpConn)
 		go s.recvHandle(g)
@@ -253,7 +254,7 @@ func (s *GateServer) kcpEnetHandle(listener *kcp.Listener) {
 			}
 		case kcp.ConnEnetFin:
 			// 连接断开通知
-			logger.Info("kcp 断开连接%v", enetNotify.SessionId)
+			logger.Info("kcp 断开连接:%v", enetNotify.SessionId)
 		default:
 		}
 	}

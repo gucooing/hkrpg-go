@@ -23,7 +23,7 @@ func (s *Muip) NodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	case cmd.GetAllServiceRsp: // 心跳包
 		s.GetAllServiceRsp(serviceMsg)
 	default:
-
+		logger.Info("node -> muip error cmdid:%v", cmdId)
 	}
 }
 

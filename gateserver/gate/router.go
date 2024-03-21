@@ -4,7 +4,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -40,7 +39,7 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	case cmd.PlayerLogoutCsReq: // 退出游戏
 		p.playerOffline()
 	case cmd.PlayerLoginCsReq:
-		p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
+		// p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 		p.GateToGame(tcpMsg)
 	default:
 		p.GateToGame(tcpMsg)
