@@ -1,0 +1,116 @@
+name: Build HKRPG-Go Commit
+on:
+  schedule:
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+  repository_dispatch:
+    typrs: [hkrpggopull]
+  push:
+    branches:
+      - dev
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sync HKRPG-Go
+      uses: actions/checkout@v3
+      with:
+        repository: gucooing/hkrpg-go-public
+        ref: "main"
+        path: go/hkrpg
+        ssh-key: ${{ secrets.GAYHUB_TOKEN }}
+        fetch-depth: 0
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.20"
+        check-latest: true
+
+    - name: Go Tidy
+      run: cd go/hkrpg && go mod tidy
+
+    - name: Build for Linux (x64)
+      run: cd go/hkrpg && go build -o hkrpg-go-linux-x64 main.go
+      env:
+        GOOS: linux
+        GOARCH: amd64
+    
+    - name: Build for Linux (x86)
+      run: cd go/hkrpg && go build -o hkrpg-go-linux-x86 main.go
+      env:
+        GOOS: linux
+        GOARCH: 386
+    
+    - name: Build for Windows (x64)
+      run: cd go/hkrpg && go build -o hkrpg-go-windows-x64.exe main.go
+      env:
+        GOOS: windows
+        GOARCH: amd64
+    
+    - name: Build for Windows (x86)
+      run: cd go/hkrpg && go build -o hkrpg-go-windows-x86.exe main.go
+      env:
+        GOOS: windows
+        GOARCH: 386
+    
+    - name: Build for  Linux (ARM)
+      run: cd go/hkrpg && go build -o hkrpg-go-linux-arm main.go
+      env:
+        GOOS: linux
+        GOARCH: arm
+
+    - name: Build for Windows (ARM)
+      run: cd go/hkrpg && go build -o hkrpg-go-windows-arm.exe main.go
+      env:
+        GOOS: windows
+        GOARCH: arm
+
+    - name: Archive Linux x64 artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: hkrpg-go-linux-x64.zip
+        path: |
+          go/hkrpg/data
+          go/hkrpg/hkrpg-go-linux-x64
+        if-no-files-found: warn
+    - name: Archive Linux x86 artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: hkrpg-go-linux-x86.zip
+        path: |
+          go/hkrpg/data
+          go/hkrpg/hkrpg-go-linux-x86
+        if-no-files-found: warn
+    - name: Archive Linux arm artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: hkrpg-go-linux-arm.zip
+        path: |
+          go/hkrpg/data
+          go/hkrpg/hkrpg-go-linux-arm
+        if-no-files-found: warn
+    - name: Archive Windows x64 artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: hkrpg-go-windows-x64.zip
+        path: |
+          go/hkrpg/data
+          go/hkrpg/hkrpg-go-windows-x64.exe
+        if-no-files-found: warn
+    - name: Archive Windows x86 artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: hkrpg-go-windows-x86.zip
+        path: |
+          go/hkrpg/data
+          go/hkrpg/hkrpg-go-windows-x86.exe
+        if-no-files-found: warn
+    - name: Archive Windows arm artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: hkrpg-go-windows-arm.zip
+        path: |
+          go/hkrpg/data
+          go/hkrpg/hkrpg-go-windows-arm.exe
+        if-no-files-found: warn

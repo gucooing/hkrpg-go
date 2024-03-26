@@ -1,0 +1,89 @@
+name: HKRPG-Go Releases
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sync HKRPG-Go
+      uses: actions/checkout@v3
+      with:
+        repository: gucooing/hkrpg-go-public
+        ref: "dev"
+        path: go/hkrpg
+        ssh-key: ${{ secrets.GAYHUB_TOKEN }}
+        fetch-depth: 0
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.20"
+        check-latest: true
+
+    - name: Go Tidy
+      run: cd go/hkrpg && go mod tidy
+
+    - name: Build for Linux (x64)
+      run: cd go/hkrpg && go build -o hkrpg-go-linux-x64 main.go
+      env:
+        GOOS: linux
+        GOARCH: amd64
+    
+    - name: Build for Linux (x86)
+      run: cd go/hkrpg && go build -o hkrpg-go-linux-x86 main.go
+      env:
+        GOOS: linux
+        GOARCH: 386
+    
+    - name: Build for Windows (x64)
+      run: cd go/hkrpg && go build -o hkrpg-go-windows-x64.exe main.go
+      env:
+        GOOS: windows
+        GOARCH: amd64
+    
+    - name: Build for Windows (x86)
+      run: cd go/hkrpg && go build -o hkrpg-go-windows-x86.exe main.go
+      env:
+        GOOS: windows
+        GOARCH: 386
+    
+    - name: Build for  Linux (ARM)
+      run: cd go/hkrpg && go build -o hkrpg-go-linux-arm main.go
+      env:
+        GOOS: linux
+        GOARCH: arm
+
+    - name: Build for Windows (ARM)
+      run: cd go/hkrpg && go build -o hkrpg-go-windows-arm.exe main.go
+      env:
+        GOOS: windows
+        GOARCH: arm
+
+    - name: Package
+      run: |
+        zip -r hkrpg-go-linux-x64.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-linux-x64
+        zip -r hkrpg-go-linux-x86.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-linux-x86
+        zip -r hkrpg-go-linux-arm.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-linux-arm
+        zip -r hkrpg-go-windows-x64.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-windows-x64.exe
+        zip -r hkrpg-go-windows-x86.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-windows-x86.exe
+        zip -r hkrpg-go-windows-arm.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-windows-arm.exe
+
+    - name: Upload Release Assets
+      id: upload-release-assets
+      uses: softprops/action-gh-release@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.TOKENHK }}
+      with:
+        tag_name: v1.0.2
+        name: Release v1.0.2
+        body: sr 1.6.0 完全修正忘却之庭与相关活动
+        draft: false
+        prerelease: false
+        files: |
+          hkrpg-go-linux-x64.zip
+          hkrpg-go-linux-x86.zip
+          hkrpg-go-linux-arm.zip
+          hkrpg-go-windows-x64.zip
+          hkrpg-go-windows-x86.zip
+          hkrpg-go-windows-arm.zip
+
