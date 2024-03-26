@@ -8,6 +8,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/hjson/hjson-go/v4 v4.3.1
 	github.com/mattn/go-colorable v0.1.13
+	github.com/redis/go-redis/v9 v9.5.1
 	golang.org/x/net v0.17.0
 	golang.org/x/sys v0.15.0
 	google.golang.org/protobuf v1.33.0
@@ -36,7 +37,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
-	github.com/redis/go-redis/v9 v9.5.1 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect

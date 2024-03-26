@@ -97,7 +97,7 @@ func GetMapService() map[spb.ServerType]map[string]*Service {
 func (n *Node) NewNode() {
 	logger.Info("此NodeServer端口为:%v", n.Port)
 	// 监听地址和端口
-	listen, err := net.Listen("tcp", "localhost:"+n.Port)
+	listen, err := net.Listen("tcp", "0.0.0.0:"+n.Port)
 	if err != nil {
 		logger.Error("NodeServer监听失败:%s", err.Error())
 		os.Exit(0)
