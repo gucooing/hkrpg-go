@@ -162,7 +162,8 @@ func (s *GateServer) Run() error {
 		kcpConn.SetWriteDelay(false)
 		kcpConn.SetWindowSize(256, 256)
 		kcpConn.SetMtu(1200)
-		kcpConn.GetConv()
+		sessionId := kcpConn.GetSessionId()
+		logger.Info("sessionId:%v", sessionId)
 		// 读取密钥相关文件
 		g := s.NewGame(kcpConn)
 		go s.recvHandle(g)
@@ -174,6 +175,7 @@ func (s *GateServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
 	g := new(PlayerGame)
 	g.KcpConn = kcpConn
 	g.XorKey = config.GetConfig().Ec2b.XorKey()
+	g.LastActiveTime = time.Now().Unix()
 
 	return g
 }

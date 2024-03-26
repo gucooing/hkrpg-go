@@ -68,22 +68,6 @@ func (s *Service) GetAllServiceReq(serviceMsg pb.Message) {
 	s.sendHandle(cmd.GetAllServiceRsp, rsp)
 }
 
-// 重复登录后处理结果处理
-func repeatLogin(uid uint32) {
-	if player := NODE.PlayerMap[uid]; player != nil { // 是否有这个玩家
-		if status := player.PlayerStatus; status != nil { // 是否有状态 （意义不明
-			// 是否符合登录条件
-			if status.GateStatus == spb.PlayerGateStatus_PlayerGateStatus_GateLogout && status.GameStatus == spb.PlayerGameStatus_PlayerGameStatus_GameLogout {
-				if gate := GetPlayerGate(uid); gate != nil {
-					status.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
-					gate.PlayerNum++
-					gate.sendHandle(cmd.PlayerLoginRsp, &spb.PlayerLoginRsp{PlayerUid: uid})
-				}
-			}
-		}
-	}
-}
-
 func (s *Service) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
 	reqn := serviceMsg.(*spb.SyncPlayerOnlineDataNotify)
 	rspn := new(spb.SyncPlayerOnlineDataNotify)

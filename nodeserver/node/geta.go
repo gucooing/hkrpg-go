@@ -72,7 +72,7 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 			},
 		}
 		rsp.PlayerUid = req.PlayerUid
-		logger.Info("[UID:%v]登录目标GameServer:%v", req.PlayerUid, req.AppId)
+		logger.Info("[UID:%v]玩家已登录gate:%v", req.PlayerUid, s.AppId)
 		s.sendHandle(cmd.PlayerLoginRsp, rsp)
 		s.PlayerNum++
 	} else {
@@ -126,6 +126,23 @@ func (s *Service) gatePlayerLogoutReq(serviceMsg pb.Message) {
 	repeatLogin(req.PlayerUid)
 }
 
+// 重复登录后处理结果处理
+func repeatLogin(uid uint32) {
+	if player := NODE.PlayerMap[uid]; player != nil { // 是否有这个玩家
+		if status := player.PlayerStatus; status != nil { // 是否有状态 （意义不明
+			// 是否符合登录条件
+			if status.GateStatus == spb.PlayerGateStatus_PlayerGateStatus_GateLogout && status.GameStatus == spb.PlayerGameStatus_PlayerGameStatus_GameLogout {
+				if gate := GetPlayerGate(uid); gate != nil {
+					status.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
+					gate.PlayerNum++
+					gate.sendHandle(cmd.PlayerLoginRsp, &spb.PlayerLoginRsp{PlayerUid: uid})
+					logger.Info("[UID:%v]玩家已登录gate:%v", uid, gate.AppId)
+				}
+			}
+		}
+	}
+}
+
 func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GetAllServiceGameReq)
 	if req.ServiceType != s.ServerType {
@@ -155,7 +172,11 @@ func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutNotify)
 	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
 		s.PlayerNum--
-		delete(NODE.PlayerMap, req.PlayerUid)
 		logger.Info("[UID:%v]node gate离线成功", req.PlayerUid)
 	}
+	if gs := GetPlayerGame(req.PlayerUid); gs != nil {
+		gs.PlayerNum--
+		logger.Info("[UID:%v]node gs离线成功", req.PlayerUid)
+	}
+	delete(NODE.PlayerMap, req.PlayerUid)
 }

@@ -100,6 +100,7 @@ func (s *GameServer) StartGameServer() error {
 func NewPlayer(conn net.Conn) *player.GamePlayer {
 	g := new(player.GamePlayer)
 	g.GateConn = conn
+	g.LastActiveTime = time.Now().Unix()
 
 	return g
 }

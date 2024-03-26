@@ -227,20 +227,6 @@ func (g *GamePlayer) HandleGetAssistHistoryCsReq() {
 	g.Send(cmd.GetAssistHistoryScRsp, rsp)
 }
 
-func (g *GamePlayer) GetMailCsReq() {
-	rsp := new(proto.GetMailScRsp)
-	rsp.TotalNum = 1
-	rsp.IsEnd = true
-	mailList := &proto.ClientMail{
-		Sender:  "gucooing",
-		Content: "欢迎来到 hkrpg-go server",
-		Title:   "欢迎来到 hkrpg-go server",
-	}
-	rsp.MailList = append(rsp.MailList, mailList)
-
-	g.Send(cmd.GetMailScRsp, rsp)
-}
-
 func (g *GamePlayer) SetClientPausedCsReq() {
 	rsp := new(proto.SetClientPausedScRsp)
 	g.Player.IsPaused = !g.Player.IsPaused

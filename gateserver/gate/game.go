@@ -30,12 +30,16 @@ func (p *PlayerGame) recvGame() {
 				}
 			*/
 
-			switch p.Status {
-			case spb.PlayerStatus_PlayerStatus_Offline:
-				KickPlayer(p)
-			case spb.PlayerStatus_PlayerStatus_PostLogin:
-				p.SwitchGame()
-			}
+			/*
+				switch p.Status {
+				case spb.PlayerStatus_PlayerStatus_Offline:
+					KickPlayer(p)
+				case spb.PlayerStatus_PlayerStatus_PostLogin:
+					p.SwitchGame()
+				}
+			*/
+			// 摆烂了，gs掉线？，md 直接全踢了
+			p.gameError()
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -46,6 +50,11 @@ func (p *PlayerGame) recvGame() {
 			p.GameRegisterMessage(msg.CmdId, playerMsg)
 		}
 	}
+}
+
+func (p *PlayerGame) gameError() {
+	p.PlayerLogoutNotify()
+	KickPlayer(p)
 }
 
 func (p *PlayerGame) SwitchGame() {
