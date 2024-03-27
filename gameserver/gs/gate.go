@@ -61,13 +61,14 @@ func (s *GameServer) PlayerLoginReq(g *player.GamePlayer, payloadMsg pb.Message)
 	if pla := s.PlayerMap[req.PlayerUid]; pla != nil {
 		KickPlayer(s.PlayerMap[req.PlayerUid])
 	}
-	logger.Info("[UID:%v]玩家登录gs", req.PlayerUid)
-	g.Uid = req.PlayerUid
-	s.PlayerMap[req.PlayerUid] = g
+	logger.Info("[AccountId:%v]玩家登录gs", req.PlayerUid)
+	g.AccountId = req.PlayerUid
 
 	// 异步拉取账户数据
 	// go func() {
-	g.GetPlayerDate()
+	g.GetPlayerDate(req.PlayerUid)
+	// g.Uid = req.PlayerUid
+	s.PlayerMap[req.PlayerUid] = g
 	if s.PlayerMap[req.PlayerUid].Player == nil {
 		s.PlayerMap[req.PlayerUid].Player = &player.PlayerData{
 			Battle: make(map[uint32]*player.Battle),

@@ -37,16 +37,12 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	if req.Token == "" || req.AccountUid == "" {
 		return
 	}
-	accountUid, err := strconv.ParseUint(req.AccountUid, 10, 64)
-	if err != nil {
-		logger.Error("get token uid error")
-		return
-	}
+	accountUid := stou32(req.AccountUid)
 	// 拉取db数据
-	uidPlayer := s.Store.QueryUidPlayerUidByFieldPlayer(uint32(accountUid))
-
+	uidPlayer := s.Store.QueryUidPlayerUidByFieldPlayer(accountUid)
+	dbComboToken := s.Store.GetComboTokenByAccountId(req.AccountUid)
 	// token验证
-	if uidPlayer.ComboToken != req.Token {
+	if dbComboToken != req.Token {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 		rsp.Msg = "token验证失败"
@@ -56,34 +52,16 @@ func (s *GateServer) HandlePlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) 
 	}
 
 	// 封禁验证
-	if uidPlayer.IsBan {
+	if uidPlayer.EndTime >= time.Now().Unix() {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)
 		rsp.Msg = "该账号正处于封禁状态，暂时无法登录，详情可联系客服。"
 		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
-		logger.Info("登录账号:%v,已被封禁", accountUid)
+		logger.Info("登录账号:%v,已被封禁,原因:%s", accountUid, uidPlayer.Msg)
 		return
 	}
 
-	p.Uid = uint32(uidPlayer.AccountUid)
-
-	newuidPlayer := &UidPlayer{
-		AccountId:  uidPlayer.AccountId,
-		IsBan:      false,
-		ComboToken: "",
-	}
-
-	syncGD.Lock()
-	err = s.Store.UpdateUidPlayer(uidPlayer.AccountId, newuidPlayer)
-	syncGD.Unlock()
-	if err != nil {
-		rsp.Uid = 0
-		rsp.Retcode = uint32(proto.Retcode_RET_PLAYER_DATA_ERROR)
-		rsp.Msg = "玩家数据错误"
-		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
-		logger.Error("登录账号:%v,玩家数据错误", accountUid)
-		return
-	}
+	p.Uid = accountUid
 
 	// 登录成功，拉取game
 	if s.gameAppId == "" || s.gameAll[s.gameAppId] == nil {
@@ -215,4 +193,12 @@ func (p *PlayerGame) PlayerLogoutNotify() {
 	}
 	GATESERVER.sendNode(cmd.PlayerLogoutNotify, notify)
 	p.sendGame(cmd.PlayerLogoutNotify, notify)
+}
+
+func stou32(msg string) uint32 {
+	if msg == "" {
+		return 0
+	}
+	ms, _ := strconv.ParseUint(msg, 10, 32)
+	return uint32(ms)
 }

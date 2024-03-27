@@ -14,7 +14,7 @@ func (s *Server) ComboGranterApiGetConfigHandler(c *gin.Context) {
 		Protocol:               true,
 		QrEnabled:              true,
 		LogLevel:               "DEBUG",
-		AnnounceURL:            "https://sdk.hoyoverse.com/hkrpg/announcement/index.html?sdk_presentation_style=fullscreen\\u0026sdk_screen_transparent=true\\u0026auth_appid=announcement\\u0026authkey_ver=1\\u0026sign_type=2#/",
+		AnnounceURL:            "https://www.youtube.com/",
 		PushAliasType:          0,
 		DisableYsdkGuard:       true,
 		EnableAnnouncePicPopup: true,

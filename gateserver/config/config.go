@@ -4,25 +4,28 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-
-	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 
 type Config struct {
-	LogLevel   string             `json:"LogLevel"`
-	MysqlDsn   string             `json:"MysqlDsn"`
-	MaxPlayer  int32              `json:"maxPlayer"`
-	AutoCreate bool               `json:"AutoCreate"`
-	OuterIp    string             `json:"OuterIp"`
-	AppList    map[string]AppList `json:"AppList"`
-	NetConf    map[string]string  `json:"NetConf"`
-	Ec2b       *random.Ec2b       `json:"Ec2B"`
+	LogLevel   string               `json:"LogLevel"`
+	MysqlDsn   string               `json:"MysqlDsn"`
+	MaxPlayer  int32                `json:"MaxPlayer"`
+	AutoCreate bool                 `json:"AutoCreate"`
+	OuterIp    string               `json:"OuterIp"`
+	AppList    map[string]AppList   `json:"AppList"`
+	NetConf    map[string]string    `json:"NetConf"`
+	RedisConf  map[string]RedisConf `json:"RedisConf"`
 }
 type AppList struct {
 	App map[string]App `json:"app"`
 }
 type App struct {
 	Port string `json:"port"`
+}
+type RedisConf struct {
+	Addr     string `json:"addr"`
+	Password string `json:"password"`
+	DB       int    `json:"db"`
 }
 
 type NetConf struct {
@@ -102,5 +105,12 @@ var DefaultConfig = &Config{
 	},
 	NetConf: map[string]string{
 		"Node": "127.0.0.1:20081",
+	},
+	RedisConf: map[string]RedisConf{
+		"player_token": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
+		},
 	},
 }

@@ -136,11 +136,11 @@ func (s *Server) GetAllServiceGateRsp(serviceMsg pb.Message) {
 	}
 
 	if minPlayerService == nil {
-		return
+		logger.Debug("get gate server error")
+	} else {
+		s.GateAddr = minPlayerService.Addr
+		s.GatePort = minPlayerService.Port
 	}
 
-	s.GateAddr = minPlayerService.Addr
-	s.GatePort = minPlayerService.Port
-
-	logger.Debug("dispatch <--> node ping:%v | min gate:%s:%s", (rsp.NodeTime-rsp.DispatchTime)/2, s.GateAddr, s.GatePort)
+	logger.Debug("dispatch <--> node ping:%v", (rsp.NodeTime-rsp.DispatchTime)/2)
 }

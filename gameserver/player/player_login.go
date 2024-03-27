@@ -11,17 +11,17 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetPlayerDate() {
+func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 	var err error
 	// playerData := new(PlayerData)
 
-	dbPlayer := db.DBASE.QueryAccountUidByFieldPlayer(g.Uid)
+	dbPlayer := db.DBASE.QueryAccountUidByFieldPlayer(accountId)
 	if dbPlayer.PlayerDataPb == nil {
 		logger.Info("新账号登录，进入初始化流程")
-		playerDataPb := g.NewPlayer(g.Uid)
+		playerDataPb := g.NewPlayer()
 		// g.Player = playerData
 		// 保存账号数据
-		dbPlayer.AccountUid = g.Uid
+		dbPlayer.AccountId = accountId
 		dbPlayer.PlayerDataPb, err = pb.Marshal(playerDataPb)
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
@@ -32,7 +32,9 @@ func (g *GamePlayer) GetPlayerDate() {
 			logger.Error("账号数据储存失败")
 			return
 		}
+		g.Uid = dbPlayer.Uid
 	} else {
+		g.Uid = dbPlayer.Uid
 		g.PlayerPb = new(spb.PlayerBasicCompBin)
 
 		err = pb.Unmarshal(dbPlayer.PlayerDataPb, g.PlayerPb)

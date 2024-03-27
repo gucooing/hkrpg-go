@@ -47,6 +47,7 @@ type GateServer struct {
 	gameAppId        string                  // 最优appid
 	gameAll          map[string]*serviceGame // 从node拉取的game列表
 	errGameAppId     []string
+	Ec2b             *random.Ec2b
 
 	RecvCh chan *TcpNodeMsg
 	Ticker *time.Ticker
@@ -88,7 +89,7 @@ func NewGate(cfg *config.Config) *GateServer {
 	// TODO
 	GATESERVER = s
 
-	cfg.Ec2b = alg.GetEc2b()
+	s.Ec2b = alg.GetEc2b()
 	s.Config = cfg
 	s.Store = NewStore(s.Config) // 初始化数据库连接
 	s.sessionMap = make(map[uint32]*PlayerGame)
@@ -174,7 +175,7 @@ func (s *GateServer) Run() error {
 func (s *GateServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
 	g := new(PlayerGame)
 	g.KcpConn = kcpConn
-	g.XorKey = config.GetConfig().Ec2b.XorKey()
+	g.XorKey = s.Ec2b.XorKey()
 	g.LastActiveTime = time.Now().Unix()
 
 	return g

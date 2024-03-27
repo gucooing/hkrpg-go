@@ -50,10 +50,9 @@ type Vector struct {
 	Z int32
 }
 
-func (g *GamePlayer) NewPlayer(uid uint32) *spb.PlayerBasicCompBin {
+func (g *GamePlayer) NewPlayer() *spb.PlayerBasicCompBin {
 	g.PlayerPb = new(spb.PlayerBasicCompBin)
 	g.PlayerPb = &spb.PlayerBasicCompBin{
-		Uid:                     uid,
 		Level:                   1,
 		Exp:                     0,
 		Nickname:                "hkrpg-go",

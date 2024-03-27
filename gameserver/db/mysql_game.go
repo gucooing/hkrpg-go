@@ -1,9 +1,9 @@
 package db
 
-// 使用账号uid拉取数据
+// 使用账号id拉取数据
 func (s *Store) QueryAccountUidByFieldPlayer(AccountId uint32) *Player {
 	var player Player
-	s.Db.Model(&Player{}).Where("account_uid = ?", AccountId).First(&player)
+	s.Db.Model(&Player{}).Where("account_id = ?", AccountId).First(&player)
 	return &player
 }
 
@@ -17,10 +17,10 @@ func (s *Store) AddDatePlayerFieldByFieldName(player *Player) error {
 
 // 更新账号
 func (s *Store) UpdatePlayer(player *Player) error {
-	if player.AccountUid == 0 {
+	if player.Uid == 0 {
 		return nil
 	}
-	if err := s.Db.Model(&Player{}).Where("account_uid = ?", player.AccountUid).Updates(player).Error; err == nil {
+	if err := s.Db.Model(&Player{}).Where("account_id = ?", player.AccountId).Updates(player).Error; err == nil {
 		return nil
 	} else {
 		return err

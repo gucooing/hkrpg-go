@@ -151,7 +151,8 @@ func UpDataPlayer(g *player.GamePlayer) error {
 		return nil
 	}
 	dbDate := new(db.Player)
-	dbDate.AccountUid = g.Uid
+	dbDate.Uid = g.Uid
+	dbDate.AccountId = g.AccountId
 
 	dbDate.PlayerDataPb, err = pb.Marshal(g.PlayerPb)
 	if err != nil {

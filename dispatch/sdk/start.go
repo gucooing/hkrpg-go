@@ -15,7 +15,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
-	"github.com/redis/go-redis/v9"
 )
 
 type Server struct {
@@ -30,7 +29,6 @@ type Server struct {
 	server     *http.Server
 	AutoCreate sync.Mutex
 	Ec2b       *random.Ec2b
-	RedisDb    *redis.Client
 
 	RecvCh chan *TcpNodeMsg
 	Ticker *time.Ticker
@@ -53,8 +51,7 @@ func NewServer(cfg *config.Config) *Server {
 	gin.SetMode(gin.ReleaseMode)    // 初始化gin
 	s.Router = gin.Default()        // gin.New()
 	s.Router.Use(gin.Recovery())
-	s.Ec2b = alg.GetEc2b()            // 读取ec2b密钥
-	s.RedisDb = db.NewRedis(s.Config) // 初始化redis
+	s.Ec2b = alg.GetEc2b() // 读取ec2b密钥
 
 	s.RecvCh = make(chan *TcpNodeMsg)
 	s.Ticker = time.NewTicker(5 * time.Second)

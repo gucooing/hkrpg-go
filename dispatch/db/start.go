@@ -2,11 +2,54 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/dispatch/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
+
+var ctx = context.Background()
+
+func (s *Store) init() {
+	var err error
+	dsn := s.config.MysqlDsn
+	s.MysqlDb, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
+	})
+	if err != nil {
+		logger.Error("MySQL数据库连接失败,错误原因:%s", err)
+		return
+	}
+	logger.Info("MySQL数据库连接成功")
+	sqlDB, err := s.MysqlDb.DB()
+	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
+	sqlDB.SetMaxIdleConns(10)
+	// SetMaxOpenConns 设置打开数据库连接的最大数量。
+	sqlDB.SetMaxOpenConns(100)
+	// SetConnMaxLifetime 设置了连接可复用的最大时间。
+	sqlDB.SetConnMaxLifetime(10 * time.Second) // 10 秒钟
+	// 初始化表
+	err = s.MysqlDb.AutoMigrate(&Account{})
+	if err != nil {
+		logger.Error("MySQL数据库初始化失败")
+		return
+	}
+	logger.Info("MySQL数据库初始化成功")
+}
+
+// NewStore 创建一个新的 store。
+func NewStore(config *config.Config) *Store {
+	s := &Store{config: config}
+	s.init()
+	s.RedisDb = NewRedis(config) // 初始化redis
+	return s
+}
 
 func NewRedis(config *config.Config) *redis.Client {
 	reconf := config.RedisConf["player_token"]
@@ -41,7 +84,7 @@ func NewRedis(config *config.Config) *redis.Client {
 		DisableIndentity:      false,
 		IdentitySuffix:        "",
 	})
-	if _, err := rdb.Ping(context.Background()).Result(); err != nil {
+	if _, err := rdb.Ping(ctx).Result(); err != nil {
 		panic(err.Error())
 	}
 	logger.Info("Redis数据库连接成功")

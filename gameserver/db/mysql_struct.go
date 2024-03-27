@@ -11,6 +11,7 @@ type Store struct {
 }
 
 type Player struct {
-	AccountUid   uint32
+	Uid          uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	AccountId    uint32
 	PlayerDataPb []byte
 }

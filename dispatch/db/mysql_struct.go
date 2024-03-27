@@ -2,12 +2,14 @@ package db
 
 import (
 	"github.com/gucooing/hkrpg-go/dispatch/config"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type Store struct {
-	config *config.Config
-	Db     *gorm.DB
+	config  *config.Config
+	MysqlDb *gorm.DB
+	RedisDb *redis.Client
 }
 
 type Account struct {
@@ -15,11 +17,4 @@ type Account struct {
 	Username   string
 	Token      string
 	CreateTime int64
-}
-
-type UidPlayer struct {
-	AccountUid uint `gorm:"primarykey;AUTO_INCREMENT"`
-	AccountId  uint
-	IsBan      bool
-	ComboToken string
 }
