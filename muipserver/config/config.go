@@ -37,7 +37,10 @@ func GetConfig() *Config {
 var FileNotExist = errors.New("config file not found")
 
 func LoadConfig(confName string) error {
-	filePath := "./" + confName
+	if _, err := os.Stat("./conf"); os.IsNotExist(err) {
+		os.MkdirAll("./conf", 0644)
+	}
+	filePath := "./conf/" + confName
 	f, err := os.Open(filePath)
 	if err != nil {
 		return FileNotExist
@@ -101,7 +104,7 @@ var DefaultConfig = &Config{
 		"mail_box": {
 			Addr:     "127.0.0.1:6379",
 			Password: "password",
-			DB:       1,
+			DB:       4,
 		},
 	},
 }

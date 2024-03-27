@@ -33,7 +33,10 @@ func GetConfig() *Config {
 var FileNotExist = errors.New("config file not found")
 
 func LoadConfig(confName string) error {
-	filePath := "./" + confName
+	if _, err := os.Stat("./conf"); os.IsNotExist(err) {
+		os.MkdirAll("./conf", 0644)
+	}
+	filePath := "./conf/" + confName
 	f, err := os.Open(filePath)
 	if err != nil {
 		return FileNotExist

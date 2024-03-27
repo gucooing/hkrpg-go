@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		if err == config.FileNotExist {
 			p, _ := json.MarshalIndent(config.DefaultConfig, "", "  ")
-			cf, _ := os.Create("./" + confName)
+			cf, _ := os.Create("./conf/" + confName)
 			cf.Write(p)
 			cf.Close()
 			fmt.Printf("找不到配置文件\n已生成默认配置文件 %s \n", confName)

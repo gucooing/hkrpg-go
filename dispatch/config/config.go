@@ -4,20 +4,18 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
-
-	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 
 type Config struct {
-	LogLevel   string             `json:"LogLevel"`
-	MysqlDsn   string             `json:"MysqlDsn"`
-	AutoCreate bool               `json:"AutoCreate"`
-	Dispatch   []Dispatch         `json:"Dispatch"`
-	OuterIp    string             `json:"OuterIp"`
-	AppList    map[string]AppList `json:"AppList"`
-	NetConf    map[string]string  `json:"NetConf"`
-	Email      *email             `json:"Email"`
-	Ec2b       *random.Ec2b       `json:"Ec2B"`
+	LogLevel   string               `json:"LogLevel"`
+	MysqlDsn   string               `json:"MysqlDsn"`
+	AutoCreate bool                 `json:"AutoCreate"`
+	Dispatch   []Dispatch           `json:"Dispatch"`
+	OuterIp    string               `json:"OuterIp"`
+	AppList    map[string]AppList   `json:"AppList"`
+	NetConf    map[string]string    `json:"NetConf"`
+	Email      *email               `json:"Email"`
+	RedisConf  map[string]RedisConf `json:"RedisConf"`
 }
 type Dispatch struct {
 	Name        string `json:"name"`
@@ -41,6 +39,11 @@ type AppList struct {
 type App struct {
 	Port string `json:"port"`
 }
+type RedisConf struct {
+	Addr     string `json:"addr"`
+	Password string `json:"password"`
+	DB       int    `json:"db"`
+}
 
 var CONF *Config = nil
 
@@ -51,7 +54,10 @@ func GetConfig() *Config {
 var FileNotExist = errors.New("config file not found")
 
 func LoadConfig(confName string) error {
-	filePath := "./" + confName
+	if _, err := os.Stat("./conf"); os.IsNotExist(err) {
+		os.MkdirAll("./conf", 0644)
+	}
+	filePath := "./conf/" + confName
 	f, err := os.Open(filePath)
 	if err != nil {
 		return FileNotExist
@@ -125,6 +131,13 @@ var DefaultConfig = &Config{
 	},
 	NetConf: map[string]string{
 		"Node": "127.0.0.1:20081",
+	},
+	RedisConf: map[string]RedisConf{
+		"player_token": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
+		},
 	},
 	Email: &email{
 		From:     "123456789@qq.com",

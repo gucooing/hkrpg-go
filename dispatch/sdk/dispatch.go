@@ -47,7 +47,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.Ip = s.GateAddr
 	queryGateway.RegionName = "hkrpg-go"
 	queryGateway.Port = stou32(s.GatePort)
-	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Config.Ec2b.Bytes())
+	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 	queryGateway.Unk1 = true
 	queryGateway.Unk2 = true
 	queryGateway.Unk3 = true
@@ -95,7 +95,7 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 
 	dispatch.Ip = s.GateAddr
 	dispatch.Port = stou32(s.GatePort)
-	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Config.Ec2b.Bytes())
+	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)
 
