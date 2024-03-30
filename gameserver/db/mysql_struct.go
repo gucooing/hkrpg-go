@@ -2,16 +2,20 @@ package db
 
 import (
 	"github.com/gucooing/hkrpg-go/gameserver/config"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
 type Store struct {
-	config *config.Config
-	Db     *gorm.DB
+	config  *config.Config
+	Mysql   *gorm.DB
+	RedisDb *redis.Client
 }
 
-type Player struct {
-	Uid          uint32 `gorm:"primarykey;AUTO_INCREMENT"`
-	AccountId    uint32
-	PlayerDataPb []byte
+type PlayerData struct {
+	Uid      uint32 `gorm:"primarykey"`
+	Nickname string
+	Level    uint32
+	Exp      uint32
+	BinData  []byte
 }

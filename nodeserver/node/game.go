@@ -82,5 +82,5 @@ func (s *Service) gamePlayerLogoutRsp(serviceMsg pb.Message) {
 func (s *Service) gamePlayerLogoutNotify(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutNotify)
 	s.PlayerNum--
-	logger.Info("[UID:%v]node game离线成功", req.PlayerUid)
+	logger.Info("[UID:%v]node game离线成功", req.Uid)
 }

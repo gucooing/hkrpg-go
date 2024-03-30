@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/dispatch/config"
+	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
@@ -13,23 +13,27 @@ import (
 	"gorm.io/gorm/schema"
 )
 
+var DBASE *Store
 var ctx = context.Background()
 
 func (s *Store) init() {
 	var err error
+	DBASE = s
 	dsn := s.config.MysqlDsn
-	s.MysqlDb, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+	DBASE.Mysql, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
 		Logger: gromlogger.Default.LogMode(gromlogger.Silent),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
 	})
+	DBASE.config = s.config
+	s.Mysql = DBASE.Mysql
 	if err != nil {
 		logger.Error("MySQL数据库连接失败,错误原因:%s", err)
 		return
 	}
 	logger.Info("MySQL数据库连接成功")
-	sqlDB, err := s.MysqlDb.DB()
+	sqlDB, err := s.Mysql.DB()
 	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
 	sqlDB.SetMaxIdleConns(5)
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
@@ -37,7 +41,7 @@ func (s *Store) init() {
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(10 * time.Second) // 10 秒钟
 	// 初始化表
-	err = s.MysqlDb.AutoMigrate(&Account{})
+	err = s.Mysql.AutoMigrate(&PlayerData{})
 	if err != nil {
 		logger.Error("MySQL数据库初始化失败")
 		return

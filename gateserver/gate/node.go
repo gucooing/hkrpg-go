@@ -133,7 +133,7 @@ func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
 }
 
 func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutNotify)
+	req := serviceMsg.(*spb.PlayerLogoutReq)
 	if req.PlayerUid == 0 {
 		return
 	}
@@ -160,6 +160,7 @@ func (s *GateServer) nodePlayerLoginRsp(serviceMsg pb.Message) {
 		for {
 			syncPl.Lock()
 			if _, ok := s.sessionMap[req.PlayerUid]; ok {
+				syncPl.Unlock()
 				time.Sleep(10 * time.Millisecond)
 				continue
 			}
@@ -171,4 +172,13 @@ func (s *GateServer) nodePlayerLoginRsp(serviceMsg pb.Message) {
 		// 通知gs玩家即将登录
 		player.sendGame(cmd.PlayerLoginReq, &spb.PlayerLoginReq{PlayerUid: req.PlayerUid})
 	}
+}
+
+/******************************************NewLogin***************************************/
+
+func (s *GateServer) PlayerLogoutNotify(uid uint32) {
+	notify := &spb.PlayerLogoutNotify{
+		Uid: uid,
+	}
+	s.sendNode(cmd.PlayerLogoutNotify, notify)
 }

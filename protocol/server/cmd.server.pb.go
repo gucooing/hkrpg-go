@@ -885,61 +885,6 @@ func (x *ServiceAll) GetPort() string {
 	return ""
 }
 
-type PlayerLogoutNotify struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	PlayerUid     uint32              `protobuf:"varint,1,opt,name=player_uid,json=playerUid,proto3" json:"player_uid,omitempty"`
-	OfflineReason PlayerOfflineReason `protobuf:"varint,2,opt,name=offline_reason,json=offlineReason,proto3,enum=proto.PlayerOfflineReason" json:"offline_reason,omitempty"` // 离线原因
-}
-
-func (x *PlayerLogoutNotify) Reset() {
-	*x = PlayerLogoutNotify{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cmd_server_proto_msgTypes[15]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *PlayerLogoutNotify) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PlayerLogoutNotify) ProtoMessage() {}
-
-func (x *PlayerLogoutNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_server_proto_msgTypes[15]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PlayerLogoutNotify.ProtoReflect.Descriptor instead.
-func (*PlayerLogoutNotify) Descriptor() ([]byte, []int) {
-	return file_cmd_server_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *PlayerLogoutNotify) GetPlayerUid() uint32 {
-	if x != nil {
-		return x.PlayerUid
-	}
-	return 0
-}
-
-func (x *PlayerLogoutNotify) GetOfflineReason() PlayerOfflineReason {
-	if x != nil {
-		return x.OfflineReason
-	}
-	return PlayerOfflineReason_OFFLINE_NONE
-}
-
 type SyncPlayerOnlineDataNotify struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -952,7 +897,7 @@ type SyncPlayerOnlineDataNotify struct {
 func (x *SyncPlayerOnlineDataNotify) Reset() {
 	*x = SyncPlayerOnlineDataNotify{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_cmd_server_proto_msgTypes[16]
+		mi := &file_cmd_server_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -965,7 +910,7 @@ func (x *SyncPlayerOnlineDataNotify) String() string {
 func (*SyncPlayerOnlineDataNotify) ProtoMessage() {}
 
 func (x *SyncPlayerOnlineDataNotify) ProtoReflect() protoreflect.Message {
-	mi := &file_cmd_server_proto_msgTypes[16]
+	mi := &file_cmd_server_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -978,7 +923,7 @@ func (x *SyncPlayerOnlineDataNotify) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncPlayerOnlineDataNotify.ProtoReflect.Descriptor instead.
 func (*SyncPlayerOnlineDataNotify) Descriptor() ([]byte, []int) {
-	return file_cmd_server_proto_rawDescGZIP(), []int{16}
+	return file_cmd_server_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *SyncPlayerOnlineDataNotify) GetPlayerUid() uint32 {
@@ -993,6 +938,133 @@ func (x *SyncPlayerOnlineDataNotify) GetPlayerOnlineData() []byte {
 		return x.PlayerOnlineData
 	}
 	return nil
+}
+
+// 新登录流程proto
+type PlayerLoginNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uuid            int64  `protobuf:"varint,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	AccountId       uint32 `protobuf:"varint,2,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"`
+	Uid             uint32 `protobuf:"varint,3,opt,name=uid,proto3" json:"uid,omitempty"`
+	GateServerAppId string `protobuf:"bytes,4,opt,name=gate_server_app_id,json=gateServerAppId,proto3" json:"gate_server_app_id,omitempty"`
+	GameServerAppId string `protobuf:"bytes,5,opt,name=game_server_app_id,json=gameServerAppId,proto3" json:"game_server_app_id,omitempty"`
+}
+
+func (x *PlayerLoginNotify) Reset() {
+	*x = PlayerLoginNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PlayerLoginNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayerLoginNotify) ProtoMessage() {}
+
+func (x *PlayerLoginNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayerLoginNotify.ProtoReflect.Descriptor instead.
+func (*PlayerLoginNotify) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *PlayerLoginNotify) GetUuid() int64 {
+	if x != nil {
+		return x.Uuid
+	}
+	return 0
+}
+
+func (x *PlayerLoginNotify) GetAccountId() uint32 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
+func (x *PlayerLoginNotify) GetUid() uint32 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *PlayerLoginNotify) GetGateServerAppId() string {
+	if x != nil {
+		return x.GateServerAppId
+	}
+	return ""
+}
+
+func (x *PlayerLoginNotify) GetGameServerAppId() string {
+	if x != nil {
+		return x.GameServerAppId
+	}
+	return ""
+}
+
+type PlayerLogoutNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uid uint32 `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+}
+
+func (x *PlayerLogoutNotify) Reset() {
+	*x = PlayerLogoutNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PlayerLogoutNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayerLogoutNotify) ProtoMessage() {}
+
+func (x *PlayerLogoutNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayerLogoutNotify.ProtoReflect.Descriptor instead.
+func (*PlayerLogoutNotify) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *PlayerLogoutNotify) GetUid() uint32 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
 }
 
 var File_cmd_server_proto protoreflect.FileDescriptor
@@ -1104,22 +1176,29 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4e, 0x75, 0x6d, 0x12, 0x15, 0x0a, 0x06, 0x61,
 	0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x70, 0x70,
 	0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x22, 0x76, 0x0a, 0x12, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x4c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x1d, 0x0a, 0x0a,
-	0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
-	0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x55, 0x69, 0x64, 0x12, 0x41, 0x0a, 0x0e, 0x6f,
-	0x66, 0x66, 0x6c, 0x69, 0x6e, 0x65, 0x5f, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0e, 0x32, 0x1a, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x6c, 0x61, 0x79,
-	0x65, 0x72, 0x4f, 0x66, 0x66, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x52,
-	0x0d, 0x6f, 0x66, 0x66, 0x6c, 0x69, 0x6e, 0x65, 0x52, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0x69,
-	0x0a, 0x1a, 0x53, 0x79, 0x6e, 0x63, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4f, 0x6e, 0x6c, 0x69,
-	0x6e, 0x65, 0x44, 0x61, 0x74, 0x61, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x1d, 0x0a, 0x0a,
-	0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d,
-	0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x55, 0x69, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x70,
-	0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x6f, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x5f, 0x64, 0x61, 0x74,
-	0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x10, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4f,
-	0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x44, 0x61, 0x74, 0x61, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x22, 0x69, 0x0a, 0x1a, 0x53, 0x79, 0x6e, 0x63, 0x50, 0x6c,
+	0x61, 0x79, 0x65, 0x72, 0x4f, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x44, 0x61, 0x74, 0x61, 0x4e, 0x6f,
+	0x74, 0x69, 0x66, 0x79, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x75,
+	0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x55, 0x69, 0x64, 0x12, 0x2c, 0x0a, 0x12, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x6f, 0x6e,
+	0x6c, 0x69, 0x6e, 0x65, 0x5f, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52,
+	0x10, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4f, 0x6e, 0x6c, 0x69, 0x6e, 0x65, 0x44, 0x61, 0x74,
+	0x61, 0x22, 0xb2, 0x01, 0x0a, 0x11, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4c, 0x6f, 0x67, 0x69,
+	0x6e, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x75, 0x75, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x61,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x09, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69,
+	0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x75, 0x69, 0x64, 0x12, 0x2b, 0x0a, 0x12,
+	0x67, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x61, 0x70, 0x70, 0x5f,
+	0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x67, 0x61, 0x74, 0x65, 0x53, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x41, 0x70, 0x70, 0x49, 0x64, 0x12, 0x2b, 0x0a, 0x12, 0x67, 0x61, 0x6d,
+	0x65, 0x5f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x67, 0x61, 0x6d, 0x65, 0x53, 0x65, 0x72, 0x76, 0x65,
+	0x72, 0x41, 0x70, 0x70, 0x49, 0x64, 0x22, 0x26, 0x0a, 0x12, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x4c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x10, 0x0a, 0x03,
+	0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x75, 0x69, 0x64, 0x42, 0x0a,
+	0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -1134,7 +1213,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),       // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),       // 1: proto.ServiceConnectionRsp
@@ -1151,30 +1230,30 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*GetAllServiceReq)(nil),           // 12: proto.GetAllServiceReq
 	(*GetAllServiceRsp)(nil),           // 13: proto.GetAllServiceRsp
 	(*ServiceAll)(nil),                 // 14: proto.ServiceAll
-	(*PlayerLogoutNotify)(nil),         // 15: proto.PlayerLogoutNotify
-	(*SyncPlayerOnlineDataNotify)(nil), // 16: proto.SyncPlayerOnlineDataNotify
-	(ServerType)(0),                    // 17: proto.ServerType
-	(PlayerOfflineReason)(0),           // 18: proto.PlayerOfflineReason
+	(*SyncPlayerOnlineDataNotify)(nil), // 15: proto.SyncPlayerOnlineDataNotify
+	(*PlayerLoginNotify)(nil),          // 16: proto.PlayerLoginNotify
+	(*PlayerLogoutNotify)(nil),         // 17: proto.PlayerLogoutNotify
+	(ServerType)(0),                    // 18: proto.ServerType
+	(PlayerOfflineReason)(0),           // 19: proto.PlayerOfflineReason
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	17, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	17, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	18, // 2: proto.PlayerLogoutReq.offline_reason:type_name -> proto.PlayerOfflineReason
-	17, // 3: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
+	18, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	18, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	19, // 2: proto.PlayerLogoutReq.offline_reason:type_name -> proto.PlayerOfflineReason
+	18, // 3: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
 	14, // 4: proto.GetAllServiceGateRsp.gate_service_list:type_name -> proto.ServiceAll
-	17, // 5: proto.GetAllServiceGameReq.service_type:type_name -> proto.ServerType
+	18, // 5: proto.GetAllServiceGameReq.service_type:type_name -> proto.ServerType
 	14, // 6: proto.GetAllServiceGameRsp.game_service_list:type_name -> proto.ServiceAll
-	17, // 7: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
-	17, // 8: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
-	17, // 9: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
+	18, // 7: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
+	18, // 8: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
+	18, // 9: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
 	14, // 10: proto.GetAllServiceRsp.service_list:type_name -> proto.ServiceAll
-	17, // 11: proto.ServiceAll.service_type:type_name -> proto.ServerType
-	18, // 12: proto.PlayerLogoutNotify.offline_reason:type_name -> proto.PlayerOfflineReason
-	13, // [13:13] is the sub-list for method output_type
-	13, // [13:13] is the sub-list for method input_type
-	13, // [13:13] is the sub-list for extension type_name
-	13, // [13:13] is the sub-list for extension extendee
-	0,  // [0:13] is the sub-list for field type_name
+	18, // 11: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	12, // [12:12] is the sub-list for method output_type
+	12, // [12:12] is the sub-list for method input_type
+	12, // [12:12] is the sub-list for extension type_name
+	12, // [12:12] is the sub-list for extension extendee
+	0,  // [0:12] is the sub-list for field type_name
 }
 
 func init() { file_cmd_server_proto_init() }
@@ -1365,7 +1444,7 @@ func file_cmd_server_proto_init() {
 			}
 		}
 		file_cmd_server_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PlayerLogoutNotify); i {
+			switch v := v.(*SyncPlayerOnlineDataNotify); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1377,7 +1456,19 @@ func file_cmd_server_proto_init() {
 			}
 		}
 		file_cmd_server_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SyncPlayerOnlineDataNotify); i {
+			switch v := v.(*PlayerLoginNotify); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cmd_server_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PlayerLogoutNotify); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1395,7 +1486,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   18,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -1,6 +1,8 @@
 package gate
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -39,6 +41,9 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	case cmd.PlayerLogoutCsReq: // 退出游戏
 		p.playerOffline()
 	case cmd.PlayerLoginCsReq:
+		// 添加定时器
+		p.ticker = time.NewTimer(4 * time.Second)
+		go p.loginTicker(p.ticker)
 		// p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 		p.GateToGame(tcpMsg)
 	default:

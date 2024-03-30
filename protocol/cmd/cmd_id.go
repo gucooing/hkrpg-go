@@ -1069,6 +1069,8 @@ const (
 	PlayerLogoutNotify         = 11000
 	SyncPlayerOnlineDataNotify = 11001
 
+	PlayerLoginNotify = 11002
+
 	GmGive       = 12001
 	GmWorldLevel = 12002
 )
@@ -1317,4 +1319,6 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GetAllServiceGameRsp, func() any { return new(spb.GetAllServiceGameRsp) })
 	c.regMsg(PlayerLogoutNotify, func() any { return new(spb.PlayerLogoutNotify) })
 	c.regMsg(SyncPlayerOnlineDataNotify, func() any { return new(spb.SyncPlayerOnlineDataNotify) })
+
+	c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
 }

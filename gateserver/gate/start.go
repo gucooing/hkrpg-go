@@ -34,15 +34,18 @@ var GATESERVER *GateServer
 
 type GateServer struct {
 	AppId            string
+	WorkerId         int64
 	Port             string
 	Config           *config.Config
 	Store            *Store
+	snowflake        *alg.SnowflakeWorker // 雪花唯一id生成器
 	kcpListener      *kcp.Listener
 	nodeConn         net.Conn
 	kcpFin           bool
 	sessionIdCounter uint32
 	sessionMap       map[uint32]*PlayerGame
 	waitingLoginMap  map[uint32]*PlayerGame
+	playerMap        map[int64]*PlayerGame // 玩家内存
 	kcpEventChan     chan *KcpEvent
 	gameAppId        string                  // 最优appid
 	gameAll          map[string]*serviceGame // 从node拉取的game列表
@@ -58,12 +61,15 @@ type PlayerGame struct {
 	GameAppId string
 	// IsToken             bool // 是否通过token验证
 	Status         spb.PlayerStatus
-	Uid            uint32
+	Uid            uint32 // uid
+	AccountId      uint32
+	Uuid           int64 // 唯一临时uuid
 	Seed           uint64
 	XorKey         []byte // 密钥
 	KcpConn        *kcp.UDPSession
 	GameConn       net.Conn
 	LastActiveTime int64 // 最近一次的活跃时间
+	ticker         *time.Timer
 }
 
 type KcpEvent struct {
@@ -94,7 +100,10 @@ func NewGate(cfg *config.Config) *GateServer {
 	s.Store = NewStore(s.Config) // 初始化数据库连接
 	s.sessionMap = make(map[uint32]*PlayerGame)
 	s.waitingLoginMap = make(map[uint32]*PlayerGame)
+	s.playerMap = make(map[int64]*PlayerGame)
 	s.AppId = alg.GetAppId()
+	s.WorkerId = 1
+	s.snowflake = alg.NewSnowflakeWorker(s.WorkerId)
 	logger.Info("GateServer AppId:%s", s.AppId)
 	port := s.Config.AppList[s.AppId].App["port_player"].Port
 	if port == "" {
@@ -213,7 +222,8 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			case spb.PlayerStatus_PlayerStatus_PreLogin:
 				if msg.CmdId == cmd.PlayerGetTokenCsReq {
 					p.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
-					s.HandlePlayerGetTokenCsReq(p, msg.ProtoData)
+					// s.HandlePlayerGetTokenCsReq(p, msg.ProtoData)
+					s.PlayerGetTokenCsReq(p, msg.ProtoData)
 				} else {
 					p.KcpConn.Close()
 					return
@@ -308,6 +318,16 @@ func KickPlayer(p *PlayerGame) {
 	delete(GATESERVER.sessionMap, p.Uid)
 	syncPl.Unlock()
 	CLIENT_CONN_NUM = int32(len(GATESERVER.sessionMap))
+}
+
+func KickwaitingLoginMap(p *PlayerGame) {
+	logger.Info("[UID:%v]离线目标GameServer:%v", p.Uid, p.GameAppId)
+
+	p.KcpConn.Close()
+	p.GameConn.Close()
+	syncPl.Lock()
+	delete(GATESERVER.waitingLoginMap, p.Uid)
+	syncPl.Unlock()
 }
 
 func (s *GateServer) AutoUpDataPlayer() {

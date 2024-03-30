@@ -44,10 +44,11 @@ func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.PlayerLoginReq: // 玩家登录通知
 		s.gatePlayerLoginReq(serviceMsg)
-	case cmd.PlayerLogoutReq: // 玩家退出回复
-		s.gatePlayerLogoutReq(serviceMsg)
+	case cmd.PlayerLoginRsp: // 玩家退出回复
+		s.gatePlayerLoginRsp(serviceMsg)
 	case cmd.GetAllServiceGameReq: // 心跳包
 		s.gateGetAllServiceGameReq(serviceMsg)
+
 	case cmd.PlayerLogoutNotify:
 		s.gatePlayerLogoutNotify(serviceMsg)
 	default:
@@ -117,8 +118,8 @@ func (s *Service) gatePlayerLoginReq(serviceMsg pb.Message) {
 }
 
 // node -> gate 玩家离线通知
-func (s *Service) gatePlayerLogoutReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutReq)
+func (s *Service) gatePlayerLoginRsp(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.PlayerLoginRsp)
 	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
 		logger.Info("[UID:%v]gate退出登录成功", req.PlayerUid)
 		player.PlayerStatus.GateStatus = spb.PlayerGateStatus_PlayerGateStatus_GateLogout
@@ -168,15 +169,9 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 	s.sendHandle(cmd.GetAllServiceGameRsp, rsp)
 }
 
+/******************************************NewLogin***************************************/
+
 func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerLogoutNotify)
-	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
-		s.PlayerNum--
-		logger.Info("[UID:%v]node gate离线成功", req.PlayerUid)
-	}
-	if gs := GetPlayerGame(req.PlayerUid); gs != nil {
-		gs.PlayerNum--
-		logger.Info("[UID:%v]node gs离线成功", req.PlayerUid)
-	}
-	delete(NODE.PlayerMap, req.PlayerUid)
+	logger.Info("[UID:%v]收到玩家被动下线通知", req.Uid)
 }

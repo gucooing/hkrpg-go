@@ -1,6 +1,7 @@
 package player
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/db"
@@ -13,16 +14,23 @@ import (
 
 func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 	var err error
-	// playerData := new(PlayerData)
+	var dbPlayer *db.PlayerData
 
-	dbPlayer := db.DBASE.QueryAccountUidByFieldPlayer(accountId)
-	if dbPlayer.PlayerDataPb == nil {
+	for i := 0; i < 40; i++ {
+		if _, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
+			dbPlayer = db.DBASE.QueryAccountUidByFieldPlayer(accountId)
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	if dbPlayer == nil {
+		dbPlayer = new(db.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
 		playerDataPb := g.NewPlayer()
-		// g.Player = playerData
-		// 保存账号数据
-		dbPlayer.AccountId = accountId
-		dbPlayer.PlayerDataPb, err = pb.Marshal(playerDataPb)
+		// 初始化完毕保存账号数据
+		dbPlayer.Uid = g.Uid
+		dbPlayer.BinData, err = pb.Marshal(playerDataPb)
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
 		}
@@ -32,25 +40,43 @@ func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 			logger.Error("账号数据储存失败")
 			return
 		}
-		g.Uid = dbPlayer.Uid
 	} else {
-		g.Uid = dbPlayer.Uid
 		g.PlayerPb = new(spb.PlayerBasicCompBin)
-
-		err = pb.Unmarshal(dbPlayer.PlayerDataPb, g.PlayerPb)
+		err = pb.Unmarshal(dbPlayer.BinData, g.PlayerPb)
 		if err != nil {
 			logger.Error("unmarshal proto data err: %v", err)
 			return
 		}
 	}
+
+	if g.ticker != nil && g.PlayerPb != nil {
+		g.HandlePlayerLoginScRsp()
+	}
+}
+
+func (g *GamePlayer) loginTicker(t *time.Timer) {
+	for {
+		<-t.C
+		logger.Info("玩家登录超时")
+		// p.killLoginPlayer()
+		return
+	}
 }
 
 func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
+	// 添加定时器
+	g.ticker = time.NewTimer(4 * time.Second)
+	go g.loginTicker(g.ticker)
+
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
-
 	logger.Info("登录的系统是:%s", req.SystemVersion)
+	if g.PlayerPb != nil {
+		g.HandlePlayerLoginScRsp()
+	}
+}
 
+func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
 	rsp.Stamina = g.GetItem().MaterialMap[11]
 	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
@@ -65,8 +91,9 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 		Stamina:    g.GetItem().MaterialMap[11],
 		WorldLevel: g.PlayerPb.WorldLevel,
 	}
-
+	g.ticker.Stop()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
+
 	g.LoginNotify()
 }
 

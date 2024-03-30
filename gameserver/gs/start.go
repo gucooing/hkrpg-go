@@ -28,6 +28,7 @@ type GameServer struct {
 	GSListener net.Listener
 	nodeConn   net.Conn
 	PlayerMap  map[uint32]*player.GamePlayer
+	PlayerMapS map[int64]*player.GamePlayer
 
 	RecvCh chan *TcpNodeMsg
 	Ticker *time.Ticker
@@ -76,6 +77,7 @@ func NewGameServer(cfg *config.Config) *GameServer {
 	}
 	s.nodeConn = tcpConn
 	s.PlayerMap = make(map[uint32]*player.GamePlayer)
+	s.PlayerMapS = make(map[int64]*player.GamePlayer)
 
 	go s.recvNode()
 	go s.AutoUpDataPlayer()
@@ -150,11 +152,10 @@ func UpDataPlayer(g *player.GamePlayer) error {
 	if g.Uid == 0 {
 		return nil
 	}
-	dbDate := new(db.Player)
+	dbDate := new(db.PlayerData)
 	dbDate.Uid = g.Uid
-	dbDate.AccountId = g.AccountId
 
-	dbDate.PlayerDataPb, err = pb.Marshal(g.PlayerPb)
+	dbDate.BinData, err = pb.Marshal(g.PlayerPb)
 	if err != nil {
 		logger.Error("pb marshal error: %v", err)
 	}

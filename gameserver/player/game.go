@@ -3,6 +3,7 @@ package player
 import (
 	"net"
 	"strconv"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -16,13 +17,16 @@ var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
 
 type GamePlayer struct {
 	IsToken        bool // 是否通过token验证
+	Uuid           int64
 	Uid            uint32
 	AccountId      uint32
+	GateAppId      string
 	LastActiveTime int64 // 最近一次的活跃时间
 	// 玩家数据
 	Player   *PlayerData
 	PlayerPb *spb.PlayerBasicCompBin // 玩家pb数据
 	GateConn net.Conn
+	ticker   *time.Timer
 }
 
 const (

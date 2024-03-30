@@ -925,9 +925,9 @@ func (RoomStatus) EnumDescriptor() ([]byte, []int) {
 type Retcode int32
 
 const (
-	Retcode_RET_SUCC              Retcode = 0
-	Retcode_RET_FAIL              Retcode = 1
-	Retcode_RET_PLAYER_DATA_ERROR Retcode = 2
+	Retcode_RET_SUCC              Retcode = 0 // 成功
+	Retcode_RET_FAIL              Retcode = 1 // 失败
+	Retcode_RET_PLAYER_DATA_ERROR Retcode = 2 // 玩家数据损坏
 )
 
 // Enum value maps for Retcode.

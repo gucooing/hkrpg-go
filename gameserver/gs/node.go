@@ -110,6 +110,7 @@ func (s *GameServer) PlayerLogoutReq(serviceMsg pb.Message) {
 	if pl := s.PlayerMap[req.PlayerUid]; pl != nil {
 		KickPlayer(s.PlayerMap[req.PlayerUid])
 	}
+	logger.Info("[UID:%v]node通知该玩家下线", req.PlayerUid)
 
 	s.sendNode(cmd.PlayerLogoutRsp, &spb.PlayerLogoutRsp{PlayerUid: req.PlayerUid})
 }

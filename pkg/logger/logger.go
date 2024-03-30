@@ -164,7 +164,7 @@ func (l *Logger) writeLogFile(logStr string) {
 			fmt.Printf(RED+"rename old log file error: %v\n"+RESET, err)
 			return
 		}
-		file, err := os.OpenFile("./"+l.AppName+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		file, err := os.OpenFile("./log/"+l.AppName+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			fmt.Printf(RED+"open new log file error: %v\n"+RESET, err)
 			return

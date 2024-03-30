@@ -6,13 +6,6 @@ import (
 )
 
 func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
-	//  此处理论不需要了，因为gate是堵塞等待gs拉取账户数据完成后再登录的，所以不存在登录gs后数据还是空的情况
-	/*
-		if g.PlayerPb == nil || g.Player == nil {
-			time.Sleep(100 * time.Millisecond)
-			g.RegisterMessage(cmdId, payloadMsg) // 意义仅在于切gs，不过应该存进缓存里管理,或者由gate缓存，在gs未拉取到数据之前堵塞住
-		}
-	*/
 	switch cmdId {
 	case cmd.PlayerHeartBeatCsReq:
 		g.PlayerHeartBeatCsReq() // 心跳包

@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -135,6 +136,13 @@ func (p *PlayerGame) GameToGate(cmdId uint16, playerMsg pb.Message) {
 	for _, msg := range playerMsgList {
 		// 发到玩家
 		logger.Debug("[S->C][UID:%v][CMDID:%v]", p.Uid, msg.CmdId)
+		if msg.CmdId == cmd.PlayerLoginScRsp {
+			// 登录成功设置
+			p.ticker.Stop()
+			// 解锁
+			GATESERVER.Store.DistUnlock(strconv.Itoa(int(p.AccountId)))
+			p.AddPlayerStatus()
+		}
 		SendHandle(p, msg)
 	}
 }
@@ -159,4 +167,35 @@ func (p *PlayerGame) gamePlayerLoginRsp(playerMsg pb.Message) {
 	p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 	GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
 	logger.Info("[UID:%v]登录gate", p.Uid)
+}
+
+/******************************************NewLogin***************************************/
+
+// gate登录请求
+func (p *PlayerGame) PlayerLoginNotify() {
+	notify := &spb.PlayerLoginNotify{
+		Uuid:            p.Uuid,
+		AccountId:       p.AccountId,
+		Uid:             p.Uid,
+		GateServerAppId: GATESERVER.AppId,
+		GameServerAppId: p.GameAppId,
+	}
+	p.sendGame(cmd.PlayerLoginNotify, notify)
+}
+
+func (p *PlayerGame) AddPlayerStatus() error {
+	bin := &spb.PlayerStatusRedisData{
+		Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
+		GameserverId: p.GameAppId,
+		LoginRand:    p.Seed,
+		LoginTime:    0,
+		Uid:          p.Uid,
+	}
+	value, err := pb.Marshal(bin)
+	if err != nil {
+		logger.Error("pb marshal error: %v\n", err)
+		return err
+	}
+	err = GATESERVER.Store.SetPlayerStatus(strconv.Itoa(int(p.AccountId)), value)
+	return err
 }

@@ -7,18 +7,24 @@ import (
 )
 
 type Config struct {
-	LogLevel           string             `json:"LogLevel"`
-	MysqlDsn           string             `json:"MysqlDsn"`
-	GameDataConfigPath string             `json:"GameDataConfigPath"`
-	OuterIp            string             `json:"OuterIp"`
-	AppList            map[string]AppList `json:"AppList"`
-	NetConf            map[string]string  `json:"NetConf"`
+	LogLevel           string               `json:"LogLevel"`
+	MysqlDsn           string               `json:"MysqlDsn"`
+	GameDataConfigPath string               `json:"GameDataConfigPath"`
+	OuterIp            string               `json:"OuterIp"`
+	AppList            map[string]AppList   `json:"AppList"`
+	NetConf            map[string]string    `json:"NetConf"`
+	RedisConf          map[string]RedisConf `json:"RedisConf"`
 }
 type AppList struct {
 	App map[string]App `json:"app"`
 }
 type App struct {
 	Port string `json:"port"`
+}
+type RedisConf struct {
+	Addr     string `json:"addr"`
+	Password string `json:"password"`
+	DB       int    `json:"db"`
 }
 
 type NetConf struct {
@@ -98,5 +104,12 @@ var DefaultConfig = &Config{
 	NetConf: map[string]string{
 		"Node": "127.0.0.1:20081",
 		"Game": "127.0.0.1:20081",
+	},
+	RedisConf: map[string]RedisConf{
+		"player_login": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
+		},
 	},
 }

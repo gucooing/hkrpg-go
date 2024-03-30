@@ -107,7 +107,7 @@ var DefaultConfig = &Config{
 		"Node": "127.0.0.1:20081",
 	},
 	RedisConf: map[string]RedisConf{
-		"player_token": {
+		"player_login": {
 			Addr:     "127.0.0.1:6379",
 			Password: "password",
 			DB:       1,

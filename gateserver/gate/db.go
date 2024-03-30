@@ -9,6 +9,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	gromlogger "gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
 
@@ -20,18 +21,24 @@ type Store struct {
 	RedisDb *redis.Client
 }
 
-// 登录黑名单
-type LoginBlackUid struct {
-	AccountId uint32
-	BeginTime int64
-	EndTime   int64
-	Msg       string
+/*********************************************Mysql****************************************/
+
+type PlayerUid struct {
+	Uid          uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	AccountType  uint32
+	AccountId    uint32
+	CreateTime   int64
+	IsBan        bool
+	BanBeginTime int64
+	BanEndTime   int64
+	BanMsg       string
 }
 
 func (s *Store) init() {
 	var err error
 	dsn := s.config.MysqlDsn
 	s.MysqlDb, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: gromlogger.Default.LogMode(gromlogger.Silent),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true,
 		},
@@ -43,13 +50,13 @@ func (s *Store) init() {
 	logger.Info("MySQL数据库连接成功")
 	sqlDB, err := s.MysqlDb.DB()
 	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
-	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxIdleConns(5)
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(100)
+	sqlDB.SetMaxOpenConns(10)
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
 	sqlDB.SetConnMaxLifetime(10 * time.Second) // 10 秒钟
 	// 初始化表
-	err = s.MysqlDb.AutoMigrate(&LoginBlackUid{})
+	err = s.MysqlDb.AutoMigrate(&PlayerUid{})
 	if err != nil {
 		logger.Error("MySQL数据库初始化失败")
 		return
@@ -65,8 +72,30 @@ func NewStore(config *config.Config) *Store {
 	return s
 }
 
+// 使用account id拉取数据
+func (s *Store) GetPlayerUidByAccountId(AccountId uint32) *PlayerUid {
+	var playerUid *PlayerUid
+	s.MysqlDb.Model(&PlayerUid{}).Where("account_id = ?", AccountId).First(&playerUid)
+	if playerUid.Uid == 0 {
+		playerUid = s.UpdatePlayerUid(AccountId)
+		return playerUid
+	}
+	return playerUid
+}
+
+// 指定account id 创建数据
+func (s *Store) UpdatePlayerUid(AccountId uint32) *PlayerUid {
+	playerUid := new(PlayerUid)
+	playerUid.AccountId = AccountId
+	s.MysqlDb.Select("account_id", AccountId).Create(&playerUid)
+
+	return playerUid
+}
+
+/*********************************************Redis****************************************/
+
 func NewRedis(config *config.Config) *redis.Client {
-	reconf := config.RedisConf["player_token"]
+	reconf := config.RedisConf["player_login"]
 	rdb := redis.NewClient(&redis.Options{
 		Network:               "",
 		Addr:                  reconf.Addr,
@@ -105,26 +134,7 @@ func NewRedis(config *config.Config) *redis.Client {
 	return rdb
 }
 
-// 使用账号uid拉取数据
-func (s *Store) QueryUidPlayerUidByFieldPlayer(AccountId uint32) *LoginBlackUid {
-	var uidplayer LoginBlackUid
-	s.MysqlDb.Model(&LoginBlackUid{}).Where("account_id = ?", AccountId).First(&uidplayer)
-	return &uidplayer
-}
-
-/*
-// 更新账号
-func (s *Store) UpdateUidPlayer(accountId uint, uidPlayer *UidPlayer) error {
-	if err := s.MysqlDb.Model(&UidPlayer{}).Where("account_id = ?", accountId).Updates(uidPlayer).Error; err == nil {
-		return nil
-	} else {
-		return err
-	}
-}
-*/
-
 // 根据accounid拉取combotoken
-
 func (s *Store) GetComboTokenByAccountId(accountId string) string {
 	key := "player_comboToken:" + accountId
 	comboToken, err := s.RedisDb.Get(ctx, key).Result()
@@ -132,4 +142,75 @@ func (s *Store) GetComboTokenByAccountId(accountId string) string {
 		return ""
 	}
 	return comboToken
+}
+
+const (
+	MaxLockAliveTime  = 10000 // 单个锁的最大存活时间 毫秒
+	LockRetryWaitTime = 50    // 同步加锁重试间隔时间 毫秒
+	MaxLockRetryTimes = 2     // 同步加锁最大重试次数
+)
+
+// DistLockSync 加锁同步阻塞直到成功或超时
+func (s *Store) DistLockSync(accountId string) bool {
+	var result = false
+	for i := 0; i < MaxLockRetryTimes; i++ {
+		var err error = nil
+		key := "player_login_lock:" + accountId
+		result, err = s.RedisDb.SetNX(context.TODO(),
+			key,
+			time.Now().UnixMilli(),
+			time.Millisecond*time.Duration(MaxLockAliveTime)).Result()
+		if err != nil {
+			logger.Error("redis lock setnx error: %v", err)
+			return false
+		}
+		if result == true {
+			break
+		}
+		time.Sleep(time.Millisecond * time.Duration(LockRetryWaitTime))
+	}
+	return result
+}
+
+// DistUnlock 解锁
+func (s *Store) DistUnlock(accountId string) {
+	var result int64 = 0
+	var err error = nil
+	key := "player_login_lock:" + accountId
+	result, err = s.RedisDb.Del(context.TODO(), key).Result()
+	if err != nil {
+		logger.Error("redis lock del error: %v", err)
+		return
+	}
+	if result == 0 {
+		logger.Error("redis lock del result is fail")
+		return
+	}
+}
+
+// 标记玩家状态
+func (s *Store) SetPlayerStatus(accountId string, value []byte) error {
+	key := "player_status:" + accountId
+	err := s.RedisDb.Set(ctx, key, value, 0).Err()
+	return err
+}
+
+// 获取玩家状态
+func (s *Store) GetPlayerStatus(accountId string) ([]byte, bool) {
+	key := "player_status:" + accountId
+	bin, err := s.RedisDb.Get(ctx, key).Bytes()
+	if err == nil {
+		return bin, true
+	} else if err == redis.Nil {
+		return bin, false
+	} else {
+		return bin, false
+	}
+}
+
+// 删除玩家状态
+func (s *Store) DelPlayerStatus(accountId string) error {
+	key := "player_status:" + accountId
+	err := s.RedisDb.Del(ctx, key).Err()
+	return err
 }
