@@ -100,7 +100,7 @@ func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
 		MessageType: 0,
 		PlayerBin:   binMsg,
 	}
-	logger.Debug("[C->S][UID:%v][CMDID:%v]", p.Uid, tcpMsg.CmdId)
+	// logger.Debug("[C->S][UID:%v][CMDID:%v]", p.Uid, tcpMsg.CmdId)
 	// 发送到game
 	p.sendGame(cmd.PlayerToGameByGateReq, gtgMsg)
 }
@@ -112,7 +112,7 @@ func (p *PlayerGame) GameToGate(cmdId uint16, playerMsg pb.Message) {
 	alg.DecodeBinToPayload(rsp.PlayerBin, &playerMsgList, nil)
 	for _, msg := range playerMsgList {
 		// 发到玩家
-		logger.Debug("[S->C][UID:%v][CMDID:%v]", p.Uid, msg.CmdId)
+		// logger.Debug("[S->C][UID:%v][CMDID:%v]", p.Uid, msg.CmdId)
 		if msg.CmdId == cmd.PlayerLoginScRsp {
 			p.playerLoginUp()
 		}
