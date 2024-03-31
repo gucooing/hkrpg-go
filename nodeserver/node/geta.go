@@ -44,6 +44,8 @@ func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.GetAllServiceGameReq: // 心跳包
 		s.gateGetAllServiceGameReq(serviceMsg)
+	case cmd.PlayerLoginNotify:
+		s.gatePlayerLoginNotify(serviceMsg)
 	case cmd.PlayerLogoutNotify:
 		s.gatePlayerLogoutNotify(serviceMsg)
 	default:
@@ -78,10 +80,35 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 
 /******************************************NewLogin***************************************/
 
-func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutNotify)
-	if NODE.PlayerMap[req.Uid] != nil {
-
+func (s *Service) gatePlayerLoginNotify(serviceMsg pb.Message) {
+	notify := serviceMsg.(*spb.PlayerLoginNotify)
+	if notify.Uuid == 0 || notify.Uid == 0 || notify.AccountId == 0 || notify.GameServerAppId == "" || notify.GateServerAppId != s.AppId {
+		logger.Error("[UID:%v][gate->node]PlayerLoginNotify通知错误", notify.Uid)
+		return
 	}
-	logger.Info("[UID:%v]收到玩家被动下线通知", req.Uid)
+	if NODE.PlayerUuidMap[notify.Uid] != 0 {
+		logger.Info("[UID:%v]要上线的玩家还没有下线", notify.Uid)
+		return
+	}
+	AddPlayerUuidMap(notify.Uuid, notify.Uid)
+	AddPlayerMap(notify.Uuid, &PlayerService{
+		GateAppId: notify.GateServerAppId,
+		Uuid:      notify.Uuid,
+		Uid:       notify.Uid,
+	})
+	logger.Info("[UID:%v][UUID%v]玩家上线", notify.Uid, notify.Uuid)
+}
+
+func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
+	notify := serviceMsg.(*spb.PlayerLogoutNotify)
+	if NODE.PlayerUuidMap[notify.Uid] == 0 {
+		logger.Info("[UID:%v]找不到要下线的玩家", notify.Uid)
+		return
+	}
+	ps := getPlayerServiceByUuid(notify.Uid)
+	gs := getGsByAppId(ps.GameAppId)
+	gs.sendHandle(cmd.NodeToGsPlayerLogoutNotify, &spb.NodeToGsPlayerLogoutNotify{Uuid: ps.Uuid})
+	DelPlayerUuidMap(ps.Uid)
+	DelPlayerMap(ps.Uuid)
+	logger.Info("[UID:%v]收到玩家被动下线通知", notify.Uid)
 }

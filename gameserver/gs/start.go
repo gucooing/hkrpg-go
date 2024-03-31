@@ -27,12 +27,10 @@ type GameServer struct {
 	AppId      string
 	GSListener net.Listener
 	nodeConn   net.Conn
-	PlayerMap  map[uint32]*player.GamePlayer
-	PlayerMapS map[int64]*player.GamePlayer
-
-	RecvCh chan *TcpNodeMsg
-	Ticker *time.Ticker
-	Stop   chan struct{}
+	PlayerMap  map[int64]*player.GamePlayer
+	RecvCh     chan *TcpNodeMsg
+	Ticker     *time.Ticker
+	Stop       chan struct{}
 }
 
 type TcpNodeMsg struct {
@@ -76,8 +74,7 @@ func NewGameServer(cfg *config.Config) *GameServer {
 		os.Exit(0)
 	}
 	s.nodeConn = tcpConn
-	s.PlayerMap = make(map[uint32]*player.GamePlayer)
-	s.PlayerMapS = make(map[int64]*player.GamePlayer)
+	s.PlayerMap = make(map[int64]*player.GamePlayer)
 
 	go s.recvNode()
 	go s.AutoUpDataPlayer()

@@ -1107,6 +1107,53 @@ func (x *PlayerLogoutRsp) GetUid() uint32 {
 	return 0
 }
 
+type NodeToGsPlayerLogoutNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uuid int64 `protobuf:"varint,1,opt,name=uuid,proto3" json:"uuid,omitempty"`
+}
+
+func (x *NodeToGsPlayerLogoutNotify) Reset() {
+	*x = NodeToGsPlayerLogoutNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *NodeToGsPlayerLogoutNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NodeToGsPlayerLogoutNotify) ProtoMessage() {}
+
+func (x *NodeToGsPlayerLogoutNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NodeToGsPlayerLogoutNotify.ProtoReflect.Descriptor instead.
+func (*NodeToGsPlayerLogoutNotify) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *NodeToGsPlayerLogoutNotify) GetUuid() int64 {
+	if x != nil {
+		return x.Uuid
+	}
+	return 0
+}
+
 var File_cmd_server_proto protoreflect.FileDescriptor
 
 var file_cmd_server_proto_rawDesc = []byte{
@@ -1244,8 +1291,11 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x04, 0x75, 0x75, 0x69, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
 	0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x61, 0x63, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x49, 0x64, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x0d, 0x52, 0x03, 0x75, 0x69, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x0d, 0x52, 0x03, 0x75, 0x69, 0x64, 0x22, 0x30, 0x0a, 0x1a, 0x4e, 0x6f, 0x64, 0x65, 0x54, 0x6f,
+	0x47, 0x73, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x4e, 0x6f,
+	0x74, 0x69, 0x66, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x75, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1260,7 +1310,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),       // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),       // 1: proto.ServiceConnectionRsp
@@ -1280,24 +1330,25 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*PlayerLogoutNotify)(nil),         // 15: proto.PlayerLogoutNotify
 	(*PlayerLogoutReq)(nil),            // 16: proto.PlayerLogoutReq
 	(*PlayerLogoutRsp)(nil),            // 17: proto.PlayerLogoutRsp
-	(ServerType)(0),                    // 18: proto.ServerType
-	(PlayerOfflineReason)(0),           // 19: proto.PlayerOfflineReason
-	(Retcode)(0),                       // 20: proto.Retcode
+	(*NodeToGsPlayerLogoutNotify)(nil), // 18: proto.NodeToGsPlayerLogoutNotify
+	(ServerType)(0),                    // 19: proto.ServerType
+	(PlayerOfflineReason)(0),           // 20: proto.PlayerOfflineReason
+	(Retcode)(0),                       // 21: proto.Retcode
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	18, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	18, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	18, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
+	19, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	19, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	19, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
 	12, // 3: proto.GetAllServiceGateRsp.gate_service_list:type_name -> proto.ServiceAll
-	18, // 4: proto.GetAllServiceGameReq.service_type:type_name -> proto.ServerType
+	19, // 4: proto.GetAllServiceGameReq.service_type:type_name -> proto.ServerType
 	12, // 5: proto.GetAllServiceGameRsp.game_service_list:type_name -> proto.ServiceAll
-	18, // 6: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
-	18, // 7: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
-	18, // 8: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
+	19, // 6: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
+	19, // 7: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
+	19, // 8: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
 	12, // 9: proto.GetAllServiceRsp.service_list:type_name -> proto.ServiceAll
-	18, // 10: proto.ServiceAll.service_type:type_name -> proto.ServerType
-	19, // 11: proto.PlayerLogoutReq.offline_reason:type_name -> proto.PlayerOfflineReason
-	20, // 12: proto.PlayerLogoutRsp.retcode:type_name -> proto.Retcode
+	19, // 10: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	20, // 11: proto.PlayerLogoutReq.offline_reason:type_name -> proto.PlayerOfflineReason
+	21, // 12: proto.PlayerLogoutRsp.retcode:type_name -> proto.Retcode
 	13, // [13:13] is the sub-list for method output_type
 	13, // [13:13] is the sub-list for method input_type
 	13, // [13:13] is the sub-list for extension type_name
@@ -1528,6 +1579,18 @@ func file_cmd_server_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_server_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NodeToGsPlayerLogoutNotify); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1535,7 +1598,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   18,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

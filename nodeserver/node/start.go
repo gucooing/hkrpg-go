@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -19,13 +20,16 @@ const (
 )
 
 var NODE *Node = nil
+var syncPlayerUuidMap sync.Mutex
+var syncPlayerMap sync.Mutex
 
 type Node struct {
-	AppId      string
-	Port       string
-	Config     *config.Config
-	MapService map[spb.ServerType]map[string]*Service // [ServerType][appid][Service]
-	PlayerMap  map[uint32]*PlayerService              // [uid][gateAppId][GameAppId]
+	AppId         string
+	Port          string
+	Config        *config.Config
+	MapService    map[spb.ServerType]map[string]*Service // [ServerType][appid][Service]
+	PlayerUuidMap map[uint32]int64                       // [uid][uuid]
+	PlayerMap     map[int64]*PlayerService               // [uid][gateAppId][GameAppId]
 }
 
 type Service struct {
@@ -38,30 +42,10 @@ type Service struct {
 }
 
 type PlayerService struct {
-	GateAppId        string
-	GameAppId        string
-	PlayerOnlineData []byte
-	PlayerStatus     *PlayerStatus
-}
-
-type PlayerStatus struct {
-	Status     spb.PlayerStatus
-	GateStatus spb.PlayerGateStatus
-	GameStatus spb.PlayerGameStatus
-}
-
-func GetPlayerGame(uid uint32) *Service {
-	if NODE.PlayerMap[uid] == nil {
-		return nil
-	}
-	return NODE.MapService[spb.ServerType_SERVICE_GAME][NODE.PlayerMap[uid].GameAppId]
-}
-
-func GetPlayerGate(uid uint32) *Service {
-	if NODE.PlayerMap[uid] == nil {
-		return nil
-	}
-	return NODE.MapService[spb.ServerType_SERVICE_GATE][NODE.PlayerMap[uid].GateAppId]
+	Uuid      int64
+	Uid       uint32
+	GateAppId string
+	GameAppId string
 }
 
 func NewNode(cfg *config.Config) *Node {
@@ -76,7 +60,8 @@ func NewNode(cfg *config.Config) *Node {
 	}
 	NODE.Port = port
 	NODE.MapService = GetMapService()
-	NODE.PlayerMap = make(map[uint32]*PlayerService)
+	NODE.PlayerUuidMap = make(map[uint32]int64)
+	NODE.PlayerMap = make(map[int64]*PlayerService)
 
 	return NODE
 }
@@ -166,4 +151,40 @@ func (s *Service) killService() {
 	logger.Info("[%s]服务离线:%s", s.ServerType, s.Conn.RemoteAddr().String())
 	s.Conn.Close()
 	delete(NODE.MapService[s.ServerType], s.AppId)
+}
+
+func AddPlayerUuidMap(uuid int64, uid uint32) {
+	syncPlayerUuidMap.Lock()
+	NODE.PlayerUuidMap[uid] = uuid
+	syncPlayerUuidMap.Unlock()
+}
+
+func DelPlayerUuidMap(uid uint32) {
+	if NODE.PlayerUuidMap[uid] != 0 {
+		syncPlayerUuidMap.Lock()
+		delete(NODE.PlayerUuidMap, uid)
+		syncPlayerUuidMap.Unlock()
+	}
+}
+
+func AddPlayerMap(uuid int64, p *PlayerService) {
+	syncPlayerMap.Lock()
+	NODE.PlayerMap[uuid] = p
+	syncPlayerMap.Unlock()
+}
+
+func DelPlayerMap(uuid int64) {
+	if NODE.PlayerMap[uuid] != nil {
+		syncPlayerMap.Lock()
+		delete(NODE.PlayerMap, uuid)
+		syncPlayerMap.Unlock()
+	}
+}
+
+func getPlayerServiceByUuid(uid uint32) *PlayerService {
+	return NODE.PlayerMap[NODE.PlayerUuidMap[uid]]
+}
+
+func getGsByAppId(appid string) *Service {
+	return NODE.MapService[spb.ServerType_SERVICE_GAME][appid]
 }

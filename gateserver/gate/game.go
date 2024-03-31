@@ -114,11 +114,7 @@ func (p *PlayerGame) GameToGate(cmdId uint16, playerMsg pb.Message) {
 		// 发到玩家
 		logger.Debug("[S->C][UID:%v][CMDID:%v]", p.Uid, msg.CmdId)
 		if msg.CmdId == cmd.PlayerLoginScRsp {
-			// 登录成功设置
-			p.ticker.Stop()
-			// 解锁
-			GATESERVER.Store.DistUnlock(strconv.Itoa(int(p.AccountId)))
-			p.AddPlayerStatus()
+			p.playerLoginUp()
 		}
 		SendHandle(p, msg)
 	}
@@ -183,4 +179,21 @@ func (p *PlayerGame) gsToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	}
 	GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
 	KickPlayer(p)
+}
+
+func (p *PlayerGame) playerLoginUp() {
+	// 登录成功设置
+	p.ticker.Stop()
+	// 解锁
+	GATESERVER.Store.DistUnlock(strconv.Itoa(int(p.AccountId)))
+	p.AddPlayerStatus()
+
+	// 通知node玩家登录
+	GATESERVER.sendNode(cmd.PlayerLoginNotify, &spb.PlayerLoginNotify{
+		Uuid:            p.Uuid,
+		AccountId:       p.AccountId,
+		Uid:             p.Uid,
+		GateServerAppId: GATESERVER.AppId,
+		GameServerAppId: p.GameAppId,
+	})
 }

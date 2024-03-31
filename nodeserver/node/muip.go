@@ -54,16 +54,30 @@ func (s *Service) muipRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 
 func (s *Service) GmGive(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmGive)
-	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
+	if req.PlayerUid == 0 || NODE.PlayerUuidMap[req.PlayerUid] == 0 {
 		return
 	}
-	GetPlayerGame(req.PlayerUid).sendHandle(cmd.GmGive, serviceMsg)
+	ps := getPlayerServiceByUuid(req.PlayerUid)
+	notify := &spb.GmGive{
+		PlayerUid: req.PlayerUid,
+		ItemId:    req.ItemId,
+		ItemCount: req.ItemCount,
+		GiveAll:   req.GiveAll,
+		Uuid:      ps.Uuid,
+	}
+	getGsByAppId(ps.GameAppId).sendHandle(cmd.GmGive, notify)
 }
 
 func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmWorldLevel)
-	if req.PlayerUid == 0 || NODE.PlayerMap[req.PlayerUid] == nil {
+	if req.PlayerUid == 0 || NODE.PlayerUuidMap[req.PlayerUid] == 0 {
 		return
 	}
-	GetPlayerGame(req.PlayerUid).sendHandle(cmd.GmWorldLevel, serviceMsg)
+	ps := getPlayerServiceByUuid(req.PlayerUid)
+	notify := &spb.GmWorldLevel{
+		PlayerUid:  req.PlayerUid,
+		WorldLevel: req.WorldLevel,
+		Uuid:       ps.Uuid,
+	}
+	getGsByAppId(ps.GameAppId).sendHandle(cmd.GmWorldLevel, notify)
 }

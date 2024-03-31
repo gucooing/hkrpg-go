@@ -87,23 +87,14 @@ func (s *GameServer) PlayerLoginNotify(g *player.GamePlayer, payloadMsg pb.Messa
 		s.AddPlayerMap(notify.Uuid, g)
 	}()
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, notify.Uuid)
-
-	// 通知node玩家登录
-	s.sendNode(cmd.PlayerLoginNotify, &spb.PlayerLoginNotify{
-		Uuid:            g.Uuid,
-		AccountId:       g.AccountId,
-		Uid:             g.Uid,
-		GateServerAppId: g.GateAppId,
-		GameServerAppId: s.AppId,
-	})
 }
 
 func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 	syncGD.Lock()
-	s.PlayerMapS[uuid] = g
+	s.PlayerMap[uuid] = g
 	// 初始化在线数据
-	if s.PlayerMapS[g.Uuid].Player == nil {
-		s.PlayerMapS[g.Uuid].Player = &player.PlayerData{
+	if s.PlayerMap[g.Uuid].Player == nil {
+		s.PlayerMap[g.Uuid].Player = &player.PlayerData{
 			Battle: make(map[uint32]*player.Battle),
 			BattleState: &player.BattleState{
 				ChallengeState: &player.ChallengeState{},
@@ -114,9 +105,9 @@ func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 }
 
 func (s *GameServer) DelPlayerMap(uuid int64) {
-	if s.PlayerMapS[uuid] != nil {
+	if s.PlayerMap[uuid] != nil {
 		syncGD.Lock()
-		delete(s.PlayerMapS, uuid)
+		delete(s.PlayerMap, uuid)
 		syncGD.Unlock()
 	}
 }
