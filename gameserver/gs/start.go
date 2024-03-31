@@ -137,7 +137,7 @@ func KickPlayer(g *player.GamePlayer) {
 	if g.GateConn != nil {
 		g.GateConn.Close()
 	}
-	logger.Debug("[UID:%v]玩家离线game", g.Uid)
+	logger.Info("[UID:%v]玩家离线game", g.Uid)
 }
 
 func UpDataPlayer(g *player.GamePlayer) error {

@@ -49,7 +49,7 @@ func NewServer(cfg *config.Config) *Server {
 	s.Port = port
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
 	gin.SetMode(gin.ReleaseMode)    // 初始化gin
-	s.Router = gin.Default()        // gin.New()
+	s.Router = gin.New()            // gin.Default()
 	s.Router.Use(gin.Recovery())
 	s.Ec2b = alg.GetEc2b() // 读取ec2b密钥
 

@@ -10,7 +10,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -29,7 +28,6 @@ const (
 	KcpConnAddrChangeNotify = "KcpConnAddrChangeNotify"
 )
 
-var syncPl sync.Mutex
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
 var GATESERVER *GateServer
 
@@ -352,6 +350,7 @@ func (s *GateServer) kcpNetInfo() {
 	kcpErrorCount := uint64(0)
 	for {
 		<-ticker.C
+		CLIENT_CONN_NUM = int32(len(s.playerMap))
 		snmp := kcp.DefaultSnmp.Copy()
 		kcpErrorCount += snmp.KCPInErrors
 		logger.Info("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)

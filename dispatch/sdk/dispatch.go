@@ -14,6 +14,7 @@ import (
 )
 
 func (s *Server) QueryDispatchHandler(c *gin.Context) {
+	logger.Info("[ADDR:%s]query_dispatch", c.Request.RemoteAddr)
 	dispatchRegionsData := new(proto.DispatchRegionData)
 	dispatchRegionsData.TopSeverRegionName = "hkrpg-go"
 	serverList := make([]*proto.RegionEntry, 0)
@@ -38,6 +39,7 @@ func (s *Server) QueryDispatchHandler(c *gin.Context) {
 }
 
 func (s *Server) QueryGatewayHandler(c *gin.Context) {
+	logger.Info("[ADDR:%s]query_gateway", c.Request.RemoteAddr)
 	if s.GateAddr == "" {
 		s.ErrorGate(c)
 		return
@@ -65,6 +67,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 
 // 其逻辑不适用于大流量使用，请仅在dev中/人数较少时使用
 func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
+	logger.Info("[ADDR:%s]query_gateway_capture", c.Request.RemoteAddr)
 	if s.GateAddr == "" {
 		s.ErrorGate(c)
 		return

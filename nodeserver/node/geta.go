@@ -92,6 +92,7 @@ func (s *Service) gatePlayerLoginNotify(serviceMsg pb.Message) {
 	}
 	AddPlayerUuidMap(notify.Uuid, notify.Uid)
 	AddPlayerMap(notify.Uuid, &PlayerService{
+		GameAppId: notify.GameServerAppId,
 		GateAppId: notify.GateServerAppId,
 		Uuid:      notify.Uuid,
 		Uid:       notify.Uid,
@@ -110,5 +111,5 @@ func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
 	gs.sendHandle(cmd.NodeToGsPlayerLogoutNotify, &spb.NodeToGsPlayerLogoutNotify{Uuid: ps.Uuid})
 	DelPlayerUuidMap(ps.Uid)
 	DelPlayerMap(ps.Uuid)
-	logger.Info("[UID:%v]收到玩家被动下线通知", notify.Uid)
+	logger.Info("[UID:%v][UUID%v]收到玩家被动下线通知", notify.Uid, ps.Uuid)
 }
