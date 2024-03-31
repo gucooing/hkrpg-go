@@ -118,8 +118,8 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 
 	// 添加定时器
 	p.ticker = time.NewTimer(4 * time.Second)
-
-	go p.loginTicker(p.ticker)
+	p.stop = make(chan struct{})
+	go p.loginTicker()
 
 	// 拉取db数据
 	uidPlayer := s.Store.GetPlayerUidByAccountId(accountUid)
@@ -198,7 +198,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 	GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
 	// 结束定时器
-	p.ticker.Stop()
+	close(p.stop)
 	logger.Info("[AccountId:%v][UUID:%v]|[UID:%v]登录gate", p.AccountId, p.Uuid, p.Uid)
 }
 
@@ -216,12 +216,21 @@ func (s *GateServer) DelPlayerMap(uuid int64) {
 	}
 }
 
-func (p *PlayerGame) loginTicker(t *time.Timer) {
-	for {
-		<-t.C
+func (p *PlayerGame) loginTicker() {
+	var closed bool
+	select {
+	case <-p.ticker.C:
 		logger.Info("玩家登录超时")
 		GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
 		KickPlayer(p)
+		p.ticker.Stop()
+		if !closed {
+			close(p.stop)
+			closed = true
+		}
+		return
+	case <-p.stop:
+		p.ticker.Stop()
 		return
 	}
 }

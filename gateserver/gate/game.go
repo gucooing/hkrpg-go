@@ -183,7 +183,7 @@ func (p *PlayerGame) gsToGamePlayerLogoutRsp(playerMsg pb.Message) {
 
 func (p *PlayerGame) playerLoginUp() {
 	// 登录成功设置
-	p.ticker.Stop()
+	close(p.stop)
 	// 解锁
 	GATESERVER.Store.DistUnlock(strconv.Itoa(int(p.AccountId)))
 	p.AddPlayerStatus()

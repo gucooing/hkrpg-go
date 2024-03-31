@@ -26,7 +26,9 @@ type GamePlayer struct {
 	Player   *PlayerData
 	PlayerPb *spb.PlayerBasicCompBin // 玩家pb数据
 	GateConn net.Conn
-	ticker   *time.Timer
+
+	stop   chan struct{}
+	ticker *time.Timer
 }
 
 const (

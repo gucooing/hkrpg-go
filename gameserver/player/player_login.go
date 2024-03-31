@@ -54,12 +54,19 @@ func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 	}
 }
 
-func (g *GamePlayer) loginTicker(t *time.Timer) {
-	for {
-		<-t.C
+func (g *GamePlayer) loginTicker() {
+	var closed bool
+	select {
+	case <-g.ticker.C:
 		logger.Info("玩家登录超时")
-		// TODO 注意内存泄露
-		// p.killLoginPlayer()
+		g.ticker.Stop()
+		if !closed {
+			close(g.stop)
+			closed = true
+		}
+		return
+	case <-g.stop:
+		g.ticker.Stop()
 		return
 	}
 }
@@ -67,7 +74,8 @@ func (g *GamePlayer) loginTicker(t *time.Timer) {
 func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	// 添加定时器
 	g.ticker = time.NewTimer(4 * time.Second)
-	go g.loginTicker(g.ticker)
+	g.stop = make(chan struct{})
+	go g.loginTicker()
 
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
@@ -92,7 +100,7 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 		Stamina:    g.GetItem().MaterialMap[11],
 		WorldLevel: g.PlayerPb.WorldLevel,
 	}
-	g.ticker.Stop()
+	close(g.stop)
 	g.Send(cmd.PlayerLoginScRsp, rsp)
 
 	g.LoginNotify()

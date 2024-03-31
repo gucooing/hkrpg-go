@@ -67,6 +67,7 @@ type PlayerGame struct {
 	GameConn       net.Conn
 	LastActiveTime int64 // 最近一次的活跃时间
 	ticker         *time.Timer
+	stop           chan struct{}
 }
 
 type KcpEvent struct {

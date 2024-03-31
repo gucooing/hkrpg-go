@@ -39,7 +39,8 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	case cmd.PlayerLoginCsReq:
 		// 添加定时器
 		p.ticker = time.NewTimer(4 * time.Second)
-		go p.loginTicker(p.ticker)
+		p.stop = make(chan struct{})
+		go p.loginTicker()
 		// p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 		p.GateToGame(tcpMsg)
 	default:
