@@ -67,19 +67,3 @@ func (s *Service) GetAllServiceReq(serviceMsg pb.Message) {
 
 	s.sendHandle(cmd.GetAllServiceRsp, rsp)
 }
-
-func (s *Service) SyncPlayerOnlineDataNotify(serviceMsg pb.Message) {
-	reqn := serviceMsg.(*spb.SyncPlayerOnlineDataNotify)
-	rspn := new(spb.SyncPlayerOnlineDataNotify)
-	if reqn.PlayerUid == 0 || NODE.PlayerMap[reqn.PlayerUid] == nil {
-		return
-	}
-	rspn.PlayerUid = reqn.PlayerUid
-	if reqn.PlayerOnlineData == nil {
-		rspn.PlayerOnlineData = NODE.PlayerMap[reqn.PlayerUid].PlayerOnlineData
-	} else {
-		NODE.PlayerMap[reqn.PlayerUid].PlayerOnlineData = reqn.PlayerOnlineData
-	}
-
-	s.sendHandle(cmd.SyncPlayerOnlineDataNotify, rspn)
-}

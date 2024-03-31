@@ -41,30 +41,12 @@ func (s *Service) gameRecvHandle() {
 
 func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.PlayerLoginReq: // 玩家登录通知
-		s.gamePlayerLoginReq(serviceMsg)
 	case cmd.PlayerLogoutNotify: // 玩家下线成功通知
 		s.gamePlayerLogoutNotify(serviceMsg)
 	case cmd.GetAllServiceReq: // 获取目标服务所有
 		s.GetAllServiceReq(serviceMsg)
 	default:
 		logger.Info("game -> node error cmdid:%v", cmdId)
-	}
-}
-func (s *Service) gamePlayerLoginReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLoginReq)
-	if player := NODE.PlayerMap[req.PlayerUid]; player != nil {
-		if player.GameAppId == s.AppId {
-			s.PlayerNum++
-			player.PlayerStatus = &PlayerStatus{
-				Status:     spb.PlayerStatus_PlayerStatus_PostLogin,
-				GateStatus: spb.PlayerGateStatus_PlayerGateStatus_GatePlaying,
-				GameStatus: spb.PlayerGameStatus_PlayerGameStatus_GamePlaying,
-			}
-			logger.Info("[UID:%v]玩家已登录game", req.PlayerUid)
-		} else {
-			logger.Info("[UID:%v]玩家异常登录", req.PlayerUid)
-		}
 	}
 }
 
