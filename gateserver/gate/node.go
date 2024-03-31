@@ -132,48 +132,6 @@ func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
 	logger.Debug("gate <--> node ping:%v | min gameappid:%s", (rsp.NodeTime-rsp.GateTime)/2, minGameAppId)
 }
 
-func (s *GateServer) PlayerLogoutReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutReq)
-	if req.PlayerUid == 0 {
-		return
-	}
-	switch req.OfflineReason {
-	case spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN:
-		logger.Info("[UID:%v]gate收到主动离线通知原因:重复登录下线", req.PlayerUid)
-	}
-
-	if player := s.sessionMap[req.PlayerUid]; player != nil {
-		player.Status = spb.PlayerStatus_PlayerStatus_Offline
-		KickPlayer(player)
-	}
-
-	rsp := &spb.PlayerLoginRsp{
-		PlayerUid: req.PlayerUid,
-	}
-	s.sendNode(cmd.PlayerLoginRsp, rsp)
-}
-
-func (s *GateServer) nodePlayerLoginRsp(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLoginRsp)
-	if player := s.waitingLoginMap[req.PlayerUid]; player != nil {
-		// 同步等待原玩家下线，再将新玩家状态覆盖上去
-		for {
-			syncPl.Lock()
-			if _, ok := s.sessionMap[req.PlayerUid]; ok {
-				syncPl.Unlock()
-				time.Sleep(10 * time.Millisecond)
-				continue
-			}
-			s.sessionMap[req.PlayerUid] = player
-			CLIENT_CONN_NUM = int32(len(GATESERVER.sessionMap))
-			syncPl.Unlock()
-			break
-		}
-		// 通知gs玩家即将登录
-		player.sendGame(cmd.PlayerLoginReq, &spb.PlayerLoginReq{PlayerUid: req.PlayerUid})
-	}
-}
-
 /******************************************NewLogin***************************************/
 
 func (s *GateServer) PlayerLogoutNotify(uid uint32) {

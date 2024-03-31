@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -43,7 +44,6 @@ type GateServer struct {
 	nodeConn         net.Conn
 	kcpFin           bool
 	sessionIdCounter uint32
-	sessionMap       map[uint32]*PlayerGame
 	waitingLoginMap  map[uint32]*PlayerGame
 	playerMap        map[int64]*PlayerGame // 玩家内存
 	kcpEventChan     chan *KcpEvent
@@ -58,8 +58,7 @@ type GateServer struct {
 }
 
 type PlayerGame struct {
-	GameAppId string
-	// IsToken             bool // 是否通过token验证
+	GameAppId      string
 	Status         spb.PlayerStatus
 	Uid            uint32 // uid
 	AccountId      uint32
@@ -98,7 +97,6 @@ func NewGate(cfg *config.Config) *GateServer {
 	s.Ec2b = alg.GetEc2b()
 	s.Config = cfg
 	s.Store = NewStore(s.Config) // 初始化数据库连接
-	s.sessionMap = make(map[uint32]*PlayerGame)
 	s.waitingLoginMap = make(map[uint32]*PlayerGame)
 	s.playerMap = make(map[int64]*PlayerGame)
 	s.AppId = alg.GetAppId()
@@ -211,6 +209,9 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
 			p.Status = spb.PlayerStatus_PlayerStatus_Offline
+			if GATESERVER.playerMap[p.Uuid] != nil {
+				KickPlayer(p)
+			}
 			return
 		}
 		bin = payload[:recvLen]
@@ -222,7 +223,6 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			case spb.PlayerStatus_PlayerStatus_PreLogin:
 				if msg.CmdId == cmd.PlayerGetTokenCsReq {
 					p.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
-					// s.HandlePlayerGetTokenCsReq(p, msg.ProtoData)
 					s.PlayerGetTokenCsReq(p, msg.ProtoData)
 				} else {
 					p.KcpConn.Close()
@@ -232,6 +232,8 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 				continue
 			case spb.PlayerStatus_PlayerStatus_PostLogin:
 				p.PlayerRegisterMessage(msg.CmdId, msg)
+			default:
+				return
 			}
 		}
 	}
@@ -301,7 +303,8 @@ func createXorPad(seed uint64) []byte {
 
 func Close() error {
 	GATESERVER.kcpFin = true
-	for _, player := range GATESERVER.sessionMap {
+	for _, player := range GATESERVER.playerMap {
+		GateToPlayer(player, cmd.PlayerKickOutScNotify, nil)
 		player.Status = spb.PlayerStatus_PlayerStatus_PassiveOffline
 		KickPlayer(player)
 	}
@@ -310,35 +313,33 @@ func Close() error {
 }
 
 func KickPlayer(p *PlayerGame) {
-	logger.Info("[UID:%v]离线目标GameServer:%v", p.Uid, p.GameAppId)
-	GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
-	p.KcpConn.Close()
-	p.GameConn.Close()
-	syncPl.Lock()
-	delete(GATESERVER.sessionMap, p.Uid)
-	syncPl.Unlock()
-	CLIENT_CONN_NUM = int32(len(GATESERVER.sessionMap))
-}
-
-func KickwaitingLoginMap(p *PlayerGame) {
-	logger.Info("[UID:%v]离线目标GameServer:%v", p.Uid, p.GameAppId)
-
-	p.KcpConn.Close()
-	p.GameConn.Close()
-	syncPl.Lock()
-	delete(GATESERVER.waitingLoginMap, p.Uid)
-	syncPl.Unlock()
+	// 删除玩家在线状态
+	if err := GATESERVER.Store.DelPlayerStatus(strconv.Itoa(int(p.AccountId))); err != nil {
+		logger.Error("[UID%v]redis玩家状态删除失败:%s", p.Uid, err.Error())
+	}
+	// 删除map
+	GATESERVER.DelPlayerMap(p.Uuid)
+	// 断开kcp连接
+	if p.KcpConn != nil {
+		p.KcpConn.Close()
+	}
+	// 断开tcp连接
+	if p.GameConn != nil {
+		p.GameConn.Close()
+	}
+	logger.Info("[UID:%v]玩家离线gate", p.Uid)
 }
 
 func (s *GateServer) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		<-ticker.C
-		for _, g := range GATESERVER.sessionMap {
+		for _, g := range GATESERVER.playerMap {
 			lastActiveTime := g.LastActiveTime
 			timestamp := time.Now().Unix()
 			if timestamp-lastActiveTime >= 60 {
 				logger.Debug("玩家超时离线")
+				GateToPlayer(g, cmd.PlayerKickOutScNotify, nil)
 				g.Status = spb.PlayerStatus_PlayerStatus_Offline
 				KickPlayer(g)
 			}

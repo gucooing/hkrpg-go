@@ -7,7 +7,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -15,32 +14,15 @@ import (
 // 从game接收消息
 func (p *PlayerGame) recvGame() {
 	nodeMsg := make([]byte, PacketMaxLen)
-
 	for {
 		var bin []byte = nil
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("[UID%v]game->gate error: %s", p.Uid, err.Error())
-
-			/*
-				// TODO
-				if GATESERVER.sessionMap[p.Uid] == nil {
-					logger.Debug("gate清理异常在线")
-					KickPlayer(p)
-					return
-				}
-			*/
-
-			/*
-				switch p.Status {
-				case spb.PlayerStatus_PlayerStatus_Offline:
-					KickPlayer(p)
-				case spb.PlayerStatus_PlayerStatus_PostLogin:
-					p.SwitchGame()
-				}
-			*/
-			// 摆烂了，gs掉线？，md 直接全踢了
-			p.gameError()
+			if GATESERVER.playerMap[p.Uuid] != nil {
+				GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
+				KickPlayer(p)
+			}
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -53,11 +35,6 @@ func (p *PlayerGame) recvGame() {
 	}
 }
 
-func (p *PlayerGame) gameError() {
-	p.PlayerLogoutNotify()
-	KickPlayer(p)
-}
-
 func (p *PlayerGame) SwitchGame() {
 	GATESERVER.errGameAppId = append(GATESERVER.errGameAppId, p.GameAppId)
 	var gameAppId string
@@ -65,7 +42,7 @@ func (p *PlayerGame) SwitchGame() {
 
 	// 等一分钟
 	for i := 0; i < 12; i++ {
-		if GATESERVER.sessionMap[p.Uid] == nil {
+		if GATESERVER.playerMap[p.Uuid] == nil {
 			return
 		}
 		gameAppId = GATESERVER.GetGameAppId()
@@ -155,20 +132,6 @@ func GateToPlayer(p *PlayerGame, cmdId uint16, playerMsg pb.Message) {
 	SendHandle(p, tcpMsg)
 }
 
-func (p *PlayerGame) gamePlayerLoginRsp(playerMsg pb.Message) {
-	req := playerMsg.(*spb.PlayerLoginRsp)
-	if req.PlayerUid != p.Uid {
-		return
-	}
-	rsp := new(proto.PlayerGetTokenScRsp)
-	rsp.Uid = p.Uid
-	rsp.SecretKeySeed = p.Seed
-	rsp.BlackInfo = &proto.BlackInfo{}
-	p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
-	GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
-	logger.Info("[UID:%v]登录gate", p.Uid)
-}
-
 /******************************************NewLogin***************************************/
 
 // gate登录请求
@@ -198,4 +161,26 @@ func (p *PlayerGame) AddPlayerStatus() error {
 	}
 	err = GATESERVER.Store.SetPlayerStatus(strconv.Itoa(int(p.AccountId)), value)
 	return err
+}
+
+// gate请求gs离线玩家
+func (p *PlayerGame) gateToGsPlayerLogoutReq() {
+	req := &spb.PlayerLogoutReq{
+		Uuid:          p.Uuid,
+		AccountId:     p.AccountId,
+		Uid:           p.Uid,
+		OfflineReason: spb.PlayerOfflineReason_OFFLINE_NONE,
+	}
+
+	p.sendGame(cmd.PlayerLogoutReq, req)
+}
+
+// gs回应玩家离线
+func (p *PlayerGame) gsToGamePlayerLogoutRsp(playerMsg pb.Message) {
+	rsp := playerMsg.(*spb.PlayerLogoutRsp)
+	if rsp.Retcode != spb.Retcode_RET_SUCC || rsp.Uid != p.Uid || rsp.Uuid != p.Uuid || rsp.AccountId != p.AccountId {
+		logger.Info("[gs->gate][UID%v]GS离线失败", p.Uid)
+	}
+	GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
+	KickPlayer(p)
 }

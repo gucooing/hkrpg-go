@@ -53,6 +53,8 @@ func (s *GameServer) GateRegisterMessage(g *player.GamePlayer, cmdId uint16, pay
 
 	case cmd.PlayerLoginNotify:
 		s.PlayerLoginNotify(g, payloadMsg) // gate请求登录
+	case cmd.PlayerLogoutReq:
+		s.gateToGamePlayerLogoutReq(g, payloadMsg) // gate请求下线玩家
 	}
 }
 
@@ -82,18 +84,7 @@ func (s *GameServer) PlayerLoginNotify(g *player.GamePlayer, payloadMsg pb.Messa
 	// 异步拉取账户数据
 	go func() {
 		g.GetPlayerDate(notify.Uid)
-		syncGD.Lock()
-		s.AddPlayer(notify.Uuid, g)
-		// 初始化在线数据
-		if s.PlayerMapS[notify.Uuid].Player == nil {
-			s.PlayerMapS[notify.Uuid].Player = &player.PlayerData{
-				Battle: make(map[uint32]*player.Battle),
-				BattleState: &player.BattleState{
-					ChallengeState: &player.ChallengeState{},
-				},
-			}
-		}
-		syncGD.Unlock()
+		s.AddPlayerMap(notify.Uuid, g)
 	}()
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, notify.Uuid)
 
@@ -107,6 +98,44 @@ func (s *GameServer) PlayerLoginNotify(g *player.GamePlayer, payloadMsg pb.Messa
 	})
 }
 
-func (s *GameServer) AddPlayer(uuid int64, g *player.GamePlayer) {
+func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
+	syncGD.Lock()
 	s.PlayerMapS[uuid] = g
+	// 初始化在线数据
+	if s.PlayerMapS[g.Uuid].Player == nil {
+		s.PlayerMapS[g.Uuid].Player = &player.PlayerData{
+			Battle: make(map[uint32]*player.Battle),
+			BattleState: &player.BattleState{
+				ChallengeState: &player.ChallengeState{},
+			},
+		}
+	}
+	syncGD.Unlock()
+}
+
+func (s *GameServer) DelPlayerMap(uuid int64) {
+	if s.PlayerMapS[uuid] != nil {
+		syncGD.Lock()
+		delete(s.PlayerMapS, uuid)
+		syncGD.Unlock()
+	}
+}
+
+func (s *GameServer) gateToGamePlayerLogoutReq(g *player.GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*spb.PlayerLogoutReq)
+	if req.Uid != g.Uid || req.Uuid != g.Uuid || req.AccountId != g.AccountId {
+		logger.Error("[UID%v][gate->gs]PlayerLogoutReq消息异常", g.Uid)
+		return
+	}
+	if err := UpDataPlayer(g); err != nil {
+		logger.Info("[UID:%v]玩家离线保存数据失败", g.Uid)
+	}
+	rsp := &spb.PlayerLogoutRsp{
+		Retcode:   spb.Retcode_RET_SUCC,
+		Uuid:      g.Uuid,
+		AccountId: g.AccountId,
+		Uid:       g.Uid,
+	}
+	g.SendGate(cmd.PlayerLogoutRsp, rsp)
+	KickPlayer(g)
 }

@@ -133,15 +133,14 @@ func Close() error {
 }
 
 func KickPlayer(g *player.GamePlayer) {
-	/*
-		1.保存数据到数据库
-		2.断开gate-game连接
-	*/
-	logger.Debug("[UID:%v]玩家离线", g.Uid)
-	GAMESERVER.SyncPlayerDate(g)
-	UpDataPlayer(g)
-	g.GateConn.Close()
-	delete(GAMESERVER.PlayerMap, g.Uid)
+	if err := UpDataPlayer(g); err != nil {
+		logger.Error("[UID:%v]保存数据失败", g.Uid)
+	}
+	GAMESERVER.DelPlayerMap(g.Uuid)
+	if g.GateConn != nil {
+		g.GateConn.Close()
+	}
+	logger.Debug("[UID:%v]玩家离线game", g.Uid)
 }
 
 func UpDataPlayer(g *player.GamePlayer) error {
@@ -154,17 +153,18 @@ func UpDataPlayer(g *player.GamePlayer) error {
 	}
 	dbDate := new(db.PlayerData)
 	dbDate.Uid = g.Uid
-
+	dbDate.Level = g.PlayerPb.Level
+	dbDate.Exp = g.PlayerPb.Exp
+	dbDate.Nickname = g.PlayerPb.Nickname
 	dbDate.BinData, err = pb.Marshal(g.PlayerPb)
 	if err != nil {
 		logger.Error("pb marshal error: %v", err)
+		return err
 	}
 
 	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
 		logger.Error("Update Player error")
 		return err
 	}
-
-	logger.Debug("[UID:%v]数据库 数据更新", g.Uid)
 	return nil
 }

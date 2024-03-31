@@ -58,6 +58,7 @@ func (g *GamePlayer) loginTicker(t *time.Timer) {
 	for {
 		<-t.C
 		logger.Info("玩家登录超时")
+		// TODO 注意内存泄露
 		// p.killLoginPlayer()
 		return
 	}

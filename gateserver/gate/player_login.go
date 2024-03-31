@@ -69,28 +69,6 @@ func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	GateToPlayer(p, cmd.PlayerHeartBeatScRsp, rsp)
 }
 
-// 玩家主动离线处理
-func (p *PlayerGame) playerOffline() {
-	p.Status = spb.PlayerStatus_PlayerStatus_Offline
-	p.PlayerLogoutNotify()
-	logger.Debug("[UID:%v]玩家主动离线", p.Uid)
-	// 等待game收到消息后被动离线玩家
-	// KickPlayer(p)
-}
-
-/*
-gate -> node
-gate -> gs
-*/
-func (p *PlayerGame) PlayerLogoutNotify() {
-	notify := &spb.PlayerLogoutNotify{
-		// PlayerUid:     p.Uid,
-		// OfflineReason: 0,
-	}
-	GATESERVER.sendNode(cmd.PlayerLogoutNotify, notify)
-	p.sendGame(cmd.PlayerLogoutNotify, notify)
-}
-
 func stou32(msg string) uint32 {
 	if msg == "" {
 		return 0
@@ -231,23 +209,25 @@ func (s *GateServer) AddPlayerMap(uuid int64, player *PlayerGame) {
 }
 
 func (s *GateServer) DelPlayerMap(uuid int64) {
-	syncGD.Lock()
-	delete(s.playerMap, uuid)
-	syncGD.Unlock()
+	if s.playerMap[uuid] != nil {
+		syncGD.Lock()
+		delete(s.playerMap, uuid)
+		syncGD.Unlock()
+	}
 }
 
 func (p *PlayerGame) loginTicker(t *time.Timer) {
 	for {
 		<-t.C
 		logger.Info("玩家登录超时")
-		p.killLoginPlayer()
+		GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
+		KickPlayer(p)
 		return
 	}
 }
 
-func (p *PlayerGame) killLoginPlayer() {
-	if GATESERVER.playerMap[p.Uuid] != nil {
-		GATESERVER.DelPlayerMap(p.Uuid)
-	}
-	p.KcpConn.Close()
+// 玩家主动离线处理
+func (p *PlayerGame) playerOffline() {
+	p.Status = spb.PlayerStatus_PlayerStatus_Offline // 标记玩家状态为离线
+	p.gateToGsPlayerLogoutReq()
 }

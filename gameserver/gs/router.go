@@ -14,8 +14,6 @@ func (s *GameServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp:
 		s.ServiceConnectionRsp(serviceMsg)
-	case cmd.PlayerLogoutReq:
-		s.PlayerLogoutReq(serviceMsg) // 玩家离线通知
 	case cmd.SyncPlayerOnlineDataNotify:
 		s.SyncPlayerOnlineDataNotify(serviceMsg) // 在线数据同步
 	case cmd.GetAllServiceRsp:

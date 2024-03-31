@@ -1,7 +1,6 @@
 package gs
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -102,35 +101,12 @@ func (s *GameServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 	}
 }
 
-func (s *GameServer) PlayerLogoutReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutReq)
-	if req.PlayerUid == 0 {
-		return
-	}
-	if pl := s.PlayerMap[req.PlayerUid]; pl != nil {
-		KickPlayer(s.PlayerMap[req.PlayerUid])
-	}
-	logger.Info("[UID:%v]node通知该玩家下线", req.PlayerUid)
-
-	s.sendNode(cmd.PlayerLogoutRsp, &spb.PlayerLogoutRsp{PlayerUid: req.PlayerUid})
-}
-
 func (s *GameServer) gameGetAllServiceReq() {
 	// 心跳包
 	req := &spb.GetAllServiceReq{
 		ServiceType: spb.ServerType_SERVICE_GAME,
 	}
 	s.sendNode(cmd.GetAllServiceReq, req)
-}
-
-func (s *GameServer) SyncPlayerDate(g *player.GamePlayer) {
-	playerBin, _ := json.Marshal(g.Player)
-	pdsm := &spb.SyncPlayerOnlineDataNotify{
-		PlayerUid:        g.Uid,
-		PlayerOnlineData: playerBin,
-	}
-	s.sendNode(cmd.SyncPlayerOnlineDataNotify, pdsm)
-	logger.Debug("[UID:%v]在线数据已同步到node", g.Uid)
 }
 
 func (s *GameServer) GetAllServiceRsp(serviceMsg pb.Message) {
