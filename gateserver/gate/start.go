@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -42,8 +43,7 @@ type GateServer struct {
 	nodeConn         net.Conn
 	kcpFin           bool
 	sessionIdCounter uint32
-	waitingLoginMap  map[uint32]*PlayerGame
-	playerMap        map[int64]*PlayerGame // 玩家内存
+	playerMap        sync.Map // map[int64]*PlayerGame // 玩家内存
 	kcpEventChan     chan *KcpEvent
 	gameAppId        string                  // 最优appid
 	gameAll          map[string]*serviceGame // 从node拉取的game列表
@@ -96,8 +96,7 @@ func NewGate(cfg *config.Config) *GateServer {
 	s.Ec2b = alg.GetEc2b()
 	s.Config = cfg
 	s.Store = NewStore(s.Config) // 初始化数据库连接
-	s.waitingLoginMap = make(map[uint32]*PlayerGame)
-	s.playerMap = make(map[int64]*PlayerGame)
+	// s.playerMap = make(map[int64]*PlayerGame)
 	s.AppId = alg.GetAppId()
 	s.WorkerId = 1
 	s.snowflake = alg.NewSnowflakeWorker(s.WorkerId)
@@ -164,12 +163,12 @@ func (s *GateServer) Run() error {
 			logger.Error("accept kcp err: %v", err)
 			continue
 		}
-
+		CLIENT_CONN_NUM++
 		kcpConn.SetACKNoDelay(true)
 		kcpConn.SetWriteDelay(false)
 		kcpConn.SetWindowSize(256, 256)
 		kcpConn.SetMtu(1200)
-		kcpConn.SetReadDeadline(time.Now().Add(30 * time.Second))
+		// kcpConn.SetReadDeadline(time.Now().Add(30 * time.Second))
 		sessionId := kcpConn.GetSessionId()
 		logger.Info("sessionId:%v", sessionId)
 		// 读取密钥相关文件
@@ -207,9 +206,10 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 		var bin []byte = nil
 		recvLen, err := p.KcpConn.Read(payload)
 		if err != nil {
+			CLIENT_CONN_NUM--
 			logger.Debug("exit recv loop, conn read err: %v", err)
 			p.Status = spb.PlayerStatus_PlayerStatus_Offline
-			if GATESERVER.playerMap[p.Uuid] != nil {
+			if _, ok := GATESERVER.playerMap.Load(p.Uuid); ok {
 				KickPlayer(p)
 			}
 			return
@@ -303,11 +303,13 @@ func createXorPad(seed uint64) []byte {
 
 func Close() error {
 	GATESERVER.kcpFin = true
-	for _, player := range GATESERVER.playerMap {
+	GATESERVER.playerMap.Range(func(key, value interface{}) bool {
+		player := value.(*PlayerGame)
 		GateToPlayer(player, cmd.PlayerKickOutScNotify, nil)
 		player.Status = spb.PlayerStatus_PlayerStatus_PassiveOffline
 		KickPlayer(player)
-	}
+		return true
+	})
 	close(GATESERVER.Stop)
 	return nil
 }
@@ -334,16 +336,18 @@ func (s *GateServer) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		<-ticker.C
-		for _, g := range GATESERVER.playerMap {
-			lastActiveTime := g.LastActiveTime
+		s.playerMap.Range(func(key, value interface{}) bool {
+			player := value.(*PlayerGame)
+			lastActiveTime := player.LastActiveTime
 			timestamp := time.Now().Unix()
 			if timestamp-lastActiveTime >= 60 {
 				logger.Debug("玩家超时离线")
-				GateToPlayer(g, cmd.PlayerKickOutScNotify, nil)
-				g.Status = spb.PlayerStatus_PlayerStatus_Offline
-				KickPlayer(g)
+				GateToPlayer(player, cmd.PlayerKickOutScNotify, nil)
+				player.Status = spb.PlayerStatus_PlayerStatus_Offline
+				KickPlayer(player)
 			}
-		}
+			return true
+		})
 	}
 }
 
@@ -352,7 +356,6 @@ func (s *GateServer) kcpNetInfo() {
 	kcpErrorCount := uint64(0)
 	for {
 		<-ticker.C
-		CLIENT_CONN_NUM = int32(len(s.playerMap))
 		snmp := kcp.DefaultSnmp.Copy()
 		kcpErrorCount += snmp.KCPInErrors
 		logger.Info("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)

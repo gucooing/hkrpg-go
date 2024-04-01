@@ -3,10 +3,9 @@ package robot
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type Game struct {
@@ -139,8 +138,9 @@ func (r *RoBot) PlayerHeartBeatCsReq() {
 	}()
 }
 
-func (r *RoBot) PlayerHeartbeatScRsp(payloadMsg pb.Message) {
-	rsp := payloadMsg.(*proto.PlayerHeartbeatScRsp)
+func (r *RoBot) PlayerHeartbeatScRsp(payloadMsg []byte) {
+	msg := decodePayloadToProto(cmd.PlayerHeartBeatScRsp, payloadMsg)
+	rsp := msg.(*proto.PlayerHeartbeatScRsp)
 
 	times := rsp.ServerTimeMs - rsp.ClientTimeMs
 

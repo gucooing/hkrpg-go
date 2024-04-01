@@ -10,8 +10,8 @@ func (s *GameServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp:
 		s.ServiceConnectionRsp(serviceMsg)
-	case cmd.GetAllServiceRsp:
-		s.GetAllServiceRsp(serviceMsg)
+	case cmd.GameToNodePingRsp:
+		s.GameToNodePingRsp(serviceMsg)
 	case cmd.NodeToGsPlayerLogoutNotify:
 		s.NodeToGsPlayerLogoutNotify(serviceMsg)
 	// 下面是gm

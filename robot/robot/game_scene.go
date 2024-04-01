@@ -7,11 +7,11 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	"github.com/gucooing/hkrpg-go/robot/gdconf"
-	pb "google.golang.org/protobuf/proto"
 )
 
-func (r *RoBot) GetCurSceneInfoScRsp(payloadMsg pb.Message) {
-	rsp := payloadMsg.(*proto.GetCurSceneInfoScRsp)
+func (r *RoBot) GetCurSceneInfoScRsp(payloadMsg []byte) {
+	msg := decodePayloadToProto(cmd.GetCurSceneInfoScRsp, payloadMsg)
+	rsp := msg.(*proto.GetCurSceneInfoScRsp)
 
 	r.Game.EntryId = rsp.Scene.EntryId
 
@@ -54,8 +54,9 @@ func (r *RoBot) EnterSceneCsReq() {
 	}
 }
 
-func (r *RoBot) EnterSceneByServerScNotify(payloadMsg pb.Message) {
-	// rsp := payloadMsg.(*proto.EnterSceneByServerScNotify)
+func (r *RoBot) EnterSceneByServerScNotify(payloadMsg []byte) {
+	// msg := decodePayloadToProto(cmd.EnterSceneByServerScNotify, payloadMsg)
+	// rsp := msg.(*proto.EnterSceneByServerScNotify)
 
 	// logger.Info("", rsp)
 }

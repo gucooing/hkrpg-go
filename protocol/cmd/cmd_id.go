@@ -1065,6 +1065,8 @@ const (
 	GetAllServiceRsp      = 10105
 	GetAllServiceGameReq  = 10006
 	GetAllServiceGameRsp  = 10106
+	GameToNodePingReq     = 10007
+	GameToNodePingRsp     = 10107
 
 	PlayerLogoutNotify         = 11000
 	SyncPlayerOnlineDataNotify = 11001
@@ -1322,4 +1324,7 @@ func (c *CmdProtoMap) registerAllMessage() {
 
 	c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
 	c.regMsg(NodeToGsPlayerLogoutNotify, func() any { return new(spb.NodeToGsPlayerLogoutNotify) })
+	c.regMsg(GameToNodePingReq, func() any { return new(spb.GameToNodePingReq) })
+	c.regMsg(GameToNodePingRsp, func() any { return new(spb.GameToNodePingRsp) })
+
 }

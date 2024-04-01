@@ -2,10 +2,9 @@ package robot
 
 import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	pb "google.golang.org/protobuf/proto"
 )
 
-func (r *RoBot) RegisterMessage(cmdId uint16, payloadMsg pb.Message) {
+func (r *RoBot) RegisterMessage(cmdId uint16, payloadMsg []byte) {
 	switch cmdId {
 	case cmd.PlayerLoginScRsp:
 		r.PlayerLoginScRsp()

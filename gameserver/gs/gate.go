@@ -33,7 +33,7 @@ func (s *GameServer) recvGate(g *player.GamePlayer) {
 		recvLen, err := g.GateConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
-			KickPlayer(g)
+			// KickPlayer(g)
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -102,6 +102,10 @@ func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 		}
 	}
 	syncGD.Unlock()
+	g.IsProficientPlayer = true
+	if g.Ticker != nil && g.IsProficientPlayer {
+		g.HandlePlayerLoginScRsp()
+	}
 }
 
 func (s *GameServer) DelPlayerMap(uuid int64) {

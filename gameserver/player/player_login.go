@@ -24,13 +24,13 @@ func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	if dbPlayer == nil {
+	if dbPlayer.BinData == nil {
 		dbPlayer = new(db.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
-		playerDataPb := g.NewPlayer()
+		g.PlayerPb = g.NewPlayer()
 		// 初始化完毕保存账号数据
 		dbPlayer.Uid = g.Uid
-		dbPlayer.BinData, err = pb.Marshal(playerDataPb)
+		dbPlayer.BinData, err = pb.Marshal(g.PlayerPb)
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
 		}
@@ -48,39 +48,36 @@ func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 			return
 		}
 	}
+}
 
-	if g.ticker != nil && g.PlayerPb != nil {
-		g.HandlePlayerLoginScRsp()
-	}
+func (g *GamePlayer) closechan() {
+	g.closeOnce.Do(func() {
+		close(g.stop)
+	})
 }
 
 func (g *GamePlayer) loginTicker() {
-	var closed bool
 	select {
-	case <-g.ticker.C:
+	case <-g.Ticker.C:
 		logger.Info("玩家登录超时")
-		g.ticker.Stop()
-		if !closed {
-			close(g.stop)
-			closed = true
-		}
+		g.Ticker.Stop()
 		return
 	case <-g.stop:
-		g.ticker.Stop()
+		g.Ticker.Stop()
 		return
 	}
 }
 
 func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	// 添加定时器
-	g.ticker = time.NewTimer(4 * time.Second)
+	g.Ticker = time.NewTimer(4 * time.Second)
 	g.stop = make(chan struct{})
 	go g.loginTicker()
 
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v][UUID:%v]登录的系统是:%s", g.Uid, g.Uuid, req.SystemVersion)
-	if g.PlayerPb != nil {
+	if g.IsProficientPlayer {
 		g.HandlePlayerLoginScRsp()
 	}
 }
@@ -100,7 +97,7 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 		Stamina:    g.GetItem().MaterialMap[11],
 		WorldLevel: g.PlayerPb.WorldLevel,
 	}
-	close(g.stop)
+	g.closechan()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
 
 	g.LoginNotify()

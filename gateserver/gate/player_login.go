@@ -176,6 +176,9 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		return
 	}
 	p.NewGame(game.addr + ":" + game.port)
+	if p.GameConn == nil {
+		return
+	}
 	p.GameAppId = game.appId
 	go p.recvGame()
 
@@ -203,17 +206,11 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 }
 
 func (s *GateServer) AddPlayerMap(uuid int64, player *PlayerGame) {
-	syncGD.Lock()
-	s.playerMap[uuid] = player
-	syncGD.Unlock()
+	s.playerMap.Store(uuid, player)
 }
 
 func (s *GateServer) DelPlayerMap(uuid int64) {
-	if s.playerMap[uuid] != nil {
-		syncGD.Lock()
-		delete(s.playerMap, uuid)
-		syncGD.Unlock()
-	}
+	s.playerMap.Delete(uuid)
 }
 
 func (p *PlayerGame) loginTicker() {

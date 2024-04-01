@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -20,7 +21,7 @@ func (s *GameServer) ServiceStart() {
 			case msg := <-s.RecvCh:
 				s.nodeRegisterMessage(msg.cmdId, msg.serviceMsg)
 			case <-s.Ticker.C:
-				s.gameGetAllServiceReq()
+				s.GameToNodePingReq()
 			case <-s.Stop:
 				s.Ticker.Stop()
 				fmt.Println("Player goroutine stopped")
@@ -101,16 +102,18 @@ func (s *GameServer) ServiceConnectionRsp(serviceMsg pb.Message) {
 	}
 }
 
-func (s *GameServer) gameGetAllServiceReq() {
+func (s *GameServer) GameToNodePingReq() {
 	// 心跳包
-	req := &spb.GetAllServiceReq{
-		ServiceType: spb.ServerType_SERVICE_GAME,
+	req := &spb.GameToNodePingReq{
+		GameServerId:   s.AppId,
+		GameServerTime: time.Now().UnixNano() / 1e6,
+		PlayerNum:      uint64(len(s.PlayerMap)),
 	}
-	s.sendNode(cmd.GetAllServiceReq, req)
+	s.sendNode(cmd.GameToNodePingReq, req)
 }
 
-func (s *GameServer) GetAllServiceRsp(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GetAllServiceRsp)
+func (s *GameServer) GameToNodePingRsp(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GameToNodePingRsp)
 
 	logger.Debug(req.String())
 }

@@ -2,6 +2,7 @@ package node
 
 import (
 	"bufio"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -41,17 +42,22 @@ func (s *Service) gameRecvHandle() {
 
 func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.PlayerLogoutNotify: // 玩家下线成功通知
-		s.gamePlayerLogoutNotify(serviceMsg)
-	case cmd.GetAllServiceReq: // 获取目标服务所有
-		s.GetAllServiceReq(serviceMsg)
+	case cmd.GameToNodePingReq: // 获取目标服务所有
+		s.GameToNodePingReq(serviceMsg)
 	default:
 		logger.Info("game -> node error cmdid:%v", cmdId)
 	}
 }
 
-func (s *Service) gamePlayerLogoutNotify(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.PlayerLogoutNotify)
-	s.PlayerNum--
-	logger.Info("[UID:%v]node game离线成功", req.Uid)
+func (s *Service) GameToNodePingReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GameToNodePingReq)
+	if req.GameServerId != s.AppId {
+		return
+	}
+	s.PlayerNum = req.PlayerNum
+	rsp := &spb.GameToNodePingRsp{
+		GameServerTime: req.GameServerTime,
+		NodeTime:       time.Now().UnixNano() / 1e6,
+	}
+	s.sendHandle(cmd.GameToNodePingRsp, rsp)
 }

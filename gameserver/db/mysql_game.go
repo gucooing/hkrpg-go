@@ -9,7 +9,7 @@ func (s *Store) QueryAccountUidByFieldPlayer(uid uint32) *PlayerData {
 
 // 添加新账号数据
 func (s *Store) AddDatePlayerFieldByFieldName(player *PlayerData) error {
-	if err := s.Mysql.Select("uid", player.Uid).Create(&player).Error; err != nil {
+	if err := s.Mysql.Create(player).Error; err != nil {
 		return err
 	}
 	return nil

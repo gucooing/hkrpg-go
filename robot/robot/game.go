@@ -7,10 +7,10 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -44,12 +44,13 @@ func (r *RoBot) recvHandle() {
 		kcpMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &kcpMsgList, r.XorKey)
 		for _, v := range kcpMsgList {
-			payloadMsg := r.DecodePayloadToProto(v)
+			// payloadMsg := r.DecodePayloadToProto(v)
 			// 密钥交换
 			if v.CmdId == cmd.PlayerGetTokenScRsp {
 				CLIENT_CONN_NUM++
 				r.Game = new(Game)
-				rsp := payloadMsg.(*proto.PlayerGetTokenScRsp)
+				msg := decodePayloadToProto(cmd.PlayerGetTokenScRsp, v.ProtoData)
+				rsp := msg.(*proto.PlayerGetTokenScRsp)
 				r.Seed = rsp.SecretKeySeed
 				r.GameUid = rsp.Uid
 				if r.IsXor {
@@ -59,7 +60,7 @@ func (r *RoBot) recvHandle() {
 				r.PlayerLoginCsReq()
 				logger.Info("[UID:%v]账号%s 登录成功", r.GameUid, r.AccountName)
 			} else {
-				r.RegisterMessage(v.CmdId, payloadMsg)
+				r.RegisterMessage(v.CmdId, v.ProtoData)
 			}
 		}
 	}
@@ -110,4 +111,18 @@ func KcpNetInfo() {
 		logger.Info("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
 		kcp.DefaultSnmp.Reset()
 	}
+}
+
+func decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
+	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
+	if protoObj == nil {
+		logger.Error("get new proto object is nil")
+		return nil
+	}
+	err := pb.Unmarshal(msg, protoObj)
+	if err != nil {
+		logger.Error("unmarshal proto data err: %v", err)
+		return nil
+	}
+	return protoObj
 }

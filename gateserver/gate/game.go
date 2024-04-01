@@ -19,7 +19,7 @@ func (p *PlayerGame) recvGame() {
 		recvLen, err := p.GameConn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("[UID%v]game->gate error: %s", p.Uid, err.Error())
-			if GATESERVER.playerMap[p.Uuid] != nil {
+			if _, ok := GATESERVER.playerMap.Load(p.Uuid); ok {
 				GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
 				KickPlayer(p)
 			}
@@ -42,7 +42,7 @@ func (p *PlayerGame) SwitchGame() {
 
 	// 等一分钟
 	for i := 0; i < 12; i++ {
-		if GATESERVER.playerMap[p.Uuid] == nil {
+		if _, ok := GATESERVER.playerMap.Load(p.Uuid); !ok {
 			return
 		}
 		gameAppId = GATESERVER.GetGameAppId()

@@ -10,8 +10,9 @@ import (
 
 func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
-	rsp.Gender = proto.Gender(g.PlayerPb.Avatar.Gender)
-	rsp.CurBasicType = proto.HeroBasicType(g.PlayerPb.Avatar.CurMainAvatar)
+	avatarDb := g.GetAvatar()
+	rsp.Gender = proto.Gender(avatarDb.Gender)
+	rsp.CurBasicType = proto.HeroBasicType(avatarDb.CurMainAvatar)
 	for _, heroBasic := range g.GetHeroBasicTypeInfo() {
 		basicTypeInfoList := &proto.HeroBasicTypeInfo{
 			BasicType:     proto.HeroBasicType(heroBasic.BasicType),
