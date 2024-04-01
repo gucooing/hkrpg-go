@@ -29,44 +29,12 @@ jobs:
         GOOS: linux
         GOARCH: amd64
     
-    - name: Build for Linux (x86)
-      run: cd go/hkrpg && go build -o hkrpg-go-linux-x86 main.go
-      env:
-        GOOS: linux
-        GOARCH: 386
-    
-    - name: Build for Windows (x64)
-      run: cd go/hkrpg && go build -o hkrpg-go-windows-x64.exe main.go
-      env:
-        GOOS: windows
-        GOARCH: amd64
-    
-    - name: Build for Windows (x86)
-      run: cd go/hkrpg && go build -o hkrpg-go-windows-x86.exe main.go
-      env:
-        GOOS: windows
-        GOARCH: 386
-    
-    - name: Build for  Linux (ARM)
-      run: cd go/hkrpg && go build -o hkrpg-go-linux-arm main.go
-      env:
-        GOOS: linux
-        GOARCH: arm
-
-    - name: Build for Windows (ARM)
-      run: cd go/hkrpg && go build -o hkrpg-go-windows-arm.exe main.go
-      env:
-        GOOS: windows
-        GOARCH: arm
+    - name: Build
+      run: cd go/hkrpg && bash build.sh
 
     - name: Package
       run: |
-        zip -r hkrpg-go-linux-x64.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-linux-x64
-        zip -r hkrpg-go-linux-x86.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-linux-x86
-        zip -r hkrpg-go-linux-arm.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-linux-arm
-        zip -r hkrpg-go-windows-x64.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-windows-x64.exe
-        zip -r hkrpg-go-windows-x86.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-windows-x86.exe
-        zip -r hkrpg-go-windows-arm.zip go/hkrpg/data/* go/hkrpg/hkrpg-go-windows-arm.exe
+        zip -r go/hkrpg/data.zip go/hkrpg/data/*
 
     - name: Upload Release Assets
       id: upload-release-assets
@@ -80,10 +48,8 @@ jobs:
         draft: false
         prerelease: false
         files: |
-          hkrpg-go-linux-x64.zip
-          hkrpg-go-linux-x86.zip
-          hkrpg-go-linux-arm.zip
-          hkrpg-go-windows-x64.zip
-          hkrpg-go-windows-x86.zip
-          hkrpg-go-windows-arm.zip
+          go/hkrpg/data.zip
+          go/hkrpg/build
+          
+          
 
