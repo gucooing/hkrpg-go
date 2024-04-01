@@ -60,6 +60,7 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 		s.killService()
 		return
 	}
+	s.PlayerNum = req.PlayerNum
 	rsp := &spb.GetAllServiceGameRsp{
 		GameServiceList: make([]*spb.ServiceAll, 0),
 		GateTime:        req.GateTime,
@@ -82,7 +83,7 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 
 func (s *Service) gatePlayerLoginNotify(serviceMsg pb.Message) {
 	notify := serviceMsg.(*spb.PlayerLoginNotify)
-	if notify.Uuid == 0 || notify.Uid == 0 || notify.AccountId == 0 || notify.GameServerAppId == "" || notify.GateServerAppId != s.AppId {
+	if notify.Uuid == 0 || notify.Uid == 0 || notify.AccountId == 0 || getGsByAppId(notify.GameServerAppId) == nil || notify.GateServerAppId != s.AppId {
 		logger.Error("[UID:%v][gate->node]PlayerLoginNotify通知错误", notify.Uid)
 		return
 	}
@@ -97,6 +98,8 @@ func (s *Service) gatePlayerLoginNotify(serviceMsg pb.Message) {
 		Uuid:      notify.Uuid,
 		Uid:       notify.Uid,
 	})
+	s.PlayerNum++
+	getGsByAppId(notify.GameServerAppId).PlayerNum++
 	logger.Info("[UID:%v][UUID%v]玩家上线", notify.Uid, notify.Uuid)
 }
 
@@ -108,8 +111,12 @@ func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
 	}
 	ps := getPlayerServiceByUuid(notify.Uid)
 	gs := getGsByAppId(ps.GameAppId)
-	gs.sendHandle(cmd.NodeToGsPlayerLogoutNotify, &spb.NodeToGsPlayerLogoutNotify{Uuid: ps.Uuid})
+	if gs != nil {
+		gs.sendHandle(cmd.NodeToGsPlayerLogoutNotify, &spb.NodeToGsPlayerLogoutNotify{Uuid: ps.Uuid})
+		gs.PlayerNum--
+	}
 	DelPlayerUuidMap(ps.Uid)
 	DelPlayerMap(ps.Uuid)
+	s.PlayerNum--
 	logger.Info("[UID:%v][UUID%v]收到玩家被动下线通知", notify.Uid, ps.Uuid)
 }

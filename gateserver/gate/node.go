@@ -95,6 +95,7 @@ func (s *GateServer) gateGetAllServiceGameReq() {
 	req := &spb.GetAllServiceGameReq{
 		ServiceType: spb.ServerType_SERVICE_GATE,
 		GateTime:    time.Now().UnixNano() / 1e6,
+		PlayerNum:   uint64(CLIENT_CONN_NUM),
 	}
 	s.sendNode(cmd.GetAllServiceGameReq, req)
 }
