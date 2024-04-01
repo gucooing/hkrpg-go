@@ -70,13 +70,15 @@ type (
 		bufptr  []byte
 
 		// settings
-		remote     net.Addr  // remote peer address
-		rd         time.Time // read deadline
-		wd         time.Time // write deadline
-		headerSize int       // the header size additional to a KCP frame
-		ackNoDelay bool      // send ack immediately for each incoming packet(testing purpose)
-		writeDelay bool      // delay kcp.flush() for Write() for bulk transfer
-		dup        int       // duplicate udp packets(testing purpose)
+		remote     net.Addr      // remote peer address
+		rd         time.Time     // read deadline
+		wd         time.Time     // write deadline
+		idt        *time.Timer   // 空闲截止计时器时间
+		fd         time.Duration // 空闲截止时间
+		headerSize int           // the header size additional to a KCP frame
+		ackNoDelay bool          // send ack immediately for each incoming packet(testing purpose)
+		writeDelay bool          // delay kcp.flush() for Write() for bulk transfer
+		dup        int           // duplicate udp packets(testing purpose)
 
 		// notifications
 		die          chan struct{} // notify current session has Closed
@@ -182,6 +184,7 @@ func (s *UDPSession) Read(b []byte) (n int, err error) {
 				s.kcp.Recv(b)
 				s.mu.Unlock()
 				atomic.AddUint64(&DefaultSnmp.BytesReceived, uint64(size))
+				s.idt.Reset(s.fd)
 				return size, nil
 			}
 
@@ -226,6 +229,8 @@ func (s *UDPSession) Read(b []byte) (n int, err error) {
 		case <-s.chSocketReadError:
 			return 0, s.socketReadError.Load().(error)
 		case <-s.die:
+			return 0, io.ErrClosedPipe
+		case <-s.idt.C:
 			return 0, io.ErrClosedPipe
 		}
 	}
@@ -507,6 +512,14 @@ func (s *UDPSession) SetWriteBuffer(bytes int) error {
 		}
 	}
 	return errInvalidOperation
+}
+
+// 设置最大空闲时间
+func (s *UDPSession) SetIdleTicker(t time.Duration) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.fd = t
+	s.idt = time.NewTimer(s.fd)
 }
 
 // post-processing for sending a packet from kcp core

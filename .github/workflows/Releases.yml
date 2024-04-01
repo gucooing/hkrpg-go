@@ -34,7 +34,7 @@ jobs:
 
     - name: Package
       run: |
-        zip -r go/hkrpg/data.zip go/hkrpg/data/*
+        zip -r go/hkrpg/build/data.zip go/hkrpg/data/*
 
     - name: Upload Release Assets
       id: upload-release-assets
@@ -42,14 +42,12 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.TOKENHK }}
       with:
-        tag_name: v1.0.2
-        name: Release v1.0.2
-        body: sr 1.6.0 完全修正忘却之庭与相关活动
+        tag_name: v1.0.6
+        name: Release v1.0.6
+        body: sr 1.6.0 sync
         draft: false
         prerelease: false
-        files: |
-          go/hkrpg/data.zip
-          go/hkrpg/build
+        files: go/hkrpg/build/
           
           
 
