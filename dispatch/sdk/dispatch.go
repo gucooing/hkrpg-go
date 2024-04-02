@@ -55,6 +55,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.Unk3 = true
 	queryGateway.Unk4 = true
 	queryGateway.Unk5 = true
+	queryGateway.Unk6 = true
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {
@@ -109,10 +110,10 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 
 func (s *Server) ErrorGate(c *gin.Context) {
 	queryGateway := new(proto.Gateserver)
-	queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
+	// queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
 	queryGateway.RegionName = "hkrpg-go"
 	queryGateway.Msg = "gate error"
-	queryGateway.MsgError = "游戏正在维护中，详情请关注官方公告。"
+	// queryGateway.MsgError = "游戏正在维护中，详情请关注官方公告。"
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {

@@ -27,8 +27,8 @@ func (g *GamePlayer) SyncRogueMapRoomScNotify() {
 func (g *GamePlayer) SyncRogueVirtualItemInfoScNotify() {
 	notify := &proto.SyncRogueVirtualItemInfoScNotify{
 		RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
-			Money: g.GetDbRogue().CurRogue.CosmicFragment,
-			X:     8,
+			RogueCoin: g.GetDbRogue().CurRogue.CosmicFragment,
+			// X:     8,
 		},
 	}
 
@@ -41,28 +41,32 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 	rogue.BuffNum += uint32(len(buffIdList))
 	notify := &proto.SyncRogueCommonPendingActionScNotify{
 		RogueCommonPendingAction: &proto.RogueCommonPendingAction{
-			Num: rogue.BuffNum,
+			UniqueId:    rogue.BuffNum,
 			RogueAction: &proto.RogueAction{
-				BuffSelectInfo: &proto.RogueCommonBuffSelectInfo{
-					HandbookUnlockBuffIdList: make([]uint32, 0),
-					CanRoll:                  true,
-					MazeBuffList:             make([]*proto.RogueCommonBuff, 0),
-					SelectBuffSourceHint:     1,
-					SourceCurCount:           dbRogue.CurRogue.CurSiteId,
-					SourceTotalCount:         1,
-				},
+				/*
+					BuffSelectInfo: &proto.RogueCommonBuffSelectInfo{
+						HandbookUnlockBuffIdList: make([]uint32, 0),
+						CanRoll:                  true,
+						MazeBuffList:             make([]*proto.RogueCommonBuff, 0),
+						SelectBuffSourceHint:     1,
+						SourceCurCount:           dbRogue.CurRogue.CurSiteId,
+						SourceTotalCount:         1,
+					},
+				*/
 			},
 		},
-		MapId: dbRogue.CurRogue.RogueMapID,
+		RogueVersionId: dbRogue.CurRogue.RogueMapID,
 	}
 
-	for _, buffId := range buffIdList {
-		rogueCommonBuff := &proto.RogueCommonBuff{
-			Level:  1,
-			BuffId: buffId,
+	/*
+		for _, buffId := range buffIdList {
+			rogueCommonBuff := &proto.RogueCommonBuff{
+				BuffLevel:  1,
+				BuffId: buffId,
+			}
+			notify.RogueCommonPendingAction.RogueAction.BuffSelectInfo.MazeBuffList = append(notify.RogueCommonPendingAction.RogueAction.BuffSelectInfo.MazeBuffList, rogueCommonBuff)
 		}
-		notify.RogueCommonPendingAction.RogueAction.BuffSelectInfo.MazeBuffList = append(notify.RogueCommonPendingAction.RogueAction.BuffSelectInfo.MazeBuffList, rogueCommonBuff)
-	}
+	*/
 
 	g.Send(cmd.SyncRogueCommonPendingActionScNotify, notify)
 }
@@ -128,16 +132,18 @@ func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 		return
 	}
 	notify := &proto.SyncRogueCommonActionResultScNotify{
-		Action: &proto.RogueActionResult{
-			ActionData: &proto.RogueActionResultData{
-				AddBuffList: &proto.RogueBuffData{
-					Level:  rogue.BuffList[buffId].Level,
-					BuffId: buffId,
+		/*
+			Action: &proto.RogueActionResult{
+				ActionData: &proto.RogueActionResultData{
+					AddBuffList: &proto.RogueBuffData{
+						Level:  rogue.BuffList[buffId].Level,
+						BuffId: buffId,
+					},
 				},
+				Source: proto.RogueBuffSource_ROGUE_BUFF_SOURCE_TYPE_SELECT,
 			},
-			Source: proto.RogueBuffSource_ROGUE_BUFF_SOURCE_TYPE_SELECT,
-		},
-		MapId: g.GetDbRogue().CurRogue.RogueMapID,
+		*/
+		RogueVersionId: g.GetDbRogue().CurRogue.RogueMapID,
 	}
 
 	g.Send(cmd.SyncRogueCommonActionResultScNotify, notify)
@@ -253,29 +259,31 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 		RogueInfo: g.GetRogueInfo(),
 	}
 	rsp.RogueInfo.RogueCurrentInfo = &proto.RogueCurrentInfo{
-		PendingAction: &proto.RogueCommonPendingAction{Num: rogue.BuffNum},
-		RogueAeon: &proto.RogueAeon{
-			CGAFFPHCNEA: true,
-			AeonId:      req.BuffAeonId, // 解锁的命途
+		PendingAction: &proto.RogueCommonPendingAction{UniqueId: rogue.BuffNum},
+		RogueAeonInfo: &proto.RogueAeon{
+			IsUnlockEnhanceBuff: true,
+			AeonId:              req.BuffAeonId, // 解锁的命途
 		},
 		RogueAvatarInfo: &proto.RogueAvatarInfo{
 			BaseAvatarIdList: req.BaseAvatarIdList,
-			AJJJNLPCEED: &proto.CLPDAOOAHOE{
-				MGEFFLOEPBK: &proto.ItemCostList{
-					ItemList: []*proto.ItemCost{
-						{
-							PileItem: &proto.PileItem{
-								ItemNum: 80,
-								ItemId:  31,
+			/*
+				AJJJNLPCEED: &proto.CLPDAOOAHOE{
+					MGEFFLOEPBK: &proto.ItemCostList{
+						ItemList: []*proto.ItemCost{
+							{
+								PileItem: &proto.PileItem{
+									ItemNum: 80,
+									ItemId:  31,
+								},
 							},
 						},
 					},
 				},
-			},
+			*/
 		},
 		RoomMap: g.GetRogueMap(),
-		RogueVirtualItem: &proto.RogueVirtualItem{
-			Money: g.GetDbRogue().CurRogue.CosmicFragment,
+		RogueVirtualItem: &proto.RogueVirtualItemInfo{
+			RogueCoin: g.GetDbRogue().CurRogue.CosmicFragment,
 		},
 		Status: proto.RogueStatus_ROGUE_STATUS_DOING,
 	}
@@ -324,7 +332,7 @@ func (g *GamePlayer) GetRogueArea() []*proto.RogueArea {
 		dbRogueArea := g.GetDbRogueArea(rogueArea)
 		RogueArea := &proto.RogueArea{
 			AreaId:          dbRogueArea.AreaId,
-			RogueAreaStatus: proto.RogueAreaStatus(dbRogueArea.RogueAreaStatus),
+			RogueAreaStatus: uint32(dbRogueArea.RogueAreaStatus),
 		}
 		rogueAreaList = append(rogueAreaList, RogueArea)
 	}
@@ -567,7 +575,6 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 						RoomId: nextRoom.RoomId,
 						SiteId: siteId,
 					},
-					AeonInfo: nil,
 				}
 			} else {
 				entityList.Prop.PropId = 1000

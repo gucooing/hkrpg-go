@@ -118,7 +118,7 @@ func (g *GamePlayer) BattlePassInfoNotify() {
 	notify := &proto.BattlePassInfoNotify{
 		TakenPremiumExtendedReward: 127,
 		TakenFreeExtendedReward:    2,
-		Unkfield:                   4,
+		// Unkfield:                   4,
 		TakenPremiumReward2:        7,
 		TakenFreeReward:            6,
 		TakenPremiumReward1:        2,

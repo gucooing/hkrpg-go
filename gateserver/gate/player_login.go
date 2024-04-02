@@ -214,17 +214,12 @@ func (s *GateServer) DelPlayerMap(uuid int64) {
 }
 
 func (p *PlayerGame) loginTicker() {
-	var closed bool
 	select {
 	case <-p.ticker.C:
 		logger.Info("玩家登录超时")
 		GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
 		KickPlayer(p)
 		p.ticker.Stop()
-		if !closed {
-			close(p.stop)
-			closed = true
-		}
 		return
 	case <-p.stop:
 		p.ticker.Stop()

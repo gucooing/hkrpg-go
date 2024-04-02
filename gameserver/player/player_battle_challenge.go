@@ -25,12 +25,14 @@ func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
 		ExtraLineupType: challengeState.ExtraLineupType,
 		Score:           challengeState.ScoreOne,
 		ScoreTwo:        challengeState.ScoreTwo,
-		StoryInfo:       &proto.ChallengeStoryInfo{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}},
+		StoryInfo:       &proto.ChallengeStoryInfo{StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}}},
 	}
 	if challengeState.ChallengeCount == 1 {
-		rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
+		rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffOne}}}
+		// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
 	} else {
-		rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffTwo)
+		rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffTwo}}}
+		// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffTwo)
 	}
 
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
@@ -48,8 +50,8 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	if req.StoryInfo != nil {
 		battleState.BattleType = spb.BattleType_Battle_CHALLENGE_Story
 		// 缓存buff
-		challengeState.StoryBuffOne = req.StoryInfo.StoryBuffInfo.StoryBuffOne
-		challengeState.StoryBuffTwo = req.StoryInfo.StoryBuffInfo.StoryBuffTwo
+		// challengeState.StoryBuffOne = req.StoryInfo.StoryBuffInfo.StoryBuffOne
+		// challengeState.StoryBuffTwo = req.StoryInfo.StoryBuffInfo.StoryBuffTwo
 	} else {
 		battleState.BattleType = spb.BattleType_Battle_CHALLENGE
 	}
@@ -136,9 +138,10 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 		RoundCount:      challengeState.RoundCount,
 		ExtraLineupType: challengeState.ExtraLineupType,
 		Score:           challengeState.ChallengeScore,
-		StoryInfo:       &proto.ChallengeStoryInfo{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}},
+		StoryInfo:       &proto.ChallengeStoryInfo{StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}}},
 	}
-	challengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(challengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
+	challengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffOne}}}
+	// challengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(challengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
 
 	// 获取世界
 	scene := g.GetChallengeScene()
