@@ -335,7 +335,7 @@ func KickPlayer(p *PlayerGame) {
 }
 
 func (s *GateServer) AutoUpDataPlayer() {
-	ticker := time.NewTicker(time.Second * 60)
+	ticker := time.NewTicker(time.Second * 120)
 	for {
 		<-ticker.C
 		s.playerMap.Range(func(key, value interface{}) bool {
@@ -347,6 +347,22 @@ func (s *GateServer) AutoUpDataPlayer() {
 				GateToPlayer(player, cmd.PlayerKickOutScNotify, nil)
 				player.Status = spb.PlayerStatus_PlayerStatus_Offline
 				KickPlayer(player)
+			} else {
+				if _, ok := s.Store.GetPlayerStatus(strconv.Itoa(int(player.AccountId))); ok {
+					bin := &spb.PlayerStatusRedisData{
+						Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
+						GameserverId: player.GameAppId,
+						LoginRand:    player.Seed,
+						LoginTime:    0,
+						Uid:          player.Uid,
+					}
+					status, err := pb.Marshal(bin)
+					if err != nil {
+						logger.Error("pb marshal error: %v\n", err)
+						return true
+					}
+					s.Store.SetPlayerStatus(strconv.Itoa(int(player.AccountId)), status)
+				}
 			}
 			return true
 		})

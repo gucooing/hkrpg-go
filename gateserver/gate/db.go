@@ -191,7 +191,7 @@ func (s *Store) DistUnlock(accountId string) {
 // 标记玩家状态
 func (s *Store) SetPlayerStatus(accountId string, value []byte) error {
 	key := "player_status:" + accountId
-	err := s.RedisDb.Set(ctx, key, value, 0).Err()
+	err := s.RedisDb.Set(ctx, key, value, 180*time.Second).Err()
 	return err
 }
 

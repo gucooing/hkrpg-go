@@ -93,3 +93,7 @@ func stou32(msg string) uint32 {
 	ms, _ := strconv.ParseUint(msg, 10, 32)
 	return uint32(ms)
 }
+
+func (g *GamePlayer) SetRedisPlayerBriefData() {
+
+}
