@@ -1,0 +1,53 @@
+name: HKRPG-Go Releases
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sync HKRPG-Go
+      uses: actions/checkout@v3
+      with:
+        repository: gucooing/hkrpg-go-public
+        ref: "dev"
+        path: go/hkrpg
+        ssh-key: ${{ secrets.GAYHUB_TOKEN }}
+        fetch-depth: 0
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.20"
+        check-latest: true
+
+    - name: Go Tidy
+      run: cd go/hkrpg && go mod tidy
+
+    - name: Build for Linux (x64)
+      run: cd go/hkrpg && go build -o hkrpg-go-linux-x64 main.go
+      env:
+        GOOS: linux
+        GOARCH: amd64
+    
+    - name: Build
+      run: cd go/hkrpg && bash build.sh
+
+    - name: Package
+      run: |
+        zip -r go/hkrpg/build/data.zip go/hkrpg/data/*
+
+    - name: Upload Release Assets
+      id: upload-release-assets
+      uses: softprops/action-gh-release@v1
+      env:
+          GITHUB_TOKEN: ${{ secrets.TOKENHK }}
+      with:
+        tag_name: v1.0.6
+        name: Release v1.0.6
+        body: sr 1.6.0 sync
+        draft: false
+        prerelease: false
+        files: go/hkrpg/build/
+          
+          
+

@@ -62,10 +62,10 @@ type LogInfo struct {
 	ThreadId    string
 }
 
-func InitLogger() {
+func InitLogger(name string) {
 	log.SetFlags(0)
 	LOG = new(Logger)
-	LOG.AppName = "hkrpg"
+	LOG.AppName = name
 	LOG.Level = LOG.getLevelInt("DEBUG")
 	LOG.Mode = LOG.getModeInt("BOTH")
 	LOG.Track = true
@@ -135,8 +135,11 @@ func (l *Logger) writeLogFile(logStr string) {
 	for _, v := range ALL_COLOR {
 		logStr = strings.ReplaceAll(logStr, v, "")
 	}
+	if _, err := os.Stat("./log"); os.IsNotExist(err) {
+		os.MkdirAll("./log", 0644)
+	}
 	if l.File == nil {
-		file, err := os.OpenFile("./"+l.AppName+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		file, err := os.OpenFile("./log/"+l.AppName+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			fmt.Printf(RED+"open new log file error: %v\n"+RESET, err)
 			return
@@ -161,7 +164,7 @@ func (l *Logger) writeLogFile(logStr string) {
 			fmt.Printf(RED+"rename old log file error: %v\n"+RESET, err)
 			return
 		}
-		file, err := os.OpenFile("./"+l.AppName+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		file, err := os.OpenFile("./log/"+l.AppName+".log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			fmt.Printf(RED+"open new log file error: %v\n"+RESET, err)
 			return
