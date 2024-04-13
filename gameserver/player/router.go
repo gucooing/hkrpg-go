@@ -212,6 +212,7 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 		g.GetNpcTakenRewardCsReq(payloadMsg) // NPC对话
 	case cmd.GetFirstTalkByPerformanceNpcCsReq:
 		g.GetFirstTalkByPerformanceNpcCsReq(payloadMsg) // NPC商店
+	// 杂
 	default:
 		logger.Debug("C --> S error router: %v", cmdId)
 	}

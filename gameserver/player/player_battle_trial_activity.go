@@ -12,8 +12,14 @@ import (
 func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
 	req := msg.(*proto.StartTrialActivityCsReq)
+	if req.TrialActivityId == 0 {
+		return
+	}
 
 	avatarDemo := gdconf.GetAvatarDemoConfigById(req.TrialActivityId)
+	if avatarDemo == nil {
+		return
+	}
 	lineup := g.GetLineUpById(10)
 
 	trialActivityState := g.GetTrialActivityState()

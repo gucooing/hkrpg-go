@@ -36,13 +36,15 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 		p.GateToGame(tcpMsg)
 	case cmd.PlayerLogoutCsReq: // 退出游戏
 		p.playerOffline()
-	case cmd.PlayerLoginCsReq:
+	case cmd.PlayerLoginCsReq: // 第二个登录包
 		// 添加定时器
 		p.ticker = time.NewTimer(4 * time.Second)
 		p.stop = make(chan struct{})
 		go p.loginTicker()
 		// p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 		p.GateToGame(tcpMsg)
+	case cmd.GetAuthkeyCsReq: // 兑换码请求
+		
 	default:
 		p.GateToGame(tcpMsg)
 	}
