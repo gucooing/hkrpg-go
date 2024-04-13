@@ -34,8 +34,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger("gameserver" + "[" + alg.GetAppId() + "]")
-	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("gameserver"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

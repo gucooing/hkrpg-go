@@ -33,8 +33,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger("discord" + "[" + alg.GetAppId() + "]")
-	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("discord"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 
 	cfg := config.GetConfig()

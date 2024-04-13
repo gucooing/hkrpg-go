@@ -33,8 +33,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger("muipserver" + "[" + alg.GetAppId() + "]")
-	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("muipserver"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 
 	cfg := config.GetConfig()
