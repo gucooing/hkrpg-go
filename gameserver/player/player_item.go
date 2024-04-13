@@ -5,6 +5,31 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+func (g *GamePlayer) ScenePlaneEventScNotify(pileItem []*Material) {
+	// 通知客户端增加了物品
+	notify := &proto.ScenePlaneEventScNotify{
+		GetItemList: &proto.ItemList{
+			ItemList: make([]*proto.Item, 0),
+		},
+	}
+	for _, items := range pileItem {
+		if items.Tid == 22 {
+			continue
+		}
+		item := &proto.Item{
+			ItemId:      items.Tid,
+			Level:       0,
+			Num:         items.Num,
+			MainAffixId: 0,
+			Rank:        0,
+			Promotion:   0,
+			UniqueId:    0,
+		}
+		notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
+	}
+	g.Send(cmd.ScenePlaneEventScNotify, notify)
+}
+
 func (g *GamePlayer) HandleGetBagCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBagScRsp)
 	// 获取背包材料

@@ -54,7 +54,6 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 			}
 		case 22:
 			g.AddTrailblazerExp(material.Num)
-			return
 		default:
 			g.GetItem().MaterialMap[material.Tid] += material.Num
 		}
@@ -76,6 +75,9 @@ func (g *GamePlayer) DelMaterial(pileItem []*Material) {
 func (g *GamePlayer) MaterialPlayerSyncScNotify(pileItem []*Material) {
 	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
 	for _, item := range pileItem {
+		if item.Tid == 22 {
+			continue
+		}
 		material := &proto.Material{
 			Tid: item.Tid,
 			Num: g.GetItem().MaterialMap[item.Tid],

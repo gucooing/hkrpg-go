@@ -103,28 +103,6 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 	}
 }
 
-func (g *GamePlayer) ScenePlaneEventScNotify(pileItem []*Material) {
-	// 通知客户端增加了物品
-	notify := &proto.ScenePlaneEventScNotify{
-		GetItemList: &proto.ItemList{
-			ItemList: make([]*proto.Item, 0),
-		},
-	}
-	for _, items := range pileItem {
-		item := &proto.Item{
-			ItemId:      items.Tid,
-			Level:       0,
-			Num:         g.GetItem().MaterialMap[items.Tid],
-			MainAffixId: 0,
-			Rank:        0,
-			Promotion:   0,
-			UniqueId:    0,
-		}
-		notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
-	}
-	g.Send(cmd.ScenePlaneEventScNotify, notify)
-}
-
 func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
 	relicItme := g.GetRelicById(uniqueId)
 	// 通知客户端增加了物品
