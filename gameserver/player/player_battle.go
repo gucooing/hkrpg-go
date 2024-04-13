@@ -605,17 +605,19 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 		BattleAvatarList: rsp.BattleInfo.BattleAvatarList,
 	}
 	battle.EventIDList = append(battle.EventIDList, req.CocoonId)
-	// 添加奖励
-	for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.PlayerPb.WorldLevel).DisplayItemList {
-		material := &Material{
-			Tid: displayItem.ItemID,
-			Num: displayItem.ItemNum,
+	// 添加奖励 TODO 发送的奖励有问题，所以暂时注释掉（有时间再康
+	/*
+		for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.PlayerPb.WorldLevel).DisplayItemList {
+			material := &Material{
+				Tid: displayItem.ItemID,
+				Num: displayItem.ItemNum,
+			}
+			if material.Num == 0 {
+				material.Num += 1
+			}
+			battle.DisplayItemList = append(battle.DisplayItemList, material)
 		}
-		if material.Num == 0 {
-			material.Num += 1
-		}
-		battle.DisplayItemList = append(battle.DisplayItemList, material)
-	}
+	*/
 	g.Player.Battle[rsp.BattleInfo.BattleId] = battle
 
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
