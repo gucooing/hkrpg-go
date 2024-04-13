@@ -25,7 +25,7 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	var groupID = mapEntrance.StartGroupID
 	var anchorID = mapEntrance.StartAnchorID
 
-	if teleportId != 0 {
+	if foorMap.Teleports[teleportId] != nil {
 		groupID = foorMap.Teleports[teleportId].AnchorGroupID
 		anchorID = foorMap.Teleports[teleportId].AnchorID
 	} else if anchorID == 0 {
