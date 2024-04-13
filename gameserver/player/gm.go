@@ -114,7 +114,7 @@ func (g *GamePlayer) ScenePlaneEventScNotify(pileItem []*Material) {
 		item := &proto.Item{
 			ItemId:      items.Tid,
 			Level:       0,
-			Num:         items.Num,
+			Num:         g.GetItem().MaterialMap[items.Tid],
 			MainAffixId: 0,
 			Rank:        0,
 			Promotion:   0,
