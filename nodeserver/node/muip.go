@@ -45,6 +45,8 @@ func (s *Service) muipRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.GmGive(serviceMsg)
 	case cmd.GmWorldLevel:
 		s.GmWorldLevel(serviceMsg)
+	case cmd.DelItem:
+		s.DelItem(serviceMsg)
 	case cmd.GetAllServiceReq:
 		s.GetAllServiceReq(serviceMsg)
 	default:
@@ -80,4 +82,17 @@ func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
 		Uuid:       ps.Uuid,
 	}
 	getGsByAppId(ps.GameAppId).sendHandle(cmd.GmWorldLevel, notify)
+}
+
+func (s *Service) DelItem(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.DelItem)
+	if req.PlayerUid == 0 || NODE.PlayerUuidMap[req.PlayerUid] == 0 {
+		return
+	}
+	ps := getPlayerServiceByUuid(req.PlayerUid)
+	notify := &spb.DelItem{
+		PlayerUid: req.PlayerUid,
+		Uuid:      ps.Uuid,
+	}
+	getGsByAppId(ps.GameAppId).sendHandle(cmd.DelItem, notify)
 }

@@ -201,7 +201,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 	GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
 	// 结束定时器
-	close(p.stop)
+	p.closeStop()
 	logger.Info("[AccountId:%v][UUID:%v]|[UID:%v]登录gate", p.AccountId, p.Uuid, p.Uid)
 }
 
@@ -225,6 +225,17 @@ func (p *PlayerGame) loginTicker() {
 		p.ticker.Stop()
 		return
 	}
+}
+
+func (p *PlayerGame) isChannelClosed() bool {
+	// 不适用于有缓存通道
+	select {
+	case <-p.stop:
+		return true
+	default:
+	}
+
+	return false
 }
 
 // 玩家主动离线处理

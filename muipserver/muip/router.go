@@ -24,6 +24,8 @@ func InitRouter(c *gin.Context) {
 		GetPlayer(c)
 	case 1005:
 		GetPlayerBin(c)
+	case 1006:
+		DelItem(c)
 	case 1101:
 		State(c)
 	case 1127:

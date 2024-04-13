@@ -138,7 +138,6 @@ func (g *GamePlayer) LoginNotify() {
 	g.Send(cmd.UpdateFeatureSwitchScNotify, nil)
 	g.Send(cmd.SyncServerSceneChangeNotify, nil)
 	g.Send(cmd.SyncTurnFoodNotify, nil)
-	g.Send(cmd.StaminaInfoScNotify, nil)
 	g.Send(cmd.DailyTaskDataScNotify, nil)
 	g.Send(cmd.RaidInfoNotify, nil)
 	g.BattlePassInfoNotify()

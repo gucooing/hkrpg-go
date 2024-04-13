@@ -74,9 +74,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq() {
 }
 
 func (g *GamePlayer) GetUpdatedArchiveDataCsReq() {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetUpdatedArchiveDataScRsp, rsp)
+	g.Send(cmd.GetUpdatedArchiveDataScRsp, nil)
 }
 
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
@@ -220,15 +218,11 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetChatEmojiListScRsp, rsp)
+	g.Send(cmd.GetChatEmojiListScRsp, nil)
 }
 
 func (g *GamePlayer) HandleGetAssistHistoryCsReq() {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetAssistHistoryScRsp, rsp)
+	g.Send(cmd.GetAssistHistoryScRsp, nil)
 }
 
 func (g *GamePlayer) SetClientPausedCsReq() {
@@ -274,11 +268,8 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 
 	g.Player.IsNickName = !g.Player.IsNickName
 
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-
 	g.PlayerPlayerSyncScNotify()
-	g.Send(cmd.SetNicknameScRsp, rsp)
+	g.Send(cmd.SetNicknameScRsp, nil)
 }
 
 func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {

@@ -1296,6 +1296,7 @@ const (
 
 	GmGive       = 12001
 	GmWorldLevel = 12002
+	DelItem      = 12003
 )
 
 func (c *CmdProtoMap) registerAllMessage() {
@@ -1572,6 +1573,7 @@ func (c *CmdProtoMap) registerAllMessage() {
 	// server
 	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
 	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
+	c.regMsg(DelItem, func() any { return new(spb.DelItem) })
 	c.regMsg(ServiceConnectionReq, func() any { return new(spb.ServiceConnectionReq) })
 	c.regMsg(ServiceConnectionRsp, func() any { return new(spb.ServiceConnectionRsp) })
 	c.regMsg(PlayerLoginReq, func() any { return new(spb.PlayerLoginReq) })

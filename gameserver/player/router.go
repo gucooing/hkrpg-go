@@ -6,6 +6,7 @@ import (
 )
 
 func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
+	logger.Debug("C --> S router cmdId: %v | name: %s", cmdId, cmd.NewCmdProtoMap().GetCmdNameByCmdId(cmdId))
 	switch cmdId {
 	case cmd.PlayerHeartBeatCsReq:
 		g.PlayerHeartBeatCsReq() // 心跳包

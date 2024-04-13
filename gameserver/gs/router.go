@@ -19,6 +19,8 @@ func (s *GameServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.GmGive(serviceMsg) // 获取物品
 	case cmd.GmWorldLevel:
 		s.GmWorldLevel(serviceMsg) // 设置世界等级
+	case cmd.DelItem:
+		s.DelItem(serviceMsg) // 清空背包
 	default:
 		logger.Info("node -> game error cmdid:%v", cmdId)
 	}

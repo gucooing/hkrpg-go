@@ -181,9 +181,16 @@ func (p *PlayerGame) gsToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	KickPlayer(p)
 }
 
+func (p *PlayerGame) closeStop() {
+	if !p.isChannelClosed() {
+		close(p.stop)
+	}
+}
+
 func (p *PlayerGame) playerLoginUp() {
 	// 登录成功设置
-	close(p.stop)
+	p.closeStop()
+
 	// 解锁
 	GATESERVER.Store.DistUnlock(strconv.Itoa(int(p.AccountId)))
 	p.AddPlayerStatus()

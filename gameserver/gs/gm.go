@@ -20,3 +20,11 @@ func (s *GameServer) GmWorldLevel(serviceMsg pb.Message) {
 	}
 	s.PlayerMap[req.Uuid].GmWorldLevel(serviceMsg)
 }
+
+func (s *GameServer) DelItem(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.DelItem)
+	if req.PlayerUid == 0 || s.PlayerMap[req.Uuid] == nil {
+		return
+	}
+	s.PlayerMap[req.Uuid].DelItem(serviceMsg)
+}

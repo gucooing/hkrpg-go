@@ -33,6 +33,21 @@ func Give(c *gin.Context) {
 	ToNode(c, cmd.GmGive, message)
 }
 
+func DelItem(c *gin.Context) {
+	uid := stou32(c.Query("uid"))
+	if uid == 0 {
+		c.JSON(404, gin.H{
+			"code": -1,
+		})
+		return
+	}
+	message := &spb.DelItem{
+		PlayerUid: uid,
+	}
+
+	ToNode(c, cmd.DelItem, message)
+}
+
 func stou32(msg string) uint32 {
 	if msg == "" {
 		return 0
