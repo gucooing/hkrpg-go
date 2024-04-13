@@ -39,7 +39,8 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 		lineup.AvatarIdList[id] = avatarId
 	}
 
-	g.Send(cmd.SyncServerSceneChangeNotify, req)
+	g.Send(cmd.ExtraLineupDestroyNotify, &proto.ExtraLineupDestroyNotify{ExtraLineupType: proto.ExtraLineupType_LINEUP_STAGE_TRIAL})
+	g.Send(cmd.SyncServerSceneChangeNotify, nil)
 
 	g.SyncLineupNotify(10)
 

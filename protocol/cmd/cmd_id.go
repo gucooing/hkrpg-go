@@ -1570,6 +1570,7 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(SetLineupNameCsReq, func() any { return new(proto.SetLineupNameCsReq) })
 	c.regMsg(GetAvatarDataScRsp, func() any { return new(proto.GetAvatarDataScRsp) })
 	c.regMsg(RankUpEquipmentCsReq, func() any { return new(proto.RankUpEquipmentCsReq) })
+	c.regMsg(ExtraLineupDestroyNotify, func() any { return new(proto.ExtraLineupDestroyNotify) })
 	// server
 	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
 	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
