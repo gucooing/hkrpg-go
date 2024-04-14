@@ -548,33 +548,41 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 		}
 		for _, relic := range avatar.EquipRelic {
 			relicdb := g.GetRelicById(relic)
-			equipRelic := &proto.BattleRelic{
-				Id:           relicdb.Tid,
-				Level:        relicdb.Level,
-				MainAffixId:  relicdb.MainAffixId,
-				SubAffixList: make([]*proto.RelicAffix, 0),
-				UniqueId:     relicdb.UniqueId,
-			}
-			for _, subAddix := range relicdb.SubAffixList {
-				relicAffix := &proto.RelicAffix{
-					AffixId: subAddix.AffixId,
-					Cnt:     subAddix.Cnt,
-					Step:    subAddix.Step,
+			if relicdb == nil {
+				delete(avatar.EquipRelic, relic)
+			} else {
+				equipRelic := &proto.BattleRelic{
+					Id:           relicdb.Tid,
+					Level:        relicdb.Level,
+					MainAffixId:  relicdb.MainAffixId,
+					SubAffixList: make([]*proto.RelicAffix, 0),
+					UniqueId:     relicdb.UniqueId,
 				}
-				equipRelic.SubAffixList = append(equipRelic.SubAffixList, relicAffix)
+				for _, subAddix := range relicdb.SubAffixList {
+					relicAffix := &proto.RelicAffix{
+						AffixId: subAddix.AffixId,
+						Cnt:     subAddix.Cnt,
+						Step:    subAddix.Step,
+					}
+					equipRelic.SubAffixList = append(equipRelic.SubAffixList, relicAffix)
+				}
+				battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 			}
-			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}
 		// 获取角色装备的光锥
 		if avatar.EquipmentUniqueId != 0 {
 			equipment := g.GetEquipment(avatar.EquipmentUniqueId)
-			equipmentList := &proto.BattleEquipment{
-				Id:        equipment.Tid,
-				Level:     equipment.Level,
-				Promotion: equipment.Promotion,
-				Rank:      equipment.Rank,
+			if equipment == nil {
+				avatar.EquipmentUniqueId = 0
+			} else {
+				equipmentList := &proto.BattleEquipment{
+					Id:        equipment.Tid,
+					Level:     equipment.Level,
+					Promotion: equipment.Promotion,
+					Rank:      equipment.Rank,
+				}
+				battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
 			}
-			battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
 		}
 		rsp.BattleInfo.BattleAvatarList = append(rsp.BattleInfo.BattleAvatarList, battleAvatar)
 		// 检查是否有提前释放的技能，添加到buff里
@@ -606,18 +614,29 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	}
 	battle.EventIDList = append(battle.EventIDList, req.CocoonId)
 	// 添加奖励 TODO 发送的奖励有问题，所以暂时注释掉（有时间再康
-	/*
-		for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.PlayerPb.WorldLevel).DisplayItemList {
-			material := &Material{
-				Tid: displayItem.ItemID,
-				Num: displayItem.ItemNum,
-			}
-			if material.Num == 0 {
-				material.Num += 1
-			}
-			battle.DisplayItemList = append(battle.DisplayItemList, material)
+	for _, displayItem := range gdconf.GetMappingInfoById(req.CocoonId, g.PlayerPb.WorldLevel).DisplayItemList {
+		itemConf := gdconf.GetItemConfigById(displayItem.ItemID)
+		if itemConf == nil {
+			continue
 		}
-	*/
+		material := &Material{}
+		if material.Num != 0 {
+			material.Tid = displayItem.ItemID
+			material.Num = displayItem.ItemNum
+		} else {
+			switch itemConf.ItemSubType {
+			case "Virtual":
+				material.Tid = displayItem.ItemID
+				material.Num = 5000
+			case "Material":
+				material.Tid = displayItem.ItemID
+				material.Num = 5
+			default:
+				continue
+			}
+		}
+		battle.DisplayItemList = append(battle.DisplayItemList, material)
+	}
 	g.Player.Battle[rsp.BattleInfo.BattleId] = battle
 
 	g.Send(cmd.StartCocoonStageScRsp, rsp)

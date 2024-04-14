@@ -10,28 +10,36 @@ func (g *GamePlayer) SyncLineupNotify(index uint32) {
 	rsq := new(proto.SyncLineupNotify)
 	rsq.Lineup = g.GetLineUpPb(index)
 
-	g.SceneGroupRefreshScNotify()
+	g.SceneGroupRefreshScNotify(index)
 
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
-func (g *GamePlayer) SceneGroupRefreshScNotify() {
+func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
 	notify := new(proto.SceneGroupRefreshScNotify)
 	notify.GroupRefreshInfo = make([]*proto.SceneGroupRefreshInfo, 0)
 	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
 	}
+	lineUpBin := g.GetLineUpById(index)
+	if lineUpBin == nil {
+		return
+	}
 	pos := g.GetPos()
 	rot := g.GetRot()
-	for _, lineup := range g.PlayerPb.LineUp.LineUpList[g.PlayerPb.LineUp.MainLineUp].AvatarIdList {
+	for _, lineup := range lineUpBin.AvatarIdList {
 		if lineup == 0 {
+			continue
+		}
+		avatarBin := g.GetAvatarBinById(lineup)
+		if avatarBin == nil {
 			continue
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
 			AddEntity: &proto.SceneEntityInfo{
 				Actor: &proto.SceneActorInfo{
-					AvatarType:   proto.AvatarType(g.PlayerPb.Avatar.Avatar[lineup].AvatarType),
+					AvatarType:   proto.AvatarType(avatarBin.AvatarType),
 					BaseAvatarId: lineup,
 				},
 				Motion: &proto.MotionInfo{
@@ -168,6 +176,7 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 	}
 
 	lineUpDb.MainAvatarId = 0
+	lineUpDb.MainLineUp = req.Index
 
 	// 队伍更新通知
 	g.SyncLineupNotify(index)

@@ -50,10 +50,13 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramLi
 		}
 
 		if avatardb.EquipRelic[relic.Slot] != 0 {
-			if g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId == avatarId {
-				g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = 0
-				relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
-				notify.RelicList = append(notify.RelicList, relicList)
+			oldEquipRelic := g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]]
+			if oldEquipRelic != nil {
+				if oldEquipRelic.BaseAvatarId == avatarId {
+					oldEquipRelic.BaseAvatarId = 0
+					relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
+					notify.RelicList = append(notify.RelicList, relicList)
+				}
 			}
 		}
 		relicdb.BaseAvatarId = avatarId

@@ -184,3 +184,7 @@ func (g *GameDataConfig) loadItemConfig() {
 func GetItemConfigMap() *ItemList {
 	return CONF.ItemConfigMap
 }
+
+func GetItemConfigById(id uint32) *ItemConfig {
+	return CONF.ItemConfigMap.Item[id]
+}

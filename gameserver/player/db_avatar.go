@@ -68,6 +68,10 @@ func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 	return g.PlayerPb.Avatar.Avatar[avatarId].SkilltreeList
 }
 
+func (g *GamePlayer) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
+	return g.GetAvatar().Avatar[avatarId]
+}
+
 func (g *GamePlayer) GetAvatarById(avatarId uint32) *proto.Avatar {
 	avatardb := g.GetAvatar().Avatar[avatarId]
 	if avatardb == nil {
