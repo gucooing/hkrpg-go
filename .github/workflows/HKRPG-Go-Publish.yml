@@ -1,7 +1,5 @@
 name: Build HKRPG-Go Commit
 on:
-  schedule:
-    - cron: '0 12 * * *'
   workflow_dispatch:
   repository_dispatch:
     typrs: [hkrpggopull]

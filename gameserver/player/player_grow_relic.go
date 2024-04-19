@@ -169,7 +169,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 		addSubAffixes--
 	}
 	g.addRelicAffix(&addRelicAffix{
-		addSubAffixes:     addSubAffixes,
+		addSubAffixes:     addSubAffixes, // int((level - oldLevel + 2) / 3),
 		mainAffixProperty: dbRelic.MainAffixProperty,
 		subAffixGroup:     relicConf.SubAffixGroup,
 		relicAffix:        dbRelic.RelicAffix,
