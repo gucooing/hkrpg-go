@@ -168,7 +168,12 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	if oldLevel == 0 {
 		addSubAffixes--
 	}
-	g.addRelicAffix(addSubAffixes, dbRelic.MainAffixProperty, relicConf.SubAffixGroup, dbRelic.RelicAffix)
+	g.addRelicAffix(&addRelicAffix{
+		addSubAffixes:     addSubAffixes,
+		mainAffixProperty: dbRelic.MainAffixProperty,
+		subAffixGroup:     relicConf.SubAffixGroup,
+		relicAffix:        dbRelic.RelicAffix,
+	})
 	// 扣除本次升级需要的信用点
 	pileItem = append(pileItem, &Material{
 		Tid: 2,

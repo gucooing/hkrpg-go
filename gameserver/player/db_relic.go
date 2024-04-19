@@ -30,38 +30,51 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 	baseSubAffixes := math.Min(math.Max(float64(relicConf.Type-2), 0), 3)
 	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
 	relicAffix := make(map[uint32]*spb.RelicAffix)
-	relic.RelicAffix = g.addRelicAffix(addSubAffixes, mainAffixConf.Property, relicConf.SubAffixGroup, relicAffix)
+	g.addRelicAffix(&addRelicAffix{
+		addSubAffixes:     addSubAffixes,
+		mainAffixProperty: mainAffixConf.Property,
+		subAffixGroup:     relicConf.SubAffixGroup,
+		relicAffix:        relicAffix,
+	})
+	relic.RelicAffix = relicAffix
 
 	g.GetItem().RelicMap[uniqueId] = relic
 	g.RelicPlayerSyncScNotify(uniqueId)
 }
 
-func (g *GamePlayer) addRelicAffix(addSubAffixes int, mainAffixProperty string, subAffixGroup uint32, relicAffix map[uint32]*spb.RelicAffix) map[uint32]*spb.RelicAffix {
-	for i := 0; i < addSubAffixes; {
-		if len(relicAffix) >= 4 {
-			randIndex := rand.Intn(len(relicAffix))
+type addRelicAffix struct {
+	addSubAffixes     int
+	mainAffixProperty string
+	subAffixGroup     uint32
+	relicAffix        map[uint32]*spb.RelicAffix
+}
+
+func (g *GamePlayer) addRelicAffix(str *addRelicAffix) {
+	for i := 0; i < str.addSubAffixes; {
+		if len(str.relicAffix) >= 4 {
+			randIndex := rand.Intn(len(str.relicAffix))
 			randKey := uint32(0)
-			for key := range relicAffix {
+			for key := range str.relicAffix {
 				if randIndex == 0 {
 					randKey = key
 					break
 				}
 				randIndex--
 			}
-			relicAffix[randKey].Cnt++
+			str.relicAffix[randKey].Cnt++
 			i++
 		} else {
-			affixConf := gdconf.GetRelicSubAffixConfigById(subAffixGroup)
+			affixConf := gdconf.GetRelicSubAffixConfigById(str.subAffixGroup)
 			if affixConf == nil {
-				return nil
+				return
 			}
-			if affixConf.Property == mainAffixProperty {
+			if affixConf.Property == str.mainAffixProperty {
 				continue
 			}
-			if ra, ok := relicAffix[affixConf.AffixID]; ok {
+			if ra, ok := str.relicAffix[affixConf.AffixID]; ok {
 				ra.Cnt++
 			} else {
-				relicAffix[affixConf.AffixID] = &spb.RelicAffix{
+				str.relicAffix[affixConf.AffixID] = &spb.RelicAffix{
 					AffixId: affixConf.AffixID,
 					Cnt:     1,
 					Step:    0,
@@ -70,7 +83,6 @@ func (g *GamePlayer) addRelicAffix(addSubAffixes int, mainAffixProperty string, 
 			i++
 		}
 	}
-	return relicAffix
 }
 
 func (g *GamePlayer) getRelicDbById(uniqueId uint32) *spb.Relic {
