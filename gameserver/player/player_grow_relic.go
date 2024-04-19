@@ -165,7 +165,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 			addSubAffixes++
 		}
 	}
-	if oldLevel == 0 {
+	if oldLevel%3 == 0 {
 		addSubAffixes--
 	}
 	g.addRelicAffix(&addRelicAffix{

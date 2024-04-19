@@ -43,10 +43,10 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 }
 
 type addRelicAffix struct {
-	addSubAffixes     int
-	mainAffixProperty string
-	subAffixGroup     uint32
-	relicAffix        map[uint32]*spb.RelicAffix
+	addSubAffixes     int                        // 添加词条数
+	mainAffixProperty string                     // 主词条效果
+	subAffixGroup     uint32                     // 副词条随机库id
+	relicAffix        map[uint32]*spb.RelicAffix // 副词条内存
 }
 
 func (g *GamePlayer) addRelicAffix(str *addRelicAffix) {
