@@ -13,8 +13,8 @@ type Relic struct {
 	ID             uint32 `json:"ID"`
 	SetID          uint32 `json:"SetID"`
 	TypeS          string `json:"Type"`
-	Type           uint32
-	Rarity         string `json:"Rarity"` // 星级
+	Type           uint32 // 星级
+	Rarity         string `json:"Rarity"`
 	MainAffixGroup uint32 `json:"MainAffixGroup"`
 	SubAffixGroup  uint32 `json:"SubAffixGroup"`
 	MaxLevel       uint32 `json:"MaxLevel"`
@@ -38,19 +38,15 @@ func (g *GameDataConfig) loadRelic() {
 		panic(info)
 	}
 	for _, relic := range g.RelicMap {
-		switch relic.TypeS {
-		case "HEAD":
-			relic.Type = 1
-		case "HAND":
+		switch relic.MaxLevel {
+		case 6:
 			relic.Type = 2
-		case "BODY":
+		case 9:
 			relic.Type = 3
-		case "FOOT":
+		case 12:
 			relic.Type = 4
-		case "NECK":
+		case 15:
 			relic.Type = 5
-		case "OBJECT":
-			relic.Type = 6
 		}
 	}
 

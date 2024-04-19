@@ -104,7 +104,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
-	relicItme := g.GetRelicById(uniqueId)
+	relicItme := g.GetProtoRelicById(uniqueId)
 	// 通知客户端增加了物品
 	notify := &proto.ScenePlaneEventScNotify{
 		GetItemList: &proto.ItemList{

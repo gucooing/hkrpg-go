@@ -188,4 +188,4 @@ cmd/gomcbe/build.bat
 log/
 rich.go
 config.json
-*.proto
+protocol/hkrpg

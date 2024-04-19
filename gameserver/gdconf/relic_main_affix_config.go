@@ -44,12 +44,12 @@ func (g *GameDataConfig) loadRelicMainAffixConfig() {
 	logger.Info("load %v RelicMainAffixConfig", len(g.RelicMainAffixConfigMap))
 }
 
-func GetRelicMainAffixConfigById(ID uint32) uint32 {
+func GetRelicMainAffixConfigById(ID uint32) *RelicMainAffixConfig {
 	relicMainAffixConfigMap := CONF.RelicMainAffixConfigMap[ID]
 	var keys []uint32
 	for k := range relicMainAffixConfigMap {
 		keys = append(keys, k)
 	}
 	idIndex := keys[rand.Intn(len(keys))]
-	return relicMainAffixConfigMap[idIndex].AffixID
+	return relicMainAffixConfigMap[idIndex]
 }

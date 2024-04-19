@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+message MailRedisData {
+  MailBin mail_bin = 1; // 邮件内容
+  uint32 id = 2; // id
+  bool is_read = 3; // 已读
+  bool is_attachment_got = 4; // 附件
+}
+
+message MailBin {
+  string title = 1; // 标题
+  string content = 2; // 内容
+  string sender = 3; // 发件人
+  repeated ItemParamBin item_param_list = 4; // 物品列表
+  fixed32 send_time = 5; // 发送时间
+  fixed32 expire_time = 6; // 过期时间
+  uint32 importance = 7; // 重要性
+  uint32 config_id = 8; // 配置id
+  repeated string argument_list = 9; // 参数列表
+  uint32 item_limit_type = 10; // 限制类型
+  uint32 source_type = 11; // 源类型
+  string tag = 12; // 标签
+  uint32 reason_type = 13; // 原因类型
+}
+
+message ItemParamBin {
+  uint32 item_id = 1; // 物品id
+  uint32 count = 2; // 数量
+  uint32 level = 3; // 等级
+  uint32 promote_level = 4; // 突破等级
+}
+
+enum PlayerStatusType {
+  PLAYER_STATUS_OFFLINE = 0;
+  PLAYER_STATUS_ONLINE = 1;
+}
+
+message PlayerStatusRedisData {
+  PlayerStatusType status = 1;
+  string gameserver_id = 2;
+  uint64 login_rand = 3;
+  uint32 login_time = 4;
+  uint32 uid = 5;
+}

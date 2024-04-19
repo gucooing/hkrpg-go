@@ -368,21 +368,10 @@ func (g *GamePlayer) GetBattleAvatarList(lineUpId uint32) []*proto.BattleAvatar 
 			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
 		}
 		for _, relic := range avatar.EquipRelic {
-			relicdb := g.GetRelicById(relic)
-			equipRelic := &proto.BattleRelic{
-				Id:           relicdb.Tid,
-				Level:        relicdb.Level,
-				MainAffixId:  relicdb.MainAffixId,
-				SubAffixList: make([]*proto.RelicAffix, 0),
-				UniqueId:     relicdb.UniqueId,
-			}
-			for _, subAddix := range relicdb.SubAffixList {
-				relicAffix := &proto.RelicAffix{
-					AffixId: subAddix.AffixId,
-					Cnt:     subAddix.Cnt,
-					Step:    subAddix.Step,
-				}
-				equipRelic.SubAffixList = append(equipRelic.SubAffixList, relicAffix)
+			equipRelic := g.GetProtoBattleRelicById(relic)
+			if equipRelic == nil {
+				delete(avatar.EquipRelic, relic)
+				continue
 			}
 			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}

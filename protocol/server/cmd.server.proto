@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+import "enum.server.proto";
+
+message ServiceConnectionReq {
+  ServerType server_type = 1;
+  string app_id = 2; // 发起请求的app_id
+  string addr = 3;
+  string port = 4;
+}
+
+message ServiceConnectionRsp {
+  ServerType server_type = 1;
+  string app_id = 2;
+}
+
+message PlayerLoginReq{
+  uint32 player_uid = 1;
+  string app_id = 2; // 登录的game的app_id
+}
+
+message PlayerLoginRsp{
+  uint32 player_uid = 1;
+}
+
+message PlayerToGameByGateReq{
+  int64 message_type = 1;
+  bytes player_bin = 2;
+}
+
+message PlayerToGameByGateRsp{
+  int64 message_type = 1;
+  bytes player_bin = 2;
+}
+
+message GetAllServiceGateReq {
+  ServerType service_type = 1;
+  int64 dispatch_time = 2;
+}
+
+message GetAllServiceGateRsp {
+  repeated ServiceAll gate_service_list = 1;
+  int64 dispatch_time = 2;
+  int64 node_time = 3;
+}
+
+message GetAllServiceReq {
+  ServerType service_type = 1;
+  ServerType get_service_type = 2;
+}
+
+message GetAllServiceRsp {
+  ServerType service_type = 1;
+  repeated ServiceAll service_list = 2;
+}
+
+message ServiceAll{
+  ServerType service_type = 1; // 服务id
+  string addr = 2; // 地址
+  uint64 player_num = 3; // 在线人数
+  string app_id = 4; // app_id
+  string port = 5;
+}
+
+message SyncPlayerOnlineDataNotify{
+  uint32 player_uid = 1;
+  bytes player_online_data = 2;
+}
+
+// 新登录流程proto
+message PlayerLoginNotify{
+  int64 uuid = 1;
+  uint32 account_id = 2;
+  uint32 uid = 3;
+  string gate_server_app_id = 4;
+  string game_server_app_id = 5;
+}
+
+message PlayerLogoutNotify {
+  uint32 uid = 1;
+}
+
+message PlayerLogoutReq{
+  int64 uuid = 1;
+  uint32 account_id = 2;
+  uint32 uid = 3;
+  PlayerOfflineReason  offline_reason = 4; // 离线原因
+}
+
+message PlayerLogoutRsp{
+  Retcode retcode = 1;
+  int64 uuid = 2;
+  uint32 account_id = 3;
+  uint32 uid = 4;
+}
+
+message NodeToGsPlayerLogoutNotify{
+  int64 uuid = 1;
+}
+
+message GetAllServiceGameReq {
+  ServerType service_type = 1;
+  int64 gate_time = 2;
+  uint64 player_num = 3;
+}
+
+message GetAllServiceGameRsp {
+  repeated ServiceAll game_service_list = 1;
+  int64 gate_time = 2;
+  int64 node_time = 3;
+}
+
+message GameToNodePingReq{
+  string game_server_id = 1;
+  int64 game_server_time = 2;
+  uint64 player_num = 3;
+}
+
+message GameToNodePingRsp{
+  int64 game_server_time = 1;
+  int64 node_time = 2;
+}

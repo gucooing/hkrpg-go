@@ -178,21 +178,10 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
 		}
 		for _, relic := range avatar.EquipRelic {
-			relicdb := g.GetRelicById(relic)
-			equipRelic := &proto.BattleRelic{
-				Id:           relicdb.Tid,
-				Level:        relicdb.Level,
-				MainAffixId:  relicdb.MainAffixId,
-				SubAffixList: make([]*proto.RelicAffix, 0),
-				UniqueId:     relicdb.UniqueId,
-			}
-			for _, subAddix := range relicdb.SubAffixList {
-				relicAffix := &proto.RelicAffix{
-					AffixId: subAddix.AffixId,
-					Cnt:     subAddix.Cnt,
-					Step:    subAddix.Step,
-				}
-				equipRelic.SubAffixList = append(equipRelic.SubAffixList, relicAffix)
+			equipRelic := g.GetProtoBattleRelicById(relic)
+			if equipRelic == nil {
+				delete(avatar.EquipRelic, relic)
+				continue
 			}
 			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}
@@ -547,27 +536,12 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
 		}
 		for _, relic := range avatar.EquipRelic {
-			relicdb := g.GetRelicById(relic)
-			if relicdb == nil {
+			equipRelic := g.GetProtoBattleRelicById(relic)
+			if equipRelic == nil {
 				delete(avatar.EquipRelic, relic)
-			} else {
-				equipRelic := &proto.BattleRelic{
-					Id:           relicdb.Tid,
-					Level:        relicdb.Level,
-					MainAffixId:  relicdb.MainAffixId,
-					SubAffixList: make([]*proto.RelicAffix, 0),
-					UniqueId:     relicdb.UniqueId,
-				}
-				for _, subAddix := range relicdb.SubAffixList {
-					relicAffix := &proto.RelicAffix{
-						AffixId: subAddix.AffixId,
-						Cnt:     subAddix.Cnt,
-						Step:    subAddix.Step,
-					}
-					equipRelic.SubAffixList = append(equipRelic.SubAffixList, relicAffix)
-				}
-				battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
+				continue
 			}
+			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}
 		// 获取角色装备的光锥
 		if avatar.EquipmentUniqueId != 0 {

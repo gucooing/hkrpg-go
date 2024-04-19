@@ -47,7 +47,7 @@ func (g *GamePlayer) HandleGetBagCsReq(payloadMsg []byte) {
 	}
 	// 获取背包遗器
 	for uniqueId, _ := range g.GetItem().RelicMap {
-		relicList := g.GetRelicById(uniqueId)
+		relicList := g.GetProtoRelicById(uniqueId)
 		rsp.RelicList = append(rsp.RelicList, relicList)
 	}
 
