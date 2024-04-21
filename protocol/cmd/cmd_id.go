@@ -1272,31 +1272,34 @@ const (
 )
 
 const (
-	ServiceConnectionReq   = 10000
-	ServiceConnectionRsp   = 10100
-	GateLoginGameRsp       = 10001
-	GateLoginGameReq       = 10101
-	GateToGameMsgNotify    = 10002
-	GameToGateMsgNotify    = 10102
-	GetAllServiceGateReq   = 10003
-	GetAllServiceGateRsp   = 10103
-	PlayerLogoutReq        = 10004
-	PlayerLogoutRsp        = 10104
-	GetAllServiceReq       = 10005
-	GetAllServiceRsp       = 10105
-	GetAllServiceGameReq   = 10006
-	GetAllServiceGameRsp   = 10106
-	GameToNodePingReq      = 10007
-	GameToNodePingRsp      = 10107
-	GateGamePingReq        = 10008
-	GateGamePingRsp        = 10108
-	GateGamePlayerLoginReq = 10009
-	GateGamePlayerLoginRsp = 10109
+	ServiceConnectionReq     = 10000
+	ServiceConnectionRsp     = 10100
+	GateLoginGameRsp         = 10001
+	GateLoginGameReq         = 10101
+	GateToGameMsgNotify      = 10002
+	GameToGateMsgNotify      = 10102
+	GetAllServiceGateReq     = 10003
+	GetAllServiceGateRsp     = 10103
+	PlayerLogoutReq          = 10004
+	PlayerLogoutRsp          = 10104
+	GetAllServiceReq         = 10005
+	GetAllServiceRsp         = 10105
+	GetAllServiceGameReq     = 10006
+	GetAllServiceGameRsp     = 10106
+	GameToNodePingReq        = 10007
+	GameToNodePingRsp        = 10107
+	GateGamePingReq          = 10008
+	GateGamePingRsp          = 10108
+	GateGamePlayerLoginReq   = 10009
+	GateGamePlayerLoginRsp   = 10109
+	GetToGamePlayerLogoutReq = 10010
+	GetToGamePlayerLogoutRsp = 10110
 
-	PlayerLogoutNotify         = 11000
-	SyncPlayerOnlineDataNotify = 11001
-	PlayerLoginNotify          = 11002
-	NodeToGsPlayerLogoutNotify = 1103
+	PlayerLogoutNotify           = 11000
+	SyncPlayerOnlineDataNotify   = 11001
+	PlayerLoginNotify            = 11002
+	NodeToGsPlayerLogoutNotify   = 11003
+	GameToGatePlayerLogoutNotify = 11004
 
 	GmGive       = 12001
 	GmWorldLevel = 12002
@@ -1599,6 +1602,9 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GateGamePingRsp, func() any { return new(spb.GateGamePingRsp) })
 	c.regMsg(GateGamePlayerLoginReq, func() any { return new(spb.GateGamePlayerLoginReq) })
 	c.regMsg(GateGamePlayerLoginRsp, func() any { return new(spb.GateGamePlayerLoginRsp) })
+	c.regMsg(GetToGamePlayerLogoutReq, func() any { return new(spb.GetToGamePlayerLogoutReq) })
+	c.regMsg(GetToGamePlayerLogoutRsp, func() any { return new(spb.GetToGamePlayerLogoutRsp) })
+	c.regMsg(GameToGatePlayerLogoutNotify, func() any { return new(spb.GameToGatePlayerLogoutNotify) })
 
 	c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
 	c.regMsg(NodeToGsPlayerLogoutNotify, func() any { return new(spb.NodeToGsPlayerLogoutNotify) })

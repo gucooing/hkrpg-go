@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -178,6 +179,20 @@ func UpDataPlayer(g *player.GamePlayer) error {
 	}
 	if g.Uid == 0 {
 		return nil
+	}
+	if bin, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
+		return nil
+	} else {
+		statu := new(spb.PlayerStatusRedisData)
+		err := pb.Unmarshal(bin, statu)
+		if err != nil {
+			logger.Error("PlayerStatusRedisData Unmarshal error")
+			return err
+		}
+		if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != g.Uuid {
+			// 脏数据
+			return nil
+		}
 	}
 	dbDate := new(db.PlayerData)
 	dbDate.Uid = g.Uid

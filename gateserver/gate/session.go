@@ -45,10 +45,6 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 		if err != nil {
 			CLIENT_CONN_NUM--
 			logger.Debug("exit recv loop, conn read err: %v", err)
-			// p.Status = spb.PlayerStatus_PlayerStatus_Offline
-			// if _, ok := GATESERVER.playerMap.Load(p.Uuid); ok {
-			// 	KickPlayer(p)
-			// }
 			return
 		}
 		bin = payload[:recvLen]
@@ -62,7 +58,6 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 					p.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
 					s.PlayerGetTokenCsReq(p, msg.ProtoData)
 				} else {
-					p.KcpConn.Close()
 					return
 				}
 			case spb.PlayerStatus_PlayerStatus_LoggingIn:

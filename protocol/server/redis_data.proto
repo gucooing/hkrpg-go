@@ -39,10 +39,11 @@ enum PlayerStatusType {
   PLAYER_STATUS_ONLINE = 1;
 }
 
-message PlayerStatusRedisData {
-  PlayerStatusType status = 1;
-  uint32 gameserver_id = 2;
-  uint64 login_rand = 3;
-  uint32 login_time = 4;
-  uint32 uid = 5;
+message PlayerStatusRedisData { // 玩家状态db
+  PlayerStatusType status = 1; // 玩家状态
+  uint32 gameserver_id = 2; // 登录的gameserver
+  uint64 login_rand = 3; // 随机种子
+  int64 login_time = 4; // 登录时间
+  uint32 uid = 5; // uid
+  int64 uuid = 6; // 临时uuid
 }

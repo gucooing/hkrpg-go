@@ -2,7 +2,6 @@ package gate
 
 import (
 	"net"
-	"strconv"
 	"sync"
 	"time"
 
@@ -140,6 +139,8 @@ func (gs *gameServer) gameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 		gs.GateGamePingRsp(playerMsg) // gate发送给gs的ping回复包
 	case cmd.GateGamePlayerLoginRsp:
 		gs.GateGamePlayerLoginRsp(playerMsg) // game玩家登录成功通知
+	case cmd.GetToGamePlayerLogoutRsp:
+		gs.GetToGamePlayerLogoutRsp(playerMsg) // gate直接向目标game申请下线玩家回复
 	case cmd.GameToGateMsgNotify:
 		gs.GameToGateMsgNotify(playerMsg)
 
@@ -201,10 +202,11 @@ func (gs *gameServer) GateGamePingRsp(playerMsg pb.Message) {
 	gs.playerNum = rsp.PlayerNum
 }
 
-func (gs *gameServer) GateGamePlayerLoginReq(uid uint32, uuid int64) {
+func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32, uuid int64) {
 	req := &spb.GateGamePlayerLoginReq{
-		Uid:  uid,
-		Uuid: uuid,
+		Uid:       uid,
+		Uuid:      uuid,
+		AccountId: accountId,
 	}
 	gs.sendGame(cmd.GateGamePlayerLoginReq, req)
 }
@@ -233,6 +235,19 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 	}
 }
 
+func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
+	rsp := playerMsg.(*spb.GetToGamePlayerLogoutRsp)
+	if rsp.Retcode != 0 {
+		return
+	}
+	newGs := gs.gate.getGsByAppid(rsp.NewGameServerId)
+	player, _ := gs.gate.GetPlayerByUuid(rsp.NewUuid)
+	if newGs == nil || player == nil {
+		return
+	}
+	newGs.playerLogin(player)
+}
+
 func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	notify := playerMsg.(*spb.GameToGateMsgNotify)
 	if player, ok := gs.gate.GetPlayerByUuid(notify.Uuid); !ok {
@@ -246,22 +261,6 @@ func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	}
 }
 
-/*
-// 将game消息转发到玩家
-func (p *PlayerGame) GameToGate(cmdId uint16, playerMsg pb.Message) {
-	rsp := playerMsg.(*spb.PlayerToGameByGateRsp)
-	playerMsgList := make([]*alg.PackMsg, 0)
-	alg.DecodeBinToPayload(rsp.PlayerBin, &playerMsgList, nil)
-	for _, msg := range playerMsgList {
-		// 发到玩家
-		// logger.Debug("[S->C][UID:%v][CMDID:%v]", p.Uid, msg.CmdId)
-		if msg.CmdId == cmd.PlayerLoginScRsp {
-			p.playerLoginUp()
-		}
-		SendHandle(p, msg)
-
-*/
-
 func GateToPlayer(p *PlayerGame, cmdId uint16, playerMsg pb.Message) {
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = cmdId
@@ -270,69 +269,8 @@ func GateToPlayer(p *PlayerGame, cmdId uint16, playerMsg pb.Message) {
 	SendHandle(p, tcpMsg)
 }
 
-/******************************************NewLogin***************************************/
-
-func (p *PlayerGame) AddPlayerStatus() error {
-	bin := &spb.PlayerStatusRedisData{
-		Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
-		GameserverId: p.gs.appid,
-		LoginRand:    p.Seed,
-		LoginTime:    0,
-		Uid:          p.Uid,
-	}
-	value, err := pb.Marshal(bin)
-	if err != nil {
-		logger.Error("pb marshal error: %v\n", err)
-		return err
-	}
-	err = GATESERVER.Store.SetPlayerStatus(strconv.Itoa(int(p.AccountId)), value)
-	return err
-}
-
-// gate请求gs离线玩家
-func (p *PlayerGame) gateToGsPlayerLogoutReq() {
-	/*
-		req := &spb.PlayerLogoutReq{
-			Uuid:          p.Uuid,
-			AccountId:     p.AccountId,
-			Uid:           p.Uid,
-			OfflineReason: spb.PlayerOfflineReason_OFFLINE_NONE,
-		}
-
-		p.sendGame(cmd.PlayerLogoutReq, req)
-	*/
-}
-
-// gs回应玩家离线
-func (p *PlayerGame) gsToGamePlayerLogoutRsp(playerMsg pb.Message) {
-	rsp := playerMsg.(*spb.PlayerLogoutRsp)
-	if rsp.Retcode != spb.Retcode_RET_SUCC || rsp.Uid != p.Uid || rsp.Uuid != p.Uuid || rsp.AccountId != p.AccountId {
-		logger.Info("[gs->gate][UID%v]GS离线失败", p.Uid)
-	}
-	GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
-	KickPlayer(p)
-}
-
 func (p *PlayerGame) closeStop() {
 	if !p.isChannelClosed() {
 		close(p.stop)
 	}
-}
-
-func (p *PlayerGame) playerLoginUp() {
-	// 登录成功设置
-	p.closeStop()
-
-	// 解锁
-	GATESERVER.Store.DistUnlock(strconv.Itoa(int(p.AccountId)))
-	p.AddPlayerStatus()
-
-	// 通知node玩家登录
-	GATESERVER.sendNode(cmd.PlayerLoginNotify, &spb.PlayerLoginNotify{
-		Uuid:            p.Uuid,
-		AccountId:       p.AccountId,
-		Uid:             p.Uid,
-		GateServerAppId: GATESERVER.AppId,
-		GameServerAppId: p.gs.appid,
-	})
 }

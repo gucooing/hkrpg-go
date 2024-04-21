@@ -53,6 +53,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 			return
 		}
 	}
+
 	accountUid := stou32(req.AccountUid)
 	dbComboToken := s.Store.GetComboTokenByAccountId(req.AccountUid)
 	// token验证
@@ -64,6 +65,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		logger.Info("登录账号:%v,token验证失败", accountUid)
 		return
 	}
+
 	// 登录分布式锁 TODO 登录时候遇到任何问题退出此次登录前都一定要del锁
 	if ok := s.Store.DistLockSync(req.AccountUid); !ok {
 		rsp.Uid = 0
@@ -92,24 +94,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		return
 	}
 
-	// 下线重复登录的玩家
-	if bin, ok := s.Store.GetPlayerStatus(req.AccountUid); ok {
-		logger.Info("[AccountId:%v]玩家重复登录", accountUid)
-		statu := new(spb.PlayerStatusRedisData)
-		err := pb.Unmarshal(bin, statu)
-		if err != nil {
-			logger.Error("PlayerStatusRedisData Unmarshal error")
-			return
-		}
-		if statu.Uid != 0 {
-			s.PlayerLogoutNotify(statu.Uid)
-		} else {
-			logger.Error("PlayerStatusRedisData uid error")
-		}
-	}
-
 	p.AccountId = accountUid
-
 	// 登录成功，拉取game
 	gs := s.getMinGsAppId()
 	if gs == nil {
@@ -133,8 +118,37 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	s.AddPlayerMap(p.Uuid, p)
 	p.Uid = uidPlayer.Uid
 
+	// 下线重复登录的玩家
+	if bin, ok := s.Store.GetPlayerStatus(req.AccountUid); ok {
+		logger.Info("[AccountId:%v]玩家重复登录", accountUid)
+		statu := new(spb.PlayerStatusRedisData)
+		err := pb.Unmarshal(bin, statu)
+		if err != nil {
+			logger.Error("PlayerStatusRedisData Unmarshal error")
+			return
+		}
+		oldGs := s.getGsByAppid(statu.GameserverId)
+		if statu.Uid != 0 || oldGs != nil {
+			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
+				Uid:             statu.Uid,
+				OldUuid:         statu.Uuid,
+				OldGameServerId: statu.GameserverId,
+				NewUuid:         p.Uuid,
+				NewGameServerId: p.gs.appid,
+			})
+			return
+		} else {
+			s.Store.DelPlayerStatus(req.AccountUid)
+			logger.Error("PlayerStatusRedisData uid error")
+		}
+	}
+
+	gs.playerLogin(p)
+}
+
+func (gs *gameServer) playerLogin(p *PlayerGame) {
 	// 通知game玩家登录
-	gs.GateGamePlayerLoginReq(p.Uid, p.Uuid)
+	gs.GateGamePlayerLoginReq(p.Uid, p.AccountId, p.Uuid)
 }
 
 func (s *GateServer) AddPlayerMap(uuid int64, player *PlayerGame) {
@@ -184,5 +198,4 @@ func (p *PlayerGame) isChannelClosed() bool {
 // 玩家主动离线处理
 func (p *PlayerGame) playerOffline() {
 	p.Status = spb.PlayerStatus_PlayerStatus_Offline // 标记玩家状态为离线
-	p.gateToGsPlayerLogoutReq()
 }

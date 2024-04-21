@@ -2,6 +2,7 @@ package gs
 
 import (
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -98,6 +99,8 @@ func (ge *gateServer) gateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 		ge.GateGamePingReq(payloadMsg) // 来自gate的ping包
 	case cmd.GateGamePlayerLoginReq:
 		ge.GateGamePlayerLoginReq(payloadMsg) // 来自gate的玩家登录请求
+	case cmd.GetToGamePlayerLogoutReq:
+		ge.GetToGamePlayerLogoutReq(payloadMsg) // gate直接向目标game申请下线玩家请求
 	case cmd.GateToGameMsgNotify:
 		ge.GateToGameMsgNotify(payloadMsg) // gate转发客户端消息到gs
 	}
@@ -139,16 +142,16 @@ func (ge *gateServer) GateGamePingReq(payloadMsg pb.Message) {
 
 func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GateGamePlayerLoginReq)
-	if req.Uid == 0 || req.Uuid == 0 {
+	if req.Uid == 0 || req.Uuid == 0 || req.AccountId == 0 {
 		logger.Error("player login uid or uuid error")
 		return
 	}
-	g := NewPlayer(req.Uid, req.Uuid, ge.msgChan)
+	g := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
 	// 拉取账户数据
 	g.GetPlayerDate(req.Uid)
 	ge.game.AddPlayerMap(req.Uuid, g)
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, req.Uuid)
-
+	ge.AddPlayerStatus(g)
 	rsp := &spb.GateGamePlayerLoginRsp{
 		Retcode: 0,
 		Uid:     req.Uid,
@@ -157,10 +160,29 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	ge.seedGate(cmd.GateGamePlayerLoginRsp, rsp)
 }
 
-func NewPlayer(uid uint32, uuid int64, msg chan player.Msg) *player.GamePlayer {
+func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
+	play := ge.game.GetPlayerByUuid(req.GetOldUuid())
+	if play == nil {
+		return
+	}
+	// 下线玩家
+	ge.killPlayer(play)
+
+	rsp := &spb.GetToGamePlayerLogoutRsp{
+		Retcode:         spb.Retcode_RET_SUCC,
+		Uid:             req.Uid,
+		NewUuid:         req.NewUuid,
+		NewGameServerId: req.NewGameServerId,
+	}
+	ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
+}
+
+func NewPlayer(uid, accountId uint32, uuid int64, msg chan player.Msg) *player.GamePlayer {
 	g := new(player.GamePlayer)
 	g.LastActiveTime = time.Now().Unix()
 	g.Uid = uid
+	g.AccountId = accountId
 	g.Uuid = uuid
 	g.MsgChan = msg
 
@@ -182,20 +204,6 @@ func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 func (ge *gateServer) GameToGateMsgNotify(payloadMsg pb.Message) {
 	ge.seedGate(cmd.GameToGateMsgNotify, payloadMsg)
 }
-
-/*
-// 从gate收到的玩家数据包
-func (s *GameServer) PlayerToGameByGateReq(g *player.GamePlayer, payloadMsg pb.Message) {
-	req := payloadMsg.(*spb.PlayerToGameByGateReq)
-	playerMsgList := make([]*alg.PackMsg, 0)
-	alg.DecodeBinToPayload(req.PlayerBin, &playerMsgList, nil)
-	for _, msg := range playerMsgList {
-		g.RegisterMessage(msg.CmdId, msg.ProtoData)
-	}
-}
-*/
-
-/******************************************NewLogin***************************************/
 
 func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 	syncGD.Lock()
@@ -226,21 +234,20 @@ func (s *GameServer) GetPlayerByUuid(uuid int64) *player.GamePlayer {
 	return s.PlayerMap[uuid]
 }
 
-func (s *GameServer) gateToGamePlayerLogoutReq(g *player.GamePlayer, payloadMsg pb.Message) {
-	req := payloadMsg.(*spb.PlayerLogoutReq)
-	if req.Uid != g.Uid || req.Uuid != g.Uuid || req.AccountId != g.AccountId {
-		logger.Error("[UID%v][gate->gs]PlayerLogoutReq消息异常", g.Uid)
-		return
+func (ge *gateServer) AddPlayerStatus(p *player.GamePlayer) error {
+	bin := &spb.PlayerStatusRedisData{
+		Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
+		GameserverId: ge.game.AppId,
+		LoginRand:    0,
+		LoginTime:    time.Now().Unix(),
+		Uid:          p.Uid,
+		Uuid:         p.Uuid,
 	}
-	if err := UpDataPlayer(g); err != nil {
-		logger.Info("[UID:%v]玩家离线保存数据失败", g.Uid)
+	value, err := pb.Marshal(bin)
+	if err != nil {
+		logger.Error("pb marshal error: %v\n", err)
+		return err
 	}
-	rsp := &spb.PlayerLogoutRsp{
-		Retcode:   spb.Retcode_RET_SUCC,
-		Uuid:      g.Uuid,
-		AccountId: g.AccountId,
-		Uid:       g.Uid,
-	}
-	g.SendGate(cmd.PlayerLogoutRsp, rsp)
-	KickPlayer(g)
+	err = ge.game.Store.SetPlayerStatus(strconv.Itoa(int(p.AccountId)), value)
+	return err
 }
