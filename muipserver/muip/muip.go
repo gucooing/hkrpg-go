@@ -15,7 +15,7 @@ var MUIP *Muip
 
 type Muip struct {
 	Config     *config.Config
-	AppId      string
+	AppId      uint32
 	Port       string
 	NodeConn   net.Conn
 	Router     *gin.Engine
@@ -23,18 +23,18 @@ type Muip struct {
 }
 
 type AllService struct {
-	AppId     string
+	AppId     uint32
 	PlayerNum uint64
 }
 
-func NewMuip(cfg *config.Config) *Muip {
+func NewMuip(cfg *config.Config, appid string) *Muip {
 	s := new(Muip)
 	MUIP = s
 
 	s.Config = cfg
-	s.AppId = alg.GetAppId()
-	logger.Info("MuipServer AppId:%s", s.AppId)
-	port := s.Config.AppList[s.AppId].App["port_http"].Port
+	s.AppId = alg.GetAppIdUint32(appid)
+	logger.Info("MuipServer AppId:%s", appid)
+	port := s.Config.AppList[appid].App["port_http"].Port
 	if port == "" {
 		log.Println("MuipServer Port error")
 		os.Exit(0)

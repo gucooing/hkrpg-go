@@ -10,7 +10,7 @@ import (
 // 公共服务注册方法
 func (s *Service) ServiceConnectionReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.ServiceConnectionReq)
-	if req.AppId == "" || req.ServerType == 0 {
+	if req.AppId == 0 || req.ServerType == 0 {
 		logger.Debug("Service registration failed")
 		s.killService()
 		return

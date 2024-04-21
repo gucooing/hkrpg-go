@@ -30,6 +30,17 @@ func (s *GateServer) ServiceStart() {
 	}()
 }
 
+func (s *GateServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
+	switch cmdId {
+	case cmd.ServiceConnectionRsp:
+		s.ServiceConnectionRsp(serviceMsg) // 注册包
+	case cmd.GetAllServiceGameRsp:
+		s.GetAllServiceGameRsp(serviceMsg) // 心跳包
+	default:
+		logger.Info("nodeRegister error cmdid:%v", cmdId)
+	}
+}
+
 // 向node注册
 func (s *GateServer) Connection() {
 	req := &spb.ServiceConnectionReq{
@@ -102,35 +113,17 @@ func (s *GateServer) gateGetAllServiceGameReq() {
 
 func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.GetAllServiceGameRsp)
-	gameAll := make(map[string]*serviceGame, 0)
-	var minGameAppId string
-	var minGameNum uint64 = 0
 	for _, service := range rsp.GameServiceList {
-		if service.Addr == "" || service.AppId == "" || service.ServiceType != spb.ServerType_SERVICE_GAME {
-			return
+		if service.Addr == "" || service.AppId == 0 || service.ServiceType != spb.ServerType_SERVICE_GAME {
+			continue
 		}
-		if minGameAppId == "" {
-			minGameAppId = service.AppId
-			minGameNum = service.PlayerNum
-		} else {
-			if minGameNum > service.PlayerNum {
-				minGameAppId = service.AppId
-				minGameNum = service.PlayerNum
-			}
+		if s.getGsByAppid(service.AppId) == nil {
+			addr := service.Addr + ":" + service.Port
+			s.newGs(addr, service.AppId)
 		}
-		serviceG := &serviceGame{
-			addr:  service.Addr,
-			num:   service.PlayerNum,
-			appId: service.AppId,
-			port:  service.Port,
-		}
-		gameAll[service.AppId] = serviceG
 	}
-	s.gameAll = gameAll
-	s.gameAppId = minGameAppId
-	s.errGameAppId = make([]string, 0)
-	s.errGameAppId = []string{}
-	logger.Debug("gate <--> node ping:%v | min gameappid:%s", (rsp.NodeTime-rsp.GateTime)/2, minGameAppId)
+
+	logger.Debug("gate <--> node ping:%v", (rsp.NodeTime-rsp.GateTime)/2)
 }
 
 /******************************************NewLogin***************************************/

@@ -32,13 +32,14 @@ func main() {
 			panic(err)
 		}
 	}
+	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("discord"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("discord"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 
 	cfg := config.GetConfig()
 	// 初始化
-	newserver := sdk.NewServer(cfg)
+	newserver := sdk.NewServer(cfg, appid)
 	if newserver == nil {
 		logger.Error("服务器初始化失败")
 		return

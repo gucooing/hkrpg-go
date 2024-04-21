@@ -41,7 +41,7 @@ enum PlayerStatusType {
 
 message PlayerStatusRedisData {
   PlayerStatusType status = 1;
-  string gameserver_id = 2;
+  uint32 gameserver_id = 2;
   uint64 login_rand = 3;
   uint32 login_time = 4;
   uint32 uid = 5;

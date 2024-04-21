@@ -1,9 +1,7 @@
 package gate
 
 import (
-	"net"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
@@ -14,47 +12,6 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
-
-var syncGD sync.Mutex
-
-// 为玩家创建一个独立的新连接
-func (p *PlayerGame) NewGame(gameAddr string) {
-	gameConn, err := net.Dial("tcp", gameAddr)
-	if err != nil {
-		logger.Error("无法连接到GAME:", err)
-		return
-	}
-	p.GameConn = gameConn
-}
-
-// 获取gameserver
-func (s *GateServer) GetGameAppId() string {
-	gameAppId := s.gameAppId
-
-	for _, appId := range s.errGameAppId {
-		if gameAppId == appId {
-			gameAppId = s.GetMinGameAppId(appId)
-		}
-	}
-
-	return gameAppId
-}
-
-// 获取最低负载gameserver
-func (s *GateServer) GetMinGameAppId(errAppId string) string {
-	var minNum uint64
-	var minAppId string
-	for _, game := range s.gameAll {
-		if game.appId == errAppId {
-			continue
-		}
-		if minAppId == "" || minNum > game.num {
-			minAppId = game.appId
-			minNum = game.num
-		}
-	}
-	return minAppId
-}
 
 // 玩家ping包处理
 func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
@@ -154,7 +111,8 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	p.AccountId = accountUid
 
 	// 登录成功，拉取game
-	if s.gameAppId == "" || s.gameAll[s.gameAppId] == nil {
+	gs := s.getMinGsAppId()
+	if gs == nil {
 		rsp.Uid = p.AccountId
 		rsp.Retcode = uint32(proto.Retcode_RET_SYSTEM_BUSY)
 		rsp.Msg = "game未启动"
@@ -163,24 +121,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		s.Store.DistUnlock(req.AccountUid)
 		return
 	}
-
-	gameAppId := s.GetGameAppId()
-	game := s.gameAll[gameAppId]
-	if game == nil {
-		rsp.Uid = p.AccountId
-		rsp.Retcode = uint32(proto.Retcode_RET_SYSTEM_BUSY)
-		rsp.Msg = "game未启动"
-		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
-		logger.Error("game未启动")
-		s.Store.DistUnlock(req.AccountUid)
-		return
-	}
-	p.NewGame(game.addr + ":" + game.port)
-	if p.GameConn == nil {
-		return
-	}
-	p.GameAppId = game.appId
-	go p.recvGame()
+	p.gs = gs
 
 	// 生成seed
 	timeRand := random.GetTimeRand()
@@ -190,27 +131,29 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	// 生成临时uuid
 	p.Uuid = s.snowflake.GenId()
 	s.AddPlayerMap(p.Uuid, p)
-	// 通知game玩家登录
-	go p.PlayerLoginNotify()
-
 	p.Uid = uidPlayer.Uid
 
-	rsp.Uid = p.Uid
-	rsp.SecretKeySeed = p.Seed
-	rsp.BlackInfo = &proto.BlackInfo{}
-	p.Status = spb.PlayerStatus_PlayerStatus_PostLogin
-	GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
-	// 结束定时器
-	p.closeStop()
-	logger.Info("[AccountId:%v][UUID:%v]|[UID:%v]登录gate", p.AccountId, p.Uuid, p.Uid)
+	// 通知game玩家登录
+	gs.GateGamePlayerLoginReq(p.Uid, p.Uuid)
 }
 
 func (s *GateServer) AddPlayerMap(uuid int64, player *PlayerGame) {
-	s.playerMap.Store(uuid, player)
+	s.playerMapLock.Lock()
+	s.playerMap[uuid] = player
+	s.playerMapLock.Unlock()
 }
 
 func (s *GateServer) DelPlayerMap(uuid int64) {
-	s.playerMap.Delete(uuid)
+	s.playerMapLock.Lock()
+	delete(s.playerMap, uuid)
+	s.playerMapLock.Unlock()
+}
+
+func (s *GateServer) GetPlayerByUuid(uuid int64) (*PlayerGame, bool) {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	player, ok := s.playerMap[uuid]
+	return player, ok
 }
 
 func (p *PlayerGame) loginTicker() {

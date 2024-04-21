@@ -1,7 +1,6 @@
 package player
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/db"
@@ -14,17 +13,8 @@ import (
 
 func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 	var err error
-	var dbPlayer *db.PlayerData
-
-	for i := 0; i < 40; i++ {
-		if _, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
-			dbPlayer = db.DBASE.QueryAccountUidByFieldPlayer(accountId)
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	if dbPlayer.BinData == nil {
+	dbPlayer := db.DBASE.QueryAccountUidByFieldPlayer(accountId)
+	if dbPlayer == nil || dbPlayer.BinData == nil {
 		dbPlayer = new(db.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
 		g.PlayerPb = g.NewPlayer()
@@ -77,9 +67,7 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v][UUID:%v]登录的系统是:%s", g.Uid, g.Uuid, req.SystemVersion)
-	if g.IsProficientPlayer {
-		g.HandlePlayerLoginScRsp()
-	}
+	g.HandlePlayerLoginScRsp()
 }
 
 func (g *GamePlayer) HandlePlayerLoginScRsp() {

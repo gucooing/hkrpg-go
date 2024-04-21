@@ -24,17 +24,17 @@ var syncPlayerUuidMap sync.Mutex
 var syncPlayerMap sync.Mutex
 
 type Node struct {
-	AppId         string
+	AppId         uint32
 	Port          string
 	Config        *config.Config
-	MapService    map[spb.ServerType]map[string]*Service // [ServerType][appid][Service]
+	MapService    map[spb.ServerType]map[uint32]*Service // [ServerType][appid][Service]
 	PlayerUuidMap map[uint32]int64                       // [uid][uuid]
 	PlayerMap     map[int64]*PlayerService               // [uid][gateAppId][GameAppId]
 }
 
 type Service struct {
 	Conn       net.Conn
-	AppId      string
+	AppId      uint32
 	ServerType spb.ServerType
 	Addr       string
 	Port       string
@@ -44,16 +44,16 @@ type Service struct {
 type PlayerService struct {
 	Uuid      int64
 	Uid       uint32
-	GateAppId string
-	GameAppId string
+	GateAppId uint32
+	GameAppId uint32
 }
 
-func NewNode(cfg *config.Config) *Node {
+func NewNode(cfg *config.Config, appid string) *Node {
 	NODE = new(Node)
 	NODE.Config = cfg
-	NODE.AppId = alg.GetAppId()
-	logger.Info("NodeServer AppId:%s", NODE.AppId)
-	port := NODE.Config.AppList[NODE.AppId].App["port_service"].Port
+	NODE.AppId = alg.GetAppIdUint32(appid)
+	logger.Info("NodeServer AppId:%s", appid)
+	port := NODE.Config.AppList[appid].App["port_service"].Port
 	if port == "" {
 		log.Println("Node port error")
 		os.Exit(0)
@@ -66,15 +66,15 @@ func NewNode(cfg *config.Config) *Node {
 	return NODE
 }
 
-func GetMapService() map[spb.ServerType]map[string]*Service {
+func GetMapService() map[spb.ServerType]map[uint32]*Service {
 	if NODE.MapService == nil {
-		NODE.MapService = make(map[spb.ServerType]map[string]*Service)
-		NODE.MapService[spb.ServerType_SERVICE_NODE] = make(map[string]*Service)
-		NODE.MapService[spb.ServerType_SERVICE_GAME] = make(map[string]*Service)
-		NODE.MapService[spb.ServerType_SERVICE_GATE] = make(map[string]*Service)
-		NODE.MapService[spb.ServerType_SERVICE_DISPATCH] = make(map[string]*Service)
-		NODE.MapService[spb.ServerType_SERVICE_MULTI] = make(map[string]*Service)
-		NODE.MapService[spb.ServerType_SERVICE_MUIP] = make(map[string]*Service)
+		NODE.MapService = make(map[spb.ServerType]map[uint32]*Service)
+		NODE.MapService[spb.ServerType_SERVICE_NODE] = make(map[uint32]*Service)
+		NODE.MapService[spb.ServerType_SERVICE_GAME] = make(map[uint32]*Service)
+		NODE.MapService[spb.ServerType_SERVICE_GATE] = make(map[uint32]*Service)
+		NODE.MapService[spb.ServerType_SERVICE_DISPATCH] = make(map[uint32]*Service)
+		NODE.MapService[spb.ServerType_SERVICE_MULTI] = make(map[uint32]*Service)
+		NODE.MapService[spb.ServerType_SERVICE_MUIP] = make(map[uint32]*Service)
 	}
 	return NODE.MapService
 }
@@ -185,6 +185,6 @@ func getPlayerServiceByUuid(uid uint32) *PlayerService {
 	return NODE.PlayerMap[NODE.PlayerUuidMap[uid]]
 }
 
-func getGsByAppId(appid string) *Service {
+func getGsByAppId(appid uint32) *Service {
 	return NODE.MapService[spb.ServerType_SERVICE_GAME][appid]
 }

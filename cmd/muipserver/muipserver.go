@@ -32,12 +32,13 @@ func main() {
 			panic(err)
 		}
 	}
+	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("muipserver"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("muipserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 
 	cfg := config.GetConfig()
-	muips := muip.NewMuip(cfg)
+	muips := muip.NewMuip(cfg, appid)
 	// 初始化
 
 	done := make(chan os.Signal, 1)

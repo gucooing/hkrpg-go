@@ -18,7 +18,7 @@ import (
 )
 
 type Server struct {
-	AppId      string
+	AppId      uint32
 	Port       string
 	NodeConn   net.Conn
 	GateAddr   string
@@ -36,12 +36,12 @@ type Server struct {
 }
 
 // 初始化所有服务
-func NewServer(cfg *config.Config) *Server {
+func NewServer(cfg *config.Config, appid string) *Server {
 	s := &Server{}
 	s.Config = cfg
-	s.AppId = alg.GetAppId()
-	logger.Info("Dispatch AppId:%s", s.AppId)
-	port := s.Config.AppList[s.AppId].App["port_http"].Port
+	s.AppId = alg.GetAppIdUint32(appid)
+	logger.Info("Dispatch AppId:%s", appid)
+	port := s.Config.AppList[appid].App["port_http"].Port
 	if port == "" {
 		log.Println("Dispatch Port error")
 		os.Exit(0)

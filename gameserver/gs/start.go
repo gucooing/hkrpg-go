@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
@@ -11,6 +12,8 @@ import (
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -24,13 +27,17 @@ type GameServer struct {
 	Config     *config.Config
 	Store      *db.Store
 	Port       string
-	AppId      string
+	AppId      uint32
 	GSListener net.Listener
 	nodeConn   net.Conn
 	PlayerMap  map[int64]*player.GamePlayer
-	RecvCh     chan *TcpNodeMsg
-	Ticker     *time.Ticker
-	Stop       chan struct{}
+
+	gateList     map[uint32]*gateServer // gate列表
+	gateListLock sync.Mutex             // gate列表同步锁
+
+	RecvCh chan *TcpNodeMsg
+	Ticker *time.Ticker
+	Stop   chan struct{}
 }
 
 type TcpNodeMsg struct {
@@ -38,17 +45,17 @@ type TcpNodeMsg struct {
 	serviceMsg pb.Message
 }
 
-func NewGameServer(cfg *config.Config) *GameServer {
+func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s := new(GameServer)
 
 	GAMESERVER = s
 
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
-	s.AppId = alg.GetAppId()
+	s.AppId = alg.GetAppIdUint32(appid)
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
-	logger.Info("GameServer AppId:%s", s.AppId)
-	port := s.Config.AppList[s.AppId].App["port_gt"].Port
+	logger.Info("GameServer AppId:%s", appid)
+	port := s.Config.AppList[appid].App["port_gt"].Port
 	if port == "" {
 		log.Println("GameServer Port error")
 		os.Exit(0)
@@ -75,6 +82,7 @@ func NewGameServer(cfg *config.Config) *GameServer {
 	}
 	s.nodeConn = tcpConn
 	s.PlayerMap = make(map[int64]*player.GamePlayer)
+	s.gateList = make(map[uint32]*gateServer)
 
 	go s.recvNode()
 	go s.AutoUpDataPlayer()
@@ -84,6 +92,10 @@ func NewGameServer(cfg *config.Config) *GameServer {
 	return s
 }
 
+func (s *GameServer) GetPlayerNum() int64 {
+	return 0
+}
+
 func (s *GameServer) StartGameServer() error {
 	for {
 		conn, err := s.GSListener.Accept()
@@ -91,17 +103,36 @@ func (s *GameServer) StartGameServer() error {
 			logger.Info("GameServer接受连接失败:%s", err.Error())
 			continue
 		}
-		g := NewPlayer(conn)
-		go s.recvGate(g)
+		// g := NewPlayer(conn)
+		// go s.recvGate(g)
+		go s.recvNil(conn)
 	}
 }
 
-func NewPlayer(conn net.Conn) *player.GamePlayer {
-	g := new(player.GamePlayer)
-	g.GateConn = conn
-	g.LastActiveTime = time.Now().Unix()
-
-	return g
+func (s *GameServer) recvNil(conn net.Conn) {
+	nodeMsg := make([]byte, player.PacketMaxLen)
+	var bin []byte = nil
+	recvLen, err := conn.Read(nodeMsg)
+	if err != nil {
+		logger.Debug("exit recv loop, conn read err: %v", err)
+		return
+	}
+	bin = nodeMsg[:recvLen]
+	nodeMsgList := make([]*alg.PackMsg, 0)
+	alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
+	for _, msg := range nodeMsgList {
+		serviceMsg := alg.DecodePayloadToProto(msg)
+		if msg.CmdId == cmd.GateLoginGameReq {
+			rsp := serviceMsg.(*spb.GateLoginGameReq)
+			switch rsp.ServerType {
+			case spb.ServerType_SERVICE_GATE:
+				go s.recvGate(conn, rsp.AppId)
+				return
+			}
+		}
+	}
+	conn.Close()
+	return
 }
 
 func (s *GameServer) AutoUpDataPlayer() {
