@@ -104,8 +104,6 @@ func (s *GameServer) StartGameServer() error {
 			logger.Info("GameServer接受连接失败:%s", err.Error())
 			continue
 		}
-		// g := NewPlayer(conn)
-		// go s.recvGate(g)
 		go s.recvNil(conn)
 	}
 }

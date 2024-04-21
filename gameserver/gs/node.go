@@ -117,11 +117,3 @@ func (s *GameServer) GameToNodePingRsp(serviceMsg pb.Message) {
 
 	logger.Debug(req.String())
 }
-
-func (s *GameServer) NodeToGsPlayerLogoutNotify(serviceMsg pb.Message) {
-	notify := serviceMsg.(*spb.NodeToGsPlayerLogoutNotify)
-	if s.PlayerMap[notify.Uuid] == nil {
-		return
-	}
-	KickPlayer(s.PlayerMap[notify.Uuid])
-}

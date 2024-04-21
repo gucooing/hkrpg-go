@@ -44,10 +44,6 @@ func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.GetAllServiceGameReq: // 心跳包
 		s.gateGetAllServiceGameReq(serviceMsg)
-	case cmd.PlayerLoginNotify:
-		s.gatePlayerLoginNotify(serviceMsg)
-	case cmd.PlayerLogoutNotify:
-		s.gatePlayerLogoutNotify(serviceMsg)
 	default:
 		logger.Info("gateRegister error cmdid:%v", cmdId)
 	}
@@ -77,46 +73,4 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 		rsp.GameServiceList = append(rsp.GameServiceList, serviceAll)
 	}
 	s.sendHandle(cmd.GetAllServiceGameRsp, rsp)
-}
-
-/******************************************NewLogin***************************************/
-
-func (s *Service) gatePlayerLoginNotify(serviceMsg pb.Message) {
-	notify := serviceMsg.(*spb.PlayerLoginNotify)
-	if notify.Uuid == 0 || notify.Uid == 0 || notify.AccountId == 0 || getGsByAppId(notify.GameServerAppId) == nil || notify.GateServerAppId != s.AppId {
-		logger.Error("[UID:%v][gate->node]PlayerLoginNotify通知错误", notify.Uid)
-		return
-	}
-	if NODE.PlayerUuidMap[notify.Uid] != 0 {
-		logger.Info("[UID:%v]要上线的玩家还没有下线", notify.Uid)
-		return
-	}
-	AddPlayerUuidMap(notify.Uuid, notify.Uid)
-	AddPlayerMap(notify.Uuid, &PlayerService{
-		GameAppId: notify.GameServerAppId,
-		GateAppId: notify.GateServerAppId,
-		Uuid:      notify.Uuid,
-		Uid:       notify.Uid,
-	})
-	s.PlayerNum++
-	getGsByAppId(notify.GameServerAppId).PlayerNum++
-	logger.Info("[UID:%v][UUID%v]玩家上线", notify.Uid, notify.Uuid)
-}
-
-func (s *Service) gatePlayerLogoutNotify(serviceMsg pb.Message) {
-	notify := serviceMsg.(*spb.PlayerLogoutNotify)
-	if NODE.PlayerUuidMap[notify.Uid] == 0 {
-		logger.Info("[UID:%v]找不到要下线的玩家", notify.Uid)
-		return
-	}
-	ps := getPlayerServiceByUuid(notify.Uid)
-	gs := getGsByAppId(ps.GameAppId)
-	if gs != nil {
-		gs.sendHandle(cmd.NodeToGsPlayerLogoutNotify, &spb.NodeToGsPlayerLogoutNotify{Uuid: ps.Uuid})
-		gs.PlayerNum--
-	}
-	DelPlayerUuidMap(ps.Uid)
-	DelPlayerMap(ps.Uuid)
-	s.PlayerNum--
-	logger.Info("[UID:%v][UUID%v]收到玩家被动下线通知", notify.Uid, ps.Uuid)
 }

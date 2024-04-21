@@ -229,7 +229,7 @@ func Close() error {
 	GATESERVER.kcpFin = true
 	GATESERVER.playerMapLock.Lock()
 	for _, player := range GATESERVER.playerMap {
-		GateToPlayer(player, cmd.PlayerKickOutScNotify, nil)
+		player.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
 		player.Status = spb.PlayerStatus_PlayerStatus_PassiveOffline
 		KickPlayer(player)
 	}
@@ -246,7 +246,7 @@ func KickPlayer(p *PlayerGame) {
 	// 删除map
 	GATESERVER.DelPlayerMap(p.Uuid)
 	// 告诉node下线玩家
-	GATESERVER.PlayerLogoutNotify(p.Uid)
+	// GATESERVER.PlayerLogoutNotify(p.Uid)
 	// 断开kcp连接
 	if p.KcpConn != nil {
 		p.KcpConn.Close()

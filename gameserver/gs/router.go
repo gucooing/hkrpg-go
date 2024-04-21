@@ -12,8 +12,6 @@ func (s *GameServer) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.ServiceConnectionRsp(serviceMsg)
 	case cmd.GameToNodePingRsp:
 		s.GameToNodePingRsp(serviceMsg)
-	case cmd.NodeToGsPlayerLogoutNotify:
-		s.NodeToGsPlayerLogoutNotify(serviceMsg)
 	// 下面是gm
 	case cmd.GmGive:
 		s.GmGive(serviceMsg) // 获取物品

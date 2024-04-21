@@ -125,12 +125,3 @@ func (s *GateServer) GetAllServiceGameRsp(serviceMsg pb.Message) {
 
 	logger.Debug("gate <--> node ping:%v", (rsp.NodeTime-rsp.GateTime)/2)
 }
-
-/******************************************NewLogin***************************************/
-
-func (s *GateServer) PlayerLogoutNotify(uid uint32) {
-	notify := &spb.PlayerLogoutNotify{
-		Uid: uid,
-	}
-	s.sendNode(cmd.PlayerLogoutNotify, notify)
-}

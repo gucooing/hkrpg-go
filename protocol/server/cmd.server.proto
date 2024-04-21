@@ -47,42 +47,6 @@ message ServiceAll{
   string port = 5;
 }
 
-message SyncPlayerOnlineDataNotify{
-  uint32 player_uid = 1;
-  bytes player_online_data = 2;
-}
-
-// 新登录流程proto
-message PlayerLoginNotify{// 玩家登录通知
-  int64 uuid = 1;
-  uint32 account_id = 2;
-  uint32 uid = 3;
-  uint32 gate_server_app_id = 4;
-  uint32 game_server_app_id = 5;
-}
-
-message PlayerLogoutNotify {// 玩家下线通知
-  uint32 uid = 1;
-}
-
-message PlayerLogoutReq{// 玩家下线请求
-  int64 uuid = 1;
-  uint32 account_id = 2;
-  uint32 uid = 3;
-  PlayerOfflineReason  offline_reason = 4; // 离线原因
-}
-
-message PlayerLogoutRsp{// 玩家下线回复
-  Retcode retcode = 1;
-  int64 uuid = 2;
-  uint32 account_id = 3;
-  uint32 uid = 4;
-}
-
-message NodeToGsPlayerLogoutNotify{// node发送给gs玩家下线通知
-  int64 uuid = 1;
-}
-
 message GetAllServiceGameReq {// 获取全部gs服务请求
   ServerType service_type = 1;
   int64 gate_time = 2;
@@ -151,8 +115,9 @@ message GateGamePlayerLoginRsp {// gate向game的玩家注册请求包
 
 message GetToGamePlayerLogoutReq{// gate直接向目标game申请下线玩家请求
   uint32 uid = 1; // 玩家uid
-  int64 old_uuid = 2; // 用户临时唯一id
-  uint32 old_game_server_id = 3; // gameserver id
+  uint32 account_id = 2; // sdk id
+  int64 old_uuid = 3; // 用户临时唯一id
+  uint32 old_game_server_id = 4; // gameserver id
   int64 new_uuid = 5; // 用户临时唯一id
   uint32 new_game_server_id = 6; // gameserver id
 }

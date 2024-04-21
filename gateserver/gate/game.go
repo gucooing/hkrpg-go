@@ -2,6 +2,7 @@ package gate
 
 import (
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -141,6 +142,8 @@ func (gs *gameServer) gameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 		gs.GateGamePlayerLoginRsp(playerMsg) // game玩家登录成功通知
 	case cmd.GetToGamePlayerLogoutRsp:
 		gs.GetToGamePlayerLogoutRsp(playerMsg) // gate直接向目标game申请下线玩家回复
+	case cmd.GameToGatePlayerLogoutNotify:
+		gs.GameToGatePlayerLogoutNotify(playerMsg) // game告知gate玩家要下线了
 	case cmd.GameToGateMsgNotify:
 		gs.GameToGateMsgNotify(playerMsg)
 
@@ -228,9 +231,11 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 		}
 
 		player.Status = spb.PlayerStatus_PlayerStatus_PostLogin
-		GateToPlayer(player, cmd.PlayerGetTokenScRsp, prsp)
+		player.GateToPlayer(cmd.PlayerGetTokenScRsp, prsp)
 		// 结束定时器
 		player.closeStop()
+		// 删除登录锁
+		gs.gate.Store.DistUnlock(strconv.Itoa(int(player.AccountId)))
 		logger.Info("[AccountId:%v][UUID:%v]|[UID:%v]登录gate", player.AccountId, player.Uuid, player.Uid)
 	}
 }
@@ -261,12 +266,11 @@ func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	}
 }
 
-func GateToPlayer(p *PlayerGame, cmdId uint16, playerMsg pb.Message) {
-	rspMsg := new(alg.ProtoMsg)
-	rspMsg.CmdId = cmdId
-	rspMsg.PayloadMessage = playerMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
-	SendHandle(p, tcpMsg)
+func (gs *gameServer) GameToGatePlayerLogoutNotify(playerMsg pb.Message) {
+	notify := playerMsg.(*spb.GameToGatePlayerLogoutNotify)
+	if play, ok := gs.gate.GetPlayerByUuid(notify.Uuid); ok {
+		gs.gate.killPlayer(play)
+	}
 }
 
 func (p *PlayerGame) closeStop() {

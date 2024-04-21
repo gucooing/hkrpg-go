@@ -1,6 +1,7 @@
 package node
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -34,7 +35,7 @@ func (s *Service) ServiceConnectionReq(serviceMsg pb.Message) {
 	s.Addr = req.Addr
 	s.Port = req.Port
 	NODE.MapService[s.ServerType][s.AppId] = s
-	logger.Info("AppId:%s Service:%s Service registration successful", s.AppId, s.ServerType)
+	logger.Info("AppId:%s Service:%s Service registration successful", alg.GetAppIdStr(s.AppId), s.ServerType)
 
 	rsp := &spb.ServiceConnectionRsp{
 		ServerType: req.ServerType,

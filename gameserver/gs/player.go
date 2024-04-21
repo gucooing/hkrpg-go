@@ -2,6 +2,7 @@ package gs
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
@@ -27,7 +28,7 @@ func (ge *gateServer) killPlayer(p *player.GamePlayer) {
 	ge.upDataPlayer(p)
 	db.DBASE.DelPlayerStatus(strconv.Itoa(int(p.AccountId)))
 	ge.game.DelPlayerMap(p.Uuid)
-	logger.Debug("[UID:%v][UUID:%v]玩家重复登录下线成功", p.Uid, p.Uuid)
+	logger.Info("[UID:%v][UUID:%v]玩家重复登录下线成功", p.Uid, p.Uuid)
 }
 
 func (ge *gateServer) upDataPlayer(p *player.GamePlayer) {
@@ -44,7 +45,7 @@ func (ge *gateServer) upDataPlayer(p *player.GamePlayer) {
 	}
 	if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != p.Uuid {
 		// 脏数据
-		logger.Debug("[UID:%v][UUID:%v]数据过期，已丢弃", p.Uid, p.Uuid)
+		logger.Info("[UID:%v][UUID:%v]数据过期，已丢弃", p.Uid, p.Uuid)
 		return
 	}
 	dbDate := new(db.PlayerData)
@@ -63,4 +64,63 @@ func (ge *gateServer) upDataPlayer(p *player.GamePlayer) {
 		return
 	}
 	return
+}
+
+/************************************接口*********************************/
+
+func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
+	syncGD.Lock()
+	s.PlayerMap[uuid] = g
+	// 初始化在线数据
+	if s.PlayerMap[g.Uuid].Player == nil {
+		s.PlayerMap[g.Uuid].Player = &player.PlayerData{
+			Battle: make(map[uint32]*player.Battle),
+			BattleState: &player.BattleState{
+				ChallengeState: &player.ChallengeState{},
+			},
+		}
+	}
+	syncGD.Unlock()
+}
+
+func (s *GameServer) DelPlayerMap(uuid int64) {
+	syncGD.Lock()
+	if s.PlayerMap[uuid] != nil {
+		delete(s.PlayerMap, uuid)
+	}
+	syncGD.Unlock()
+}
+
+func (s *GameServer) GetAllPlayer() map[int64]*player.GamePlayer {
+	players := make(map[int64]*player.GamePlayer)
+	syncGD.Lock()
+	defer syncGD.Unlock()
+	for _, play := range s.PlayerMap {
+		players[play.Uuid] = play
+	}
+	return players
+}
+
+func (s *GameServer) GetPlayerByUuid(uuid int64) *player.GamePlayer {
+	syncGD.Lock()
+	defer syncGD.Unlock()
+	return s.PlayerMap[uuid]
+}
+
+func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
+	bin := &spb.PlayerStatusRedisData{
+		Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
+		GameserverId: s.AppId,
+		LoginRand:    0,
+		LoginTime:    time.Now().Unix(),
+		Uid:          p.Uid,
+		Uuid:         p.Uuid,
+	}
+	value, err := pb.Marshal(bin)
+	if err != nil {
+		logger.Error("pb marshal error: %v\n", err)
+		return err
+	}
+	err = s.Store.SetPlayerStatus(strconv.Itoa(int(p.AccountId)), value)
+	return err
 }

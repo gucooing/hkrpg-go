@@ -23,7 +23,7 @@ func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	rsp.ClientTimeMs = req.ClientTimeMs
 	p.LastActiveTime = time.Now().Unix()
 
-	GateToPlayer(p, cmd.PlayerHeartBeatScRsp, rsp)
+	p.GateToPlayer(cmd.PlayerHeartBeatScRsp, rsp)
 }
 
 func stou32(msg string) uint32 {
@@ -49,7 +49,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 			rsp.Uid = 0
 			rsp.Retcode = uint32(proto.Retcode_RET_REACH_MAX_PLAYER_NUM)
 			rsp.Msg = "当前服务器人数过多，请稍后再试。"
-			GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+			p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
 			return
 		}
 	}
@@ -61,17 +61,17 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 		rsp.Msg = "token验证失败"
-		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Info("登录账号:%v,token验证失败", accountUid)
 		return
 	}
 
-	// 登录分布式锁 TODO 登录时候遇到任何问题退出此次登录前都一定要del锁
+	// 登录分布式锁
 	if ok := s.Store.DistLockSync(req.AccountUid); !ok {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_REACH_MAX_PLAYER_NUM)
 		rsp.Msg = "重复登录，请稍后再试。"
-		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
 		return
 	}
 
@@ -88,7 +88,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)
 		rsp.Msg = "该账号正处于封禁状态，暂时无法登录，详情可联系客服。"
-		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Info("登录账号:%v,已被封禁,原因:%s", accountUid, uidPlayer.BanMsg)
 		s.Store.DistUnlock(req.AccountUid)
 		return
@@ -101,7 +101,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		rsp.Uid = p.AccountId
 		rsp.Retcode = uint32(proto.Retcode_RET_SYSTEM_BUSY)
 		rsp.Msg = "game未启动"
-		GateToPlayer(p, cmd.PlayerGetTokenScRsp, rsp)
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Error("game未启动")
 		s.Store.DistUnlock(req.AccountUid)
 		return
@@ -131,6 +131,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		if statu.Uid != 0 || oldGs != nil {
 			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
 				Uid:             statu.Uid,
+				AccountId:       accountUid,
 				OldUuid:         statu.Uuid,
 				OldGameServerId: statu.GameserverId,
 				NewUuid:         p.Uuid,
@@ -151,30 +152,11 @@ func (gs *gameServer) playerLogin(p *PlayerGame) {
 	gs.GateGamePlayerLoginReq(p.Uid, p.AccountId, p.Uuid)
 }
 
-func (s *GateServer) AddPlayerMap(uuid int64, player *PlayerGame) {
-	s.playerMapLock.Lock()
-	s.playerMap[uuid] = player
-	s.playerMapLock.Unlock()
-}
-
-func (s *GateServer) DelPlayerMap(uuid int64) {
-	s.playerMapLock.Lock()
-	delete(s.playerMap, uuid)
-	s.playerMapLock.Unlock()
-}
-
-func (s *GateServer) GetPlayerByUuid(uuid int64) (*PlayerGame, bool) {
-	s.playerMapLock.Lock()
-	defer s.playerMapLock.Unlock()
-	player, ok := s.playerMap[uuid]
-	return player, ok
-}
-
 func (p *PlayerGame) loginTicker() {
 	select {
 	case <-p.ticker.C:
 		logger.Info("玩家登录超时")
-		GateToPlayer(p, cmd.PlayerKickOutScNotify, nil)
+		p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
 		KickPlayer(p)
 		p.ticker.Stop()
 		return

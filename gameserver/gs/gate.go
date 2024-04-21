@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -151,7 +152,7 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	g.GetPlayerDate(req.Uid)
 	ge.game.AddPlayerMap(req.Uuid, g)
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, req.Uuid)
-	ge.AddPlayerStatus(g)
+	ge.game.AddPlayerStatus(g)
 	rsp := &spb.GateGamePlayerLoginRsp{
 		Retcode: 0,
 		Uid:     req.Uid,
@@ -164,10 +165,11 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
 	play := ge.game.GetPlayerByUuid(req.GetOldUuid())
 	if play == nil {
-		return
+		db.DBASE.DelPlayerStatus(strconv.Itoa(int(req.AccountId)))
+	} else {
+		// 下线玩家
+		ge.killPlayer(play)
 	}
-	// 下线玩家
-	ge.killPlayer(play)
 
 	rsp := &spb.GetToGamePlayerLogoutRsp{
 		Retcode:         spb.Retcode_RET_SUCC,
@@ -203,51 +205,4 @@ func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 
 func (ge *gateServer) GameToGateMsgNotify(payloadMsg pb.Message) {
 	ge.seedGate(cmd.GameToGateMsgNotify, payloadMsg)
-}
-
-func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
-	syncGD.Lock()
-	s.PlayerMap[uuid] = g
-	// 初始化在线数据
-	if s.PlayerMap[g.Uuid].Player == nil {
-		s.PlayerMap[g.Uuid].Player = &player.PlayerData{
-			Battle: make(map[uint32]*player.Battle),
-			BattleState: &player.BattleState{
-				ChallengeState: &player.ChallengeState{},
-			},
-		}
-	}
-	syncGD.Unlock()
-}
-
-func (s *GameServer) DelPlayerMap(uuid int64) {
-	syncGD.Lock()
-	if s.PlayerMap[uuid] != nil {
-		delete(s.PlayerMap, uuid)
-	}
-	syncGD.Unlock()
-}
-
-func (s *GameServer) GetPlayerByUuid(uuid int64) *player.GamePlayer {
-	syncGD.Lock()
-	defer syncGD.Unlock()
-	return s.PlayerMap[uuid]
-}
-
-func (ge *gateServer) AddPlayerStatus(p *player.GamePlayer) error {
-	bin := &spb.PlayerStatusRedisData{
-		Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
-		GameserverId: ge.game.AppId,
-		LoginRand:    0,
-		LoginTime:    time.Now().Unix(),
-		Uid:          p.Uid,
-		Uuid:         p.Uuid,
-	}
-	value, err := pb.Marshal(bin)
-	if err != nil {
-		logger.Error("pb marshal error: %v\n", err)
-		return err
-	}
-	err = ge.game.Store.SetPlayerStatus(strconv.Itoa(int(p.AccountId)), value)
-	return err
 }

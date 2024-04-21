@@ -1272,16 +1272,16 @@ const (
 )
 
 const (
-	ServiceConnectionReq     = 10000
-	ServiceConnectionRsp     = 10100
-	GateLoginGameRsp         = 10001
-	GateLoginGameReq         = 10101
-	GateToGameMsgNotify      = 10002
-	GameToGateMsgNotify      = 10102
-	GetAllServiceGateReq     = 10003
-	GetAllServiceGateRsp     = 10103
-	PlayerLogoutReq          = 10004
-	PlayerLogoutRsp          = 10104
+	ServiceConnectionReq = 10000
+	ServiceConnectionRsp = 10100
+	GateLoginGameRsp     = 10001
+	GateLoginGameReq     = 10101
+	GateToGameMsgNotify  = 10002
+	GameToGateMsgNotify  = 10102
+	GetAllServiceGateReq = 10003
+	GetAllServiceGateRsp = 10103
+	// PlayerLogoutReq          = 10004
+	// PlayerLogoutRsp          = 10104
 	GetAllServiceReq         = 10005
 	GetAllServiceRsp         = 10105
 	GetAllServiceGameReq     = 10006
@@ -1295,10 +1295,10 @@ const (
 	GetToGamePlayerLogoutReq = 10010
 	GetToGamePlayerLogoutRsp = 10110
 
-	PlayerLogoutNotify           = 11000
-	SyncPlayerOnlineDataNotify   = 11001
-	PlayerLoginNotify            = 11002
-	NodeToGsPlayerLogoutNotify   = 11003
+	// PlayerLogoutNotify           = 11000
+	// SyncPlayerOnlineDataNotify   = 11001
+	// PlayerLoginNotify            = 11002
+	// NodeToGsPlayerLogoutNotify   = 11003
 	GameToGatePlayerLogoutNotify = 11004
 
 	GmGive       = 12001
@@ -1590,14 +1590,14 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GameToGateMsgNotify, func() any { return new(spb.GameToGateMsgNotify) })
 	c.regMsg(GetAllServiceGateReq, func() any { return new(spb.GetAllServiceGateReq) })
 	c.regMsg(GetAllServiceGateRsp, func() any { return new(spb.GetAllServiceGateRsp) })
-	c.regMsg(PlayerLogoutReq, func() any { return new(spb.PlayerLogoutReq) })
-	c.regMsg(PlayerLogoutRsp, func() any { return new(spb.PlayerLogoutRsp) })
+	// c.regMsg(PlayerLogoutReq, func() any { return new(spb.PlayerLogoutReq) })
+	// c.regMsg(PlayerLogoutRsp, func() any { return new(spb.PlayerLogoutRsp) })
 	c.regMsg(GetAllServiceReq, func() any { return new(spb.GetAllServiceReq) })
 	c.regMsg(GetAllServiceRsp, func() any { return new(spb.GetAllServiceRsp) })
 	c.regMsg(GetAllServiceGameReq, func() any { return new(spb.GetAllServiceGameReq) })
 	c.regMsg(GetAllServiceGameRsp, func() any { return new(spb.GetAllServiceGameRsp) })
-	c.regMsg(PlayerLogoutNotify, func() any { return new(spb.PlayerLogoutNotify) })
-	c.regMsg(SyncPlayerOnlineDataNotify, func() any { return new(spb.SyncPlayerOnlineDataNotify) })
+	// c.regMsg(PlayerLogoutNotify, func() any { return new(spb.PlayerLogoutNotify) })
+	// c.regMsg(SyncPlayerOnlineDataNotify, func() any { return new(spb.SyncPlayerOnlineDataNotify) })
 	c.regMsg(GateGamePingReq, func() any { return new(spb.GateGamePingReq) })
 	c.regMsg(GateGamePingRsp, func() any { return new(spb.GateGamePingRsp) })
 	c.regMsg(GateGamePlayerLoginReq, func() any { return new(spb.GateGamePlayerLoginReq) })
@@ -1606,8 +1606,8 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GetToGamePlayerLogoutRsp, func() any { return new(spb.GetToGamePlayerLogoutRsp) })
 	c.regMsg(GameToGatePlayerLogoutNotify, func() any { return new(spb.GameToGatePlayerLogoutNotify) })
 
-	c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
-	c.regMsg(NodeToGsPlayerLogoutNotify, func() any { return new(spb.NodeToGsPlayerLogoutNotify) })
+	// c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
+	// c.regMsg(NodeToGsPlayerLogoutNotify, func() any { return new(spb.NodeToGsPlayerLogoutNotify) })
 	c.regMsg(GameToNodePingReq, func() any { return new(spb.GameToNodePingReq) })
 	c.regMsg(GameToNodePingRsp, func() any { return new(spb.GameToNodePingRsp) })
 
