@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -23,7 +22,6 @@ func (s *GateServer) ServiceStart() {
 				s.gateGetAllServiceGameReq()
 			case <-s.Stop:
 				s.Ticker.Stop()
-				fmt.Println("Player goroutine stopped")
 				return
 			}
 		}
@@ -106,7 +104,7 @@ func (s *GateServer) gateGetAllServiceGameReq() {
 	req := &spb.GetAllServiceGameReq{
 		ServiceType: spb.ServerType_SERVICE_GATE,
 		GateTime:    time.Now().UnixNano() / 1e6,
-		PlayerNum:   uint64(CLIENT_CONN_NUM),
+		PlayerNum:   int64(CLIENT_CONN_NUM),
 	}
 	s.sendNode(cmd.GetAllServiceGameReq, req)
 }

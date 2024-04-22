@@ -21,7 +21,7 @@ import (
 */
 func (s *GameServer) killPlayer(p *player.GamePlayer) {
 	s.upDataPlayer(p)
-	db.DBASE.DelPlayerStatus(strconv.Itoa(int(p.AccountId)))
+	db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
 	s.DelPlayerMap(p.Uuid)
 	logger.Info("[UID:%v][UUID:%v]玩家下线成功", p.Uid, p.Uuid)
 }
@@ -35,7 +35,7 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 	err := pb.Unmarshal(redisDb, statu)
 	if err != nil {
 		logger.Error("PlayerStatusRedisData Unmarshal error")
-		db.DBASE.DelPlayerStatus(strconv.Itoa(int(p.AccountId)))
+		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
 		return
 	}
 	if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != p.Uuid {
@@ -75,6 +75,7 @@ func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 			},
 		}
 	}
+	PLAYERNUM = int64(len(s.PlayerMap))
 	syncGD.Unlock()
 	go func() {
 		if ge := s.getGeByAppid(g.GateAppId); ge != nil {
@@ -99,6 +100,7 @@ func (s *GameServer) DelPlayerMap(uuid int64) {
 		}()
 		delete(s.PlayerMap, uuid)
 	}
+	PLAYERNUM = int64(len(s.PlayerMap))
 	syncGD.Unlock()
 }
 
@@ -150,6 +152,8 @@ func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
 		logger.Error("pb marshal error: %v\n", err)
 		return err
 	}
-	err = s.Store.SetPlayerStatus(strconv.Itoa(int(p.AccountId)), value)
+	if ok := s.Store.DistLockPlayerStatus(strconv.Itoa(int(p.AccountId)), value); !ok {
+		logger.Info("玩家状态锁加锁失败")
+	}
 	return err
 }

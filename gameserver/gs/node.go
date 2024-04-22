@@ -107,7 +107,7 @@ func (s *GameServer) GameToNodePingReq() {
 	req := &spb.GameToNodePingReq{
 		GameServerId:   s.AppId,
 		GameServerTime: time.Now().UnixNano() / 1e6,
-		PlayerNum:      uint64(len(s.PlayerMap)),
+		PlayerNum:      s.GetPlayerNum(),
 	}
 	s.sendNode(cmd.GameToNodePingReq, req)
 }

@@ -121,7 +121,7 @@ func (s *Server) getAllServiceGateReq() {
 
 func (s *Server) GetAllServiceGateRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.GetAllServiceGateRsp)
-	var minPlayerNum uint64 = 1<<63 - 1 // 初始化为较大的数
+	var minPlayerNum int64 = 1<<63 - 1 // 初始化为较大的数
 	var minPlayerService *spb.ServiceAll
 	for _, service := range rsp.GateServiceList {
 		if service.PlayerNum < minPlayerNum {

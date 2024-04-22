@@ -139,7 +139,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 			})
 			return
 		} else {
-			s.Store.DelPlayerStatus(req.AccountUid)
+			s.Store.DistUnlockPlayerStatus(req.AccountUid)
 			logger.Error("PlayerStatusRedisData uid error")
 		}
 	}

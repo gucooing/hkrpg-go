@@ -173,7 +173,7 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
 	play := ge.game.GetPlayerByUuid(req.OldUuid)
 	if play == nil {
-		db.DBASE.DelPlayerStatus(strconv.Itoa(int(req.AccountId)))
+		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))
 	} else {
 		ge.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
 			Uid:  play.Uid,
@@ -196,7 +196,7 @@ func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
 	notify := payloadMsg.(*spb.GateToGamePlayerLogoutNotify)
 	play := ge.game.GetPlayerByUuid(notify.Uuid)
 	if play == nil {
-		db.DBASE.DelPlayerStatus(strconv.Itoa(int(notify.AccountId)))
+		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(notify.AccountId)))
 	} else {
 		// 下线玩家
 		ge.game.killPlayer(play)

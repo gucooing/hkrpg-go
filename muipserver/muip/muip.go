@@ -24,7 +24,7 @@ type Muip struct {
 
 type AllService struct {
 	AppId     uint32
-	PlayerNum uint64
+	PlayerNum int64
 }
 
 func NewMuip(cfg *config.Config, appid string) *Muip {

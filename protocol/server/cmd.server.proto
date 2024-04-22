@@ -42,7 +42,7 @@ message GetAllServiceRsp {
 message ServiceAll{
   ServerType service_type = 1; // 服务id
   string addr = 2; // 地址
-  uint64 player_num = 3; // 在线人数
+  int64 player_num = 3; // 在线人数
   uint32 app_id = 4; // app_id
   string port = 5;
 }
@@ -50,7 +50,7 @@ message ServiceAll{
 message GetAllServiceGameReq {// 获取全部gs服务请求
   ServerType service_type = 1;
   int64 gate_time = 2;
-  uint64 player_num = 3;
+  int64 player_num = 3;
 }
 
 message GetAllServiceGameRsp {// 获取全部gs服务回复
@@ -62,7 +62,7 @@ message GetAllServiceGameRsp {// 获取全部gs服务回复
 message GameToNodePingReq{// game to node ping包请求
   uint32 game_server_id = 1;
   int64 game_server_time = 2;
-  uint64 player_num = 3;
+  int64 player_num = 3;
 }
 
 message GameToNodePingRsp{// game to node ping包回复

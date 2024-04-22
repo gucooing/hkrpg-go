@@ -190,7 +190,7 @@ func (s *Store) DistUnlock(accountId string) {
 
 // 获取玩家状态
 func (s *Store) GetPlayerStatus(accountId string) ([]byte, bool) {
-	key := "player_status:" + accountId
+	key := "player_status_lock:" + accountId
 	bin, err := s.RedisDb.Get(ctx, key).Bytes()
 	if err == nil {
 		return bin, true
@@ -202,8 +202,17 @@ func (s *Store) GetPlayerStatus(accountId string) ([]byte, bool) {
 }
 
 // 删除玩家状态
-func (s *Store) DelPlayerStatus(accountId string) error {
-	key := "player_status:" + accountId
-	err := s.RedisDb.Del(ctx, key).Err()
-	return err
+func (s *Store) DistUnlockPlayerStatus(accountId string) {
+	var result int64 = 0
+	var err error = nil
+	key := "player_status_lock:" + accountId
+	result, err = s.RedisDb.Del(context.TODO(), key).Result()
+	if err != nil {
+		logger.Error("redis lock del error: %v", err)
+		return
+	}
+	if result == 0 {
+		logger.Error("redis lock del result is fail")
+		return
+	}
 }

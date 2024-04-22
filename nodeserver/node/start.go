@@ -38,7 +38,7 @@ type Service struct {
 	ServerType spb.ServerType
 	Addr       string
 	Port       string
-	PlayerNum  uint64
+	PlayerNum  int64
 }
 
 type PlayerService struct {

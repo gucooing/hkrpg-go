@@ -23,6 +23,7 @@ const (
 )
 
 var GAMESERVER *GameServer
+var PLAYERNUM int64 // 玩家人数
 
 type GameServer struct {
 	Config     *config.Config
@@ -94,7 +95,7 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 }
 
 func (s *GameServer) GetPlayerNum() int64 {
-	return 0
+	return PLAYERNUM
 }
 
 func (s *GameServer) StartGameServer() error {
