@@ -9,7 +9,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -20,7 +19,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -121,7 +119,7 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 	go s.recvNode()
 	go s.kcpNetInfo()
 	go s.kcpEnetHandle(kcpListener)
-	go s.AutoUpDataPlayer()
+	go s.AutoDelPlayer()
 	// 向node注册
 	s.Connection()
 
@@ -212,83 +210,21 @@ func SendHandle(p *PlayerGame, kcpMsg *alg.PackMsg) {
 		if p.Seed == 0 {
 			return
 		}
-		p.XorKey = createXorPad(p.Seed)
+		p.XorKey = random.CreateXorPad(p.Seed, false)
 		logger.Info("uid:%v,seed:%v,密钥交换成功", p.Uid, p.Seed)
 	}
 }
 
-func createXorPad(seed uint64) []byte {
-	keyBlock := random.NewKeyBlock(seed, false)
-	xorKey := keyBlock.XorKey()
-	key := make([]byte, 4096)
-	copy(key, xorKey[:])
-	return key
-}
-
 func Close() error {
-	GATESERVER.kcpFin = true
-	GATESERVER.playerMapLock.Lock()
-	for _, player := range GATESERVER.playerMap {
-		player.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-		player.Status = spb.PlayerStatus_PlayerStatus_PassiveOffline
-		KickPlayer(player)
+	ges := GATESERVER
+	ges.kcpFin = true
+	plays := ges.GetAllPlayer()
+	for _, play := range plays {
+		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
+		play.PlayerLogoutCsReq()
 	}
-	GATESERVER.playerMapLock.Unlock()
-	close(GATESERVER.Stop)
+	close(ges.Stop)
 	return nil
-}
-
-func KickPlayer(p *PlayerGame) {
-	// 删除玩家在线状态
-	if err := GATESERVER.Store.DelPlayerStatus(strconv.Itoa(int(p.AccountId))); err != nil {
-		logger.Error("[UID%v]redis玩家状态删除失败:%s", p.Uid, err.Error())
-	}
-	// 删除map
-	GATESERVER.DelPlayerMap(p.Uuid)
-	// 告诉node下线玩家
-	// GATESERVER.PlayerLogoutNotify(p.Uid)
-	// 断开kcp连接
-	if p.KcpConn != nil {
-		p.KcpConn.Close()
-	}
-	logger.Info("[UID:%v]玩家离线gate", p.Uid)
-}
-
-func (s *GateServer) AutoUpDataPlayer() {
-	ticker := time.NewTicker(time.Second * 120)
-	for {
-		<-ticker.C
-		/*
-			s.playerMap.Range(func(key, value interface{}) bool {
-				player := value.(*PlayerGame)
-				lastActiveTime := player.LastActiveTime
-				timestamp := time.Now().Unix()
-				if timestamp-lastActiveTime >= 60 {
-					logger.Debug("玩家超时离线")
-					GateToPlayer(player, cmd.PlayerKickOutScNotify, nil)
-					player.Status = spb.PlayerStatus_PlayerStatus_Offline
-					KickPlayer(player)
-				} else {
-					if _, ok := s.Store.GetPlayerStatus(strconv.Itoa(int(player.AccountId))); ok {
-						bin := &spb.PlayerStatusRedisData{
-							Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
-							GameserverId: player.gs.appid,
-							LoginRand:    player.Seed,
-							LoginTime:    0,
-							Uid:          player.Uid,
-						}
-						status, err := pb.Marshal(bin)
-						if err != nil {
-							logger.Error("pb marshal error: %v\n", err)
-							return true
-						}
-						s.Store.SetPlayerStatus(strconv.Itoa(int(player.AccountId)), status)
-					}
-				}
-				return true
-			})
-		*/
-	}
 }
 
 func (s *GateServer) kcpNetInfo() {

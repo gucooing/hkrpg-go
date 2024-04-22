@@ -151,33 +151,3 @@ func (gs *gameServer) playerLogin(p *PlayerGame) {
 	// 通知game玩家登录
 	gs.GateGamePlayerLoginReq(p.Uid, p.AccountId, p.Uuid)
 }
-
-func (p *PlayerGame) loginTicker() {
-	select {
-	case <-p.ticker.C:
-		logger.Info("玩家登录超时")
-		p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-		KickPlayer(p)
-		p.ticker.Stop()
-		return
-	case <-p.stop:
-		p.ticker.Stop()
-		return
-	}
-}
-
-func (p *PlayerGame) isChannelClosed() bool {
-	// 不适用于有缓存通道
-	select {
-	case <-p.stop:
-		return true
-	default:
-	}
-
-	return false
-}
-
-// 玩家主动离线处理
-func (p *PlayerGame) playerOffline() {
-	p.Status = spb.PlayerStatus_PlayerStatus_Offline // 标记玩家状态为离线
-}

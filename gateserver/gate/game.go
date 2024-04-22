@@ -16,11 +16,11 @@ import (
 
 type gameServer struct {
 	gate          *GateServer
-	appid         uint32            // appid
-	playerMap     map[uint32]uint64 // 玩家列表
-	playerMapLock sync.Mutex        // 玩家列表互斥锁
-	conn          net.Conn          // gs tcp通道
-	playerNum     int64             // 所连接的gs玩家数
+	appid         uint32                // appid
+	playerMap     map[int64]*PlayerGame // 玩家列表
+	playerMapLock sync.Mutex            // 玩家列表互斥锁
+	conn          net.Conn              // gs tcp通道
+	playerNum     int64                 // 所连接的gs玩家数
 
 	gsChan chan struct{} // gs通道
 	ticker *time.Ticker  // 定时器
@@ -38,7 +38,6 @@ func (s *GateServer) sendGs(msg *Msg) {
 	if gs == nil {
 		return
 	}
-
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = msg.cmdId
 	rspMsg.PayloadMessage = msg.playerMsg
@@ -87,7 +86,9 @@ func (s *GateServer) addGsList(gs *gameServer) {
 
 func (s *GateServer) delGsList(appid uint32) {
 	s.gsListLock.Lock()
-	delete(s.gsList, appid)
+	if s.gsList[appid] != nil {
+		delete(s.gsList, appid)
+	}
 	s.gsListLock.Unlock()
 }
 
@@ -100,7 +101,7 @@ func (s *GateServer) newGs(addr string, appid uint32) {
 	gs := &gameServer{
 		gate:      s,
 		appid:     appid,
-		playerMap: make(map[uint32]uint64),
+		playerMap: make(map[int64]*PlayerGame),
 		conn:      gameConn,
 		gsChan:    make(chan struct{}),
 	}
@@ -120,6 +121,7 @@ func (gs *gameServer) recvGame() {
 		recvLen, err := gs.conn.Read(nodeMsg)
 		if err != nil {
 			logger.Debug("[GS:%v]game->gate error: %s", gs.appid, err.Error())
+			gs.gameKill()
 			return
 		}
 		bin = nodeMsg[:recvLen]
@@ -277,4 +279,15 @@ func (p *PlayerGame) closeStop() {
 	if !p.isChannelClosed() {
 		close(p.stop)
 	}
+}
+
+// gameserver离线时
+func (gs *gameServer) gameKill() {
+	plays := gs.GetAllPlayer()
+	for _, play := range plays {
+		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
+		play.KcpConn.Close()
+	}
+	gs.gate.delGsList(gs.appid)
+	logger.Info("[APPID:%v]game server离线", gs.appid)
 }

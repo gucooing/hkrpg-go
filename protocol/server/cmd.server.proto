@@ -133,3 +133,9 @@ message GameToGatePlayerLogoutNotify{// game通知gate玩家该离线了
   uint32 uid = 1;
   int64  uuid = 2;
 }
+
+message GateToGamePlayerLogoutNotify {// gate通知game玩家该离线了
+  uint32 uid = 1;
+  int64  uuid = 2;
+  uint32 account_id = 3; // sdk id
+}

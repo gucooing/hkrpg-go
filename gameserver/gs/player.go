@@ -7,7 +7,6 @@ import (
 	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -20,18 +19,14 @@ import (
 4.可保存数据情况下删除redis状态
 5.删除玩家内存
 */
-func (ge *gateServer) killPlayer(p *player.GamePlayer) {
-	ge.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
-		Uid:  p.Uid,
-		Uuid: p.Uuid,
-	})
-	ge.upDataPlayer(p)
+func (s *GameServer) killPlayer(p *player.GamePlayer) {
+	s.upDataPlayer(p)
 	db.DBASE.DelPlayerStatus(strconv.Itoa(int(p.AccountId)))
-	ge.game.DelPlayerMap(p.Uuid)
-	logger.Info("[UID:%v][UUID:%v]玩家重复登录下线成功", p.Uid, p.Uuid)
+	s.DelPlayerMap(p.Uuid)
+	logger.Info("[UID:%v][UUID:%v]玩家下线成功", p.Uid, p.Uuid)
 }
 
-func (ge *gateServer) upDataPlayer(p *player.GamePlayer) {
+func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 	redisDb, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(p.AccountId)))
 	if !ok {
 		return
@@ -81,14 +76,38 @@ func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 		}
 	}
 	syncGD.Unlock()
+	go func() {
+		if ge := s.getGeByAppid(g.GateAppId); ge != nil {
+			ge.AddPlayerMap(uuid, g)
+		}
+	}()
+}
+
+func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
+	ge.playerMapLock.Lock()
+	ge.playerMap[uuid] = g
+	ge.playerMapLock.Unlock()
 }
 
 func (s *GameServer) DelPlayerMap(uuid int64) {
 	syncGD.Lock()
 	if s.PlayerMap[uuid] != nil {
+		func() {
+			if ge := s.getGeByAppid(s.PlayerMap[uuid].GateAppId); ge != nil {
+				ge.DelPlayerMap(uuid)
+			}
+		}()
 		delete(s.PlayerMap, uuid)
 	}
 	syncGD.Unlock()
+}
+
+func (ge *gateServer) DelPlayerMap(uuid int64) {
+	ge.playerMapLock.Lock()
+	if ge.playerMap[uuid] != nil {
+		delete(ge.playerMap, uuid)
+	}
+	ge.playerMapLock.Unlock()
 }
 
 func (s *GameServer) GetAllPlayer() map[int64]*player.GamePlayer {
@@ -96,6 +115,16 @@ func (s *GameServer) GetAllPlayer() map[int64]*player.GamePlayer {
 	syncGD.Lock()
 	defer syncGD.Unlock()
 	for _, play := range s.PlayerMap {
+		players[play.Uuid] = play
+	}
+	return players
+}
+
+func (ge *gateServer) GetAllPlayer() map[int64]*player.GamePlayer {
+	players := make(map[int64]*player.GamePlayer)
+	syncGD.Lock()
+	defer syncGD.Unlock()
+	for _, play := range ge.playerMap {
 		players[play.Uuid] = play
 	}
 	return players

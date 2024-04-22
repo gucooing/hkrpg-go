@@ -90,3 +90,11 @@ func (b *KeyBlock) Seed() uint64 {
 func (b *KeyBlock) XorKey() [4096]byte {
 	return b.data
 }
+
+func CreateXorPad(seed uint64, useMagicSeed bool) []byte {
+	keyBlock := NewKeyBlock(seed, useMagicSeed)
+	xorKey := keyBlock.XorKey()
+	key := make([]byte, 4096)
+	copy(key, xorKey[:])
+	return key
+}

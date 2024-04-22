@@ -1374,6 +1374,69 @@ func (x *GameToGatePlayerLogoutNotify) GetUuid() int64 {
 	return 0
 }
 
+type GateToGamePlayerLogoutNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Uid       uint32 `protobuf:"varint,1,opt,name=uid,proto3" json:"uid,omitempty"`
+	Uuid      int64  `protobuf:"varint,2,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	AccountId uint32 `protobuf:"varint,3,opt,name=account_id,json=accountId,proto3" json:"account_id,omitempty"` // sdk id
+}
+
+func (x *GateToGamePlayerLogoutNotify) Reset() {
+	*x = GateToGamePlayerLogoutNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GateToGamePlayerLogoutNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GateToGamePlayerLogoutNotify) ProtoMessage() {}
+
+func (x *GateToGamePlayerLogoutNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GateToGamePlayerLogoutNotify.ProtoReflect.Descriptor instead.
+func (*GateToGamePlayerLogoutNotify) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *GateToGamePlayerLogoutNotify) GetUid() uint32 {
+	if x != nil {
+		return x.Uid
+	}
+	return 0
+}
+
+func (x *GateToGamePlayerLogoutNotify) GetUuid() int64 {
+	if x != nil {
+		return x.Uuid
+	}
+	return 0
+}
+
+func (x *GateToGamePlayerLogoutNotify) GetAccountId() uint32 {
+	if x != nil {
+		return x.AccountId
+	}
+	return 0
+}
+
 var File_cmd_server_proto protoreflect.FileDescriptor
 
 var file_cmd_server_proto_rawDesc = []byte{
@@ -1542,9 +1605,15 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x54, 0x6f, 0x47, 0x61, 0x74, 0x65, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4c, 0x6f, 0x67, 0x6f,
 	0x75, 0x74, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x75, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x75, 0x75,
-	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x42, 0x0a,
-	0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x22, 0x63,
+	0x0a, 0x1c, 0x47, 0x61, 0x74, 0x65, 0x54, 0x6f, 0x47, 0x61, 0x6d, 0x65, 0x50, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x4c, 0x6f, 0x67, 0x6f, 0x75, 0x74, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x10,
+	0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x75, 0x69, 0x64,
+	0x12, 0x12, 0x0a, 0x04, 0x75, 0x75, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04,
+	0x75, 0x75, 0x69, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x5f,
+	0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x49, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1559,7 +1628,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 23)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),         // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),         // 1: proto.ServiceConnectionRsp
@@ -1583,25 +1652,26 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*GetToGamePlayerLogoutReq)(nil),     // 19: proto.GetToGamePlayerLogoutReq
 	(*GetToGamePlayerLogoutRsp)(nil),     // 20: proto.GetToGamePlayerLogoutRsp
 	(*GameToGatePlayerLogoutNotify)(nil), // 21: proto.GameToGatePlayerLogoutNotify
-	(ServerType)(0),                      // 22: proto.ServerType
-	(Retcode)(0),                         // 23: proto.Retcode
+	(*GateToGamePlayerLogoutNotify)(nil), // 22: proto.GateToGamePlayerLogoutNotify
+	(ServerType)(0),                      // 23: proto.ServerType
+	(Retcode)(0),                         // 24: proto.Retcode
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	22, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	22, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	22, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
+	23, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	23, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	23, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
 	6,  // 3: proto.GetAllServiceGateRsp.gate_service_list:type_name -> proto.ServiceAll
-	22, // 4: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
-	22, // 5: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
-	22, // 6: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
+	23, // 4: proto.GetAllServiceReq.service_type:type_name -> proto.ServerType
+	23, // 5: proto.GetAllServiceReq.get_service_type:type_name -> proto.ServerType
+	23, // 6: proto.GetAllServiceRsp.service_type:type_name -> proto.ServerType
 	6,  // 7: proto.GetAllServiceRsp.service_list:type_name -> proto.ServiceAll
-	22, // 8: proto.ServiceAll.service_type:type_name -> proto.ServerType
-	22, // 9: proto.GetAllServiceGameReq.service_type:type_name -> proto.ServerType
+	23, // 8: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	23, // 9: proto.GetAllServiceGameReq.service_type:type_name -> proto.ServerType
 	6,  // 10: proto.GetAllServiceGameRsp.game_service_list:type_name -> proto.ServiceAll
-	22, // 11: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
-	23, // 12: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
-	23, // 13: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
-	23, // 14: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
+	23, // 11: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
+	24, // 12: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
+	24, // 13: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
+	24, // 14: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
 	15, // [15:15] is the sub-list for method output_type
 	15, // [15:15] is the sub-list for method input_type
 	15, // [15:15] is the sub-list for extension type_name
@@ -1880,6 +1950,18 @@ func file_cmd_server_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_server_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GateToGamePlayerLogoutNotify); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1887,7 +1969,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   23,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -1295,7 +1295,7 @@ const (
 	GetToGamePlayerLogoutReq = 10010
 	GetToGamePlayerLogoutRsp = 10110
 
-	// PlayerLogoutNotify           = 11000
+	GateToGamePlayerLogoutNotify = 11000
 	// SyncPlayerOnlineDataNotify   = 11001
 	// PlayerLoginNotify            = 11002
 	// NodeToGsPlayerLogoutNotify   = 11003
@@ -1596,7 +1596,7 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GetAllServiceRsp, func() any { return new(spb.GetAllServiceRsp) })
 	c.regMsg(GetAllServiceGameReq, func() any { return new(spb.GetAllServiceGameReq) })
 	c.regMsg(GetAllServiceGameRsp, func() any { return new(spb.GetAllServiceGameRsp) })
-	// c.regMsg(PlayerLogoutNotify, func() any { return new(spb.PlayerLogoutNotify) })
+	c.regMsg(GateToGamePlayerLogoutNotify, func() any { return new(spb.GateToGamePlayerLogoutNotify) })
 	// c.regMsg(SyncPlayerOnlineDataNotify, func() any { return new(spb.SyncPlayerOnlineDataNotify) })
 	c.regMsg(GateGamePingReq, func() any { return new(spb.GateGamePingReq) })
 	c.regMsg(GateGamePingRsp, func() any { return new(spb.GateGamePingRsp) })
