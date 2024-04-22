@@ -20,7 +20,7 @@ func (s *Store) DistLockPlayerStatus(accountId string, value []byte) bool {
 	for i := 0; i < MaxLockRetryTimes; i++ {
 		var err error = nil
 		key := "player_status_lock:" + accountId
-		result, err = s.RedisDb.SetNX(context.TODO(),
+		result, err = s.StatusRedis.SetNX(context.TODO(),
 			key,
 			value,
 			time.Millisecond*time.Duration(MaxLockAliveTime)).Result()
@@ -39,7 +39,7 @@ func (s *Store) DistLockPlayerStatus(accountId string, value []byte) bool {
 // 获取玩家状态
 func (s *Store) GetPlayerStatus(accountId string) ([]byte, bool) {
 	key := "player_status_lock:" + accountId
-	bin, err := s.RedisDb.Get(ctx, key).Bytes()
+	bin, err := s.StatusRedis.Get(ctx, key).Bytes()
 	if err == nil {
 		return bin, true
 	} else if err == redis.Nil {
@@ -54,7 +54,7 @@ func (s *Store) DistUnlockPlayerStatus(accountId string) {
 	var result int64 = 0
 	var err error = nil
 	key := "player_status_lock:" + accountId
-	result, err = s.RedisDb.Del(context.TODO(), key).Result()
+	result, err = s.StatusRedis.Del(context.TODO(), key).Result()
 	if err != nil {
 		logger.Error("redis lock del error: %v", err)
 		return

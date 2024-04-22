@@ -33,7 +33,12 @@ type appIdData struct {
 }
 
 func GetAppIdStr(appId uint32) string {
-	data := getAppIdData(appId)
+	data := appIdData{
+		region:  (appId >> 22) & 0x3FF,
+		appType: (appId >> 18) & 0xF,
+		host:    (appId >> 4) & 0x3FFF,
+		index:   appId & 0xF,
+	}
 	return fmt.Sprintf("%d.%d.%d.%d", data.region, data.appType, data.host, data.index)
 }
 
@@ -55,15 +60,6 @@ func GetAppIdUint32(appid string) uint32 {
 	appID |= (data.host & 0x3FFF) << 4
 	appID |= data.index & 0xF
 	return appID
-}
-
-func getAppIdData(appId uint32) appIdData {
-	return appIdData{
-		region:  (appId >> 22) & 0x3FF,
-		appType: (appId >> 18) & 0xF,
-		host:    (appId >> 4) & 0x3FFF,
-		index:   appId & 0xF,
-	}
 }
 
 func s2u32(msg string) uint32 {

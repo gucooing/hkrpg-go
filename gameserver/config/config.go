@@ -8,11 +8,11 @@ import (
 
 type Config struct {
 	LogLevel           string               `json:"LogLevel"`
-	MysqlDsn           string               `json:"MysqlDsn"`
 	GameDataConfigPath string               `json:"GameDataConfigPath"`
 	OuterIp            string               `json:"OuterIp"`
 	AppList            map[string]AppList   `json:"AppList"`
 	NetConf            map[string]string    `json:"NetConf"`
+	MysqlConf          map[string]MysqlConf `json:"MysqlConf"`
 	RedisConf          map[string]RedisConf `json:"RedisConf"`
 }
 type AppList struct {
@@ -20,6 +20,9 @@ type AppList struct {
 }
 type App struct {
 	Port string `json:"port"`
+}
+type MysqlConf struct {
+	Dsn string `json:"dsn"`
 }
 type RedisConf struct {
 	Addr     string `json:"addr"`
@@ -61,7 +64,6 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel:           "Info",
-	MysqlDsn:           "root:password@tcp(127.0.0.1:3306)/hkrpg-go?charset=utf8mb4&parseTime=True&loc=Local",
 	GameDataConfigPath: "resources",
 	OuterIp:            "127.0.0.1",
 	AppList: map[string]AppList{
@@ -104,6 +106,11 @@ var DefaultConfig = &Config{
 	NetConf: map[string]string{
 		"Node": "127.0.0.1:20081",
 		"Game": "127.0.0.1:20081",
+	},
+	MysqlConf: map[string]MysqlConf{
+		"player_data": {
+			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go?charset=utf8mb4&parseTime=True&loc=Local",
+		},
 	},
 	RedisConf: map[string]RedisConf{
 		"player_login": {

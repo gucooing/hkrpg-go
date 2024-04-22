@@ -7,9 +7,9 @@ import (
 )
 
 type Store struct {
-	config  *config.Config
-	MysqlDb *gorm.DB
-	RedisDb *redis.Client
+	config       *config.Config
+	AccountMysql *gorm.DB
+	LoginRedis   *redis.Client
 }
 
 type Account struct {
