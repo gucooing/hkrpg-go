@@ -1,6 +1,7 @@
 package gs
 
 import (
+	"context"
 	"net"
 	"strconv"
 	"sync"
@@ -24,7 +25,8 @@ type gateServer struct {
 	playerMapLock sync.Mutex                   // 玩家列表互斥锁
 	conn          net.Conn                     // gate tcp通道
 
-	msgChan chan player.Msg // 消息通道
+	msgChan          chan player.Msg // 消息通道
+	recvPlayerCancel context.CancelFunc
 }
 
 func (s *GameServer) addGeList(ge *gateServer) {
@@ -59,11 +61,12 @@ func (s *GameServer) recvGate(conn net.Conn, appid uint32) {
 	}
 	ge.seedGate(cmd.GateLoginGameRsp, rsp)
 	ge.msgChan = make(chan player.Msg, 10)
-	go ge.recvPlayer()
+	recvPlayerCtx, recvPlayerCancel := context.WithCancel(context.Background())
+	ge.recvPlayerCancel = recvPlayerCancel
+	go ge.recvPlayer(recvPlayerCtx)
 	logger.Info("gate:[%v]在game注册成功", appid)
 
 	nodeMsg := make([]byte, player.PacketMaxLen)
-
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
@@ -93,10 +96,15 @@ func (s *GameServer) recvGate(conn net.Conn, appid uint32) {
 }
 
 // 接收player传来的消息
-func (ge *gateServer) recvPlayer() {
+func (ge *gateServer) recvPlayer(recvPlayerCtx context.Context) {
 	for {
-		bin := <-ge.msgChan
-		ge.playerToGame(bin)
+		select {
+		case bin := <-ge.msgChan:
+			ge.playerToGame(bin)
+		case <-recvPlayerCtx.Done():
+			close(ge.msgChan)
+			return
+		}
 	}
 }
 
@@ -237,5 +245,6 @@ func (ge *gateServer) killGate() {
 		ge.game.killPlayer(play)
 	}
 	ge.game.delGeList(ge.appid)
+	ge.recvPlayerCancel()
 	logger.Info("[APPID:%v]gate server离线", ge.appid)
 }

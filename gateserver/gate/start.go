@@ -65,7 +65,6 @@ type TcpNodeMsg struct {
 
 func NewGate(cfg *config.Config, appid string) *GateServer {
 	s := new(GateServer)
-	// TODO
 	GATESERVER = s
 
 	s.Ec2b = alg.GetEc2b()

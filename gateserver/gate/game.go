@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"context"
 	"net"
 	"strconv"
 	"sync"
@@ -22,9 +23,8 @@ type gameServer struct {
 	conn          net.Conn              // gs tcp通道
 	playerNum     int64                 // 所连接的gs玩家数
 
-	gsChan chan struct{} // gs通道
-	ticker *time.Ticker  // 定时器
-	msg    chan Msg      // 玩家上发消息
+	tickerCancel context.CancelFunc
+	ticker       *time.Ticker // 定时器
 }
 
 type Msg struct {
@@ -103,7 +103,6 @@ func (s *GateServer) newGs(addr string, appid uint32) {
 		appid:     appid,
 		playerMap: make(map[int64]*PlayerGame),
 		conn:      gameConn,
-		gsChan:    make(chan struct{}),
 	}
 	s.addGsList(gs)
 	go gs.recvGame()
@@ -175,22 +174,26 @@ func (gs *gameServer) sendGame(cmdId uint16, playerMsg pb.Message) {
 func (gs *gameServer) GateLoginGameRsp(playerMsg pb.Message) {
 	rsp := playerMsg.(*spb.GateLoginGameRsp)
 	if rsp.Retcode != 0 {
-		// TODO 销毁这个gs连接
+		gs.conn.Close()
 		return
 	}
 	// 注册成功，将gs放入可连接列表
 	gs.gate.addGsList(gs)
 	gs.ticker = time.NewTicker(5 * time.Second)
+	tickerCtx, tickerCancel := context.WithCancel(context.Background())
+	gs.tickerCancel = tickerCancel
 	logger.Info("gate在game:[%v]注册成功", gs.appid)
-	go gs.gsMsgTo()
+	go gs.gsMsgTo(tickerCtx)
 }
 
 // 同一个gs的玩家共用一个协程
-func (gs *gameServer) gsMsgTo() {
+func (gs *gameServer) gsMsgTo(tickerCtx context.Context) {
 	for {
 		select {
 		case <-gs.ticker.C:
 			gs.GateGamePingReq() // ping包
+		case <-tickerCtx.Done():
+			return
 		}
 	}
 }
@@ -288,6 +291,8 @@ func (gs *gameServer) gameKill() {
 		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
 		play.KcpConn.Close()
 	}
+	gs.ticker.Stop()
+	gs.tickerCancel()
 	gs.gate.delGsList(gs.appid)
 	logger.Info("[APPID:%v]game server离线", gs.appid)
 }
