@@ -9,9 +9,9 @@ import (
 )
 
 const (
-	MaxLockAliveTime  = 10000 // 单个锁的最大存活时间 毫秒
-	LockRetryWaitTime = 50    // 同步加锁重试间隔时间 毫秒
-	MaxLockRetryTimes = 2     // 同步加锁最大重试次数
+	MaxLockAliveTime  = 0  // 单个锁的最大存活时间 毫秒
+	LockRetryWaitTime = 50 // 同步加锁重试间隔时间 毫秒
+	MaxLockRetryTimes = 2  // 同步加锁最大重试次数
 )
 
 // 标记玩家状态
