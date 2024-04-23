@@ -5,7 +5,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
-func (g *GamePlayer) GetMailCsReq() {
+func (g *GamePlayer) GetMailCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetMailScRsp)
 	rsp.TotalNum = 1
 	rsp.IsEnd = true

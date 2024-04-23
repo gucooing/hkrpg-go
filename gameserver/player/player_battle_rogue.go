@@ -149,7 +149,7 @@ func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 	g.Send(cmd.SyncRogueCommonActionResultScNotify, notify)
 }
 
-func (g *GamePlayer) GetRogueScoreRewardInfoCsReq() {
+func (g *GamePlayer) GetRogueScoreRewardInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetRogueScoreRewardInfoScRsp)
 	rsp.ScoreRewardInfo = &proto.RogueScoreRewardInfo{
 		// TODO 注意时间
@@ -164,7 +164,7 @@ func (g *GamePlayer) GetRogueScoreRewardInfoCsReq() {
 	g.Send(cmd.GetRogueScoreRewardInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueTalentInfoCsReq() {
+func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueTalentInfoScRsp{
 		TalentInfo: &proto.RogueTalentInfo{
 			RogueTalent: make([]*proto.RogueTalent, 0),
@@ -182,7 +182,7 @@ func (g *GamePlayer) GetRogueTalentInfoCsReq() {
 	g.Send(cmd.GetRogueTalentInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueHandbookDataScRsp() {
+func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueHandbookDataScRsp{
 		HandbookInfo: &proto.RogueHandbookData{
 			MiracleList: make([]*proto.RogueHandbookMiracle, 0),

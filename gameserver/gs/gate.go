@@ -21,9 +21,9 @@ var syncGD sync.Mutex
 type gateServer struct {
 	game          *GameServer
 	appid         uint32
-	playerMap     map[int64]*player.GamePlayer // 玩家列表
-	playerMapLock sync.Mutex                   // 玩家列表互斥锁
-	conn          net.Conn                     // gate tcp通道
+	playerMap     map[int64]*GamePlayer // 玩家列表
+	playerMapLock sync.Mutex            // 玩家列表互斥锁
+	conn          net.Conn              // gate tcp通道
 
 	msgChan          chan player.Msg // 消息通道
 	recvPlayerCancel context.CancelFunc
@@ -52,7 +52,7 @@ func (s *GameServer) recvGate(conn net.Conn, appid uint32) {
 	ge := &gateServer{
 		game:      s,
 		appid:     appid,
-		playerMap: make(map[int64]*player.GamePlayer),
+		playerMap: make(map[int64]*GamePlayer),
 		conn:      conn,
 	}
 	s.addGeList(ge)
@@ -74,6 +74,7 @@ func (s *GameServer) recvGate(conn net.Conn, appid uint32) {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			logger.Error("the motherfucker gate: %v", appid)
+			ge.conn.Close()
 		}
 	}()
 
@@ -179,7 +180,7 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	g := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
 	// 拉取账户数据
 	g.GetPlayerDate(req.Uid)
-	ge.game.AddPlayerMap(req.Uuid, g)
+	ge.game.AddPlayerMap(req.Uuid, g, ge)
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, req.Uuid)
 	ge.game.AddPlayerStatus(g)
 	ge.GateGamePlayerLoginRsp(rsp)
@@ -196,11 +197,11 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))
 	} else {
 		ge.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
-			Uid:  play.Uid,
-			Uuid: play.Uuid,
+			Uid:  play.p.Uid,
+			Uuid: play.p.Uuid,
 		})
 		// 下线玩家
-		ge.game.killPlayer(play)
+		ge.game.killPlayer(play.p)
 	}
 
 	rsp := &spb.GetToGamePlayerLogoutRsp{
@@ -219,7 +220,7 @@ func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
 		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(notify.AccountId)))
 	} else {
 		// 下线玩家
-		ge.game.killPlayer(play)
+		ge.game.killPlayer(play.p)
 	}
 }
 
@@ -241,7 +242,7 @@ func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 		msgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(rsp.Msg, &msgList, nil)
 		for _, msg := range msgList {
-			paler.RegisterMessage(msg.CmdId, msg.ProtoData)
+			RegisterMessage(msg.CmdId, msg.ProtoData, paler)
 		}
 	}
 }
@@ -254,7 +255,7 @@ func (ge *gateServer) GameToGateMsgNotify(payloadMsg pb.Message) {
 func (ge *gateServer) killGate() {
 	plays := ge.GetAllPlayer()
 	for _, play := range plays {
-		ge.game.killPlayer(play)
+		ge.game.killPlayer(play.p)
 	}
 	ge.game.delGeList(ge.appid)
 	ge.recvPlayerCancel()

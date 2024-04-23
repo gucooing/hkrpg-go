@@ -14,7 +14,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
-	pb "google.golang.org/protobuf/proto"
 )
 
 const (
@@ -31,16 +30,11 @@ type GameServer struct {
 	AppId        uint32
 	GSListener   net.Listener
 	node         *NodeService
-	PlayerMap    map[int64]*player.GamePlayer
+	PlayerMap    map[int64]*GamePlayer
 	gateList     map[uint32]*gateServer // gate列表
 	gateListLock sync.Mutex             // gate列表同步锁
 	Ticker       *time.Ticker
 	Stop         chan struct{}
-}
-
-type TcpNodeMsg struct {
-	cmdId      uint16
-	serviceMsg pb.Message
 }
 
 func NewGameServer(cfg *config.Config, appid string) *GameServer {
@@ -51,7 +45,7 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
 	s.AppId = alg.GetAppIdUint32(appid)
-	s.PlayerMap = make(map[int64]*player.GamePlayer)
+	s.PlayerMap = make(map[int64]*GamePlayer)
 	s.gateList = make(map[uint32]*gateServer)
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	logger.Info("GameServer AppId:%s", appid)
@@ -132,14 +126,14 @@ func (s *GameServer) AutoUpDataPlayer() {
 	for {
 		<-ticker.C
 		for _, g := range s.PlayerMap {
-			if g.Uid == 0 {
+			if g.p.Uid == 0 {
 				return
 			}
-			lastActiveTime := g.LastActiveTime
+			lastActiveTime := g.p.LastActiveTime
 			timestamp := time.Now().Unix()
 			if timestamp-lastActiveTime >= 120 {
-				logger.Info("[UID:%v]玩家超时离线", g.Uid)
-				KickPlayer(g)
+				logger.Info("[UID:%v]玩家超时离线", g.p.Uid)
+				KickPlayer(g.p)
 			}
 		}
 	}
@@ -147,7 +141,7 @@ func (s *GameServer) AutoUpDataPlayer() {
 
 func Close() error {
 	for _, gamePlayer := range GAMESERVER.PlayerMap {
-		KickPlayer(gamePlayer)
+		KickPlayer(gamePlayer.p)
 	}
 	return nil
 }

@@ -34,10 +34,7 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	trialActivityState.NPCMonsterID = avatarDemo.NpcMonsterIDList1[0]
 	trialActivityState.GroupID = avatarDemo.MazeGroupID1
 
-	lineup.AvatarIdList = []uint32{0, 0, 0, 0}
-	for id, avatarId := range avatarDemo.TrialAvatarList {
-		lineup.AvatarIdList[id] = avatarId
-	}
+	lineup.AvatarIdList = avatarDemo.TrialAvatarList
 
 	g.Send(cmd.ExtraLineupDestroyNotify, &proto.ExtraLineupDestroyNotify{ExtraLineupType: proto.ExtraLineupType_LINEUP_STAGE_TRIAL})
 	g.Send(cmd.SyncServerSceneChangeNotify, nil)

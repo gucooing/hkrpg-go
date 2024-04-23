@@ -10,7 +10,7 @@ func (s *GameServer) GmGive(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 || s.PlayerMap[req.Uuid] == nil {
 		return
 	}
-	s.PlayerMap[req.Uuid].GmGive(serviceMsg)
+	s.PlayerMap[req.Uuid].p.GmGive(serviceMsg)
 }
 
 func (s *GameServer) GmWorldLevel(serviceMsg pb.Message) {
@@ -18,7 +18,7 @@ func (s *GameServer) GmWorldLevel(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 || s.PlayerMap[req.Uuid] == nil {
 		return
 	}
-	s.PlayerMap[req.Uuid].GmWorldLevel(serviceMsg)
+	s.PlayerMap[req.Uuid].p.GmWorldLevel(serviceMsg)
 }
 
 func (s *GameServer) DelItem(serviceMsg pb.Message) {
@@ -26,5 +26,5 @@ func (s *GameServer) DelItem(serviceMsg pb.Message) {
 	if req.PlayerUid == 0 || s.PlayerMap[req.Uuid] == nil {
 		return
 	}
-	s.PlayerMap[req.Uuid].DelItem(serviceMsg)
+	s.PlayerMap[req.Uuid].p.DelItem(serviceMsg)
 }

@@ -274,7 +274,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 
 // 忘却之庭战斗退出/结束
 
-func (g *GamePlayer) LeaveChallengeCsReq() {
+func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
 	if g.GetBattleState().ChallengeState.Status == proto.ChallengeStatus_CHALLENGE_DOING {

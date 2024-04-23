@@ -19,6 +19,13 @@ import (
 4.可保存数据情况下删除redis状态
 5.删除玩家内存
 */
+type GamePlayer struct {
+	gate         *gateServer
+	game         *GameServer
+	p            *player.GamePlayer
+	RouteManager *RouteManager
+}
+
 func (s *GameServer) killPlayer(p *player.GamePlayer) {
 	s.upDataPlayer(p)
 	db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
@@ -63,12 +70,18 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 
 /************************************接口*********************************/
 
-func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
+func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer, ge *gateServer) {
 	syncGD.Lock()
-	s.PlayerMap[uuid] = g
+	gamePlayer := &GamePlayer{
+		gate:         ge,
+		game:         s,
+		p:            g,
+		RouteManager: NewRouteManager(g),
+	}
+	s.PlayerMap[uuid] = gamePlayer
 	// 初始化在线数据
-	if s.PlayerMap[g.Uuid].Player == nil {
-		s.PlayerMap[g.Uuid].Player = &player.PlayerData{
+	if s.PlayerMap[g.Uuid].p.Player == nil {
+		s.PlayerMap[g.Uuid].p.Player = &player.PlayerData{
 			Battle: make(map[uint32]*player.Battle),
 			BattleState: &player.BattleState{
 				ChallengeState: &player.ChallengeState{},
@@ -78,15 +91,13 @@ func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 	PLAYERNUM = int64(len(s.PlayerMap))
 	syncGD.Unlock()
 	go func() {
-		if ge := s.getGeByAppid(g.GateAppId); ge != nil {
-			ge.AddPlayerMap(uuid, g)
-		}
+		ge.AddPlayerMap(uuid, gamePlayer)
 	}()
 }
 
-func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
+func (ge *gateServer) AddPlayerMap(uuid int64, playerGame *GamePlayer) {
 	ge.playerMapLock.Lock()
-	ge.playerMap[uuid] = g
+	ge.playerMap[uuid] = playerGame
 	ge.playerMapLock.Unlock()
 }
 
@@ -94,7 +105,7 @@ func (s *GameServer) DelPlayerMap(uuid int64) {
 	syncGD.Lock()
 	if s.PlayerMap[uuid] != nil {
 		func() {
-			if ge := s.getGeByAppid(s.PlayerMap[uuid].GateAppId); ge != nil {
+			if ge := s.getGeByAppid(s.PlayerMap[uuid].p.GateAppId); ge != nil {
 				ge.DelPlayerMap(uuid)
 			}
 		}()
@@ -112,27 +123,27 @@ func (ge *gateServer) DelPlayerMap(uuid int64) {
 	ge.playerMapLock.Unlock()
 }
 
-func (s *GameServer) GetAllPlayer() map[int64]*player.GamePlayer {
-	players := make(map[int64]*player.GamePlayer)
+func (s *GameServer) GetAllPlayer() map[int64]*GamePlayer {
+	players := make(map[int64]*GamePlayer)
 	syncGD.Lock()
 	defer syncGD.Unlock()
-	for _, play := range s.PlayerMap {
-		players[play.Uuid] = play
+	for uuid, play := range s.PlayerMap {
+		players[uuid] = play
 	}
 	return players
 }
 
-func (ge *gateServer) GetAllPlayer() map[int64]*player.GamePlayer {
-	players := make(map[int64]*player.GamePlayer)
+func (ge *gateServer) GetAllPlayer() map[int64]*GamePlayer {
+	players := make(map[int64]*GamePlayer)
 	syncGD.Lock()
 	defer syncGD.Unlock()
-	for _, play := range ge.playerMap {
-		players[play.Uuid] = play
+	for uuid, play := range ge.playerMap {
+		players[uuid] = play
 	}
 	return players
 }
 
-func (s *GameServer) GetPlayerByUuid(uuid int64) *player.GamePlayer {
+func (s *GameServer) GetPlayerByUuid(uuid int64) *GamePlayer {
 	syncGD.Lock()
 	defer syncGD.Unlock()
 	return s.PlayerMap[uuid]
