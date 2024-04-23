@@ -4,7 +4,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"strconv"
 	"sync"
 	"time"
 
@@ -26,20 +25,17 @@ var GAMESERVER *GameServer
 var PLAYERNUM int64 // 玩家人数
 
 type GameServer struct {
-	Config     *config.Config
-	Store      *db.Store
-	Port       string
-	AppId      uint32
-	GSListener net.Listener
-	nodeConn   net.Conn
-	PlayerMap  map[int64]*player.GamePlayer
-
+	Config       *config.Config
+	Store        *db.Store
+	Port         string
+	AppId        uint32
+	GSListener   net.Listener
+	node         *NodeService
+	PlayerMap    map[int64]*player.GamePlayer
 	gateList     map[uint32]*gateServer // gate列表
 	gateListLock sync.Mutex             // gate列表同步锁
-
-	RecvCh chan *TcpNodeMsg
-	Ticker *time.Ticker
-	Stop   chan struct{}
+	Ticker       *time.Ticker
+	Stop         chan struct{}
 }
 
 type TcpNodeMsg struct {
@@ -55,8 +51,11 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
 	s.AppId = alg.GetAppIdUint32(appid)
+	s.PlayerMap = make(map[int64]*player.GamePlayer)
+	s.gateList = make(map[uint32]*gateServer)
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	logger.Info("GameServer AppId:%s", appid)
+	// 开启tcp服务
 	port := s.Config.AppList[appid].App["port_gt"].Port
 	if port == "" {
 		log.Println("GameServer Port error")
@@ -70,27 +69,11 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 		os.Exit(0)
 	}
 	s.GSListener = gSListener
-
-	s.RecvCh = make(chan *TcpNodeMsg)
+	// 开启game定时器
 	s.Ticker = time.NewTicker(Ticker * time.Second)
 	s.Stop = make(chan struct{})
-	s.ServiceStart()
-
-	// 连接node
-	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
-	if err != nil {
-		log.Println("nodeserver error")
-		os.Exit(0)
-	}
-	s.nodeConn = tcpConn
-	s.PlayerMap = make(map[int64]*player.GamePlayer)
-	s.gateList = make(map[uint32]*gateServer)
-
-	go s.recvNode()
+	go s.gameTicker()
 	go s.AutoUpDataPlayer()
-	// 向node注册
-	s.ServiceConnectionReq()
-
 	return s
 }
 
@@ -110,6 +93,15 @@ func (s *GameServer) StartGameServer() error {
 }
 
 func (s *GameServer) recvNil(conn net.Conn) {
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			return
+		}
+	}()
 	nodeMsg := make([]byte, player.PacketMaxLen)
 	var bin []byte = nil
 	recvLen, err := conn.Read(nodeMsg)
@@ -160,53 +152,22 @@ func Close() error {
 	return nil
 }
 
-func KickPlayer(g *player.GamePlayer) {
-	if err := UpDataPlayer(g); err != nil {
-		logger.Error("[UID:%v]保存数据失败", g.Uid)
+func (s *GameServer) gameTicker() {
+	for {
+		select {
+		case <-s.Ticker.C:
+			s.GlobalRotationEvent()
+		case <-s.Stop:
+			s.Ticker.Stop()
+			return
+		}
 	}
-	GAMESERVER.DelPlayerMap(g.Uuid)
-	if g.GateConn != nil {
-		g.GateConn.Close()
-	}
-	logger.Info("[UID:%v]玩家离线game", g.Uid)
 }
 
-func UpDataPlayer(g *player.GamePlayer) error {
-	var err error
-	if g.PlayerPb == nil {
-		return nil
+func (s *GameServer) GlobalRotationEvent() {
+	// 检查node是否存在
+	if s.node == nil {
+		logger.Info("尝试连接node")
+		s.newNode()
 	}
-	if g.Uid == 0 {
-		return nil
-	}
-	if bin, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
-		return nil
-	} else {
-		statu := new(spb.PlayerStatusRedisData)
-		err := pb.Unmarshal(bin, statu)
-		if err != nil {
-			logger.Error("PlayerStatusRedisData Unmarshal error")
-			return err
-		}
-		if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != g.Uuid {
-			// 脏数据
-			return nil
-		}
-	}
-	dbDate := new(db.PlayerData)
-	dbDate.Uid = g.Uid
-	dbDate.Level = g.PlayerPb.Level
-	dbDate.Exp = g.PlayerPb.Exp
-	dbDate.Nickname = g.PlayerPb.Nickname
-	dbDate.BinData, err = pb.Marshal(g.PlayerPb)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return err
-	}
-
-	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
-		logger.Error("Update Player error")
-		return err
-	}
-	return nil
 }

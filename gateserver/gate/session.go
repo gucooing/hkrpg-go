@@ -25,52 +25,6 @@ type PlayerGame struct {
 	stop           chan struct{}
 }
 
-func (s *GateServer) recvHandle(p *PlayerGame) {
-	payload := make([]byte, PacketMaxLen)
-
-	// panic捕获
-	defer func() {
-		if err := recover(); err != nil {
-			logger.Error("!!! GATE MAIN LOOP PANIC !!!")
-			logger.Error("error: %v", err)
-			logger.Error("stack: %v", logger.Stack())
-			logger.Error("the motherfucker player uid: %v", p.Uid)
-			p.PlayerLogoutCsReq()
-		}
-	}()
-
-	for {
-		var bin []byte = nil
-		recvLen, err := p.KcpConn.Read(payload)
-		if err != nil {
-			CLIENT_CONN_NUM--
-			logger.Debug("exit recv loop, conn read err: %v", err)
-			return
-		}
-		bin = payload[:recvLen]
-		kcpMsgList := make([]*alg.PackMsg, 0)
-		alg.DecodeBinToPayload(bin, &kcpMsgList, p.XorKey)
-		for _, msg := range kcpMsgList {
-			// playerMsg := alg.DecodePayloadToProto(msg)
-			switch p.Status {
-			case spb.PlayerStatus_PlayerStatus_PreLogin:
-				if msg.CmdId == cmd.PlayerGetTokenCsReq {
-					p.Status = spb.PlayerStatus_PlayerStatus_LoggingIn
-					s.PlayerGetTokenCsReq(p, msg.ProtoData)
-				} else {
-					return
-				}
-			case spb.PlayerStatus_PlayerStatus_LoggingIn:
-				continue
-			case spb.PlayerStatus_PlayerStatus_PostLogin:
-				p.PlayerRegisterMessage(msg.CmdId, msg)
-			default:
-				return
-			}
-		}
-	}
-}
-
 func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	switch cmdId {
 	case cmd.PlayerHeartBeatCsReq:

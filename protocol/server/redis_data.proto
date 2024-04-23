@@ -47,3 +47,18 @@ message PlayerStatusRedisData { // 玩家状态db
   uint32 uid = 5; // uid
   int64 uuid = 6; // 临时uuid
 }
+
+message RedisMessageData{
+  uint32 last_index = 1; // 房间号
+  repeated ReadMessage read_message_list = 2; // 离线消息（已读
+  repeated UnreadMessages unread_messages_list = 3; // 离线消息（未读
+}
+
+message ReadMessage {
+  fixed32 time = 1;
+  uint32 index = 2;
+}
+
+message UnreadMessages {
+
+}

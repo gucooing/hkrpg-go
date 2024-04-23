@@ -438,6 +438,162 @@ func (x *PlayerStatusRedisData) GetUuid() int64 {
 	return 0
 }
 
+type RedisMessageData struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	LastIndex          uint32            `protobuf:"varint,1,opt,name=last_index,json=lastIndex,proto3" json:"last_index,omitempty"`                             // 房间号
+	ReadMessageList    []*ReadMessage    `protobuf:"bytes,2,rep,name=read_message_list,json=readMessageList,proto3" json:"read_message_list,omitempty"`          // 离线消息（已读
+	UnreadMessagesList []*UnreadMessages `protobuf:"bytes,3,rep,name=unread_messages_list,json=unreadMessagesList,proto3" json:"unread_messages_list,omitempty"` // 离线消息（未读
+}
+
+func (x *RedisMessageData) Reset() {
+	*x = RedisMessageData{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_redis_data_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RedisMessageData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RedisMessageData) ProtoMessage() {}
+
+func (x *RedisMessageData) ProtoReflect() protoreflect.Message {
+	mi := &file_redis_data_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RedisMessageData.ProtoReflect.Descriptor instead.
+func (*RedisMessageData) Descriptor() ([]byte, []int) {
+	return file_redis_data_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *RedisMessageData) GetLastIndex() uint32 {
+	if x != nil {
+		return x.LastIndex
+	}
+	return 0
+}
+
+func (x *RedisMessageData) GetReadMessageList() []*ReadMessage {
+	if x != nil {
+		return x.ReadMessageList
+	}
+	return nil
+}
+
+func (x *RedisMessageData) GetUnreadMessagesList() []*UnreadMessages {
+	if x != nil {
+		return x.UnreadMessagesList
+	}
+	return nil
+}
+
+type ReadMessage struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Time  uint32 `protobuf:"fixed32,1,opt,name=time,proto3" json:"time,omitempty"`
+	Index uint32 `protobuf:"varint,2,opt,name=index,proto3" json:"index,omitempty"`
+}
+
+func (x *ReadMessage) Reset() {
+	*x = ReadMessage{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_redis_data_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ReadMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadMessage) ProtoMessage() {}
+
+func (x *ReadMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_redis_data_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadMessage.ProtoReflect.Descriptor instead.
+func (*ReadMessage) Descriptor() ([]byte, []int) {
+	return file_redis_data_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ReadMessage) GetTime() uint32 {
+	if x != nil {
+		return x.Time
+	}
+	return 0
+}
+
+func (x *ReadMessage) GetIndex() uint32 {
+	if x != nil {
+		return x.Index
+	}
+	return 0
+}
+
+type UnreadMessages struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *UnreadMessages) Reset() {
+	*x = UnreadMessages{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_redis_data_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UnreadMessages) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UnreadMessages) ProtoMessage() {}
+
+func (x *UnreadMessages) ProtoReflect() protoreflect.Message {
+	mi := &file_redis_data_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UnreadMessages.ProtoReflect.Descriptor instead.
+func (*UnreadMessages) Descriptor() ([]byte, []int) {
+	return file_redis_data_proto_rawDescGZIP(), []int{6}
+}
+
 var File_redis_data_proto protoreflect.FileDescriptor
 
 var file_redis_data_proto_rawDesc = []byte{
@@ -499,13 +655,29 @@ var file_redis_data_proto_rawDesc = []byte{
 	0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x6c, 0x6f, 0x67, 0x69, 0x6e, 0x54, 0x69, 0x6d, 0x65,
 	0x12, 0x10, 0x0a, 0x03, 0x75, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x75,
 	0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x75, 0x75, 0x69, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x2a, 0x47, 0x0a, 0x10, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72,
-	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x54, 0x79, 0x70, 0x65, 0x12, 0x19, 0x0a, 0x15, 0x50, 0x4c,
-	0x41, 0x59, 0x45, 0x52, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x4f, 0x46, 0x46, 0x4c,
-	0x49, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x18, 0x0a, 0x14, 0x50, 0x4c, 0x41, 0x59, 0x45, 0x52, 0x5f,
-	0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x4f, 0x4e, 0x4c, 0x49, 0x4e, 0x45, 0x10, 0x01, 0x42,
-	0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x52, 0x04, 0x75, 0x75, 0x69, 0x64, 0x22, 0xba, 0x01, 0x0a, 0x10, 0x52, 0x65, 0x64, 0x69, 0x73,
+	0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x44, 0x61, 0x74, 0x61, 0x12, 0x1d, 0x0a, 0x0a, 0x6c,
+	0x61, 0x73, 0x74, 0x5f, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x09, 0x6c, 0x61, 0x73, 0x74, 0x49, 0x6e, 0x64, 0x65, 0x78, 0x12, 0x3e, 0x0a, 0x11, 0x72, 0x65,
+	0x61, 0x64, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18,
+	0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x52, 0x65,
+	0x61, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x52, 0x0f, 0x72, 0x65, 0x61, 0x64, 0x4d,
+	0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x47, 0x0a, 0x14, 0x75, 0x6e,
+	0x72, 0x65, 0x61, 0x64, 0x5f, 0x6d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x5f, 0x6c, 0x69,
+	0x73, 0x74, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x55, 0x6e, 0x72, 0x65, 0x61, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x52,
+	0x12, 0x75, 0x6e, 0x72, 0x65, 0x61, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x4c,
+	0x69, 0x73, 0x74, 0x22, 0x37, 0x0a, 0x0b, 0x52, 0x65, 0x61, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61,
+	0x67, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x07,
+	0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05, 0x69, 0x6e, 0x64, 0x65, 0x78, 0x22, 0x10, 0x0a, 0x0e,
+	0x55, 0x6e, 0x72, 0x65, 0x61, 0x64, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x73, 0x2a, 0x47,
+	0x0a, 0x10, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x54, 0x79,
+	0x70, 0x65, 0x12, 0x19, 0x0a, 0x15, 0x50, 0x4c, 0x41, 0x59, 0x45, 0x52, 0x5f, 0x53, 0x54, 0x41,
+	0x54, 0x55, 0x53, 0x5f, 0x4f, 0x46, 0x46, 0x4c, 0x49, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x18, 0x0a,
+	0x14, 0x50, 0x4c, 0x41, 0x59, 0x45, 0x52, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x4f,
+	0x4e, 0x4c, 0x49, 0x4e, 0x45, 0x10, 0x01, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -521,23 +693,28 @@ func file_redis_data_proto_rawDescGZIP() []byte {
 }
 
 var file_redis_data_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_redis_data_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_redis_data_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_redis_data_proto_goTypes = []interface{}{
 	(PlayerStatusType)(0),         // 0: proto.PlayerStatusType
 	(*MailRedisData)(nil),         // 1: proto.MailRedisData
 	(*MailBin)(nil),               // 2: proto.MailBin
 	(*ItemParamBin)(nil),          // 3: proto.ItemParamBin
 	(*PlayerStatusRedisData)(nil), // 4: proto.PlayerStatusRedisData
+	(*RedisMessageData)(nil),      // 5: proto.RedisMessageData
+	(*ReadMessage)(nil),           // 6: proto.ReadMessage
+	(*UnreadMessages)(nil),        // 7: proto.UnreadMessages
 }
 var file_redis_data_proto_depIdxs = []int32{
 	2, // 0: proto.MailRedisData.mail_bin:type_name -> proto.MailBin
 	3, // 1: proto.MailBin.item_param_list:type_name -> proto.ItemParamBin
 	0, // 2: proto.PlayerStatusRedisData.status:type_name -> proto.PlayerStatusType
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	6, // 3: proto.RedisMessageData.read_message_list:type_name -> proto.ReadMessage
+	7, // 4: proto.RedisMessageData.unread_messages_list:type_name -> proto.UnreadMessages
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_redis_data_proto_init() }
@@ -594,6 +771,42 @@ func file_redis_data_proto_init() {
 				return nil
 			}
 		}
+		file_redis_data_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RedisMessageData); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_redis_data_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ReadMessage); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_redis_data_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*UnreadMessages); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -601,7 +814,7 @@ func file_redis_data_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_redis_data_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -157,3 +157,54 @@ func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
 	}
 	return err
 }
+
+func KickPlayer(g *player.GamePlayer) {
+	if err := UpDataPlayer(g); err != nil {
+		logger.Error("[UID:%v]保存数据失败", g.Uid)
+	}
+	GAMESERVER.DelPlayerMap(g.Uuid)
+	if g.GateConn != nil {
+		g.GateConn.Close()
+	}
+	logger.Info("[UID:%v]玩家离线game", g.Uid)
+}
+
+func UpDataPlayer(g *player.GamePlayer) error {
+	var err error
+	if g.PlayerPb == nil {
+		return nil
+	}
+	if g.Uid == 0 {
+		return nil
+	}
+	if bin, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
+		return nil
+	} else {
+		statu := new(spb.PlayerStatusRedisData)
+		err := pb.Unmarshal(bin, statu)
+		if err != nil {
+			logger.Error("PlayerStatusRedisData Unmarshal error")
+			return err
+		}
+		if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != g.Uuid {
+			// 脏数据
+			return nil
+		}
+	}
+	dbDate := new(db.PlayerData)
+	dbDate.Uid = g.Uid
+	dbDate.Level = g.PlayerPb.Level
+	dbDate.Exp = g.PlayerPb.Exp
+	dbDate.Nickname = g.PlayerPb.Nickname
+	dbDate.BinData, err = pb.Marshal(g.PlayerPb)
+	if err != nil {
+		logger.Error("pb marshal error: %v", err)
+		return err
+	}
+
+	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
+		logger.Error("Update Player error")
+		return err
+	}
+	return nil
+}

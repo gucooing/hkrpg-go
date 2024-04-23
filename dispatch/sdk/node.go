@@ -1,9 +1,9 @@
 package sdk
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"context"
+	"net"
+	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -17,65 +17,97 @@ const (
 	PacketMaxLen = 343 * 1024 // 最大应用层包长度
 )
 
-type TcpNodeMsg struct {
-	cmdId      uint16
-	serviceMsg pb.Message
+type NodeService struct {
+	s            *Server
+	gateList     map[uint32]*Gate
+	gateListLock sync.Mutex // gate列表互斥锁
+	nodeConn     net.Conn
+	tickerCancel context.CancelFunc
+	ticker       *time.Ticker // 定时器
 }
 
-func (s *Server) ServiceStart() {
-	go func() {
-		for {
-			select {
-			case msg := <-s.RecvCh:
-				s.nodeRegisterMessage(msg.cmdId, msg.serviceMsg)
-			case <-s.Ticker.C:
-				s.getAllServiceGateReq()
-			case <-s.Stop:
-				s.Ticker.Stop()
-				fmt.Println("Player goroutine stopped")
-				return
-			}
+// TODO 结构上要考虑熔断设计（综合参考成功率，流量，人数，系统状态
+type Gate struct {
+	Ip   string
+	Port uint32
+	Num  int64
+}
+
+func (s *Server) newNode() {
+	n := new(NodeService)
+	tcpConn, err := net.Dial("tcp", s.Config.NetConf["Node"])
+	if err != nil {
+		logger.Error("nodeserver error:%s", err.Error())
+		return
+	}
+	n.nodeConn = tcpConn
+	n.s = s
+	n.gateList = make(map[uint32]*Gate)
+	n.ticker = time.NewTicker(5 * time.Second)
+	tickerCtx, tickerCancel := context.WithCancel(context.Background())
+	n.tickerCancel = tickerCancel
+	s.node = n
+	go n.recvNode()
+	// 向node注册
+	n.ServiceConnectionReq()
+	// 开启node定时器
+	n.nodeTicler(tickerCtx)
+}
+
+func (n *NodeService) nodeKill() {
+	n.nodeConn.Close()
+	n.tickerCancel()
+	logger.Info("node server离线")
+	n.s.node = nil
+}
+
+func (n *NodeService) nodeTicler(tickerCtx context.Context) {
+	for {
+		select {
+		case <-n.ticker.C:
+			n.getAllServiceGateReq() // ping包
+		case <-tickerCtx.Done():
+			n.ticker.Stop()
+			return
 		}
-	}()
-}
-
-func (s *Server) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
-	switch cmdId {
-	case cmd.ServiceConnectionRsp: // 注册回包
-		s.ServiceConnectionRsp(serviceMsg)
-	case cmd.GetAllServiceGateRsp: // 心跳包
-		s.GetAllServiceGateRsp(serviceMsg)
-	default:
-		logger.Info("node -> dispatch error cmdid:%v", cmdId)
 	}
 }
 
 // 从node接收消息
-func (s *Server) RecvNode() {
+func (n *NodeService) recvNode() {
 	nodeMsg := make([]byte, PacketMaxLen)
 
 	for {
 		var bin []byte = nil
-		recvLen, err := s.NodeConn.Read(nodeMsg)
+		recvLen, err := n.nodeConn.Read(nodeMsg)
 		if err != nil {
-			log.Println("node error")
-			os.Exit(0)
+			logger.Error("node error")
+			n.nodeKill()
+			return
 		}
 		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			newServiceMsg := new(TcpNodeMsg)
-			newServiceMsg.cmdId = msg.CmdId
-			newServiceMsg.serviceMsg = serviceMsg
-			s.RecvCh <- newServiceMsg
+			n.nodeRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
 }
 
+func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
+	switch cmdId {
+	case cmd.ServiceConnectionRsp: // 注册回包
+		n.ServiceConnectionRsp(serviceMsg)
+	case cmd.GetAllServiceGateRsp: // 心跳包
+		n.GetAllServiceGateRsp(serviceMsg)
+	default:
+		logger.Info("node -> dispatch error cmdid:%v", cmdId)
+	}
+}
+
 // 发送到node
-func (s *Server) sendNode(cmdId uint16, playerMsg pb.Message) {
+func (n *NodeService) sendNode(cmdId uint16, playerMsg pb.Message) {
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
@@ -84,7 +116,7 @@ func (s *Server) sendNode(cmdId uint16, playerMsg pb.Message) {
 		logger.Error("cmdId error")
 	}
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-	_, err := s.NodeConn.Write(binMsg)
+	_, err := n.nodeConn.Write(binMsg)
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
 		return
@@ -92,55 +124,67 @@ func (s *Server) sendNode(cmdId uint16, playerMsg pb.Message) {
 }
 
 // 向node注册
-func (s *Server) Connection() {
+func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_DISPATCH,
-		AppId:      s.AppId,
-		Addr:       s.Config.OuterIp,
-		Port:       s.Port,
+		AppId:      n.s.AppId,
+		Addr:       n.s.Config.OuterIp,
+		Port:       n.s.Port,
 	}
-
-	s.sendNode(cmd.ServiceConnectionReq, req)
+	n.sendNode(cmd.ServiceConnectionReq, req)
 }
 
-func (s *Server) ServiceConnectionRsp(serviceMsg pb.Message) {
+// 向node注册回包
+func (n *NodeService) ServiceConnectionRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.ServiceConnectionRsp)
-	if rsp.ServerType == spb.ServerType_SERVICE_DISPATCH && rsp.AppId == s.AppId {
+	if rsp.ServerType == spb.ServerType_SERVICE_DISPATCH && rsp.AppId == n.s.AppId {
 		logger.Info("已向node注册成功！")
 	}
 }
 
-func (s *Server) getAllServiceGateReq() {
-	// 心跳包
+// ping包请求
+func (n *NodeService) getAllServiceGateReq() {
 	req := &spb.GetAllServiceGateReq{
 		ServiceType:  spb.ServerType_SERVICE_DISPATCH,
 		DispatchTime: time.Now().UnixNano() / 1e6,
 	}
-	s.sendNode(cmd.GetAllServiceGateReq, req)
+	n.sendNode(cmd.GetAllServiceGateReq, req)
 }
 
-func (s *Server) GetAllServiceGateRsp(serviceMsg pb.Message) {
+// ping包回应
+func (n *NodeService) GetAllServiceGateRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.GetAllServiceGateRsp)
-	var minPlayerNum int64 = 1<<63 - 1 // 初始化为较大的数
-	var minPlayerService *spb.ServiceAll
-	for _, service := range rsp.GateServiceList {
-		if service.PlayerNum < minPlayerNum {
-			minPlayerNum = service.PlayerNum
-		}
-	}
-	for _, service := range rsp.GateServiceList {
-		if service.PlayerNum == minPlayerNum {
-			minPlayerService = service
-			break
-		}
-	}
 
-	if minPlayerService == nil {
-		logger.Debug("get gate server error")
-	} else {
-		s.GateAddr = minPlayerService.Addr
-		s.GatePort = minPlayerService.Port
+	gateList := make(map[uint32]*Gate)
+	for _, service := range rsp.GateServiceList {
+		gate := &Gate{
+			Ip:   service.Addr,
+			Port: stou32(service.Port),
+			Num:  service.PlayerNum,
+		}
+		gateList[service.AppId] = gate
 	}
-
+	n.setGateList(gateList)
 	logger.Debug("dispatch <--> node ping:%v", (rsp.NodeTime-rsp.DispatchTime)/2)
+}
+
+func (n *NodeService) setGateList(gateList map[uint32]*Gate) {
+	n.gateListLock.Lock()
+	n.gateList = gateList
+	n.gateListLock.Unlock()
+}
+
+func (n *NodeService) getGate() *Gate {
+	var minAppId uint32
+	var minNum int64
+	n.gateListLock.Lock()
+	for id, gate := range n.gateList {
+		if minAppId == 0 || minNum > gate.Num {
+			minAppId = id
+			minNum = gate.Num
+		}
+	}
+	gate := n.gateList[minAppId]
+	n.gateListLock.Unlock()
+	return gate
 }

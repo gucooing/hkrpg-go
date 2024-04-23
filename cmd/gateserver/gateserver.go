@@ -45,7 +45,7 @@ func main() {
 
 	// 启动gate服务
 	go func() {
-		if err = gaten.Run(); err != nil {
+		if err = gaten.RunKcp(); err != nil {
 			logger.Error("无法启动kcp服务")
 		}
 	}()

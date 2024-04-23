@@ -20,19 +20,15 @@ import (
 type Server struct {
 	AppId      uint32
 	Port       string
-	NodeConn   net.Conn
-	GateAddr   string
-	GatePort   string
+	node       *NodeService
 	Config     *config.Config
 	Store      *db.Store
 	Router     *gin.Engine
 	server     *http.Server
 	AutoCreate sync.Mutex
 	Ec2b       *random.Ec2b
-
-	RecvCh chan *TcpNodeMsg
-	Ticker *time.Ticker
-	Stop   chan struct{}
+	Ticker     *time.Ticker
+	Stop       chan struct{}
 }
 
 // 初始化所有服务
@@ -52,22 +48,10 @@ func NewServer(cfg *config.Config, appid string) *Server {
 	s.Router = gin.New()            // gin.Default()
 	s.Router.Use(gin.Recovery())
 	s.Ec2b = alg.GetEc2b() // 读取ec2b密钥
-
-	s.RecvCh = make(chan *TcpNodeMsg)
+	// 开启dispatch定时器
 	s.Ticker = time.NewTicker(5 * time.Second)
 	s.Stop = make(chan struct{})
-	s.ServiceStart()
-
-	// 连接node
-	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
-	if err != nil {
-		log.Println("nodeserver error")
-		panic(err)
-	}
-	s.NodeConn = tcpConn
-	go s.RecvNode()
-	// 向node注册
-	s.Connection()
+	go s.dispatchTicker()
 
 	return s
 }
@@ -112,5 +96,27 @@ func clientIPMiddleware() gin.HandlerFunc {
 		// 将 IP 信息存储在 gin.Context 中
 		c.Set("IP", ip)
 		c.Next()
+	}
+}
+
+func (s *Server) dispatchTicker() {
+	go func() {
+		for {
+			select {
+			case <-s.Ticker.C:
+				s.GlobalRotationEvent()
+			case <-s.Stop:
+				s.Ticker.Stop()
+				return
+			}
+		}
+	}()
+}
+
+func (s *Server) GlobalRotationEvent() {
+	// 检查node是否存在
+	if s.node == nil {
+		logger.Info("尝试连接node")
+		s.newNode()
 	}
 }

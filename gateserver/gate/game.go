@@ -27,71 +27,6 @@ type gameServer struct {
 	ticker       *time.Ticker // 定时器
 }
 
-type Msg struct {
-	appId     uint32 // gs appid
-	cmdId     uint16
-	playerMsg pb.Message
-}
-
-func (s *GateServer) sendGs(msg *Msg) {
-	gs := s.getGsByAppid(msg.appId)
-	if gs == nil {
-		return
-	}
-	rspMsg := new(alg.ProtoMsg)
-	rspMsg.CmdId = msg.cmdId
-	rspMsg.PayloadMessage = msg.playerMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
-	if tcpMsg.CmdId == 0 {
-		logger.Error("cmdid error")
-		return
-	}
-	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-	_, err := gs.conn.Write(binMsg)
-	if err != nil {
-		logger.Debug("[GS:%v]gate->game error: %s", msg.appId, err.Error())
-		return
-	}
-}
-
-func (s *GateServer) getGsByAppid(appid uint32) *gameServer {
-	gs := new(gameServer)
-	s.gsListLock.Lock()
-	gs = s.gsList[appid]
-	s.gsListLock.Unlock()
-	return gs
-}
-
-func (s *GateServer) getMinGsAppId() *gameServer {
-	var minAppId uint32
-	var minNum int
-	s.gsListLock.Lock()
-	for id, game := range s.gsList {
-		if minAppId == 0 || minNum > len(game.playerMap) {
-			minAppId = id
-			minNum = len(game.playerMap)
-		}
-	}
-	gs := s.gsList[minAppId]
-	s.gsListLock.Unlock()
-	return gs
-
-}
-
-func (s *GateServer) addGsList(gs *gameServer) {
-	s.gsListLock.Lock()
-	s.gsList[gs.appid] = gs
-	s.gsListLock.Unlock()
-}
-
-func (s *GateServer) delGsList(appid uint32) {
-	s.gsListLock.Lock()
-	if s.gsList[appid] != nil {
-		delete(s.gsList, appid)
-	}
-	s.gsListLock.Unlock()
-}
-
 func (s *GateServer) newGs(addr string, appid uint32) {
 	gameConn, err := net.Dial("tcp", addr)
 	if err != nil {
@@ -133,6 +68,46 @@ func (gs *gameServer) recvGame() {
 	}
 }
 
+// gameserver离线时
+func (gs *gameServer) gameKill() {
+	plays := gs.GetAllPlayer()
+	for _, play := range plays {
+		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
+		play.KcpConn.Close()
+	}
+	gs.tickerCancel()
+	gs.gate.delGsList(gs.appid)
+	logger.Info("[APPID:%v]game server离线", gs.appid)
+}
+
+func (gs *gameServer) GateLoginGameRsp(playerMsg pb.Message) {
+	rsp := playerMsg.(*spb.GateLoginGameRsp)
+	if rsp.Retcode != 0 {
+		gs.conn.Close()
+		return
+	}
+	// 注册成功，将gs放入可连接列表
+	gs.gate.addGsList(gs)
+	gs.ticker = time.NewTicker(5 * time.Second)
+	tickerCtx, tickerCancel := context.WithCancel(context.Background())
+	gs.tickerCancel = tickerCancel
+	logger.Info("gate在game:[%v]注册成功", gs.appid)
+	go gs.gsTicker(tickerCtx)
+}
+
+// gs定时器
+func (gs *gameServer) gsTicker(tickerCtx context.Context) {
+	for {
+		select {
+		case <-gs.ticker.C:
+			gs.GateGamePingReq() // ping包
+		case <-tickerCtx.Done():
+			gs.ticker.Stop()
+			return
+		}
+	}
+}
+
 func (gs *gameServer) gameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 	switch cmdId {
 	case cmd.GateLoginGameRsp:
@@ -147,7 +122,6 @@ func (gs *gameServer) gameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 		gs.GameToGatePlayerLogoutNotify(playerMsg) // game告知gate玩家要下线了
 	case cmd.GameToGateMsgNotify:
 		gs.GameToGateMsgNotify(playerMsg)
-
 	default:
 		logger.Error("game -> gate register error, cmdId:%v", cmdId)
 	}
@@ -171,33 +145,48 @@ func (gs *gameServer) sendGame(cmdId uint16, playerMsg pb.Message) {
 	}
 }
 
-func (gs *gameServer) GateLoginGameRsp(playerMsg pb.Message) {
-	rsp := playerMsg.(*spb.GateLoginGameRsp)
-	if rsp.Retcode != 0 {
-		gs.conn.Close()
-		return
-	}
-	// 注册成功，将gs放入可连接列表
-	gs.gate.addGsList(gs)
-	gs.ticker = time.NewTicker(5 * time.Second)
-	tickerCtx, tickerCancel := context.WithCancel(context.Background())
-	gs.tickerCancel = tickerCancel
-	logger.Info("gate在game:[%v]注册成功", gs.appid)
-	go gs.gsMsgTo(tickerCtx)
+func (s *GateServer) getGsByAppid(appid uint32) *gameServer {
+	gs := new(gameServer)
+	s.gsListLock.Lock()
+	gs = s.gsList[appid]
+	s.gsListLock.Unlock()
+	return gs
 }
 
-// 同一个gs的玩家共用一个协程
-func (gs *gameServer) gsMsgTo(tickerCtx context.Context) {
-	for {
-		select {
-		case <-gs.ticker.C:
-			gs.GateGamePingReq() // ping包
-		case <-tickerCtx.Done():
-			return
+func (s *GateServer) getMinGsAppId() *gameServer {
+	if s.node == nil {
+		return nil
+	}
+	var minAppId uint32
+	var minNum int
+	s.gsListLock.Lock()
+	for id, game := range s.gsList {
+		if minAppId == 0 || minNum > len(game.playerMap) {
+			minAppId = id
+			minNum = len(game.playerMap)
 		}
 	}
+	gs := s.gsList[minAppId]
+	s.gsListLock.Unlock()
+	return gs
+
 }
 
+func (s *GateServer) addGsList(gs *gameServer) {
+	s.gsListLock.Lock()
+	s.gsList[gs.appid] = gs
+	s.gsListLock.Unlock()
+}
+
+func (s *GateServer) delGsList(appid uint32) {
+	s.gsListLock.Lock()
+	if s.gsList[appid] != nil {
+		delete(s.gsList, appid)
+	}
+	s.gsListLock.Unlock()
+}
+
+// gs ping 请求
 func (gs *gameServer) GateGamePingReq() {
 	req := &spb.GateGamePingReq{
 		GateServerTime: time.Now().Unix(),
@@ -205,11 +194,13 @@ func (gs *gameServer) GateGamePingReq() {
 	gs.sendGame(cmd.GateGamePingReq, req)
 }
 
+// gs ping 回复
 func (gs *gameServer) GateGamePingRsp(playerMsg pb.Message) {
 	rsp := playerMsg.(*spb.GateGamePingRsp)
 	gs.playerNum = rsp.PlayerNum
 }
 
+// 玩家在gs注册请求
 func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32, uuid int64) {
 	req := &spb.GateGamePlayerLoginReq{
 		Uid:       uid,
@@ -219,8 +210,17 @@ func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32, uuid int64) 
 	gs.sendGame(cmd.GateGamePlayerLoginReq, req)
 }
 
+// 玩家在gs注册回复
 func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 	rsp := playerMsg.(*spb.GateGamePlayerLoginRsp)
+	switch rsp.Retcode {
+	case spb.Retcode_RET_PLAYER_ID_ERR:
+		logger.Debug("由于玩家id丢失，玩家无法登录")
+		return
+	case spb.Retcode_RET_NODE_ERR:
+		logger.Debug("由于node意外离线，玩家无法登录")
+		return
+	}
 	if player, ok := gs.gate.GetPlayerByUuid(rsp.Uuid); !ok {
 		return
 	} else {
@@ -245,6 +245,13 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 	}
 }
 
+func (p *PlayerGame) closeStop() {
+	if !p.isChannelClosed() {
+		close(p.stop)
+	}
+}
+
+// gs玩家下线回复
 func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	rsp := playerMsg.(*spb.GetToGamePlayerLogoutRsp)
 	if rsp.Retcode != 0 {
@@ -258,6 +265,7 @@ func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	newGs.playerLogin(player)
 }
 
+// game通知gate玩家消息
 func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	notify := playerMsg.(*spb.GameToGateMsgNotify)
 	if player, ok := gs.gate.GetPlayerByUuid(notify.Uuid); !ok {
@@ -271,28 +279,10 @@ func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	}
 }
 
+// game通知gate玩家下线
 func (gs *gameServer) GameToGatePlayerLogoutNotify(playerMsg pb.Message) {
 	notify := playerMsg.(*spb.GameToGatePlayerLogoutNotify)
 	if play, ok := gs.gate.GetPlayerByUuid(notify.Uuid); ok {
 		gs.gate.killPlayer(play)
 	}
-}
-
-func (p *PlayerGame) closeStop() {
-	if !p.isChannelClosed() {
-		close(p.stop)
-	}
-}
-
-// gameserver离线时
-func (gs *gameServer) gameKill() {
-	plays := gs.GetAllPlayer()
-	for _, play := range plays {
-		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-		play.KcpConn.Close()
-	}
-	gs.ticker.Stop()
-	gs.tickerCancel()
-	gs.gate.delGsList(gs.appid)
-	logger.Info("[APPID:%v]game server离线", gs.appid)
 }

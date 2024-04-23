@@ -6,24 +6,24 @@ option go_package = "./;proto";
 
 import "enum.server.proto";
 
-message ServiceConnectionReq {
+message ServiceConnectionReq {// 向node注册包
   ServerType server_type = 1;
   uint32 app_id = 2; // 发起请求的app_id
   string addr = 3;
   string port = 4;
 }
 
-message ServiceConnectionRsp {
+message ServiceConnectionRsp {// 向node注册回复
   ServerType server_type = 1;
   uint32 app_id = 2;
 }
 
-message GetAllServiceGateReq {
+message GetAllServiceGateReq {// 向node获取gate服务请求
   ServerType service_type = 1;
   int64 dispatch_time = 2;
 }
 
-message GetAllServiceGateRsp {
+message GetAllServiceGateRsp {// 向node获取gate服务回复
   repeated ServiceAll gate_service_list = 1;
   int64 dispatch_time = 2;
   int64 node_time = 3;

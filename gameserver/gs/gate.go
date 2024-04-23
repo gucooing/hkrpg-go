@@ -159,8 +159,21 @@ func (ge *gateServer) GateGamePingReq(payloadMsg pb.Message) {
 
 func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GateGamePlayerLoginReq)
+	rsp := &spb.GateGamePlayerLoginRsp{
+		Retcode: spb.Retcode_RET_SUCC,
+		Uid:     req.Uid,
+		Uuid:    req.Uuid,
+	}
 	if req.Uid == 0 || req.Uuid == 0 || req.AccountId == 0 {
 		logger.Error("player login uid or uuid error")
+		rsp.Retcode = spb.Retcode_RET_PLAYER_ID_ERR
+		ge.GateGamePlayerLoginRsp(rsp)
+		return
+	}
+	if ge.game.node == nil {
+		logger.Error("player login node error")
+		rsp.Retcode = spb.Retcode_RET_NODE_ERR
+		ge.GateGamePlayerLoginRsp(rsp)
 		return
 	}
 	g := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
@@ -169,11 +182,10 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	ge.game.AddPlayerMap(req.Uuid, g)
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, req.Uuid)
 	ge.game.AddPlayerStatus(g)
-	rsp := &spb.GateGamePlayerLoginRsp{
-		Retcode: 0,
-		Uid:     req.Uid,
-		Uuid:    req.Uuid,
-	}
+	ge.GateGamePlayerLoginRsp(rsp)
+}
+
+func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
 	ge.seedGate(cmd.GateGamePlayerLoginRsp, rsp)
 }
 

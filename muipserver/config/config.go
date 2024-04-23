@@ -101,10 +101,20 @@ var DefaultConfig = &Config{
 		"Node": "127.0.0.1:20081",
 	},
 	RedisConf: map[string]RedisConf{
-		"mail_box": {
+		"player_status": {
 			Addr:     "127.0.0.1:6379",
 			Password: "password",
-			DB:       4,
+			DB:       1,
+		},
+		"player_mail": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
+		},
+		"player_chat": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
 		},
 	},
 }
