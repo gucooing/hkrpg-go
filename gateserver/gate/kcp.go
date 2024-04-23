@@ -50,7 +50,7 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			logger.Error("the motherfucker player uid: %v", p.Uid)
-			p.PlayerLogoutCsReq()
+			p.PlayerLogoutCsReq(nil)
 		}
 	}()
 

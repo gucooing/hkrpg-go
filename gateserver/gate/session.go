@@ -21,23 +21,42 @@ type PlayerGame struct {
 	XorKey         []byte // 密钥
 	KcpConn        *kcp.UDPSession
 	LastActiveTime int64 // 最近一次的活跃时间
+	RouteManager   *RouteManager
 	ticker         *time.Timer
 	stop           chan struct{}
 }
 
-func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
-	switch cmdId {
-	case cmd.PlayerHeartBeatCsReq:
-		p.HandlePlayerHeartBeatCsReq(tcpMsg.ProtoData) // 心跳包
-		p.GateToGame(tcpMsg)
-	case cmd.PlayerLogoutCsReq: // 退出游戏
-		p.PlayerLogoutCsReq()
-	case cmd.GetAuthkeyCsReq: // 兑换码请求
+type HandlerFunc func(tcpMsg *alg.PackMsg)
 
-	default:
-		p.GateToGame(tcpMsg)
+type RouteManager struct {
+	handlerFuncRouteMap map[uint16]HandlerFunc
+}
+
+func NewRouteManager(p *PlayerGame) (r *RouteManager) {
+	r = new(RouteManager)
+	r.initRoute(p)
+	return r
+}
+
+func (r *RouteManager) initRoute(p *PlayerGame) {
+	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
+		cmd.PlayerHeartBeatCsReq: p.HandlePlayerHeartBeatCsReq,
+		cmd.PlayerLogoutCsReq:    p.PlayerLogoutCsReq,
+		cmd.GetAuthkeyCsReq:      p.nilProto,
 	}
 }
+
+func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
+	handlerFunc, ok := p.RouteManager.handlerFuncRouteMap[cmdId]
+	if !ok {
+		p.GateToGame(tcpMsg)
+		return
+	}
+	handlerFunc(tcpMsg)
+	return
+}
+
+func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {}
 
 // 将玩家消息转发到game
 func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
@@ -117,7 +136,7 @@ func (gs *gameServer) GetAllPlayer() map[int64]*PlayerGame {
 }
 
 // 玩家主动离线处理
-func (p *PlayerGame) PlayerLogoutCsReq() {
+func (p *PlayerGame) PlayerLogoutCsReq(tcpMsg *alg.PackMsg) {
 	p.KcpConn.Close()
 	notify := &spb.GateToGamePlayerLogoutNotify{
 		Uid:  p.Uid,
@@ -137,7 +156,7 @@ func (s *GateServer) AutoDelPlayer() {
 		for _, play := range plays {
 			if time.Now().Unix()-play.LastActiveTime > 30 {
 				play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-				play.PlayerLogoutCsReq()
+				play.PlayerLogoutCsReq(nil)
 			}
 		}
 	}

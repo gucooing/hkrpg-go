@@ -102,6 +102,8 @@ func (s *GateServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
 	g.KcpConn = kcpConn
 	g.XorKey = s.Ec2b.XorKey()
 	g.LastActiveTime = time.Now().Unix()
+	// 初始化路由
+	g.RouteManager = NewRouteManager(g)
 
 	return g
 }
@@ -133,7 +135,7 @@ func Close() error {
 	plays := ges.GetAllPlayer()
 	for _, play := range plays {
 		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-		play.PlayerLogoutCsReq()
+		play.PlayerLogoutCsReq(nil)
 	}
 	close(ges.Stop)
 	return nil

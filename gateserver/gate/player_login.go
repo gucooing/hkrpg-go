@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -14,9 +15,10 @@ import (
 )
 
 // 玩家ping包处理
-func (p *PlayerGame) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
+func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
+	p.GateToGame(tcpMsg)
 	req := new(proto.PlayerHeartbeatCsReq)
-	pb.Unmarshal(payloadMsg, req)
+	pb.Unmarshal(tcpMsg.ProtoData, req)
 
 	rsp := new(proto.PlayerHeartbeatScRsp)
 	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
