@@ -75,11 +75,6 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		return
 	}
 
-	// 添加定时器
-	p.ticker = time.NewTimer(4 * time.Second)
-	p.stop = make(chan struct{})
-	go p.loginTicker()
-
 	// 拉取db数据
 	uidPlayer := s.Store.GetPlayerUidByAccountId(accountUid)
 
@@ -107,6 +102,11 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		return
 	}
 	p.gs = gs
+
+	// 添加定时器
+	p.ticker = time.NewTimer(4 * time.Second)
+	p.stop = make(chan struct{})
+	go p.loginTicker()
 
 	// 生成seed
 	timeRand := random.GetTimeRand()
