@@ -155,23 +155,11 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 
 	index := req.Index
 	lineUpDb := g.GetLineUp()
-	isBattleLine := true
+	isBattleLine := false
 
-	switch req.ExtraLineupType {
-	case proto.ExtraLineupType_LINEUP_CHALLENGE:
-		index = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	case proto.ExtraLineupType_LINEUP_CHALLENGE_2:
-		index = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
-	case proto.ExtraLineupType_LINEUP_CHALLENGE_3:
-		index = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_3)
-	case proto.ExtraLineupType_LINEUP_ROGUE:
-		index = uint32(proto.ExtraLineupType_LINEUP_ROGUE)
-	case proto.ExtraLineupType_LINEUP_STAGE_TRIAL:
-		index = uint32(proto.ExtraLineupType_LINEUP_STAGE_TRIAL)
-	case proto.ExtraLineupType_LINEUP_ACTIVITY:
-		index = uint32(proto.ExtraLineupType_LINEUP_ACTIVITY)
-	default:
-		isBattleLine = false
+	if req.ExtraLineupType != proto.ExtraLineupType_LINEUP_NONE {
+		index = uint32(req.ExtraLineupType)
+		isBattleLine = true
 	}
 
 	if !isBattleLine {
