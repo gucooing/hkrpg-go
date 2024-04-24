@@ -234,7 +234,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	g.SyncRogueMapRoomScNotify()
 	g.Send(cmd.SyncServerSceneChangeNotify, nil)
 	// 队伍更新通知
-	g.SyncLineupNotify(9)
+	g.SyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	var buffList []uint32
 	g.SyncEntityBuffChangeListScNotify(buffList)
 	g.CommonRogueUpdateScNotify()
@@ -255,7 +255,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 
 	rsp := &proto.StartRogueScRsp{
 		Scene:     scene,
-		Lineup:    g.GetLineUpPb(9),
+		Lineup:    g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_ROGUE)),
 		RogueInfo: g.GetRogueInfo(),
 	}
 	rsp.RogueInfo.RogueCurrentInfo = &proto.RogueCurrentInfo{
@@ -343,10 +343,15 @@ func (g *GamePlayer) GetRogueArea() []*proto.RogueArea {
 // 新建模拟宇宙
 func (g *GamePlayer) NewRogue(avatarIdList []uint32, areaId uint32) {
 	// 更新队伍
+	db := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	db.LeaderSlot = 0
+	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
+	db.ExtraLineupType = spb.ExtraLineupType(proto.ExtraLineupType_LINEUP_ROGUE)
 	if avatarIdList != nil {
-		g.GetLineUpById(9).AvatarIdList = avatarIdList
+		for id, avatarId := range avatarIdList {
+			db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}
+		}
 	}
-	g.GetLineUp().MainAvatarId = 0
 
 	// 获取地图
 	rogueAreaConfig := gdconf.GetRogueAreaConfigById(strconv.Itoa(int(areaId)))
@@ -445,16 +450,16 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	}
 	startGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, rogueRoom.GroupID)
 	anchor := startGroup.AnchorList[0]
-	baseAvatarIdList := g.GetLineUpById(9)
-	for id, avatarId := range baseAvatarIdList.AvatarIdList {
-		if avatarId == 0 {
+	baseAvatarIdList := g.GetLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	for id, avatarList := range baseAvatarIdList.AvatarIdList {
+		if avatarList == nil || avatarList.AvatarId == 0 {
 			continue
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
 			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-				BaseAvatarId: avatarId,
+				BaseAvatarId: avatarList.AvatarId,
 			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
@@ -473,13 +478,13 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		if id == 0 {
 			entityList.EntityId = leaderEntityId
 			avatarEntity[leaderEntityId] = &AvatarEntity{
-				AvatarId: avatarId,
+				AvatarId: avatarList.AvatarId,
 				GroupId:  rogueRoom.GroupID,
 			}
 		} else {
 			entityList.EntityId = entityId
 			avatarEntity[entityId] = &AvatarEntity{
-				AvatarId: avatarId,
+				AvatarId: avatarList.AvatarId,
 				GroupId:  rogueRoom.GroupID,
 			}
 		}
@@ -649,7 +654,7 @@ func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	}
 	rsp.BattleInfo.BattleTargetInfo[2].BattleTargetList = battleTargetList
 	// 添加角色
-	rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(9)
+	rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	// 添加buff
 	rsp.BattleInfo.BuffList = make([]*proto.BattleBuff, 0)
 	for id, buff := range g.GetRogueBuff() {
@@ -678,8 +683,8 @@ func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, rsp *proto.PVEBattleResultScRsp) {
 	battle := g.GetRogueBattle()[req.BattleId]
 	// 队伍状态通知
-	g.ChallengeSyncLineupNotify(9)
-	rsp.BattleAvatarList = g.GetBattleAvatarList(9)
+	g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	rsp.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	// buff同步
 	var buffList []uint32
 	g.SyncEntityBuffChangeListScNotify(buffList)
@@ -790,7 +795,7 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	g.GetSceneEntity().AvatarEntity = avatarEntity
 	g.GetSceneEntity().MonsterEntity = monsterEntity
 	rsp := &proto.EnterRogueMapRoomScRsp{
-		Lineup:    g.GetLineUpPb(9),
+		Lineup:    g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_ROGUE)),
 		CurSiteId: req.SiteId,
 		Retcode:   0,
 		Scene:     scene,

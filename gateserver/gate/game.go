@@ -75,7 +75,9 @@ func (gs *gameServer) gameKill() {
 		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
 		play.KcpConn.Close()
 	}
-	gs.tickerCancel()
+	if gs.tickerCancel != nil {
+		gs.tickerCancel()
+	}
 	gs.gate.delGsList(gs.appid)
 	logger.Info("[APPID:%v]game server离线", gs.appid)
 }

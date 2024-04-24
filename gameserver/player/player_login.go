@@ -35,6 +35,7 @@ func (g *GamePlayer) GetPlayerDate(accountId uint32) {
 		err = pb.Unmarshal(dbPlayer.BinData, g.PlayerPb)
 		if err != nil {
 			logger.Error("unmarshal proto data err: %v", err)
+			g.PlayerPb = g.NewPlayer()
 			return
 		}
 	}

@@ -35,7 +35,7 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId u
 		avatardbs := g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId]
 		avatardbs.EquipmentUniqueId = avatardb.EquipmentUniqueId
 		// 获取要装备的角色光锥,与目标光锥角色交换
-		avatar := g.GetAvatarById(avatardbs.AvatarId)
+		avatar := g.GetProtoAvatarById(avatardbs.AvatarId)
 		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		// 交换光锥
 		g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
@@ -50,7 +50,7 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId u
 	equipmentdb.BaseAvatarId = avatarId
 	g.PlayerPb.Avatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
 
-	avatar := g.GetAvatarById(avatarId)
+	avatar := g.GetProtoAvatarById(avatarId)
 
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 

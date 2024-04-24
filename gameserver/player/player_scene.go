@@ -68,15 +68,19 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 	for _, anchor := range foorMap.Groups[groupID].AnchorList {
 		if anchor.ID == anchorID {
-			for id, avatarid := range g.GetLineUpById(g.GetLineUp().MainLineUp).AvatarIdList {
-				if avatarid == 0 {
+			curLineUp := g.GetCurLineUp()
+			for id, lineAvatar := range curLineUp.AvatarIdList {
+				if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 					continue
+				}
+				if curLineUp.AvatarIdList[curLineUp.LeaderSlot] == nil {
+					curLineUp.LeaderSlot = id
 				}
 				entityId := uint32(g.GetNextGameObjectGuid())
 				entityList := &proto.SceneEntityInfo{
 					Actor: &proto.SceneActorInfo{
 						AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-						BaseAvatarId: avatarid,
+						BaseAvatarId: lineAvatar.AvatarId,
 					},
 					Motion: &proto.MotionInfo{
 						Pos: &proto.Vector{
@@ -92,16 +96,16 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 					},
 				}
 				// 为进入场景的角色设置与上面相同的实体id
-				if id == 0 {
+				if id == curLineUp.LeaderSlot {
 					entityList.EntityId = leaderEntityId
 					avatarEntity[leaderEntityId] = &AvatarEntity{
-						AvatarId: avatarid,
+						AvatarId: lineAvatar.AvatarId,
 						GroupId:  groupID,
 					}
 				} else {
 					entityList.EntityId = entityId
 					avatarEntity[entityId] = &AvatarEntity{
-						AvatarId: avatarid,
+						AvatarId: lineAvatar.AvatarId,
 						GroupId:  groupID,
 					}
 				}
@@ -118,7 +122,7 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			g.GetScene().EntryId = entryId
 			g.GetScene().PlaneId = mapEntrance.PlaneID
 			g.GetScene().FloorId = mapEntrance.FloorID
-			g.GetLineUp().MainAvatarId = 0
+			// g.GetLineUp().MainAvatarId = 0
 			break
 		}
 	}
@@ -207,15 +211,23 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
 	// 将进入场景的角色添加到实体列表里
-	for id, avatarid := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
-		if avatarid == 0 {
+	curLineUp := g.GetCurLineUp()
+	for id, lineAvatar := range curLineUp.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
+			continue
+		}
+		if curLineUp.AvatarIdList[curLineUp.LeaderSlot] == nil {
+			curLineUp.LeaderSlot = id
+		}
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
+		if avatarBin == nil {
 			continue
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
 			Actor: &proto.SceneActorInfo{
-				AvatarType:   proto.AvatarType(g.PlayerPb.Avatar.Avatar[avatarid].AvatarType),
-				BaseAvatarId: avatarid,
+				AvatarType:   proto.AvatarType(avatarBin.AvatarType),
+				BaseAvatarId: lineAvatar.AvatarId,
 			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
@@ -231,15 +243,15 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 			},
 		}
 		// 为进入场景的角色设置与上面相同的实体id
-		if id == 0 {
+		if id == curLineUp.LeaderSlot {
 			entityList.EntityId = leaderEntityId
 			avatarEntity[leaderEntityId] = &AvatarEntity{
-				AvatarId: avatarid,
+				AvatarId: lineAvatar.AvatarId,
 				GroupId:  0,
 			}
 		} else {
 			avatarEntity[entityId] = &AvatarEntity{
-				AvatarId: avatarid,
+				AvatarId: lineAvatar.AvatarId,
 				GroupId:  0,
 			}
 			entityList.EntityId = entityId
@@ -276,7 +288,7 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	g.GetSceneEntity().MonsterEntity = monsterEntity
 	g.GetSceneEntity().AvatarEntity = avatarEntity
 	g.GetSceneEntity().NpcEntity = npcEntity
-	g.GetLineUp().MainAvatarId = 0
+	// g.GetLineUp().MainAvatarId = 0
 
 	g.Send(cmd.GetCurSceneInfoScRsp, rsp)
 }

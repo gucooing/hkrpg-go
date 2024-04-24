@@ -42,7 +42,7 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramLi
 				relicList := g.GetProtoRelicById(avatardb.EquipRelic[relic.Slot])
 				notify.RelicList = append(notify.RelicList, relicList)
 			}
-			avatar := g.GetAvatarById(avatarDbs.AvatarId)
+			avatar := g.GetProtoAvatarById(avatarDbs.AvatarId)
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		}
 
@@ -66,7 +66,7 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramLi
 		notify.RelicList = append(notify.RelicList, relicList)
 	}
 
-	avatar := g.GetAvatarById(avatarId)
+	avatar := g.GetProtoAvatarById(avatarId)
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
 	g.Send(cmd.PlayerSyncScNotify, notify)

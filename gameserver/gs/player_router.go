@@ -138,7 +138,7 @@ func RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/, 
 	logger.Debug("C --> S router cmdId: %v", cmdId)
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		logger.Error("C --> S no route for msg, cmdId: %v", cmdId)
+		// logger.Error("C --> S no route for msg, cmdId: %v", cmdId)
 		return
 	}
 	handlerFunc(payloadMsg)

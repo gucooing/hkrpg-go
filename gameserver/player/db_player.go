@@ -103,6 +103,13 @@ func (g *GamePlayer) NewPlayer() *spb.PlayerBasicCompBin {
 	return g.PlayerPb
 }
 
+func (g *GamePlayer) GetPlayerPb() *spb.PlayerBasicCompBin {
+	if g.PlayerPb == nil {
+		g.PlayerPb = g.NewPlayer()
+	}
+	return g.PlayerPb
+}
+
 func (g *GamePlayer) GetPlayer() *PlayerData {
 	if g.Player == nil {
 		g.Player = &PlayerData{

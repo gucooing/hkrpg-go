@@ -147,7 +147,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	scene := g.GetChallengeScene()
 
 	// 获取队伍
-	lineup := g.GetLineUpPb(6)
+	lineup := g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE))
 
 	rsp := &proto.StartChallengeScRsp{
 		ChallengeInfo: challengeInfo,
@@ -190,15 +190,17 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		GroupId:    0,
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	for id, slots := range g.GetLineUpPb(6).AvatarList {
-		if slots == nil {
+	curLineUp := g.GetBattleLineUpById(6)
+	for id, lineAvatar := range curLineUp.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
 			Actor: &proto.SceneActorInfo{
-				AvatarType:   slots.AvatarType, // TODO
-				BaseAvatarId: slots.Id,
+				AvatarType:   proto.AvatarType(avatarBin.AvatarType), // TODO
+				BaseAvatarId: avatarBin.AvatarId,
 			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
@@ -214,15 +216,15 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 			},
 		}
 		// 为进入场景的角色设置与上面相同的实体id
-		if id == 0 {
+		if id == curLineUp.LeaderSlot {
 			entityList.EntityId = leaderEntityId
 			avatarEntity[leaderEntityId] = &AvatarEntity{
-				AvatarId: slots.Id,
+				AvatarId: lineAvatar.AvatarId,
 				GroupId:  0,
 			}
 		} else {
 			avatarEntity[entityId] = &AvatarEntity{
-				AvatarId: slots.Id,
+				AvatarId: lineAvatar.AvatarId,
 				GroupId:  0,
 			}
 			entityList.EntityId = entityId
@@ -275,12 +277,10 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 // 忘却之庭战斗退出/结束
 
 func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
 	if g.GetBattleState().ChallengeState.Status == proto.ChallengeStatus_CHALLENGE_DOING {
-		g.Send(cmd.QuitBattleScNotify, rsp)
+		g.Send(cmd.QuitBattleScNotify, nil)
 	}
-	g.Send(cmd.LeaveChallengeScRsp, rsp)
+	g.Send(cmd.LeaveChallengeScRsp, nil)
 
 	g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
 	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
@@ -292,14 +292,14 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	// battleState := g.GetBattleState()
 	challengeState := g.GetChallengeState()
-	var lineUpId uint32 = 6
+	var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
 	var targetIndex uint32 = 0
 
 	// 通过波次获取队伍
 	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		lineUpId = 6
+		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
 	} else {
-		lineUpId = 7
+		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
 	}
 
 	// 添加角色
@@ -335,21 +335,21 @@ func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp
 
 func (g *GamePlayer) GetBattleAvatarList(lineUpId uint32) []*proto.BattleAvatar {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
-	for id, avatarId := range g.GetLineUpById(lineUpId).AvatarIdList {
-		if avatarId == 0 {
+	for id, lineAvatar := range g.GetLineUpById(lineUpId).AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatar := g.GetAvatar().Avatar[avatarId]
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 
 		battleAvatar := &proto.BattleAvatar{
 			AvatarType:    proto.AvatarType_AVATAR_FORMAL_TYPE,
-			Id:            avatarId,
-			Level:         avatar.Level,
-			Rank:          avatar.Rank,
-			Index:         uint32(id),
+			Id:            avatarBin.AvatarId,
+			Level:         avatarBin.Level,
+			Rank:          avatarBin.Rank,
+			Index:         id,
 			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
 			Hp:            10000,
-			Promotion:     avatar.PromoteLevel,
+			Promotion:     avatarBin.PromoteLevel,
 			RelicList:     make([]*proto.BattleRelic, 0),
 			WorldLevel:    g.PlayerPb.WorldLevel,
 			SpBar: &proto.SpBarInfo{
@@ -357,7 +357,7 @@ func (g *GamePlayer) GetBattleAvatarList(lineUpId uint32) []*proto.BattleAvatar 
 				MaxSp: 10000,
 			},
 		}
-		for _, skill := range g.GetSkillTreeList(avatar.AvatarId) {
+		for _, skill := range g.GetSkillTreeList(avatarBin.AvatarId) {
 			if skill.Level == 0 {
 				continue
 			}
@@ -367,17 +367,17 @@ func (g *GamePlayer) GetBattleAvatarList(lineUpId uint32) []*proto.BattleAvatar 
 			}
 			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
 		}
-		for _, relic := range avatar.EquipRelic {
+		for _, relic := range avatarBin.EquipRelic {
 			equipRelic := g.GetProtoBattleRelicById(relic)
 			if equipRelic == nil {
-				delete(avatar.EquipRelic, relic)
+				delete(avatarBin.EquipRelic, relic)
 				continue
 			}
 			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}
 		// 获取角色装备的光锥
-		if avatar.EquipmentUniqueId != 0 {
-			equipment := g.GetEquipment(avatar.EquipmentUniqueId)
+		if avatarBin.EquipmentUniqueId != 0 {
+			equipment := g.GetEquipment(avatarBin.EquipmentUniqueId)
 			equipmentList := &proto.BattleEquipment{
 				Id:        equipment.Tid,
 				Level:     equipment.Level,
@@ -400,9 +400,9 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	rot := challengeState.Rot
 
 	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		g.ChallengeSyncLineupNotify(6)
+		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE))
 	} else {
-		g.ChallengeSyncLineupNotify(7)
+		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2))
 	}
 
 	// 战斗失败
@@ -487,7 +487,7 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 		// 添加角色
 		g.ChallengeAddAvatarSceneGroupRefreshScNotify()
 		// 更新新的队伍
-		g.ChallengeSyncLineupNotify(7)
+		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2))
 		// 通知当前战斗的队伍
 		challengeLineupNotify := &proto.ChallengeLineupNotify{
 			ExtraLineupType: challengeState.ExtraLineupType,
@@ -500,7 +500,7 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 
 func (g *GamePlayer) ChallengeSyncLineupNotify(index uint32) {
 	rsq := new(proto.SyncLineupNotify)
-	lineUp := g.GetLineUpById(index)
+	lineUp := g.GetBattleLineUpById(index)
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,
 		LeaderSlot:      0,
@@ -511,17 +511,17 @@ func (g *GamePlayer) ChallengeSyncLineupNotify(index uint32) {
 		Mp:              5,
 		PlaneId:         0,
 	}
-	for slot, avatarId := range lineUp.AvatarIdList {
-		if avatarId == 0 {
+	for slot, lineAvatar := range lineUp.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: proto.AvatarType(avatar.AvatarType),
-			Slot:       uint32(slot),
+			AvatarType: proto.AvatarType(avatarBin.AvatarType),
+			Slot:       slot,
 			Satiety:    0,
 			Hp:         10000,
-			Id:         avatarId,
+			Id:         avatarBin.AvatarId,
 			SpBar: &proto.SpBarInfo{
 				CurSp: 10000,
 				MaxSp: 10000,
@@ -545,16 +545,17 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
 	}
 
-	for _, avatarId := range g.GetLineUp().LineUpList[7].AvatarIdList {
-		if avatarId == 0 {
+	for _, lineAvatar := range g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)).AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
 			AddEntity: &proto.SceneEntityInfo{
 				Actor: &proto.SceneActorInfo{
-					AvatarType:   proto.AvatarType(g.GetAvatar().Avatar[avatarId].AvatarType),
-					BaseAvatarId: avatarId,
+					AvatarType:   proto.AvatarType(avatarBin.AvatarType),
+					BaseAvatarId: avatarBin.AvatarId,
 				},
 				Motion: &proto.MotionInfo{
 					Pos: &proto.Vector{
@@ -572,7 +573,7 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 			},
 		}
 		g.GetSceneEntity().AvatarEntity[entityId] = &AvatarEntity{
-			AvatarId: avatarId,
+			AvatarId: avatarBin.AvatarId,
 			GroupId:  0,
 		}
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
@@ -638,15 +639,15 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 
 func (g *GamePlayer) ChallengeStorySceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	challengeState := g.GetChallengeState()
-	var lineUpId uint32 = 6
+	var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
 	var targetIndex uint32 = 0
 	storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
 
 	// 通过波次获取队伍
 	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		lineUpId = 6
+		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
 	} else {
-		lineUpId = 7
+		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
 	}
 
 	// 添加角色
@@ -730,9 +731,9 @@ func (g *GamePlayer) ChallengeStoryPVEBattleResultCsReq(req *proto.PVEBattleResu
 	rot := challengeState.Rot
 
 	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		g.ChallengeSyncLineupNotify(6)
+		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE))
 	} else {
-		g.ChallengeSyncLineupNotify(7)
+		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2))
 	}
 
 	// 删除实体
@@ -813,7 +814,7 @@ func (g *GamePlayer) ChallengeStoryPVEBattleResultCsReq(req *proto.PVEBattleResu
 		// 添加角色
 		g.ChallengeAddAvatarSceneGroupRefreshScNotify()
 		// 更新新的队伍
-		g.ChallengeSyncLineupNotify(7)
+		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2))
 		// 通知当前战斗的队伍
 		challengeLineupNotify := &proto.ChallengeLineupNotify{
 			ExtraLineupType: challengeState.ExtraLineupType,
