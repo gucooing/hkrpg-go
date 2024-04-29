@@ -49,10 +49,10 @@ func GetAppIdUint32(appid string) uint32 {
 		os.Exit(0)
 	}
 	data := appIdData{
-		region:  s2u32(parts[0]),
-		appType: s2u32(parts[1]),
-		host:    s2u32(parts[2]),
-		index:   s2u32(parts[3]),
+		region:  S2U32(parts[0]),
+		appType: S2U32(parts[1]),
+		host:    S2U32(parts[2]),
+		index:   S2U32(parts[3]),
 	}
 	var appID uint32
 	appID |= (data.region & 0x3FF) << 22
@@ -62,7 +62,7 @@ func GetAppIdUint32(appid string) uint32 {
 	return appID
 }
 
-func s2u32(msg string) uint32 {
+func S2U32(msg string) uint32 {
 	if msg == "" {
 		return 0
 	}

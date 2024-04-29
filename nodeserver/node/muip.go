@@ -2,6 +2,7 @@ package node
 
 import (
 	"bufio"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -18,7 +19,7 @@ func (s *Service) muipRecvHandle() {
 			logger.Error("!!! DISPATCH SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			s.killService()
+			s.n.killService(s)
 		}
 	}()
 
@@ -26,7 +27,7 @@ func (s *Service) muipRecvHandle() {
 		var bin []byte = nil
 		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
 		if err != nil {
-			s.killService()
+			s.n.killService(s)
 			break
 		}
 		bin = payload[:recvLen]
@@ -41,58 +42,36 @@ func (s *Service) muipRecvHandle() {
 
 func (s *Service) muipRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.GmGive:
-		s.GmGive(serviceMsg)
-	case cmd.GmWorldLevel:
-		s.GmWorldLevel(serviceMsg)
-	case cmd.DelItem:
-		s.DelItem(serviceMsg)
-	case cmd.GetAllServiceReq:
-		s.GetAllServiceReq(serviceMsg)
+	case cmd.MuipToNodePingReq:
+		s.MuipToNodePingReq(serviceMsg)
 	default:
 		logger.Info("muip -> node error cmdid:%v", cmdId)
 	}
 }
 
-func (s *Service) GmGive(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GmGive)
-	if req.PlayerUid == 0 || NODE.PlayerUuidMap[req.PlayerUid] == 0 {
-		return
+func (s *Service) MuipToNodePingReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.MuipToNodePingReq)
+	rsp := &spb.MuipToNodePingRsp{
+		MuipServerTime: req.MuipServerTime,
+		NodeServerTime: time.Now().UnixNano() / 1e6,
+		ServiceList:    make(map[uint32]*spb.MuipServiceAll),
 	}
-	ps := getPlayerServiceByUuid(req.PlayerUid)
-	notify := &spb.GmGive{
-		PlayerUid: req.PlayerUid,
-		ItemId:    req.ItemId,
-		ItemCount: req.ItemCount,
-		GiveAll:   req.GiveAll,
-		Uuid:      ps.Uuid,
-	}
-	getGsByAppId(ps.GameAppId).sendHandle(cmd.GmGive, notify)
-}
 
-func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GmWorldLevel)
-	if req.PlayerUid == 0 || NODE.PlayerUuidMap[req.PlayerUid] == 0 {
-		return
+	for serverType, serviceList := range s.n.GetAllService() {
+		muipServiceAll := &spb.MuipServiceAll{
+			ServiceList: make([]*spb.ServiceAll, 0),
+		}
+		for _, service := range serviceList {
+			muipServiceAll.ServiceList = append(muipServiceAll.ServiceList, &spb.ServiceAll{
+				ServiceType: service.ServerType,
+				Addr:        service.Addr,
+				PlayerNum:   service.PlayerNum,
+				AppId:       service.AppId,
+				Port:        service.Port,
+			})
+		}
+		rsp.ServiceList[serverType] = muipServiceAll
 	}
-	ps := getPlayerServiceByUuid(req.PlayerUid)
-	notify := &spb.GmWorldLevel{
-		PlayerUid:  req.PlayerUid,
-		WorldLevel: req.WorldLevel,
-		Uuid:       ps.Uuid,
-	}
-	getGsByAppId(ps.GameAppId).sendHandle(cmd.GmWorldLevel, notify)
-}
 
-func (s *Service) DelItem(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.DelItem)
-	if req.PlayerUid == 0 || NODE.PlayerUuidMap[req.PlayerUid] == 0 {
-		return
-	}
-	ps := getPlayerServiceByUuid(req.PlayerUid)
-	notify := &spb.DelItem{
-		PlayerUid: req.PlayerUid,
-		Uuid:      ps.Uuid,
-	}
-	getGsByAppId(ps.GameAppId).sendHandle(cmd.DelItem, notify)
+	s.sendHandle(cmd.MuipToNodePingRsp, rsp)
 }

@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	Ticker = 5 // 心跳包间隔时间 / s
+	Ticker = 5 // 定时器间隔时间 / s
 )
 
 var GAMESERVER *GameServer

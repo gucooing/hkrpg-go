@@ -2,24 +2,28 @@ package muip
 
 import (
 	"log"
-	"net"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	api2 "github.com/gucooing/hkrpg-go/muipserver/api"
 	"github.com/gucooing/hkrpg-go/muipserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
-var MUIP *Muip
+const (
+	Ticker = 5 // 定时器间隔时间 / s
+)
 
 type Muip struct {
-	Config     *config.Config
-	AppId      uint32
-	Port       string
-	NodeConn   net.Conn
-	Router     *gin.Engine
-	AllService map[string][]*AllService
+	Config *config.Config
+	AppId  uint32
+	Api    *api2.Api
+	Node   *NodeService
+
+	Ticker *time.Ticker
+	Stop   chan struct{}
 }
 
 type AllService struct {
@@ -29,32 +33,48 @@ type AllService struct {
 
 func NewMuip(cfg *config.Config, appid string) *Muip {
 	s := new(Muip)
-	MUIP = s
-
 	s.Config = cfg
 	s.AppId = alg.GetAppIdUint32(appid)
 	logger.Info("MuipServer AppId:%s", appid)
+
+	// newApi
 	port := s.Config.AppList[appid].App["port_http"].Port
 	if port == "" {
-		log.Println("MuipServer Port error")
+		log.Println("Api Port error")
 		os.Exit(0)
 	}
-	s.Port = port
-	// 连接node
-	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
-	if err != nil {
-		log.Println("nodeserver error")
-		os.Exit(0)
+	s.Api = &api2.Api{
+		Addr:   "0.0.0.0:" + port,
+		Router: gin.Default(), // gin.New(),
 	}
-	s.NodeConn = tcpConn
-	s.AllService = make(map[string][]*AllService)
-	go s.RecvNode()
-	// 向node注册
-	s.Connection()
-
 	gin.SetMode(gin.ReleaseMode) // 初始化gin
-	s.Router = gin.Default()     // gin.New()
-	s.Router.Use(gin.Recovery())
+	s.Api.Router.Use(gin.Recovery())
+	s.Api.InitRouter()
+
+	// 启动muip定时器
+	s.Ticker = time.NewTicker(Ticker * time.Second)
+	s.Stop = make(chan struct{})
+	go s.gameTicker()
 
 	return s
+}
+
+func (s *Muip) gameTicker() {
+	for {
+		select {
+		case <-s.Ticker.C:
+			s.GlobalRotationEvent()
+		case <-s.Stop:
+			s.Ticker.Stop()
+			return
+		}
+	}
+}
+
+func (s *Muip) GlobalRotationEvent() {
+	// 检查node是否存在
+	if s.Node == nil {
+		logger.Info("尝试连接node")
+		s.newNode()
+	}
 }

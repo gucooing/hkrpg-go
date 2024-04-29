@@ -29,16 +29,6 @@ message GetAllServiceGateRsp {// 向node获取gate服务回复
   int64 node_time = 3;
 }
 
-message GetAllServiceReq {
-  ServerType service_type = 1;
-  ServerType get_service_type = 2;
-}
-
-message GetAllServiceRsp {
-  ServerType service_type = 1;
-  repeated ServiceAll service_list = 2;
-}
-
 message ServiceAll{
   ServerType service_type = 1; // 服务id
   string addr = 2; // 地址
@@ -138,4 +128,18 @@ message GateToGamePlayerLogoutNotify {// gate通知game玩家该离线了
   uint32 uid = 1;
   int64  uuid = 2;
   uint32 account_id = 3; // sdk id
+}
+
+message MuipToNodePingReq { // muip向node发送的ping包
+  int64 muip_server_time = 1; // muip时间
+}
+
+message MuipToNodePingRsp { // node回复muip的ping包
+  int64 muip_server_time = 1; // muip时间
+  int64 node_server_time = 2; // node时间
+  map<uint32,MuipServiceAll> service_list = 3; // 全部服务
+}
+
+message MuipServiceAll {
+  repeated ServiceAll service_list = 1;
 }

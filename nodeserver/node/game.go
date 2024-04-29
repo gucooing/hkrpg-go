@@ -19,7 +19,7 @@ func (s *Service) gameRecvHandle() {
 			logger.Error("!!! GAME SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			s.killService()
+			s.n.killService(s)
 		}
 	}()
 
@@ -27,7 +27,7 @@ func (s *Service) gameRecvHandle() {
 		var bin []byte = nil
 		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
 		if err != nil {
-			s.killService()
+			s.n.killService(s)
 			break
 		}
 		bin = payload[:recvLen]

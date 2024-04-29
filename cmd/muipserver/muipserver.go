@@ -36,18 +36,16 @@ func main() {
 	// 初始化日志
 	logger.InitLogger("muipserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
-
+	// 初始化
 	cfg := config.GetConfig()
 	muips := muip.NewMuip(cfg, appid)
-	// 初始化
-
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
-	// 启动SDK服务
+	// 启动Api
 	go func() {
-		if err = muips.Start(); err != nil {
-			logger.Error("无法启动muipserver服务器")
+		if err = muips.Api.Start(); err != nil {
+			logger.Error("Api 服务启动失败, 原因: %s", err)
 		}
 	}()
 

@@ -19,7 +19,7 @@ func (s *Service) gateRecvHandle() {
 			logger.Error("!!! GATE SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			s.killService()
+			s.n.killService(s)
 		}
 	}()
 
@@ -27,7 +27,7 @@ func (s *Service) gateRecvHandle() {
 		var bin []byte = nil
 		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
 		if err != nil {
-			s.killService()
+			s.n.killService(s)
 			break
 		}
 		bin = payload[:recvLen]
@@ -53,7 +53,7 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GetAllServiceGameReq)
 	if req.ServiceType != s.ServerType {
 		logger.Debug("Service registration failed")
-		s.killService()
+		s.n.killService(s)
 		return
 	}
 	s.PlayerNum = req.PlayerNum

@@ -1,22 +1,19 @@
-package muip
+package api
 
 import (
 	"encoding/json"
 
 	"github.com/gin-gonic/gin"
-)
-
-var (
-	err error
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 )
 
 func State(c *gin.Context) {
-	rsp, _ := json.Marshal(MUIP.AllService)
+	rsp, _ := json.Marshal("")
 	c.String(200, string(rsp))
 }
 
 func GetPlayer(c *gin.Context) {
-	uid := stou32(c.Query("uid"))
+	uid := alg.S2U32(c.Query("uid"))
 	if uid == 0 {
 		c.JSON(404, gin.H{
 			"code": -1,
@@ -45,7 +42,7 @@ func GetPlayer(c *gin.Context) {
 }
 
 func GetPlayerBin(c *gin.Context) {
-	uid := stou32(c.Query("uid"))
+	uid := alg.S2U32(c.Query("uid"))
 	if uid == 0 {
 		c.JSON(404, gin.H{
 			"code": -1,
