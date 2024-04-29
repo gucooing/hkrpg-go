@@ -3,6 +3,7 @@ package muip
 import (
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,9 @@ type Muip struct {
 	AppId  uint32
 	Api    *api2.Api
 	Node   *NodeService
+
+	gsList     map[uint32]*gameServer // gs列表
+	gsListLock sync.Mutex             // gs列表互斥锁
 
 	Ticker *time.Ticker
 	Stop   chan struct{}

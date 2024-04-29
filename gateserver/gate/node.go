@@ -144,6 +144,7 @@ func (n *NodeService) GetAllServiceGameRsp(serviceMsg pb.Message) {
 			continue
 		}
 		if n.gate.getGsByAppid(service.AppId) == nil {
+			logger.Info("[AppId:%v]发现新的gameserver接入,申请连接中", service.AppId)
 			addr := service.Addr + ":" + service.Port
 			n.gate.newGs(addr, service.AppId)
 		}
