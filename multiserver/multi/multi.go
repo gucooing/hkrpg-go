@@ -1,14 +1,10 @@
-package muip
+package multi
 
 import (
-	"log"
-	"os"
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	api2 "github.com/gucooing/hkrpg-go/muipserver/api"
-	"github.com/gucooing/hkrpg-go/muipserver/config"
+	"github.com/gucooing/hkrpg-go/multiserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -17,10 +13,9 @@ const (
 	Ticker = 5 // 定时器间隔时间 / s
 )
 
-type Muip struct {
+type Multi struct {
 	Config *config.Config
 	AppId  uint32
-	Api    *api2.Api
 	Node   *NodeService
 
 	gsList     map[uint32]*gameServer // gs列表
@@ -35,25 +30,11 @@ type AllService struct {
 	PlayerNum int64
 }
 
-func NewMuip(cfg *config.Config, appid string) *Muip {
-	s := new(Muip)
+func NewMulti(cfg *config.Config, appid string) *Multi {
+	s := new(Multi)
 	s.Config = cfg
 	s.AppId = alg.GetAppIdUint32(appid)
-	logger.Info("MuipServer AppId:%s", appid)
-
-	// newApi
-	port := s.Config.AppList[appid].App["port_http"].Port
-	if port == "" {
-		log.Println("Api Port error")
-		os.Exit(0)
-	}
-	s.Api = &api2.Api{
-		Addr:   "0.0.0.0:" + port,
-		Router: gin.Default(), // gin.New(),
-	}
-	gin.SetMode(gin.ReleaseMode) // 初始化gin
-	s.Api.Router.Use(gin.Recovery())
-	s.Api.InitRouter()
+	logger.Info("MultiServer AppId:%s", appid)
 
 	// 启动muip定时器
 	s.Ticker = time.NewTicker(Ticker * time.Second)
@@ -63,7 +44,7 @@ func NewMuip(cfg *config.Config, appid string) *Muip {
 	return s
 }
 
-func (s *Muip) gameTicker() {
+func (s *Multi) gameTicker() {
 	for {
 		select {
 		case <-s.Ticker.C:
@@ -75,7 +56,7 @@ func (s *Muip) gameTicker() {
 	}
 }
 
-func (s *Muip) GlobalRotationEvent() {
+func (s *Multi) GlobalRotationEvent() {
 	// 检查node是否存在
 	if s.Node == nil {
 		logger.Info("尝试连接node")

@@ -11,7 +11,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (s *Service) muipRecvHandle() {
+func (s *Service) multiRecvHandle() {
 	payload := make([]byte, PacketMaxLen)
 	// panic捕获
 	defer func() {
@@ -35,30 +35,30 @@ func (s *Service) muipRecvHandle() {
 		alg.DecodeBinToPayload(bin, &msgList, nil)
 		for _, msg := range msgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			s.muipRegisterMessage(msg.CmdId, serviceMsg)
+			s.multiRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
 }
 
-func (s *Service) muipRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
+func (s *Service) multiRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.MuipToNodePingReq:
-		s.MuipToNodePingReq(serviceMsg)
+	case cmd.MultiToNodePingReq:
+		s.multiToNodePingReq(serviceMsg)
 	default:
-		logger.Info("muip -> node error cmdid:%v", cmdId)
+		logger.Info("multi -> node error cmdid:%v", cmdId)
 	}
 }
 
-func (s *Service) MuipToNodePingReq(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.MuipToNodePingReq)
-	rsp := &spb.MuipToNodePingRsp{
-		MuipServerTime: req.MuipServerTime,
-		NodeServerTime: time.Now().UnixNano() / 1e6,
-		ServiceList:    make(map[uint32]*spb.MuipServiceAll),
+func (s *Service) multiToNodePingReq(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.MultiToNodePingReq)
+	rsp := &spb.MultiToNodePingRsp{
+		MultiServerTime: req.MultiServerTime,
+		NodeServerTime:  time.Now().UnixNano() / 1e6,
+		ServiceList:     make(map[uint32]*spb.MultiServiceAll),
 	}
 
 	for serverType, serviceList := range s.n.GetAllService() {
-		muipServiceAll := &spb.MuipServiceAll{
+		muipServiceAll := &spb.MultiServiceAll{
 			ServiceList: make([]*spb.ServiceAll, 0),
 		}
 		for _, service := range serviceList {
@@ -73,5 +73,5 @@ func (s *Service) MuipToNodePingReq(serviceMsg pb.Message) {
 		rsp.ServiceList[serverType] = muipServiceAll
 	}
 
-	s.sendHandle(cmd.MuipToNodePingRsp, rsp)
+	s.sendHandle(cmd.MultiToNodePingRsp, rsp)
 }

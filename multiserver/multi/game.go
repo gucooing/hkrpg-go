@@ -1,4 +1,4 @@
-package muip
+package multi
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 )
 
 type gameServer struct {
-	muip         *Muip
+	multi        *Multi
 	appid        uint32   // appid
 	conn         net.Conn // gs tcp通道
 	tickerCancel context.CancelFunc

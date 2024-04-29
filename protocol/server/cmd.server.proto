@@ -130,16 +130,16 @@ message GateToGamePlayerLogoutNotify {// gate通知game玩家该离线了
   uint32 account_id = 3; // sdk id
 }
 
-message MuipToNodePingReq { // muip向node发送的ping包
-  int64 muip_server_time = 1; // muip时间
+message MultiToNodePingReq { // muip向node发送的ping包
+  int64 multi_server_time = 1; // muip时间
 }
 
-message MuipToNodePingRsp { // node回复muip的ping包
-  int64 muip_server_time = 1; // muip时间
+message MultiToNodePingRsp { // node回复muip的ping包
+  int64 multi_server_time = 1; // muip时间
   int64 node_server_time = 2; // node时间
-  map<uint32,MuipServiceAll> service_list = 3; // 全部服务
+  map<uint32,MultiServiceAll> service_list = 3; // 全部服务
 }
 
-message MuipServiceAll {
+message MultiServiceAll {
   repeated ServiceAll service_list = 1;
 }

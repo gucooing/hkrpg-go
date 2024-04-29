@@ -1280,8 +1280,8 @@ const (
 	GameToGateMsgNotify  = 10102
 	GetAllServiceGateReq = 10003
 	GetAllServiceGateRsp = 10103
-	MuipToNodePingReq    = 10004
-	MuipToNodePingRsp    = 10104
+	MultiToNodePingReq   = 10004
+	MultiToNodePingRsp   = 10104
 	// GetAllServiceReq         = 10005
 	// GetAllServiceRsp         = 10105
 	GetAllServiceGameReq     = 10006
@@ -1590,8 +1590,8 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GameToGateMsgNotify, func() any { return new(spb.GameToGateMsgNotify) })
 	c.regMsg(GetAllServiceGateReq, func() any { return new(spb.GetAllServiceGateReq) })
 	c.regMsg(GetAllServiceGateRsp, func() any { return new(spb.GetAllServiceGateRsp) })
-	c.regMsg(MuipToNodePingReq, func() any { return new(spb.MuipToNodePingReq) })
-	c.regMsg(MuipToNodePingRsp, func() any { return new(spb.MuipToNodePingRsp) })
+	c.regMsg(MultiToNodePingReq, func() any { return new(spb.MultiToNodePingReq) })
+	c.regMsg(MultiToNodePingRsp, func() any { return new(spb.MultiToNodePingRsp) })
 	// c.regMsg(GetAllServiceReq, func() any { return new(spb.GetAllServiceReq) })
 	// c.regMsg(GetAllServiceRsp, func() any { return new(spb.GetAllServiceRsp) })
 	c.regMsg(GetAllServiceGameReq, func() any { return new(spb.GetAllServiceGameReq) })

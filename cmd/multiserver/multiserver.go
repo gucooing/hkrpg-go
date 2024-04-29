@@ -10,15 +10,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/muipserver/config"
-	"github.com/gucooing/hkrpg-go/muipserver/muip"
+	"github.com/gucooing/hkrpg-go/multiserver/config"
+	"github.com/gucooing/hkrpg-go/multiserver/multi"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func main() {
 	// 启动读取配置
-	confName := "muipserver.json"
+	confName := "multiserver.json"
 	err := config.LoadConfig(confName)
 	if err != nil {
 		if err == config.FileNotExist {
@@ -34,20 +34,13 @@ func main() {
 	}
 	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("muipserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("multiserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	// 初始化
 	cfg := config.GetConfig()
-	muips := muip.NewMuip(cfg, appid)
+	multi.NewMulti(cfg, appid)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	// 启动Api
-	go func() {
-		if err = muips.Api.Start(); err != nil {
-			logger.Error("Api 服务启动失败, 原因: %s", err)
-		}
-	}()
 
 	go func() {
 		select {

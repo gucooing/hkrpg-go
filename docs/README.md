@@ -28,7 +28,7 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 ```
 了解到了appid的组成含义后你可以先不携带参数启动一次，使其生成各个服务的配置文件，生成的配置文件在conf文件夹里，然后根据你自己定义的appid更改默认配置文件中的appid(虽然服务采用发现形式添加新服务，但是还是推荐每一个配置文件中的appid配置表都相同)，然后根据自己的想法更改配置文件中的其他参数。
 ### 3.数据库的准备，
-安装mysql，mysql中新疆数据库：hkrpg-go (utf8mb4),然后更改配置文件中的账户和密码，安装redis，更改配置文件中的密码（本服务可采用分表分库形式，但同一张表一定要是同一个数据库）
+安装mysql，mysql中新建数据库：hkrpg-go (utf8mb4),然后更改配置文件中的账户和密码，安装redis，更改配置文件中的密码（本服务可采用分表分库形式，但同一张表一定要是同一个数据库）
 ### 4.启动，
 前期的准备工作已经全部完成了到了启动的时候了，推荐的启动顺序为：
 > 下面示例的启动方法为默认配置文件的启动参数
@@ -37,7 +37,7 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 ./gameserver -i 9001.2.1.1
 ./gateserver -i 9001.1.1.1
 ./dispatch -i 9001.4.1.1
-./muipserver -i 9001.5.1.1
+./multiserver -i 9001.5.1.1
 ```
 
 ## 各服务功能
@@ -45,7 +45,7 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 ### dispatch 登录服务器（无状态，可集群）
 ### gateserver 网关服务器（有状态，可集群），内部网络与外界唯一交互口
 ### gameserver 逻辑服务器（有状态，可集群），处理业务逻辑
-### muipserver 多人服务器（有状态，可集群），处理好友，邮件等功能
+### multiserver 多人服务器（有状态，可集群），处理好友，邮件等功能
 
 ## 进阶操作
 ### 多gateserver、多gameserver部署

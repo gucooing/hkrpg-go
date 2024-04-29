@@ -102,8 +102,8 @@ func (n *Node) ServiceConnectionReq(serviceMsg pb.Message, s *Service) {
 		go s.gameRecvHandle()
 	case spb.ServerType_SERVICE_DISPATCH:
 		go s.dispatchRecvHandle()
-	case spb.ServerType_SERVICE_MUIP:
-		go s.muipRecvHandle()
+	case spb.ServerType_SERVICE_MULTI:
+		go s.multiRecvHandle()
 	default:
 		logger.Info("Service registration failed")
 		return

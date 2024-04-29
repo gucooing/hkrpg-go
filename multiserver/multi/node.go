@@ -1,4 +1,4 @@
-package muip
+package multi
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 )
 
 type NodeService struct {
-	s        *Muip
+	s        *Multi
 	Addr     string
 	nodeConn net.Conn
 
@@ -23,7 +23,7 @@ type NodeService struct {
 	ticker       *time.Ticker // 定时器
 }
 
-func (s *Muip) newNode() {
+func (s *Multi) newNode() {
 	n := new(NodeService)
 	n.s = s
 	n.Addr = s.Config.NetConf["Node"]
@@ -58,7 +58,7 @@ func (n *NodeService) nodeTicler(tickerCtx context.Context) {
 	for {
 		select {
 		case <-n.ticker.C:
-			n.MuipToNodePingReq() // ping包
+			n.MultiToNodePingReq() // ping包
 		case <-tickerCtx.Done():
 			n.ticker.Stop()
 			return
@@ -69,7 +69,7 @@ func (n *NodeService) nodeTicler(tickerCtx context.Context) {
 // 向node注册
 func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
-		ServerType: spb.ServerType_SERVICE_MUIP,
+		ServerType: spb.ServerType_SERVICE_MULTI,
 		AppId:      n.s.AppId,
 	}
 
@@ -102,10 +102,10 @@ func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp: // 注册回包
 		n.ServiceConnectionRsp(serviceMsg)
-	case cmd.MuipToNodePingRsp: // 心跳包
-		n.MuipToNodePingRsp(serviceMsg)
+	case cmd.MultiToNodePingRsp: // 心跳包
+		n.MultiToNodePingRsp(serviceMsg)
 	default:
-		logger.Info("node -> muip error cmdid:%v", cmdId)
+		logger.Info("node -> multi error cmdid:%v", cmdId)
 	}
 }
 
@@ -128,22 +128,22 @@ func (n *NodeService) sendNode(cmdId uint16, playerMsg pb.Message) {
 
 func (n *NodeService) ServiceConnectionRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.ServiceConnectionRsp)
-	if rsp.ServerType == spb.ServerType_SERVICE_MUIP && rsp.AppId == n.s.AppId {
+	if rsp.ServerType == spb.ServerType_SERVICE_MULTI && rsp.AppId == n.s.AppId {
 		logger.Info("已向node注册成功！")
 	}
 }
 
-func (n *NodeService) MuipToNodePingReq() {
-	req := &spb.MuipToNodePingReq{
-		MuipServerTime: time.Now().UnixNano() / 1e6,
+func (n *NodeService) MultiToNodePingReq() {
+	req := &spb.MultiToNodePingReq{
+		MultiServerTime: time.Now().UnixNano() / 1e6,
 	}
-	n.sendNode(cmd.MuipToNodePingReq, req)
+	n.sendNode(cmd.MultiToNodePingReq, req)
 }
 
-func (n *NodeService) MuipToNodePingRsp(serviceMsg pb.Message) {
-	rsp := serviceMsg.(*spb.MuipToNodePingRsp)
-	if rsp.NodeServerTime-rsp.MuipServerTime > 5 {
-		logger.Warn("muip <-> node 调用时间过长")
+func (n *NodeService) MultiToNodePingRsp(serviceMsg pb.Message) {
+	rsp := serviceMsg.(*spb.MultiToNodePingRsp)
+	if rsp.NodeServerTime-rsp.MultiServerTime > 5 {
+		logger.Warn("multi <-> node 调用时间过长")
 	}
 	logger.Info("ping rsp msg :%s", protojson.Format(rsp))
 }
