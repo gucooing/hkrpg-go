@@ -65,6 +65,9 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 		logger.Error("Update Player error")
 		return
 	}
+	if !s.SetPlayerPlayerBasicBriefData(p) {
+		logger.Error("[UID:%v][UUID:%v]玩家简要信息保存失败", p.Uid, p.Uuid)
+	}
 	return
 }
 
@@ -169,8 +172,8 @@ func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
 	return err
 }
 
-func KickPlayer(g *player.GamePlayer) {
-	if err := UpDataPlayer(g); err != nil {
+func (s *GameServer) KickPlayer(g *player.GamePlayer) {
+	if err := s.UpDataPlayer(g); err != nil {
 		logger.Error("[UID:%v]保存数据失败", g.Uid)
 	}
 	GAMESERVER.DelPlayerMap(g.Uuid)
@@ -180,7 +183,7 @@ func KickPlayer(g *player.GamePlayer) {
 	logger.Info("[UID:%v]玩家离线game", g.Uid)
 }
 
-func UpDataPlayer(g *player.GamePlayer) error {
+func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {
 	var err error
 	if g.PlayerPb == nil {
 		return nil
@@ -217,5 +220,29 @@ func UpDataPlayer(g *player.GamePlayer) error {
 		logger.Error("Update Player error")
 		return err
 	}
+	if !s.SetPlayerPlayerBasicBriefData(g) {
+		logger.Error("[UID:%v][UUID:%v]玩家简要信息保存失败", g.Uid, g.Uuid)
+	}
 	return nil
+}
+
+func (s *GameServer) SetPlayerPlayerBasicBriefData(g *player.GamePlayer) bool {
+	playerBasicBrief := &spb.PlayerBasicBriefData{
+		Nickname:          g.GetNickname(),
+		Level:             g.GetLevel(),
+		WorldLevel:        g.GetWorldLevel(),
+		LastLoginTime:     time.Now().Unix(),
+		HeadImageAvatarId: g.GetHeadIcon(),
+		Exp:               g.GetPlayerPb().Exp,
+		PlatformType:      0,
+		Uid:               g.Uid,
+	}
+
+	bin, err := pb.Marshal(playerBasicBrief)
+	if err != nil {
+		logger.Error("pb marshal error: %v", err)
+		return false
+	}
+
+	return s.Store.SetPlayerPlayerBasicBriefData(g.Uid, bin)
 }

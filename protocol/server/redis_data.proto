@@ -62,3 +62,14 @@ message ReadMessage {
 message UnreadMessages {
 
 }
+
+message PlayerBasicBriefData { // 玩家简要信息
+  string nickname = 1; // 昵称
+  uint32 level = 2; // 等级
+  uint32 world_level = 3; // 世界等级
+  int64 last_login_time = 4;// 上一次登录时间
+  uint32 head_image_avatar_id = 5; // 头像id
+  uint32 exp = 6; // 经验
+  uint32 platform_type = 7; // 登录设备
+  uint32 uid = 8; // 游戏uid
+}

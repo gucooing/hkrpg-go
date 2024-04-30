@@ -157,3 +157,35 @@ func (g *GamePlayer) GetSceneEntity() *SceneEntity {
 
 	return g.GetPlayer().SceneEntity
 }
+
+func (g *GamePlayer) GetNickname() string {
+	db := g.GetPlayerPb()
+	if db.Nickname == "" {
+		db.Nickname = "hkrpg-go"
+	}
+	return db.Nickname
+}
+
+func (g *GamePlayer) GetLevel() uint32 {
+	db := g.GetPlayerPb()
+	if db.Level <= 0 {
+		db.Level = 1
+	}
+	return db.Level
+}
+
+func (g *GamePlayer) GetWorldLevel() uint32 {
+	db := g.GetPlayerPb()
+	if db.WorldLevel < 0 {
+		db.WorldLevel = 0
+	}
+	return db.WorldLevel
+}
+
+func (g *GamePlayer) GetHeadIcon() uint32 {
+	db := g.GetPlayerPb()
+	if db.HeadImageAvatarId == 0 {
+		db.HeadImageAvatarId = 208001
+	}
+	return db.HeadImageAvatarId
+}

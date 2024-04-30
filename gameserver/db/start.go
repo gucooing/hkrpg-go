@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+
 	"github.com/gucooing/hkrpg-go/pkg/database"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
@@ -23,6 +24,8 @@ func NewStore(config *config.Config) *Store {
 	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
 	redisStatusConf := config.RedisConf["player_status"]
 	s.StatusRedis = database.NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
+	playerBriefDataRedis := config.RedisConf["player_brief_data"]
+	s.PlayerBriefDataRedis = database.NewRedis(playerBriefDataRedis.Addr, playerBriefDataRedis.Password, playerBriefDataRedis.DB)
 
 	logger.Info("数据库连接成功")
 	return s

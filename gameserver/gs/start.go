@@ -133,7 +133,7 @@ func (s *GameServer) AutoUpDataPlayer() {
 			timestamp := time.Now().Unix()
 			if timestamp-lastActiveTime >= 120 {
 				logger.Info("[UID:%v]玩家超时离线", g.p.Uid)
-				KickPlayer(g.p)
+				s.KickPlayer(g.p)
 			}
 		}
 	}
@@ -141,7 +141,7 @@ func (s *GameServer) AutoUpDataPlayer() {
 
 func Close() error {
 	for _, gamePlayer := range GAMESERVER.PlayerMap {
-		KickPlayer(gamePlayer.p)
+		GAMESERVER.KickPlayer(gamePlayer.p)
 	}
 	return nil
 }

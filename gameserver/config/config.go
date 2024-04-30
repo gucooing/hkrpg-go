@@ -123,5 +123,10 @@ var DefaultConfig = &Config{
 			Password: "password",
 			DB:       1,
 		},
+		"player_brief_data": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
+		},
 	},
 }

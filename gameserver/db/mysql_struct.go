@@ -7,10 +7,11 @@ import (
 )
 
 type Store struct {
-	config          *config.Config
-	PlayerDataMysql *gorm.DB
-	LoginRedis      *redis.Client
-	StatusRedis     *redis.Client
+	config               *config.Config
+	PlayerDataMysql      *gorm.DB
+	LoginRedis           *redis.Client
+	StatusRedis          *redis.Client
+	PlayerBriefDataRedis *redis.Client // 玩家简要信息
 }
 
 type PlayerData struct {
