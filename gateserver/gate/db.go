@@ -2,10 +2,10 @@ package gate
 
 import (
 	"context"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -37,13 +37,13 @@ type PlayerUid struct {
 func NewStore(config *config.Config) *Store {
 	s := &Store{config: config}
 	playerUidMysqlConf := config.MysqlConf["player_uid"]
-	s.PlayerUidMysql = alg.NewMysql(playerUidMysqlConf.Dsn)
+	s.PlayerUidMysql = database.NewMysql(playerUidMysqlConf.Dsn)
 	s.PlayerUidMysql.AutoMigrate(&PlayerUid{})
 
 	redisLoginConf := config.RedisConf["player_login"]
-	s.LoginRedis = alg.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
+	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
 	redisStatusConf := config.RedisConf["player_status"]
-	s.StatusRedis = alg.NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
+	s.StatusRedis = database.NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
 
 	logger.Info("数据库连接成功")
 	return s

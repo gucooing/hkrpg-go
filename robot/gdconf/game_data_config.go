@@ -6,8 +6,8 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/robot/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/robot/config"
 )
 
 var CONF *GameDataConfig = nil

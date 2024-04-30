@@ -1,6 +1,7 @@
 package multi
 
 import (
+	"github.com/gucooing/hkrpg-go/multiserver/db"
 	"sync"
 	"time"
 
@@ -17,6 +18,7 @@ type Multi struct {
 	Config *config.Config
 	AppId  uint32
 	Node   *NodeService
+	store  *db.Store
 
 	gsList     map[uint32]*gameServer // gs列表
 	gsListLock sync.Mutex             // gs列表互斥锁
@@ -30,11 +32,12 @@ type AllService struct {
 	PlayerNum int64
 }
 
-func NewMulti(cfg *config.Config, appid string) *Multi {
+func NewMulti(cfg *config.Config, appid string, store *db.Store) *Multi {
 	s := new(Multi)
 	s.Config = cfg
 	s.AppId = alg.GetAppIdUint32(appid)
 	logger.Info("MultiServer AppId:%s", appid)
+	s.store = store
 
 	// 启动muip定时器
 	s.Ticker = time.NewTicker(Ticker * time.Second)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gucooing/hkrpg-go/multiserver/db"
 	"os"
 	"os/signal"
 	"strings"
@@ -38,7 +39,10 @@ func main() {
 	logger.Info("hkrpg-go")
 	// 初始化
 	cfg := config.GetConfig()
-	multi.NewMulti(cfg, appid)
+	// 初始化数据库
+	dbs := db.NewStore(cfg)
+	// 初始化服务
+	multi.NewMulti(cfg, appid, dbs)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 

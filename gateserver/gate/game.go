@@ -63,7 +63,7 @@ func (gs *gameServer) recvGame() {
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			playerMsg := alg.DecodePayloadToProto(msg)
-			gs.gameRegisterMessage(msg.CmdId, playerMsg)
+			go gs.gameRegisterMessage(msg.CmdId, playerMsg)
 		}
 	}
 }
