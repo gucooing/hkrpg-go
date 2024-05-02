@@ -33,14 +33,15 @@ func main() {
 			panic(err)
 		}
 	}
+	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("gameserver"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("gameserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	cfg := config.GetConfig()
 	// 初始化game
-	gameserver := gs.NewGameServer(cfg)
+	gameserver := gs.NewGameServer(cfg, appid)
 	if gameserver == nil {
 		logger.Error("game初始化失败")
 		return

@@ -160,4 +160,6 @@ enum Retcode {
   RET_SUCC = 0; // 成功
   RET_FAIL = 1; // 失败
   RET_PLAYER_DATA_ERROR = 2; // 玩家数据损坏
+  RET_NODE_ERR = 3; // node意外离线
+  RET_PLAYER_ID_ERR = 4; // 玩家id缺失
 }

@@ -19,7 +19,8 @@ func (s *Service) dispatchRecvHandle() {
 			logger.Error("!!! DISPATCH SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			s.killService()
+			s.n.killService(s)
+			return
 		}
 	}()
 
@@ -27,7 +28,7 @@ func (s *Service) dispatchRecvHandle() {
 		var bin []byte = nil
 		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
 		if err != nil {
-			s.killService()
+			s.n.killService(s)
 			break
 		}
 		bin = payload[:recvLen]
@@ -50,10 +51,11 @@ func (s *Service) dispatchRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 }
 
 func (s *Service) dispatchGetAllServiceGateReq(serviceMsg pb.Message) {
+	s.lastAliveTime = time.Now().Unix()
 	req := serviceMsg.(*spb.GetAllServiceGateReq)
 	if req.ServiceType != s.ServerType {
 		logger.Debug("Service registration failed")
-		s.killService()
+		s.n.killService(s)
 		return
 	}
 	rsp := &spb.GetAllServiceGateRsp{

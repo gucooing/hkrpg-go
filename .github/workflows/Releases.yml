@@ -22,12 +22,6 @@ jobs:
 
     - name: Go Tidy
       run: cd go/hkrpg && go mod tidy
-
-    - name: Build for Linux (x64)
-      run: cd go/hkrpg && go build -o hkrpg-go-linux-x64 main.go
-      env:
-        GOOS: linux
-        GOARCH: amd64
     
     - name: Build
       run: cd go/hkrpg && bash build.sh
@@ -42,9 +36,9 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.TOKENHK }}
       with:
-        tag_name: v1.0.6
-        name: Release v1.0.6
-        body: sr 1.6.0 sync
+        tag_name: v1.1.1
+        name: Release v1.1.1
+        body: sr 2.1.0
         draft: false
         prerelease: false
         files: go/hkrpg/build/

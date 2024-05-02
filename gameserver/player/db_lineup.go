@@ -1,73 +1,126 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-type DbLineUp struct {
-	LineUpList   []*LineUp
-	MainLineUp   uint32 // 当前上场队伍
-	MainAvatarId uint32 // 当前上场角色
-}
-
-type LineUp struct {
-	Name string
-	// ExtraLineupType proto.ExtraLineupType
-	AvatarIdList []uint32
-}
+const MaxLineupList = 20 // 设置最大普通队伍数
 
 func (g *GamePlayer) GetLineUp() *spb.LineUp {
-	if g.PlayerPb.LineUp == nil {
-		g.PlayerPb.LineUp = &spb.LineUp{
-			MainLineUp:   0,
-			MainAvatarId: 0,
-			LineUpList:   make(map[uint32]*spb.Line),
+	db := g.GetPlayerPb()
+	if db.LineUp == nil {
+		db.LineUp = &spb.LineUp{
+			MainLineUp:     0,
+			LineUpList:     make(map[uint32]*spb.Line),
+			BattleLineList: make(map[uint32]*spb.BattleLine),
 		}
-		g.PlayerPb.LineUp.LineUpList[0] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{uint32(g.GetAvatar().CurMainAvatar), 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
-		g.PlayerPb.LineUp.LineUpList[1] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
-		g.PlayerPb.LineUp.LineUpList[2] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
-		g.PlayerPb.LineUp.LineUpList[3] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
-		g.PlayerPb.LineUp.LineUpList[4] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
-		g.PlayerPb.LineUp.LineUpList[5] = &spb.Line{Name: "hkrpg", AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_NONE}
-		g.PlayerPb.LineUp.LineUpList[6] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_CHALLENGE}
-		g.PlayerPb.LineUp.LineUpList[7] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_CHALLENGE_2}
-		g.PlayerPb.LineUp.LineUpList[8] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_CHALLENGE_3}
-		g.PlayerPb.LineUp.LineUpList[9] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_ROGUE}
-		g.PlayerPb.LineUp.LineUpList[10] = &spb.Line{AvatarIdList: []uint32{0, 0, 0, 0}, ExtraLineupType: spb.ExtraLineupType_LINEUP_STAGE_TRIAL}
+		db.LineUp.LineUpList[0] = &spb.Line{
+			Name:         "hkrpg",
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
+			LeaderSlot:   0,
+		}
+		db.LineUp.LineUpList[0].AvatarIdList[0] = &spb.LineAvatarList{AvatarId: uint32(g.GetAvatar().CurMainAvatar), Slot: 0}
 	}
-	return g.PlayerPb.LineUp
+	return db.LineUp
 }
 
 func (g *GamePlayer) GetLineUpById(index uint32) *spb.Line {
-	return g.GetLineUp().LineUpList[index]
+	db := g.GetLineUp()
+	if db.LineUpList == nil {
+		db.LineUpList = make(map[uint32]*spb.Line)
+		db.LineUpList[0] = &spb.Line{
+			Name:         "hkrpg",
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
+			LeaderSlot:   0,
+		}
+		db.LineUpList[0].AvatarIdList[0] = &spb.LineAvatarList{AvatarId: uint32(g.GetAvatar().CurMainAvatar), Slot: 0}
+	}
+	if db.LineUpList[index] == nil {
+		db.LineUpList[index] = &spb.Line{
+			Name:         "",
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
+			LeaderSlot:   0,
+		}
+	}
+	return db.LineUpList[index]
 }
 
-func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
-	lineUp := g.GetLineUpById(id)
-	lineupList := &proto.LineupInfo{
-		IsVirtual:       false,
-		LeaderSlot:      0,
-		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           id,
-		ExtraLineupType: proto.ExtraLineupType(lineUp.ExtraLineupType),
-		MaxMp:           5,
-		Mp:              5,
-		Name:            lineUp.Name,
-		PlaneId:         0,
+func (g *GamePlayer) GetBattleLineUpById(index uint32) *spb.BattleLine {
+	db := g.GetLineUp()
+	if db.BattleLineList == nil {
+		db.BattleLineList = make(map[uint32]*spb.BattleLine)
 	}
-	for slot, avatarId := range lineUp.AvatarIdList {
-		if avatarId == 0 {
+	if db.BattleLineList[index] == nil {
+		db.BattleLineList[index] = &spb.BattleLine{
+			AvatarIdList:    make(map[uint32]*spb.LineAvatarList),
+			LeaderSlot:      0,
+			ExtraLineupType: spb.ExtraLineupType(index),
+		}
+	}
+	return db.BattleLineList[index]
+}
+
+func (g *GamePlayer) GetCurLineUp() *spb.Line {
+	db := g.GetLineUp()
+	return db.LineUpList[db.MainLineUp]
+}
+
+func (g *GamePlayer) GetSceneAvatarId() uint32 {
+	db := g.GetCurLineUp()
+	if db.AvatarIdList[db.LeaderSlot] == nil {
+		logger.Error("获取的角色不存在于队伍中")
+		return 8001
+	} else {
+		return db.AvatarIdList[db.LeaderSlot].AvatarId
+	}
+}
+
+// 队伍更新
+func (g *GamePlayer) UnDbLineUp(index uint32, Slot uint32, avatarId uint32) {
+	db := g.GetLineUpById(index)
+	db.AvatarIdList[Slot] = &spb.LineAvatarList{AvatarId: avatarId, Slot: Slot}
+	db.LeaderSlot = Slot
+}
+
+// 交换角色
+func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
+	db := g.GetLineUpById(index)
+	src := db.AvatarIdList[src_slot]
+	dst := db.AvatarIdList[dst_slot]
+	src.Slot = dst.Slot
+	dst.Slot = src.Slot
+	db.AvatarIdList[src_slot] = dst
+	db.AvatarIdList[dst_slot] = src
+}
+
+/*****************************************功能方法****************************/
+
+func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
+	db := g.GetLineUpById(id)
+	lineupList := &proto.LineupInfo{
+		IsVirtual:  false,
+		LeaderSlot: db.LeaderSlot,
+		AvatarList: make([]*proto.LineupAvatar, 0),
+		Index:      id,
+		MaxMp:      5,
+		Mp:         5,
+		Name:       db.Name,
+		PlaneId:    0,
+	}
+	for slot, lineAvatar := range db.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatar := g.GetAvatar().Avatar[avatarId]
-		if avatar == nil {
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
+		if avatarBin == nil {
 			lineupAvatar := &proto.LineupAvatar{
 				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
-				Slot:       uint32(slot),
+				Slot:       slot,
 				Satiety:    0,
 				Hp:         10000,
-				Id:         avatarId,
+				Id:         lineAvatar.AvatarId,
 				SpBar: &proto.SpBarInfo{
 					CurSp: 6000,
 					MaxSp: 10000,
@@ -76,33 +129,18 @@ func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
 			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 		} else {
 			lineupAvatar := &proto.LineupAvatar{
-				AvatarType: proto.AvatarType(avatar.AvatarType),
-				Slot:       uint32(slot),
+				AvatarType: proto.AvatarType(avatarBin.AvatarType),
+				Slot:       slot,
 				Satiety:    0,
-				Hp:         avatar.Hp,
-				Id:         avatarId,
+				Hp:         avatarBin.Hp,
+				Id:         lineAvatar.AvatarId,
 				SpBar: &proto.SpBarInfo{
-					CurSp: avatar.SpBar.CurSp,
-					MaxSp: avatar.SpBar.MaxSp,
+					CurSp: avatarBin.SpBar.CurSp,
+					MaxSp: avatarBin.SpBar.MaxSp,
 				},
 			}
 			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
 		}
 	}
 	return lineupList
-}
-
-// 队伍更新
-func (g *GamePlayer) UnDbLineUp(index uint32, Slot uint32, avatarId uint32) {
-	g.PlayerPb.LineUp.LineUpList[index].AvatarIdList[Slot] = avatarId
-}
-
-// 交换角色
-func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
-	lineUpList := g.PlayerPb.LineUp.LineUpList[index]
-	lineUpList.AvatarIdList[src_slot], lineUpList.AvatarIdList[dst_slot] = lineUpList.AvatarIdList[dst_slot], lineUpList.AvatarIdList[src_slot]
-}
-
-func (g *GamePlayer) GetSceneAvatarId() uint32 {
-	return g.PlayerPb.LineUp.LineUpList[g.PlayerPb.LineUp.MainLineUp].AvatarIdList[g.PlayerPb.LineUp.MainAvatarId]
 }

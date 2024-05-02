@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
 	_ "net/http/pprof"
 	"os"
 	"os/signal"
@@ -35,23 +33,20 @@ func main() {
 			panic(err)
 		}
 	}
+	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("gateserver"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("gateserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	cfg := config.GetConfig()
 	// 初始化geta
-	gaten := gate.NewGate(cfg)
-
-	go func() {
-		log.Println(http.ListenAndServe(":6060", nil))
-	}()
+	gaten := gate.NewGate(cfg, appid)
 
 	// 启动gate服务
 	go func() {
-		if err = gaten.Run(); err != nil {
-			logger.Error("无法启动geta服务器")
+		if err = gaten.RunKcp(); err != nil {
+			logger.Error("无法启动kcp服务")
 		}
 	}()
 

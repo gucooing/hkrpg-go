@@ -1,6 +1,12 @@
 ![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
+ 
+## 朋友要复出了，可以关注一下 [hk4e](https://github.com/flswld/hk4e-go)
 
  随机首包密钥，随机生成seed，使数据更加安全
+
+ 分布式架构，使可承载玩家大大提高
+
+ ~~学习golang的第一个稍微大一点的项目，bug max~~
 
 ### 已实现的功能：
 - 走路模拟器

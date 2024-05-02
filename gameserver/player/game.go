@@ -17,12 +17,11 @@ import (
 var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
 
 type GamePlayer struct {
-	IsProficientPlayer bool // 是否新号
-	Uuid               int64
-	Uid                uint32
-	AccountId          uint32
-	GateAppId          string
-	LastActiveTime     int64 // 最近一次的活跃时间
+	Uuid           int64
+	Uid            uint32
+	AccountId      uint32
+	GateAppId      uint32
+	LastActiveTime int64 // 最近一次的活跃时间
 	// 玩家数据
 	Player   *PlayerData
 	PlayerPb *spb.PlayerBasicCompBin // 玩家pb数据
@@ -31,6 +30,14 @@ type GamePlayer struct {
 	closeOnce sync.Once
 	stop      chan struct{}
 	Ticker    *time.Timer
+
+	MsgChan chan Msg // 消息通道
+}
+
+type Msg struct {
+	AppId     uint32 // gs appid
+	CmdId     uint16
+	PlayerMsg pb.Message
 }
 
 const (
@@ -58,13 +65,18 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 	rspMsg.PayloadMessage = playerMsg
 	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-
-	gtgMsg := &spb.PlayerToGameByGateRsp{
-		MessageType: 0,
-		PlayerBin:   binMsg,
+	gtgMsg := &spb.GameToGateMsgNotify{
+		Uid:  g.Uid,
+		Uuid: g.Uuid,
+		Msg:  binMsg,
 	}
 
-	g.SendGate(cmd.PlayerToGameByGateRsp, gtgMsg)
+	g.MsgChan <- Msg{
+		AppId:     g.GateAppId,
+		CmdId:     cmd.GameToGateMsgNotify,
+		PlayerMsg: gtgMsg,
+	}
+
 }
 
 func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {

@@ -1,3 +1,7 @@
+/*
+好用的kcp
+爱 来自 hk4e-go
+*/
 package kcp
 
 import (

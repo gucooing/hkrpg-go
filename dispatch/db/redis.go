@@ -9,7 +9,7 @@ import (
 
 func (s *Store) GetComboTokenByAccountId(accountId string) string {
 	key := "player_comboToken:" + accountId
-	comboToken, err := s.RedisDb.Get(ctx, key).Result()
+	comboToken, err := s.LoginRedis.Get(ctx, key).Result()
 	if err != nil {
 		comboToken = random.GetRandomByteHexStr(20)
 		s.SetComboTokenByAccountId(accountId, comboToken)
@@ -19,7 +19,7 @@ func (s *Store) GetComboTokenByAccountId(accountId string) string {
 
 func (s *Store) SetComboTokenByAccountId(accountId, comboToken string) string {
 	key := "player_comboToken:" + accountId
-	err := s.RedisDb.Set(ctx, key, comboToken, 168*time.Hour).Err()
+	err := s.LoginRedis.Set(ctx, key, comboToken, 168*time.Hour).Err()
 	if err != nil {
 		return ""
 	}

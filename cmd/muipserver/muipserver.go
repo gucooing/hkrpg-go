@@ -17,7 +17,6 @@ import (
 )
 
 func main() {
-	// 启动读取配置
 	confName := "muipserver.json"
 	err := config.LoadConfig(confName)
 	if err != nil {
@@ -32,21 +31,22 @@ func main() {
 			panic(err)
 		}
 	}
+	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("muipserver"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("muipserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
-
-	cfg := config.GetConfig()
-	muips := muip.NewMuip(cfg)
-	// 初始化
-
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	cfg := config.GetConfig()
+	// 初始化muip
+	s := muip.NewMuip(cfg, appid)
+
+	// 连接nodeserver
 
 	// 启动SDK服务
 	go func() {
-		if err = muips.Start(); err != nil {
-			logger.Error("无法启动muipserver服务器")
+		if err = s.Api.StartApi(); err != nil {
+			logger.Error("无法启动Api")
 		}
 	}()
 
@@ -55,7 +55,9 @@ func main() {
 		case <-done:
 			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
+			logger.Info("MuipServer 正在关闭")
 
+			logger.Info("MuipServer 服务已停止")
 			logger.CloseLogger()
 			os.Exit(0)
 		}

@@ -11,7 +11,7 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) PlayerHeartBeatCsReq() {
+func (g *GamePlayer) PlayerHeartBeatCsReq(payloadMsg []byte) {
 	g.LastActiveTime = time.Now().Unix()
 }
 
@@ -24,7 +24,7 @@ func (g *GamePlayer) StaminaInfoScNotify() {
 	g.Send(cmd.StaminaInfoScNotify, notify)
 }
 
-func (g *GamePlayer) HandleGetBasicInfoCsReq() {
+func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
 	rsp.NextRecoverTime = 1698768000
@@ -34,7 +34,7 @@ func (g *GamePlayer) HandleGetBasicInfoCsReq() {
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetArchiveDataCsReq() {
+func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetArchiveDataScRsp)
 	archiveData := &proto.ArchiveData{
 		ArchiveMissingAvatarIdList:    make([]uint32, 0),
@@ -63,7 +63,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq() {
 	for _, relicList := range gdconf.GetRelicMap() {
 		archiveRelicList := &proto.RelicArchive{
 			RelicId: relicList.ID,
-			Slot:    relicList.Type,
+			Slot:    relicList.SetID,
 		}
 		archiveData.RelicList = append(archiveData.RelicList, archiveRelicList)
 	}
@@ -73,7 +73,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq() {
 	g.Send(cmd.GetArchiveDataScRsp, rsp)
 }
 
-func (g *GamePlayer) GetUpdatedArchiveDataCsReq() {
+func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetUpdatedArchiveDataScRsp, nil)
 }
 
@@ -134,7 +134,7 @@ func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetFriendLoginInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetFriendListInfoCsReq() {
+func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetFriendListInfoScRsp)
 	rsp.FriendList = make([]*proto.FriendListInfo, 0)
 	simpleInfo := &proto.SimpleInfo{
@@ -182,17 +182,6 @@ func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.ToUidList, req.Emote, req.MsgType, req.Text, req.ChatType)
 }
 
-func (g *GamePlayer) HandleGetRogueHandbookDataCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetRogueHandbookDataScRsp)
-	handbookInfo := &proto.RogueHandbookData{
-		// RogueCurrentVersion: 1,
-		// IsMiracleUnlock:     true,
-	}
-	rsp.HandbookInfo = handbookInfo
-
-	g.Send(cmd.GetRogueHandbookDataScRsp, rsp)
-}
-
 func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
@@ -221,11 +210,11 @@ func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetChatEmojiListScRsp, nil)
 }
 
-func (g *GamePlayer) HandleGetAssistHistoryCsReq() {
+func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetAssistHistoryScRsp, nil)
 }
 
-func (g *GamePlayer) SetClientPausedCsReq() {
+func (g *GamePlayer) SetClientPausedCsReq(payloadMsg []byte) {
 	rsp := new(proto.SetClientPausedScRsp)
 	g.Player.IsPaused = !g.Player.IsPaused
 	rsp.Paused = g.Player.IsPaused
@@ -294,7 +283,7 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 	g.Send(cmd.SetSignatureScRsp, rsp)
 }
 
-func (g *GamePlayer) TextJoinQueryCsReq() {
+func (g *GamePlayer) TextJoinQueryCsReq(payloadMsg []byte) {
 	rsp := new(proto.TextJoinQueryScRsp)
 	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
 		textJoinList := &proto.TextJoinInfo{
@@ -334,7 +323,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, nil)
 	// TODO 主动调用
-	g.HandleGetArchiveDataCsReq()
+	g.HandleGetArchiveDataCsReq(nil)
 }
 
 func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {

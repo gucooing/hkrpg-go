@@ -189,3 +189,4 @@ log/
 rich.go
 config.json
 protocol/hkrpg
+./muipserver

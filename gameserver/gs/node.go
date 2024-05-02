@@ -1,9 +1,8 @@
 package gs
 
 import (
-	"fmt"
-	"log"
-	"os"
+	"context"
+	"net"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/player"
@@ -14,72 +13,107 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (s *GameServer) ServiceStart() {
-	go func() {
-		for {
-			select {
-			case msg := <-s.RecvCh:
-				s.nodeRegisterMessage(msg.cmdId, msg.serviceMsg)
-			case <-s.Ticker.C:
-				s.GameToNodePingReq()
-			case <-s.Stop:
-				s.Ticker.Stop()
-				fmt.Println("Player goroutine stopped")
-				return
-			}
+type NodeService struct {
+	game     *GameServer
+	nodeConn net.Conn
+
+	tickerCancel context.CancelFunc
+	ticker       *time.Ticker // 定时器
+}
+
+func (s *GameServer) newNode() {
+	n := new(NodeService)
+	tcpConn, err := net.Dial("tcp", s.Config.NetConf["Node"])
+	if err != nil {
+		logger.Error("nodeserver error:%s", err.Error())
+		return
+	}
+	n.nodeConn = tcpConn
+	n.game = s
+	n.ticker = time.NewTicker(5 * time.Second)
+	tickerCtx, tickerCancel := context.WithCancel(context.Background())
+	n.tickerCancel = tickerCancel
+	s.node = n
+	go n.recvNode()
+	// 向node注册
+	n.ServiceConnectionReq()
+	// 开启node定时器
+	n.nodeTicler(tickerCtx)
+}
+
+func (n *NodeService) nodeKill() {
+	n.nodeConn.Close()
+	n.tickerCancel()
+	logger.Info("node server离线")
+	n.game.node = nil
+}
+
+func (n *NodeService) nodeTicler(tickerCtx context.Context) {
+	for {
+		select {
+		case <-n.ticker.C:
+			n.GameToNodePingReq() // ping包
+		case <-tickerCtx.Done():
+			n.ticker.Stop()
+			return
 		}
-	}()
+	}
 }
 
 // 向node注册
-func (s *GameServer) ServiceConnectionReq() {
+func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_GAME,
-		AppId:      s.AppId,
-		Addr:       s.Config.OuterIp,
-		Port:       s.Port,
+		AppId:      n.game.AppId,
+		Addr:       n.game.Config.OuterIp,
+		Port:       n.game.Port,
 	}
 
-	s.sendNode(cmd.ServiceConnectionReq, req)
+	n.sendNode(cmd.ServiceConnectionReq, req)
 }
 
 // 从node接收消息
-func (s *GameServer) recvNode() {
+func (n *NodeService) recvNode() {
 	nodeMsg := make([]byte, player.PacketMaxLen)
-
-	// panic捕获
-	defer func() {
-		if err := recover(); err != nil {
-			logger.Error("!!! GAMESERVER MAIN LOOP PANIC !!!")
-			logger.Error("error: %v", err)
-			logger.Error("stack: %v", logger.Stack())
-			Close()
-			os.Exit(0)
-		}
-	}()
 
 	for {
 		var bin []byte = nil
-		recvLen, err := s.nodeConn.Read(nodeMsg)
+		recvLen, err := n.nodeConn.Read(nodeMsg)
 		if err != nil {
-			log.Println("node error")
-			os.Exit(0)
+			logger.Error("node error")
+			n.nodeKill()
+			return
 		}
 		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			newServiceMsg := new(TcpNodeMsg)
-			newServiceMsg.cmdId = msg.CmdId
-			newServiceMsg.serviceMsg = serviceMsg
-			s.RecvCh <- newServiceMsg
+			n.nodeRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
 }
 
+func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
+	switch cmdId {
+	case cmd.ServiceConnectionRsp:
+		n.ServiceConnectionRsp(serviceMsg)
+	case cmd.GameToNodePingRsp:
+		n.GameToNodePingRsp(serviceMsg)
+	// 下面是gm
+	case cmd.GmGive:
+		n.game.GmGive(serviceMsg) // 获取物品
+	case cmd.GmWorldLevel:
+		n.game.GmWorldLevel(serviceMsg) // 设置世界等级
+	case cmd.DelItem:
+		n.game.DelItem(serviceMsg) // 清空背包
+	default:
+		logger.Info("node -> game error cmdid:%v", cmdId)
+	}
+}
+
 // 发送到node
-func (s *GameServer) sendNode(cmdId uint16, playerMsg pb.Message) {
+func (n *NodeService) sendNode(cmdId uint16, playerMsg pb.Message) {
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
@@ -88,40 +122,31 @@ func (s *GameServer) sendNode(cmdId uint16, playerMsg pb.Message) {
 		logger.Error("cmdId error")
 	}
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
-	_, err := s.nodeConn.Write(binMsg)
+	_, err := n.nodeConn.Write(binMsg)
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
 		return
 	}
 }
 
-func (s *GameServer) ServiceConnectionRsp(serviceMsg pb.Message) {
+func (n *NodeService) ServiceConnectionRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.ServiceConnectionRsp)
-	if rsp.ServerType == spb.ServerType_SERVICE_GAME && rsp.AppId == s.AppId {
+	if rsp.ServerType == spb.ServerType_SERVICE_GAME && rsp.AppId == n.game.AppId {
 		logger.Info("已向node注册成功！")
 	}
 }
 
-func (s *GameServer) GameToNodePingReq() {
+func (n *NodeService) GameToNodePingReq() {
 	// 心跳包
 	req := &spb.GameToNodePingReq{
-		GameServerId:   s.AppId,
+		GameServerId:   n.game.AppId,
 		GameServerTime: time.Now().UnixNano() / 1e6,
-		PlayerNum:      uint64(len(s.PlayerMap)),
+		PlayerNum:      n.game.GetPlayerNum(),
 	}
-	s.sendNode(cmd.GameToNodePingReq, req)
+	n.sendNode(cmd.GameToNodePingReq, req)
 }
 
-func (s *GameServer) GameToNodePingRsp(serviceMsg pb.Message) {
+func (n *NodeService) GameToNodePingRsp(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GameToNodePingRsp)
-
 	logger.Debug(req.String())
-}
-
-func (s *GameServer) NodeToGsPlayerLogoutNotify(serviceMsg pb.Message) {
-	notify := serviceMsg.(*spb.NodeToGsPlayerLogoutNotify)
-	if s.PlayerMap[notify.Uuid] == nil {
-		return
-	}
-	KickPlayer(s.PlayerMap[notify.Uuid])
 }

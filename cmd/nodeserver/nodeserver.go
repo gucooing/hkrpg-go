@@ -7,6 +7,7 @@ import (
 
 	"github.com/goccy/go-json"
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
+	"github.com/gucooing/hkrpg-go/nodeserver/db"
 	"github.com/gucooing/hkrpg-go/nodeserver/node"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -29,12 +30,15 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger("nodeserver"+"["+alg.GetAppId()+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	appid := alg.GetAppId()
+	logger.InitLogger("nodeserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	cfg := config.GetConfig()
 
+	// 初始化数据库
+	dbs := db.NewStore(cfg)
 	// 初始化node
-	s := node.NewNode(cfg)
+	s := node.NewNode(cfg, appid, dbs)
 
 	// 开启监听
 	go s.NewNode()

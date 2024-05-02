@@ -6,7 +6,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
-func (g *GamePlayer) GetMissionEventDataCsReq() {
+func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMissionEventDataScRsp, nil)
 }
 

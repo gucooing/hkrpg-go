@@ -18,7 +18,6 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	var targetIndex uint32 = 0
 	var buffLists []uint32
 	var monsterEntityMap []uint32 // 目标怪物列表
-	lineUp := g.GetLineUp().MainLineUp
 	battleState := g.GetBattleState()
 
 	// 添加buff
@@ -145,29 +144,29 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 
 	/********************************下面开始就是普通战斗场景处理了*************************************/
 	// 添加角色
-	for id, avatarId := range g.GetLineUpById(lineUp).AvatarIdList {
-		if avatarId == 0 {
+	curLineUp := g.GetCurLineUp()
+	for id, lineAvatar := range curLineUp.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatar := g.GetAvatar().Avatar[avatarId]
-
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		battleAvatar := &proto.BattleAvatar{
 			AvatarType:    proto.AvatarType_AVATAR_FORMAL_TYPE,
-			Id:            avatarId,
-			Level:         avatar.Level,
-			Rank:          avatar.Rank,
-			Index:         uint32(id),
+			Id:            avatarBin.AvatarId,
+			Level:         avatarBin.Level,
+			Rank:          avatarBin.Rank,
+			Index:         id,
 			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
-			Hp:            avatar.Hp,
-			Promotion:     avatar.PromoteLevel,
+			Hp:            avatarBin.Hp,
+			Promotion:     avatarBin.PromoteLevel,
 			RelicList:     make([]*proto.BattleRelic, 0),
 			WorldLevel:    g.PlayerPb.WorldLevel,
 			SpBar: &proto.SpBarInfo{
-				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.MaxSp,
+				CurSp: avatarBin.SpBar.CurSp,
+				MaxSp: avatarBin.SpBar.MaxSp,
 			},
 		}
-		for _, skill := range g.GetSkillTreeList(avatar.AvatarId) {
+		for _, skill := range g.GetSkillTreeList(avatarBin.AvatarId) {
 			if skill.Level == 0 {
 				continue
 			}
@@ -177,17 +176,17 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 			}
 			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
 		}
-		for _, relic := range avatar.EquipRelic {
+		for _, relic := range avatarBin.EquipRelic {
 			equipRelic := g.GetProtoBattleRelicById(relic)
 			if equipRelic == nil {
-				delete(avatar.EquipRelic, relic)
+				delete(avatarBin.EquipRelic, relic)
 				continue
 			}
 			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}
 		// 获取角色装备的光锥
-		if avatar.EquipmentUniqueId != 0 {
-			equipment := g.GetEquipment(avatar.EquipmentUniqueId)
+		if avatarBin.EquipmentUniqueId != 0 {
+			equipment := g.GetEquipment(avatarBin.EquipmentUniqueId)
 			equipmentList := &proto.BattleEquipment{
 				Id:        equipment.Tid,
 				Level:     equipment.Level,
@@ -198,9 +197,9 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		}
 		rsp.BattleInfo.BattleAvatarList = append(rsp.BattleInfo.BattleAvatarList, battleAvatar)
 		// 检查是否有提前释放的技能，添加到buff里
-		if avatar.BuffList != 0 {
+		if avatarBin.BuffList != 0 {
 			buffList := &proto.BattleBuff{
-				Id:              avatar.BuffList,
+				Id:              avatarBin.BuffList,
 				Level:           1,
 				OwnerId:         targetIndex,
 				TargetIndexList: []uint32{targetIndex},
@@ -210,7 +209,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 			buffList.DynamicValues["SkillIndex"] = 1
 			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 			targetIndex++
-			g.PlayerPb.Avatar.Avatar[avatarId].BuffList = 0
+			avatarBin.BuffList = 0
 		}
 	}
 
@@ -392,30 +391,30 @@ func (g *GamePlayer) BattleSyncLineupNotify(index uint32) {
 	rsq := new(proto.SyncLineupNotify)
 	lineUp := g.GetLineUpById(index)
 	lineupList := &proto.LineupInfo{
-		IsVirtual:       false,
-		LeaderSlot:      0,
-		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           index,
-		ExtraLineupType: proto.ExtraLineupType(lineUp.ExtraLineupType),
-		MaxMp:           5,
-		Mp:              5,
-		Name:            lineUp.Name,
-		PlaneId:         0,
+		IsVirtual:  false,
+		LeaderSlot: 0,
+		AvatarList: make([]*proto.LineupAvatar, 0),
+		Index:      index,
+		// ExtraLineupType: proto.ExtraLineupType(lineUp.ExtraLineupType),
+		MaxMp:   5,
+		Mp:      5,
+		Name:    lineUp.Name,
+		PlaneId: 0,
 	}
-	for slot, avatarId := range lineUp.AvatarIdList {
-		if avatarId == 0 {
+	for slot, lineAvatar := range lineUp.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatar := g.PlayerPb.Avatar.Avatar[avatarId]
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: proto.AvatarType(avatar.AvatarType),
-			Slot:       uint32(slot),
+			AvatarType: proto.AvatarType(avatarBin.AvatarType),
+			Slot:       slot,
 			Satiety:    0,
-			Hp:         avatar.Hp,
-			Id:         avatarId,
+			Hp:         avatarBin.Hp,
+			Id:         lineAvatar.AvatarId,
 			SpBar: &proto.SpBarInfo{
-				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.MaxSp,
+				CurSp: avatarBin.SpBar.CurSp,
+				MaxSp: avatarBin.SpBar.MaxSp,
 			},
 		}
 		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
@@ -503,29 +502,30 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	}
 
 	// 添加角色
-	for id, Lineup := range g.GetLineUpById(g.PlayerPb.LineUp.MainLineUp).AvatarIdList {
-		if Lineup == 0 {
+	curLineUp := g.GetCurLineUp()
+	for id, lineAvatar := range curLineUp.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatar := g.PlayerPb.Avatar.Avatar[Lineup]
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 
 		battleAvatar := &proto.BattleAvatar{
 			AvatarType:    proto.AvatarType_AVATAR_FORMAL_TYPE,
-			Id:            Lineup,
-			Level:         avatar.Level,
-			Rank:          avatar.Rank,
-			Index:         uint32(id),
+			Id:            avatarBin.AvatarId,
+			Level:         avatarBin.Level,
+			Rank:          avatarBin.Rank,
+			Index:         id,
 			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
-			Hp:            avatar.Hp,
-			Promotion:     avatar.PromoteLevel,
+			Hp:            avatarBin.Hp,
+			Promotion:     avatarBin.PromoteLevel,
 			RelicList:     make([]*proto.BattleRelic, 0),
 			WorldLevel:    g.PlayerPb.WorldLevel,
 			SpBar: &proto.SpBarInfo{
-				CurSp: avatar.SpBar.CurSp,
-				MaxSp: avatar.SpBar.MaxSp,
+				CurSp: avatarBin.SpBar.CurSp,
+				MaxSp: avatarBin.SpBar.MaxSp,
 			},
 		}
-		for _, skill := range g.GetSkillTreeList(avatar.AvatarId) {
+		for _, skill := range g.GetSkillTreeList(avatarBin.AvatarId) {
 			if skill.Level == 0 {
 				continue
 			}
@@ -535,19 +535,19 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 			}
 			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
 		}
-		for _, relic := range avatar.EquipRelic {
+		for _, relic := range avatarBin.EquipRelic {
 			equipRelic := g.GetProtoBattleRelicById(relic)
 			if equipRelic == nil {
-				delete(avatar.EquipRelic, relic)
+				delete(avatarBin.EquipRelic, relic)
 				continue
 			}
 			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
 		}
 		// 获取角色装备的光锥
-		if avatar.EquipmentUniqueId != 0 {
-			equipment := g.GetEquipment(avatar.EquipmentUniqueId)
+		if avatarBin.EquipmentUniqueId != 0 {
+			equipment := g.GetEquipment(avatarBin.EquipmentUniqueId)
 			if equipment == nil {
-				avatar.EquipmentUniqueId = 0
+				avatarBin.EquipmentUniqueId = 0
 			} else {
 				equipmentList := &proto.BattleEquipment{
 					Id:        equipment.Tid,
@@ -560,9 +560,9 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 		}
 		rsp.BattleInfo.BattleAvatarList = append(rsp.BattleInfo.BattleAvatarList, battleAvatar)
 		// 检查是否有提前释放的技能，添加到buff里
-		if avatar.BuffList != 0 {
+		if avatarBin.BuffList != 0 {
 			buffList := &proto.BattleBuff{
-				Id:              avatar.BuffList,
+				Id:              avatarBin.BuffList,
 				Level:           1,
 				OwnerId:         targetIndex,
 				TargetIndexList: []uint32{targetIndex},
@@ -570,7 +570,7 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 			}
 			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 			targetIndex++
-			g.PlayerPb.Avatar.Avatar[Lineup].BuffList = 0
+			avatarBin.BuffList = 0
 		}
 	}
 

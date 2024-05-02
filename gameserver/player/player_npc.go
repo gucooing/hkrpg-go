@@ -5,7 +5,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
-func (g *GamePlayer) GetFirstTalkNpcCsReq() {
+func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
 	// TODO 是的，没错，还是同样的原因
 	g.Send(cmd.GetFirstTalkNpcScRsp, rsp)

@@ -19,7 +19,8 @@ func (s *Service) gameRecvHandle() {
 			logger.Error("!!! GAME SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			s.killService()
+			s.n.killService(s)
+			return
 		}
 	}()
 
@@ -27,7 +28,7 @@ func (s *Service) gameRecvHandle() {
 		var bin []byte = nil
 		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
 		if err != nil {
-			s.killService()
+			s.n.killService(s)
 			break
 		}
 		bin = payload[:recvLen]
@@ -50,6 +51,7 @@ func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 }
 
 func (s *Service) GameToNodePingReq(serviceMsg pb.Message) {
+	s.lastAliveTime = time.Now().Unix()
 	req := serviceMsg.(*spb.GameToNodePingReq)
 	if req.GameServerId != s.AppId {
 		return
