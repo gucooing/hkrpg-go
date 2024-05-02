@@ -2,8 +2,9 @@ package gate
 
 import (
 	"context"
-	"github.com/gucooing/hkrpg-go/pkg/database"
 	"time"
+
+	"github.com/gucooing/hkrpg-go/pkg/database"
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -22,23 +23,12 @@ type Store struct {
 
 /*********************************************Mysql****************************************/
 
-type PlayerUid struct {
-	Uid          uint32 `gorm:"primarykey;AUTO_INCREMENT"`
-	AccountType  uint32
-	AccountId    uint32
-	CreateTime   int64
-	IsBan        bool
-	BanBeginTime int64
-	BanEndTime   int64
-	BanMsg       string
-}
-
 // NewStore 创建一个新的 store。
 func NewStore(config *config.Config) *Store {
 	s := &Store{config: config}
-	playerUidMysqlConf := config.MysqlConf["player_uid"]
+	playerUidMysqlConf := config.MysqlConf["user"]
 	s.PlayerUidMysql = database.NewMysql(playerUidMysqlConf.Dsn)
-	s.PlayerUidMysql.AutoMigrate(&PlayerUid{})
+	s.PlayerUidMysql.AutoMigrate(&database.PlayerUid{})
 
 	redisLoginConf := config.RedisConf["player_login"]
 	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
@@ -50,9 +40,9 @@ func NewStore(config *config.Config) *Store {
 }
 
 // 使用account id拉取数据
-func (s *Store) GetPlayerUidByAccountId(AccountId uint32) *PlayerUid {
-	var playerUid *PlayerUid
-	s.PlayerUidMysql.Model(&PlayerUid{}).Where("account_id = ?", AccountId).First(&playerUid)
+func (s *Store) GetPlayerUidByAccountId(AccountId uint32) *database.PlayerUid {
+	var playerUid *database.PlayerUid
+	s.PlayerUidMysql.Model(&database.PlayerUid{}).Where("account_id = ?", AccountId).First(&playerUid)
 	if playerUid.Uid == 0 {
 		playerUid = s.UpdatePlayerUid(AccountId)
 		return playerUid
@@ -61,8 +51,8 @@ func (s *Store) GetPlayerUidByAccountId(AccountId uint32) *PlayerUid {
 }
 
 // 指定account id 创建数据
-func (s *Store) UpdatePlayerUid(AccountId uint32) *PlayerUid {
-	playerUid := new(PlayerUid)
+func (s *Store) UpdatePlayerUid(AccountId uint32) *database.PlayerUid {
+	playerUid := new(database.PlayerUid)
 	playerUid.AccountId = AccountId
 	s.PlayerUidMysql.Select("account_id", AccountId).Create(&playerUid)
 

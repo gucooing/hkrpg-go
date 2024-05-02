@@ -69,7 +69,8 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 		os.Exit(0)
 	}
 	s.Port = port
-	addr := "0.0.0.0:" + s.Port
+
+	addr := s.Config.OuterIp + ":" + s.Port
 	kcpListener, err := kcp.ListenWithOptions(addr)
 	if err != nil {
 		log.Printf("listen kcp err: %v\n", err)

@@ -39,9 +39,7 @@ type GameServer struct {
 
 func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s := new(GameServer)
-
 	GAMESERVER = s
-
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
 	s.AppId = alg.GetAppIdUint32(appid)
@@ -56,7 +54,7 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 		os.Exit(0)
 	}
 	s.Port = port
-	addr := "0.0.0.0:" + port
+	addr := s.Config.OuterIp + ":" + port
 	gSListener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Println(err.Error())

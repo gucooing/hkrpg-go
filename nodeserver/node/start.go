@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
+	"github.com/gucooing/hkrpg-go/nodeserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -22,31 +23,16 @@ type Node struct {
 	AppId          uint32
 	Port           string
 	Config         *config.Config
+	Store          *db.Store
 	MapService     map[spb.ServerType]map[uint32]*Service // [ServerType][appid][Service]
 	serviceMapLock sync.Mutex                             // 服务列表互斥锁
 }
 
-type Service struct {
-	n          *Node
-	Conn       net.Conn
-	AppId      uint32
-	ServerType spb.ServerType
-	Addr       string
-	Port       string
-	PlayerNum  int64
-}
-
-type PlayerService struct {
-	Uuid      int64
-	Uid       uint32
-	GateAppId uint32
-	GameAppId uint32
-}
-
-func NewNode(cfg *config.Config, appid string) *Node {
+func NewNode(cfg *config.Config, appid string, store *db.Store) *Node {
 	n := new(Node)
 	NODE = n
 	n.Config = cfg
+	n.Store = store
 	n.AppId = alg.GetAppIdUint32(appid)
 	logger.Info("NodeServer AppId:%s", appid)
 	port := n.Config.AppList[appid].App["port_service"].Port
@@ -63,7 +49,6 @@ func NewNode(cfg *config.Config, appid string) *Node {
 func (n *Node) GetMapService() map[spb.ServerType]map[uint32]*Service {
 	if n.MapService == nil {
 		n.MapService = make(map[spb.ServerType]map[uint32]*Service)
-		n.MapService[spb.ServerType_SERVICE_NODE] = make(map[uint32]*Service)
 		n.MapService[spb.ServerType_SERVICE_GAME] = make(map[uint32]*Service)
 		n.MapService[spb.ServerType_SERVICE_GATE] = make(map[uint32]*Service)
 		n.MapService[spb.ServerType_SERVICE_DISPATCH] = make(map[uint32]*Service)
@@ -82,9 +67,8 @@ func (n *Node) NewNode() {
 		os.Exit(0)
 	}
 	defer listen.Close()
-
 	logger.Info("NodeServer已启动")
-
+	go n.removeDeadServer()
 	for {
 		conn, err := listen.Accept()
 		if err != nil {

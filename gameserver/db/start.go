@@ -4,21 +4,29 @@ import (
 	"context"
 
 	"github.com/gucooing/hkrpg-go/pkg/database"
+	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
-var DBASE *Store
+type Store struct {
+	config               *config.Config
+	PlayerDataMysql      *gorm.DB
+	LoginRedis           *redis.Client
+	StatusRedis          *redis.Client
+	PlayerBriefDataRedis *redis.Client // 玩家简要信息
+}
+
 var ctx = context.Background()
 
 // NewStore 创建一个新的 store。
 func NewStore(config *config.Config) *Store {
 	s := &Store{config: config}
-	DBASE = s
-	mysqlPlayerDataConf := config.MysqlConf["player_data"]
+	mysqlPlayerDataConf := config.MysqlConf["player"]
 	s.PlayerDataMysql = database.NewMysql(mysqlPlayerDataConf.Dsn)
-	s.PlayerDataMysql.AutoMigrate(&PlayerData{})
+	s.PlayerDataMysql.AutoMigrate(&database.PlayerData{})
 
 	redisLoginConf := config.RedisConf["player_login"]
 	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)

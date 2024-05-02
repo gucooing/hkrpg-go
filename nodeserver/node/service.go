@@ -2,6 +2,8 @@ package node
 
 import (
 	"bufio"
+	"net"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -9,6 +11,17 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
+
+type Service struct {
+	n             *Node
+	Conn          net.Conn
+	AppId         uint32
+	ServerType    spb.ServerType
+	Addr          string
+	Port          string
+	PlayerNum     int64
+	lastAliveTime int64
+}
 
 func (n *Node) recvHandle(s *Service) {
 	payload := make([]byte, PacketMaxLen)
@@ -51,8 +64,9 @@ func (s *Service) sendHandle(cmdid uint16, playerMsg pb.Message) {
 
 func (n *Node) killService(s *Service) {
 	s.Conn.Close()
-	n.DelMapService(s)
-	logger.Info("[%s]服务离线:%s", s.ServerType, s.Conn.RemoteAddr().String())
+	if n.DelMapService(s) {
+		logger.Info("[%s]服务离线:%s", s.ServerType, s.Conn.RemoteAddr().String())
+	}
 }
 
 func (n *Node) AddMapService(s *Service) {
@@ -62,14 +76,15 @@ func (n *Node) AddMapService(s *Service) {
 	logger.Info("AppId:%s Service:%s Service registration successful", alg.GetAppIdStr(s.AppId), s.ServerType)
 }
 
-func (n *Node) DelMapService(s *Service) {
+func (n *Node) DelMapService(s *Service) bool {
 	n.serviceMapLock.Lock()
+	defer n.serviceMapLock.Unlock()
 	if n.MapService[s.ServerType] == nil || n.MapService[s.ServerType][s.AppId] == nil {
-
+		return false
 	} else {
 		delete(n.MapService[s.ServerType], s.AppId)
+		return true
 	}
-	n.serviceMapLock.Unlock()
 }
 
 func (n *Node) GetAllService() map[uint32][]*Service {
@@ -85,6 +100,27 @@ func (n *Node) GetAllService() map[uint32][]*Service {
 	}
 	n.serviceMapLock.Unlock()
 	return allServices
+}
+
+func (n *Node) GetAllServiceByType(serverType spb.ServerType) []*Service {
+	servicesList := make([]*Service, 0)
+	n.serviceMapLock.Lock()
+	all := n.MapService[serverType]
+	n.serviceMapLock.Unlock()
+	for _, service := range all {
+		servicesList = append(servicesList, service)
+	}
+	return servicesList
+}
+
+func (n *Node) GetAllServiceByTypeId(serverType spb.ServerType, appid uint32) *Service {
+	n.serviceMapLock.Lock()
+	defer n.serviceMapLock.Unlock()
+	serviceList := n.MapService[serverType]
+	if serviceList == nil {
+		return nil
+	}
+	return serviceList[appid]
 }
 
 // 公共服务注册方法
@@ -104,6 +140,8 @@ func (n *Node) ServiceConnectionReq(serviceMsg pb.Message, s *Service) {
 		go s.dispatchRecvHandle()
 	case spb.ServerType_SERVICE_MULTI:
 		go s.multiRecvHandle()
+	case spb.ServerType_SERVICE_MUIP:
+		go s.muipRecvHandle()
 	default:
 		logger.Info("Service registration failed")
 		return
@@ -113,6 +151,7 @@ func (n *Node) ServiceConnectionReq(serviceMsg pb.Message, s *Service) {
 	s.ServerType = req.ServerType
 	s.Addr = req.Addr
 	s.Port = req.Port
+	s.lastAliveTime = time.Now().Unix()
 	n.AddMapService(s)
 
 	rsp := &spb.ServiceConnectionRsp{
@@ -121,4 +160,20 @@ func (n *Node) ServiceConnectionReq(serviceMsg pb.Message, s *Service) {
 	}
 
 	s.sendHandle(cmd.ServiceConnectionRsp, rsp)
+}
+
+func (n *Node) removeDeadServer() {
+	ticker := time.NewTicker(time.Second * 10)
+	for {
+		<-ticker.C
+		nowTime := time.Now().Unix()
+		for _, serviceList := range n.GetAllService() {
+			for _, service := range serviceList {
+				if nowTime-service.lastAliveTime > 30 {
+					n.killService(service)
+					logger.Info("[APPID:%v]删除死服务器", service.AppId)
+				}
+			}
+		}
+	}
 }

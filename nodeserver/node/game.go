@@ -20,6 +20,7 @@ func (s *Service) gameRecvHandle() {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			s.n.killService(s)
+			return
 		}
 	}()
 
@@ -50,6 +51,7 @@ func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 }
 
 func (s *Service) GameToNodePingReq(serviceMsg pb.Message) {
+	s.lastAliveTime = time.Now().Unix()
 	req := serviceMsg.(*spb.GameToNodePingReq)
 	if req.GameServerId != s.AppId {
 		return

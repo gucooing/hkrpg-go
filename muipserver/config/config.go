@@ -7,31 +7,12 @@ import (
 )
 
 type Config struct {
-	LogLevel   string               `json:"LogLevel"`
-	AutoCreate bool                 `json:"AutoCreate"`
-	Dispatch   []Dispatch           `json:"Dispatch"`
-	OuterIp    string               `json:"OuterIp"`
-	AppList    map[string]AppList   `json:"AppList"`
-	NetConf    map[string]string    `json:"NetConf"`
-	Email      *email               `json:"Email"`
-	MysqlConf  map[string]MysqlConf `json:"MysqlConf"`
-	RedisConf  map[string]RedisConf `json:"RedisConf"`
-}
-type Dispatch struct {
-	Name        string `json:"name"`
-	Title       string `json:"title"`
-	Type        string `json:"type"`
-	DispatchUrl string `json:"dispatchUrl"`
-}
-type Game struct {
-	Addr string `json:"addr"`
-	Port uint32 `json:"port"`
-}
-type email struct {
-	From     string `json:"from"`
-	Addr     string `json:"addr"`
-	Host     string `json:"host"`
-	Identity string `json:"identity"`
+	LogLevel  string               `json:"LogLevel"`
+	OuterIp   string               `json:"OuterIp"`
+	AppList   map[string]AppList   `json:"AppList"`
+	NetConf   map[string]string    `json:"NetConf"`
+	MysqlConf map[string]MysqlConf `json:"MysqlConf"`
+	RedisConf map[string]RedisConf `json:"RedisConf"`
 }
 type AppList struct {
 	App map[string]App `json:"app"`
@@ -46,6 +27,9 @@ type RedisConf struct {
 	Addr     string `json:"addr"`
 	Password string `json:"password"`
 	DB       int    `json:"db"`
+}
+
+type NetConf struct {
 }
 
 var CONF *Config = nil
@@ -79,21 +63,7 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel: "Info",
-	Dispatch: []Dispatch{
-		{
-			Name:        "hkrpg-go",
-			Title:       "os_usa",
-			Type:        "2",
-			DispatchUrl: "/query_gateway",
-		},
-		{
-			Name:        "hkrpg-official",
-			Title:       "os_usa",
-			Type:        "2",
-			DispatchUrl: "/query_gateway_capture",
-		},
-	},
-	OuterIp: "127.0.0.1",
+	OuterIp:  "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
 			App: map[string]App{
@@ -177,11 +147,5 @@ var DefaultConfig = &Config{
 			Password: "password",
 			DB:       1,
 		},
-	},
-	Email: &email{
-		From:     "123456789@qq.com",
-		Addr:     "smtp.qq.com:587",
-		Host:     "smtp.qq.com",
-		Identity: "123456789",
 	},
 }

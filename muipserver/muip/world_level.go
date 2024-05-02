@@ -1,4 +1,4 @@
-package api
+package muip
 
 import (
 	"github.com/gin-gonic/gin"
@@ -7,7 +7,7 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func WorldLevel(c *gin.Context) {
+func (a *Api) WorldLevel(c *gin.Context) {
 	uid := alg.S2U32(c.Query("uid"))
 	worldLevel := alg.S2U32(c.Query("world_level"))
 	if worldLevel < 0 || worldLevel > 6 || uid == 0 {
@@ -22,5 +22,5 @@ func WorldLevel(c *gin.Context) {
 		WorldLevel: worldLevel,
 	}
 
-	ToNode(c, cmd.GmWorldLevel, message)
+	a.ToNode(c, cmd.GmWorldLevel, message)
 }

@@ -20,6 +20,7 @@ func (s *Service) gateRecvHandle() {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			s.n.killService(s)
+			return
 		}
 	}()
 
@@ -50,6 +51,7 @@ func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 }
 
 func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
+	s.lastAliveTime = time.Now().Unix()
 	req := serviceMsg.(*spb.GetAllServiceGameReq)
 	if req.ServiceType != s.ServerType {
 		logger.Debug("Service registration failed")
@@ -62,7 +64,7 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 		GateTime:        req.GateTime,
 		NodeTime:        time.Now().UnixNano() / 1e6,
 	}
-	for _, service := range NODE.MapService[spb.ServerType_SERVICE_GAME] {
+	for _, service := range s.n.GetAllServiceByType(spb.ServerType_SERVICE_GAME) {
 		serviceAll := &spb.ServiceAll{
 			ServiceType: service.ServerType,
 			Addr:        service.Addr,

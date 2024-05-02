@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -28,13 +28,13 @@ type GamePlayer struct {
 
 func (s *GameServer) killPlayer(p *player.GamePlayer) {
 	s.upDataPlayer(p)
-	db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
+	s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
 	s.DelPlayerMap(p.Uuid)
 	logger.Info("[UID:%v][UUID:%v]玩家下线成功", p.Uid, p.Uuid)
 }
 
 func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
-	redisDb, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(p.AccountId)))
+	redisDb, ok := s.Store.GetPlayerStatus(strconv.Itoa(int(p.AccountId)))
 	if !ok {
 		return
 	}
@@ -42,7 +42,7 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 	err := pb.Unmarshal(redisDb, statu)
 	if err != nil {
 		logger.Error("PlayerStatusRedisData Unmarshal error")
-		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
+		s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
 		return
 	}
 	if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != p.Uuid {
@@ -50,7 +50,7 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 		logger.Info("[UID:%v][UUID:%v]数据过期，已丢弃", p.Uid, p.Uuid)
 		return
 	}
-	dbDate := new(db.PlayerData)
+	dbDate := new(database.PlayerData)
 	dbDate.Uid = p.Uid
 	dbDate.Level = p.PlayerPb.Level
 	dbDate.Exp = p.PlayerPb.Exp
@@ -61,7 +61,7 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 		return
 	}
 
-	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
+	if err = s.Store.UpdatePlayer(dbDate); err != nil {
 		logger.Error("Update Player error")
 		return
 	}
@@ -191,7 +191,7 @@ func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {
 	if g.Uid == 0 {
 		return nil
 	}
-	if bin, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
+	if bin, ok := s.Store.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
 		return nil
 	} else {
 		statu := new(spb.PlayerStatusRedisData)
@@ -205,7 +205,7 @@ func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {
 			return nil
 		}
 	}
-	dbDate := new(db.PlayerData)
+	dbDate := new(database.PlayerData)
 	dbDate.Uid = g.Uid
 	dbDate.Level = g.PlayerPb.Level
 	dbDate.Exp = g.PlayerPb.Exp
@@ -216,7 +216,7 @@ func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {
 		return err
 	}
 
-	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
+	if err = s.Store.UpdatePlayer(dbDate); err != nil {
 		logger.Error("Update Player error")
 		return err
 	}

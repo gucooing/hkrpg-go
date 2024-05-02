@@ -20,6 +20,7 @@ func (s *Service) multiRecvHandle() {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			s.n.killService(s)
+			return
 		}
 	}()
 
@@ -50,27 +51,23 @@ func (s *Service) multiRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 }
 
 func (s *Service) multiToNodePingReq(serviceMsg pb.Message) {
+	s.lastAliveTime = time.Now().Unix()
 	req := serviceMsg.(*spb.MultiToNodePingReq)
 	rsp := &spb.MultiToNodePingRsp{
 		MultiServerTime: req.MultiServerTime,
 		NodeServerTime:  time.Now().UnixNano() / 1e6,
-		ServiceList:     make(map[uint32]*spb.MultiServiceAll),
+		GameServiceList: make([]*spb.ServiceAll, 0),
 	}
 
-	for serverType, serviceList := range s.n.GetAllService() {
-		muipServiceAll := &spb.MultiServiceAll{
-			ServiceList: make([]*spb.ServiceAll, 0),
+	for _, service := range s.n.GetAllServiceByType(spb.ServerType_SERVICE_GAME) {
+		serviceAll := &spb.ServiceAll{
+			ServiceType: service.ServerType,
+			Addr:        service.Addr,
+			Port:        service.Port,
+			PlayerNum:   service.PlayerNum,
+			AppId:       service.AppId,
 		}
-		for _, service := range serviceList {
-			muipServiceAll.ServiceList = append(muipServiceAll.ServiceList, &spb.ServiceAll{
-				ServiceType: service.ServerType,
-				Addr:        service.Addr,
-				PlayerNum:   service.PlayerNum,
-				AppId:       service.AppId,
-				Port:        service.Port,
-			})
-		}
-		rsp.ServiceList[serverType] = muipServiceAll
+		rsp.GameServiceList = append(rsp.GameServiceList, serviceAll)
 	}
 
 	s.sendHandle(cmd.MultiToNodePingRsp, rsp)

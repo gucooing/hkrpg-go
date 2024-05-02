@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/hkrpg-go/dispatch/db"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 )
@@ -37,7 +37,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 		if s.Config.AutoCreate {
 			// 生成新的token
 			token := base64.StdEncoding.EncodeToString(random.GetRandomByte(24))
-			account = &db.Account{
+			account = &database.Account{
 				Username:   requestData.Account,
 				Token:      token,
 				CreateTime: time.Now().Unix(),

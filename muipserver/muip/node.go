@@ -1,10 +1,11 @@
-package multi
+package muip
 
 import (
 	"context"
 	"net"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -14,29 +15,30 @@ import (
 )
 
 type NodeService struct {
-	s        *Multi
-	Addr     string
-	nodeConn net.Conn
-
+	muip         *MuipServer
+	nodeConn     net.Conn
 	tickerCancel context.CancelFunc
 	ticker       *time.Ticker // 定时器
 }
 
-func (s *Multi) newNode() {
-	n := new(NodeService)
-	n.s = s
-	n.Addr = s.Config.NetConf["Node"]
+type Service struct {
+	AppId     string
+	PlayerNum int64
+}
 
-	tcpConn, err := net.Dial("tcp", n.Addr)
+func (s *MuipServer) newNode() {
+	n := new(NodeService)
+	tcpConn, err := net.Dial("tcp", s.Config.NetConf["Node"])
 	if err != nil {
 		logger.Error("nodeserver error:%s", err.Error())
 		return
 	}
 	n.nodeConn = tcpConn
+	n.muip = s
 	n.ticker = time.NewTicker(5 * time.Second)
 	tickerCtx, tickerCancel := context.WithCancel(context.Background())
 	n.tickerCancel = tickerCancel
-
+	s.node = n
 	go n.recvNode()
 	// 向node注册
 	n.ServiceConnectionReq()
@@ -46,18 +48,16 @@ func (s *Multi) newNode() {
 
 func (n *NodeService) nodeKill() {
 	n.nodeConn.Close()
-	if n.tickerCancel != nil {
-		n.tickerCancel()
-	}
+	n.tickerCancel()
 	logger.Info("node server离线")
-	n.s.Node = nil
+	n.muip.node = nil
 }
 
 func (n *NodeService) nodeTicler(tickerCtx context.Context) {
 	for {
 		select {
 		case <-n.ticker.C:
-			n.MultiToNodePingReq() // ping包
+			n.MuipToNodePingReq()
 		case <-tickerCtx.Done():
 			n.ticker.Stop()
 			return
@@ -68,8 +68,9 @@ func (n *NodeService) nodeTicler(tickerCtx context.Context) {
 // 向node注册
 func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
-		ServerType: spb.ServerType_SERVICE_MULTI,
-		AppId:      n.s.AppId,
+		ServerType: spb.ServerType_SERVICE_MUIP,
+		AppId:      n.muip.AppId,
+		Addr:       n.muip.ApiAddr,
 	}
 
 	n.sendNode(cmd.ServiceConnectionReq, req)
@@ -99,13 +100,21 @@ func (n *NodeService) recvNode() {
 
 func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.ServiceConnectionRsp: // 注册回包
+	case cmd.ServiceConnectionRsp:
 		n.ServiceConnectionRsp(serviceMsg)
-	case cmd.MultiToNodePingRsp: // 心跳包
-		n.MultiToNodePingRsp(serviceMsg)
+	case cmd.MuipToNodePingRsp:
+		n.MuipToNodePingRsp(serviceMsg)
 	default:
-		logger.Info("node -> multi error cmdid:%v", cmdId)
+		logger.Info("node -> muip error cmdid:%v", cmdId)
 	}
+}
+
+// 来自api的消息转发到nodeserver
+func (a *Api) ToNode(c *gin.Context, cmdId uint16, message pb.Message) {
+	a.muip.node.sendNode(cmdId, message)
+	c.JSON(200, gin.H{
+		"code": 0,
+	})
 }
 
 // 发送到node
@@ -127,21 +136,38 @@ func (n *NodeService) sendNode(cmdId uint16, playerMsg pb.Message) {
 
 func (n *NodeService) ServiceConnectionRsp(serviceMsg pb.Message) {
 	rsp := serviceMsg.(*spb.ServiceConnectionRsp)
-	if rsp.ServerType == spb.ServerType_SERVICE_MULTI && rsp.AppId == n.s.AppId {
+	if rsp.ServerType == spb.ServerType_SERVICE_MUIP && rsp.AppId == n.muip.AppId {
 		logger.Info("已向node注册成功！")
 	}
 }
 
-func (n *NodeService) MultiToNodePingReq() {
-	req := &spb.MultiToNodePingReq{
-		MultiServerTime: time.Now().UnixNano() / 1e6,
+func (n *NodeService) MuipToNodePingReq() {
+	req := &spb.MuipToNodePingReq{
+		MuipServerTime: time.Now().Unix(),
 	}
-	n.sendNode(cmd.MultiToNodePingReq, req)
+	n.sendNode(cmd.MuipToNodePingReq, req)
 }
 
-func (n *NodeService) MultiToNodePingRsp(serviceMsg pb.Message) {
-	rsp := serviceMsg.(*spb.MultiToNodePingRsp)
-	if rsp.NodeServerTime-rsp.MultiServerTime > 5 {
-		logger.Warn("multi <-> node 调用时间过长")
+func (n *NodeService) MuipToNodePingRsp(serviceMsg pb.Message) {
+	rsp := serviceMsg.(*spb.MuipToNodePingRsp)
+	if rsp.NodeServerTime-rsp.MuipServerTime > 5 {
+		logger.Error("调用时间过长")
 	}
+	allService := make(map[string][]*Service, 0)
+	for id, serviceList := range rsp.ServiceList {
+		if len(serviceList.ServiceList) == 0 {
+			continue
+		}
+		if allService[spb.ServerType(id).String()] == nil {
+			allService[spb.ServerType(id).String()] = make([]*Service, 0)
+		}
+		for _, service := range serviceList.ServiceList {
+			allService[spb.ServerType(id).String()] = append(allService[spb.ServerType(id).String()], &Service{
+				AppId:     alg.GetAppIdStr(service.AppId),
+				PlayerNum: service.PlayerNum,
+			})
+		}
+	}
+
+	n.muip.setAllService(allService)
 }

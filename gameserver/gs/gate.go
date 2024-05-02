@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -179,11 +179,41 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	}
 	g := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
 	// 拉取账户数据
-	g.GetPlayerDate(req.Uid)
+	ge.GetPlayerDate(req.Uid, g)
 	ge.game.AddPlayerMap(req.Uuid, g, ge)
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, req.Uuid)
 	ge.game.AddPlayerStatus(g)
 	ge.GateGamePlayerLoginRsp(rsp)
+}
+
+func (ge *gateServer) GetPlayerDate(accountId uint32, g *player.GamePlayer) {
+	var err error
+	dbPlayer := ge.game.Store.QueryAccountUidByFieldPlayer(accountId)
+	if dbPlayer == nil || dbPlayer.BinData == nil {
+		dbPlayer = new(database.PlayerData)
+		logger.Info("新账号登录，进入初始化流程")
+		g.PlayerPb = g.NewPlayer()
+		// 初始化完毕保存账号数据
+		dbPlayer.Uid = g.Uid
+		dbPlayer.BinData, err = pb.Marshal(g.PlayerPb)
+		if err != nil {
+			logger.Error("pb marshal error: %v", err)
+		}
+
+		err = ge.game.Store.AddDatePlayerFieldByFieldName(dbPlayer)
+		if err != nil {
+			logger.Error("账号数据储存失败")
+			return
+		}
+	} else {
+		g.PlayerPb = new(spb.PlayerBasicCompBin)
+		err = pb.Unmarshal(dbPlayer.BinData, g.PlayerPb)
+		if err != nil {
+			logger.Error("unmarshal proto data err: %v", err)
+			g.PlayerPb = g.NewPlayer()
+			return
+		}
+	}
 }
 
 func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
@@ -194,7 +224,7 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
 	play := ge.game.GetPlayerByUuid(req.OldUuid)
 	if play == nil {
-		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))
+		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))
 	} else {
 		ge.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
 			Uid:  play.p.Uid,
@@ -217,7 +247,7 @@ func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
 	notify := payloadMsg.(*spb.GateToGamePlayerLogoutNotify)
 	play := ge.game.GetPlayerByUuid(notify.Uuid)
 	if play == nil {
-		db.DBASE.DistUnlockPlayerStatus(strconv.Itoa(int(notify.AccountId)))
+		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(notify.AccountId)))
 	} else {
 		// 下线玩家
 		ge.game.killPlayer(play.p)

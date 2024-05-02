@@ -20,6 +20,7 @@ func (s *Service) dispatchRecvHandle() {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			s.n.killService(s)
+			return
 		}
 	}()
 
@@ -50,6 +51,7 @@ func (s *Service) dispatchRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 }
 
 func (s *Service) dispatchGetAllServiceGateReq(serviceMsg pb.Message) {
+	s.lastAliveTime = time.Now().Unix()
 	req := serviceMsg.(*spb.GetAllServiceGateReq)
 	if req.ServiceType != s.ServerType {
 		logger.Debug("Service registration failed")

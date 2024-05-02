@@ -38,6 +38,7 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 ./gateserver -i 9001.1.1.1
 ./dispatch -i 9001.4.1.1
 ./multiserver -i 9001.5.1.1
+./muipserver -i 9001.6.1.1
 ```
 
 ## 各服务功能
@@ -46,6 +47,7 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 ### gateserver 网关服务器（有状态，可集群），内部网络与外界唯一交互口
 ### gameserver 逻辑服务器（有状态，可集群），处理业务逻辑
 ### multiserver 多人服务器（有状态，可集群），处理好友，邮件等功能
+### muipserver 目前仅负责api
 
 ## 进阶操作
 ### 多gateserver、多gameserver部署

@@ -1,4 +1,4 @@
-package api
+package muip
 
 import (
 	"net"
@@ -11,28 +11,24 @@ func (a *Api) InitRouter() {
 	a.Router.Use(clientIPMiddleware())
 	a.Router.Any("/", a.HandleDefault)
 	a.Router.Any("/index.html", a.HandleDefault)
-	a.Router.GET("/api", InitRouter)
+	a.Router.GET("/api", a.CmdIdInitRouter)
 }
 
 func (a *Api) HandleDefault(c *gin.Context) {
 	c.String(200, "hkrpg-go")
 }
 
-func InitRouter(c *gin.Context) {
+func (a *Api) CmdIdInitRouter(c *gin.Context) {
 	cmdId := uint16(alg.S2U32(c.Query("cmd")))
 	switch cmdId {
 	case 1001:
-		WorldLevel(c)
-	case 1004:
-		GetPlayer(c)
-	case 1005:
-		GetPlayerBin(c)
+		a.WorldLevel(c)
 	case 1006:
-		DelItem(c)
+		a.DelItem(c)
 	case 1101:
-		State(c)
+		a.State(c)
 	case 1127:
-		Give(c)
+		a.Give(c)
 	default:
 		c.JSON(404, gin.H{
 			"code": -1,

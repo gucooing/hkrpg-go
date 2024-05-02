@@ -96,6 +96,9 @@ var DefaultConfig = &Config{
 			},
 		},
 		"9001.5.1.1": {
+			App: map[string]App{},
+		},
+		"9001.6.1.1": {
 			App: map[string]App{
 				"port_http": {
 					Port: "20011",
@@ -108,8 +111,17 @@ var DefaultConfig = &Config{
 		"Game": "127.0.0.1:20081",
 	},
 	MysqlConf: map[string]MysqlConf{
-		"player_data": {
-			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go?charset=utf8mb4&parseTime=True&loc=Local",
+		"account": {
+			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-account?charset=utf8mb4&parseTime=True&loc=Local",
+		},
+		"user": {
+			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-user?charset=utf8mb4&parseTime=True&loc=Local",
+		},
+		"player": {
+			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-player?charset=utf8mb4&parseTime=True&loc=Local",
+		},
+		"conf": {
+			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-conf?charset=utf8mb4&parseTime=True&loc=Local",
 		},
 	},
 	RedisConf: map[string]RedisConf{
@@ -119,6 +131,16 @@ var DefaultConfig = &Config{
 			DB:       1,
 		},
 		"player_status": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
+		},
+		"player_mail": {
+			Addr:     "127.0.0.1:6379",
+			Password: "password",
+			DB:       1,
+		},
+		"player_chat": {
 			Addr:     "127.0.0.1:6379",
 			Password: "password",
 			DB:       1,
