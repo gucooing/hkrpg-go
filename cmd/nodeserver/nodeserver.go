@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/goccy/go-json"
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
@@ -42,6 +46,20 @@ func main() {
 
 	// 开启监听
 	go s.NewNode()
+	done := make(chan os.Signal, 1)
+	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		select {
+		case <-done:
+			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+			defer cancel()
+			logger.Info("NodeServer 正在关闭")
+			s.Close()
+			logger.Info("NodeServer 服务已停止")
+			logger.CloseLogger()
+			os.Exit(0)
+		}
+	}()
 
 	select {}
 }

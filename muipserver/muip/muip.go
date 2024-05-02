@@ -117,3 +117,7 @@ func (s *MuipServer) getAllService() map[string][]*Service {
 	s.allServiceSync.Unlock()
 	return allService
 }
+
+func (s *MuipServer) Close() {
+	// 通知node服务下线
+}

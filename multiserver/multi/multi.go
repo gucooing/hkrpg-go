@@ -1,9 +1,10 @@
 package multi
 
 import (
-	"github.com/gucooing/hkrpg-go/multiserver/db"
 	"sync"
 	"time"
+
+	"github.com/gucooing/hkrpg-go/multiserver/db"
 
 	"github.com/gucooing/hkrpg-go/multiserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -65,4 +66,8 @@ func (s *Multi) GlobalRotationEvent() {
 		logger.Info("尝试连接node")
 		s.newNode()
 	}
+}
+
+func (s *Multi) Close() {
+
 }

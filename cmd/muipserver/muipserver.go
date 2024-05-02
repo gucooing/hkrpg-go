@@ -56,7 +56,7 @@ func main() {
 			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
 			logger.Info("MuipServer 正在关闭")
-
+			s.Close()
 			logger.Info("MuipServer 服务已停止")
 			logger.CloseLogger()
 			os.Exit(0)

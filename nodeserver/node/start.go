@@ -86,3 +86,7 @@ func (n *Node) newService(conn net.Conn) *Service {
 	s.n = n
 	return s
 }
+
+func (n *Node) Close() {
+
+}

@@ -4,12 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/gucooing/hkrpg-go/multiserver/db"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/gucooing/hkrpg-go/multiserver/db"
 
 	"github.com/gucooing/hkrpg-go/multiserver/config"
 	"github.com/gucooing/hkrpg-go/multiserver/multi"
@@ -42,7 +43,7 @@ func main() {
 	// 初始化数据库
 	dbs := db.NewStore(cfg)
 	// 初始化服务
-	multi.NewMulti(cfg, appid, dbs)
+	s := multi.NewMulti(cfg, appid, dbs)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
@@ -51,7 +52,9 @@ func main() {
 		case <-done:
 			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
-
+			logger.Info("MultiServer 正在关闭")
+			s.Close()
+			logger.Info("MultiServer 服务已停止")
 			logger.CloseLogger()
 			os.Exit(0)
 		}
