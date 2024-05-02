@@ -153,16 +153,16 @@ func (n *NodeService) MuipToNodePingRsp(serviceMsg pb.Message) {
 	if rsp.NodeServerTime-rsp.MuipServerTime > 5 {
 		logger.Error("调用时间过长")
 	}
-	allService := make(map[string][]*Service, 0)
+	allService := make(map[spb.ServerType][]*Service, 0)
 	for id, serviceList := range rsp.ServiceList {
 		if len(serviceList.ServiceList) == 0 {
 			continue
 		}
-		if allService[spb.ServerType(id).String()] == nil {
-			allService[spb.ServerType(id).String()] = make([]*Service, 0)
+		if allService[spb.ServerType(id)] == nil {
+			allService[spb.ServerType(id)] = make([]*Service, 0)
 		}
 		for _, service := range serviceList.ServiceList {
-			allService[spb.ServerType(id).String()] = append(allService[spb.ServerType(id).String()], &Service{
+			allService[spb.ServerType(id)] = append(allService[spb.ServerType(id)], &Service{
 				AppId:     alg.GetAppIdStr(service.AppId),
 				PlayerNum: service.PlayerNum,
 			})

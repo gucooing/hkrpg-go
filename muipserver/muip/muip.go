@@ -11,6 +11,7 @@ import (
 	"github.com/gucooing/hkrpg-go/muipserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 const (
@@ -23,7 +24,7 @@ type MuipServer struct {
 	Config         *config.Config
 	Api            *Api
 	node           *NodeService
-	allService     map[string][]*Service
+	allService     map[spb.ServerType][]*Service
 	allServiceSync sync.Mutex
 	Ticker         *time.Ticker
 	Stop           chan struct{}
@@ -46,7 +47,7 @@ func NewMuip(config *config.Config, appid string) *MuipServer {
 	}
 	s.ApiAddr = s.Config.OuterIp + ":" + port
 	s.Api = s.newApi()
-	s.allService = make(map[string][]*Service)
+	s.allService = make(map[spb.ServerType][]*Service)
 	// 开启game定时器
 	s.Ticker = time.NewTicker(Ticker * time.Second)
 	s.Stop = make(chan struct{})
@@ -97,15 +98,15 @@ func (s *MuipServer) GlobalRotationEvent() {
 	}
 }
 
-func (s *MuipServer) setAllService(allService map[string][]*Service) {
+func (s *MuipServer) setAllService(allService map[spb.ServerType][]*Service) {
 	s.allServiceSync.Lock()
 	s.allService = allService
 	s.allServiceSync.Unlock()
 }
 
-func (s *MuipServer) getAllService() map[string][]*Service {
+func (s *MuipServer) getAllService() map[spb.ServerType][]*Service {
 	s.allServiceSync.Lock()
-	allService := make(map[string][]*Service, 0)
+	allService := make(map[spb.ServerType][]*Service, 0)
 	for id, serviceList := range s.allService {
 		if allService[id] == nil {
 			allService[id] = make([]*Service, 0)
