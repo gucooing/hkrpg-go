@@ -36,7 +36,7 @@ jobs:
         zip -r go/hkrpg/build/data.zip go/hkrpg/data/*
 
     - name: Upload Archive
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: hkrpg-go
         path: go/hkrpg/build/

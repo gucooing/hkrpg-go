@@ -1,4 +1,4 @@
-![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
+![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go-public/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
  
 ## 朋友要复出了，可以关注一下 [hk4e](https://github.com/flswld/hk4e-go)
 
