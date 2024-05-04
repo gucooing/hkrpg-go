@@ -1,7 +1,6 @@
 package node
 
 import (
-	"bufio"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -12,7 +11,6 @@ import (
 )
 
 func (s *Service) multiRecvHandle() {
-	payload := make([]byte, PacketMaxLen)
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
@@ -25,13 +23,11 @@ func (s *Service) multiRecvHandle() {
 	}()
 
 	for {
-		var bin []byte = nil
-		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
+		bin, err := s.Conn.Read()
 		if err != nil {
 			s.n.killService(s)
 			break
 		}
-		bin = payload[:recvLen]
 		msgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &msgList, nil)
 		for _, msg := range msgList {

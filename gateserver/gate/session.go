@@ -92,8 +92,8 @@ func (gs *gameServer) AddPlayerMap(uuid int64, player *PlayerGame) {
 }
 
 func (s *GateServer) DelPlayerMap(uuid int64) {
-	s.playerMap[uuid].gs.DelPlayerMap(uuid)
 	s.playerMapLock.Lock()
+	s.playerMap[uuid].gs.DelPlayerMap(uuid)
 	if s.playerMap[uuid] != nil {
 		delete(s.playerMap, uuid)
 	}

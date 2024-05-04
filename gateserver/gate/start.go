@@ -31,7 +31,6 @@ type GateServer struct {
 	snowflake        *alg.SnowflakeWorker // 雪花唯一id生成器
 	kcpListener      *kcp.Listener
 	node             *NodeService
-	kcpFin           bool
 	sessionIdCounter uint32
 	playerMap        map[int64]*PlayerGame // 玩家内存
 	playerMapLock    sync.Mutex            // 玩家列表互斥锁
@@ -132,12 +131,10 @@ func (s *GateServer) GlobalRotationEvent() {
 
 func Close() error {
 	ges := GATESERVER
-	ges.kcpFin = true
 	plays := ges.GetAllPlayer()
 	for _, play := range plays {
 		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-		play.PlayerLogoutCsReq(nil)
+		go play.PlayerLogoutCsReq(nil)
 	}
-	close(ges.Stop)
 	return nil
 }

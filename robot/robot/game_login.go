@@ -133,7 +133,7 @@ func (r *RoBot) PlayerHeartBeatCsReq() {
 
 			r.send(cmd.PlayerHeartBeatCsReq, req)
 
-			time.Sleep(1 * time.Second)
+			time.Sleep(1 * time.Millisecond)
 		}
 	}()
 }

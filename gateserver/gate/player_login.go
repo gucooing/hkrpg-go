@@ -117,12 +117,12 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 
 	// 生成临时uuid
 	p.Uuid = s.snowflake.GenId()
-	s.AddPlayerMap(p.Uuid, p)
 	p.Uid = uidPlayer.Uid
+	s.AddPlayerMap(p.Uuid, p)
 
 	// 下线重复登录的玩家
 	if bin, ok := s.Store.GetPlayerStatus(req.AccountUid); ok {
-		logger.Info("[AccountId:%v]玩家重复登录", accountUid)
+		logger.Info("[UID:%v][AccountId:%v]玩家重复登录", p.Uid, accountUid)
 		statu := new(spb.PlayerStatusRedisData)
 		err := pb.Unmarshal(bin, statu)
 		if err != nil {
@@ -130,15 +130,16 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 			return
 		}
 		oldGs := s.getGsByAppid(statu.GameserverId)
-		if statu.Uid != 0 || oldGs != nil {
+		if oldGs != nil {
 			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
-				Uid:             statu.Uid,
+				Uid:             p.Uid,
 				AccountId:       accountUid,
 				OldUuid:         statu.Uuid,
 				OldGameServerId: statu.GameserverId,
 				NewUuid:         p.Uuid,
 				NewGameServerId: p.gs.appid,
 			})
+			logger.Debug("[UID:%v][AccountId:%v]重复登录，下线玩家中", p.Uid, accountUid)
 			return
 		} else {
 			s.Store.DistUnlockPlayerStatus(req.AccountUid)

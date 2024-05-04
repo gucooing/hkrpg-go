@@ -2,10 +2,11 @@ package gs
 
 import (
 	"log"
-	"net"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/gucooing/gunet"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
@@ -28,7 +29,7 @@ type GameServer struct {
 	Store        *db.Store
 	Port         string
 	AppId        uint32
-	GSListener   net.Listener
+	GSListener   *gunet.TcpListener
 	node         *NodeService
 	PlayerMap    map[int64]*GamePlayer
 	gateList     map[uint32]*gateServer // gate列表
@@ -55,7 +56,7 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	}
 	s.Port = port
 	addr := s.Config.OuterIp + ":" + port
-	gSListener, err := net.Listen("tcp", addr)
+	gSListener, err := gunet.NewTcpS(addr)
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(0)
@@ -84,7 +85,7 @@ func (s *GameServer) StartGameServer() error {
 	}
 }
 
-func (s *GameServer) recvNil(conn net.Conn) {
+func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
@@ -94,29 +95,26 @@ func (s *GameServer) recvNil(conn net.Conn) {
 			return
 		}
 	}()
-	nodeMsg := make([]byte, player.PacketMaxLen)
-	var bin []byte = nil
-	recvLen, err := conn.Read(nodeMsg)
-	if err != nil {
-		logger.Debug("exit recv loop, conn read err: %v", err)
-		return
-	}
-	bin = nodeMsg[:recvLen]
-	nodeMsgList := make([]*alg.PackMsg, 0)
-	alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
-	for _, msg := range nodeMsgList {
-		serviceMsg := alg.DecodePayloadToProto(msg)
-		if msg.CmdId == cmd.GateLoginGameReq {
-			rsp := serviceMsg.(*spb.GateLoginGameReq)
-			switch rsp.ServerType {
-			case spb.ServerType_SERVICE_GATE:
-				go s.recvGate(conn, rsp.AppId)
-				return
+	tmp := []byte{}
+	for {
+		bin, err := conn.Read()
+		if err != nil {
+			logger.Debug("exit recv loop, conn read err: %v", err)
+			conn.Close()
+			return
+		}
+		nodeMsgList := make([]*alg.PackMsg, 0)
+		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
+		for _, msg := range nodeMsgList {
+			serviceMsg := alg.DecodePayloadToProto(msg)
+			switch msg.CmdId {
+			case cmd.GateLoginGameReq:
+				rsp := serviceMsg.(*spb.GateLoginGameReq)
+				go s.recvGate(conn, rsp.AppId, tmp)
 			}
+			return
 		}
 	}
-	conn.Close()
-	return
 }
 
 func (s *GameServer) AutoUpDataPlayer() {

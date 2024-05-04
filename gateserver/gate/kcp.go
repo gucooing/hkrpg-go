@@ -13,30 +13,29 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+var QPS int64
+
 func (s *GateServer) RunKcp() error {
 	for {
 		kcpConn, err := s.kcpListener.AcceptKCP()
-		if s.kcpFin {
-			logger.Info("kcp error")
-			break
-		}
 		if err != nil {
 			logger.Error("accept kcp err: %v", err)
-			continue
+			return err
 		}
-		CLIENT_CONN_NUM++
-		kcpConn.SetACKNoDelay(true)
-		kcpConn.SetWriteDelay(false)
-		kcpConn.SetWindowSize(256, 256)
-		kcpConn.SetMtu(1200)
-		kcpConn.SetIdleTicker(10 * time.Second)
-		sessionId := kcpConn.GetSessionId()
-		logger.Info("sessionId:%v", sessionId)
-		// 读取密钥相关文件
-		g := s.NewGame(kcpConn)
-		go s.recvHandle(g)
+		go func() {
+			CLIENT_CONN_NUM++
+			kcpConn.SetACKNoDelay(true)
+			kcpConn.SetWriteDelay(false)
+			kcpConn.SetWindowSize(256, 256)
+			kcpConn.SetMtu(1200)
+			kcpConn.SetIdleTicker(10 * time.Second)
+			sessionId := kcpConn.GetSessionId()
+			logger.Info("sessionId:%v", sessionId)
+			// 读取密钥相关文件
+			g := s.NewGame(kcpConn)
+			go s.recvHandle(g)
+		}()
 	}
-	return nil
 }
 
 // kcp接收
@@ -57,6 +56,7 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 	for {
 		var bin []byte = nil
 		recvLen, err := p.KcpConn.Read(payload)
+		QPS++
 		if err != nil {
 			CLIENT_CONN_NUM--
 			logger.Debug("exit recv loop, conn read err: %v", err)
@@ -153,6 +153,8 @@ func (s *GateServer) kcpNetInfo() {
 		logger.Info("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
 		clientConnNum := atomic.LoadInt32(&CLIENT_CONN_NUM)
 		logger.Info("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
+		logger.Info("QPS: %v /s", QPS/60)
+		QPS = 0
 		kcp.DefaultSnmp.Reset()
 	}
 }

@@ -1,7 +1,6 @@
 package node
 
 import (
-	"bufio"
 	"strconv"
 	"time"
 
@@ -13,7 +12,6 @@ import (
 )
 
 func (s *Service) muipRecvHandle() {
-	payload := make([]byte, PacketMaxLen)
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
@@ -26,13 +24,11 @@ func (s *Service) muipRecvHandle() {
 	}()
 
 	for {
-		var bin []byte = nil
-		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
+		bin, err := s.Conn.Read()
 		if err != nil {
 			s.n.killService(s)
 			break
 		}
-		bin = payload[:recvLen]
 		msgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &msgList, nil)
 		for _, msg := range msgList {

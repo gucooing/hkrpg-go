@@ -2,11 +2,10 @@ package muip
 
 import (
 	"context"
-	"net"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/hkrpg-go/gameserver/player"
+	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -16,7 +15,7 @@ import (
 
 type NodeService struct {
 	muip         *MuipServer
-	nodeConn     net.Conn
+	nodeConn     *gunet.TcpConn
 	tickerCancel context.CancelFunc
 	ticker       *time.Ticker // 定时器
 }
@@ -28,7 +27,7 @@ type Service struct {
 
 func (s *MuipServer) newNode() {
 	n := new(NodeService)
-	tcpConn, err := net.Dial("tcp", s.Config.NetConf["Node"])
+	tcpConn, err := gunet.NewTcpC(s.Config.NetConf["Node"])
 	if err != nil {
 		logger.Error("nodeserver error:%s", err.Error())
 		return
@@ -78,17 +77,13 @@ func (n *NodeService) ServiceConnectionReq() {
 
 // 从node接收消息
 func (n *NodeService) recvNode() {
-	nodeMsg := make([]byte, player.PacketMaxLen)
-
 	for {
-		var bin []byte = nil
-		recvLen, err := n.nodeConn.Read(nodeMsg)
+		bin, err := n.nodeConn.Read()
 		if err != nil {
 			logger.Error("node error")
 			n.nodeKill()
 			return
 		}
-		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {

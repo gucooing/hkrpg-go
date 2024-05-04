@@ -2,11 +2,11 @@ package gate
 
 import (
 	"context"
-	"net"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -20,7 +20,7 @@ type gameServer struct {
 	appid         uint32                // appid
 	playerMap     map[int64]*PlayerGame // 玩家列表
 	playerMapLock sync.Mutex            // 玩家列表互斥锁
-	conn          net.Conn              // gs tcp通道
+	conn          *gunet.TcpConn        // gs tcp通道
 	playerNum     int64                 // 所连接的gs玩家数
 
 	tickerCancel context.CancelFunc
@@ -28,7 +28,7 @@ type gameServer struct {
 }
 
 func (s *GateServer) newGs(addr string, appid uint32) {
-	gameConn, err := net.Dial("tcp", addr)
+	gameConn, err := gunet.NewTcpC(addr)
 	if err != nil {
 		logger.Error("无法连接到GAME:", err)
 		return
@@ -49,21 +49,16 @@ func (s *GateServer) newGs(addr string, appid uint32) {
 
 // 从game接收消息
 func (gs *gameServer) recvGame() {
-	nodeMsg := make([]byte, PacketMaxLen)
 	for {
-		var bin []byte = nil
-		recvLen, err := gs.conn.Read(nodeMsg)
+		bin, err := gs.conn.Read()
 		if err != nil {
-			logger.Debug("[GS:%v]game->gate error: %s", gs.appid, err.Error())
-			gs.gameKill()
 			return
 		}
-		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
-			playerMsg := alg.DecodePayloadToProto(msg)
-			go gs.gameRegisterMessage(msg.CmdId, playerMsg)
+			serviceMsg := alg.DecodePayloadToProto(msg)
+			go gs.gameRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
 }
@@ -204,6 +199,7 @@ func (gs *gameServer) GateGamePingRsp(playerMsg pb.Message) {
 
 // 玩家在gs注册请求
 func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32, uuid int64) {
+	logger.Debug("[UID:%v][AccountId:%v]发送登录通知", uid, accountId)
 	req := &spb.GateGamePlayerLoginReq{
 		Uid:       uid,
 		Uuid:      uuid,
@@ -224,9 +220,11 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 		return
 	}
 	if player, ok := gs.gate.GetPlayerByUuid(rsp.Uuid); !ok {
+		logger.Warn("[UID:%v][UUID:%v]不存在此玩家", rsp.Uid, rsp.Uuid)
 		return
 	} else {
 		if player.gs.appid != gs.appid {
+			logger.Warn("不存在此gameserver")
 			return
 		}
 		prsp := &proto.PlayerGetTokenScRsp{
@@ -259,12 +257,13 @@ func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	if rsp.Retcode != 0 {
 		return
 	}
+	logger.Debug("[UID:%v][UUID:%v]重复登录，下线玩家成功", rsp.Uid, rsp.NewUuid)
 	newGs := gs.gate.getGsByAppid(rsp.NewGameServerId)
-	player, _ := gs.gate.GetPlayerByUuid(rsp.NewUuid)
-	if newGs == nil || player == nil {
+	play, _ := gs.gate.GetPlayerByUuid(rsp.NewUuid)
+	if newGs == nil || play == nil {
 		return
 	}
-	newGs.playerLogin(player)
+	newGs.playerLogin(play)
 }
 
 // game通知gate玩家消息

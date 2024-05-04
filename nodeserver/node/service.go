@@ -1,10 +1,9 @@
 package node
 
 import (
-	"bufio"
-	"net"
 	"time"
 
+	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -14,7 +13,7 @@ import (
 
 type Service struct {
 	n             *Node
-	Conn          net.Conn
+	Conn          *gunet.TcpConn
 	AppId         uint32
 	ServerType    spb.ServerType
 	Addr          string
@@ -24,15 +23,12 @@ type Service struct {
 }
 
 func (n *Node) recvHandle(s *Service) {
-	payload := make([]byte, PacketMaxLen)
-	var bin []byte = nil
-	recvLen, err := bufio.NewReader(s.Conn).Read(payload)
+	bin, err := s.Conn.Read()
 	if err != nil {
 		logger.Warn("已切断异常连接Addr:%s", s.Conn.RemoteAddr().String())
 		s.Conn.Close()
 		return
 	}
-	bin = payload[:recvLen]
 	msgList := make([]*alg.PackMsg, 0)
 	alg.DecodeBinToPayload(bin, &msgList, nil)
 	for _, msg := range msgList {

@@ -2,11 +2,11 @@ package gs
 
 import (
 	"context"
-	"net"
 	"strconv"
 	"sync"
 	"time"
 
+	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
@@ -23,7 +23,7 @@ type gateServer struct {
 	appid         uint32
 	playerMap     map[int64]*GamePlayer // 玩家列表
 	playerMapLock sync.Mutex            // 玩家列表互斥锁
-	conn          net.Conn              // gate tcp通道
+	conn          *gunet.TcpConn        // gate tcp通道
 
 	msgChan          chan player.Msg // 消息通道
 	recvPlayerCancel context.CancelFunc
@@ -48,7 +48,7 @@ func (s *GameServer) getGeByAppid(appid uint32) *gateServer {
 }
 
 // 从gate接收消息
-func (s *GameServer) recvGate(conn net.Conn, appid uint32) {
+func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32, tmp []byte) {
 	ge := &gateServer{
 		game:      s,
 		appid:     appid,
@@ -65,8 +65,6 @@ func (s *GameServer) recvGate(conn net.Conn, appid uint32) {
 	ge.recvPlayerCancel = recvPlayerCancel
 	go ge.recvPlayer(recvPlayerCtx)
 	logger.Info("gate:[%v]在game注册成功", appid)
-
-	nodeMsg := make([]byte, player.PacketMaxLen)
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
@@ -79,19 +77,17 @@ func (s *GameServer) recvGate(conn net.Conn, appid uint32) {
 	}()
 
 	for {
-		var bin []byte = nil
-		recvLen, err := conn.Read(nodeMsg)
+		bin, err := conn.Read()
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
 			ge.killGate()
 			return
 		}
-		bin = nodeMsg[:recvLen]
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			ge.gateRegisterMessage(msg.CmdId, serviceMsg)
+			go ge.gateRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
 }
@@ -160,6 +156,7 @@ func (ge *gateServer) GateGamePingReq(payloadMsg pb.Message) {
 
 func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GateGamePlayerLoginReq)
+	logger.Info("[UID:%v][AccountId:%v]收到登录通知", req.Uid, req.AccountId)
 	rsp := &spb.GateGamePlayerLoginRsp{
 		Retcode: spb.Retcode_RET_SUCC,
 		Uid:     req.Uid,
@@ -222,6 +219,7 @@ func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
 
 func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
+	logger.Info("[UID:%v][AccountId:%v]重复登录，下线玩家中", req.Uid, req.AccountId)
 	play := ge.game.GetPlayerByUuid(req.OldUuid)
 	if play == nil {
 		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))

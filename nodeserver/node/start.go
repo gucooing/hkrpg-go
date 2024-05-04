@@ -2,10 +2,10 @@ package node
 
 import (
 	"log"
-	"net"
 	"os"
 	"sync"
 
+	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
 	"github.com/gucooing/hkrpg-go/nodeserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -61,7 +61,7 @@ func (n *Node) GetMapService() map[spb.ServerType]map[uint32]*Service {
 func (n *Node) NewNode() {
 	logger.Info("此NodeServer端口为:%v", n.Port)
 	// 监听地址和端口
-	listen, err := net.Listen("tcp", "0.0.0.0:"+n.Port)
+	listen, err := gunet.NewTcpS("0.0.0.0:" + n.Port)
 	if err != nil {
 		logger.Error("NodeServer监听失败:%s", err.Error())
 		os.Exit(0)
@@ -80,7 +80,7 @@ func (n *Node) NewNode() {
 	}
 }
 
-func (n *Node) newService(conn net.Conn) *Service {
+func (n *Node) newService(conn *gunet.TcpConn) *Service {
 	s := new(Service)
 	s.Conn = conn
 	s.n = n

@@ -128,6 +128,8 @@ func newUDPSession(conv uint64, l *Listener, conn net.PacketConn, ownConn bool, 
 	sess.ownConn = ownConn
 	sess.l = l
 	sess.recvbuf = make([]byte, mtuLimit)
+	sess.fd = 10 * time.Second
+	sess.idt = time.NewTimer(sess.fd)
 
 	// cast to writebatch conn
 	if _, ok := conn.(*net.UDPConn); ok {
