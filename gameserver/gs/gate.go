@@ -218,8 +218,9 @@ func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
 func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
 	logger.Info("[UID:%v][AccountId:%v]重复登录，下线玩家中", req.Uid, req.AccountId)
-	play := ge.game.GetPlayerByUuid(req.OldUuid)
+	play := ge.GetPlayerByUuid(req.OldUuid)
 	if play == nil {
+		// TODO 此处应该下线玩家（通知到gate和客户端
 		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))
 	} else {
 		ge.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
@@ -241,8 +242,9 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 
 func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
 	notify := payloadMsg.(*spb.GateToGamePlayerLogoutNotify)
-	play := ge.game.GetPlayerByUuid(notify.Uuid)
+	play := ge.GetPlayerByUuid(notify.Uuid)
 	if play == nil {
+		// TODO 此处应该下线玩家（通知到gate和客户端
 		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(notify.AccountId)))
 	} else {
 		// 下线玩家
@@ -263,7 +265,8 @@ func NewPlayer(uid, accountId uint32, uuid int64, msg chan player.Msg) *player.G
 
 func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 	rsp := payloadMsg.(*spb.GateToGameMsgNotify)
-	paler := ge.game.GetPlayerByUuid(rsp.Uuid)
+	paler := ge.GetPlayerByUuid(rsp.Uuid)
+	// TODO 此处应该下线玩家（通知到gate和客户端
 	if paler != nil {
 		msgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(rsp.Msg, &msgList, nil)

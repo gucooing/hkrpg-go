@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -46,6 +48,10 @@ func main() {
 		logger.Error("game初始化失败")
 		return
 	}
+
+	go func() {
+		http.ListenAndServe("0.0.0.0:9991", nil)
+	}()
 
 	// 加载res
 	gdconf.InitGameDataConfig()

@@ -114,6 +114,13 @@ func (ge *gateServer) GetAllPlayer() map[int64]*GamePlayer {
 	return players
 }
 
+func (ge *gateServer) GetPlayerByUuid(uuid int64) *GamePlayer {
+	ge.playerMapLock.Lock()
+	defer ge.playerMapLock.Unlock()
+	return ge.playerMap[uuid]
+}
+
+// 这个玩意不要过多执行，会卡死的
 func (s *GameServer) GetPlayerByUuid(uuid int64) *GamePlayer {
 	for _, ge := range s.gateList {
 		playerList := ge.GetAllPlayer()

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -41,6 +43,10 @@ func main() {
 	cfg := config.GetConfig()
 	// 初始化geta
 	gaten := gate.NewGate(cfg, appid)
+
+	go func() {
+		http.ListenAndServe("0.0.0.0:9990", nil)
+	}()
 
 	// 启动gate服务
 	go func() {
