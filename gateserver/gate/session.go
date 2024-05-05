@@ -78,26 +78,10 @@ func (p *PlayerGame) GateToPlayer(cmdId uint16, playerMsg pb.Message) {
 	SendHandle(p, tcpMsg)
 }
 
-func (s *GateServer) AddPlayerMap(uuid int64, player *PlayerGame) {
-	s.playerMapLock.Lock()
-	s.playerMap[uuid] = player
-	s.playerMapLock.Unlock()
-	go player.gs.AddPlayerMap(uuid, player)
-}
-
 func (gs *gameServer) AddPlayerMap(uuid int64, player *PlayerGame) {
 	gs.playerMapLock.Lock()
 	gs.playerMap[uuid] = player
 	gs.playerMapLock.Unlock()
-}
-
-func (s *GateServer) DelPlayerMap(uuid int64) {
-	s.playerMapLock.Lock()
-	s.playerMap[uuid].gs.DelPlayerMap(uuid)
-	if s.playerMap[uuid] != nil {
-		delete(s.playerMap, uuid)
-	}
-	s.playerMapLock.Unlock()
 }
 
 func (gs *gameServer) DelPlayerMap(uuid int64) {
@@ -106,23 +90,6 @@ func (gs *gameServer) DelPlayerMap(uuid int64) {
 		delete(gs.playerMap, uuid)
 	}
 	gs.playerMapLock.Unlock()
-}
-
-func (s *GateServer) GetPlayerByUuid(uuid int64) (*PlayerGame, bool) {
-	s.playerMapLock.Lock()
-	defer s.playerMapLock.Unlock()
-	player, ok := s.playerMap[uuid]
-	return player, ok
-}
-
-func (s *GateServer) GetAllPlayer() map[int64]*PlayerGame {
-	s.playerMapLock.Lock()
-	defer s.playerMapLock.Unlock()
-	players := make(map[int64]*PlayerGame)
-	for k, v := range s.playerMap {
-		players[k] = v
-	}
-	return players
 }
 
 func (gs *gameServer) GetAllPlayer() map[int64]*PlayerGame {
@@ -135,11 +102,21 @@ func (gs *gameServer) GetAllPlayer() map[int64]*PlayerGame {
 	return players
 }
 
+func (s *GateServer) GetPlayerByUuid(uuid int64) (*PlayerGame, bool) {
+	for _, gs := range s.gsList {
+		playerList := gs.GetAllPlayer()
+		if playerList[uuid] != nil {
+			return playerList[uuid], true
+		}
+	}
+	return nil, false
+}
+
 // 玩家主动离线处理
 func (p *PlayerGame) PlayerLogoutCsReq(tcpMsg *alg.PackMsg) {
 	p.KcpConn.Close()
 	p.gs.GateToGamePlayerLogoutNotify(p)
-	p.gs.gate.DelPlayerMap(p.Uuid)
+	p.gs.DelPlayerMap(p.Uuid)
 	logger.Info("[UID:%v][UUID:%v]玩家离线成功", p.Uid, p.Uuid)
 }
 
@@ -148,13 +125,15 @@ func (s *GateServer) AutoDelPlayer() {
 	ticker := time.NewTicker(time.Second * 120)
 	for {
 		<-ticker.C
-		plays := s.GetAllPlayer()
-		for _, play := range plays {
-			if time.Now().Unix()-play.LastActiveTime > 30 {
-				play.gs.GateToGamePlayerLogoutNotify(play)
-				play.KcpConn.Close()
-				s.DelPlayerMap(play.Uuid)
-				logger.Info("[UID:%v][UUID:%v]玩家超时离线", play.Uid, play.Uid)
+		for _, gs := range s.gsList {
+			playerList := gs.GetAllPlayer()
+			for _, play := range playerList {
+				if time.Now().Unix()-play.LastActiveTime > 30 {
+					play.gs.GateToGamePlayerLogoutNotify(play)
+					play.KcpConn.Close()
+					play.gs.DelPlayerMap(play.Uuid)
+					logger.Info("[UID:%v][UUID:%v]玩家超时离线", play.Uid, play.Uid)
+				}
 			}
 		}
 	}
@@ -166,7 +145,7 @@ func (s *GateServer) AutoDelPlayer() {
 */
 func (s *GateServer) killPlayer(p *PlayerGame) {
 	p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-	s.DelPlayerMap(p.Uuid)
+	p.gs.DelPlayerMap(p.Uuid)
 	logger.Info("[UID:%v][UUID:%v]玩家下线gate", p.Uid, p.Uuid)
 }
 
@@ -177,7 +156,7 @@ func (p *PlayerGame) loginTicker() {
 		logger.Info("[UID:%v][UUID:%v]玩家登录超时", p.Uid, p.Uuid)
 		p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
 		p.KcpConn.Close()
-		p.gs.gate.DelPlayerMap(p.Uuid)
+		p.gs.DelPlayerMap(p.Uuid)
 		p.ticker.Stop()
 		return
 	case <-p.stop:

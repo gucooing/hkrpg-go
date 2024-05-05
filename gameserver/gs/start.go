@@ -31,7 +31,6 @@ type GameServer struct {
 	AppId        uint32
 	GSListener   *gunet.TcpListener
 	node         *NodeService
-	PlayerMap    map[int64]*GamePlayer
 	gateList     map[uint32]*gateServer // gate列表
 	gateListLock sync.Mutex             // gate列表同步锁
 	Ticker       *time.Ticker
@@ -44,7 +43,6 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
 	s.AppId = alg.GetAppIdUint32(appid)
-	s.PlayerMap = make(map[int64]*GamePlayer)
 	s.gateList = make(map[uint32]*gateServer)
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	logger.Info("GameServer AppId:%s", appid)
@@ -121,23 +119,32 @@ func (s *GameServer) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		<-ticker.C
-		for _, g := range s.PlayerMap {
-			if g.p.Uid == 0 {
-				return
-			}
-			lastActiveTime := g.p.LastActiveTime
-			timestamp := time.Now().Unix()
-			if timestamp-lastActiveTime >= 120 {
-				logger.Info("[UID:%v]玩家超时离线", g.p.Uid)
-				s.KickPlayer(g.p)
+		for _, ge := range s.gateList {
+			playerList := ge.GetAllPlayer()
+			for _, g := range playerList {
+				if g.p.Uid == 0 {
+					continue
+				}
+				lastActiveTime := g.p.LastActiveTime
+				timestamp := time.Now().Unix()
+				if timestamp-lastActiveTime >= 120 {
+					logger.Info("[UID:%v]玩家超时离线", g.p.Uid)
+					s.KickPlayer(g)
+				}
 			}
 		}
 	}
 }
 
 func Close() error {
-	for _, gamePlayer := range GAMESERVER.PlayerMap {
-		GAMESERVER.KickPlayer(gamePlayer.p)
+	for _, ge := range GAMESERVER.gateList {
+		playerList := ge.GetAllPlayer()
+		for _, g := range playerList {
+			if g.p.Uid == 0 {
+				continue
+			}
+			GAMESERVER.KickPlayer(g)
+		}
 	}
 	return nil
 }

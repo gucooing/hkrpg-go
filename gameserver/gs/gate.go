@@ -16,8 +16,6 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-var syncGD sync.Mutex
-
 type gateServer struct {
 	game          *GameServer
 	appid         uint32
@@ -177,7 +175,7 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	g := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
 	// 拉取账户数据
 	ge.GetPlayerDate(req.Uid, g)
-	ge.game.AddPlayerMap(req.Uuid, g, ge)
+	ge.AddPlayerMap(req.Uuid, g)
 	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, req.Uuid)
 	ge.game.AddPlayerStatus(g)
 	ge.GateGamePlayerLoginRsp(rsp)
@@ -229,7 +227,7 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 			Uuid: play.p.Uuid,
 		})
 		// 下线玩家
-		ge.game.killPlayer(play.p)
+		ge.game.killPlayer(play)
 	}
 
 	rsp := &spb.GetToGamePlayerLogoutRsp{
@@ -248,7 +246,7 @@ func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
 		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(notify.AccountId)))
 	} else {
 		// 下线玩家
-		ge.game.killPlayer(play.p)
+		ge.game.killPlayer(play)
 	}
 }
 
@@ -283,7 +281,7 @@ func (ge *gateServer) GameToGateMsgNotify(payloadMsg pb.Message) {
 func (ge *gateServer) killGate() {
 	plays := ge.GetAllPlayer()
 	for _, play := range plays {
-		ge.game.killPlayer(play.p)
+		ge.game.killPlayer(play)
 	}
 	ge.game.delGeList(ge.appid)
 	ge.recvPlayerCancel()

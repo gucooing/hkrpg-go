@@ -14,16 +14,21 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+func getCurTime() int64 {
+	return time.Now().Unix()
+}
+
 // 玩家ping包处理
 func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
 	p.GateToGame(tcpMsg)
 	req := new(proto.PlayerHeartbeatCsReq)
 	pb.Unmarshal(tcpMsg.ProtoData, req)
+	sTime := getCurTime()
 
 	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(time.Now().UnixNano() / 1e6)
+	rsp.ServerTimeMs = uint64(sTime)
 	rsp.ClientTimeMs = req.ClientTimeMs
-	p.LastActiveTime = time.Now().Unix()
+	p.LastActiveTime = sTime
 
 	p.GateToPlayer(cmd.PlayerHeartBeatScRsp, rsp)
 }
@@ -118,7 +123,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	// 生成临时uuid
 	p.Uuid = s.snowflake.GenId()
 	p.Uid = uidPlayer.Uid
-	s.AddPlayerMap(p.Uuid, p)
+	gs.AddPlayerMap(p.Uuid, p)
 
 	// 下线重复登录的玩家
 	if bin, ok := s.Store.GetPlayerStatus(req.AccountUid); ok {

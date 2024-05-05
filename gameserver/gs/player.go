@@ -26,11 +26,12 @@ type GamePlayer struct {
 	RouteManager *RouteManager
 }
 
-func (s *GameServer) killPlayer(p *player.GamePlayer) {
-	s.upDataPlayer(p)
-	s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
-	s.DelPlayerMap(p.Uuid)
-	logger.Info("[UID:%v][UUID:%v]玩家下线成功", p.Uid, p.Uuid)
+// 这个kill玩家不会通知给gate
+func (s *GameServer) killPlayer(p *GamePlayer) {
+	s.upDataPlayer(p.p)
+	s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.p.AccountId)))
+	p.gate.DelPlayerMap(p.p.Uuid)
+	logger.Info("[UID:%v][UUID:%v]玩家下线成功", p.p.Uid, p.p.Uuid)
 }
 
 func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
@@ -73,49 +74,26 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 
 /************************************接口*********************************/
 
-func (s *GameServer) AddPlayerMap(uuid int64, g *player.GamePlayer, ge *gateServer) {
-	syncGD.Lock()
+func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 	gamePlayer := &GamePlayer{
 		gate:         ge,
-		game:         s,
+		game:         ge.game,
 		p:            g,
 		RouteManager: NewRouteManager(g),
 	}
-	s.PlayerMap[uuid] = gamePlayer
-	// 初始化在线数据
-	if s.PlayerMap[g.Uuid].p.Player == nil {
-		s.PlayerMap[g.Uuid].p.Player = &player.PlayerData{
+	ge.playerMapLock.Lock()
+	ge.playerMap[uuid] = gamePlayer
+	ge.playerMapLock.Unlock()
+
+	if gamePlayer.p.Player == nil {
+		gamePlayer.p.Player = &player.PlayerData{
 			Battle: make(map[uint32]*player.Battle),
 			BattleState: &player.BattleState{
 				ChallengeState: &player.ChallengeState{},
 			},
 		}
 	}
-	PLAYERNUM = int64(len(s.PlayerMap))
-	syncGD.Unlock()
-	go func() {
-		ge.AddPlayerMap(uuid, gamePlayer)
-	}()
-}
-
-func (ge *gateServer) AddPlayerMap(uuid int64, playerGame *GamePlayer) {
-	ge.playerMapLock.Lock()
-	ge.playerMap[uuid] = playerGame
-	ge.playerMapLock.Unlock()
-}
-
-func (s *GameServer) DelPlayerMap(uuid int64) {
-	syncGD.Lock()
-	if s.PlayerMap[uuid] != nil {
-		func() {
-			if ge := s.getGeByAppid(s.PlayerMap[uuid].p.GateAppId); ge != nil {
-				ge.DelPlayerMap(uuid)
-			}
-		}()
-		delete(s.PlayerMap, uuid)
-	}
-	PLAYERNUM = int64(len(s.PlayerMap))
-	syncGD.Unlock()
+	PLAYERNUM++
 }
 
 func (ge *gateServer) DelPlayerMap(uuid int64) {
@@ -126,20 +104,10 @@ func (ge *gateServer) DelPlayerMap(uuid int64) {
 	ge.playerMapLock.Unlock()
 }
 
-func (s *GameServer) GetAllPlayer() map[int64]*GamePlayer {
-	players := make(map[int64]*GamePlayer)
-	syncGD.Lock()
-	defer syncGD.Unlock()
-	for uuid, play := range s.PlayerMap {
-		players[uuid] = play
-	}
-	return players
-}
-
 func (ge *gateServer) GetAllPlayer() map[int64]*GamePlayer {
 	players := make(map[int64]*GamePlayer)
-	syncGD.Lock()
-	defer syncGD.Unlock()
+	ge.playerMapLock.Lock()
+	defer ge.playerMapLock.Unlock()
 	for uuid, play := range ge.playerMap {
 		players[uuid] = play
 	}
@@ -147,9 +115,13 @@ func (ge *gateServer) GetAllPlayer() map[int64]*GamePlayer {
 }
 
 func (s *GameServer) GetPlayerByUuid(uuid int64) *GamePlayer {
-	syncGD.Lock()
-	defer syncGD.Unlock()
-	return s.PlayerMap[uuid]
+	for _, ge := range s.gateList {
+		playerList := ge.GetAllPlayer()
+		if playerList[uuid] != nil {
+			return playerList[uuid]
+		}
+	}
+	return nil
 }
 
 func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
@@ -172,15 +144,13 @@ func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
 	return err
 }
 
-func (s *GameServer) KickPlayer(g *player.GamePlayer) {
-	if err := s.UpDataPlayer(g); err != nil {
-		logger.Error("[UID:%v]保存数据失败", g.Uid)
+// 这个kill玩家会通知给gate
+func (s *GameServer) KickPlayer(g *GamePlayer) {
+	if err := s.UpDataPlayer(g.p); err != nil {
+		logger.Error("[UID:%v]保存数据失败", g.p.Uid)
 	}
-	GAMESERVER.DelPlayerMap(g.Uuid)
-	if g.GateConn != nil {
-		g.GateConn.Close()
-	}
-	logger.Info("[UID:%v]玩家离线game", g.Uid)
+	g.gate.DelPlayerMap(g.p.Uuid)
+	logger.Info("[UID:%v]玩家离线game", g.p.Uid)
 }
 
 func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {

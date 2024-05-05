@@ -32,8 +32,6 @@ type GateServer struct {
 	kcpListener      *kcp.Listener
 	node             *NodeService
 	sessionIdCounter uint32
-	playerMap        map[int64]*PlayerGame // 玩家内存
-	playerMapLock    sync.Mutex            // 玩家列表互斥锁
 	kcpEventChan     chan *KcpEvent
 	Ec2b             *random.Ec2b
 	gsList           map[uint32]*gameServer // gs列表
@@ -55,7 +53,6 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 	s.Ec2b = alg.GetEc2b()
 	s.Config = cfg
 	s.Store = NewStore(s.Config) // 初始化数据库连接
-	s.playerMap = make(map[int64]*PlayerGame)
 	s.gsList = make(map[uint32]*gameServer)
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.WorkerId = 1
@@ -101,7 +98,7 @@ func (s *GateServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
 	g := new(PlayerGame)
 	g.KcpConn = kcpConn
 	g.XorKey = s.Ec2b.XorKey()
-	g.LastActiveTime = time.Now().Unix()
+	g.LastActiveTime = getCurTime()
 	// 初始化路由
 	g.RouteManager = NewRouteManager(g)
 
@@ -131,16 +128,18 @@ func (s *GateServer) GlobalRotationEvent() {
 
 func Close() error {
 	ges := GATESERVER
-	plays := ges.GetAllPlayer()
-	for _, play := range plays {
-		go func() {
-			play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-			play.gs.GateToGamePlayerLogoutNotify(play)
-			play.KcpConn.Close()
-			play.gs.gate.DelPlayerMap(play.Uuid)
-			play.KcpConn.Close()
-			logger.Info("[UID:%v][UUID:%v]玩家离线成功", play.Uid, play.Uuid)
-		}()
+	for _, gs := range ges.gsList {
+		playerList := gs.GetAllPlayer()
+		for _, play := range playerList {
+			go func() {
+				play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
+				play.gs.GateToGamePlayerLogoutNotify(play)
+				play.KcpConn.Close()
+				play.gs.DelPlayerMap(play.Uuid)
+				play.KcpConn.Close()
+				logger.Info("[UID:%v][UUID:%v]玩家离线成功", play.Uid, play.Uuid)
+			}()
+		}
 	}
 	return nil
 }

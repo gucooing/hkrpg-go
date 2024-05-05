@@ -52,7 +52,7 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			CLIENT_CONN_NUM--
 			p.gs.GateToGamePlayerLogoutNotify(p)
 			p.KcpConn.Close()
-			s.DelPlayerMap(p.Uuid)
+			p.gs.DelPlayerMap(p.Uuid)
 		}
 	}()
 
