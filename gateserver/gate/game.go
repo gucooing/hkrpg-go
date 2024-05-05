@@ -52,6 +52,7 @@ func (gs *gameServer) recvGame() {
 	for {
 		bin, err := gs.conn.Read()
 		if err != nil {
+			gs.gameKill()
 			return
 		}
 		nodeMsgList := make([]*alg.PackMsg, 0)
@@ -286,4 +287,13 @@ func (gs *gameServer) GameToGatePlayerLogoutNotify(playerMsg pb.Message) {
 	if play, ok := gs.gate.GetPlayerByUuid(notify.Uuid); ok {
 		gs.gate.killPlayer(play)
 	}
+}
+
+// gate通知game玩家下线
+func (gs *gameServer) GateToGamePlayerLogoutNotify(p *PlayerGame) {
+	notify := &spb.GateToGamePlayerLogoutNotify{
+		Uid:  p.Uid,
+		Uuid: p.Uuid,
+	}
+	gs.sendGame(cmd.GateToGamePlayerLogoutNotify, notify)
 }

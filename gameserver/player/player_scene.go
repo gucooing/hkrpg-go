@@ -197,6 +197,7 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
+		EntityList:         make([]*proto.SceneEntityInfo, 0),
 	}
 
 	for i := uint32(0); i < 100; i++ {

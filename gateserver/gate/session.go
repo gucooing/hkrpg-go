@@ -138,11 +138,7 @@ func (gs *gameServer) GetAllPlayer() map[int64]*PlayerGame {
 // 玩家主动离线处理
 func (p *PlayerGame) PlayerLogoutCsReq(tcpMsg *alg.PackMsg) {
 	p.KcpConn.Close()
-	notify := &spb.GateToGamePlayerLogoutNotify{
-		Uid:  p.Uid,
-		Uuid: p.Uuid,
-	}
-	p.gs.sendGame(cmd.GateToGamePlayerLogoutNotify, notify)
+	p.gs.GateToGamePlayerLogoutNotify(p)
 	p.gs.gate.DelPlayerMap(p.Uuid)
 	logger.Info("[UID:%v][UUID:%v]玩家离线成功", p.Uid, p.Uuid)
 }
@@ -155,8 +151,10 @@ func (s *GateServer) AutoDelPlayer() {
 		plays := s.GetAllPlayer()
 		for _, play := range plays {
 			if time.Now().Unix()-play.LastActiveTime > 30 {
-				play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-				play.PlayerLogoutCsReq(nil)
+				play.gs.GateToGamePlayerLogoutNotify(play)
+				play.KcpConn.Close()
+				s.DelPlayerMap(play.Uuid)
+				logger.Info("[UID:%v][UUID:%v]玩家超时离线", play.Uid, play.Uid)
 			}
 		}
 	}

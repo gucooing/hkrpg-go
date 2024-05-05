@@ -72,7 +72,8 @@ func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
 func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetAllLineupDataScRsp)
 	rsp.LineupList = make([]*proto.LineupInfo, 0)
-	rsp.CurIndex = 0
+	db := g.GetLineUp()
+	rsp.CurIndex = db.MainLineUp
 
 	// 添加普通队伍
 	for i := 0; i < MaxLineupList; i++ {

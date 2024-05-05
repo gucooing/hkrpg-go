@@ -133,8 +133,14 @@ func Close() error {
 	ges := GATESERVER
 	plays := ges.GetAllPlayer()
 	for _, play := range plays {
-		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-		go play.PlayerLogoutCsReq(nil)
+		go func() {
+			play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
+			play.gs.GateToGamePlayerLogoutNotify(play)
+			play.KcpConn.Close()
+			play.gs.gate.DelPlayerMap(play.Uuid)
+			play.KcpConn.Close()
+			logger.Info("[UID:%v][UUID:%v]玩家离线成功", play.Uid, play.Uuid)
+		}()
 	}
 	return nil
 }

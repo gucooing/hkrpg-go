@@ -32,6 +32,7 @@ const (
 var (
 	errInvalidOperation = errors.New("invalid operation")
 	errTimeout          = errors.New("timeout")
+	errReadTimeout      = errors.New("read timeout")
 )
 
 var (
@@ -233,7 +234,7 @@ func (s *UDPSession) Read(b []byte) (n int, err error) {
 		case <-s.die:
 			return 0, io.ErrClosedPipe
 		case <-s.idt.C:
-			return 0, io.ErrClosedPipe
+			return 0, errReadTimeout
 		}
 	}
 }
