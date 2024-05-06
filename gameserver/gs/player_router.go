@@ -14,7 +14,6 @@ type RouteManager struct {
 
 func (r *RouteManager) initRoute(g *player.GamePlayer) {
 	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
-		cmd.PlayerHeartBeatCsReq:  g.PlayerHeartBeatCsReq, // 心跳包
 		cmd.GetBasicInfoCsReq:     g.HandleGetBasicInfoCsReq,
 		cmd.GetEnteredSceneCsReq:  g.HandleGetEnteredSceneCsReq,
 		cmd.QueryProductInfoCsReq: g.HandleQueryProductInfoCsReq,

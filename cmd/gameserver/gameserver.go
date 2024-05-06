@@ -70,7 +70,7 @@ func main() {
 			defer cancel()
 
 			logger.Info("game服务正在关闭")
-			if err = gs.Close(); err != nil {
+			if err = gameserver.Close(); err != nil {
 				logger.Error("无法正常关闭game服务")
 			}
 			logger.Info("game服务已停止")

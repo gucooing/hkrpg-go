@@ -102,6 +102,12 @@ func (gs *gameServer) GetAllPlayer() map[int64]*PlayerGame {
 	return players
 }
 
+func (gs *gameServer) GetPlayerByUuid(uuid int64) *PlayerGame {
+	gs.playerMapLock.Lock()
+	defer gs.playerMapLock.Unlock()
+	return gs.playerMap[uuid]
+}
+
 func (s *GateServer) GetPlayerByUuid(uuid int64) (*PlayerGame, bool) {
 	for _, gs := range s.gsList {
 		playerList := gs.GetAllPlayer()
@@ -114,10 +120,7 @@ func (s *GateServer) GetPlayerByUuid(uuid int64) (*PlayerGame, bool) {
 
 // 玩家主动离线处理
 func (p *PlayerGame) PlayerLogoutCsReq(tcpMsg *alg.PackMsg) {
-	p.KcpConn.Close()
-	p.gs.GateToGamePlayerLogoutNotify(p)
-	p.gs.DelPlayerMap(p.Uuid)
-	logger.Info("[UID:%v][UUID:%v]玩家离线成功", p.Uid, p.Uuid)
+	p.gs.gate.ttiPlayerKill(p, spb.Retcode_RET_PLAYER_LOGOUT)
 }
 
 // 玩家超时离线
@@ -129,24 +132,17 @@ func (s *GateServer) AutoDelPlayer() {
 			playerList := gs.GetAllPlayer()
 			for _, play := range playerList {
 				if time.Now().Unix()-play.LastActiveTime > 30 {
-					play.gs.GateToGamePlayerLogoutNotify(play)
-					play.KcpConn.Close()
-					play.gs.DelPlayerMap(play.Uuid)
-					logger.Info("[UID:%v][UUID:%v]玩家超时离线", play.Uid, play.Uid)
+					switch play.Status {
+					case spb.PlayerStatus_PlayerStatus_PostLogin:
+						s.ttiPlayerKill(play, spb.Retcode_RET_PLAYER_TIMEOUT)
+					case spb.PlayerStatus_PlayerStatus_Logout_Wait:
+						gs.DelPlayerMap(play.Uuid)
+						logger.Debug("[UID:%v][UUID:%v]长时间未收到gameserver的离线成功包", play.Uid, play.Uuid)
+					}
 				}
 			}
 		}
 	}
-}
-
-/*
-1.通知客户端下线
-2.删除玩家内存
-*/
-func (s *GateServer) killPlayer(p *PlayerGame) {
-	p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-	p.gs.DelPlayerMap(p.Uuid)
-	logger.Info("[UID:%v][UUID:%v]玩家下线gate", p.Uid, p.Uuid)
 }
 
 // 玩家登录超时离线
@@ -174,4 +170,54 @@ func (p *PlayerGame) isChannelClosed() bool {
 	}
 
 	return false
+}
+
+// 主动离线方法
+/*
+1.标记玩家状态为离线等待
+2.关闭kcp通道
+3.通知gameserver离线玩家
+4.gameserver离线成功后删除玩家
+5.gameserver长时间未回复交由定时器处理
+*/
+func (s *GateServer) ttiPlayerKill(p *PlayerGame, code spb.Retcode) {
+	p.Status = spb.PlayerStatus_PlayerStatus_Logout_Wait
+	p.KcpConn.Close()
+	p.gs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
+		Retcode:         code,
+		Uid:             p.Uid,
+		AccountId:       p.AccountId,
+		OldUuid:         p.Uuid,
+		OldGameServerId: p.gs.appid,
+	})
+	logger.Debug("[UID:%v][UUID:%v]玩家主动离线中,原因:%s", p.Uid, p.Uuid, code.String())
+}
+
+// 被动离线方法
+/*
+1.标记玩家状态
+2.通知给客户端
+3.gate原因需要通知给game
+4.关闭kcp通道
+5.删除玩家
+*/
+func (s *GateServer) passPlayerKill(p *PlayerGame, code spb.Retcode) {
+	if p == nil {
+		return
+	}
+	p.Status = spb.PlayerStatus_PlayerStatus_Logout
+	p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
+	p.KcpConn.Close()
+	p.gs.DelPlayerMap(p.Uuid)
+	switch code {
+	case spb.Retcode_RET_PLAYER_SYSTEM_ERROR: // 玩家异常
+		p.gs.sendGame(cmd.GateToGamePlayerLogoutNotify, &spb.GateToGamePlayerLogoutNotify{
+			Uid:       p.Uid,
+			Uuid:      p.Uuid,
+			AccountId: p.AccountId,
+		})
+	case spb.Retcode_RET_PLAYER_GAME_LOGIN: // game通知
+
+	}
+	logger.Debug("[UID:%v][UUID:%v]玩家被动离线中,原因:%s", p.Uid, p.Uuid, code.String())
 }

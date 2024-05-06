@@ -17,11 +17,10 @@ import (
 var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
 
 type GamePlayer struct {
-	Uuid           int64
-	Uid            uint32
-	AccountId      uint32
-	GateAppId      uint32
-	LastActiveTime int64 // 最近一次的活跃时间
+	Uuid      int64
+	Uid       uint32
+	AccountId uint32
+	GateAppId uint32
 	// 玩家数据
 	Player   *PlayerData
 	PlayerPb *spb.PlayerBasicCompBin // 玩家pb数据

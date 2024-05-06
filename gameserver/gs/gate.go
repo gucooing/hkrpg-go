@@ -2,7 +2,6 @@ package gs
 
 import (
 	"context"
-	"strconv"
 	"sync"
 	"time"
 
@@ -70,7 +69,7 @@ func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32, tmp []byte) {
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			logger.Error("the motherfucker gate: %v", appid)
-			ge.conn.Close()
+			ge.killGate()
 		}
 	}()
 
@@ -112,7 +111,7 @@ func (ge *gateServer) gateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 	case cmd.GetToGamePlayerLogoutReq:
 		ge.GetToGamePlayerLogoutReq(payloadMsg) // gate直接向目标game申请下线玩家请求
 	case cmd.GateToGamePlayerLogoutNotify:
-		ge.GateToGamePlayerLogoutNotify(payloadMsg) // gate直接向目标game申请下线玩家通知
+		ge.GateToGamePlayerLogoutNotify(payloadMsg)
 	case cmd.GateToGameMsgNotify:
 		ge.GateToGameMsgNotify(payloadMsg) // gate转发客户端消息到gs
 	}
@@ -217,20 +216,42 @@ func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
 
 func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
-	logger.Info("[UID:%v][AccountId:%v]重复登录，下线玩家中", req.Uid, req.AccountId)
 	play := ge.GetPlayerByUuid(req.OldUuid)
+	switch req.Retcode {
+	case spb.Retcode_RET_PLAYER_REPEAT_LOGIN: // 重复登录
+		ge.playerRepeatLogin(req, play)
+	case spb.Retcode_RET_PLAYER_TIMEOUT: // 超时
+		rsp := &spb.GetToGamePlayerLogoutRsp{
+			Retcode:         spb.Retcode_RET_SUCC,
+			Uid:             req.Uid,
+			NewUuid:         req.OldUuid,
+			NewGameServerId: req.OldGameServerId,
+		}
+		ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
+	case spb.Retcode_RET_PLAYER_LOGOUT: // 正常离线
+		rsp := &spb.GetToGamePlayerLogoutRsp{
+			Retcode:         spb.Retcode_RET_SUCC,
+			Uid:             req.Uid,
+			NewUuid:         req.OldUuid,
+			NewGameServerId: req.OldGameServerId,
+		}
+		ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
+	default:
+		return
+	}
+	ge.game.killPlayer(play)
+	logger.Info("[UID:%v][AccountId:%v]下线玩家,原因:%s", req.Uid, req.AccountId, req.Retcode.String())
+}
+
+// 玩家重复登录处理
+func (ge *gateServer) playerRepeatLogin(req *spb.GetToGamePlayerLogoutReq, play *GamePlayer) {
 	if play == nil {
-		// TODO 此处应该下线玩家（通知到gate和客户端
-		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))
 	} else {
 		ge.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
 			Uid:  play.p.Uid,
 			Uuid: play.p.Uuid,
 		})
-		// 下线玩家
-		ge.game.killPlayer(play)
 	}
-
 	rsp := &spb.GetToGamePlayerLogoutRsp{
 		Retcode:         spb.Retcode_RET_SUCC,
 		Uid:             req.Uid,
@@ -240,21 +261,8 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
 }
 
-func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
-	notify := payloadMsg.(*spb.GateToGamePlayerLogoutNotify)
-	play := ge.GetPlayerByUuid(notify.Uuid)
-	if play == nil {
-		// TODO 此处应该下线玩家（通知到gate和客户端
-		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(notify.AccountId)))
-	} else {
-		// 下线玩家
-		ge.game.killPlayer(play)
-	}
-}
-
 func NewPlayer(uid, accountId uint32, uuid int64, msg chan player.Msg) *player.GamePlayer {
 	g := new(player.GamePlayer)
-	g.LastActiveTime = time.Now().Unix()
 	g.Uid = uid
 	g.AccountId = accountId
 	g.Uuid = uuid
@@ -280,6 +288,17 @@ func (ge *gateServer) GameToGateMsgNotify(payloadMsg pb.Message) {
 	ge.seedGate(cmd.GameToGateMsgNotify, payloadMsg)
 }
 
+func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
+	notify := payloadMsg.(*spb.GateToGamePlayerLogoutNotify)
+	play := ge.GetPlayerByUuid(notify.Uuid)
+	if play == nil {
+		return
+	} else {
+		// 下线玩家
+		ge.game.killPlayer(play)
+	}
+}
+
 // gate离线
 func (ge *gateServer) killGate() {
 	plays := ge.GetAllPlayer()
@@ -287,6 +306,8 @@ func (ge *gateServer) killGate() {
 		ge.game.killPlayer(play)
 	}
 	ge.game.delGeList(ge.appid)
-	ge.recvPlayerCancel()
+	if ge.recvPlayerCancel != nil {
+		ge.recvPlayerCancel()
+	}
 	logger.Info("[APPID:%v]gate server离线", ge.appid)
 }

@@ -62,7 +62,7 @@ func main() {
 			defer cancel()
 
 			logger.Info("geta服务正在关闭")
-			if err = gate.Close(); err != nil {
+			if err = gaten.Close(); err != nil {
 				logger.Error("无法正常关闭geta服务")
 			}
 			logger.Info("geta服务已停止")

@@ -20,10 +20,11 @@ import (
 5.删除玩家内存
 */
 type GamePlayer struct {
-	gate         *gateServer
-	game         *GameServer
-	p            *player.GamePlayer
-	RouteManager *RouteManager
+	gate           *gateServer
+	game           *GameServer
+	p              *player.GamePlayer
+	RouteManager   *RouteManager
+	LastActiveTime int64 // 最近一次的保存时间
 }
 
 // 这个kill玩家不会通知给gate
@@ -149,15 +150,6 @@ func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
 		logger.Info("玩家状态锁加锁失败")
 	}
 	return err
-}
-
-// 这个kill玩家会通知给gate
-func (s *GameServer) KickPlayer(g *GamePlayer) {
-	if err := s.UpDataPlayer(g.p); err != nil {
-		logger.Error("[UID:%v]保存数据失败", g.p.Uid)
-	}
-	g.gate.DelPlayerMap(g.p.Uuid)
-	logger.Info("[UID:%v]玩家离线game", g.p.Uid)
 }
 
 func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {

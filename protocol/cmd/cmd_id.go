@@ -1598,7 +1598,6 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(MuipToNodePingRsp, func() any { return new(spb.MuipToNodePingRsp) })
 	c.regMsg(GetAllServiceGameReq, func() any { return new(spb.GetAllServiceGameReq) })
 	c.regMsg(GetAllServiceGameRsp, func() any { return new(spb.GetAllServiceGameRsp) })
-	c.regMsg(GateToGamePlayerLogoutNotify, func() any { return new(spb.GateToGamePlayerLogoutNotify) })
 	// c.regMsg(SyncPlayerOnlineDataNotify, func() any { return new(spb.SyncPlayerOnlineDataNotify) })
 	c.regMsg(GateGamePingReq, func() any { return new(spb.GateGamePingReq) })
 	c.regMsg(GateGamePingRsp, func() any { return new(spb.GateGamePingRsp) })
@@ -1607,6 +1606,7 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GetToGamePlayerLogoutReq, func() any { return new(spb.GetToGamePlayerLogoutReq) })
 	c.regMsg(GetToGamePlayerLogoutRsp, func() any { return new(spb.GetToGamePlayerLogoutRsp) })
 	c.regMsg(GameToGatePlayerLogoutNotify, func() any { return new(spb.GameToGatePlayerLogoutNotify) })
+	c.regMsg(GateToGamePlayerLogoutNotify, func() any { return new(spb.GateToGamePlayerLogoutNotify) })
 
 	// c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
 	// c.regMsg(NodeToGsPlayerLogoutNotify, func() any { return new(spb.NodeToGsPlayerLogoutNotify) })

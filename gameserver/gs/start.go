@@ -2,6 +2,7 @@ package gs
 
 import (
 	"log"
+	"math/rand"
 	"os"
 	"sync"
 	"time"
@@ -125,25 +126,26 @@ func (s *GameServer) AutoUpDataPlayer() {
 				if g.p.Uid == 0 {
 					continue
 				}
-				lastActiveTime := g.p.LastActiveTime
+				lastActiveTime := g.LastActiveTime
 				timestamp := time.Now().Unix()
-				if timestamp-lastActiveTime >= 120 {
-					logger.Info("[UID:%v]玩家超时离线", g.p.Uid)
-					s.KickPlayer(g)
+				if timestamp-lastActiveTime >= 180 {
+					logger.Info("[UID:%v]玩家数据自动保存", g.p.Uid)
+					s.UpDataPlayer(g.p)
+					g.LastActiveTime = timestamp + rand.Int63n(120)
 				}
 			}
 		}
 	}
 }
 
-func Close() error {
-	for _, ge := range GAMESERVER.gateList {
+func (s *GameServer) Close() error {
+	for _, ge := range s.gateList {
 		playerList := ge.GetAllPlayer()
 		for _, g := range playerList {
 			if g.p.Uid == 0 {
 				continue
 			}
-			GAMESERVER.KickPlayer(g)
+			s.UpDataPlayer(g.p)
 		}
 	}
 	return nil

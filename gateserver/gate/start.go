@@ -11,7 +11,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
 
 const (
@@ -83,7 +82,7 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			Close()
+			s.Close()
 			os.Exit(0)
 		}
 	}()
@@ -126,20 +125,6 @@ func (s *GateServer) GlobalRotationEvent() {
 	}
 }
 
-func Close() error {
-	ges := GATESERVER
-	for _, gs := range ges.gsList {
-		playerList := gs.GetAllPlayer()
-		for _, play := range playerList {
-			go func() {
-				play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-				play.gs.GateToGamePlayerLogoutNotify(play)
-				play.KcpConn.Close()
-				play.gs.DelPlayerMap(play.Uuid)
-				play.KcpConn.Close()
-				logger.Info("[UID:%v][UUID:%v]玩家离线成功", play.Uid, play.Uuid)
-			}()
-		}
-	}
+func (s *GateServer) Close() error {
 	return nil
 }

@@ -113,26 +113,9 @@ enum ServerType {
 enum PlayerStatus {
   PlayerStatus_PreLogin = 0; // 登录前
   PlayerStatus_LoggingIn = 1;// 登录中
-  PlayerStatus_PostLogin = 2;// 登录后
-  PlayerStatus_Offline = 3;// 登录后主动离线
-  PlayerStatus_PassiveOffline = 4;// 登录后被动离线
-  PlayerStatus_RepeatLogin = 5; // 登录踢下线
-}
-
-enum  PlayerGateStatus {
-  PlayerGateStatus_None = 0;
-  PlayerGateStatus_GateLogin = 1; // 登录gate中
-  PlayerGateStatus_GatePlaying = 2; // 已登录gate
-  PlayerGateStatus_GateWaitLogout = 3; // 离线gate中
-  PlayerGateStatus_GateLogout = 4; // 离线gate
-}
-
-enum  PlayerGameStatus {
-  PlayerGameStatus_None = 0;
-  PlayerGameStatus_GameLogin = 1; // 登录game中
-  PlayerGameStatus_GamePlaying = 2; // 已登录game
-  PlayerGameStatus_GameWaitLogout = 3; // 离线game中
-  PlayerGameStatus_GameLogout = 4; // 离线game
+  PlayerStatus_PostLogin = 2;// 登录完成
+  PlayerStatus_Logout_Wait = 3;//离线等待中
+  PlayerStatus_Logout = 4;//离线等待中
 }
 
 enum PlayerOfflineReason {
@@ -162,4 +145,9 @@ enum Retcode {
   RET_PLAYER_DATA_ERROR = 2; // 玩家数据损坏
   RET_NODE_ERR = 3; // node意外离线
   RET_PLAYER_ID_ERR = 4; // 玩家id缺失
+  RET_PLAYER_TIMEOUT = 5; //玩家超时
+  RET_PLAYER_LOGOUT = 6; // 玩家离线
+  RET_PLAYER_REPEAT_LOGIN = 7;//重复登录
+  RET_PLAYER_GAME_LOGIN = 8;//game告知需要离线
+  RET_PLAYER_SYSTEM_ERROR = 9;//内部服务异常离线（不就是gate或者game玩家线程崩坏了
 }

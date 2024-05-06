@@ -68,8 +68,7 @@ func (gs *gameServer) recvGame() {
 func (gs *gameServer) gameKill() {
 	plays := gs.GetAllPlayer()
 	for _, play := range plays {
-		play.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
-		play.KcpConn.Close()
+		gs.gate.passPlayerKill(play, spb.Retcode_RET_PLAYER_GAME_LOGIN)
 	}
 	if gs.tickerCancel != nil {
 		gs.tickerCancel()
@@ -258,13 +257,24 @@ func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	if rsp.Retcode != 0 {
 		return
 	}
-	logger.Debug("[UID:%v][UUID:%v]重复登录，下线玩家成功", rsp.Uid, rsp.NewUuid)
-	newGs := gs.gate.getGsByAppid(rsp.NewGameServerId)
-	play, _ := gs.gate.GetPlayerByUuid(rsp.NewUuid)
-	if newGs == nil || play == nil {
+	play := gs.GetPlayerByUuid(rsp.NewUuid)
+	if play == nil {
+		logger.Debug("[UID:%v][UUID:%v]没有找到该玩家", rsp.Uid, rsp.NewUuid)
 		return
 	}
-	newGs.playerLogin(play)
+	switch play.Status {
+	case spb.PlayerStatus_PlayerStatus_LoggingIn: // 登录中收到下线，肯定是重复登录下线回复
+		newGs := gs.gate.getGsByAppid(rsp.NewGameServerId)
+		if newGs == nil {
+			return
+		}
+		newGs.playerLogin(play)
+	case spb.PlayerStatus_PlayerStatus_Logout_Wait: // 离线等待中收到下线
+		play.Status = spb.PlayerStatus_PlayerStatus_Logout
+		gs.DelPlayerMap(play.Uuid)
+	}
+
+	logger.Debug("[UID:%v][UUID:%v]下线玩家成功", rsp.Uid, rsp.NewUuid)
 }
 
 // game通知gate玩家消息
@@ -285,15 +295,6 @@ func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 func (gs *gameServer) GameToGatePlayerLogoutNotify(playerMsg pb.Message) {
 	notify := playerMsg.(*spb.GameToGatePlayerLogoutNotify)
 	if play, ok := gs.gate.GetPlayerByUuid(notify.Uuid); ok {
-		gs.gate.killPlayer(play)
+		gs.gate.passPlayerKill(play, spb.Retcode_RET_PLAYER_GAME_LOGIN)
 	}
-}
-
-// gate通知game玩家下线
-func (gs *gameServer) GateToGamePlayerLogoutNotify(p *PlayerGame) {
-	notify := &spb.GateToGamePlayerLogoutNotify{
-		Uid:  p.Uid,
-		Uuid: p.Uuid,
-	}
-	gs.sendGame(cmd.GateToGamePlayerLogoutNotify, notify)
 }

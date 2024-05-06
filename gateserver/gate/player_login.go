@@ -137,6 +137,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		oldGs := s.getGsByAppid(statu.GameserverId)
 		if oldGs != nil {
 			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
+				Retcode:         spb.Retcode_RET_PLAYER_REPEAT_LOGIN,
 				Uid:             p.Uid,
 				AccountId:       accountUid,
 				OldUuid:         statu.Uuid,

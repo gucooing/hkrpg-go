@@ -104,12 +104,13 @@ message GateGamePlayerLoginRsp {// gate向game的玩家注册请求包
 }
 
 message GetToGamePlayerLogoutReq{// gate直接向目标game申请下线玩家请求
-  uint32 uid = 1; // 玩家uid
-  uint32 account_id = 2; // sdk id
-  int64 old_uuid = 3; // 用户临时唯一id
-  uint32 old_game_server_id = 4; // gameserver id
-  int64 new_uuid = 5; // 用户临时唯一id
-  uint32 new_game_server_id = 6; // gameserver id
+  Retcode retcode = 1; // 状态
+  uint32 uid = 2; // 玩家uid
+  uint32 account_id = 3; // sdk id
+  int64 old_uuid = 4; // 用户临时唯一id
+  uint32 old_game_server_id = 5; // gameserver id
+  int64 new_uuid = 6; // 用户临时唯一id
+  uint32 new_game_server_id = 7; // gameserver id
 }
 
 message GetToGamePlayerLogoutRsp{// gate直接向目标game申请下线玩家回复
