@@ -20,7 +20,6 @@ func getCurTime() int64 {
 
 // 玩家ping包处理
 func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
-	p.GateToGame(tcpMsg)
 	req := new(proto.PlayerHeartbeatCsReq)
 	pb.Unmarshal(tcpMsg.ProtoData, req)
 	sTime := getCurTime()
