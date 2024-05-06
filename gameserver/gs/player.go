@@ -75,7 +75,7 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 
 /************************************接口*********************************/
 
-func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
+func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) *GamePlayer {
 	gamePlayer := &GamePlayer{
 		gate:         ge,
 		game:         ge.game,
@@ -95,6 +95,7 @@ func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) {
 		}
 	}
 	PLAYERNUM++
+	return gamePlayer
 }
 
 func (ge *gateServer) DelPlayerMap(uuid int64) {
@@ -132,21 +133,22 @@ func (s *GameServer) GetPlayerByUuid(uuid int64) *GamePlayer {
 	return nil
 }
 
-func (s *GameServer) AddPlayerStatus(p *player.GamePlayer) error {
+func (s *GameServer) AddPlayerStatus(g *GamePlayer) error {
 	bin := &spb.PlayerStatusRedisData{
 		Status:       spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
 		GameserverId: s.AppId,
+		GateserverId: g.gate.appid,
 		LoginRand:    0,
 		LoginTime:    time.Now().Unix(),
-		Uid:          p.Uid,
-		Uuid:         p.Uuid,
+		Uid:          g.p.Uid,
+		Uuid:         g.p.Uuid,
 	}
 	value, err := pb.Marshal(bin)
 	if err != nil {
 		logger.Error("pb marshal error: %v\n", err)
 		return err
 	}
-	if ok := s.Store.DistLockPlayerStatus(strconv.Itoa(int(p.AccountId)), value); !ok {
+	if ok := s.Store.DistLockPlayerStatus(strconv.Itoa(int(g.p.AccountId)), value); !ok {
 		logger.Info("玩家状态锁加锁失败")
 	}
 	return err

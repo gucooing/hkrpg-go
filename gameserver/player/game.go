@@ -39,10 +39,6 @@ type Msg struct {
 	PlayerMsg pb.Message
 }
 
-const (
-	PacketMaxLen = 343 * 1024 // 最大应用层包长度
-)
-
 var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatCsReq, cmd.PlayerHeartBeatScRsp} // 黑名单
 func isValid(cmdid uint16) bool {
 	for _, value := range blacklist {
@@ -103,8 +99,4 @@ func stou32(msg string) uint32 {
 	}
 	ms, _ := strconv.ParseUint(msg, 10, 32)
 	return uint32(ms)
-}
-
-func (g *GamePlayer) SetRedisPlayerBriefData() {
-
 }

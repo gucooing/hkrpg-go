@@ -94,7 +94,11 @@ var DefaultConfig = &Config{
 			},
 		},
 		"9001.5.1.1": {
-			App: map[string]App{},
+			App: map[string]App{
+				"port_service": {
+					Port: "20091",
+				},
+			},
 		},
 		"9001.6.1.1": {
 			App: map[string]App{

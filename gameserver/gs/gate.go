@@ -45,7 +45,7 @@ func (s *GameServer) getGeByAppid(appid uint32) *gateServer {
 }
 
 // 从gate接收消息
-func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32, tmp []byte) {
+func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32) {
 	ge := &gateServer{
 		game:      s,
 		appid:     appid,
@@ -171,11 +171,11 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 		ge.GateGamePlayerLoginRsp(rsp)
 		return
 	}
-	g := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
+	p := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
 	// 拉取账户数据
-	ge.GetPlayerDate(req.Uid, g)
-	ge.AddPlayerMap(req.Uuid, g)
-	logger.Info("[UID:%v]|[UUID:%v]登录game", g.Uid, req.Uuid)
+	ge.GetPlayerDate(req.Uid, p)
+	g := ge.AddPlayerMap(req.Uuid, p)
+	logger.Info("[UID:%v]|[UUID:%v]登录game", p.Uid, req.Uuid)
 	ge.game.AddPlayerStatus(g)
 	ge.GateGamePlayerLoginRsp(rsp)
 }

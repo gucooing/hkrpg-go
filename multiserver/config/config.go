@@ -8,6 +8,7 @@ import (
 
 type Config struct {
 	LogLevel  string               `json:"LogLevel"`
+	OuterIp   string               `json:"OuterIp"`
 	AppList   map[string]AppList   `json:"AppList"`
 	NetConf   map[string]string    `json:"NetConf"`
 	MysqlConf map[string]MysqlConf `json:"MysqlConf"`
@@ -62,6 +63,7 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel: "Info",
+	OuterIp:  "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
 			App: map[string]App{
@@ -92,7 +94,11 @@ var DefaultConfig = &Config{
 			},
 		},
 		"9001.5.1.1": {
-			App: map[string]App{},
+			App: map[string]App{
+				"port_service": {
+					Port: "20091",
+				},
+			},
 		},
 		"9001.6.1.1": {
 			App: map[string]App{

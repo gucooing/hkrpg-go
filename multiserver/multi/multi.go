@@ -1,10 +1,14 @@
 package multi
 
 import (
-	"sync"
+	"log"
+	"os"
 	"time"
 
+	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/multiserver/db"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 
 	"github.com/gucooing/hkrpg-go/multiserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -15,17 +19,18 @@ const (
 	Ticker = 5 // 定时器间隔时间 / s
 )
 
+var err error
+
 type Multi struct {
-	Config *config.Config
-	AppId  uint32
-	Node   *NodeService
-	store  *db.Store
-
-	gsList     map[uint32]*gameServer // gs列表
-	gsListLock sync.Mutex             // gs列表互斥锁
-
-	Ticker *time.Ticker
-	Stop   chan struct{}
+	Config    *config.Config
+	AppId     uint32
+	addr      string
+	listener  *gunet.TcpListener
+	Node      *NodeService
+	store     *db.Store
+	Ticker    *time.Ticker
+	everyDay4 *time.Ticker
+	Stop      chan struct{}
 }
 
 type AllService struct {
@@ -39,8 +44,22 @@ func NewMulti(cfg *config.Config, appid string, store *db.Store) *Multi {
 	s.AppId = alg.GetAppIdUint32(appid)
 	logger.Info("MultiServer AppId:%s", appid)
 	s.store = store
-
+	// 开启tcp服务
+	port := s.Config.AppList[appid].App["port_service"].Port
+	if port == "" {
+		log.Println("MultiServer Port error")
+		os.Exit(0)
+	}
+	s.addr = s.Config.OuterIp + ":" + port
+	s.listener, err = gunet.NewTcpS(s.addr)
+	if err != nil {
+		log.Println(err.Error())
+		os.Exit(0)
+	}
 	// 启动muip定时器
+	everyDay4 := alg.GetEveryDay4()
+	logger.Debug("离下一个刷新时间:%v", everyDay4)
+	s.everyDay4 = time.NewTicker(everyDay4)
 	s.Ticker = time.NewTicker(Ticker * time.Second)
 	s.Stop = make(chan struct{})
 	go s.gameTicker()
@@ -48,11 +67,57 @@ func NewMulti(cfg *config.Config, appid string, store *db.Store) *Multi {
 	return s
 }
 
+func (s *Multi) StartMultiServer() error {
+	for {
+		conn, err := s.listener.Accept()
+		if err != nil {
+			logger.Info("MultiServer接受连接失败:%s", err.Error())
+			continue
+		}
+		go s.recvTcp(conn)
+	}
+}
+
+func (s *Multi) recvTcp(conn *gunet.TcpConn) {
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			return
+		}
+	}()
+	for {
+		bin, err := conn.Read()
+		if err != nil {
+			logger.Debug("exit recv loop, conn read err: %v", err)
+			conn.Close()
+			return
+		}
+		nodeMsgList := make([]*alg.PackMsg, 0)
+		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
+		for _, msg := range nodeMsgList {
+			serviceMsg := alg.DecodePayloadToProto(msg)
+			switch msg.CmdId {
+			case cmd.GateLoginMultiReq:
+				rsp := serviceMsg.(*spb.GateLoginMultiReq)
+				go s.recvGate(conn, rsp.AppId)
+			}
+			return
+		}
+	}
+}
+
 func (s *Multi) gameTicker() {
 	for {
 		select {
 		case <-s.Ticker.C:
 			s.GlobalRotationEvent()
+		case <-s.everyDay4.C:
+			everyDay4 := alg.GetEveryDay4()
+			logger.Debug("离下一个刷新时间:%v", everyDay4)
+			s.everyDay4 = time.NewTicker(everyDay4)
 		case <-s.Stop:
 			s.Ticker.Stop()
 			return

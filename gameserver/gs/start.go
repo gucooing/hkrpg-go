@@ -35,6 +35,7 @@ type GameServer struct {
 	gateList     map[uint32]*gateServer // gate列表
 	gateListLock sync.Mutex             // gate列表同步锁
 	Ticker       *time.Ticker
+	everyDay4    *time.Ticker
 	Stop         chan struct{}
 }
 
@@ -63,6 +64,9 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s.GSListener = gSListener
 	// 开启game定时器
 	s.Ticker = time.NewTicker(Ticker * time.Second)
+	everyDay4 := alg.GetEveryDay4()
+	logger.Debug("离下一个刷新时间:%v", everyDay4)
+	s.everyDay4 = time.NewTicker(everyDay4)
 	s.Stop = make(chan struct{})
 	go s.gameTicker()
 	go s.AutoUpDataPlayer()
@@ -94,7 +98,6 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 			return
 		}
 	}()
-	tmp := []byte{}
 	for {
 		bin, err := conn.Read()
 		if err != nil {
@@ -109,7 +112,7 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 			switch msg.CmdId {
 			case cmd.GateLoginGameReq:
 				rsp := serviceMsg.(*spb.GateLoginGameReq)
-				go s.recvGate(conn, rsp.AppId, tmp)
+				go s.recvGate(conn, rsp.AppId)
 			}
 			return
 		}
@@ -156,6 +159,10 @@ func (s *GameServer) gameTicker() {
 		select {
 		case <-s.Ticker.C:
 			s.GlobalRotationEvent()
+		case <-s.everyDay4.C: // 4点事件
+			everyDay4 := alg.GetEveryDay4()
+			logger.Debug("离下一个刷新时间:%v", everyDay4)
+			s.everyDay4 = time.NewTicker(everyDay4)
 		case <-s.Stop:
 			s.Ticker.Stop()
 			return

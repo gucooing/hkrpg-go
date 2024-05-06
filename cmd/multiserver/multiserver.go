@@ -47,6 +47,13 @@ func main() {
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 
+	// 启动game
+	go func() {
+		if err = s.StartMultiServer(); err != nil {
+			logger.Error("无法启动game服务器")
+		}
+	}()
+
 	go func() {
 		select {
 		case <-done:

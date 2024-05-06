@@ -6,6 +6,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func GetAppId() string {
@@ -68,4 +69,13 @@ func S2U32(msg string) uint32 {
 	}
 	ms, _ := strconv.ParseUint(msg, 10, 32)
 	return uint32(ms)
+}
+
+func GetEveryDay4() time.Duration {
+	currentTime := time.Now()
+	nextExecution := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 4, 0, 0, 0, currentTime.Location())
+	if currentTime.Hour() >= 4 {
+		nextExecution = nextExecution.AddDate(0, 0, 1)
+	}
+	return nextExecution.Sub(currentTime)
 }

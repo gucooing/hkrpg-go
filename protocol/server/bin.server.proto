@@ -238,18 +238,5 @@ message ContentAuditBin {
 }
 
 message PlayerOnlineData {
-  bytes bin = 1;
-  /*
-  bool LoginToday = 1; // 是否是今天第一次登录
-  map<uint32, Battle> Battle = 2; // 正在进行的战斗
-  BattleState    BattleState = 3; // 战斗情况
-  uint32    BattleId = 4; // 战斗id
-  uint32    EntityBattleId = 5; // 攻击实体id
-  bool   IsPaused = 6; // 是否暂停
-  uint64   GameObjectGuidCounter = 7; // 游戏对象guid计数器
-  bool    IsNickName = 8; // 是否修改昵称
-  map<uint32, EntityList>    EntityList = 9; // 实体ID映射表
-  SceneEntity    SceneEntity = 10; // 场景实体管理
-  map<uint32, uint32>   NpcList = 11;
-   */
+
 }
