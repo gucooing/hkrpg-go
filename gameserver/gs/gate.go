@@ -190,7 +190,11 @@ func (ge *gateServer) GetPlayerDate(accountId uint32, g *player.GamePlayer) {
 		g.PlayerPb = g.NewPlayer()
 		// 初始化完毕保存账号数据
 		dbPlayer.Uid = g.Uid
+		dbPlayer.Level = g.GetLevel()
+		dbPlayer.Exp = g.PlayerPb.Exp
+		dbPlayer.Nickname = g.GetNickname()
 		dbPlayer.BinData, err = pb.Marshal(g.PlayerPb)
+		dbPlayer.DataVersion = g.GetDataVersion()
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
 		}

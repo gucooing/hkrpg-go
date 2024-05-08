@@ -189,3 +189,14 @@ func (g *GamePlayer) GetHeadIcon() uint32 {
 	}
 	return db.HeadImageAvatarId
 }
+
+func (g *GamePlayer) GetDataVersion() uint32 {
+	db := g.GetPlayerPb()
+	return db.DataVersion
+}
+
+func (g *GamePlayer) AddDataVersion() uint32 {
+	db := g.GetPlayerPb()
+	db.DataVersion++
+	return db.DataVersion
+}

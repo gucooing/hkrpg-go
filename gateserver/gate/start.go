@@ -113,7 +113,7 @@ func (s *GateServer) gateTicker() {
 	for {
 		select {
 		case <-s.Ticker.C:
-			s.GlobalRotationEvent()
+			s.GlobalRotationEvent5s()
 		case <-s.Stop:
 			s.Ticker.Stop()
 			return
@@ -121,7 +121,7 @@ func (s *GateServer) gateTicker() {
 	}
 }
 
-func (s *GateServer) GlobalRotationEvent() {
+func (s *GateServer) GlobalRotationEvent5s() {
 	// 检查node是否存在
 	if s.node == nil {
 		logger.Info("尝试连接node")

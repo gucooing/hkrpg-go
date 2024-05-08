@@ -13,9 +13,8 @@ import (
 )
 
 type NodeService struct {
-	game     *GameServer
-	nodeConn *gunet.TcpConn
-
+	game         *GameServer
+	nodeConn     *gunet.TcpConn
 	tickerCancel context.CancelFunc
 	ticker       *time.Ticker // 定时器
 }

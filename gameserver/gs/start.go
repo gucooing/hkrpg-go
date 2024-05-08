@@ -22,7 +22,6 @@ const (
 	Ticker = 5 // 定时器间隔时间 / s
 )
 
-var GAMESERVER *GameServer
 var PLAYERNUM int64 // 玩家人数
 
 type GameServer struct {
@@ -43,7 +42,6 @@ type GameServer struct {
 
 func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s := new(GameServer)
-	GAMESERVER = s
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
 	s.AppId = alg.GetAppIdUint32(appid)
@@ -134,7 +132,7 @@ func (s *GameServer) AutoUpDataPlayer() {
 			timestamp := time.Now().Unix()
 			if timestamp-lastActiveTime >= 180 {
 				logger.Info("[UID:%v]玩家数据自动保存", g.p.Uid)
-				s.UpDataPlayer(g.p)
+				s.upDataPlayer(g.p)
 				g.LastActiveTime = timestamp + rand.Int63n(120)
 			}
 		}
@@ -146,7 +144,7 @@ func (s *GameServer) Close() error {
 		if g.p.Uid == 0 {
 			continue
 		}
-		s.UpDataPlayer(g.p)
+		s.upDataPlayer(g.p)
 	}
 	return nil
 }
@@ -155,11 +153,9 @@ func (s *GameServer) gameTicker() {
 	for {
 		select {
 		case <-s.Ticker.C:
-			s.GlobalRotationEvent()
+			s.GlobalRotationEvent5s()
 		case <-s.everyDay4.C: // 4点事件
-			everyDay4 := alg.GetEveryDay4()
-			logger.Debug("离下一个刷新时间:%v", everyDay4)
-			s.everyDay4 = time.NewTicker(everyDay4)
+			s.GlobalRotationEvent4h()
 		case <-s.Stop:
 			s.Ticker.Stop()
 			return
@@ -167,10 +163,16 @@ func (s *GameServer) gameTicker() {
 	}
 }
 
-func (s *GameServer) GlobalRotationEvent() {
+func (s *GameServer) GlobalRotationEvent5s() {
 	// 检查node是否存在
 	if s.node == nil {
 		logger.Info("尝试连接node")
 		s.newNode()
 	}
+}
+
+func (s *GameServer) GlobalRotationEvent4h() {
+	everyDay4 := alg.GetEveryDay4()
+	logger.Debug("离下一个刷新时间:%v", everyDay4)
+	s.everyDay4 = time.NewTicker(everyDay4)
 }
