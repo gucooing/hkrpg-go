@@ -43,6 +43,16 @@ message GetAllServiceGameReq {// 获取全部gs服务请求
   int64 player_num = 3;
 }
 
+message GateToNodePingReq {// gate to node ping包请求
+  ServerType service_type = 1;
+  int64 gate_time = 2;
+  int64 player_num = 3;
+}
+
+message GateToNodePingRsp {// gate to node ping包回复
+
+}
+
 message GetAllServiceGameRsp {// 获取全部gs服务回复
   repeated ServiceAll game_service_list = 1;
   int64 gate_time = 2;
@@ -62,13 +72,13 @@ message GameToNodePingRsp{// game to node ping包回复
 
 message GateToGameMsgNotify{// gate向game发送消息
   uint32 uid = 1;
-  int64 uuid = 2;
+  //int64 uuid = 2;
   bytes msg = 3;
 }
 
 message GameToGateMsgNotify{// game向gate发送消息
   uint32 uid = 1;
-  int64 uuid = 2;
+  //int64 uuid = 2;
   bytes msg = 3;
 }
 
@@ -93,41 +103,41 @@ message GateGamePingRsp {// gate向game的ping回复包
 
 message GateGamePlayerLoginReq {// gate向game的玩家注册请求包
   uint32 uid = 1; // 玩家uid
-  int64 uuid = 2; // 用户临时唯一id
+  //int64 uuid = 2; // 用户临时唯一id
   uint32 account_id = 3; // sdk 账户id
 }
 
 message GateGamePlayerLoginRsp {// gate向game的玩家注册请求包
   Retcode retcode = 1; // 状态
   uint32 uid = 2; // 玩家uid
-  int64 uuid = 3; // 用户临时唯一id
+  //int64 uuid = 3; // 用户临时唯一id
 }
 
 message GetToGamePlayerLogoutReq{// gate直接向目标game申请下线玩家请求
   Retcode retcode = 1; // 状态
   uint32 uid = 2; // 玩家uid
   uint32 account_id = 3; // sdk id
-  int64 old_uuid = 4; // 用户临时唯一id
+  //int64 old_uuid = 4; // 用户临时唯一id
   uint32 old_game_server_id = 5; // gameserver id
-  int64 new_uuid = 6; // 用户临时唯一id
+  //int64 new_uuid = 6; // 用户临时唯一id
   uint32 new_game_server_id = 7; // gameserver id
 }
 
 message GetToGamePlayerLogoutRsp{// gate直接向目标game申请下线玩家回复
   Retcode retcode = 1; // 状态
   uint32 uid = 2; // 玩家uid
-  int64 new_uuid = 4; // 用户临时唯一id
+  //int64 new_uuid = 4; // 用户临时唯一id
   uint32 new_game_server_id = 5; // gameserver id
 }
 
 message GameToGatePlayerLogoutNotify{// game通知gate玩家该离线了
   uint32 uid = 1;
-  int64  uuid = 2;
+  //int64  uuid = 2;
 }
 
 message GateToGamePlayerLogoutNotify {// gate通知game玩家该离线了
   uint32 uid = 1;
-  int64  uuid = 2;
+  //int64  uuid = 2;
   uint32 account_id = 3; // sdk id
 }
 

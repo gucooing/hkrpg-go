@@ -2,7 +2,7 @@ package gs
 
 import (
 	"context"
-	"sync"
+	"strconv"
 	"time"
 
 	"github.com/gucooing/gunet"
@@ -16,12 +16,9 @@ import (
 )
 
 type gateServer struct {
-	game          *GameServer
-	appid         uint32
-	playerMap     map[int64]*GamePlayer // 玩家列表
-	playerMapLock sync.Mutex            // 玩家列表互斥锁
-	conn          *gunet.TcpConn        // gate tcp通道
-
+	game             *GameServer
+	appid            uint32
+	conn             *gunet.TcpConn  // gate tcp通道
 	msgChan          chan player.Msg // 消息通道
 	recvPlayerCancel context.CancelFunc
 }
@@ -47,10 +44,9 @@ func (s *GameServer) getGeByAppid(appid uint32) *gateServer {
 // 从gate接收消息
 func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32) {
 	ge := &gateServer{
-		game:      s,
-		appid:     appid,
-		playerMap: make(map[int64]*GamePlayer),
-		conn:      conn,
+		game:  s,
+		appid: appid,
+		conn:  conn,
 	}
 	s.addGeList(ge)
 	rsp := &spb.GateLoginGameRsp{
@@ -114,6 +110,8 @@ func (ge *gateServer) gateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 		ge.GateToGamePlayerLogoutNotify(payloadMsg)
 	case cmd.GateToGameMsgNotify:
 		ge.GateToGameMsgNotify(payloadMsg) // gate转发客户端消息到gs
+	default:
+		logger.Error("gate -> game cmdid error: %v", cmdId)
 	}
 }
 
@@ -157,9 +155,8 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	rsp := &spb.GateGamePlayerLoginRsp{
 		Retcode: spb.Retcode_RET_SUCC,
 		Uid:     req.Uid,
-		Uuid:    req.Uuid,
 	}
-	if req.Uid == 0 || req.Uuid == 0 || req.AccountId == 0 {
+	if req.Uid == 0 || req.AccountId == 0 {
 		logger.Error("player login uid or uuid error")
 		rsp.Retcode = spb.Retcode_RET_PLAYER_ID_ERR
 		ge.GateGamePlayerLoginRsp(rsp)
@@ -171,11 +168,15 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 		ge.GateGamePlayerLoginRsp(rsp)
 		return
 	}
-	p := NewPlayer(req.Uid, req.AccountId, req.Uuid, ge.msgChan)
+	p := NewPlayer(req.Uid, req.AccountId, ge.msgChan)
 	// 拉取账户数据
 	ge.GetPlayerDate(req.Uid, p)
-	g := ge.AddPlayerMap(req.Uuid, p)
-	logger.Info("[UID:%v]|[UUID:%v]登录game", p.Uid, req.Uuid)
+	g, ok := ge.game.addPlayerMap(req.Uid, p, ge)
+	if !ok {
+		logger.Warn("[UID:%v]超出预期的玩家重复登录", p.Uid)
+		return
+	}
+	logger.Info("[UID:%v]登录game", p.Uid)
 	ge.game.AddPlayerStatus(g)
 	ge.GateGamePlayerLoginRsp(rsp)
 }
@@ -216,56 +217,46 @@ func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
 
 func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GetToGamePlayerLogoutReq)
-	play := ge.GetPlayerByUuid(req.OldUuid)
-	switch req.Retcode {
-	case spb.Retcode_RET_PLAYER_REPEAT_LOGIN: // 重复登录
-		ge.playerRepeatLogin(req, play)
-	case spb.Retcode_RET_PLAYER_TIMEOUT: // 超时
-		rsp := &spb.GetToGamePlayerLogoutRsp{
-			Retcode:         spb.Retcode_RET_SUCC,
-			Uid:             req.Uid,
-			NewUuid:         req.OldUuid,
-			NewGameServerId: req.OldGameServerId,
-		}
-		ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
-	case spb.Retcode_RET_PLAYER_LOGOUT: // 正常离线
-		rsp := &spb.GetToGamePlayerLogoutRsp{
-			Retcode:         spb.Retcode_RET_SUCC,
-			Uid:             req.Uid,
-			NewUuid:         req.OldUuid,
-			NewGameServerId: req.OldGameServerId,
-		}
-		ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
-	default:
+	play := ge.game.getPlayerByUid(req.Uid)
+	if play == nil {
+		logger.Info("[UID:%v]没有找到此玩家", req.Uid)
+		ge.game.Store.DistUnlockPlayerStatus(strconv.Itoa(int(req.AccountId)))
+		ge.playerRepeatLogin(req)
 		return
 	}
 	ge.game.killPlayer(play)
 	logger.Info("[UID:%v][AccountId:%v]下线玩家,原因:%s", req.Uid, req.AccountId, req.Retcode.String())
+	switch req.Retcode {
+	case spb.Retcode_RET_PLAYER_REPEAT_LOGIN: // 异网关重复登录
+		play.gate.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
+			Uid: play.p.Uid,
+		})
+		ge.playerRepeatLogin(req)
+	case spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN: // 同网关重复登录
+		ge.playerRepeatLogin(req)
+	case spb.Retcode_RET_PLAYER_TIMEOUT: // 超时
+		ge.playerRepeatLogin(req)
+	case spb.Retcode_RET_PLAYER_LOGOUT: // 正常离线
+		ge.playerRepeatLogin(req)
+	default:
+		return
+	}
 }
 
 // 玩家重复登录处理
-func (ge *gateServer) playerRepeatLogin(req *spb.GetToGamePlayerLogoutReq, play *GamePlayer) {
-	if play == nil {
-	} else {
-		ge.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
-			Uid:  play.p.Uid,
-			Uuid: play.p.Uuid,
-		})
-	}
+func (ge *gateServer) playerRepeatLogin(req *spb.GetToGamePlayerLogoutReq) {
 	rsp := &spb.GetToGamePlayerLogoutRsp{
 		Retcode:         spb.Retcode_RET_SUCC,
 		Uid:             req.Uid,
-		NewUuid:         req.NewUuid,
 		NewGameServerId: req.NewGameServerId,
 	}
 	ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
 }
 
-func NewPlayer(uid, accountId uint32, uuid int64, msg chan player.Msg) *player.GamePlayer {
+func NewPlayer(uid, accountId uint32, msg chan player.Msg) *player.GamePlayer {
 	g := new(player.GamePlayer)
 	g.Uid = uid
 	g.AccountId = accountId
-	g.Uuid = uuid
 	g.MsgChan = msg
 
 	return g
@@ -273,7 +264,7 @@ func NewPlayer(uid, accountId uint32, uuid int64, msg chan player.Msg) *player.G
 
 func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 	rsp := payloadMsg.(*spb.GateToGameMsgNotify)
-	paler := ge.GetPlayerByUuid(rsp.Uuid)
+	paler := ge.game.getPlayerByUid(rsp.Uid)
 	// TODO 此处应该下线玩家（通知到gate和客户端
 	if paler != nil {
 		msgList := make([]*alg.PackMsg, 0)
@@ -290,7 +281,7 @@ func (ge *gateServer) GameToGateMsgNotify(payloadMsg pb.Message) {
 
 func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
 	notify := payloadMsg.(*spb.GateToGamePlayerLogoutNotify)
-	play := ge.GetPlayerByUuid(notify.Uuid)
+	play := ge.game.getPlayerByUid(notify.Uid)
 	if play == nil {
 		return
 	} else {
@@ -301,9 +292,11 @@ func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {
 
 // gate离线
 func (ge *gateServer) killGate() {
-	plays := ge.GetAllPlayer()
+	plays := ge.game.getAllPlayer()
 	for _, play := range plays {
-		ge.game.killPlayer(play)
+		if play.gate.appid == ge.appid {
+			ge.game.killPlayer(play)
+		}
 	}
 	ge.game.delGeList(ge.appid)
 	if ge.recvPlayerCancel != nil {

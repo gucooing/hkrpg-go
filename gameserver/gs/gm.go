@@ -7,7 +7,7 @@ import (
 
 func (s *GameServer) GmGive(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmGive)
-	play := s.GetPlayerByUuid(req.Uuid)
+	play := s.getPlayerByUid(req.PlayerUid)
 	if play == nil {
 		return
 	}
@@ -16,7 +16,7 @@ func (s *GameServer) GmGive(serviceMsg pb.Message) {
 
 func (s *GameServer) GmWorldLevel(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmWorldLevel)
-	play := s.GetPlayerByUuid(req.Uuid)
+	play := s.getPlayerByUid(req.PlayerUid)
 	if play == nil {
 		return
 	}
@@ -25,7 +25,7 @@ func (s *GameServer) GmWorldLevel(serviceMsg pb.Message) {
 
 func (s *GameServer) DelItem(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.DelItem)
-	play := s.GetPlayerByUuid(req.Uuid)
+	play := s.getPlayerByUid(req.PlayerUid)
 	if play == nil {
 		return
 	}

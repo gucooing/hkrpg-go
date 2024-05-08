@@ -16,7 +16,6 @@ type PlayerGame struct {
 	Status         spb.PlayerStatus
 	Uid            uint32 // uid
 	AccountId      uint32
-	Uuid           int64 // 唯一临时uuid
 	Seed           uint64
 	XorKey         []byte // 密钥
 	KcpConn        *kcp.UDPSession
@@ -62,9 +61,8 @@ func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {}
 func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
 	msg := &spb.GateToGameMsgNotify{
-		Uid:  p.Uid,
-		Uuid: p.Uuid,
-		Msg:  binMsg,
+		Uid: p.Uid,
+		Msg: binMsg,
 	}
 	p.gs.sendGame(cmd.GateToGameMsgNotify, msg)
 }
@@ -78,44 +76,66 @@ func (p *PlayerGame) GateToPlayer(cmdId uint16, playerMsg pb.Message) {
 	SendHandle(p, tcpMsg)
 }
 
-func (gs *gameServer) AddPlayerMap(uuid int64, player *PlayerGame) {
-	gs.playerMapLock.Lock()
-	gs.playerMap[uuid] = player
-	gs.playerMapLock.Unlock()
-}
-
-func (gs *gameServer) DelPlayerMap(uuid int64) {
-	gs.playerMapLock.Lock()
-	if gs.playerMap[uuid] != nil {
-		delete(gs.playerMap, uuid)
-	}
-	gs.playerMapLock.Unlock()
-}
-
-func (gs *gameServer) GetAllPlayer() map[int64]*PlayerGame {
-	gs.playerMapLock.Lock()
-	defer gs.playerMapLock.Unlock()
-	players := make(map[int64]*PlayerGame)
-	for k, v := range gs.playerMap {
+func (s *GateServer) getAllPlayer() map[uint32]*PlayerGame {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	players := make(map[uint32]*PlayerGame)
+	for k, v := range s.playerMap {
 		players[k] = v
 	}
 	return players
 }
 
-func (gs *gameServer) GetPlayerByUuid(uuid int64) *PlayerGame {
-	gs.playerMapLock.Lock()
-	defer gs.playerMapLock.Unlock()
-	return gs.playerMap[uuid]
+func (s *GateServer) getPlayerByUid(uid uint32) *PlayerGame {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	return s.playerMap[uid]
 }
 
-func (s *GateServer) GetPlayerByUuid(uuid int64) (*PlayerGame, bool) {
-	for _, gs := range s.gsList {
-		playerList := gs.GetAllPlayer()
-		if playerList[uuid] != nil {
-			return playerList[uuid], true
-		}
+func (s *GateServer) addPlayer(uid uint32, player *PlayerGame) bool {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	if s.playerMap[uid] == nil {
+		s.playerMap[uid] = player
+		return true
 	}
-	return nil, false
+	return false
+}
+
+func (s *GateServer) delPlayerByUid(uid uint32) bool {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	if s.playerMap[uid] != nil {
+		delete(s.playerMap, uid)
+		return true
+	}
+	return false
+}
+
+func (s *GateServer) getLoginPlayerByUid(uid uint32) *PlayerGame {
+	s.loginPlayerMapLock.Lock()
+	defer s.loginPlayerMapLock.Unlock()
+	return s.loginPlayerMap[uid]
+}
+
+func (s *GateServer) addLoginPlayer(uid uint32, player *PlayerGame) bool {
+	s.loginPlayerMapLock.Lock()
+	defer s.loginPlayerMapLock.Unlock()
+	if s.loginPlayerMap[uid] == nil {
+		s.loginPlayerMap[uid] = player
+		return true
+	}
+	return false
+}
+
+func (s *GateServer) delLoginPlayerByUid(uid uint32) bool {
+	s.loginPlayerMapLock.Lock()
+	defer s.loginPlayerMapLock.Unlock()
+	if s.loginPlayerMap[uid] != nil {
+		delete(s.loginPlayerMap, uid)
+		return true
+	}
+	return false
 }
 
 // 玩家主动离线处理
@@ -128,17 +148,14 @@ func (s *GateServer) AutoDelPlayer() {
 	ticker := time.NewTicker(time.Second * 120)
 	for {
 		<-ticker.C
-		for _, gs := range s.gsList {
-			playerList := gs.GetAllPlayer()
-			for _, play := range playerList {
-				if time.Now().Unix()-play.LastActiveTime > 30 {
-					switch play.Status {
-					case spb.PlayerStatus_PlayerStatus_PostLogin:
-						s.ttiPlayerKill(play, spb.Retcode_RET_PLAYER_TIMEOUT)
-					case spb.PlayerStatus_PlayerStatus_Logout_Wait:
-						gs.DelPlayerMap(play.Uuid)
-						logger.Debug("[UID:%v][UUID:%v]长时间未收到gameserver的离线成功包", play.Uid, play.Uuid)
-					}
+		for _, play := range s.getAllPlayer() {
+			if time.Now().Unix()-play.LastActiveTime > 30 {
+				switch play.Status {
+				case spb.PlayerStatus_PlayerStatus_PostLogin:
+					s.ttiPlayerKill(play, spb.Retcode_RET_PLAYER_TIMEOUT)
+				case spb.PlayerStatus_PlayerStatus_Logout_Wait:
+					s.delPlayerByUid(play.Uid)
+					logger.Debug("[UID:%v]长时间未收到gameserver的离线成功包", play.Uid)
 				}
 			}
 		}
@@ -149,10 +166,10 @@ func (s *GateServer) AutoDelPlayer() {
 func (p *PlayerGame) loginTicker() {
 	select {
 	case <-p.ticker.C:
-		logger.Info("[UID:%v][UUID:%v]玩家登录超时", p.Uid, p.Uuid)
+		logger.Info("[UID:%v]玩家登录超时", p.Uid)
 		p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
 		p.KcpConn.Close()
-		p.gs.DelPlayerMap(p.Uuid)
+		p.gs.gate.delLoginPlayerByUid(p.Uid)
 		p.ticker.Stop()
 		return
 	case <-p.stop:
@@ -187,10 +204,9 @@ func (s *GateServer) ttiPlayerKill(p *PlayerGame, code spb.Retcode) {
 		Retcode:         code,
 		Uid:             p.Uid,
 		AccountId:       p.AccountId,
-		OldUuid:         p.Uuid,
 		OldGameServerId: p.gs.appid,
 	})
-	logger.Debug("[UID:%v][UUID:%v]玩家主动离线中,原因:%s", p.Uid, p.Uuid, code.String())
+	logger.Debug("[UID:%v]玩家主动离线中,原因:%s", p.Uid, code.String())
 }
 
 // 被动离线方法
@@ -208,16 +224,16 @@ func (s *GateServer) passPlayerKill(p *PlayerGame, code spb.Retcode) {
 	p.Status = spb.PlayerStatus_PlayerStatus_Logout
 	p.GateToPlayer(cmd.PlayerKickOutScNotify, nil)
 	p.KcpConn.Close()
-	p.gs.DelPlayerMap(p.Uuid)
+	s.delPlayerByUid(p.Uid)
 	switch code {
-	case spb.Retcode_RET_PLAYER_SYSTEM_ERROR: // 玩家异常
+	case spb.Retcode_RET_PLAYER_SYSTEM_ERROR: // 系统 异常下线
 		p.gs.sendGame(cmd.GateToGamePlayerLogoutNotify, &spb.GateToGamePlayerLogoutNotify{
 			Uid:       p.Uid,
-			Uuid:      p.Uuid,
 			AccountId: p.AccountId,
 		})
-	case spb.Retcode_RET_PLAYER_GAME_LOGIN: // game通知
+	case spb.Retcode_RET_PLAYER_GAME_LOGIN: // game通知下线
+	case spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN: // 同网关下线
 
 	}
-	logger.Debug("[UID:%v][UUID:%v]玩家被动离线中,原因:%s", p.Uid, p.Uuid, code.String())
+	logger.Debug("[UID:%v]玩家被动离线中,原因:%s", p.Uid, code.String())
 }

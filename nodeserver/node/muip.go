@@ -82,13 +82,12 @@ func (s *Service) MuipToNodePingReq(serviceMsg pb.Message) {
 
 func (s *Service) GmGive(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmGive)
-	if gs, statu, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
+	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
 		notify := &spb.GmGive{
 			PlayerUid: req.PlayerUid,
 			ItemId:    req.ItemId,
 			ItemCount: req.ItemCount,
 			GiveAll:   req.GiveAll,
-			Uuid:      statu.Uuid,
 		}
 		gs.sendHandle(cmd.GmGive, notify)
 	}
@@ -96,11 +95,10 @@ func (s *Service) GmGive(serviceMsg pb.Message) {
 
 func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmWorldLevel)
-	if gs, statu, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
+	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
 		notify := &spb.GmWorldLevel{
 			PlayerUid:  req.PlayerUid,
 			WorldLevel: req.WorldLevel,
-			Uuid:       statu.Uuid,
 		}
 		gs.sendHandle(cmd.GmWorldLevel, notify)
 	}
@@ -108,10 +106,9 @@ func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
 
 func (s *Service) DelItem(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.DelItem)
-	if gs, statu, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
+	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
 		notify := &spb.DelItem{
 			PlayerUid: req.PlayerUid,
-			Uuid:      statu.Uuid,
 		}
 		gs.sendHandle(cmd.DelItem, notify)
 	}

@@ -3,7 +3,6 @@ package gate
 import (
 	"context"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/gucooing/gunet"
@@ -16,13 +15,10 @@ import (
 )
 
 type gameServer struct {
-	gate          *GateServer
-	appid         uint32                // appid
-	playerMap     map[int64]*PlayerGame // 玩家列表
-	playerMapLock sync.Mutex            // 玩家列表互斥锁
-	conn          *gunet.TcpConn        // gs tcp通道
-	playerNum     int64                 // 所连接的gs玩家数
-
+	gate         *GateServer
+	appid        uint32         // appid
+	conn         *gunet.TcpConn // gs tcp通道
+	playerNum    int64          // 所连接的gs玩家数
 	tickerCancel context.CancelFunc
 	ticker       *time.Ticker // 定时器
 }
@@ -34,10 +30,9 @@ func (s *GateServer) newGs(addr string, appid uint32) {
 		return
 	}
 	gs := &gameServer{
-		gate:      s,
-		appid:     appid,
-		playerMap: make(map[int64]*PlayerGame),
-		conn:      gameConn,
+		gate:  s,
+		appid: appid,
+		conn:  gameConn,
 	}
 	s.addGsList(gs)
 	go gs.recvGame()
@@ -66,9 +61,11 @@ func (gs *gameServer) recvGame() {
 
 // gameserver离线时
 func (gs *gameServer) gameKill() {
-	plays := gs.GetAllPlayer()
+	plays := gs.gate.getAllPlayer()
 	for _, play := range plays {
-		gs.gate.passPlayerKill(play, spb.Retcode_RET_PLAYER_GAME_LOGIN)
+		if play.gs.appid == gs.appid {
+			gs.gate.passPlayerKill(play, spb.Retcode_RET_PLAYER_GAME_LOGIN)
+		}
 	}
 	if gs.tickerCancel != nil {
 		gs.tickerCancel()
@@ -155,12 +152,12 @@ func (s *GateServer) getMinGsAppId() *gameServer {
 		return nil
 	}
 	var minAppId uint32
-	var minNum int
+	var minNum int64
 	s.gsListLock.Lock()
 	for id, game := range s.gsList {
-		if minAppId == 0 || minNum > len(game.playerMap) {
+		if minAppId == 0 || minNum > game.playerNum {
 			minAppId = id
-			minNum = len(game.playerMap)
+			minNum = game.playerNum
 		}
 	}
 	gs := s.gsList[minAppId]
@@ -198,11 +195,10 @@ func (gs *gameServer) GateGamePingRsp(playerMsg pb.Message) {
 }
 
 // 玩家在gs注册请求
-func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32, uuid int64) {
+func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32) {
 	logger.Debug("[UID:%v][AccountId:%v]发送登录通知", uid, accountId)
 	req := &spb.GateGamePlayerLoginReq{
 		Uid:       uid,
-		Uuid:      uuid,
 		AccountId: accountId,
 	}
 	gs.sendGame(cmd.GateGamePlayerLoginReq, req)
@@ -219,30 +215,37 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 		logger.Debug("由于node意外离线，玩家无法登录")
 		return
 	}
-	if player, ok := gs.gate.GetPlayerByUuid(rsp.Uuid); !ok {
-		logger.Warn("[UID:%v][UUID:%v]不存在此玩家", rsp.Uid, rsp.Uuid)
+	player := gs.gate.getLoginPlayerByUid(rsp.Uid)
+	if player == nil {
+		logger.Warn("[UID:%v]不存在此玩家", rsp.Uid)
 		return
-	} else {
-		if player.gs.appid != gs.appid {
-			logger.Warn("不存在此gameserver")
-			return
-		}
-		prsp := &proto.PlayerGetTokenScRsp{
-			SecretKeySeed: player.Seed,
-			BlackInfo:     &proto.BlackInfo{},
-			Uid:           player.Uid,
-			Msg:           "",
-			Retcode:       0,
-		}
-
-		player.Status = spb.PlayerStatus_PlayerStatus_PostLogin
-		player.GateToPlayer(cmd.PlayerGetTokenScRsp, prsp)
-		// 结束定时器
-		player.closeStop()
-		// 删除登录锁
-		gs.gate.Store.DistUnlock(strconv.Itoa(int(player.AccountId)))
-		logger.Info("[AccountId:%v][UUID:%v]|[UID:%v]登录gate", player.AccountId, player.Uuid, player.Uid)
 	}
+	if player.gs.appid != gs.appid {
+		logger.Warn("不存在此gameserver")
+		return
+	}
+	// 删除登录玩家
+	gs.gate.delLoginPlayerByUid(rsp.Uid)
+	// 将玩家添加到已登录玩家列表
+	if !gs.gate.addPlayer(rsp.Uid, player) {
+		logger.Warn("[UID:%v]超出预期的玩家重复登录", rsp.Uid)
+		return
+	}
+	prsp := &proto.PlayerGetTokenScRsp{
+		SecretKeySeed: player.Seed,
+		BlackInfo:     &proto.BlackInfo{},
+		Uid:           player.Uid,
+		Msg:           "",
+		Retcode:       0,
+	}
+
+	player.Status = spb.PlayerStatus_PlayerStatus_PostLogin
+	player.GateToPlayer(cmd.PlayerGetTokenScRsp, prsp)
+	// 结束定时器
+	player.closeStop()
+	// 删除登录锁
+	gs.gate.Store.DistUnlock(strconv.Itoa(int(player.AccountId)))
+	logger.Info("[AccountId:%v][UID:%v]登录gate", player.AccountId, player.Uid)
 }
 
 func (p *PlayerGame) closeStop() {
@@ -257,44 +260,49 @@ func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	if rsp.Retcode != 0 {
 		return
 	}
-	play := gs.GetPlayerByUuid(rsp.NewUuid)
-	if play == nil {
-		logger.Debug("[UID:%v][UUID:%v]没有找到该玩家", rsp.Uid, rsp.NewUuid)
-		return
+	play := gs.gate.getPlayerByUid(rsp.Uid)
+	loginPlay := gs.gate.getLoginPlayerByUid(rsp.Uid)
+	if play != nil {
+		switch play.Status {
+		case spb.PlayerStatus_PlayerStatus_LoggingIn: // 登录中收到下线，肯定是重复登录下线回复
+			logger.Warn("[UID:%v]🖥️🦐不是，兄弟！你登录流程都没跑完怎么收到的下线通知?", rsp.Uid)
+		case spb.PlayerStatus_PlayerStatus_PostLogin: // 已登录状态收到下线，滚
+			gs.gate.passPlayerKill(play, spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN)
+		case spb.PlayerStatus_PlayerStatus_Logout_Wait: // 离线等待中收到下线
+			play.Status = spb.PlayerStatus_PlayerStatus_Logout
+			gs.gate.delPlayerByUid(play.Uid)
+		}
 	}
-	switch play.Status {
-	case spb.PlayerStatus_PlayerStatus_LoggingIn: // 登录中收到下线，肯定是重复登录下线回复
+	// 登录中收到下线，肯定是重复登录下线回复
+	if loginPlay != nil {
 		newGs := gs.gate.getGsByAppid(rsp.NewGameServerId)
 		if newGs == nil {
 			return
 		}
-		newGs.playerLogin(play)
-	case spb.PlayerStatus_PlayerStatus_Logout_Wait: // 离线等待中收到下线
-		play.Status = spb.PlayerStatus_PlayerStatus_Logout
-		gs.DelPlayerMap(play.Uuid)
+		newGs.playerLogin(loginPlay)
 	}
 
-	logger.Debug("[UID:%v][UUID:%v]下线玩家成功", rsp.Uid, rsp.NewUuid)
+	logger.Debug("[UID:%v]下线玩家成功", rsp.Uid)
 }
 
 // game通知gate玩家消息
 func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	notify := playerMsg.(*spb.GameToGateMsgNotify)
-	if player, ok := gs.gate.GetPlayerByUuid(notify.Uuid); !ok {
+	player := gs.gate.getPlayerByUid(notify.Uid)
+	if player == nil {
 		return
-	} else {
-		msgList := make([]*alg.PackMsg, 0)
-		alg.DecodeBinToPayload(notify.Msg, &msgList, nil)
-		for _, msg := range msgList {
-			SendHandle(player, msg)
-		}
+	}
+	msgList := make([]*alg.PackMsg, 0)
+	alg.DecodeBinToPayload(notify.Msg, &msgList, nil)
+	for _, msg := range msgList {
+		SendHandle(player, msg)
 	}
 }
 
 // game通知gate玩家下线
 func (gs *gameServer) GameToGatePlayerLogoutNotify(playerMsg pb.Message) {
 	notify := playerMsg.(*spb.GameToGatePlayerLogoutNotify)
-	if play, ok := gs.gate.GetPlayerByUuid(notify.Uuid); ok {
+	if play := gs.gate.getPlayerByUid(notify.Uid); play != nil {
 		gs.gate.passPlayerKill(play, spb.Retcode_RET_PLAYER_GAME_LOGIN)
 	}
 }

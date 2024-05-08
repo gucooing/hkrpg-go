@@ -3,6 +3,7 @@ package multi
 import (
 	"log"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/gucooing/gunet"
@@ -22,15 +23,17 @@ const (
 var err error
 
 type Multi struct {
-	Config    *config.Config
-	AppId     uint32
-	addr      string
-	listener  *gunet.TcpListener
-	Node      *NodeService
-	store     *db.Store
-	Ticker    *time.Ticker
-	everyDay4 *time.Ticker
-	Stop      chan struct{}
+	Config       *config.Config
+	AppId        uint32
+	addr         string
+	listener     *gunet.TcpListener
+	Node         *NodeService
+	store        *db.Store
+	gateList     map[uint32]*gateServer // gate列表
+	gateListLock sync.Mutex             // gate列表同步锁
+	Ticker       *time.Ticker
+	everyDay4    *time.Ticker
+	Stop         chan struct{}
 }
 
 type AllService struct {
@@ -44,6 +47,7 @@ func NewMulti(cfg *config.Config, appid string, store *db.Store) *Multi {
 	s.AppId = alg.GetAppIdUint32(appid)
 	logger.Info("MultiServer AppId:%s", appid)
 	s.store = store
+	s.gateList = make(map[uint32]*gateServer)
 	// 开启tcp服务
 	port := s.Config.AppList[appid].App["port_service"].Port
 	if port == "" {

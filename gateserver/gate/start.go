@@ -19,24 +19,27 @@ const (
 )
 
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
-var GATESERVER *GateServer
 
 type GateServer struct {
-	AppId            uint32
-	WorkerId         int64
-	Port             string
-	Config           *config.Config
-	Store            *Store
-	snowflake        *alg.SnowflakeWorker // 雪花唯一id生成器
-	kcpListener      *kcp.Listener
-	node             *NodeService
-	sessionIdCounter uint32
-	kcpEventChan     chan *KcpEvent
-	Ec2b             *random.Ec2b
-	gsList           map[uint32]*gameServer // gs列表
-	gsListLock       sync.Mutex             // gs列表互斥锁
-	Ticker           *time.Ticker
-	Stop             chan struct{}
+	AppId              uint32
+	WorkerId           int64
+	Port               string
+	Config             *config.Config
+	Store              *Store
+	snowflake          *alg.SnowflakeWorker // 雪花唯一id生成器
+	kcpListener        *kcp.Listener
+	node               *NodeService
+	sessionIdCounter   uint32
+	kcpEventChan       chan *KcpEvent
+	Ec2b               *random.Ec2b
+	gsList             map[uint32]*gameServer // gs列表
+	gsListLock         sync.Mutex             // gs列表互斥锁
+	Ticker             *time.Ticker
+	Stop               chan struct{}
+	loginPlayerMap     map[uint32]*PlayerGame // 正在登录的玩家列表
+	loginPlayerMapLock sync.Mutex             // 正在登录的玩家列表互斥锁
+	playerMap          map[uint32]*PlayerGame // 玩家列表
+	playerMapLock      sync.Mutex             // 玩家列表互斥锁
 }
 
 type KcpEvent struct {
@@ -47,7 +50,6 @@ type KcpEvent struct {
 
 func NewGate(cfg *config.Config, appid string) *GateServer {
 	s := new(GateServer)
-	GATESERVER = s
 
 	s.Ec2b = alg.GetEc2b()
 	s.Config = cfg
@@ -56,6 +58,8 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.WorkerId = 1
 	s.snowflake = alg.NewSnowflakeWorker(s.WorkerId)
+	s.loginPlayerMap = make(map[uint32]*PlayerGame)
+	s.playerMap = make(map[uint32]*PlayerGame)
 	logger.Info("GateServer AppId:%s", appid)
 	// 开启kcp服务
 	port := s.Config.AppList[appid].App["port_player"].Port

@@ -17,20 +17,17 @@ import (
 var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
 
 type GamePlayer struct {
-	Uuid      int64
 	Uid       uint32
 	AccountId uint32
 	GateAppId uint32
 	// 玩家数据
-	Player   *PlayerData
-	PlayerPb *spb.PlayerBasicCompBin // 玩家pb数据
-	GateConn net.Conn
-
+	Player    *PlayerData
+	PlayerPb  *spb.PlayerBasicCompBin // 玩家pb数据
+	GateConn  net.Conn
 	closeOnce sync.Once
 	stop      chan struct{}
 	Ticker    *time.Timer
-
-	MsgChan chan Msg // 消息通道
+	MsgChan   chan Msg // 消息通道
 }
 
 type Msg struct {
@@ -61,9 +58,8 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
 	gtgMsg := &spb.GameToGateMsgNotify{
-		Uid:  g.Uid,
-		Uuid: g.Uuid,
-		Msg:  binMsg,
+		Uid: g.Uid,
+		Msg: binMsg,
 	}
 
 	g.MsgChan <- Msg{

@@ -118,11 +118,13 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	timeRand := random.GetTimeRand()
 	serverSeedUint64 := timeRand.Uint64()
 	p.Seed = serverSeedUint64
-
-	// 生成临时uuid
-	p.Uuid = s.snowflake.GenId()
 	p.Uid = uidPlayer.Uid
-	gs.AddPlayerMap(p.Uuid, p)
+
+	// 保存玩家到临时登录列表中
+	if !s.addLoginPlayer(p.Uid, p) {
+		logger.Warn("[UID:%v][AccountId:%v]超出预期的玩家重复登录", p.Uid, accountUid)
+		return
+	}
 
 	// 下线重复登录的玩家
 	if bin, ok := s.Store.GetPlayerStatus(req.AccountUid); ok {
@@ -135,15 +137,19 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		}
 		oldGs := s.getGsByAppid(statu.GameserverId)
 		if oldGs != nil {
-			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
-				Retcode:         spb.Retcode_RET_PLAYER_REPEAT_LOGIN,
+			logoutReq := &spb.GetToGamePlayerLogoutReq{
 				Uid:             p.Uid,
 				AccountId:       accountUid,
-				OldUuid:         statu.Uuid,
 				OldGameServerId: statu.GameserverId,
-				NewUuid:         p.Uuid,
 				NewGameServerId: p.gs.appid,
-			})
+			}
+
+			if statu.GateserverId == s.AppId {
+				logoutReq.Retcode = spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN // 同网关重复登录
+			} else {
+				logoutReq.Retcode = spb.Retcode_RET_PLAYER_REPEAT_LOGIN // 异网关重复登录
+			}
+			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, logoutReq)
 			logger.Debug("[UID:%v][AccountId:%v]重复登录，下线玩家中", p.Uid, accountUid)
 			return
 		} else {
@@ -157,5 +163,5 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 
 func (gs *gameServer) playerLogin(p *PlayerGame) {
 	// 通知game玩家登录
-	gs.GateGamePlayerLoginReq(p.Uid, p.AccountId, p.Uuid)
+	gs.GateGamePlayerLoginReq(p.Uid, p.AccountId)
 }

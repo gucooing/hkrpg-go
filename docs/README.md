@@ -46,7 +46,7 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 ### dispatch 登录服务器（无状态，可集群）
 ### gateserver 网关服务器（有状态，可集群），内部网络与外界唯一交互口
 ### gameserver 逻辑服务器（有状态，可集群），处理业务逻辑
-### multiserver 多人服务器（有状态，可集群），处理好友，邮件等功能
+### multiserver 多人服务器（有状态，不可集群），处理好友，邮件等功能
 ### muipserver 目前仅负责api
 
 ## 进阶操作

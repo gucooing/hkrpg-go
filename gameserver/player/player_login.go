@@ -34,7 +34,7 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
-	logger.Info("[UID:%v][UUID:%v]登录的系统是:%s", g.Uid, g.Uuid, req.SystemVersion)
+	logger.Info("[UID:%v]登录的系统是:%s", g.Uid, req.SystemVersion)
 	g.HandlePlayerLoginScRsp()
 }
 

@@ -31,8 +31,8 @@ type GamePlayer struct {
 func (s *GameServer) killPlayer(p *GamePlayer) {
 	s.upDataPlayer(p.p)
 	s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.p.AccountId)))
-	p.gate.DelPlayerMap(p.p.Uuid)
-	logger.Info("[UID:%v][UUID:%v]玩家下线成功", p.p.Uid, p.p.Uuid)
+	s.delPlayerMap(p.p.Uid)
+	logger.Info("[UID:%v]玩家下线成功", p.p.Uid)
 }
 
 func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
@@ -47,9 +47,9 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 		s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
 		return
 	}
-	if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != p.Uuid {
+	if statu.GameserverId != GAMESERVER.AppId {
 		// 脏数据
-		logger.Info("[UID:%v][UUID:%v]数据过期，已丢弃", p.Uid, p.Uuid)
+		logger.Info("[UID:%v]数据过期，已丢弃", p.Uid)
 		return
 	}
 	dbDate := new(database.PlayerData)
@@ -68,23 +68,22 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 		return
 	}
 	if !s.SetPlayerPlayerBasicBriefData(p) {
-		logger.Error("[UID:%v][UUID:%v]玩家简要信息保存失败", p.Uid, p.Uuid)
+		logger.Error("[UID:%v]玩家简要信息保存失败", p.Uid)
 	}
 	return
 }
 
 /************************************接口*********************************/
 
-func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) *GamePlayer {
+func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServer) (*GamePlayer, bool) {
 	gamePlayer := &GamePlayer{
 		gate:         ge,
-		game:         ge.game,
+		game:         s,
 		p:            g,
 		RouteManager: NewRouteManager(g),
 	}
-	ge.playerMapLock.Lock()
-	ge.playerMap[uuid] = gamePlayer
-	ge.playerMapLock.Unlock()
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
 
 	if gamePlayer.p.Player == nil {
 		gamePlayer.p.Player = &player.PlayerData{
@@ -94,43 +93,38 @@ func (ge *gateServer) AddPlayerMap(uuid int64, g *player.GamePlayer) *GamePlayer
 			},
 		}
 	}
-	PLAYERNUM++
-	return gamePlayer
-}
-
-func (ge *gateServer) DelPlayerMap(uuid int64) {
-	ge.playerMapLock.Lock()
-	if ge.playerMap[uuid] != nil {
-		delete(ge.playerMap, uuid)
+	if s.playerMap[uid] == nil {
+		PLAYERNUM++
+		s.playerMap[uid] = gamePlayer
+		return gamePlayer, true
 	}
-	ge.playerMapLock.Unlock()
+	return nil, false
 }
 
-func (ge *gateServer) GetAllPlayer() map[int64]*GamePlayer {
-	players := make(map[int64]*GamePlayer)
-	ge.playerMapLock.Lock()
-	defer ge.playerMapLock.Unlock()
-	for uuid, play := range ge.playerMap {
+func (s *GameServer) delPlayerMap(uid uint32) bool {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	if s.playerMap[uid] != nil {
+		delete(s.playerMap, uid)
+		return true
+	}
+	return false
+}
+
+func (s *GameServer) getAllPlayer() map[uint32]*GamePlayer {
+	players := make(map[uint32]*GamePlayer)
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	for uuid, play := range s.playerMap {
 		players[uuid] = play
 	}
 	return players
 }
 
-func (ge *gateServer) GetPlayerByUuid(uuid int64) *GamePlayer {
-	ge.playerMapLock.Lock()
-	defer ge.playerMapLock.Unlock()
-	return ge.playerMap[uuid]
-}
-
-// 这个玩意不要过多执行，会卡死的
-func (s *GameServer) GetPlayerByUuid(uuid int64) *GamePlayer {
-	for _, ge := range s.gateList {
-		playerList := ge.GetAllPlayer()
-		if playerList[uuid] != nil {
-			return playerList[uuid]
-		}
-	}
-	return nil
+func (s *GameServer) getPlayerByUid(uid uint32) *GamePlayer {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	return s.playerMap[uid]
 }
 
 func (s *GameServer) AddPlayerStatus(g *GamePlayer) error {
@@ -141,7 +135,6 @@ func (s *GameServer) AddPlayerStatus(g *GamePlayer) error {
 		LoginRand:    0,
 		LoginTime:    time.Now().Unix(),
 		Uid:          g.p.Uid,
-		Uuid:         g.p.Uuid,
 	}
 	value, err := pb.Marshal(bin)
 	if err != nil {
@@ -171,7 +164,7 @@ func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {
 			logger.Error("PlayerStatusRedisData Unmarshal error")
 			return err
 		}
-		if statu.GameserverId != GAMESERVER.AppId || statu.Uuid != g.Uuid {
+		if statu.GameserverId != GAMESERVER.AppId {
 			// 脏数据
 			return nil
 		}
@@ -192,7 +185,7 @@ func (s *GameServer) UpDataPlayer(g *player.GamePlayer) error {
 		return err
 	}
 	if !s.SetPlayerPlayerBasicBriefData(g) {
-		logger.Error("[UID:%v][UUID:%v]玩家简要信息保存失败", g.Uid, g.Uuid)
+		logger.Error("[UID:%v]玩家简要信息保存失败", g.Uid)
 	}
 	return nil
 }

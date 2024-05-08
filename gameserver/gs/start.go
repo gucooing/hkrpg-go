@@ -26,17 +26,19 @@ var GAMESERVER *GameServer
 var PLAYERNUM int64 // 玩家人数
 
 type GameServer struct {
-	Config       *config.Config
-	Store        *db.Store
-	Port         string
-	AppId        uint32
-	GSListener   *gunet.TcpListener
-	node         *NodeService
-	gateList     map[uint32]*gateServer // gate列表
-	gateListLock sync.Mutex             // gate列表同步锁
-	Ticker       *time.Ticker
-	everyDay4    *time.Ticker
-	Stop         chan struct{}
+	Config        *config.Config
+	Store         *db.Store
+	Port          string
+	AppId         uint32
+	GSListener    *gunet.TcpListener
+	node          *NodeService
+	gateList      map[uint32]*gateServer // gate列表
+	gateListLock  sync.Mutex             // gate列表同步锁
+	playerMap     map[uint32]*GamePlayer // 玩家列表
+	playerMapLock sync.Mutex             // 玩家列表互斥锁
+	Ticker        *time.Ticker
+	everyDay4     *time.Ticker
+	Stop          chan struct{}
 }
 
 func NewGameServer(cfg *config.Config, appid string) *GameServer {
@@ -46,6 +48,7 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.gateList = make(map[uint32]*gateServer)
+	s.playerMap = make(map[uint32]*GamePlayer)
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	logger.Info("GameServer AppId:%s", appid)
 	// 开启tcp服务
@@ -123,33 +126,27 @@ func (s *GameServer) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		<-ticker.C
-		for _, ge := range s.gateList {
-			playerList := ge.GetAllPlayer()
-			for _, g := range playerList {
-				if g.p.Uid == 0 {
-					continue
-				}
-				lastActiveTime := g.LastActiveTime
-				timestamp := time.Now().Unix()
-				if timestamp-lastActiveTime >= 180 {
-					logger.Info("[UID:%v]玩家数据自动保存", g.p.Uid)
-					s.UpDataPlayer(g.p)
-					g.LastActiveTime = timestamp + rand.Int63n(120)
-				}
+		for _, g := range s.getAllPlayer() {
+			if g.p.Uid == 0 {
+				continue
+			}
+			lastActiveTime := g.LastActiveTime
+			timestamp := time.Now().Unix()
+			if timestamp-lastActiveTime >= 180 {
+				logger.Info("[UID:%v]玩家数据自动保存", g.p.Uid)
+				s.UpDataPlayer(g.p)
+				g.LastActiveTime = timestamp + rand.Int63n(120)
 			}
 		}
 	}
 }
 
 func (s *GameServer) Close() error {
-	for _, ge := range s.gateList {
-		playerList := ge.GetAllPlayer()
-		for _, g := range playerList {
-			if g.p.Uid == 0 {
-				continue
-			}
-			s.UpDataPlayer(g.p)
+	for _, g := range s.getAllPlayer() {
+		if g.p.Uid == 0 {
+			continue
 		}
+		s.UpDataPlayer(g.p)
 	}
 	return nil
 }

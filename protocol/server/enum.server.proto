@@ -148,6 +148,7 @@ enum Retcode {
   RET_PLAYER_TIMEOUT = 5; //玩家超时
   RET_PLAYER_LOGOUT = 6; // 玩家离线
   RET_PLAYER_REPEAT_LOGIN = 7;//重复登录
-  RET_PLAYER_GAME_LOGIN = 8;//game告知需要离线
-  RET_PLAYER_SYSTEM_ERROR = 9;//内部服务异常离线（不就是gate或者game玩家线程崩坏了
+  RET_PLAYER_GATE_REPEAT_LOGIN = 8;//同网关重复登录
+  RET_PLAYER_GAME_LOGIN = 9;//game告知需要离线
+  RET_PLAYER_SYSTEM_ERROR = 10;//内部服务异常离线（不就是gate或者game玩家线程崩坏了
 }
