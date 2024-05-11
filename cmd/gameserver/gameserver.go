@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"strings"
@@ -33,19 +35,23 @@ func main() {
 			panic(err)
 		}
 	}
+	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("gameserver" + "[" + alg.GetAppId() + "]")
-	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("gameserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	cfg := config.GetConfig()
 	// 初始化game
-	gameserver := gs.NewGameServer(cfg)
+	gameserver := gs.NewGameServer(cfg, appid)
 	if gameserver == nil {
 		logger.Error("game初始化失败")
 		return
 	}
+
+	go func() {
+		http.ListenAndServe("0.0.0.0:9991", nil)
+	}()
 
 	// 加载res
 	gdconf.InitGameDataConfig()
@@ -64,7 +70,7 @@ func main() {
 			defer cancel()
 
 			logger.Info("game服务正在关闭")
-			if err = gs.Close(); err != nil {
+			if err = gameserver.Close(); err != nil {
 				logger.Error("无法正常关闭game服务")
 			}
 			logger.Info("game服务已停止")

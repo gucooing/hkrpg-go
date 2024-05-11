@@ -38,23 +38,32 @@ func (s *Server) QueryDispatchHandler(c *gin.Context) {
 	c.String(200, reqdataBase64)
 }
 
+func (s *Server) getGate() *Gate {
+	if s.node == nil {
+		return nil
+	}
+	return s.node.getGate()
+}
+
 func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_gateway", c.Request.RemoteAddr)
-	if s.GateAddr == "" {
+	gate := s.getGate()
+	if gate == nil {
 		s.ErrorGate(c)
 		return
 	}
 	queryGateway := new(proto.Gateserver)
 	queryGateway.Msg = "OK"
-	queryGateway.Ip = s.GateAddr
+	queryGateway.Ip = gate.Ip
 	queryGateway.RegionName = "hkrpg-go"
-	queryGateway.Port = stou32(s.GatePort)
+	queryGateway.Port = gate.Port
 	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 	queryGateway.Unk1 = true
 	queryGateway.Unk2 = true
 	queryGateway.Unk3 = true
 	queryGateway.Unk4 = true
 	queryGateway.Unk5 = true
+	queryGateway.Unk6 = true
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {
@@ -68,7 +77,8 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 // 其逻辑不适用于大流量使用，请仅在dev中/人数较少时使用
 func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_gateway_capture", c.Request.RemoteAddr)
-	if s.GateAddr == "" {
+	gate := s.getGate()
+	if gate == nil {
 		s.ErrorGate(c)
 		return
 	}
@@ -96,8 +106,8 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 		logger.Error("", err)
 	}
 
-	dispatch.Ip = s.GateAddr
-	dispatch.Port = stou32(s.GatePort)
+	dispatch.Ip = gate.Ip
+	dispatch.Port = gate.Port
 	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)
@@ -109,10 +119,10 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 
 func (s *Server) ErrorGate(c *gin.Context) {
 	queryGateway := new(proto.Gateserver)
-	queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
+	// queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
 	queryGateway.RegionName = "hkrpg-go"
 	queryGateway.Msg = "gate error"
-	queryGateway.MsgError = "游戏正在维护中，详情请关注官方公告。"
+	// queryGateway.MsgError = "游戏正在维护中，详情请关注官方公告。"
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {

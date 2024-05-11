@@ -33,69 +33,69 @@ func (g *GameDataConfig) loadPlayerLevelConfig() {
 	logger.Info("load %v PlayerLevelConfig", len(g.PlayerLevelConfigMap))
 }
 
-func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32) {
+func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32, uint32) {
 	level++
 	for ; level < 71; level++ {
 		if exp < CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].PlayerExp {
 			switch worldLevel {
 			case 0:
 				if level >= 20 {
-					return 20, exp
+					return 20, exp, 0
 				} else {
-					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 0
 				}
 			case 1:
 				if level >= 30 {
-					return 30, exp
+					return 30, exp, 1
 				} else {
-					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 1
 				}
 			case 2:
 				if level >= 40 {
-					return 40, exp
+					return 40, exp, 2
 				} else {
-					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 2
 				}
 			case 3:
 				if level >= 50 {
-					return 50, exp
+					return 50, exp, 3
 				} else {
-					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 3
 				}
 			case 4:
 				if level >= 60 {
-					return 60, exp
+					return 60, exp, 4
 				} else {
-					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 4
 				}
 			case 5:
 				if level >= 65 {
-					return 65, exp
+					return 65, exp, 5
 				} else {
-					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 5
 				}
 			case 6:
 				if level >= 70 {
-					return 70, exp
+					return 70, exp, 6
 				} else {
-					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+					return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 6
 				}
 			}
 			if level >= 70 {
-				return 70, exp
+				return 70, exp, 6
 			} else {
-				return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp
+				return CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].Level - 1, exp, 6
 			}
 		} else {
 			if level == 70 {
 				if exp < CONF.PlayerLevelConfigMap[strconv.Itoa(70)].PlayerExp {
-					return 70, exp
+					return 70, exp, 6
 				} else {
-					return 70, CONF.PlayerLevelConfigMap[strconv.Itoa(70)].PlayerExp
+					return 70, CONF.PlayerLevelConfigMap[strconv.Itoa(70)].PlayerExp, 6
 				}
 			}
 			exp -= CONF.PlayerLevelConfigMap[strconv.Itoa(int(level))].PlayerExp
 		}
 	}
-	return 0, 0
+	return 0, 0, 0
 }

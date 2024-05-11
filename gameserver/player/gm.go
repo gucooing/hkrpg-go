@@ -53,7 +53,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 			g.AddRelic(relic.ID)
 		}
 		g.AddMaterial(pileItem)
-		g.ScenePlaneEventScNotify(pileItem)
+		// g.ScenePlaneEventScNotify(pileItem)
 	} else {
 		var pileItem []*Material
 		for _, item := range itemConf.Item {
@@ -103,30 +103,8 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 	}
 }
 
-func (g *GamePlayer) ScenePlaneEventScNotify(pileItem []*Material) {
-	// 通知客户端增加了物品
-	notify := &proto.ScenePlaneEventScNotify{
-		GetItemList: &proto.ItemList{
-			ItemList: make([]*proto.Item, 0),
-		},
-	}
-	for _, items := range pileItem {
-		item := &proto.Item{
-			ItemId:      items.Tid,
-			Level:       0,
-			Num:         items.Num,
-			MainAffixId: 0,
-			Rank:        0,
-			Promotion:   0,
-			UniqueId:    0,
-		}
-		notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
-	}
-	g.Send(cmd.ScenePlaneEventScNotify, notify)
-}
-
 func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
-	relicItme := g.GetRelicById(uniqueId)
+	relicItme := g.GetProtoRelicById(uniqueId)
 	// 通知客户端增加了物品
 	notify := &proto.ScenePlaneEventScNotify{
 		GetItemList: &proto.ItemList{
@@ -153,4 +131,14 @@ func (g *GamePlayer) GmWorldLevel(payloadMsg pb.Message) {
 
 	// 账号状态通知
 	g.PlayerPlayerSyncScNotify()
+}
+
+func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
+	g.PlayerPb.Item = &spb.Item{
+		RelicMap:     make(map[uint32]*spb.Relic),
+		EquipmentMap: make(map[uint32]*spb.Equipment),
+		MaterialMap:  make(map[uint32]uint32),
+		HeadIcon:     make([]uint32, 0),
+	}
+	g.PlayerPb.Item.MaterialMap[11] = 240
 }

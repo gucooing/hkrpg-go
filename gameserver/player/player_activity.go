@@ -22,7 +22,7 @@ func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }
 
-func (g *GamePlayer) GetLoginActivityCsReq() {
+func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg []byte) {
 	rsp := &proto.GetLoginActivityScRsp{
 		LoginActivityList: make([]*proto.LoginActivityData, 0),
 	}
@@ -78,7 +78,7 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg []byte) {
 	g.Send(cmd.TakeLoginActivityRewardScRsp, rsp)
 }
 
-func (g *GamePlayer) GetTrialActivityDataCsReq() {
+func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetTrialActivityDataScRsp{
 		TrialActivityList: make([]*proto.TrialActivityInfo, 0),
 	}

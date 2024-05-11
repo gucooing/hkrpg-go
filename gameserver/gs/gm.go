@@ -7,16 +7,27 @@ import (
 
 func (s *GameServer) GmGive(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmGive)
-	if req.PlayerUid == 0 || s.PlayerMap[req.Uuid] == nil {
+	play := s.getPlayerByUid(req.PlayerUid)
+	if play == nil {
 		return
 	}
-	s.PlayerMap[req.Uuid].GmGive(serviceMsg)
+	play.p.GmGive(serviceMsg)
 }
 
 func (s *GameServer) GmWorldLevel(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmWorldLevel)
-	if req.PlayerUid == 0 || s.PlayerMap[req.Uuid] == nil {
+	play := s.getPlayerByUid(req.PlayerUid)
+	if play == nil {
 		return
 	}
-	s.PlayerMap[req.Uuid].GmWorldLevel(serviceMsg)
+	play.p.GmWorldLevel(serviceMsg)
+}
+
+func (s *GameServer) DelItem(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.DelItem)
+	play := s.getPlayerByUid(req.PlayerUid)
+	if play == nil {
+		return
+	}
+	play.p.DelItem(serviceMsg)
 }

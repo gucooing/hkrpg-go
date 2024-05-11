@@ -1,6 +1,12 @@
-![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
+![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go-public/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
+ 
+## 朋友要复出了，可以关注一下 [hk4e](https://github.com/flswld/hk4e-go)
 
  随机首包密钥，随机生成seed，使数据更加安全
+
+ 分布式架构，使可承载玩家大大提高
+
+ ~~学习golang的第一个稍微大一点的项目，bug max~~
 
 ### 已实现的功能：
 - 走路模拟器
@@ -20,9 +26,7 @@
 - 忘却之庭-虚构叙事
 
 ### 目前目标：
-- 服务之间通信添加状态，标明成功/失败/失败原因
-- 恢复muip的功能
-- 处理gs异常离线时，玩家的问题（在线数据的处理，是刷新还是继承
+- 暂无
 
 ### 使用方法：
 1. 拉取项目文件
@@ -34,4 +38,4 @@
 
 ### 注：
 * 如果你想帮助此项目，欢迎提交
-* 欢迎加入我们的 [Discord](https://discord.gg/ZJGTU8ZFGW)
+* ~~欢迎加入我们的 [Discord](https://discord.gg/ZJGTU8ZFGW)~~

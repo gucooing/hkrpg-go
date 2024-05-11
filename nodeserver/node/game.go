@@ -1,7 +1,6 @@
 package node
 
 import (
-	"bufio"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -12,25 +11,23 @@ import (
 )
 
 func (s *Service) gameRecvHandle() {
-	payload := make([]byte, PacketMaxLen)
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("!!! GAME SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			s.killService()
+			s.n.killService(s)
+			return
 		}
 	}()
 
 	for {
-		var bin []byte = nil
-		recvLen, err := bufio.NewReader(s.Conn).Read(payload)
+		bin, err := s.Conn.Read()
 		if err != nil {
-			s.killService()
+			s.n.killService(s)
 			break
 		}
-		bin = payload[:recvLen]
 		msgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &msgList, nil)
 		for _, msg := range msgList {
@@ -50,6 +47,7 @@ func (s *Service) gameRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 }
 
 func (s *Service) GameToNodePingReq(serviceMsg pb.Message) {
+	s.lastAliveTime = time.Now().Unix()
 	req := serviceMsg.(*spb.GameToNodePingReq)
 	if req.GameServerId != s.AppId {
 		return

@@ -32,6 +32,7 @@ const (
 var (
 	errInvalidOperation = errors.New("invalid operation")
 	errTimeout          = errors.New("timeout")
+	errReadTimeout      = errors.New("read timeout")
 )
 
 var (
@@ -128,6 +129,8 @@ func newUDPSession(conv uint64, l *Listener, conn net.PacketConn, ownConn bool, 
 	sess.ownConn = ownConn
 	sess.l = l
 	sess.recvbuf = make([]byte, mtuLimit)
+	sess.fd = 10 * time.Second
+	sess.idt = time.NewTimer(sess.fd)
 
 	// cast to writebatch conn
 	if _, ok := conn.(*net.UDPConn); ok {
@@ -231,7 +234,7 @@ func (s *UDPSession) Read(b []byte) (n int, err error) {
 		case <-s.die:
 			return 0, io.ErrClosedPipe
 		case <-s.idt.C:
-			return 0, io.ErrClosedPipe
+			return 0, errReadTimeout
 		}
 	}
 }

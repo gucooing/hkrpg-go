@@ -8,6 +8,16 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
+	notify := &proto.PlayerSyncScNotify{
+		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
+	}
+	avatar := g.GetProtoAvatarById(avatarId)
+	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
+
+	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
 func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
 	avatarDb := g.GetAvatar()
@@ -43,7 +53,7 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 	avatarDb := g.GetAvatar()
 
 	for avatarId, _ := range avatarDb.Avatar {
-		avatarList := g.GetAvatarById(avatarId)
+		avatarList := g.GetProtoAvatarById(avatarId)
 		if avatarId/1000 == 8 {
 			avatarList.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
 		}

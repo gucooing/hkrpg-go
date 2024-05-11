@@ -23,13 +23,12 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 			GachaId:    bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {
-			list := []uint32{1003, 1101, 1211}
 			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
 				IsClaimed:  false,
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
 				CeilingNum: gacha.CeilingNum,
 			}
-			for _, id := range list {
+			for _, id := range bannerslist.RateUpItems5 {
 				avatarlist := &proto.GachaCeilingAvatar{
 					RepeatedCnt: 0,
 					AvatarId:    id,

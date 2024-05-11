@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"os"
@@ -35,24 +34,24 @@ func main() {
 			panic(err)
 		}
 	}
+	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("gateserver" + "[" + alg.GetAppId() + "]")
-	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("gateserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	cfg := config.GetConfig()
 	// 初始化geta
-	gaten := gate.NewGate(cfg)
+	gaten := gate.NewGate(cfg, appid)
 
 	go func() {
-		log.Println(http.ListenAndServe(":6060", nil))
+		http.ListenAndServe("0.0.0.0:9990", nil)
 	}()
 
 	// 启动gate服务
 	go func() {
-		if err = gaten.Run(); err != nil {
-			logger.Error("无法启动geta服务器")
+		if err = gaten.RunKcp(); err != nil {
+			logger.Error("无法启动kcp服务")
 		}
 	}()
 
@@ -63,7 +62,7 @@ func main() {
 			defer cancel()
 
 			logger.Info("geta服务正在关闭")
-			if err = gate.Close(); err != nil {
+			if err = gaten.Close(); err != nil {
 				logger.Error("无法正常关闭geta服务")
 			}
 			logger.Info("geta服务已停止")

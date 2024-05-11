@@ -35,7 +35,7 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId u
 		avatardbs := g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId]
 		avatardbs.EquipmentUniqueId = avatardb.EquipmentUniqueId
 		// 获取要装备的角色光锥,与目标光锥角色交换
-		avatar := g.GetAvatarById(avatardbs.AvatarId)
+		avatar := g.GetProtoAvatarById(avatardbs.AvatarId)
 		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		// 交换光锥
 		g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
@@ -50,7 +50,7 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId u
 	equipmentdb.BaseAvatarId = avatarId
 	g.PlayerPb.Avatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
 
-	avatar := g.GetAvatarById(avatarId)
+	avatar := g.GetProtoAvatarById(avatarId)
 
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
@@ -168,24 +168,6 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	g.EquipmentPlayerSyncScNotify(req.EquipmentUniqueId)
 	rsp := &proto.ExpUpEquipmentScRsp{}
 	g.Send(cmd.ExpUpEquipmentScRsp, rsp)
-}
-
-// 角色状态改变时需要发送通知
-func (g *GamePlayer) PlayerPlayerSyncScNotify() {
-	notify := &proto.PlayerSyncScNotify{
-		BasicInfo: &proto.PlayerBasicInfo{
-			Nickname:   g.PlayerPb.Nickname,
-			Level:      g.PlayerPb.Level,
-			Exp:        g.PlayerPb.Exp,
-			Hcoin:      g.GetItem().MaterialMap[1],
-			Scoin:      g.GetItem().MaterialMap[2],
-			Mcoin:      g.GetItem().MaterialMap[3],
-			Stamina:    g.GetItem().MaterialMap[11],
-			WorldLevel: g.PlayerPb.WorldLevel,
-		},
-	}
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
 func (g *GamePlayer) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {

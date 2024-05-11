@@ -54,7 +54,7 @@ func (r *RoBot) recvHandle() {
 				r.Seed = rsp.SecretKeySeed
 				r.GameUid = rsp.Uid
 				if r.IsXor {
-					r.XorKey = createXorPad(r.Seed)
+					r.XorKey = random.CreateXorPad(r.Seed, false)
 					logger.Info("uid:%v,seed:%v,密钥交换成功", r.GameUid, r.Seed)
 				}
 				r.PlayerLoginCsReq()
@@ -87,14 +87,6 @@ func (r *RoBot) sendHandle(cmdid uint16, playerMsg pb.Message) {
 		logger.Error("exit send loop, conn write err: %v", err)
 		return
 	}
-}
-
-func createXorPad(seed uint64) []byte {
-	keyBlock := random.NewKeyBlock(seed, false)
-	xorKey := keyBlock.XorKey()
-	key := make([]byte, 4096)
-	copy(key, xorKey[:])
-	return key
 }
 
 func KcpNetInfo() {

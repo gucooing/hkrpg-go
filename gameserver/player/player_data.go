@@ -11,10 +11,6 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) PlayerHeartBeatCsReq() {
-	g.LastActiveTime = time.Now().Unix()
-}
-
 func (g *GamePlayer) StaminaInfoScNotify() {
 	notify := &proto.StaminaInfoScNotify{
 		NextRecoverTime: 0,
@@ -24,7 +20,7 @@ func (g *GamePlayer) StaminaInfoScNotify() {
 	g.Send(cmd.StaminaInfoScNotify, notify)
 }
 
-func (g *GamePlayer) HandleGetBasicInfoCsReq() {
+func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
 	rsp.NextRecoverTime = 1698768000
@@ -34,17 +30,18 @@ func (g *GamePlayer) HandleGetBasicInfoCsReq() {
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetArchiveDataCsReq() {
+func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetArchiveDataScRsp)
 	archiveData := &proto.ArchiveData{
-		ArchiveAvatarIdList:    make([]uint32, 0),
-		ArchiveEquipmentIdList: make([]uint32, 0),
-		ArchiveMonsterIdList:   make([]*proto.MonsterArchive, 0),
-		RelicList:              make([]*proto.RelicArchive, 0),
+		ArchiveMissingAvatarIdList:    make([]uint32, 0),
+		ArchiveEquipmentIdList:        make([]uint32, 0),
+		ArchiveMissingEquipmentIdList: make([]uint32, 0),
+		ArchiveMonsterIdList:          make([]*proto.MonsterArchive, 0),
+		RelicList:                     make([]*proto.RelicArchive, 0),
 	}
 
 	for _, avatar := range g.PlayerPb.Avatar.Avatar {
-		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.AvatarId)
+		archiveData.ArchiveMissingAvatarIdList = append(archiveData.ArchiveMissingAvatarIdList, avatar.AvatarId)
 	}
 
 	for _, equipment := range gdconf.GetItemConfigEquipmentMap() {
@@ -62,7 +59,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq() {
 	for _, relicList := range gdconf.GetRelicMap() {
 		archiveRelicList := &proto.RelicArchive{
 			RelicId: relicList.ID,
-			Slot:    relicList.Type,
+			Slot:    relicList.SetID,
 		}
 		archiveData.RelicList = append(archiveData.RelicList, archiveRelicList)
 	}
@@ -72,10 +69,8 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq() {
 	g.Send(cmd.GetArchiveDataScRsp, rsp)
 }
 
-func (g *GamePlayer) GetUpdatedArchiveDataCsReq() {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetUpdatedArchiveDataScRsp, rsp)
+func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg []byte) {
+	g.Send(cmd.GetUpdatedArchiveDataScRsp, nil)
 }
 
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
@@ -135,7 +130,7 @@ func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetFriendLoginInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetFriendListInfoCsReq() {
+func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetFriendListInfoScRsp)
 	rsp.FriendList = make([]*proto.FriendListInfo, 0)
 	simpleInfo := &proto.SimpleInfo{
@@ -144,10 +139,13 @@ func (g *GamePlayer) GetFriendListInfoCsReq() {
 		Level:          999,
 		ChatBubbleId:   220003,
 		PlatformType:   proto.PlatformType_MAC,
-		SimpleAvatarInfo: &proto.SimpleAvatarInfo{
-			AvatarId:      1212,
-			Level:         80,
-			DressedSkinId: 0,
+		AssistSimpleInfo: []*proto.AssistSimpleInfo{
+			{
+				Pos:           0,
+				AvatarId:      1212,
+				Level:         80,
+				DressedSkinId: 0,
+			},
 		},
 		Uid:          999,
 		HeadIcon:     200106,
@@ -180,17 +178,6 @@ func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.ToUidList, req.Emote, req.MsgType, req.Text, req.ChatType)
 }
 
-func (g *GamePlayer) HandleGetRogueHandbookDataCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetRogueHandbookDataScRsp)
-	handbookInfo := &proto.RogueHandbookData{
-		// RogueCurrentVersion: 1,
-		// IsMiracleUnlock:     true,
-	}
-	rsp.HandbookInfo = handbookInfo
-
-	g.Send(cmd.GetRogueHandbookDataScRsp, rsp)
-}
-
 func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
@@ -201,7 +188,7 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 			ChallengeId: id,
 			Stars:       stars.Stars,
 			Score:       stars.ScoreOne,
-			ScoreTwo:    stars.ScoreTwo,
+			TakenReward: stars.ScoreTwo,
 		}
 		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
 	}
@@ -216,18 +203,14 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetChatEmojiListScRsp, rsp)
+	g.Send(cmd.GetChatEmojiListScRsp, nil)
 }
 
-func (g *GamePlayer) HandleGetAssistHistoryCsReq() {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetAssistHistoryScRsp, rsp)
+func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg []byte) {
+	g.Send(cmd.GetAssistHistoryScRsp, nil)
 }
 
-func (g *GamePlayer) SetClientPausedCsReq() {
+func (g *GamePlayer) SetClientPausedCsReq(payloadMsg []byte) {
 	rsp := new(proto.SetClientPausedScRsp)
 	g.Player.IsPaused = !g.Player.IsPaused
 	rsp.Paused = g.Player.IsPaused
@@ -270,11 +253,8 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 
 	g.Player.IsNickName = !g.Player.IsNickName
 
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-
 	g.PlayerPlayerSyncScNotify()
-	g.Send(cmd.SetNicknameScRsp, rsp)
+	g.Send(cmd.SetNicknameScRsp, nil)
 }
 
 func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {
@@ -299,7 +279,7 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 	g.Send(cmd.SetSignatureScRsp, rsp)
 }
 
-func (g *GamePlayer) TextJoinQueryCsReq() {
+func (g *GamePlayer) TextJoinQueryCsReq(payloadMsg []byte) {
 	rsp := new(proto.TextJoinQueryScRsp)
 	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
 		textJoinList := &proto.TextJoinInfo{
@@ -321,6 +301,9 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 
 	for _, id := range req.EntryIdList {
 		excel := gdconf.GetMapEntranceById(strconv.Itoa(int(id)))
+		if excel == nil {
+			continue
+		}
 		teleport := gdconf.GetTeleportsById(excel.PlaneID, excel.FloorID)
 		if teleport == nil {
 			continue
@@ -336,7 +319,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, nil)
 	// TODO 主动调用
-	g.HandleGetArchiveDataCsReq()
+	g.HandleGetArchiveDataCsReq(nil)
 }
 
 func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {

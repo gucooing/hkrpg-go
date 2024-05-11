@@ -1,14 +1,11 @@
 package player
 
 import (
-	"math"
-	"math/rand"
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg []byte) {
@@ -42,18 +39,21 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramLi
 				avatarDbs.EquipRelic[relic.Slot] = avatardb.EquipRelic[relic.Slot]
 				g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = avatarDbs.AvatarId
 
-				relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
+				relicList := g.GetProtoRelicById(avatardb.EquipRelic[relic.Slot])
 				notify.RelicList = append(notify.RelicList, relicList)
 			}
-			avatar := g.GetAvatarById(avatarDbs.AvatarId)
+			avatar := g.GetProtoAvatarById(avatarDbs.AvatarId)
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		}
 
 		if avatardb.EquipRelic[relic.Slot] != 0 {
-			if g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId == avatarId {
-				g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = 0
-				relicList := g.GetRelicById(avatardb.EquipRelic[relic.Slot])
-				notify.RelicList = append(notify.RelicList, relicList)
+			oldEquipRelic := g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]]
+			if oldEquipRelic != nil {
+				if oldEquipRelic.BaseAvatarId == avatarId {
+					oldEquipRelic.BaseAvatarId = 0
+					relicList := g.GetProtoRelicById(avatardb.EquipRelic[relic.Slot])
+					notify.RelicList = append(notify.RelicList, relicList)
+				}
 			}
 		}
 		relicdb.BaseAvatarId = avatarId
@@ -62,11 +62,11 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramLi
 		}
 		avatardb.EquipRelic[relic.Slot] = relic.RelicUniqueId
 
-		relicList := g.GetRelicById(relic.RelicUniqueId)
+		relicList := g.GetProtoRelicById(relic.RelicUniqueId)
 		notify.RelicList = append(notify.RelicList, relicList)
 	}
 
-	avatar := g.GetAvatarById(avatarId)
+	avatar := g.GetProtoAvatarById(avatarId)
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
@@ -88,7 +88,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	var oldLevel uint32      // 升级前等级
 
 	// 从背包获取需要升级的圣遗物
-	dbRelic := g.GetRelicById(req.RelicUniqueId)
+	dbRelic := g.getRelicDbById(req.RelicUniqueId)
 	if dbRelic == nil {
 		rsp := &proto.ExpUpRelicScRsp{}
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -135,7 +135,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 		}
 		relicList = append(relicList, relic.GetRelicUniqueId())
 		// 获取光锥配置
-		relicconfig := gdconf.GetRelicById(strconv.Itoa(int(g.GetRelicById(relic.GetRelicUniqueId()).Tid)))
+		relicconfig := gdconf.GetRelicById(strconv.Itoa(int(g.GetProtoRelicById(relic.GetRelicUniqueId()).Tid)))
 		if relicconfig == nil {
 			rsp := &proto.ExpUpRelicScRsp{}
 			g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -159,34 +159,29 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	}
 
 	// 添加副属性
-	addex := (level - oldLevel) / 3
-	// TODO 不应与主属性相同
-	addSubAffixes := math.Min(float64(relicConf.Type-1), float64(uint32(len(dbRelic.SubAffixList))+(addex)))
-	for i := 0; i < int(addSubAffixes)-len(dbRelic.SubAffixList); i++ {
-		affixId := gdconf.GetRelicSubAffixConfigById(relicConf.SubAffixGroup)
-		relicAffix := &spb.RelicAffix{
-			AffixId: affixId,
-			Cnt:     1,
-			Step:    0,
+	addSubAffixes := 0
+	for i := oldLevel; i <= level; i++ {
+		if i%3 == 0 {
+			addSubAffixes++
 		}
-		addex--
-		g.GetItem().RelicMap[req.RelicUniqueId].RelicAffix = append(g.GetItem().RelicMap[req.RelicUniqueId].RelicAffix, relicAffix)
 	}
-	// 升级属性
-	var i uint32
-	for i = 0; i < addex; i++ {
-		idIndex := rand.Intn(len(dbRelic.SubAffixList))
-		g.GetItem().RelicMap[req.RelicUniqueId].RelicAffix[idIndex].Cnt++
+	if oldLevel%3 == 0 {
+		addSubAffixes--
 	}
-
+	g.addRelicAffix(&addRelicAffix{
+		addSubAffixes:     addSubAffixes, // int((level - oldLevel + 2) / 3),
+		mainAffixProperty: dbRelic.MainAffixProperty,
+		subAffixGroup:     relicConf.SubAffixGroup,
+		relicAffix:        dbRelic.RelicAffix,
+	})
 	// 扣除本次升级需要的信用点
 	pileItem = append(pileItem, &Material{
 		Tid: 2,
 		Num: delScoin,
 	})
 	// 更新需要升级的圣遗物状态
-	g.GetItem().RelicMap[req.RelicUniqueId].Level = level
-	g.GetItem().RelicMap[req.RelicUniqueId].Exp = exp
+	dbRelic.Level = level
+	dbRelic.Exp = exp
 
 	// 删除用来升级的材料
 	if len(pileItem) != 0 {

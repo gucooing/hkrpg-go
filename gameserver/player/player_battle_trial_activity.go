@@ -12,9 +12,15 @@ import (
 func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
 	req := msg.(*proto.StartTrialActivityCsReq)
+	if req.TrialActivityId == 0 {
+		return
+	}
 
 	avatarDemo := gdconf.GetAvatarDemoConfigById(req.TrialActivityId)
-	lineup := g.GetLineUpById(10)
+	if avatarDemo == nil {
+		return
+	}
+	lineup := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY))
 
 	trialActivityState := g.GetTrialActivityState()
 	trialActivityState.AvatarDemoId = req.TrialActivityId
@@ -28,14 +34,17 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	trialActivityState.NPCMonsterID = avatarDemo.NpcMonsterIDList1[0]
 	trialActivityState.GroupID = avatarDemo.MazeGroupID1
 
-	lineup.AvatarIdList = []uint32{0, 0, 0, 0}
 	for id, avatarId := range avatarDemo.TrialAvatarList {
-		lineup.AvatarIdList[id] = avatarId
+		lineup.AvatarIdList[uint32(id)] = &spb.LineAvatarList{
+			Slot:     uint32(id),
+			AvatarId: avatarId,
+		}
 	}
 
-	g.Send(cmd.SyncServerSceneChangeNotify, req)
+	g.Send(cmd.ExtraLineupDestroyNotify, &proto.ExtraLineupDestroyNotify{ExtraLineupType: proto.ExtraLineupType_LINEUP_STAGE_TRIAL})
+	g.Send(cmd.SyncServerSceneChangeNotify, nil)
 
-	g.SyncLineupNotify(10)
+	g.SyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY))
 
 	g.StartTrialEnterSceneByServerScNotify()
 
@@ -63,7 +72,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	anchorID = foorMap.StartAnchorID
 
 	// 获取队伍
-	lineup := g.GetLineUpById(10)
+	lineup := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY))
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,
 		LeaderSlot:      0,
@@ -73,16 +82,16 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 		Mp:              5,
 		PlaneId:         0,
 	}
-	for slot, avatarId := range lineup.AvatarIdList {
-		if avatarId == 0 {
+	for slot, lineAvatar := range lineup.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
 		lineupAvatar := &proto.LineupAvatar{
 			AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
-			Slot:       uint32(slot),
+			Slot:       slot,
 			Satiety:    0,
 			Hp:         10000,
-			Id:         avatarId,
+			Id:         lineAvatar.AvatarId,
 			SpBar: &proto.SpBarInfo{
 				CurSp: 5000,
 				MaxSp: 10000,
@@ -121,11 +130,12 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	}
 	for _, anchor := range foorMap.Groups[trialActivityState.GroupID].AnchorList {
 		if anchor.ID == anchorID {
-			for id, avatarid := range g.GetLineUpById(10).AvatarIdList {
-				if avatarid == 0 {
+			lineUpBin := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY))
+			for id, lineAvatar := range lineUpBin.AvatarIdList {
+				if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 					continue
 				}
-				avatarid = gdconf.GetSpecialAvatarById(avatarid).AvatarID
+				avatarid := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId).AvatarID
 				entityId := uint32(g.GetNextGameObjectGuid())
 				entityList := &proto.SceneEntityInfo{
 					Actor: &proto.SceneActorInfo{
@@ -264,18 +274,19 @@ func (g *GamePlayer) TrialActivitySceneCastSkillScRsp(rsp *proto.SceneCastSkillS
 
 func (g *GamePlayer) TrialActivityGetBattleAvatarList() []*proto.BattleAvatar {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
-	for id, avatarId := range g.GetLineUpById(10).AvatarIdList {
-		if avatarId == 0 {
+	lineupBin := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY))
+	for id, lineAvatar := range lineupBin.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatar := gdconf.GetSpecialAvatarById(avatarId)
+		avatar := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId)
 
 		battleAvatar := &proto.BattleAvatar{
 			AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
-			Id:            avatarId,
+			Id:            lineAvatar.AvatarId,
 			Level:         avatar.Level,
 			Rank:          0,
-			Index:         uint32(id),
+			Index:         id,
 			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
 			Hp:            10000,
 			Promotion:     avatar.Promotion,

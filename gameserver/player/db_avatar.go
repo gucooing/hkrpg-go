@@ -4,21 +4,29 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) GetAvatar() *spb.Avatar {
-	if g.PlayerPb.Avatar == nil {
-		g.PlayerPb.Avatar = &spb.Avatar{
+	db := g.GetPlayerPb()
+	if db.Avatar == nil {
+		db.Avatar = &spb.Avatar{
 			Avatar:            make(map[uint32]*spb.AvatarBin),
 			Gender:            spb.Gender_GenderMan,
 			CurMainAvatar:     spb.HeroBasicType_BoyWarrior,
 			HeroBasicTypeInfo: g.GetHeroBasicTypeInfo(),
 		}
 	}
-	return g.PlayerPb.Avatar
+	return db.Avatar
+}
+
+func (g *GamePlayer) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
+	bin := g.GetAvatar()
+	if bin.Avatar == nil {
+		bin.Avatar = make(map[uint32]*spb.AvatarBin)
+	}
+	return bin.Avatar[avatarId]
 }
 
 func (g *GamePlayer) GetHeroBasicTypeInfo() []*spb.HeroBasicTypeInfo {
@@ -68,7 +76,43 @@ func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 	return g.PlayerPb.Avatar.Avatar[avatarId].SkilltreeList
 }
 
-func (g *GamePlayer) GetAvatarById(avatarId uint32) *proto.Avatar {
+func (g *GamePlayer) AddAvatar(avatarId uint32) {
+	var pileItem []*Material
+	if g.PlayerPb.Avatar.Avatar[avatarId] != nil {
+		pileItem = append(pileItem, &Material{
+			Tid: avatarId + 10000,
+			Num: 1,
+		})
+		g.AddMaterial(pileItem)
+		return
+	}
+
+	g.PlayerPb.Avatar.Avatar[avatarId] = &spb.AvatarBin{
+		AvatarId:          avatarId,
+		Exp:               0,
+		Level:             1,
+		AvatarType:        uint32(spb.AvatarType_AVATAR_FORMAL_TYPE),
+		FirstMetTimeStamp: uint64(time.Now().Unix()),
+		PromoteLevel:      0,
+		Rank:              0,
+		Hp:                10000,
+		SpBar: &spb.AvatarSpBarInfo{
+			CurSp: 10000,
+			MaxSp: 10000,
+		},
+		SkilltreeList:     g.GetSkillTreeList(avatarId),
+		EquipmentUniqueId: 0,
+		EquipRelic:        make(map[uint32]uint32),
+		TakenRewards:      make([]uint32, 0),
+		BuffList:          0,
+	}
+
+	g.AvatarPlayerSyncScNotify(avatarId)
+}
+
+/***************************************功能接口**************************/
+
+func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 	avatardb := g.GetAvatar().Avatar[avatarId]
 	if avatardb == nil {
 		return nil
@@ -112,46 +156,10 @@ func (g *GamePlayer) GetAvatarById(avatarId uint32) *proto.Avatar {
 	return avatar
 }
 
-func (g *GamePlayer) AddAvatar(avatarId uint32) {
-	var pileItem []*Material
-	if g.PlayerPb.Avatar.Avatar[avatarId] != nil {
-		pileItem = append(pileItem, &Material{
-			Tid: avatarId + 10000,
-			Num: 1,
-		})
-		g.AddMaterial(pileItem)
-		return
+func (g *GamePlayer) GetProtoBattleAvatar(avatarId uint32) *proto.BattleAvatar {
+	avatarBin := g.GetAvatarBinById(avatarId)
+	if avatarBin == nil {
+		return nil
 	}
-
-	g.PlayerPb.Avatar.Avatar[avatarId] = &spb.AvatarBin{
-		AvatarId:          avatarId,
-		Exp:               0,
-		Level:             1,
-		AvatarType:        uint32(spb.AvatarType_AVATAR_FORMAL_TYPE),
-		FirstMetTimeStamp: uint64(time.Now().Unix()),
-		PromoteLevel:      0,
-		Rank:              0,
-		Hp:                10000,
-		SpBar: &spb.AvatarSpBarInfo{
-			CurSp: 10000,
-			MaxSp: 10000,
-		},
-		SkilltreeList:     g.GetSkillTreeList(avatarId),
-		EquipmentUniqueId: 0,
-		EquipRelic:        make(map[uint32]uint32),
-		TakenRewards:      make([]uint32, 0),
-		BuffList:          0,
-	}
-
-	g.AvatarPlayerSyncScNotify(avatarId)
-}
-
-func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
-	notify := &proto.PlayerSyncScNotify{
-		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
-	}
-	avatar := g.GetAvatarById(avatarId)
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
+	return &proto.BattleAvatar{}
 }

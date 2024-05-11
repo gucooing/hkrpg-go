@@ -1,54 +1,12 @@
 package player
 
 import (
-	"strconv"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
-	pb "google.golang.org/protobuf/proto"
 )
-
-func (g *GamePlayer) GetPlayerDate(accountId uint32) {
-	var err error
-	var dbPlayer *db.PlayerData
-
-	for i := 0; i < 40; i++ {
-		if _, ok := db.DBASE.GetPlayerStatus(strconv.Itoa(int(g.AccountId))); !ok {
-			dbPlayer = db.DBASE.QueryAccountUidByFieldPlayer(accountId)
-			break
-		}
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	if dbPlayer.BinData == nil {
-		dbPlayer = new(db.PlayerData)
-		logger.Info("新账号登录，进入初始化流程")
-		g.PlayerPb = g.NewPlayer()
-		// 初始化完毕保存账号数据
-		dbPlayer.Uid = g.Uid
-		dbPlayer.BinData, err = pb.Marshal(g.PlayerPb)
-		if err != nil {
-			logger.Error("pb marshal error: %v", err)
-		}
-
-		err = db.DBASE.AddDatePlayerFieldByFieldName(dbPlayer)
-		if err != nil {
-			logger.Error("账号数据储存失败")
-			return
-		}
-	} else {
-		g.PlayerPb = new(spb.PlayerBasicCompBin)
-		err = pb.Unmarshal(dbPlayer.BinData, g.PlayerPb)
-		if err != nil {
-			logger.Error("unmarshal proto data err: %v", err)
-			return
-		}
-	}
-}
 
 func (g *GamePlayer) closechan() {
 	g.closeOnce.Do(func() {
@@ -76,10 +34,8 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
-	logger.Info("[UID:%v][UUID:%v]登录的系统是:%s", g.Uid, g.Uuid, req.SystemVersion)
-	if g.IsProficientPlayer {
-		g.HandlePlayerLoginScRsp()
-	}
+	logger.Info("[UID:%v]登录的系统是:%s", g.Uid, req.SystemVersion)
+	g.HandlePlayerLoginScRsp()
 }
 
 func (g *GamePlayer) HandlePlayerLoginScRsp() {
@@ -118,7 +74,7 @@ func (g *GamePlayer) BattlePassInfoNotify() {
 	notify := &proto.BattlePassInfoNotify{
 		TakenPremiumExtendedReward: 127,
 		TakenFreeExtendedReward:    2,
-		Unkfield:                   4,
+		// Unkfield:                   4,
 		TakenPremiumReward2:        7,
 		TakenFreeReward:            6,
 		TakenPremiumReward1:        2,
@@ -138,7 +94,6 @@ func (g *GamePlayer) LoginNotify() {
 	g.Send(cmd.UpdateFeatureSwitchScNotify, nil)
 	g.Send(cmd.SyncServerSceneChangeNotify, nil)
 	g.Send(cmd.SyncTurnFoodNotify, nil)
-	g.Send(cmd.StaminaInfoScNotify, nil)
 	g.Send(cmd.DailyTaskDataScNotify, nil)
 	g.Send(cmd.RaidInfoNotify, nil)
 	g.BattlePassInfoNotify()

@@ -33,8 +33,7 @@ func main() {
 		}
 	}
 	// 初始化日志
-	logger.InitLogger("robot")
-	logger.SetLogLevel(strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("robot", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-robot-go")
 
 	gdconf.InitGameDataConfig()

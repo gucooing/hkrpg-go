@@ -2,86 +2,80 @@ package gs
 
 import (
 	"log"
-	"net"
+	"math/rand"
 	"os"
+	"sync"
 	"time"
+
+	"github.com/gucooing/gunet"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	pb "google.golang.org/protobuf/proto"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 const (
-	Ticker = 5 // 心跳包间隔时间 / s
+	Ticker = 5 // 定时器间隔时间 / s
 )
 
-var GAMESERVER *GameServer
+var PLAYERNUM int64 // 玩家人数
 
 type GameServer struct {
-	Config     *config.Config
-	Store      *db.Store
-	Port       string
-	AppId      string
-	GSListener net.Listener
-	nodeConn   net.Conn
-	PlayerMap  map[int64]*player.GamePlayer
-	RecvCh     chan *TcpNodeMsg
-	Ticker     *time.Ticker
-	Stop       chan struct{}
+	Config        *config.Config
+	Store         *db.Store
+	Port          string
+	AppId         uint32
+	GSListener    *gunet.TcpListener
+	node          *NodeService
+	gateList      map[uint32]*gateServer // gate列表
+	gateListLock  sync.Mutex             // gate列表同步锁
+	playerMap     map[uint32]*GamePlayer // 玩家列表
+	playerMapLock sync.Mutex             // 玩家列表互斥锁
+	Ticker        *time.Ticker
+	everyDay4     *time.Ticker
+	Stop          chan struct{}
 }
 
-type TcpNodeMsg struct {
-	cmdId      uint16
-	serviceMsg pb.Message
-}
-
-func NewGameServer(cfg *config.Config) *GameServer {
+func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s := new(GameServer)
-
-	GAMESERVER = s
-
 	s.Config = cfg
 	s.Store = db.NewStore(s.Config) // 初始化数据库连接
-	s.AppId = alg.GetAppId()
+	s.AppId = alg.GetAppIdUint32(appid)
+	s.gateList = make(map[uint32]*gateServer)
+	s.playerMap = make(map[uint32]*GamePlayer)
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
-	logger.Info("GameServer AppId:%s", s.AppId)
-	port := s.Config.AppList[s.AppId].App["port_gt"].Port
+	logger.Info("GameServer AppId:%s", appid)
+	// 开启tcp服务
+	port := s.Config.AppList[appid].App["port_gt"].Port
 	if port == "" {
 		log.Println("GameServer Port error")
 		os.Exit(0)
 	}
 	s.Port = port
-	addr := "0.0.0.0:" + port
-	gSListener, err := net.Listen("tcp", addr)
+	addr := s.Config.OuterIp + ":" + port
+	gSListener, err := gunet.NewTcpS(addr)
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(0)
 	}
 	s.GSListener = gSListener
-
-	s.RecvCh = make(chan *TcpNodeMsg)
+	// 开启game定时器
 	s.Ticker = time.NewTicker(Ticker * time.Second)
+	everyDay4 := alg.GetEveryDay4()
+	logger.Debug("离下一个刷新时间:%v", everyDay4)
+	s.everyDay4 = time.NewTicker(everyDay4)
 	s.Stop = make(chan struct{})
-	s.ServiceStart()
-
-	// 连接node
-	tcpConn, err := net.Dial("tcp", cfg.NetConf["Node"])
-	if err != nil {
-		log.Println("nodeserver error")
-		os.Exit(0)
-	}
-	s.nodeConn = tcpConn
-	s.PlayerMap = make(map[int64]*player.GamePlayer)
-
-	go s.recvNode()
+	go s.gameTicker()
 	go s.AutoUpDataPlayer()
-	// 向node注册
-	s.ServiceConnectionReq()
-
 	return s
+}
+
+func (s *GameServer) GetPlayerNum() int64 {
+	return PLAYERNUM
 }
 
 func (s *GameServer) StartGameServer() error {
@@ -91,77 +85,94 @@ func (s *GameServer) StartGameServer() error {
 			logger.Info("GameServer接受连接失败:%s", err.Error())
 			continue
 		}
-		g := NewPlayer(conn)
-		go s.recvGate(g)
+		go s.recvNil(conn)
 	}
 }
 
-func NewPlayer(conn net.Conn) *player.GamePlayer {
-	g := new(player.GamePlayer)
-	g.GateConn = conn
-	g.LastActiveTime = time.Now().Unix()
-
-	return g
+func (s *GameServer) recvNil(conn *gunet.TcpConn) {
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			return
+		}
+	}()
+	for {
+		bin, err := conn.Read()
+		if err != nil {
+			logger.Debug("exit recv loop, conn read err: %v", err)
+			conn.Close()
+			return
+		}
+		nodeMsgList := make([]*alg.PackMsg, 0)
+		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
+		for _, msg := range nodeMsgList {
+			serviceMsg := alg.DecodePayloadToProto(msg)
+			switch msg.CmdId {
+			case cmd.GateLoginGameReq:
+				rsp := serviceMsg.(*spb.GateLoginGameReq)
+				go s.recvGate(conn, rsp.AppId)
+			}
+			return
+		}
+	}
 }
 
 func (s *GameServer) AutoUpDataPlayer() {
 	ticker := time.NewTicker(time.Second * 60)
 	for {
 		<-ticker.C
-		for _, g := range s.PlayerMap {
-			if g.Uid == 0 {
-				return
+		for _, g := range s.getAllPlayer() {
+			if g.p.Uid == 0 {
+				continue
 			}
 			lastActiveTime := g.LastActiveTime
 			timestamp := time.Now().Unix()
-			if timestamp-lastActiveTime >= 120 {
-				logger.Info("[UID:%v]玩家超时离线", g.Uid)
-				KickPlayer(g)
+			if timestamp-lastActiveTime >= 180 {
+				logger.Info("[UID:%v]玩家数据自动保存", g.p.Uid)
+				s.upDataPlayer(g.p)
+				g.LastActiveTime = timestamp + rand.Int63n(120)
 			}
 		}
 	}
 }
 
-func Close() error {
-	for _, gamePlayer := range GAMESERVER.PlayerMap {
-		KickPlayer(gamePlayer)
+func (s *GameServer) Close() error {
+	for _, g := range s.getAllPlayer() {
+		if g.p.Uid == 0 {
+			continue
+		}
+		s.upDataPlayer(g.p)
 	}
 	return nil
 }
 
-func KickPlayer(g *player.GamePlayer) {
-	if err := UpDataPlayer(g); err != nil {
-		logger.Error("[UID:%v]保存数据失败", g.Uid)
+func (s *GameServer) gameTicker() {
+	for {
+		select {
+		case <-s.Ticker.C:
+			s.GlobalRotationEvent5s()
+		case <-s.everyDay4.C: // 4点事件
+			s.GlobalRotationEvent4h()
+		case <-s.Stop:
+			s.Ticker.Stop()
+			return
+		}
 	}
-	GAMESERVER.DelPlayerMap(g.Uuid)
-	if g.GateConn != nil {
-		g.GateConn.Close()
-	}
-	logger.Info("[UID:%v]玩家离线game", g.Uid)
 }
 
-func UpDataPlayer(g *player.GamePlayer) error {
-	var err error
-	if g.PlayerPb == nil {
-		return nil
+func (s *GameServer) GlobalRotationEvent5s() {
+	// 检查node是否存在
+	if s.node == nil {
+		logger.Info("尝试连接node")
+		s.newNode()
 	}
-	if g.Uid == 0 {
-		return nil
-	}
-	dbDate := new(db.PlayerData)
-	dbDate.Uid = g.Uid
-	dbDate.Level = g.PlayerPb.Level
-	dbDate.Exp = g.PlayerPb.Exp
-	dbDate.Nickname = g.PlayerPb.Nickname
-	dbDate.BinData, err = pb.Marshal(g.PlayerPb)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return err
-	}
+}
 
-	if err = db.DBASE.UpdatePlayer(dbDate); err != nil {
-		logger.Error("Update Player error")
-		return err
-	}
-	return nil
+func (s *GameServer) GlobalRotationEvent4h() {
+	everyDay4 := alg.GetEveryDay4()
+	logger.Debug("离下一个刷新时间:%v", everyDay4)
+	s.everyDay4 = time.NewTicker(everyDay4)
 }

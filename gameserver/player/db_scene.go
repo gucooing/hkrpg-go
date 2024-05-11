@@ -193,15 +193,15 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *spb.VectorBin) *prot
 	if foorMap.Groups[groupID] == nil {
 		return nil
 	}
-	for id, avatarid := range g.GetLineUpById(g.GetLineUp().MainLineUp).AvatarIdList {
-		if avatarid == 0 {
+	for id, lineAvatar := range g.GetCurLineUp().AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
 			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-				BaseAvatarId: avatarid,
+				BaseAvatarId: lineAvatar.AvatarId,
 			},
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
@@ -220,13 +220,13 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *spb.VectorBin) *prot
 		if id == 0 {
 			entityList.EntityId = leaderEntityId
 			avatarEntity[leaderEntityId] = &AvatarEntity{
-				AvatarId: avatarid,
+				AvatarId: lineAvatar.AvatarId,
 				GroupId:  groupID,
 			}
 		} else {
 			entityList.EntityId = entityId
 			avatarEntity[entityId] = &AvatarEntity{
-				AvatarId: avatarid,
+				AvatarId: lineAvatar.AvatarId,
 				GroupId:  groupID,
 			}
 		}
@@ -241,7 +241,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *spb.VectorBin) *prot
 	g.GetScene().EntryId = entryId
 	g.GetScene().PlaneId = mapEntrance.PlaneID
 	g.GetScene().FloorId = mapEntrance.FloorID
-	g.GetLineUp().MainAvatarId = 0
+	// g.GetLineUp().MainAvatarId = 0
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 
 	for _, levelGroup := range foorMap.Groups {

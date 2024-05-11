@@ -1,73 +1,64 @@
 package muip
 
 import (
-	"encoding/json"
-
 	"github.com/gin-gonic/gin"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-var (
-	err error
-)
-
-func State(c *gin.Context) {
-	rsp, _ := json.Marshal(MUIP.AllService)
-	c.String(200, string(rsp))
+type State struct {
+	NodeServer  *nodeServer             `json:"NodeServer"`
+	Dispatch    map[string]*dispatch    `json:"Dispatch"`
+	GateServer  map[string]*gateServer  `json:"GateServer"`
+	GameServer  map[string]*gameServer  `json:"GameServer"`
+	MultiServer map[string]*multiServer `json:"MultiServer"`
+	MServer     map[string]*muipServer  `json:"MuipServer"`
 }
 
-func GetPlayer(c *gin.Context) {
-	uid := stou32(c.Query("uid"))
-	if uid == 0 {
-		c.JSON(404, gin.H{
-			"code": -1,
-		})
-		return
-	}
-	/*
-		playerPb := Net.GetPlayerBin(uid)
-		if playerPb.Uid == uid {
-			protojson.Format(playerPb)
-			c.IndentedJSON(200, playerPb)
-			return
-		}
-		dbPlayer := DataBase.DBASE.QueryAccountUidByFieldPlayer(uid)
-		if dbPlayer.PlayerDataPb == nil || string(dbPlayer.PlayerDataPb) == "null" {
-			c.JSON(404, gin.H{
-				"code": -1,
-			})
-			return
-		} else {
-			proto.Unmarshal(dbPlayer.PlayerDataPb, playerPb)
-			c.IndentedJSON(200, playerPb)
-			return
-		}
-	*/
+type nodeServer struct {
+	AppId string `json:"AppId"`
+}
+type dispatch struct {
+	AppId string `json:"AppId"`
+}
+type gameServer struct {
+	AppId     string `json:"AppId"`
+	PlayerNum int64  `json:"PlayerNum"`
+}
+type gateServer struct {
+	AppId     string `json:"AppId"`
+	PlayerNum int64  `json:"PlayerNum"`
+}
+type multiServer struct {
+	AppId string `json:"AppId"`
+}
+type muipServer struct {
+	AppId string `json:"AppId"`
 }
 
-func GetPlayerBin(c *gin.Context) {
-	uid := stou32(c.Query("uid"))
-	if uid == 0 {
-		c.JSON(404, gin.H{
-			"code": -1,
-		})
-		return
+func (a *Api) State(c *gin.Context) {
+	allService := a.muip.getAllService()
+	state := &State{
+		Dispatch:    make(map[string]*dispatch),
+		GateServer:  make(map[string]*gateServer),
+		GameServer:  make(map[string]*gameServer),
+		MultiServer: make(map[string]*multiServer),
+		MServer:     make(map[string]*muipServer),
 	}
-	/*
-		playerPb := Net.GetPlayerBin(uid)
-		if playerPb.Uid == uid {
-			playerBin, _ := proto.Marshal(playerPb)
-			c.String(200, hex.EncodeToString(playerBin))
-			return
+	for stype, serviceList := range allService {
+		for _, service := range serviceList {
+			switch stype {
+			case spb.ServerType_SERVICE_DISPATCH:
+				state.Dispatch[service.AppId] = &dispatch{AppId: service.AppId}
+			case spb.ServerType_SERVICE_GATE:
+				state.GateServer[service.AppId] = &gateServer{AppId: service.AppId, PlayerNum: service.PlayerNum}
+			case spb.ServerType_SERVICE_GAME:
+				state.GameServer[service.AppId] = &gameServer{AppId: service.AppId, PlayerNum: service.PlayerNum}
+			case spb.ServerType_SERVICE_MULTI:
+				state.MultiServer[service.AppId] = &multiServer{AppId: service.AppId}
+			case spb.ServerType_SERVICE_MUIP:
+				state.MServer[service.AppId] = &muipServer{AppId: service.AppId}
+			}
 		}
-		dbPlayer := DataBase.DBASE.QueryAccountUidByFieldPlayer(uid)
-		if dbPlayer.PlayerDataPb == nil || string(dbPlayer.PlayerDataPb) == "null" {
-			c.JSON(404, gin.H{
-				"code": -1,
-			})
-			return
-		} else {
-			c.String(200, hex.EncodeToString(dbPlayer.PlayerDataPb))
-			return
-		}
-	*/
+	}
+	c.IndentedJSON(200, state)
 }

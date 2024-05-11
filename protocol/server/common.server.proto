@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+option go_package = "./;proto";
+
+message GmGive {
+  uint32 player_uid = 1;
+  uint32 item_id = 2;
+  uint32 item_count = 3;
+  bool give_all = 4;
+}
+
+message GmWorldLevel {
+  uint32 player_uid = 1;
+  uint32 world_level = 2;
+}
+
+message DelItem {
+  uint32 player_uid = 1;
+}

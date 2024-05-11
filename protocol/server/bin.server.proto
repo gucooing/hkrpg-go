@@ -1,0 +1,242 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+import "enum.server.proto";
+
+message PlayerBasicCompBin {
+  // uint32 uid = 1; // uid
+  uint32 level = 2; // 等级
+  uint32 exp = 3; // 经验
+  string nickname = 4; // 昵称
+  uint32 world_level = 5; // 世界等级
+  Activity activity = 6; // 米币
+  string signature = 7; // 签名
+  uint32 head_image_avatar_id = 8; // 头像id
+  uint32 birthday = 9; // 生日
+  Scene scene = 10; // 当前场景
+  VectorBin pos = 11; // 坐标
+  VectorBin rot = 12; // 朝向
+  Avatar avatar = 13; // 角色数据
+  LineUp lineUp = 14; // 队伍数据
+  Item item = 15; // 背包
+  Gacha gacha = 16; // 抽卡数据
+  Battle battle = 17; // 战斗
+  repeated uint32 reward_taken_level_list = 18; // 等级奖励领取级别列表
+  map<uint32, uint32> open_state_map = 19; // 地图开放状态
+  fixed32 register_time = 20; // 注册时间
+  uint32 total_login_days = 21; // 登录天数
+  uint32 total_game_time = 22; // 总游戏时长
+  fixed32 last_login_time = 23; // 上次登录时间
+  uint32 last_login_platform = 24; // 最后登录平台
+  fixed32 last_logout_time = 25; // 最后退出时间
+  bool is_rebate_mail_sent = 26; // 是否已发送反利邮件
+  bool is_rebate_mail_received = 27; // 是否已收到回扣邮件
+  uint32 data_version = 28; // 数据版本
+  fixed32 last_daily_refresh_time = 29; // 最后每日刷新时间
+  uint32 profile_picture_costume_id = 30; // 个人资料图片ID
+  string psn_id = 31; // PSN id
+  uint32 language_type = 32; // 语言
+  string client_app_version = 33; // 客户端版本
+  string client_device_info = 34; // 客户端设备信息
+  string client_system_version = 35; // 客户端系统版本
+  uint32 set_language_tag = 36; // 设置语言标签
+  uint32 guid_seq_id = 37; // 序列号
+  bool is_guest = 38; // 是否游客登录
+  double pivot_client_time = 39; // 客户端时间
+  double pivot_unix_time = 40; // unix时间
+  uint64 player_stat_id = 41; // 玩家统计id
+  ContentAuditBin nickname_audit_bin = 42; // 昵称审核bin
+  string ip_country_code = 43; // ip国家代码
+  string ip_region_name = 44; // ip区域名称
+}
+
+message Activity{
+  repeated uint32 trial_activity = 1; // 已完成的试用角色
+  map<uint32, uint32> activity_login = 2; // 登录活动
+}
+
+message Scene {
+  uint32 entryId = 1;
+  uint32 planeId = 2;
+  uint32 floorId = 3;
+}
+
+message Avatar {
+  map<uint32, AvatarBin> avatar = 1;
+  Gender gender = 2; // 性别
+  HeroBasicType cur_main_avatar = 3;
+  repeated HeroBasicTypeInfo hero_basic_type_info = 4;
+}
+
+message HeroBasicTypeInfo {
+  uint32 rank = 1;
+  HeroBasicType basic_type = 2;
+  repeated AvatarSkillBin skill_tree_list = 3;
+}
+
+message AvatarBin {
+  uint32 avatar_id = 1; // ID
+  uint32 exp = 2; // 经验
+  uint32 level = 3; // 等级
+  uint32 avatar_type = 4; // 状态
+  uint64 first_met_time_stamp = 5; // 获取时间
+  uint32 promote_level = 6; // 突破等级
+  uint32 rank = 7; // 激活命座数
+  uint32 hp = 8; // 血量
+  AvatarSpBarInfo sp_bar = 9; // 能量
+  repeated AvatarSkillBin skilltree_list = 10; // 技能库
+  uint32 equipment_uniqueId = 11; // 装备光锥
+  map<uint32, uint32> equip_relic = 12; // 装备圣遗物
+  repeated uint32 taken_rewards = 13; // 已领取的突破奖励
+  uint32 buff_list = 14; // 开启战斗的buff
+}
+
+message AvatarSpBarInfo {
+  uint32 cur_sp = 1; // 当前能量
+  uint32 max_sp = 2; // 当前等级
+}
+
+message AvatarSkillBin {
+  uint32 point_id = 1; // 技能id
+  uint32 level = 2; // 等级
+}
+
+message VectorBin {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+}
+
+message LineUp {
+  uint32 main_line_up = 1; // 当前上场队伍
+  // uint32 main_avatar_id = 2; // 当前上场角色
+  map<uint32, Line> line_up_list = 3; // 普通队伍
+  map<uint32,BattleLine>battle_line_list = 4; // 战斗队伍
+}
+
+message Line {
+  string name = 1; // 队伍名称
+  map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
+  // ExtraLineupType extra_lineup_type = 3; // 队伍类型
+  uint32 LeaderSlot = 4; // 当前角色是第几个
+}
+
+message BattleLine{
+  map<uint32, LineAvatarList>  avatar_id_list = 1; // 角色列表
+  uint32 LeaderSlot = 2; // 当前角色是第几个
+  ExtraLineupType extra_lineup_type = 3; // 队伍类型
+}
+
+message LineAvatarList {
+  uint32 slot = 1;//第几个
+  uint32 avatar_id = 2;;//角色id
+}
+
+message Item  {
+  map<uint32, Relic> relic_map = 1; // 遗器
+  map<uint32, Equipment> equipment_map = 2; // 光锥
+  map<uint32, uint32> material_map = 3; // 材料
+  repeated uint32 head_icon = 4; // 头像
+}
+
+message Relic {
+  uint32 tid = 1;// id
+  uint32 unique_id = 2; // 唯一ID
+  uint32 exp = 3;
+  uint32 level = 4;
+  uint32 main_affix_id = 5; // 主词条
+  map<uint32, RelicAffix>  relic_affix = 6; // 词条 map[affix_id]RelicAffix
+  uint32 base_avatar_id = 7; // 装备角色
+  bool is_protected = 8; // 是否锁定
+  string main_affix_property = 9;//主词条类型
+}
+
+message RelicAffix {
+  uint32 affix_id = 1;
+  uint32 cnt = 2;
+  uint32 step = 3;
+}
+
+message Equipment {
+  uint32 tid = 1; // id
+  uint32 unique_id = 2; // 唯一ID
+  uint32 exp = 3;
+  uint32 level = 4;
+  uint32 promotion = 5;
+  uint32 base_avatar_id = 6;// 装备角色
+  bool is_protected = 7;// 是否锁定
+  uint32 rank = 8;// 命座?
+}
+
+message Material {
+  uint32 tid = 1; // id
+  uint32 num = 2; // 个数
+}
+
+message Battle {
+  Rogue rogue = 1; // 期数-情况
+  Challenge challenge = 2;
+}
+
+message Rogue {
+  map<uint32, RogueArea> rogue_area = 1; // 完成情况
+  CurRogue cur_rogue = 2; // 当前正在进行的
+}
+
+message RogueArea {
+  uint32 areaId = 1;
+  RogueAreaStatus rogue_area_status = 2;
+}
+
+message CurRogue {
+  uint32 cur_area_id = 1;
+  uint32 cur_siteId = 2;
+  map<uint32, RogueRoom> rogue_scene_map = 3;
+  uint32 rogue_map_iD = 4;
+  uint32 cosmic_fragment = 5;
+}
+
+message RogueRoom {
+  uint32 room_id = 1;
+  RoomStatus room_status = 2;
+  repeated uint32 next_site_id_list = 3;
+}
+
+message Challenge {
+  map<uint32, ChallengeList> challenge_list = 1;
+  map<uint64, uint32> challenge_reward_list = 2;
+}
+message ChallengeList {
+  uint32 stars = 1;
+  uint32 score_one = 2;
+  uint32 score_two = 3;
+}
+
+message BattleList{
+
+}
+
+message Gacha {
+  map<uint32, GachaNum> gacha_map = 1;// [GachaType]*CeilingNum
+}
+
+message GachaNum {
+  uint32 ceiling_num = 1;// 抽取次数
+  uint32 pity4 = 2; // 几抽未四星up
+  bool failed_featured_item_pulls4 = 3;
+  bool failed_featured_item_pulls5 = 4; // 是否保底
+}
+
+message ContentAuditBin {
+  string content = 1; // 内容
+  uint32 audit_state = 2; // 审核状态
+  uint32 submit_time = 3; // 提交时间
+  uint32 submit_count = 4; // 提交计数
+}
+
+message PlayerOnlineData {
+
+}

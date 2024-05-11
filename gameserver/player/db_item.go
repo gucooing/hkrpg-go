@@ -1,11 +1,6 @@
 package player
 
 import (
-	"math"
-	"math/rand"
-	"strconv"
-
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -54,7 +49,6 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 			}
 		case 22:
 			g.AddTrailblazerExp(material.Num)
-			return
 		default:
 			g.GetItem().MaterialMap[material.Tid] += material.Num
 		}
@@ -76,6 +70,9 @@ func (g *GamePlayer) DelMaterial(pileItem []*Material) {
 func (g *GamePlayer) MaterialPlayerSyncScNotify(pileItem []*Material) {
 	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
 	for _, item := range pileItem {
+		if item.Tid == 22 {
+			continue
+		}
 		material := &proto.Material{
 			Tid: item.Tid,
 			Num: g.GetItem().MaterialMap[item.Tid],
@@ -93,62 +90,6 @@ func (g *GamePlayer) AddHeadIcon(headIconId uint32) {
 	g.GetItem().HeadIcon = append(g.GetItem().HeadIcon, headIconId)
 	// TODO
 	// g.ScenePlaneEventScNotify(headIconId, 1)
-}
-
-func (g *GamePlayer) AddRelic(tid uint32) {
-	uniqueId := uint32(SNOWFLAKE.GenId())
-	relic := gdconf.GetRelicById(strconv.Itoa(int(tid)))
-	g.GetItem().RelicMap[uniqueId] = &spb.Relic{
-		Tid:          tid,
-		UniqueId:     uniqueId,
-		Exp:          0,
-		Level:        0,
-		MainAffixId:  gdconf.GetRelicMainAffixConfigById(relic.MainAffixGroup),
-		RelicAffix:   make([]*spb.RelicAffix, 0),
-		BaseAvatarId: 0,
-		IsProtected:  false,
-	}
-	baseSubAffixes := math.Min(math.Max(float64(relic.Type-2), 0), 3)
-	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
-	// TODO 不应与主属性相同
-	for i := 0; i < addSubAffixes; i++ {
-		affixId := gdconf.GetRelicSubAffixConfigById(relic.SubAffixGroup)
-		relicAffix := &spb.RelicAffix{
-			AffixId: affixId,
-			Cnt:     200,
-			Step:    0,
-		}
-		g.GetItem().RelicMap[uniqueId].RelicAffix = append(g.GetItem().RelicMap[uniqueId].RelicAffix, relicAffix)
-	}
-
-	g.RelicPlayerSyncScNotify(uniqueId)
-}
-
-func (g *GamePlayer) GetRelicById(uniqueId uint32) *proto.Relic {
-	if g.GetItem().RelicMap[uniqueId] == nil {
-		return nil
-	}
-	relicDb := g.GetItem().RelicMap[uniqueId]
-	relic := &proto.Relic{
-		Tid:          relicDb.Tid,
-		SubAffixList: make([]*proto.RelicAffix, 0),
-		BaseAvatarId: relicDb.BaseAvatarId,
-		UniqueId:     relicDb.UniqueId,
-		Level:        relicDb.Level,
-		IsProtected:  relicDb.IsProtected,
-		MainAffixId:  relicDb.MainAffixId,
-		Exp:          relicDb.Exp,
-	}
-	for _, subAffixList := range relicDb.RelicAffix {
-		relicAffix := &proto.RelicAffix{
-			AffixId: subAffixList.AffixId,
-			Cnt:     subAffixList.Cnt,
-			Step:    subAffixList.Step,
-		}
-		relic.SubAffixList = append(relic.SubAffixList, relicAffix)
-	}
-
-	return relic
 }
 
 func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
@@ -200,7 +141,7 @@ func (g *GamePlayer) RelicPlayerSyncScNotify(uniqueId uint32) {
 		RelicList: make([]*proto.Relic, 0),
 	}
 
-	relic := g.GetRelicById(uniqueId)
+	relic := g.GetProtoRelicById(uniqueId)
 	notify.RelicList = append(notify.RelicList, relic)
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
