@@ -711,9 +711,8 @@ func (g *GamePlayer) ChallengeStorySceneCastSkillCsReq(rsp *proto.SceneCastSkill
 	battleTargetList := make([]*proto.BattleTarget, 0)
 	for _, id := range storyMazeExtra.BattleTargetID {
 		battleTarget := &proto.BattleTarget{
-			Id:          id,
-			Progress:    0,
-			CDLKMKKOGLL: 0,
+			Id:       id,
+			Progress: 0,
 		}
 		battleTargetList = append(battleTargetList, battleTarget)
 	}

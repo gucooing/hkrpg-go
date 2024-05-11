@@ -576,9 +576,11 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 					entityList.Prop.PropId = 1021
 				}
 				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
-					RogueInfo: &proto.PropRogueInfo{
-						RoomId: nextRoom.RoomId,
-						SiteId: siteId,
+					Info: &proto.PropExtraInfo_RogueInfo{
+						RogueInfo: &proto.PropRogueInfo{
+							RoomId: nextRoom.RoomId,
+							SiteId: siteId,
+						},
 					},
 				}
 			} else {
@@ -745,23 +747,24 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.HandleRogueCommonPendingActionCsReq, payloadMsg)
 	req := msg.(*proto.HandleRogueCommonPendingActionCsReq)
-	if req.BuffSelectResult.BuffId == 0 {
+	buffSelectResult := req.GetBuffSelectResult()
+	if buffSelectResult == nil {
 		return
 	}
 	rogue := g.GetRogue()
 	var buffIdList []uint32
 	// 祝福通知
-	if rogue.BuffList[req.BuffSelectResult.BuffId] == nil {
-		buffIdList = append(buffIdList, req.BuffSelectResult.BuffId)
+	if rogue.BuffList[buffSelectResult.BuffId] == nil {
+		buffIdList = append(buffIdList, buffSelectResult.BuffId)
 	} else {
 
 	}
 
-	g.RogueAddBuff(req.BuffSelectResult.BuffId)
+	g.RogueAddBuff(buffSelectResult.BuffId)
 
 	g.SyncEntityBuffChangeListScNotify(buffIdList)
 	// 添加后通知启动
-	g.SyncRogueCommonActionResultScNotify(req.BuffSelectResult.BuffId)
+	g.SyncRogueCommonActionResultScNotify(buffSelectResult.BuffId)
 	// 模拟宇宙图鉴更新通知？ SyncRogueHandbookDataUpdateScNotify
 	// 模拟宇宙常见操作结果通知 SyncRogueCommonActionResultScNotify // add buff, buff状态
 	rsp := &proto.HandleRogueCommonPendingActionScRsp{

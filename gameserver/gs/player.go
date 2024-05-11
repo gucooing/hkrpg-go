@@ -20,11 +20,11 @@ import (
 5.删除玩家内存
 */
 type GamePlayer struct {
-	gate           *gateServer
-	game           *GameServer
-	p              *player.GamePlayer
-	RouteManager   *RouteManager
-	LastActiveTime int64 // 最近一次的保存时间
+	gate           *gateServer        // 玩家所属gate
+	game           *GameServer        // 玩家所属game
+	p              *player.GamePlayer // 玩家内存
+	RouteManager   *RouteManager      // 玩家路由
+	LastActiveTime int64              // 最近一次的保存时间
 }
 
 // 这个kill玩家不会通知给gate

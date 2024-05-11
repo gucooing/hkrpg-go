@@ -3,7 +3,6 @@ package database
 import (
 	"context"
 
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -42,8 +41,7 @@ func NewRedis(addr, password string, db int) *redis.Client {
 		IdentitySuffix:        "",
 	})
 	if _, err := rdb.Ping(ctx).Result(); err != nil {
-		logger.Error("redis connect fail")
-		panic(err.Error())
+		panic("redis connect fail" + err.Error())
 	}
 	return rdb
 }
