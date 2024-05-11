@@ -36,12 +36,12 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.TOKENHK }}
       with:
-        tag_name: v1.1.1
-        name: Release v1.1.1
-        body: sr 2.1.0
+        tag_name: v1.2.0
+        name: Release v1.2.0
+        body: sr 2.2.0
         draft: false
         prerelease: false
-        files: go/hkrpg/build/
+        files: go/hkrpg/build/*
           
           
 
