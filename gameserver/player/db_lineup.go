@@ -14,7 +14,7 @@ func (g *GamePlayer) GetLineUp() *spb.LineUp {
 		db.LineUp = &spb.LineUp{
 			MainLineUp:     0,
 			LineUpList:     make(map[uint32]*spb.Line),
-			BattleLineList: make(map[uint32]*spb.BattleLine),
+			BattleLineList: make(map[uint32]*spb.Line),
 		}
 		db.LineUp.LineUpList[0] = &spb.Line{
 			Name:         "hkrpg",
@@ -47,16 +47,15 @@ func (g *GamePlayer) GetLineUpById(index uint32) *spb.Line {
 	return db.LineUpList[index]
 }
 
-func (g *GamePlayer) GetBattleLineUpById(index uint32) *spb.BattleLine {
+func (g *GamePlayer) GetBattleLineUpById(index uint32) *spb.Line {
 	db := g.GetLineUp()
 	if db.BattleLineList == nil {
-		db.BattleLineList = make(map[uint32]*spb.BattleLine)
+		db.BattleLineList = make(map[uint32]*spb.Line)
 	}
 	if db.BattleLineList[index] == nil {
-		db.BattleLineList[index] = &spb.BattleLine{
-			AvatarIdList:    make(map[uint32]*spb.LineAvatarList),
-			LeaderSlot:      0,
-			ExtraLineupType: spb.ExtraLineupType(index),
+		db.BattleLineList[index] = &spb.Line{
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
+			LeaderSlot:   0,
 		}
 	}
 	return db.BattleLineList[index]
@@ -100,14 +99,15 @@ func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
 func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
 	db := g.GetLineUpById(id)
 	lineupList := &proto.LineupInfo{
-		IsVirtual:  false,
-		LeaderSlot: db.LeaderSlot,
-		AvatarList: make([]*proto.LineupAvatar, 0),
-		Index:      id,
-		MaxMp:      5,
-		Mp:         5,
-		Name:       db.Name,
-		PlaneId:    0,
+		IsVirtual:       false,
+		LeaderSlot:      db.LeaderSlot,
+		AvatarList:      make([]*proto.LineupAvatar, 0),
+		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
+		Index:           id,
+		MaxMp:           5,
+		Mp:              5,
+		Name:            db.Name,
+		PlaneId:         0,
 	}
 	for slot, lineAvatar := range db.AvatarIdList {
 		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
@@ -117,6 +117,55 @@ func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
 		if avatarBin == nil {
 			lineupAvatar := &proto.LineupAvatar{
 				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
+				Slot:       slot,
+				Satiety:    0,
+				Hp:         10000,
+				Id:         lineAvatar.AvatarId,
+				SpBar: &proto.SpBarInfo{
+					CurSp: 6000,
+					MaxSp: 10000,
+				},
+			}
+			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
+		} else {
+			lineupAvatar := &proto.LineupAvatar{
+				AvatarType: proto.AvatarType(avatarBin.AvatarType),
+				Slot:       slot,
+				Satiety:    0,
+				Hp:         avatarBin.Hp,
+				Id:         lineAvatar.AvatarId,
+				SpBar: &proto.SpBarInfo{
+					CurSp: avatarBin.SpBar.CurSp,
+					MaxSp: avatarBin.SpBar.MaxSp,
+				},
+			}
+			lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
+		}
+	}
+	return lineupList
+}
+
+func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
+	db := g.GetBattleLineUpById(id)
+	lineupList := &proto.LineupInfo{
+		IsVirtual:       false,
+		LeaderSlot:      db.LeaderSlot,
+		AvatarList:      make([]*proto.LineupAvatar, 0),
+		ExtraLineupType: proto.ExtraLineupType(id),
+		Index:           0,
+		MaxMp:           5,
+		Mp:              5,
+		Name:            db.Name,
+		PlaneId:         0,
+	}
+	for slot, lineAvatar := range db.AvatarIdList {
+		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
+			continue
+		}
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
+		if avatarBin == nil {
+			lineupAvatar := &proto.LineupAvatar{
+				AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,
 				Slot:       slot,
 				Satiety:    0,
 				Hp:         10000,

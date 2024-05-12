@@ -114,7 +114,7 @@ message LineUp {
   uint32 main_line_up = 1; // 当前上场队伍
   // uint32 main_avatar_id = 2; // 当前上场角色
   map<uint32, Line> line_up_list = 3; // 普通队伍
-  map<uint32,BattleLine>battle_line_list = 4; // 战斗队伍
+  map<uint32,Line>battle_line_list = 4; // 战斗队伍
 }
 
 message Line {
@@ -122,12 +122,6 @@ message Line {
   map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
   // ExtraLineupType extra_lineup_type = 3; // 队伍类型
   uint32 LeaderSlot = 4; // 当前角色是第几个
-}
-
-message BattleLine{
-  map<uint32, LineAvatarList>  avatar_id_list = 1; // 角色列表
-  uint32 LeaderSlot = 2; // 当前角色是第几个
-  ExtraLineupType extra_lineup_type = 3; // 队伍类型
 }
 
 message LineAvatarList {

@@ -50,8 +50,8 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	if req.StoryInfo != nil {
 		battleState.BattleType = spb.BattleType_Battle_CHALLENGE_Story
 		// 缓存buff
-		// challengeState.StoryBuffOne = req.StoryInfo.StoryBuffInfo.StoryBuffOne
-		// challengeState.StoryBuffTwo = req.StoryInfo.StoryBuffInfo.StoryBuffTwo
+		challengeState.StoryBuffOne = req.StoryInfo.GetStoryBuffInfo().StoryBuffOne
+		challengeState.StoryBuffTwo = req.StoryInfo.GetStoryBuffInfo().StoryBuffTwo
 	} else {
 		battleState.BattleType = spb.BattleType_Battle_CHALLENGE
 	}
@@ -141,13 +141,12 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 		StoryInfo:       &proto.ChallengeStoryInfo{StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}}},
 	}
 	challengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffOne}}}
-	// challengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(challengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
 
 	// 获取世界
 	scene := g.GetChallengeScene()
 
 	// 获取队伍
-	lineup := g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE))
+	lineup := g.GetBattleLineUpPb(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE))
 
 	rsp := &proto.StartChallengeScRsp{
 		ChallengeInfo: challengeInfo,
@@ -158,6 +157,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartChallengeScRsp, rsp)
 }
 
+// 获取忘却之庭世界
 func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	challengeState := g.GetChallengeState()
 
@@ -190,7 +190,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		GroupId:    0,
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	curLineUp := g.GetBattleLineUpById(6)
+	curLineUp := g.GetBattleLineUpById(uint32(challengeState.ExtraLineupType))
 	for id, lineAvatar := range curLineUp.AvatarIdList {
 		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
@@ -335,7 +335,7 @@ func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp
 
 func (g *GamePlayer) GetBattleAvatarList(lineUpId uint32) []*proto.BattleAvatar {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
-	for id, lineAvatar := range g.GetLineUpById(lineUpId).AvatarIdList {
+	for id, lineAvatar := range g.GetBattleLineUpById(lineUpId).AvatarIdList {
 		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
@@ -505,8 +505,8 @@ func (g *GamePlayer) ChallengeSyncLineupNotify(index uint32) {
 		IsVirtual:       false,
 		LeaderSlot:      0,
 		AvatarList:      make([]*proto.LineupAvatar, 0),
-		Index:           index,
-		ExtraLineupType: proto.ExtraLineupType(lineUp.ExtraLineupType),
+		Index:           0,
+		ExtraLineupType: proto.ExtraLineupType(index),
 		MaxMp:           5,
 		Mp:              5,
 		PlaneId:         0,

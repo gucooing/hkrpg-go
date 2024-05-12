@@ -19,25 +19,27 @@ import (
 )
 
 const (
-	Ticker = 5 // 定时器间隔时间 / s
+	Ticker                 = 5  // 定时器间隔时间 / s
+	AutoUpDataPlayerTicker = 60 // 定时执行玩家数据保存间隔时间 / s
 )
 
 var PLAYERNUM int64 // 玩家人数
 
 type GameServer struct {
-	Config        *config.Config
-	Store         *db.Store
-	Port          string
-	AppId         uint32
-	GSListener    *gunet.TcpListener
-	node          *NodeService
-	gateList      map[uint32]*gateServer // gate列表
-	gateListLock  sync.Mutex             // gate列表同步锁
-	playerMap     map[uint32]*GamePlayer // 玩家列表
-	playerMapLock sync.Mutex             // 玩家列表互斥锁
-	Ticker        *time.Ticker
-	everyDay4     *time.Ticker
-	Stop          chan struct{}
+	Config           *config.Config
+	Store            *db.Store
+	Port             string
+	AppId            uint32
+	GSListener       *gunet.TcpListener
+	node             *NodeService
+	gateList         map[uint32]*gateServer // gate列表
+	gateListLock     sync.Mutex             // gate列表同步锁
+	playerMap        map[uint32]*GamePlayer // 玩家列表
+	playerMapLock    sync.Mutex             // 玩家列表互斥锁
+	Ticker           *time.Ticker
+	everyDay4        *time.Ticker
+	autoUpDataPlayer *time.Ticker
+	Stop             chan struct{}
 }
 
 func NewGameServer(cfg *config.Config, appid string) *GameServer {
@@ -65,12 +67,12 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	s.GSListener = gSListener
 	// 开启game定时器
 	s.Ticker = time.NewTicker(Ticker * time.Second)
+	s.autoUpDataPlayer = time.NewTicker(AutoUpDataPlayerTicker * time.Second)
 	everyDay4 := alg.GetEveryDay4()
 	logger.Debug("离下一个刷新时间:%v", everyDay4)
 	s.everyDay4 = time.NewTicker(everyDay4)
 	s.Stop = make(chan struct{})
 	go s.gameTicker()
-	go s.AutoUpDataPlayer()
 	return s
 }
 
@@ -121,22 +123,20 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 }
 
 func (s *GameServer) AutoUpDataPlayer() {
-	ticker := time.NewTicker(time.Second * 60)
-	for {
-		<-ticker.C
-		for _, g := range s.getAllPlayer() {
-			if g.p.Uid == 0 {
-				continue
-			}
-			lastActiveTime := g.LastActiveTime
-			timestamp := time.Now().Unix()
-			if timestamp-lastActiveTime >= 180 {
-				logger.Info("[UID:%v]玩家数据自动保存", g.p.Uid)
-				s.upDataPlayer(g.p)
-				g.LastActiveTime = timestamp + rand.Int63n(120)
-			}
+	logger.Info("开始自动保存玩家数据")
+	for _, g := range s.getAllPlayer() {
+		if g.p.Uid == 0 {
+			continue
+		}
+		lastActiveTime := g.LastActiveTime
+		timestamp := time.Now().Unix()
+		if timestamp-lastActiveTime >= 180 {
+			logger.Debug("[UID:%v]玩家数据自动保存", g.p.Uid)
+			s.upDataPlayer(g.p)
+			g.LastActiveTime = timestamp + rand.Int63n(120)
 		}
 	}
+	logger.Info("自动保存玩家数据结束")
 }
 
 func (s *GameServer) Close() error {
@@ -154,6 +154,8 @@ func (s *GameServer) gameTicker() {
 		select {
 		case <-s.Ticker.C:
 			s.GlobalRotationEvent5s()
+		case <-s.autoUpDataPlayer.C:
+			s.AutoUpDataPlayer()
 		case <-s.everyDay4.C: // 4点事件
 			s.GlobalRotationEvent4h()
 		case <-s.Stop:

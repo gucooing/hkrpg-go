@@ -44,7 +44,7 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	g.Send(cmd.ExtraLineupDestroyNotify, &proto.ExtraLineupDestroyNotify{ExtraLineupType: proto.ExtraLineupType_LINEUP_STAGE_TRIAL})
 	g.Send(cmd.SyncServerSceneChangeNotify, nil)
 
-	g.SyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY))
+	g.SyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY), true)
 
 	g.StartTrialEnterSceneByServerScNotify()
 
@@ -77,7 +77,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 		IsVirtual:       false,
 		LeaderSlot:      0,
 		AvatarList:      make([]*proto.LineupAvatar, 0),
-		ExtraLineupType: proto.ExtraLineupType(lineup.ExtraLineupType),
+		ExtraLineupType: proto.ExtraLineupType_LINEUP_ACTIVITY,
 		MaxMp:           5,
 		Mp:              5,
 		PlaneId:         0,

@@ -187,6 +187,7 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(dbScene.EntryId)))
 
 	rsp.Scene = &proto.SceneInfo{
+		ClientPosVersion:   1,
 		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,                        // 世界id
 		LeaderEntityId:     leaderEntityId,                                                                                 // 进入场景的角色实体id
 		FloorId:            mapEntrance.FloorID,                                                                            // 上面表查询到的，对应文件名中F开头后面的数字
@@ -198,6 +199,7 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		EntityList:         make([]*proto.SceneEntityInfo, 0),
+		ExtraData:          make(map[string]int32),
 	}
 
 	for i := uint32(0); i < 100; i++ {
@@ -289,7 +291,6 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	g.GetSceneEntity().MonsterEntity = monsterEntity
 	g.GetSceneEntity().AvatarEntity = avatarEntity
 	g.GetSceneEntity().NpcEntity = npcEntity
-	// g.GetLineUp().MainAvatarId = 0
 
 	g.Send(cmd.GetCurSceneInfoScRsp, rsp)
 }

@@ -234,7 +234,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	g.SyncRogueMapRoomScNotify()
 	g.Send(cmd.SyncServerSceneChangeNotify, nil)
 	// 队伍更新通知
-	g.SyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	g.SyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE), true)
 	var buffList []uint32
 	g.SyncEntityBuffChangeListScNotify(buffList)
 	g.CommonRogueUpdateScNotify()
@@ -346,7 +346,6 @@ func (g *GamePlayer) NewRogue(avatarIdList []uint32, areaId uint32) {
 	db := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	db.LeaderSlot = 0
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-	db.ExtraLineupType = spb.ExtraLineupType(proto.ExtraLineupType_LINEUP_ROGUE)
 	if avatarIdList != nil {
 		for id, avatarId := range avatarIdList {
 			db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}

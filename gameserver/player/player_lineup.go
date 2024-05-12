@@ -7,12 +7,14 @@ import (
 )
 
 // 队伍更新通知
-func (g *GamePlayer) SyncLineupNotify(index uint32) {
+func (g *GamePlayer) SyncLineupNotify(index uint32, isBattleLine bool) {
 	rsq := new(proto.SyncLineupNotify)
-	rsq.Lineup = g.GetLineUpPb(index)
-
-	g.SceneGroupRefreshScNotify(index)
-
+	if isBattleLine {
+		rsq.Lineup = g.GetBattleLineUpPb(index)
+	} else {
+		rsq.Lineup = g.GetLineUpPb(index)
+		g.SceneGroupRefreshScNotify(index)
+	}
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
@@ -98,7 +100,7 @@ func (g *GamePlayer) HandleJoinLineupCsReq(payloadMsg []byte) {
 	g.UnDbLineUp(req.Index, req.Slot, req.BaseAvatarId)
 
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index)
+	g.SyncLineupNotify(req.Index, false)
 
 	rsp := new(proto.LineupAvatar)
 	g.Send(cmd.JoinLineupScRsp, rsp)
@@ -111,7 +113,7 @@ func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg []byte) {
 	lineUpDb := g.GetLineUp()
 	lineUpDb.MainLineUp = req.Index
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index)
+	g.SyncLineupNotify(req.Index, false)
 
 	rsp := &proto.SwitchLineupIndexScRsp{Index: req.Index}
 
@@ -126,7 +128,7 @@ func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg []byte) {
 	g.SwapLineup(req.Index, req.SrcSlot, req.DstSlot)
 
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index)
+	g.SyncLineupNotify(req.Index, false)
 
 	rsp := &proto.SwapLineupCsReq{}
 
@@ -140,7 +142,7 @@ func (g *GamePlayer) SetLineupNameCsReq(payloadMsg []byte) {
 	db.Name = req.Name
 
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index)
+	g.SyncLineupNotify(req.Index, false)
 
 	rsp := &proto.SetLineupNameScRsp{
 		Index: req.Index,
@@ -175,7 +177,6 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 		db := g.GetBattleLineUpById(index)
 		db.LeaderSlot = 0
 		db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-		db.ExtraLineupType = spb.ExtraLineupType(index)
 		for _, avatarList := range req.Slots {
 			db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{AvatarId: avatarList.Id, Slot: avatarList.Slot}
 		}
@@ -183,7 +184,7 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 	}
 
 	// 队伍更新通知
-	g.SyncLineupNotify(index)
+	g.SyncLineupNotify(index, isBattleLine)
 
 	g.Send(cmd.ReplaceLineupScRsp, nil)
 }
@@ -214,7 +215,7 @@ func (g *GamePlayer) QuitLineupCsReq(payloadMsg []byte) {
 		}
 	}
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index)
+	g.SyncLineupNotify(req.Index, false)
 
 	g.Send(cmd.QuitLineupScRsp, nil)
 }
