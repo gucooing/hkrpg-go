@@ -136,16 +136,18 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			continue
 		}
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
-
+		entityGroupLists := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
+		}
 		// 添加物品实体
-		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
+		g.GetPropByID(entityGroupLists, levelGroup, levelGroup.GroupId)
 		// 添加怪物实体
-		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, monsterEntity)
-		monsterEntity = x
+		g.GetNPCMonsterByID(entityGroupLists, levelGroup, levelGroup.GroupId, monsterEntity)
 		// 添加NPC实体
-		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
-		if len(entityGroupList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
+		g.GetNPCByID(entityGroupLists, levelGroup)
+		if len(entityGroupLists.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupLists)
 		}
 	}
 
@@ -274,19 +276,20 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
 			continue
 		}
-		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
-
-		// 添加物品实体
-		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
-		// 添加怪物实体
-		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, monsterEntity)
-		monsterEntity = x
-		// 添加NPC实体
-		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
-		if len(entityGroupList.EntityList) != 0 {
-			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupList)
+		entityGroupLists := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-
+		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
+		// 添加物品实体
+		g.GetPropByID(entityGroupLists, levelGroup, levelGroup.GroupId)
+		// 添加怪物实体
+		g.GetNPCMonsterByID(entityGroupLists, levelGroup, levelGroup.GroupId, monsterEntity)
+		// 添加NPC实体
+		g.GetNPCByID(entityGroupLists, levelGroup)
+		if len(entityGroupLists.EntityList) != 0 {
+			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupLists)
+		}
 	}
 	g.GetSceneEntity().MonsterEntity = monsterEntity
 	g.GetSceneEntity().AvatarEntity = avatarEntity
@@ -338,7 +341,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 							continue
 						}
 						mazeProp := &proto.MazeProp{
-							State:    gdconf.GetStateValue(propList.State),
+							State:    gdconf.GetStateValue(propList),
 							GroupId:  groupMapList.GroupId,
 							ConfigId: propList.ID,
 						}

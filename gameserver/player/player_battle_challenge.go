@@ -293,7 +293,7 @@ func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp
 	// battleState := g.GetBattleState()
 	challengeState := g.GetChallengeState()
 	var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	var targetIndex uint32 = 0
+	// var targetIndex uint32 = 0
 
 	// 通过波次获取队伍
 	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
@@ -318,17 +318,19 @@ func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp
 		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 	}
 	// 添加角色buff
-	for _, buffId := range challengeState.AvatarBuffList {
-		buffList := &proto.BattleBuff{
-			Id:              buffId,
-			Level:           1,
-			OwnerId:         targetIndex,
-			TargetIndexList: []uint32{targetIndex},
-			WaveFlag:        4294967295, // 失效时间
+	/*
+		for _, buffId := range challengeState.AvatarBuffList {
+			buffList := &proto.BattleBuff{
+				Id:              buffId,
+				Level:           1,
+				OwnerId:         targetIndex,
+				TargetIndexList: []uint32{targetIndex},
+				WaveFlag:        4294967295, // 失效时间
+			}
+			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+			targetIndex++
 		}
-		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
-		targetIndex++
-	}
+	*/
 
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
 }
@@ -481,7 +483,7 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 		// 还差一波
 		challengeState.CurChallengeCount++
 		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-		challengeState.AvatarBuffList = make([]uint32, 0)
+		// challengeState.AvatarBuffList = make([]uint32, 0)
 		// 添加怪物
 		g.ChallengeAddSceneGroupRefreshScNotify()
 		// 添加角色
@@ -640,7 +642,7 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 func (g *GamePlayer) ChallengeStorySceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	challengeState := g.GetChallengeState()
 	var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	var targetIndex uint32 = 0
+	// var targetIndex uint32 = 0
 	storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
 
 	// 通过波次获取队伍
@@ -691,17 +693,19 @@ func (g *GamePlayer) ChallengeStorySceneCastSkillCsReq(rsp *proto.SceneCastSkill
 		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
 	}
 	// 添加角色buff
-	for _, buffId := range challengeState.AvatarBuffList {
-		buffList := &proto.BattleBuff{
-			Id:              buffId,
-			Level:           1,
-			OwnerId:         targetIndex,
-			TargetIndexList: []uint32{targetIndex},
-			WaveFlag:        4294967295, // 失效时间
+	/*
+		for _, buffId := range challengeState.AvatarBuffList {
+			buffList := &proto.BattleBuff{
+				Id:              buffId,
+				Level:           1,
+				OwnerId:         targetIndex,
+				TargetIndexList: []uint32{targetIndex},
+				WaveFlag:        4294967295, // 失效时间
+			}
+			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+			targetIndex++
 		}
-		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
-		targetIndex++
-	}
+	*/
 	rsp.BattleInfo.BattleTargetInfo = make(map[uint32]*proto.BattleTargetList)
 	rsp.BattleInfo.BattleTargetInfo[1] = &proto.BattleTargetList{
 		BattleTargetList: []*proto.BattleTarget{{
@@ -807,7 +811,7 @@ func (g *GamePlayer) ChallengeStoryPVEBattleResultCsReq(req *proto.PVEBattleResu
 		// 还差一波
 		challengeState.CurChallengeCount++
 		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-		challengeState.AvatarBuffList = make([]uint32, 0)
+		// challengeState.AvatarBuffList = make([]uint32, 0)
 		// 添加怪物
 		g.ChallengeAddSceneGroupRefreshScNotify()
 		// 添加角色

@@ -185,7 +185,11 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 		rsp.Scene.GroupIdList = append(rsp.Scene.GroupIdList, levelGroup.GroupId)
 
 		// 添加物品实体
-		propList := g.GetPropByID(levelGroup, levelGroup.GroupId)
+		propList := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
+		}
+		g.GetPropByID(propList, levelGroup, levelGroup.GroupId)
 		if len(propList.EntityList) != 0 {
 			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
 		}
@@ -252,22 +256,24 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 }
 
 func (g *GamePlayer) TrialActivitySceneCastSkillScRsp(rsp *proto.SceneCastSkillScRsp) {
-	var targetIndex uint32 = 0
-	trialActivityState := g.GetTrialActivityState()
+	// var targetIndex uint32 = 0
+	// trialActivityState := g.GetTrialActivityState()
 	// 添加角色
 	rsp.BattleInfo.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
 	// 添加角色buff
-	for _, buffId := range trialActivityState.AvatarBuffList {
-		buffList := &proto.BattleBuff{
-			Id:              buffId,
-			Level:           1,
-			OwnerId:         targetIndex,
-			TargetIndexList: []uint32{targetIndex},
-			WaveFlag:        4294967295, // 失效时间
+	/*
+		for _, buffId := range trialActivityState.AvatarBuffList {
+			buffList := &proto.BattleBuff{
+				Id:              buffId,
+				Level:           1,
+				OwnerId:         targetIndex,
+				TargetIndexList: []uint32{targetIndex},
+				WaveFlag:        4294967295, // 失效时间
+			}
+			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
+			targetIndex++
 		}
-		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
-		targetIndex++
-	}
+	*/
 
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
 }

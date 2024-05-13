@@ -158,6 +158,19 @@ func (g *GamePlayer) GetSceneEntity() *SceneEntity {
 	return g.GetPlayer().SceneEntity
 }
 
+func (g *GamePlayer) GetMonsterEntity() map[uint32]*MonsterEntity {
+	db := g.GetSceneEntity()
+	if db.MonsterEntity == nil {
+		db.MonsterEntity = make(map[uint32]*MonsterEntity)
+	}
+	return db.MonsterEntity
+}
+
+func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
+	db := g.GetMonsterEntity()
+	return db[id]
+}
+
 func (g *GamePlayer) GetNickname() string {
 	db := g.GetPlayerPb()
 	if db.Nickname == "" {

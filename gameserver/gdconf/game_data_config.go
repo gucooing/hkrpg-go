@@ -47,7 +47,7 @@ type GameDataConfig struct {
 	MazeBuffMap                 map[string]map[string]*MazeBuff                 // 技能buff库
 	MazePlaneMap                map[string]*MazePlane                           // 场景id
 	NPCMonsterDataMap           map[string]*NPCMonsterData                      // NPC怪物表？
-	MazePropMap                 map[string]*MazeProp                            // 实体列表？
+	MazePropMap                 map[uint32]*MazeProp                            // 实体列表？
 	NPCDataMap                  map[string]*NPCData                             // NPC列表？
 	GroupMap                    map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                    map[uint32]map[uint32]*LevelFloor               // ?

@@ -41,12 +41,12 @@ func (g *GamePlayer) GetRot() *spb.VectorBin {
 	return g.PlayerPb.Rot
 }
 
-func (g *GamePlayer) GetPropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    groupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
+func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
+		propState := gdconf.GetStateValue(propList)
+		if propState == 0 {
+			continue
+		}
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  groupID,     // 文件名后那个G
 			InstId:   propList.ID, // ID
@@ -65,18 +65,15 @@ func (g *GamePlayer) GetPropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) 
 			},
 			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
-				PropState: 1,               // gdconf.GetPropState(strconv.Itoa(int(propList.PropID))),
+				PropState: propState,
 			},
 		}
-		if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {
-			entityList.Prop.PropState = 8 // 解锁
-		}
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
-	return entityGroupLists
+	return entityGroupList
 }
 
-func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
+func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity) *proto.SceneEntityGroupInfo {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := uint32(g.GetNextGameObjectGuid())
 		entityList := &proto.SceneEntityInfo{
@@ -118,13 +115,13 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 		}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
-	return entityGroupList, entityMap
+	return entityGroupList
 }
 
-func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
 	for _, npcList := range sceneGroup.NPCList {
 		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,
+			GroupId:  sceneGroup.GroupId,
 			InstId:   npcList.ID,
 			EntityId: uint32(g.GetNextGameObjectGuid()),
 			Motion: &proto.MotionInfo{
@@ -134,9 +131,9 @@ func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 					Z: int32(npcList.PosZ * 1000),
 				},
 				Rot: &proto.Vector{
-					X: 0,
+					X: int32(npcList.RotX * 1000),
 					Y: int32(npcList.RotY * 1000),
-					Z: 0,
+					Z: int32(npcList.RotZ * 1000),
 				},
 			},
 			Npc: &proto.SceneNpcInfo{
@@ -252,16 +249,18 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *spb.VectorBin) *prot
 			continue
 		}
 		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
-
+		entityGroupLists := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
+		}
 		// 添加物品实体
-		entityGroupList := g.GetPropByID(levelGroup, levelGroup.GroupId)
+		g.GetPropByID(entityGroupLists, levelGroup, levelGroup.GroupId)
 		// 添加怪物实体
-		entityGroupList, x := g.GetNPCMonsterByID(entityGroupList, levelGroup, levelGroup.GroupId, monsterEntity)
-		monsterEntity = x
+		g.GetNPCMonsterByID(entityGroupLists, levelGroup, levelGroup.GroupId, monsterEntity)
 		// 添加NPC实体
-		entityGroupList = g.GetNPCByID(entityGroupList, levelGroup, levelGroup.GroupId)
-		if len(entityGroupList.EntityList) != 0 {
-			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupList)
+		g.GetNPCByID(entityGroupLists, levelGroup)
+		if len(entityGroupLists.EntityList) != 0 {
+			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 		}
 	}
 	g.GetSceneEntity().MonsterEntity = monsterEntity

@@ -20,53 +20,54 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	var monsterEntityMap []uint32 // 目标怪物列表
 	battleState := g.GetBattleState()
 
-	// 添加buff
-	switch req.SkillIndex {
-	case 1:
-		avatarId := g.GetSceneEntity().AvatarEntity[req.CasterId].AvatarId
-		skillId := (avatarId * 100) + req.SkillIndex
-		switch battleState.BattleType {
-		case spb.BattleType_Battle_NONE:
-			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
-				g.PlayerPb.Avatar.Avatar[avatarId].BuffList = skillId
-			} else {
-				// 技能处理，有的技能并不会增加buff而是回复生命等功能
-			}
-		case spb.BattleType_Battle_ROGUE:
-			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
-				battleState.RogueState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
-			} else {
-				// 技能处理，有的技能并不会增加buff而是回复生命等功能
-			}
-		case spb.BattleType_Battle_CHALLENGE:
+	/*
+		// 添加buff
+		switch req.SkillIndex {
+		case 1:
+			avatarId := g.GetSceneEntity().AvatarEntity[req.CasterId].AvatarId
+			skillId := (avatarId * 100) + req.SkillIndex
+			switch battleState.BattleType {
+			case spb.BattleType_Battle_NONE:
+				if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+					g.PlayerPb.Avatar.Avatar[avatarId].BuffList = skillId
+				} else {
+					// 技能处理，有的技能并不会增加buff而是回复生命等功能
+				}
+			case spb.BattleType_Battle_ROGUE:
+				if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+					battleState.AvatarBuffList = append(battleState.AvatarBuffList, skillId)
+				} else {
+					// 技能处理，有的技能并不会增加buff而是回复生命等功能
+				}
+			case spb.BattleType_Battle_CHALLENGE:
 
-			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
-				battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
-			} else {
-				// 技能处理，有的技能并不会增加buff而是回复生命等功能
-			}
-		case spb.BattleType_Battle_CHALLENGE_Story:
-			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
-				battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
-			} else {
-				// 技能处理，有的技能并不会增加buff而是回复生命等功能
-			}
-		case spb.BattleType_Battle_TrialActivity:
-			if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
-				battleState.TrialActivityState.AvatarBuffList = append(battleState.TrialActivityState.AvatarBuffList, skillId)
-			} else {
-				// 技能处理，有的技能并不会增加buff而是回复生命等功能
+				if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+					battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
+				} else {
+					// 技能处理，有的技能并不会增加buff而是回复生命等功能
+				}
+			case spb.BattleType_Battle_CHALLENGE_Story:
+				if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+					battleState.ChallengeState.AvatarBuffList = append(battleState.ChallengeState.AvatarBuffList, skillId)
+				} else {
+					// 技能处理，有的技能并不会增加buff而是回复生命等功能
+				}
+			case spb.BattleType_Battle_TrialActivity:
+				if gdconf.GetMazeBuffById(skillId, req.SkillIndex) != nil {
+					battleState.TrialActivityState.AvatarBuffList = append(battleState.TrialActivityState.AvatarBuffList, skillId)
+				} else {
+					// 技能处理，有的技能并不会增加buff而是回复生命等功能
+				}
 			}
 		}
-	}
+	*/
 
-	if len(req.HitTargetEntityIdList) == 0 || g.GetSceneEntity().MonsterEntity[req.HitTargetEntityIdList[0]] == nil {
-		monsterEntityMap = append(monsterEntityMap, req.CasterId)
-	} else {
-		monsterEntityMap = req.HitTargetEntityIdList
+	for _, id := range req.GetHitTargetEntityIdList() {
+		if g.GetMonsterEntityById(id) != nil {
+			monsterEntityMap = append(monsterEntityMap, id)
+		}
 	}
-
-	if g.GetSceneEntity().MonsterEntity[monsterEntityMap[0]] == nil {
+	if len(monsterEntityMap) == 0 {
 		rsp := &proto.SceneCastSkillScRsp{
 			AttackedGroupId: req.AttackedGroupId,
 		}
@@ -90,20 +91,19 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	}
 
 	// 怪物波列表
-	dbMonsterEntityMap := g.GetSceneEntity().MonsterEntity
-	for id, monsterEntity := range monsterEntityMap {
-		entity := dbMonsterEntityMap[monsterEntity]
+	for id, entiyiId := range monsterEntityMap {
+		entity := g.GetMonsterEntityById(entiyiId)
 		if entity == nil {
 			continue
 		}
 		stageID := gdconf.GetPlaneEventById(entity.MonsterEId, g.PlayerPb.WorldLevel)
 		if stageID == nil {
-			return
-		}
-		if id == 0 {
-			rsp.BattleInfo.StageId = stageID.StageID // 阶段id
+			continue
 		}
 		stageConfig := gdconf.GetStageConfigById(stageID.StageID)
+		if stageConfig == nil {
+			continue
+		}
 		for _, monsterListMap := range stageConfig.MonsterList {
 			monsterWaveList := &proto.SceneMonsterWave{
 				StageId: stageID.StageID,
@@ -116,6 +116,9 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 				monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
 			}
 			rsp.BattleInfo.MonsterWaveList = append(rsp.BattleInfo.MonsterWaveList, monsterWaveList)
+		}
+		if id == 0 {
+			rsp.BattleInfo.StageId = stageID.StageID // 阶段id
 		}
 	}
 

@@ -510,7 +510,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		entityGroupLists, x := g.GetRogueNPCMonsterByID(entityGroupLists, sceneGroup, stou32(groupID), monsterEntity, ida)
 		monsterEntity = x
 		// 添加NPC实体
-		entityGroupLists = g.GetNPCByID(entityGroupLists, sceneGroup, stou32(groupID))
+		entityGroupLists = g.GetNPCByID(entityGroupLists, sceneGroup)
 		if len(entityGroupLists.EntityList) != 0 {
 			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 		}

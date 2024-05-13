@@ -1,4 +1,4 @@
-// 记录战斗关键数据并储存，用于战斗结算和重连重新开启战斗
+// 记录战斗关键数据并储存，用于战斗结算
 
 package player
 
@@ -14,6 +14,7 @@ type BattleState struct {
 	ChallengeState     *ChallengeState
 	TrialActivityState *TrialActivityState
 	BuffList           []uint32 // 进入战斗需要添加的buff
+	AvatarBuffList     []uint32 // 角色buff
 	RogueState         *RogueState
 }
 type ChallengeState struct {
@@ -33,7 +34,6 @@ type ChallengeState struct {
 	EntranceID         uint32
 	CurChallengeBattle map[uint32]*CurChallengeBattle // 每一波关卡配置
 	SceneBuffList      []uint32                       // 场景buff
-	AvatarBuffList     []uint32                       // 角色buff
 	MonsterEntityMap   []uint32                       // 当前战斗实体id
 	// 下面是普通
 	ChallengeCount     uint32   // 波数
@@ -47,13 +47,12 @@ type ChallengeState struct {
 	ScoreTwo     uint32
 }
 type TrialActivityState struct {
-	AvatarDemoId   uint32
-	NPCMonsterPos  *spb.VectorBin
-	NPCMonsterRot  *spb.VectorBin
-	PlaneID        uint32
-	FloorID        uint32
-	EntranceID     uint32
-	AvatarBuffList []uint32 // 角色buff
+	AvatarDemoId  uint32
+	NPCMonsterPos *spb.VectorBin
+	NPCMonsterRot *spb.VectorBin
+	PlaneID       uint32
+	FloorID       uint32
+	EntranceID    uint32
 
 	NPCMonsterID uint32
 	EventID      uint32
@@ -81,12 +80,11 @@ type Battle struct {
 }
 
 type RogueState struct {
-	BuffNum        uint32
-	AvatarBuffList []uint32
-	BuffList       map[uint32]*RogueBuff
-	AvatarEntity   map[uint32]*AvatarEntity
-	MonsterEntity  map[uint32]*MonsterEntity
-	Battle         map[uint32]*RogueBattle
+	BuffNum       uint32
+	BuffList      map[uint32]*RogueBuff
+	AvatarEntity  map[uint32]*AvatarEntity
+	MonsterEntity map[uint32]*MonsterEntity
+	Battle        map[uint32]*RogueBattle
 }
 type RogueBattle struct {
 	monsterEntityMap []uint32 // 实体列表
@@ -212,23 +210,21 @@ func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
 
 func (g *GamePlayer) NewRogueState() {
 	g.GetBattleState().RogueState = &RogueState{
-		BuffNum:        0,
-		AvatarBuffList: make([]uint32, 0),
-		AvatarEntity:   make(map[uint32]*AvatarEntity),
-		MonsterEntity:  make(map[uint32]*MonsterEntity),
-		Battle:         make(map[uint32]*RogueBattle),
-		BuffList:       make(map[uint32]*RogueBuff),
+		BuffNum:       0,
+		AvatarEntity:  make(map[uint32]*AvatarEntity),
+		MonsterEntity: make(map[uint32]*MonsterEntity),
+		Battle:        make(map[uint32]*RogueBattle),
+		BuffList:      make(map[uint32]*RogueBuff),
 	}
 }
 
 func (g *GamePlayer) GetRogue() *RogueState {
 	if g.GetBattleState().RogueState == nil {
 		g.GetBattleState().RogueState = &RogueState{
-			AvatarBuffList: make([]uint32, 0),
-			AvatarEntity:   make(map[uint32]*AvatarEntity),
-			MonsterEntity:  make(map[uint32]*MonsterEntity),
-			Battle:         make(map[uint32]*RogueBattle),
-			BuffList:       make(map[uint32]*RogueBuff),
+			AvatarEntity:  make(map[uint32]*AvatarEntity),
+			MonsterEntity: make(map[uint32]*MonsterEntity),
+			Battle:        make(map[uint32]*RogueBattle),
+			BuffList:      make(map[uint32]*RogueBuff),
 		}
 	}
 
