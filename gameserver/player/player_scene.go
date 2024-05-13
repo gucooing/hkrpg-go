@@ -337,11 +337,11 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 
 				for _, groupMapList := range groupMap {
 					for _, propList := range groupMapList.PropList {
-						if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {
+						if propList.AnchorID == 0 {
 							continue
 						}
 						mazeProp := &proto.MazeProp{
-							State:    gdconf.GetStateValue(propList),
+							State:    gdconf.CheckPointEnable,
 							GroupId:  groupMapList.GroupId,
 							ConfigId: propList.ID,
 						}

@@ -44,9 +44,6 @@ func (g *GamePlayer) GetRot() *spb.VectorBin {
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		propState := gdconf.GetStateValue(propList)
-		if propState == 0 {
-			continue
-		}
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  groupID,     // 文件名后那个G
 			InstId:   propList.ID, // ID
