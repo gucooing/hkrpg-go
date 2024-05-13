@@ -156,10 +156,71 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 	return avatar
 }
 
-func (g *GamePlayer) GetProtoBattleAvatar(avatarId uint32) *proto.BattleAvatar {
-	avatarBin := g.GetAvatarBinById(avatarId)
-	if avatarBin == nil {
-		return nil
+type BattleAvatar struct {
+	AvatarId  uint32 // 角色id
+	IsAssist  bool   // 是否助战
+	AssistUid uint32 // 助战uid
+}
+
+func (g *GamePlayer) GetProtoBattleAvatar(bAList []BattleAvatar) []*proto.BattleAvatar {
+	battleAvatarList := make([]*proto.BattleAvatar, 0)
+	for id, bA := range bAList {
+		var avatarBin *spb.AvatarBin
+		if bA.IsAssist {
+			// TODO 助战情况
+		} else {
+			avatarBin = g.GetAvatarBinById(bA.AvatarId)
+		}
+		if avatarBin == nil {
+			continue
+		}
+		battleAvatar := &proto.BattleAvatar{
+			AvatarType:    proto.AvatarType(avatarBin.AvatarType),
+			Id:            avatarBin.AvatarId,
+			Level:         avatarBin.Level,
+			Rank:          avatarBin.Rank,
+			Index:         uint32(id),
+			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
+			EquipmentList: make([]*proto.BattleEquipment, 0),
+			Hp:            avatarBin.Hp,
+			Promotion:     avatarBin.PromoteLevel,
+			RelicList:     make([]*proto.BattleRelic, 0),
+			WorldLevel:    g.GetWorldLevel(),
+			AssistUid:     bA.AssistUid,
+			SpBar: &proto.SpBarInfo{
+				CurSp: avatarBin.SpBar.CurSp,
+				MaxSp: avatarBin.SpBar.MaxSp,
+			},
+		}
+		// 获取技能
+		for _, skill := range avatarBin.GetSkilltreeList() {
+			avatarSkillTree := &proto.AvatarSkillTree{
+				PointId: skill.PointId,
+				Level:   skill.Level,
+			}
+			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
+		}
+		// 获取装备
+		for _, relic := range avatarBin.EquipRelic {
+			equipRelic := g.GetProtoBattleRelicById(relic)
+			if equipRelic == nil {
+				delete(avatarBin.EquipRelic, relic)
+				continue
+			}
+			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
+		}
+		// 获取角色装备的光锥
+		if avatarBin.EquipmentUniqueId != 0 {
+			equipment := g.GetEquipment(avatarBin.EquipmentUniqueId)
+			equipmentList := &proto.BattleEquipment{
+				Id:        equipment.Tid,
+				Level:     equipment.Level,
+				Promotion: equipment.Promotion,
+				Rank:      equipment.Rank,
+			}
+			battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
+		}
+		battleAvatarList = append(battleAvatarList, battleAvatar)
 	}
-	return &proto.BattleAvatar{}
+	return battleAvatarList
 }

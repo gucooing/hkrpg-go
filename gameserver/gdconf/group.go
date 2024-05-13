@@ -261,7 +261,7 @@ func GetStateValue(propList *PropList) uint32 {
 		"Elevator2":         15,
 		"Elevator3":         16,
 		"WaitActive":        17,
-		"EventClose":        18,
+		"EventClose":        19,
 		"EventOpen":         19,
 		"Hidden":            20,
 		"TeleportGate0":     21,
@@ -282,10 +282,6 @@ func GetStateValue(propList *PropList) uint32 {
 
 	value, ok := stateMap[propList.State]
 	if !ok {
-		excrl := GetMazePropId(propList.PropID)
-		if excrl == nil {
-			return 0
-		}
 		return 0
 	}
 

@@ -8,6 +8,73 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+type EntityAll interface {
+	entity()
+	AddEntity(g *GamePlayer)
+}
+
+type Entity struct {
+	EntityId uint32 // 实体id
+	GroupId  uint32 // 区域
+	Pos      *proto.Vector
+	Rot      *proto.Vector
+}
+
+func (e *Entity) entity() {}
+
+type AvatarEntity struct {
+	Entity
+	AvatarId uint32 // 角色id
+}
+
+type MonsterEntity struct {
+	Entity
+	EventID uint32 // 怪物id
+}
+
+type NpcEntity struct {
+	Entity
+	NpcId uint32 // ncp id
+}
+
+func (g *GamePlayer) GetEntity() map[uint32]EntityAll {
+	db := g.GetPlayer()
+	if db.EntityMap == nil {
+		db.EntityMap = make(map[uint32]EntityAll)
+	}
+	return db.EntityMap
+}
+
+func (g *GamePlayer) NewEntity() map[uint32]EntityAll { // 清空实体列表用的
+	db := g.GetPlayer()
+	db.EntityMap = make(map[uint32]EntityAll)
+	return db.EntityMap
+}
+
+func (ae *AvatarEntity) AddEntity(g *GamePlayer) {
+	db := g.GetEntity()
+	db[ae.EntityId] = ae
+}
+
+func (me *MonsterEntity) AddEntity(g *GamePlayer) {
+	db := g.GetEntity()
+	db[me.EntityId] = me
+}
+
+func (ne *NpcEntity) AddEntity(g *GamePlayer) {
+	db := g.GetEntity()
+	db[ne.EntityId] = ne
+}
+
+func (g *GamePlayer) AddEntity(t EntityAll) {
+	t.AddEntity(g)
+}
+
+func (g *GamePlayer) GetEntityById(id uint32) EntityAll { // 根据实体id拉取实体
+	db := g.GetEntity()
+	return db[id]
+}
+
 func (g *GamePlayer) GetScene() *spb.Scene {
 	if g.PlayerPb.Scene == nil {
 		g.PlayerPb.Scene = &spb.Scene{
@@ -41,13 +108,67 @@ func (g *GamePlayer) GetRot() *spb.VectorBin {
 	return g.PlayerPb.Rot
 }
 
-func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
+/****************************************************功能***************************************************/
+
+func (g *GamePlayer) GetPosPb() *proto.Vector {
+	db := g.GetPos()
+	return &proto.Vector{
+		Y: db.Y,
+		X: db.X,
+		Z: db.Z,
+	}
+}
+
+func (g *GamePlayer) GetRotPb() *proto.Vector {
+	db := g.GetRot()
+	return &proto.Vector{
+		Y: db.Y,
+		X: db.X,
+		Z: db.Z,
+	}
+}
+
+func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGroupInfo, lineUp *spb.Line, leaderEntityId uint32, pos, rot *proto.Vector) {
+	for sole, lineAvatar := range lineUp.AvatarIdList {
+		if lineAvatar.AvatarId == 0 {
+			continue
+		}
+		entityList := &proto.SceneEntityInfo{
+			Actor: &proto.SceneActorInfo{
+				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+				BaseAvatarId: lineAvatar.AvatarId,
+			},
+			Motion: &proto.MotionInfo{
+				Pos: pos,
+				Rot: rot,
+			},
+		}
+		if sole == lineUp.LeaderSlot {
+			entityList.EntityId = leaderEntityId
+		} else {
+			entityId := g.GetNextGameObjectGuid()
+			entityList.EntityId = entityId
+		}
+		g.AddEntity(&AvatarEntity{
+			Entity: Entity{
+				EntityId: entityList.EntityId,
+				GroupId:  0,
+				Pos:      pos,
+				Rot:      rot,
+			},
+			AvatarId: lineAvatar.AvatarId,
+		})
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+	}
+}
+
+func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		propState := gdconf.GetStateValue(propList)
 		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,     // 文件名后那个G
-			InstId:   propList.ID, // ID
-			EntityId: uint32(g.GetNextGameObjectGuid()),
+			GroupId:  sceneGroup.GroupId, // 文件名后那个G
+			InstId:   propList.ID,        // ID
+			EntityId: g.GetNextGameObjectGuid(),
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
 					X: int32(propList.PosX * 1000),
@@ -70,24 +191,26 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 	return entityGroupList
 }
 
-func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
 	for _, monsterList := range sceneGroup.MonsterList {
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
+		pos := &proto.Vector{
+			X: int32(monsterList.PosX * 1000),
+			Y: int32(monsterList.PosY * 1000),
+			Z: int32(monsterList.PosZ * 1000),
+		}
+		rot := &proto.Vector{
+			X: int32(monsterList.RotX * 1000),
+			Y: int32(monsterList.RotY * 1000),
+			Z: int32(monsterList.RotZ * 1000),
+		}
 		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,
+			GroupId:  sceneGroup.GroupId,
 			InstId:   monsterList.ID,
 			EntityId: entityId,
 			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(monsterList.PosX * 1000),
-					Y: int32(monsterList.PosY * 1000),
-					Z: int32(monsterList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: int32(monsterList.RotY * 1000),
-					Z: 0,
-				},
+				Pos: pos,
+				Rot: rot,
 			},
 			NpcMonster: &proto.SceneNpcMonsterInfo{
 				WorldLevel: g.PlayerPb.WorldLevel,
@@ -95,21 +218,16 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 				EventId:    monsterList.EventID,
 			},
 		}
-		// 添加实体
-		entityMap[entityId] = &MonsterEntity{
-			MonsterEId: monsterList.EventID,
-			GroupId:    groupID,
-			Pos: &Vector{
-				X: int32(monsterList.PosX * 1000),
-				Y: int32(monsterList.PosY * 1000),
-				Z: int32(monsterList.PosZ * 1000),
+		// 添加怪物实体
+		g.AddEntity(&MonsterEntity{
+			Entity: Entity{
+				EntityId: entityId,
+				GroupId:  sceneGroup.GroupId,
+				Pos:      pos,
+				Rot:      rot,
 			},
-			Rot: &Vector{
-				X: 0,
-				Y: int32(monsterList.RotY * 1000),
-				Z: 0,
-			},
-		}
+			EventID: monsterList.EventID,
+		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 	return entityGroupList
@@ -117,21 +235,24 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 
 func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
 	for _, npcList := range sceneGroup.NPCList {
+		entityId := g.GetNextGameObjectGuid()
+		pos := &proto.Vector{
+			X: int32(npcList.PosX * 1000),
+			Y: int32(npcList.PosY * 1000),
+			Z: int32(npcList.PosZ * 1000),
+		}
+		rot := &proto.Vector{
+			X: int32(npcList.RotX * 1000),
+			Y: int32(npcList.RotY * 1000),
+			Z: int32(npcList.RotZ * 1000),
+		}
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  sceneGroup.GroupId,
 			InstId:   npcList.ID,
-			EntityId: uint32(g.GetNextGameObjectGuid()),
+			EntityId: entityId,
 			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(npcList.PosX * 1000),
-					Y: int32(npcList.PosY * 1000),
-					Z: int32(npcList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: int32(npcList.RotX * 1000),
-					Y: int32(npcList.RotY * 1000),
-					Z: int32(npcList.RotZ * 1000),
-				},
+				Pos: pos,
+				Rot: rot,
 			},
 			Npc: &proto.SceneNpcInfo{
 				ExtraInfo: nil,
@@ -141,13 +262,23 @@ func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 		if npcList.FirstDialogueGroupID != 0 {
 			g.GetSceneNpcList()[npcList.NPCID] = npcList.FirstDialogueGroupID
 		}
+		// 添加npc
+		g.AddEntity(&NpcEntity{
+			Entity: Entity{
+				EntityId: entityId,
+				GroupId:  sceneGroup.GroupId,
+				Pos:      pos,
+				Rot:      rot,
+			},
+			NpcId: npcList.NPCID,
+		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 	return entityGroupList
 }
 
-func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *spb.VectorBin) *proto.SceneInfo {
-	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp *spb.Line) *proto.SceneInfo {
+	leaderEntityId := g.GetNextGameObjectGuid()
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
 	if mapEntrance == nil {
 		return nil
@@ -171,73 +302,19 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *spb.VectorBin) *prot
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 	}
-
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)
 	}
-
 	// 获取场景实体
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	monsterEntity := make(map[uint32]*MonsterEntity, 0)
-	avatarEntity := make(map[uint32]*AvatarEntity, 0)
-	npcEntity := make(map[uint32]*NpcEntity, 0)
 	// 添加队伍角色进实体列表，并设置坐标
 	if foorMap.Groups[groupID] == nil {
 		return nil
 	}
-	for id, lineAvatar := range g.GetCurLineUp().AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
-			continue
-		}
-		entityId := uint32(g.GetNextGameObjectGuid())
-		entityList := &proto.SceneEntityInfo{
-			Actor: &proto.SceneActorInfo{
-				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-				BaseAvatarId: lineAvatar.AvatarId,
-			},
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: pos.X,
-					Y: pos.Y,
-					Z: pos.Z,
-				},
-				Rot: &proto.Vector{
-					X: rot.X,
-					Y: rot.Y,
-					Z: rot.Z,
-				},
-			},
-		}
-		// 为进入场景的角色设置与上面相同的实体id
-		if id == 0 {
-			entityList.EntityId = leaderEntityId
-			avatarEntity[leaderEntityId] = &AvatarEntity{
-				AvatarId: lineAvatar.AvatarId,
-				GroupId:  groupID,
-			}
-		} else {
-			entityList.EntityId = entityId
-			avatarEntity[entityId] = &AvatarEntity{
-				AvatarId: lineAvatar.AvatarId,
-				GroupId:  groupID,
-			}
-		}
-		entityGroup.EntityList = append(entityGroup.EntityList, entityList)
-	}
-	g.GetPos().X = pos.X
-	g.GetPos().Y = pos.Y
-	g.GetPos().Z = pos.Z
-	g.GetRot().X = rot.X
-	g.GetRot().Y = rot.Y
-	g.GetRot().Z = rot.Z
-	g.GetScene().EntryId = entryId
-	g.GetScene().PlaneId = mapEntrance.PlaneID
-	g.GetScene().FloorId = mapEntrance.FloorID
-	// g.GetLineUp().MainAvatarId = 0
+	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
-
 	for _, levelGroup := range foorMap.Groups {
 		if levelGroup.GroupId == 0 {
 			continue
@@ -251,18 +328,14 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *spb.VectorBin) *prot
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
 		// 添加物品实体
-		g.GetPropByID(entityGroupLists, levelGroup, levelGroup.GroupId)
+		g.GetPropByID(entityGroupLists, levelGroup)
 		// 添加怪物实体
-		g.GetNPCMonsterByID(entityGroupLists, levelGroup, levelGroup.GroupId, monsterEntity)
+		g.GetNPCMonsterByID(entityGroupLists, levelGroup)
 		// 添加NPC实体
 		g.GetNPCByID(entityGroupLists, levelGroup)
 		if len(entityGroupLists.EntityList) != 0 {
 			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 		}
 	}
-	g.GetSceneEntity().MonsterEntity = monsterEntity
-	g.GetSceneEntity().AvatarEntity = avatarEntity
-	g.GetSceneEntity().NpcEntity = npcEntity
-
 	return scene
 }

@@ -161,7 +161,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	challengeState := g.GetChallengeState()
 
-	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	leaderEntityId := g.GetNextGameObjectGuid()
 	// 获取映射信息
 
 	anchorPos := challengeState.Pos
@@ -196,7 +196,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 			continue
 		}
 		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
 		entityList := &proto.SceneEntityInfo{
 			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType(avatarBin.AvatarType), // TODO
@@ -238,7 +238,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		GroupId:    curChallengeBattle.GroupID,
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	entityId := uint32(g.GetNextGameObjectGuid())
+	entityId := g.GetNextGameObjectGuid()
 	entityList := &proto.SceneEntityInfo{
 		GroupId:  curChallengeBattle.GroupID,
 		InstId:   curChallengeBattle.ConfigID,
@@ -551,7 +551,7 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
 		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
 			AddEntity: &proto.SceneEntityInfo{
@@ -600,7 +600,7 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 	}
 
 	// 添加怪物实体
-	entityId := uint32(g.GetNextGameObjectGuid())
+	entityId := g.GetNextGameObjectGuid()
 	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
 		AddEntity: &proto.SceneEntityInfo{
 			GroupId:  curChallengeBattle.GroupID,

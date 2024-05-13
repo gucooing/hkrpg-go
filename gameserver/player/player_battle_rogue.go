@@ -424,7 +424,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		return nil, nil, nil
 	}
 
-	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	leaderEntityId := g.GetNextGameObjectGuid()
 	scene := &proto.SceneInfo{
 		ClientPosVersion:   5,
 		PlaneId:            mapEntrance.PlaneID,
@@ -454,7 +454,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		if avatarList == nil || avatarList.AvatarId == 0 {
 			continue
 		}
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
 		entityList := &proto.SceneEntityInfo{
 			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
@@ -528,7 +528,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  groupID,     // 文件名后那个G
 			InstId:   propList.ID, // ID
-			EntityId: uint32(g.GetNextGameObjectGuid()),
+			EntityId: g.GetNextGameObjectGuid(),
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
 					X: int32(propList.PosX * 1000),
@@ -594,7 +594,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 
 func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
 	for _, monsterList := range sceneGroup.MonsterList {
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
 		rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)
 		rogueMonster := gdconf.GetRogueMonsterByRogueMonsterID(rogueMonsterID)
 		entityList := &proto.SceneEntityInfo{
@@ -734,10 +734,11 @@ func (g *GamePlayer) QuitRogueCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
+	curLine := g.GetCurLineUp()
 	rsp := &proto.LeaveRogueScRsp{
 		RogueInfo: g.GetRogueInfo(),
 		Lineup:    g.GetLineUpPb(g.GetLineUp().MainLineUp),
-		Scene:     g.GetSceneInfo(g.GetScene().EntryId, g.GetPos(), g.GetRot()),
+		Scene:     g.GetSceneInfo(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb(), curLine),
 	}
 
 	g.Send(cmd.LeaveRogueScRsp, rsp)

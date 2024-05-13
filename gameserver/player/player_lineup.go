@@ -38,7 +38,7 @@ func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
 		if avatarBin == nil {
 			continue
 		}
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
 			AddEntity: &proto.SceneEntityInfo{
 				Actor: &proto.SceneActorInfo{

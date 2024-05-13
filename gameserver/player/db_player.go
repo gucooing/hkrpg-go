@@ -5,43 +5,16 @@ import (
 )
 
 type PlayerData struct {
-	LoginToday            bool               // 是否是今天第一次登录
-	Battle                map[uint32]*Battle // 正在进行的战斗
-	BattleState           *BattleState       // 战斗情况
-	BattleId              uint32             // 战斗id
-	EntityBattleId        uint32             // 攻击实体id
-	IsPaused              bool               // 是否暂停
-	GameObjectGuidCounter uint64             // 游戏对象guid计数器
-	IsNickName            bool               // 是否修改昵称
-	SceneEntity           *SceneEntity       // 场景实体管理
+	LoginToday            bool                 // 是否是今天第一次登录
+	Battle                map[uint32]*Battle   // 正在进行的战斗
+	BattleState           *BattleState         // 战斗情况
+	BattleId              uint32               // 战斗id
+	EntityBattleId        uint32               // 攻击实体id
+	IsPaused              bool                 // 是否暂停
+	GameObjectGuidCounter uint32               // 游戏对象guid计数器 貌似一个玩家用一个就行了
+	IsNickName            bool                 // 是否修改昵称
+	EntityMap             map[uint32]EntityAll // 场景实体
 	NpcList               map[uint32]uint32
-}
-
-type SceneEntity struct {
-	AvatarEntity  map[uint32]*AvatarEntity // [实体id]*AvatarEntity
-	NpcEntity     map[uint32]*NpcEntity
-	MonsterEntity map[uint32]*MonsterEntity
-}
-
-type AvatarEntity struct {
-	AvatarId uint32
-	GroupId  uint32
-	Pos      *Vector
-	Rot      *Vector
-}
-
-type NpcEntity struct {
-	NpcId   uint32
-	GroupId uint32
-	Pos     *Vector
-	Rot     *Vector
-}
-
-type MonsterEntity struct {
-	MonsterEId uint32
-	GroupId    uint32
-	Pos        *Vector
-	Rot        *Vector
 }
 
 type Vector struct {
@@ -121,7 +94,7 @@ func (g *GamePlayer) GetPlayer() *PlayerData {
 			IsPaused:              false,
 			GameObjectGuidCounter: 0,
 			IsNickName:            false,
-			SceneEntity:           nil,
+			EntityMap:             g.NewEntity(),
 			NpcList:               nil,
 		}
 	}
@@ -136,7 +109,7 @@ func (g *GamePlayer) GetSceneNpcList() map[uint32]uint32 {
 	return g.Player.NpcList
 }
 
-func (g *GamePlayer) GetNextGameObjectGuid() uint64 {
+func (g *GamePlayer) GetNextGameObjectGuid() uint32 {
 	g.Player.GameObjectGuidCounter++
 	return 0 + g.Player.GameObjectGuidCounter
 }
@@ -144,31 +117,6 @@ func (g *GamePlayer) GetNextGameObjectGuid() uint64 {
 func (g *GamePlayer) GetBattleIdGuid() uint32 {
 	g.Player.BattleId++
 	return 1 + g.Player.BattleId
-}
-
-func (g *GamePlayer) GetSceneEntity() *SceneEntity {
-	if g.GetPlayer().SceneEntity == nil {
-		g.GetPlayer().SceneEntity = &SceneEntity{
-			AvatarEntity:  make(map[uint32]*AvatarEntity),
-			NpcEntity:     make(map[uint32]*NpcEntity),
-			MonsterEntity: make(map[uint32]*MonsterEntity),
-		}
-	}
-
-	return g.GetPlayer().SceneEntity
-}
-
-func (g *GamePlayer) GetMonsterEntity() map[uint32]*MonsterEntity {
-	db := g.GetSceneEntity()
-	if db.MonsterEntity == nil {
-		db.MonsterEntity = make(map[uint32]*MonsterEntity)
-	}
-	return db.MonsterEntity
-}
-
-func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
-	db := g.GetMonsterEntity()
-	return db[id]
 }
 
 func (g *GamePlayer) GetNickname() string {

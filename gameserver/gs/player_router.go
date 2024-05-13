@@ -2,7 +2,6 @@ package gs
 
 import (
 	"github.com/gucooing/hkrpg-go/gameserver/player"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
 
@@ -134,7 +133,8 @@ func NewRouteManager(g *player.GamePlayer) (r *RouteManager) {
 }
 
 func RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/, g *GamePlayer) {
-	logger.Debug("C --> S router cmdId: %v", cmdId)
+	// 异步打印需要的数据包
+	go player.LogMsgRecv(cmdId, payloadMsg)
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
 		// logger.Error("C --> S no route for msg, cmdId: %v", cmdId)

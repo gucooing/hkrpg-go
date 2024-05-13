@@ -141,6 +141,5 @@ func (n *NodeService) GameToNodePingReq() {
 }
 
 func (n *NodeService) GameToNodePingRsp(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GameToNodePingRsp)
-	logger.Debug(req.String())
+	// req := serviceMsg.(*spb.GameToNodePingRsp)
 }

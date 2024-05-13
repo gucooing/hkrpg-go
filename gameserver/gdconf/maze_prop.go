@@ -150,19 +150,3 @@ func getPropType(state string) uint32 {
 
 	return value
 }
-
-func GetPropState(propType uint32) uint32 {
-	switch propType {
-	case PROP_DESTRUCT:
-		return Open
-	case PROP_TREASURE_CHEST:
-		// if state == ChestClosed && state == ChestUsed {
-		//
-		// }
-		return ChestUsed
-	case PROP_MAZE_PUZZLE:
-		return ChestUsed
-	default:
-		return Closed
-	}
-}

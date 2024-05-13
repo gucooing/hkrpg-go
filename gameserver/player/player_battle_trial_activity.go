@@ -56,7 +56,7 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	rsp := new(proto.EnterSceneByServerScNotify)
-	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	leaderEntityId := g.GetNextGameObjectGuid()
 	trialActivityState := g.GetTrialActivityState()
 
 	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(trialActivityState.EntranceID)))
@@ -136,7 +136,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 					continue
 				}
 				avatarid := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId).AvatarID
-				entityId := uint32(g.GetNextGameObjectGuid())
+				entityId := g.GetNextGameObjectGuid()
 				entityList := &proto.SceneEntityInfo{
 					Actor: &proto.SceneActorInfo{
 						AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
@@ -189,7 +189,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-		g.GetPropByID(propList, levelGroup, levelGroup.GroupId)
+		g.GetPropByID(propList, levelGroup)
 		if len(propList.EntityList) != 0 {
 			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
 		}
@@ -203,7 +203,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	}
 	for _, monsterList := range foorMap.Groups[trialActivityState.GroupID].MonsterList {
 		if monsterList.ID == trialActivityState.ConfigID {
-			entityId := uint32(g.GetNextGameObjectGuid())
+			entityId := g.GetNextGameObjectGuid()
 			entityList := &proto.SceneEntityInfo{
 				GroupId:  trialActivityState.GroupID,
 				InstId:   trialActivityState.ConfigID,
@@ -345,7 +345,7 @@ func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResul
 	rsp.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
 	if rsp.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
 		// 传送回原来的场景
-		g.SceneByServerScNotify(g.GetScene().EntryId, g.GetPos(), g.GetRot())
+		g.SceneByServerScNotify(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb())
 		// 储存通关状态
 		g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, g.GetTrialActivityState().AvatarDemoId)
 		// 发送通关通知
