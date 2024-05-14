@@ -8,6 +8,14 @@ import (
 
 const MaxLineupList = 20 // 设置最大普通队伍数
 
+func (g *GamePlayer) NewLineUp() *spb.LineUp {
+	return &spb.LineUp{
+		MainLineUp:     0,
+		LineUpList:     nil,
+		BattleLineList: nil,
+	}
+}
+
 func (g *GamePlayer) GetLineUp() *spb.LineUp {
 	db := g.GetPlayerPb()
 	if db.LineUp == nil {
@@ -92,6 +100,22 @@ func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
 	dst.Slot = src.Slot
 	db.AvatarIdList[src_slot] = dst
 	db.AvatarIdList[dst_slot] = src
+}
+
+func (g *GamePlayer) GetBattleLineUp() *spb.Line {
+	status := g.GetBattleStatus()
+	switch status {
+	case spb.BattleType_Battle_NONE:
+		return g.GetCurLineUp()
+	case spb.BattleType_Battle_CHALLENGE:
+	case spb.BattleType_Battle_CHALLENGE_Story_1:
+	case spb.BattleType_Battle_CHALLENGE_Story_2:
+	case spb.BattleType_Battle_ROGUE:
+	case spb.BattleType_Battle_TrialActivity:
+	default:
+		return g.GetCurLineUp()
+	}
+	return g.GetBattleLineUp() // 多余了
 }
 
 /*****************************************功能方法****************************/

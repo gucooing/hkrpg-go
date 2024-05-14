@@ -120,7 +120,6 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 
 	monsterEntity := make(map[uint32]*MonsterEntity, 0)
 	avatarEntity := make(map[uint32]*AvatarEntity, 0)
-	npcEntity := make(map[uint32]*NpcEntity, 0)
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
@@ -228,18 +227,18 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 			}
 			// 添加实体
 			monsterEntity[entityId] = &MonsterEntity{
-				MonsterEId: trialActivityState.EventID,
-				GroupId:    trialActivityState.GroupID,
-				Pos: &Vector{
-					X: int32(monsterList.PosX * 1000),
-					Y: int32(monsterList.PosY * 1000),
-					Z: int32(monsterList.PosZ * 1000),
-				},
-				Rot: &Vector{
-					X: 0,
-					Y: int32(monsterList.RotY * 1000),
-					Z: 0,
-				},
+				// MonsterEId: trialActivityState.EventID,
+				// GroupId:    trialActivityState.GroupID,
+				// Pos: &Vector{
+				// 	X: int32(monsterList.PosX * 1000),
+				// 	Y: int32(monsterList.PosY * 1000),
+				// 	Z: int32(monsterList.PosZ * 1000),
+				// },
+				// Rot: &Vector{
+				// 	X: 0,
+				// 	Y: int32(monsterList.RotY * 1000),
+				// 	Z: 0,
+				// },
 			}
 			entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
 			break
@@ -248,9 +247,6 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 		}
 	}
 	rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, entityGroupLists)
-	g.GetSceneEntity().MonsterEntity = monsterEntity
-	g.GetSceneEntity().AvatarEntity = avatarEntity
-	g.GetSceneEntity().NpcEntity = npcEntity
 
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }

@@ -70,10 +70,14 @@ func (g *GamePlayer) SceneByServerScNotify(entryId uint32, pos, rot *proto.Vecto
 
 func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetEnteredSceneScRsp)
-	scene := g.GetScene()
+	db := g.GetScene()
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(db.EntryId)))
+	if mapEntrance == nil {
+		return
+	}
 	enteredSceneInfo := &proto.EnteredSceneInfo{
-		FloorId: scene.FloorId,
-		PlaneId: scene.PlaneId,
+		FloorId: mapEntrance.FloorID,
+		PlaneId: mapEntrance.PlaneID,
 	}
 	rsp.EnteredSceneInfo = []*proto.EnteredSceneInfo{enteredSceneInfo}
 
@@ -157,6 +161,7 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg []byte) {
 	rsp := &proto.GetEnteredSceneScRsp{}
 
 	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId)
+	g.SetCurEntryId(req.EntryId)
 
 	g.Send(cmd.EnterSceneScRsp, rsp)
 	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)

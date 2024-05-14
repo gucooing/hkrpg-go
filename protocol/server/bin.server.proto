@@ -60,8 +60,8 @@ message Activity{
 
 message Scene {
   uint32 entryId = 1;
-  uint32 planeId = 2;
-  uint32 floorId = 3;
+//  uint32 planeId = 2;
+//  uint32 floorId = 3;
 }
 
 message Avatar {
@@ -170,9 +170,10 @@ message Material {
   uint32 num = 2; // 个数
 }
 
-message Battle {
-  Rogue rogue = 1; // 期数-情况
-  Challenge challenge = 2;
+message Battle { // 战斗
+  BattleType battle_type = 1; // 当前状态
+  Rogue rogue = 2; // 期数-情况
+  Challenge challenge = 3; // 忘却之庭
 }
 
 message Rogue {
@@ -200,16 +201,18 @@ message RogueRoom {
 }
 
 message Challenge {
-  map<uint32, ChallengeList> challenge_list = 1;
+  map<uint32, ChallengeList> challenge_list = 1; // 通关状态
   map<uint64, uint32> challenge_reward_list = 2;
-}
-message ChallengeList {
-  uint32 stars = 1;
-  uint32 score_one = 2;
-  uint32 score_two = 3;
+  CurChallenge cur_challenge = 3; // 当前战斗状态
 }
 
-message BattleList{
+message ChallengeList {
+  uint32 stars = 1; // 星数
+  uint32 score_one = 2; // 第一关得分
+  uint32 score_two = 3; // 第二关得分
+}
+
+message CurChallenge {
 
 }
 

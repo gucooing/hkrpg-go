@@ -37,6 +37,11 @@ type NpcEntity struct {
 	NpcId uint32 // ncp id
 }
 
+type PropEntity struct {
+	Entity
+	PropId uint32
+}
+
 func (g *GamePlayer) GetEntity() map[uint32]EntityAll {
 	db := g.GetPlayer()
 	if db.EntityMap == nil {
@@ -66,6 +71,11 @@ func (ne *NpcEntity) AddEntity(g *GamePlayer) {
 	db[ne.EntityId] = ne
 }
 
+func (pe *PropEntity) AddEntity(g *GamePlayer) {
+	db := g.GetEntity()
+	db[pe.EntityId] = pe
+}
+
 func (g *GamePlayer) AddEntity(t EntityAll) {
 	t.AddEntity(g)
 }
@@ -75,37 +85,69 @@ func (g *GamePlayer) GetEntityById(id uint32) EntityAll { // 根据实体id拉�
 	return db[id]
 }
 
-func (g *GamePlayer) GetScene() *spb.Scene {
-	if g.PlayerPb.Scene == nil {
-		g.PlayerPb.Scene = &spb.Scene{
-			EntryId: 1010101,
-			PlaneId: 10101,
-			FloorId: 10101001,
-		}
+func (g *GamePlayer) NewScene() *spb.Scene {
+	return &spb.Scene{
+		EntryId: 1010101,
 	}
-	return g.PlayerPb.Scene
+}
+
+func (g *GamePlayer) GetScene() *spb.Scene {
+	db := g.PlayerPb
+	if db.Scene == nil {
+		db.Scene = g.NewScene()
+	}
+	return db.Scene
+}
+
+func (g *GamePlayer) SetCurEntryId(id uint32) {
+	db := g.GetScene()
+	db.EntryId = id
+}
+
+func (g *GamePlayer) NewPos() *spb.VectorBin {
+	return &spb.VectorBin{
+		X: -43300,
+		Y: 6,
+		Z: -37960,
+	}
+}
+
+func (g *GamePlayer) NewRot() *spb.VectorBin {
+	return &spb.VectorBin{
+		X: 0,
+		Y: 90000,
+		Z: 0,
+	}
 }
 
 func (g *GamePlayer) GetPos() *spb.VectorBin {
-	if g.PlayerPb.Pos == nil {
-		g.PlayerPb.Pos = &spb.VectorBin{
-			X: -43300,
-			Y: 6,
-			Z: -37960,
-		}
+	db := g.GetPlayerPb()
+	if db.Pos == nil {
+		db.Pos = g.NewPos()
 	}
-	return g.PlayerPb.Pos
+	return db.Pos
 }
 
 func (g *GamePlayer) GetRot() *spb.VectorBin {
-	if g.PlayerPb.Rot == nil {
-		g.PlayerPb.Rot = &spb.VectorBin{
-			X: 0,
-			Y: 90000,
-			Z: 0,
-		}
+	db := g.GetPlayerPb()
+	if db.Rot == nil {
+		db.Rot = g.NewRot()
 	}
-	return g.PlayerPb.Rot
+	return db.Rot
+}
+
+func (g *GamePlayer) SetPos(x, y, z int32) {
+	db := g.GetPos()
+	db.X = x
+	db.Y = y
+	db.Z = z
+}
+
+func (g *GamePlayer) SetRot(x, y, z int32) {
+	db := g.GetRot()
+	db.X = x
+	db.Y = y
+	db.Z = z
 }
 
 /****************************************************功能***************************************************/
@@ -165,27 +207,40 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		propState := gdconf.GetStateValue(propList)
+		entityId := g.GetNextGameObjectGuid()
+		pos := &proto.Vector{
+			X: int32(propList.PosX * 1000),
+			Y: int32(propList.PosY * 1000),
+			Z: int32(propList.PosZ * 1000),
+		}
+		rot := &proto.Vector{
+			X: 0,
+			Y: int32(propList.RotY * 1000),
+			Z: 0,
+		}
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  sceneGroup.GroupId, // 文件名后那个G
 			InstId:   propList.ID,        // ID
-			EntityId: g.GetNextGameObjectGuid(),
+			EntityId: entityId,
 			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(propList.PosX * 1000),
-					Y: int32(propList.PosY * 1000),
-					Z: int32(propList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: int32(propList.RotY * 1000),
-					Z: 0,
-				},
+				Pos: pos,
+				Rot: rot,
 			},
 			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
 				PropState: propState,
 			},
 		}
+		// 添加物品实体
+		g.AddEntity(&PropEntity{
+			Entity: Entity{
+				EntityId: entityId,
+				GroupId:  sceneGroup.GroupId,
+				Pos:      pos,
+				Rot:      rot,
+			},
+			PropId: propList.PropID,
+		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 	return entityGroupList
@@ -287,9 +342,6 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	if foorMap == nil {
 		return nil
 	}
-
-	var groupID = mapEntrance.StartGroupID
-	groupID = foorMap.StartGroupID
 	scene := &proto.SceneInfo{
 		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
 		LeaderEntityId:     leaderEntityId,
@@ -309,10 +361,9 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
+	// 清理老实体列表
+	g.NewEntity()
 	// 添加队伍角色进实体列表，并设置坐标
-	if foorMap.Groups[groupID] == nil {
-		return nil
-	}
 	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	for _, levelGroup := range foorMap.Groups {

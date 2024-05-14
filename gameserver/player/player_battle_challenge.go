@@ -48,7 +48,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 
 	// 设置战斗类型
 	if req.StoryInfo != nil {
-		battleState.BattleType = spb.BattleType_Battle_CHALLENGE_Story
+		// battleState.BattleType = spb.BattleType_Battle_CHALLENGE_Story
 		// 缓存buff
 		challengeState.StoryBuffOne = req.StoryInfo.GetStoryBuffInfo().StoryBuffOne
 		challengeState.StoryBuffTwo = req.StoryInfo.GetStoryBuffInfo().StoryBuffTwo
@@ -111,10 +111,10 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	case spb.BattleType_Battle_CHALLENGE:
 		challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
 		challengeState.ChallengeCountDown = challengeMazeConfig.ChallengeCountDown
-	case spb.BattleType_Battle_CHALLENGE_Story:
-		storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
-		challengeState.ChallengeCountDown = storyMazeExtra.TurnLimit
-		challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
+		// case spb.BattleType_Battle_CHALLENGE_Story:
+		// 	storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
+		// 	challengeState.ChallengeCountDown = storyMazeExtra.TurnLimit
+		// 	challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
 	}
 
 	// 添加波次
@@ -182,9 +182,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		GroupStateList:     nil,
 	}
 
-	monsterEntity := make(map[uint32]*MonsterEntity, 0)
 	avatarEntity := make(map[uint32]*AvatarEntity, 0)
-	npcEntity := make(map[uint32]*NpcEntity, 0)
 	// 将进入场景的角色添加到实体列表里
 	entityGroup := &proto.SceneEntityGroupInfo{
 		GroupId:    0,
@@ -220,12 +218,10 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 			entityList.EntityId = leaderEntityId
 			avatarEntity[leaderEntityId] = &AvatarEntity{
 				AvatarId: lineAvatar.AvatarId,
-				GroupId:  0,
 			}
 		} else {
 			avatarEntity[entityId] = &AvatarEntity{
 				AvatarId: lineAvatar.AvatarId,
-				GroupId:  0,
 			}
 			entityList.EntityId = entityId
 		}
@@ -261,15 +257,12 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 			EventId:    curChallengeBattle.EventID,
 		},
 	}
-	monsterEntity[entityId] = &MonsterEntity{
-		MonsterEId: curChallengeBattle.EventID,
-		GroupId:    curChallengeBattle.GroupID,
-	}
+	// monsterEntity[entityId] = &MonsterEntity{
+	// 	MonsterEId: curChallengeBattle.EventID,
+	// 	GroupId:    curChallengeBattle.GroupID,
+	// }
 	entityGroupNPCMonster.EntityList = append(entityGroupNPCMonster.EntityList, entityList)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupNPCMonster)
-	g.GetSceneEntity().MonsterEntity = monsterEntity
-	g.GetSceneEntity().AvatarEntity = avatarEntity
-	g.GetSceneEntity().NpcEntity = npcEntity
 
 	return scene
 }
@@ -292,18 +285,18 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	// battleState := g.GetBattleState()
 	challengeState := g.GetChallengeState()
-	var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	// var targetIndex uint32 = 0
-
-	// 通过波次获取队伍
-	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	} else {
-		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
-	}
-
-	// 添加角色
-	rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
+	// var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
+	// // var targetIndex uint32 = 0
+	//
+	// // 通过波次获取队伍
+	// if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
+	// 	lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
+	// } else {
+	// 	lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
+	// }
+	//
+	// // 添加角色
+	// rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
 	// 添加回合限制
 	rsp.BattleInfo.RoundsLimit = challengeState.ChallengeCountDown
 
@@ -333,64 +326,6 @@ func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp
 	*/
 
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
-}
-
-func (g *GamePlayer) GetBattleAvatarList(lineUpId uint32) []*proto.BattleAvatar {
-	battleAvatarList := make([]*proto.BattleAvatar, 0)
-	for id, lineAvatar := range g.GetBattleLineUpById(lineUpId).AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
-			continue
-		}
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-
-		battleAvatar := &proto.BattleAvatar{
-			AvatarType:    proto.AvatarType_AVATAR_FORMAL_TYPE,
-			Id:            avatarBin.AvatarId,
-			Level:         avatarBin.Level,
-			Rank:          avatarBin.Rank,
-			Index:         id,
-			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
-			Hp:            10000,
-			Promotion:     avatarBin.PromoteLevel,
-			RelicList:     make([]*proto.BattleRelic, 0),
-			WorldLevel:    g.PlayerPb.WorldLevel,
-			SpBar: &proto.SpBarInfo{
-				CurSp: 10000,
-				MaxSp: 10000,
-			},
-		}
-		for _, skill := range g.GetSkillTreeList(avatarBin.AvatarId) {
-			if skill.Level == 0 {
-				continue
-			}
-			avatarSkillTree := &proto.AvatarSkillTree{
-				PointId: skill.PointId,
-				Level:   skill.Level,
-			}
-			battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
-		}
-		for _, relic := range avatarBin.EquipRelic {
-			equipRelic := g.GetProtoBattleRelicById(relic)
-			if equipRelic == nil {
-				delete(avatarBin.EquipRelic, relic)
-				continue
-			}
-			battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
-		}
-		// 获取角色装备的光锥
-		if avatarBin.EquipmentUniqueId != 0 {
-			equipment := g.GetEquipment(avatarBin.EquipmentUniqueId)
-			equipmentList := &proto.BattleEquipment{
-				Id:        equipment.Tid,
-				Level:     equipment.Level,
-				Promotion: equipment.Promotion,
-				Rank:      equipment.Rank,
-			}
-			battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
-		}
-		battleAvatarList = append(battleAvatarList, battleAvatar)
-	}
-	return battleAvatarList
 }
 
 // 忘却之庭世界战斗结算事件
@@ -426,21 +361,21 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	nitify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
 	}
-	for _, eventId := range challengeState.MonsterEntityMap {
-		entity := g.GetSceneEntity().MonsterEntity[eventId]
-		if entity != nil {
-			groupRefreshInfo := &proto.SceneGroupRefreshInfo{
-				GroupId: entity.GroupId,
-				RefreshEntity: []*proto.SceneEntityRefreshInfo{
-					{
-						DelEntity: eventId,
-					},
-				},
-			}
-			nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
-			delete(g.GetSceneEntity().MonsterEntity, eventId)
-		}
-	}
+	// for _, eventId := range challengeState.MonsterEntityMap {
+	// 	entity := g.GetSceneEntity().MonsterEntity[eventId]
+	// 	if entity != nil {
+	// 		groupRefreshInfo := &proto.SceneGroupRefreshInfo{
+	// 			GroupId: entity.GroupId,
+	// 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
+	// 				{
+	// 					DelEntity: eventId,
+	// 				},
+	// 			},
+	// 		}
+	// 		nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
+	// 		delete(g.GetSceneEntity().MonsterEntity, eventId)
+	// 	}
+	// }
 	g.Send(cmd.SceneGroupRefreshScNotify, nitify)
 
 	// 获取已使用回合数
@@ -574,10 +509,10 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 				EntityId: entityId,
 			},
 		}
-		g.GetSceneEntity().AvatarEntity[entityId] = &AvatarEntity{
-			AvatarId: avatarBin.AvatarId,
-			GroupId:  0,
-		}
+		// g.GetSceneEntity().AvatarEntity[entityId] = &AvatarEntity{
+		// 	AvatarId: avatarBin.AvatarId,
+		// 	GroupId:  0,
+		// }
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	}
 	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
@@ -626,10 +561,10 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 		},
 	}
 
-	g.GetSceneEntity().MonsterEntity[entityId] = &MonsterEntity{
-		MonsterEId: curChallengeBattle.EventID,
-		GroupId:    curChallengeBattle.GroupID,
-	}
+	// g.GetSceneEntity().MonsterEntity[entityId] = &MonsterEntity{
+	// 	MonsterEId: curChallengeBattle.EventID,
+	// 	GroupId:    curChallengeBattle.GroupID,
+	// }
 	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 
 	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
@@ -641,19 +576,19 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 
 func (g *GamePlayer) ChallengeStorySceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	challengeState := g.GetChallengeState()
-	var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	// var targetIndex uint32 = 0
+	// var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
+	// // var targetIndex uint32 = 0
 	storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
-
-	// 通过波次获取队伍
-	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	} else {
-		lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
-	}
-
-	// 添加角色
-	rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
+	//
+	// // 通过波次获取队伍
+	// if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
+	// 	lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
+	// } else {
+	// 	lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
+	// }
+	//
+	// // 添加角色
+	// rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
 	// 添加回合限制
 	rsp.BattleInfo.RoundsLimit = challengeState.ChallengeCountDown
 
@@ -743,21 +678,21 @@ func (g *GamePlayer) ChallengeStoryPVEBattleResultCsReq(req *proto.PVEBattleResu
 	nitify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
 	}
-	for _, eventId := range challengeState.MonsterEntityMap {
-		entity := g.GetSceneEntity().MonsterEntity[eventId]
-		if entity != nil {
-			groupRefreshInfo := &proto.SceneGroupRefreshInfo{
-				GroupId: entity.GroupId,
-				RefreshEntity: []*proto.SceneEntityRefreshInfo{
-					{
-						DelEntity: eventId,
-					},
-				},
-			}
-			nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
-			delete(g.GetSceneEntity().MonsterEntity, eventId)
-		}
-	}
+	// for _, eventId := range challengeState.MonsterEntityMap {
+	// 	entity := g.GetSceneEntity().MonsterEntity[eventId]
+	// 	if entity != nil {
+	// 		groupRefreshInfo := &proto.SceneGroupRefreshInfo{
+	// 			GroupId: entity.GroupId,
+	// 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
+	// 				{
+	// 					DelEntity: eventId,
+	// 				},
+	// 			},
+	// 		}
+	// 		nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
+	// 		delete(g.GetSceneEntity().MonsterEntity, eventId)
+	// 	}
+	// }
 	g.Send(cmd.SceneGroupRefreshScNotify, nitify)
 
 	// 获取分数

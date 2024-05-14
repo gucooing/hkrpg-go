@@ -110,7 +110,7 @@ func (g *GamePlayer) AddAvatar(avatarId uint32) {
 	g.AvatarPlayerSyncScNotify(avatarId)
 }
 
-/***************************************功能接口**************************/
+/****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 	avatardb := g.GetAvatar().Avatar[avatarId]
@@ -194,6 +194,9 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList []BattleAvatar) []*proto.Battle
 		}
 		// 获取技能
 		for _, skill := range avatarBin.GetSkilltreeList() {
+			if skill.Level == 0 {
+				continue
+			}
 			avatarSkillTree := &proto.AvatarSkillTree{
 				PointId: skill.PointId,
 				Level:   skill.Level,
