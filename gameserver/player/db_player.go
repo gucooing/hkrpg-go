@@ -4,7 +4,7 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-type PlayerData struct {
+type OnlineData struct {
 	LoginToday            bool                 // 是否是今天第一次登录
 	Battle                map[uint32]*Battle   // 正在进行的战斗
 	BattleState           *BattleState         // 战斗情况
@@ -14,7 +14,7 @@ type PlayerData struct {
 	GameObjectGuidCounter uint32               // 游戏对象guid计数器 貌似一个玩家用一个就行了
 	IsNickName            bool                 // 是否修改昵称
 	EntityMap             map[uint32]EntityAll // 场景实体
-	NpcList               map[uint32]uint32
+	CurBattle             *CurBattle           // 正在进行的战斗
 }
 
 type Vector struct {
@@ -23,9 +23,9 @@ type Vector struct {
 	Z int32
 }
 
-func (g *GamePlayer) NewPlayer() *spb.PlayerBasicCompBin {
-	g.PlayerPb = new(spb.PlayerBasicCompBin)
-	g.PlayerPb = &spb.PlayerBasicCompBin{
+func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
+	g.BasicBin = new(spb.PlayerBasicCompBin)
+	g.BasicBin = &spb.PlayerBasicCompBin{
 		Level:                   1,
 		Exp:                     0,
 		Nickname:                "hkrpg-go",
@@ -73,19 +73,19 @@ func (g *GamePlayer) NewPlayer() *spb.PlayerBasicCompBin {
 
 	g.AddAvatar(uint32(g.GetAvatar().CurMainAvatar))
 
-	return g.PlayerPb
+	return g.BasicBin
 }
 
-func (g *GamePlayer) GetPlayerPb() *spb.PlayerBasicCompBin {
-	if g.PlayerPb == nil {
-		g.PlayerPb = g.NewPlayer()
+func (g *GamePlayer) GetBasicBin() *spb.PlayerBasicCompBin {
+	if g.BasicBin == nil {
+		g.BasicBin = g.NewBasicBin()
 	}
-	return g.PlayerPb
+	return g.BasicBin
 }
 
-func (g *GamePlayer) GetPlayer() *PlayerData {
-	if g.Player == nil {
-		g.Player = &PlayerData{
+func (g *GamePlayer) GetOnlineData() *OnlineData {
+	if g.OnlineData == nil {
+		g.OnlineData = &OnlineData{
 			LoginToday:            false,
 			Battle:                nil,
 			BattleState:           nil,
@@ -95,32 +95,25 @@ func (g *GamePlayer) GetPlayer() *PlayerData {
 			GameObjectGuidCounter: 0,
 			IsNickName:            false,
 			EntityMap:             g.NewEntity(),
-			NpcList:               nil,
+			CurBattle:             g.NewCurBattle(),
 		}
 	}
 
-	return g.Player
-}
-
-func (g *GamePlayer) GetSceneNpcList() map[uint32]uint32 {
-	if g.Player.NpcList == nil {
-		g.Player.NpcList = make(map[uint32]uint32)
-	}
-	return g.Player.NpcList
+	return g.OnlineData
 }
 
 func (g *GamePlayer) GetNextGameObjectGuid() uint32 {
-	g.Player.GameObjectGuidCounter++
-	return 0 + g.Player.GameObjectGuidCounter
+	g.OnlineData.GameObjectGuidCounter++
+	return 0 + g.OnlineData.GameObjectGuidCounter
 }
 
 func (g *GamePlayer) GetBattleIdGuid() uint32 {
-	g.Player.BattleId++
-	return 1 + g.Player.BattleId
+	g.OnlineData.BattleId++
+	return 1 + g.OnlineData.BattleId
 }
 
 func (g *GamePlayer) GetNickname() string {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.Nickname == "" {
 		db.Nickname = "hkrpg-go"
 	}
@@ -128,7 +121,7 @@ func (g *GamePlayer) GetNickname() string {
 }
 
 func (g *GamePlayer) GetLevel() uint32 {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.Level <= 0 {
 		db.Level = 1
 	}
@@ -136,7 +129,7 @@ func (g *GamePlayer) GetLevel() uint32 {
 }
 
 func (g *GamePlayer) GetWorldLevel() uint32 {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.WorldLevel < 0 {
 		db.WorldLevel = 0
 	}
@@ -144,7 +137,7 @@ func (g *GamePlayer) GetWorldLevel() uint32 {
 }
 
 func (g *GamePlayer) GetHeadIcon() uint32 {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.HeadImageAvatarId == 0 {
 		db.HeadImageAvatarId = 208001
 	}
@@ -152,12 +145,12 @@ func (g *GamePlayer) GetHeadIcon() uint32 {
 }
 
 func (g *GamePlayer) GetDataVersion() uint32 {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	return db.DataVersion
 }
 
 func (g *GamePlayer) AddDataVersion() uint32 {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	db.DataVersion++
 	return db.DataVersion
 }

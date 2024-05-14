@@ -21,13 +21,13 @@ type GamePlayer struct {
 	AccountId uint32
 	GateAppId uint32
 	// 玩家数据
-	Player    *PlayerData
-	PlayerPb  *spb.PlayerBasicCompBin // 玩家pb数据
-	GateConn  net.Conn
-	closeOnce sync.Once
-	stop      chan struct{}
-	Ticker    *time.Timer
-	MsgChan   chan Msg // 消息通道
+	OnlineData *OnlineData
+	BasicBin   *spb.PlayerBasicCompBin // 玩家pb数据
+	GateConn   net.Conn
+	closeOnce  sync.Once
+	stop       chan struct{}
+	Ticker     *time.Timer
+	MsgChan    chan Msg // 消息通道
 }
 
 type Msg struct {

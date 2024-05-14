@@ -58,9 +58,9 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 	dbDate := new(database.PlayerData)
 	dbDate.Uid = p.Uid
 	dbDate.Level = p.GetLevel()
-	dbDate.Exp = p.PlayerPb.Exp
+	dbDate.Exp = p.BasicBin.Exp
 	dbDate.Nickname = p.GetNickname()
-	dbDate.BinData, err = pb.Marshal(p.PlayerPb)
+	dbDate.BinData, err = pb.Marshal(p.BasicBin)
 	dbDate.DataVersion = p.GetDataVersion()
 	if err != nil {
 		logger.Error("pb marshal error: %v", err)
@@ -89,8 +89,8 @@ func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServ
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
 
-	if gamePlayer.p.Player == nil {
-		gamePlayer.p.Player = &player.PlayerData{
+	if gamePlayer.p.OnlineData == nil {
+		gamePlayer.p.OnlineData = &player.OnlineData{
 			Battle: make(map[uint32]*player.Battle),
 			BattleState: &player.BattleState{
 				ChallengeState: &player.ChallengeState{},
@@ -160,7 +160,7 @@ func (s *GameServer) SetPlayerPlayerBasicBriefData(g *player.GamePlayer) bool {
 		WorldLevel:        g.GetWorldLevel(),
 		LastLoginTime:     time.Now().Unix(),
 		HeadImageAvatarId: g.GetHeadIcon(),
-		Exp:               g.GetPlayerPb().Exp,
+		Exp:               g.GetBasicBin().Exp,
 		PlatformType:      0,
 		Uid:               g.Uid,
 	}

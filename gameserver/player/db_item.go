@@ -12,25 +12,25 @@ type Material struct {
 }
 
 func (g *GamePlayer) GetItem() *spb.Item {
-	if g.PlayerPb.Item == nil {
-		g.PlayerPb.Item = &spb.Item{
+	if g.BasicBin.Item == nil {
+		g.BasicBin.Item = &spb.Item{
 			RelicMap:     make(map[uint32]*spb.Relic),
 			EquipmentMap: make(map[uint32]*spb.Equipment),
 			MaterialMap:  make(map[uint32]uint32),
 			HeadIcon:     make([]uint32, 0),
 		}
-		g.PlayerPb.Item.MaterialMap[11] = 240
+		g.BasicBin.Item.MaterialMap[11] = 240
 	}
-	if g.PlayerPb.Item.RelicMap == nil {
-		g.PlayerPb.Item.RelicMap = make(map[uint32]*spb.Relic)
+	if g.BasicBin.Item.RelicMap == nil {
+		g.BasicBin.Item.RelicMap = make(map[uint32]*spb.Relic)
 	}
-	if g.PlayerPb.Item.EquipmentMap == nil {
-		g.PlayerPb.Item.EquipmentMap = make(map[uint32]*spb.Equipment)
+	if g.BasicBin.Item.EquipmentMap == nil {
+		g.BasicBin.Item.EquipmentMap = make(map[uint32]*spb.Equipment)
 	}
-	if g.PlayerPb.Item.MaterialMap == nil {
-		g.PlayerPb.Item.MaterialMap = make(map[uint32]uint32)
+	if g.BasicBin.Item.MaterialMap == nil {
+		g.BasicBin.Item.MaterialMap = make(map[uint32]uint32)
 	}
-	return g.PlayerPb.Item
+	return g.BasicBin.Item
 }
 
 func (g *GamePlayer) AddMaterial(pileItem []*Material) {

@@ -187,13 +187,13 @@ func (ge *gateServer) GetPlayerDate(accountId uint32, g *player.GamePlayer) {
 	if dbPlayer == nil || dbPlayer.BinData == nil {
 		dbPlayer = new(database.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
-		g.PlayerPb = g.NewPlayer()
+		g.BasicBin = g.NewBasicBin()
 		// 初始化完毕保存账号数据
 		dbPlayer.Uid = g.Uid
 		dbPlayer.Level = g.GetLevel()
-		dbPlayer.Exp = g.PlayerPb.Exp
+		dbPlayer.Exp = g.BasicBin.Exp
 		dbPlayer.Nickname = g.GetNickname()
-		dbPlayer.BinData, err = pb.Marshal(g.PlayerPb)
+		dbPlayer.BinData, err = pb.Marshal(g.BasicBin)
 		dbPlayer.DataVersion = g.GetDataVersion()
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
@@ -205,11 +205,11 @@ func (ge *gateServer) GetPlayerDate(accountId uint32, g *player.GamePlayer) {
 			return
 		}
 	} else {
-		g.PlayerPb = new(spb.PlayerBasicCompBin)
-		err = pb.Unmarshal(dbPlayer.BinData, g.PlayerPb)
+		g.BasicBin = new(spb.PlayerBasicCompBin)
+		err = pb.Unmarshal(dbPlayer.BinData, g.BasicBin)
 		if err != nil {
 			logger.Error("unmarshal proto data err: %v", err)
-			g.PlayerPb = g.NewPlayer()
+			g.BasicBin = g.NewBasicBin()
 			return
 		}
 	}

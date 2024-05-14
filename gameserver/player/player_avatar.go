@@ -256,7 +256,7 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 		g.DelMaterial(pileItem)
 	}
 	// 升级
-	for id, skilltree := range g.PlayerPb.Avatar.Avatar[avatarId].SkilltreeList {
+	for id, skilltree := range g.BasicBin.Avatar.Avatar[avatarId].SkilltreeList {
 		if skilltree.PointId == req.PointId {
 			avatarDb.SkilltreeList[id].Level = req.Level
 		}

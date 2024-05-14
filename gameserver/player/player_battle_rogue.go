@@ -609,7 +609,7 @@ func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGr
 				},
 			},
 			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.PlayerPb.WorldLevel,
+				WorldLevel: g.BasicBin.WorldLevel,
 				MonsterId:  rogueMonster.NpcMonsterID,
 				EventId:    rogueMonster.EventID,
 			},

@@ -24,7 +24,7 @@ func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
 	rsp.NextRecoverTime = 1698768000
-	rsp.GameplayBirthday = g.PlayerPb.Birthday
+	rsp.GameplayBirthday = g.BasicBin.Birthday
 	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
 
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
@@ -40,7 +40,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		RelicList:                     make([]*proto.RelicArchive, 0),
 	}
 
-	for _, avatar := range g.PlayerPb.Avatar.Avatar {
+	for _, avatar := range g.BasicBin.Avatar.Avatar {
 		archiveData.ArchiveMissingAvatarIdList = append(archiveData.ArchiveMissingAvatarIdList, avatar.AvatarId)
 	}
 
@@ -75,9 +75,9 @@ func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.PlayerPb.HeadImageAvatarId,
+		CurrentHeadIconId:    g.BasicBin.HeadImageAvatarId,
 		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
-		Signature:            g.PlayerPb.Signature,
+		Signature:            g.BasicBin.Signature,
 		// TODO
 		DisplayAvatarVec: &proto.DisplayAvatarVec{
 			DisplayAvatarList: nil,
@@ -99,7 +99,7 @@ func (g *GamePlayer) SetHeadIconCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeadIconCsReq, payloadMsg)
 	req := msg.(*proto.SetHeadIconCsReq)
 
-	g.PlayerPb.HeadImageAvatarId = req.Id
+	g.BasicBin.HeadImageAvatarId = req.Id
 
 	rsp := &proto.SetHeadIconScRsp{
 		CurrentHeadIconId: req.Id,
@@ -113,7 +113,7 @@ func (g *GamePlayer) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeroBasicTypeCsReq, payloadMsg)
 	req := msg.(*proto.SetHeroBasicTypeCsReq)
 
-	g.PlayerPb.Avatar.CurMainAvatar = spb.HeroBasicType(req.BasicType)
+	g.BasicBin.Avatar.CurMainAvatar = spb.HeroBasicType(req.BasicType)
 
 	rsp := &proto.SetHeroBasicTypeScRsp{
 		BasicType: req.BasicType,
@@ -212,8 +212,8 @@ func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) SetClientPausedCsReq(payloadMsg []byte) {
 	rsp := new(proto.SetClientPausedScRsp)
-	g.Player.IsPaused = !g.Player.IsPaused
-	rsp.Paused = g.Player.IsPaused
+	g.OnlineData.IsPaused = !g.OnlineData.IsPaused
+	rsp.Paused = g.OnlineData.IsPaused
 
 	g.Send(cmd.SetClientPausedScRsp, rsp)
 }
@@ -247,11 +247,11 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetNicknameCsReq, payloadMsg)
 	req := msg.(*proto.SetNicknameCsReq)
 
-	if g.Player.IsNickName {
-		g.PlayerPb.Nickname = req.Nickname
+	if g.OnlineData.IsNickName {
+		g.BasicBin.Nickname = req.Nickname
 	}
 
-	g.Player.IsNickName = !g.Player.IsNickName
+	g.OnlineData.IsNickName = !g.OnlineData.IsNickName
 
 	g.PlayerPlayerSyncScNotify()
 	g.Send(cmd.SetNicknameScRsp, nil)
@@ -261,7 +261,7 @@ func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetGameplayBirthdayCsReq, payloadMsg)
 	req := msg.(*proto.SetGameplayBirthdayCsReq)
 
-	g.PlayerPb.Birthday = req.Birthday
+	g.BasicBin.Birthday = req.Birthday
 
 	rsp := &proto.SetGameplayBirthdayScRsp{Birthday: req.Birthday}
 
@@ -272,7 +272,7 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetSignatureCsReq, payloadMsg)
 	req := msg.(*proto.SetSignatureCsReq)
 
-	g.PlayerPb.Signature = req.Signature
+	g.BasicBin.Signature = req.Signature
 
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
 

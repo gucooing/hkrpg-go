@@ -9,7 +9,6 @@ import (
 )
 
 type EntityAll interface {
-	entity()
 	AddEntity(g *GamePlayer)
 }
 
@@ -19,8 +18,6 @@ type Entity struct {
 	Pos      *proto.Vector
 	Rot      *proto.Vector
 }
-
-func (e *Entity) entity() {}
 
 type AvatarEntity struct {
 	Entity
@@ -39,11 +36,11 @@ type NpcEntity struct {
 
 type PropEntity struct {
 	Entity
-	PropId uint32
+	PropId uint32 // 物品id
 }
 
 func (g *GamePlayer) GetEntity() map[uint32]EntityAll {
-	db := g.GetPlayer()
+	db := g.GetOnlineData()
 	if db.EntityMap == nil {
 		db.EntityMap = make(map[uint32]EntityAll)
 	}
@@ -51,7 +48,7 @@ func (g *GamePlayer) GetEntity() map[uint32]EntityAll {
 }
 
 func (g *GamePlayer) NewEntity() map[uint32]EntityAll { // 清空实体列表用的
-	db := g.GetPlayer()
+	db := g.GetOnlineData()
 	db.EntityMap = make(map[uint32]EntityAll)
 	return db.EntityMap
 }
@@ -92,7 +89,7 @@ func (g *GamePlayer) NewScene() *spb.Scene {
 }
 
 func (g *GamePlayer) GetScene() *spb.Scene {
-	db := g.PlayerPb
+	db := g.BasicBin
 	if db.Scene == nil {
 		db.Scene = g.NewScene()
 	}
@@ -121,7 +118,7 @@ func (g *GamePlayer) NewRot() *spb.VectorBin {
 }
 
 func (g *GamePlayer) GetPos() *spb.VectorBin {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.Pos == nil {
 		db.Pos = g.NewPos()
 	}
@@ -129,7 +126,7 @@ func (g *GamePlayer) GetPos() *spb.VectorBin {
 }
 
 func (g *GamePlayer) GetRot() *spb.VectorBin {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.Rot == nil {
 		db.Rot = g.NewRot()
 	}
@@ -268,7 +265,7 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 				Rot: rot,
 			},
 			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.PlayerPb.WorldLevel,
+				WorldLevel: g.BasicBin.WorldLevel,
 				MonsterId:  monsterList.NPCMonsterID,
 				EventId:    monsterList.EventID,
 			},
@@ -313,9 +310,6 @@ func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 				ExtraInfo: nil,
 				NpcId:     npcList.NPCID,
 			},
-		}
-		if npcList.FirstDialogueGroupID != 0 {
-			g.GetSceneNpcList()[npcList.NPCID] = npcList.FirstDialogueGroupID
 		}
 		// 添加npc
 		g.AddEntity(&NpcEntity{

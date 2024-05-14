@@ -5,13 +5,13 @@ import (
 )
 
 func (g *GamePlayer) GetActivity() *spb.Activity {
-	if g.PlayerPb.Activity == nil {
-		g.PlayerPb.Activity = &spb.Activity{
+	if g.BasicBin.Activity == nil {
+		g.BasicBin.Activity = &spb.Activity{
 			TrialActivity: make([]uint32, 0),
 			ActivityLogin: make(map[uint32]uint32),
 		}
 	}
-	return g.PlayerPb.Activity
+	return g.BasicBin.Activity
 }
 
 func (g *GamePlayer) GetTrialActivity() []uint32 {

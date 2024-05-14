@@ -220,7 +220,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 					},
 				},
 				NpcMonster: &proto.SceneNpcMonsterInfo{
-					WorldLevel: g.PlayerPb.WorldLevel,
+					WorldLevel: g.BasicBin.WorldLevel,
 					MonsterId:  trialActivityState.NPCMonsterID,
 					EventId:    trialActivityState.EventID,
 				},
@@ -293,7 +293,7 @@ func (g *GamePlayer) TrialActivityGetBattleAvatarList() []*proto.BattleAvatar {
 			Hp:            10000,
 			Promotion:     avatar.Promotion,
 			RelicList:     make([]*proto.BattleRelic, 0),
-			WorldLevel:    g.PlayerPb.WorldLevel,
+			WorldLevel:    g.BasicBin.WorldLevel,
 			SpBar: &proto.SpBarInfo{
 				CurSp: 6000,
 				MaxSp: 10000,

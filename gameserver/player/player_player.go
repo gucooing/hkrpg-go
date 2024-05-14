@@ -10,14 +10,14 @@ import (
 func (g *GamePlayer) PlayerPlayerSyncScNotify() {
 	notify := &proto.PlayerSyncScNotify{
 		BasicInfo: &proto.PlayerBasicInfo{
-			Nickname:   g.PlayerPb.Nickname,
-			Level:      g.PlayerPb.Level,
-			Exp:        g.PlayerPb.Exp,
+			Nickname:   g.BasicBin.Nickname,
+			Level:      g.BasicBin.Level,
+			Exp:        g.BasicBin.Exp,
 			Hcoin:      g.GetItem().MaterialMap[1],
 			Scoin:      g.GetItem().MaterialMap[2],
 			Mcoin:      g.GetItem().MaterialMap[3],
 			Stamina:    g.GetItem().MaterialMap[11],
-			WorldLevel: g.PlayerPb.WorldLevel,
+			WorldLevel: g.BasicBin.WorldLevel,
 		},
 	}
 
@@ -25,14 +25,14 @@ func (g *GamePlayer) PlayerPlayerSyncScNotify() {
 }
 
 func (g *GamePlayer) AddTrailblazerExp(num uint32) {
-	g.PlayerPb.Exp += num
-	level, exp, worldLevel := gdconf.GetPlayerLevelConfigByLevel(g.PlayerPb.Exp, g.PlayerPb.Level, g.PlayerPb.WorldLevel)
+	g.BasicBin.Exp += num
+	level, exp, worldLevel := gdconf.GetPlayerLevelConfigByLevel(g.BasicBin.Exp, g.BasicBin.Level, g.BasicBin.WorldLevel)
 	if level == 0 && exp == 0 {
 		return
 	} else {
-		g.PlayerPb.Exp = exp
-		g.PlayerPb.Level = level
-		g.PlayerPb.WorldLevel = worldLevel
+		g.BasicBin.Exp = exp
+		g.BasicBin.Level = level
+		g.BasicBin.WorldLevel = worldLevel
 		g.PlayerPlayerSyncScNotify()
 	}
 

@@ -5,15 +5,15 @@ import (
 )
 
 func (g *GamePlayer) GetGacha() *spb.Gacha {
-	if g.PlayerPb.Gacha == nil {
-		g.PlayerPb.Gacha = &spb.Gacha{
+	if g.BasicBin.Gacha == nil {
+		g.BasicBin.Gacha = &spb.Gacha{
 			GachaMap: make(map[uint32]*spb.GachaNum),
 		}
 	}
-	if g.PlayerPb.Gacha.GachaMap == nil {
-		g.PlayerPb.Gacha.GachaMap = make(map[uint32]*spb.GachaNum)
+	if g.BasicBin.Gacha.GachaMap == nil {
+		g.BasicBin.Gacha.GachaMap = make(map[uint32]*spb.GachaNum)
 	}
-	return g.PlayerPb.Gacha
+	return g.BasicBin.Gacha
 }
 
 func (g *GamePlayer) GetDbGacha(gachaId uint32) *spb.GachaNum {
@@ -36,7 +36,7 @@ func (g *GamePlayer) AddGachaItem(id uint32) (bool, bool) {
 		g.AddEquipment(id)
 		return false, false
 	} else {
-		if g.PlayerPb.Avatar.Avatar[id] != nil {
+		if g.BasicBin.Avatar.Avatar[id] != nil {
 			pileItem = append(pileItem, &Material{
 				Tid: id + 10000,
 				Num: 1,

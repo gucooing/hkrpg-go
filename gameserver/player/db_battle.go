@@ -3,12 +3,66 @@
 package player
 
 import (
+	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
+
+var BattleBackupLock sync.Mutex // 战斗列表互斥锁
+
+type CurBattle struct {
+	BattleBackup map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
+}
+
+type BattleBackup struct {
+	BattleId         uint32                   // 战斗id
+	BattleAvatarList map[uint32]*BattleAvatar // 参加战斗的角色
+	monsterEntity    []uint32                 // 参战怪物实体id
+	// 奖励
+}
+
+func (g *GamePlayer) NewCurBattle() *CurBattle {
+	return &CurBattle{
+		BattleBackup: make(map[uint32]*BattleBackup),
+	}
+}
+
+func (g *GamePlayer) GetCurBattle() *CurBattle {
+	db := g.GetOnlineData()
+	if db.CurBattle == nil {
+		db.CurBattle = g.NewCurBattle()
+	}
+	return db.CurBattle
+}
+
+func (g *GamePlayer) GetBattleBackup() map[uint32]*BattleBackup {
+	db := g.GetCurBattle()
+	if db.BattleBackup == nil {
+		db.BattleBackup = make(map[uint32]*BattleBackup)
+	}
+	return db.BattleBackup
+}
+
+func (g *GamePlayer) GetBattleBackupById(battleId uint32) *BattleBackup {
+	BattleBackupLock.Lock()
+	defer BattleBackupLock.Unlock()
+	return g.GetBattleBackup()[battleId]
+}
+
+func (g *GamePlayer) AddBattleBackup(bb *BattleBackup) {
+	BattleBackupLock.Lock()
+	defer BattleBackupLock.Unlock()
+	g.GetBattleBackup()[bb.BattleId] = bb
+}
+
+func (g *GamePlayer) DelBattleBackupById(battleId uint32) {
+	BattleBackupLock.Lock()
+	defer BattleBackupLock.Unlock()
+	delete(g.GetBattleBackup(), battleId)
+}
 
 type BattleState struct {
 	BattleType         spb.BattleType
@@ -96,8 +150,8 @@ type RogueBuff struct {
 }
 
 func (g *GamePlayer) GetBattleState() *BattleState {
-	if g.Player.BattleState == nil {
-		g.Player.BattleState = &BattleState{
+	if g.OnlineData.BattleState == nil {
+		g.OnlineData.BattleState = &BattleState{
 			BattleType:         0,
 			ChallengeState:     &ChallengeState{},
 			BuffList:           make([]uint32, 0),
@@ -105,7 +159,7 @@ func (g *GamePlayer) GetBattleState() *BattleState {
 			RogueState:         &RogueState{},
 		}
 	}
-	return g.Player.BattleState
+	return g.OnlineData.BattleState
 }
 
 func (g *GamePlayer) NewChallengeState() *ChallengeState {
@@ -136,7 +190,7 @@ func (g *GamePlayer) NewBattle() *spb.Battle {
 }
 
 func (g *GamePlayer) GetBattle() *spb.Battle {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.Battle == nil {
 		db.Battle = g.NewBattle()
 	}
@@ -160,16 +214,32 @@ func (g *GamePlayer) GetChallenge() *spb.Challenge {
 	return db.Challenge
 }
 
-func (g *GamePlayer) GetMem(isMem []uint32) []uint32 {
-	mem := make([]uint32, 0)
+type MPEM struct {
+	IsBattle bool     // 是否战斗
+	EntityId []uint32 // 实体id
+	MPid     []uint32 // 怪物/物品对应id
+}
+
+func (g *GamePlayer) GetMem(isMem []uint32) *MPEM {
+	mpem := &MPEM{
+		IsBattle: false,
+		EntityId: make([]uint32, 0),
+		MPid:     make([]uint32, 0),
+	}
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
 		switch entity.(type) {
+		case *AvatarEntity:
 		case *MonsterEntity:
-			mem = append(mem, id)
+			mpem.EntityId = append(mpem.EntityId, id)
+			mpem.MPid = append(mpem.MPid, entity.(*MonsterEntity).EventID)
+			mpem.IsBattle = true
+		case *PropEntity:
+			mpem.EntityId = append(mpem.EntityId, id)
+			mpem.MPid = append(mpem.MPid, entity.(*PropEntity).PropId)
 		}
 	}
-	return mem
+	return mpem
 }
 
 func (g *GamePlayer) GetChallengeById(id uint32) *spb.ChallengeList {
@@ -282,21 +352,22 @@ func (g *GamePlayer) RogueAddBuff(buffId uint32) {
 
 /****************************************************功能***************************************************/
 
-func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) *proto.SceneBattleInfo {
-	bAList := make([]BattleAvatar, 0)
+func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.SceneBattleInfo, *BattleBackup) {
+	bAList := make(map[uint32]*BattleAvatar, 0)
 	for _, lp := range lineUp.AvatarIdList {
-		bA := BattleAvatar{
+		bA := &BattleAvatar{
 			AssistUid: 0,
 			AvatarId:  lp.AvatarId,
 			IsAssist:  false,
 		}
-		bAList = append(bAList, bA)
+		bAList[lp.AvatarId] = bA
 	}
+	battleId := g.GetBattleIdGuid()
 	monsterWaveList, stageId := g.GetSceneMonsterWave(mem)
 	battleInfo := &proto.SceneBattleInfo{
 		LogicRandomSeed:     gdconf.GetLoadingDesc(),                  // 逻辑随机种子
 		WorldLevel:          g.GetWorldLevel(),                        // 世界等级
-		BattleId:            g.GetBattleIdGuid(),                      // 战斗Id
+		BattleId:            battleId,                                 // 战斗Id
 		BattleAvatarList:    g.GetProtoBattleAvatar(bAList),           // 战斗角色列表
 		MonsterWaveList:     monsterWaveList,                          // 怪物列表
 		StageId:             stageId,                                  // 起始战斗
@@ -305,44 +376,46 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) *proto.S
 		RoundsLimit:         0,                                        // 回合限制
 		BuffList:            make([]*proto.BattleBuff, 0),             // Buff列表
 	}
+	// 记录此次战斗
+	battleBackup := &BattleBackup{
+		BattleId:         battleId,
+		BattleAvatarList: bAList,
+		monsterEntity:    make([]uint32, 0),
+	}
 
-	return battleInfo
+	return battleInfo, battleBackup
 }
 
 func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWave, uint32) {
 	mWList := make([]*proto.SceneMonsterWave, 0)
 	var stageID uint32 = 0
 	for id, meid := range mem {
-		entity := g.GetEntityById(meid)
-		switch entity.(type) {
-		case *MonsterEntity:
-			stage := gdconf.GetPlaneEventById(entity.(*MonsterEntity).EventID, g.GetWorldLevel())
-			if stage == nil {
-				continue
+		stage := gdconf.GetPlaneEventById(meid, g.GetWorldLevel())
+		if stage == nil {
+			continue
+		}
+		stageConfig := gdconf.GetStageConfigById(stage.StageID)
+		if stageConfig == nil {
+			continue
+		}
+		for _, monsterListMap := range stageConfig.MonsterList {
+			monsterWaveList := &proto.SceneMonsterWave{
+				StageId:     stage.StageID,
+				WaveId:      1,
+				DropList:    make([]*proto.ItemList, 0),
+				MonsterList: make([]*proto.SceneMonster, 0),
+				WaveParam:   &proto.SceneMonsterWaveParam{},
 			}
-			stageConfig := gdconf.GetStageConfigById(stage.StageID)
-			if stageConfig == nil {
-				continue
-			}
-			for _, monsterListMap := range stageConfig.MonsterList {
-				monsterWaveList := &proto.SceneMonsterWave{
-					StageId: stage.StageID,
-					WaveId:  1,
-
-					MonsterList: make([]*proto.SceneMonster, 0),
-					WaveParam:   &proto.SceneMonsterWaveParam{},
+			for _, monsterList := range monsterListMap {
+				sceneMonster := &proto.SceneMonster{
+					MonsterId: monsterList,
 				}
-				for _, monsterList := range monsterListMap {
-					sceneMonster := &proto.SceneMonster{
-						MonsterId: monsterList,
-					}
-					monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
-				}
-				mWList = append(mWList, monsterWaveList)
+				monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
 			}
-			if id == 0 {
-				stageID = stage.StageID // 阶段id
-			}
+			mWList = append(mWList, monsterWaveList)
+		}
+		if id == 0 {
+			stageID = stage.StageID // 阶段id
 		}
 	}
 	return mWList, stageID

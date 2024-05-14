@@ -17,7 +17,7 @@ func (g *GamePlayer) NewLineUp() *spb.LineUp {
 }
 
 func (g *GamePlayer) GetLineUp() *spb.LineUp {
-	db := g.GetPlayerPb()
+	db := g.GetBasicBin()
 	if db.LineUp == nil {
 		db.LineUp = &spb.LineUp{
 			MainLineUp:     0,

@@ -127,18 +127,18 @@ func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
 func (g *GamePlayer) GmWorldLevel(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GmWorldLevel)
 
-	g.PlayerPb.WorldLevel = req.WorldLevel
+	g.BasicBin.WorldLevel = req.WorldLevel
 
 	// 账号状态通知
 	g.PlayerPlayerSyncScNotify()
 }
 
 func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
-	g.PlayerPb.Item = &spb.Item{
+	g.BasicBin.Item = &spb.Item{
 		RelicMap:     make(map[uint32]*spb.Relic),
 		EquipmentMap: make(map[uint32]*spb.Equipment),
 		MaterialMap:  make(map[uint32]uint32),
 		HeadIcon:     make([]uint32, 0),
 	}
-	g.PlayerPb.Item.MaterialMap[11] = 240
+	g.BasicBin.Item.MaterialMap[11] = 240
 }

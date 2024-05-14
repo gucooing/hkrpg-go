@@ -252,7 +252,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 			},
 		},
 		NpcMonster: &proto.SceneNpcMonsterInfo{
-			WorldLevel: g.PlayerPb.WorldLevel,
+			WorldLevel: g.BasicBin.WorldLevel,
 			MonsterId:  curChallengeBattle.NPCMonsterID,
 			EventId:    curChallengeBattle.EventID,
 		},
@@ -554,7 +554,7 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 				},
 			},
 			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.PlayerPb.WorldLevel,
+				WorldLevel: g.BasicBin.WorldLevel,
 				MonsterId:  curChallengeBattle.NPCMonsterID,
 				EventId:    curChallengeBattle.EventID,
 			},

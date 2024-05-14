@@ -56,7 +56,7 @@ func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg []byte) {
 
 	for i := 1; i < 5; i++ {
 		dailyActivityInfo := &proto.DailyActivityInfo{
-			WorldLevel:       g.PlayerPb.WorldLevel,
+			WorldLevel:       g.BasicBin.WorldLevel,
 			Level:            uint32(i),
 			DailyActivePoint: uint32(i * 100),
 			IsHasTaken:       true,

@@ -44,14 +44,14 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.CurTimezone = 8 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
-		Nickname:   g.PlayerPb.Nickname,
-		Level:      g.PlayerPb.Level,
-		Exp:        g.PlayerPb.Exp,
+		Nickname:   g.BasicBin.Nickname,
+		Level:      g.BasicBin.Level,
+		Exp:        g.BasicBin.Exp,
 		Hcoin:      g.GetItem().MaterialMap[1],
 		Scoin:      g.GetItem().MaterialMap[2],
 		Mcoin:      g.GetItem().MaterialMap[3],
 		Stamina:    g.GetItem().MaterialMap[11],
-		WorldLevel: g.PlayerPb.WorldLevel,
+		WorldLevel: g.BasicBin.WorldLevel,
 	}
 	g.closechan()
 	g.Send(cmd.PlayerLoginScRsp, rsp)
