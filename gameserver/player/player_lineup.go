@@ -60,10 +60,6 @@ func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
 				EntityId: entityId,
 			},
 		}
-		// g.GetSceneEntity().AvatarEntity[entityId] = &AvatarEntity{
-		// 	AvatarId: lineAvatar.AvatarId,
-		// 	GroupId:  0,
-		// }
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	}
 	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)

@@ -359,10 +359,22 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) ([]*NPCList, []*NPCList)
 }
 
 func GetSceneByPF(planeId, floorId uint32) map[uint32]*LevelGroup {
-	var levelGroup map[uint32]*LevelGroup
 	var nPCList []*NPCList
-	levelGroup = make(map[uint32]*LevelGroup)
+	levelGroup := make(map[uint32]*LevelGroup)
 	for _, groupList := range CONF.GroupMap[planeId][floorId] {
+		levelGroup[groupList.GroupId] = &LevelGroup{
+			GroupId:         groupList.GroupId,
+			GroupName:       groupList.GroupName,
+			LoadSide:        groupList.LoadSide,
+			Category:        groupList.Category,
+			LoadCondition:   groupList.LoadCondition,
+			UnloadCondition: groupList.UnloadCondition,
+			LoadOnInitial:   groupList.LoadOnInitial,
+			PropList:        nil,
+			MonsterList:     nil,
+			NPCList:         nil,
+			AnchorList:      groupList.AnchorList,
+		}
 		if groupList.LoadSide != "Server" { // 不是服务端发的不要
 			continue
 		}
@@ -386,16 +398,9 @@ func GetSceneByPF(planeId, floorId uint32) map[uint32]*LevelGroup {
 				continue
 			}
 		}
-		group := new(LevelGroup)
-		group.AnchorList = groupList.AnchorList
-		group.GroupId = groupList.GroupId
-		group.GroupName = groupList.GroupName
-		group.LoadSide = groupList.LoadSide
-		group.LoadOnInitial = groupList.LoadOnInitial
-		group.PropList = LoadProp(groupList)
-		group.MonsterList = LoadMonster(groupList)
-		group.NPCList, nPCList = LoadNpc(groupList, nPCList)
-		levelGroup[groupList.GroupId] = group
+		levelGroup[groupList.GroupId].PropList = LoadProp(groupList)
+		levelGroup[groupList.GroupId].MonsterList = LoadMonster(groupList)
+		levelGroup[groupList.GroupId].NPCList, nPCList = LoadNpc(groupList, nPCList)
 	}
 	return levelGroup
 }

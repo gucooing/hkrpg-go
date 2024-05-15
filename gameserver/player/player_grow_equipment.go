@@ -27,18 +27,18 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId u
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
 
-	avatardb := g.BasicBin.Avatar.Avatar[avatarId]
+	avatardb := g.BasicBin.Avatar.AvatarList[avatarId]
 	equipmentdb := g.GetItem().EquipmentMap[equipmentUniqueId]
 
 	// 目标光锥是否已被装备
 	if equipmentdb.BaseAvatarId != 0 {
-		avatardbs := g.BasicBin.Avatar.Avatar[equipmentdb.BaseAvatarId]
+		avatardbs := g.BasicBin.Avatar.AvatarList[equipmentdb.BaseAvatarId]
 		avatardbs.EquipmentUniqueId = avatardb.EquipmentUniqueId
 		// 获取要装备的角色光锥,与目标光锥角色交换
 		avatar := g.GetProtoAvatarById(avatardbs.AvatarId)
 		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 		// 交换光锥
-		g.BasicBin.Avatar.Avatar[equipmentdb.BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
+		g.BasicBin.Avatar.AvatarList[equipmentdb.BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
 		if avatardb.EquipmentUniqueId == 0 {
 		} else {
 			equipmentLists := g.GetEquipment(avatardb.EquipmentUniqueId)
@@ -48,7 +48,7 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId u
 	}
 
 	equipmentdb.BaseAvatarId = avatarId
-	g.BasicBin.Avatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
+	g.BasicBin.Avatar.AvatarList[avatarId].EquipmentUniqueId = equipmentUniqueId
 
 	avatar := g.GetProtoAvatarById(avatarId)
 

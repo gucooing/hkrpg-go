@@ -30,11 +30,7 @@
 
 ### 使用方法：
 1. 拉取项目文件
-2. run
-```
-  run build.bat / build.sh
-  run /build
-```
+2. [简易教程](./docs/README.md)
 
 ### 注：
 * 如果你想帮助此项目，欢迎提交

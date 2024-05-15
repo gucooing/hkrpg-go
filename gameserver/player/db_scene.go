@@ -82,6 +82,15 @@ func (g *GamePlayer) GetEntityById(id uint32) EntityAll { // 根据实体id拉�
 	return db[id]
 }
 
+func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
+	db := g.GetEntityById(id)
+	switch db.(type) {
+	case *MonsterEntity:
+		return db.(*MonsterEntity)
+	}
+	return nil
+}
+
 func (g *GamePlayer) NewScene() *spb.Scene {
 	return &spb.Scene{
 		EntryId: 1010101,
@@ -94,6 +103,11 @@ func (g *GamePlayer) GetScene() *spb.Scene {
 		db.Scene = g.NewScene()
 	}
 	return db.Scene
+}
+
+func (g *GamePlayer) GetCurEntryId() uint32 {
+	db := g.GetScene()
+	return db.EntryId
 }
 
 func (g *GamePlayer) SetCurEntryId(id uint32) {
@@ -383,4 +397,26 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		}
 	}
 	return scene
+}
+
+func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.SceneGroupRefreshInfo {
+	sceneGroupRefreshInfo := make([]*proto.SceneGroupRefreshInfo, 0)
+	for _, id := range mem {
+		entity := g.GetMonsterEntityById(id)
+		if entity == nil {
+			continue
+		}
+		sgri := &proto.SceneGroupRefreshInfo{
+			State:   0,
+			GroupId: entity.GroupId,
+			RefreshEntity: []*proto.SceneEntityRefreshInfo{
+				{
+					DelEntity: entity.EventID,
+				},
+			},
+			GroupRefreshType: 0,
+		}
+		sceneGroupRefreshInfo = append(sceneGroupRefreshInfo, sgri)
+	}
+	return sceneGroupRefreshInfo
 }

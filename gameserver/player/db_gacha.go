@@ -36,7 +36,7 @@ func (g *GamePlayer) AddGachaItem(id uint32) (bool, bool) {
 		g.AddEquipment(id)
 		return false, false
 	} else {
-		if g.BasicBin.Avatar.Avatar[id] != nil {
+		if g.BasicBin.Avatar.AvatarList[id] != nil {
 			pileItem = append(pileItem, &Material{
 				Tid: id + 10000,
 				Num: 1,

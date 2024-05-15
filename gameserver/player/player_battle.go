@@ -9,7 +9,7 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-/***********************************大世界攻击事件处理***********************************/
+/***********************************攻击事件处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCsReq, payloadMsg)
@@ -49,6 +49,11 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.PVEBattleResultCsReq, payloadMsg)
 	req := msg.(*proto.PVEBattleResultCsReq)
+	battleBin := g.GetBattleBackupById(req.BattleId)
+	if battleBin == nil {
+		return
+	}
+	var teleportToAnchor = false
 	rsp := &proto.PVEBattleResultScRsp{
 		BattleAvatarList: make([]*proto.BattleAvatar, 0),
 		BattleId:         req.BattleId,
@@ -58,115 +63,31 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		BinVersion:       "",
 		ResVersion:       strconv.Itoa(int(req.ClientResVersion)), // 版本验证
 	}
-	/*
-			var pileItem []*Material
-		pos := g.GetPos()
-		rot := g.GetRot()
-		lineUp := g.GetLineUp().MainLineUp
-		battleState := g.GetBattleState()
+	// 更新角色状态
+	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
 
-		switch battleState.BattleType {
-		case spb.BattleType_Battle_NONE:
-			// 撤退
-			if req.EndStatus == proto.BattleEndStatus_BATTLE_END_QUIT {
-				// 删除储存的战斗信息
-				delete(g.OnlineData.Battle, req.BattleId)
-				g.Send(cmd.PVEBattleResultScRsp, rsp)
-				return
-			}
-			// 更新队伍状态
-			g.BattleSyncLineupNotify(lineUp)
-		case spb.BattleType_Battle_ROGUE:
-			g.RoguePVEBattleResultCsReq(req, rsp)
-			return
-		case spb.BattleType_Battle_CHALLENGE:
-			g.ChallengePVEBattleResultCsReq(req)
-			g.Send(cmd.PVEBattleResultScRsp, rsp)
-			return
-		// case spb.BattleType_Battle_CHALLENGE_Story:
-		// 	g.ChallengeStoryPVEBattleResultCsReq(req)
-		// 	g.Send(cmd.PVEBattleResultScRsp, rsp)
-		// 	return
-		case spb.BattleType_Battle_TrialActivity:
-			g.TrialActivityPVEBattleResultScRsp(rsp)
-			return
-		}
-
-		// 更新角色状态
-		for _, avatarStt := range req.Stt.BattleAvatarList {
-			avatar := g.GetAvatar().Avatar[avatarStt.Id]
-			avatar.AvatarType = uint32(avatarStt.AvatarType)
-			avatar.SpBar.CurSp = uint32((avatarStt.AvatarStatus.LeftSp / avatarStt.AvatarStatus.MaxSp) * 10000)
-			if avatarStt.AvatarStatus.LeftHp == float64(0) {
-				avatar.Hp = 2000
-				avatar.AvatarType = uint32(proto.AvatarType_AVATAR_FORMAL_TYPE)
-			} else {
-				avatar.Hp = uint32((avatarStt.AvatarStatus.LeftHp / avatarStt.AvatarStatus.MaxHp) * 10000)
-			}
-		}
-
+	// 根据不同结算状态处理
+	switch req.EndStatus {
+	case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
+		// 删除怪物实体
+		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+			GroupRefreshInfo: g.GetDelSceneGroupRefreshInfo(battleBin.monsterEntity),
+		})
 		// 账号状态改变通知
 		g.PlayerPlayerSyncScNotify()
-
-		// 胜利时获取奖励
-		if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
-			battle := g.OnlineData.Battle[req.BattleId]
-
-			// 删除实体
-			nitify := &proto.SceneGroupRefreshScNotify{
-				GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
-			}
-			// for _, eventId := range battle.EventIDList {
-			// 	entity := g.GetSceneEntity().MonsterEntity[eventId]
-			// 	if entity != nil {
-			// 		groupRefreshInfo := &proto.SceneGroupRefreshInfo{
-			// 			GroupId: entity.GroupId,
-			// 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
-			// 				{
-			// 					DelEntity: eventId,
-			// 				},
-			// 			},
-			// 		}
-			// 		nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
-			// 		delete(g.GetSceneEntity().MonsterEntity, eventId)
-			// 	}
-			// }
-			g.Send(cmd.SceneGroupRefreshScNotify, nitify)
-
-			g.GetItem().MaterialMap[11] -= battle.StaminaCost * battle.Wave // 扣除体力
-
-			// 获取奖励
-			rsp.DropData = &proto.ItemList{ItemList: make([]*proto.Item, 0)}
-			for _, drop := range battle.DisplayItemList {
-				item := &proto.Item{
-					ItemId:      drop.Tid,
-					Level:       0,
-					Num:         drop.Num * battle.Wave,
-					MainAffixId: 0,
-					Rank:        0,
-					Promotion:   0,
-					UniqueId:    0,
-				}
-				rsp.DropData.ItemList = append(rsp.DropData.ItemList, item)
-
-				pileItem = append(pileItem, &Material{
-					Tid: drop.Tid,
-					Num: drop.Num * battle.Wave,
-				})
-			}
-		}
-
-		g.AddMaterial(pileItem)
-
-		// 当前坐标通知(失败情况应该是移动到最近锚点)
-		g.SceneEntityMoveScNotify(pos, rot, g.GetScene().EntryId)
-
 		// 体力改变通知
 		g.StaminaInfoScNotify()
+	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
+		teleportToAnchor = true
+	case proto.BattleEndStatus_BATTLE_END_QUIT:
+		teleportToAnchor = true
+	}
 
-		// 删除储存的战斗信息
-		delete(g.OnlineData.Battle, req.BattleId)
-	*/
+	// 是否传送到最近锚点
+	if teleportToAnchor {
+		// 当前坐标通知(移动到最近锚点)
+		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
+	}
 
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
 }

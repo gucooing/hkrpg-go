@@ -58,7 +58,7 @@ func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
 	dbDate := new(database.PlayerData)
 	dbDate.Uid = p.Uid
 	dbDate.Level = p.GetLevel()
-	dbDate.Exp = p.BasicBin.Exp
+	dbDate.Exp = p.GetMaterialById(player.Exp)
 	dbDate.Nickname = p.GetNickname()
 	dbDate.BinData, err = pb.Marshal(p.BasicBin)
 	dbDate.DataVersion = p.GetDataVersion()
@@ -160,7 +160,7 @@ func (s *GameServer) SetPlayerPlayerBasicBriefData(g *player.GamePlayer) bool {
 		WorldLevel:        g.GetWorldLevel(),
 		LastLoginTime:     time.Now().Unix(),
 		HeadImageAvatarId: g.GetHeadIcon(),
-		Exp:               g.GetBasicBin().Exp,
+		Exp:               g.GetMaterialById(player.Exp),
 		PlatformType:      0,
 		Uid:               g.Uid,
 	}

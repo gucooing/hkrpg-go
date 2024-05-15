@@ -9,7 +9,7 @@ import "enum.server.proto";
 message PlayerBasicCompBin {
   // uint32 uid = 1; // uid
   uint32 level = 2; // 等级
-  uint32 exp = 3; // 经验
+  //uint32 exp = 3; // 经验
   string nickname = 4; // 昵称
   uint32 world_level = 5; // 世界等级
   Activity activity = 6; // 米币
@@ -65,7 +65,7 @@ message Scene {
 }
 
 message Avatar {
-  map<uint32, AvatarBin> avatar = 1;
+  map<uint32, AvatarBin> avatar_list = 1;
   Gender gender = 2; // 性别
   HeroBasicType cur_main_avatar = 3;
   repeated HeroBasicTypeInfo hero_basic_type_info = 4;

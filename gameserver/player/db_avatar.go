@@ -12,7 +12,7 @@ func (g *GamePlayer) GetAvatar() *spb.Avatar {
 	db := g.GetBasicBin()
 	if db.Avatar == nil {
 		db.Avatar = &spb.Avatar{
-			Avatar:            make(map[uint32]*spb.AvatarBin),
+			AvatarList:        make(map[uint32]*spb.AvatarBin),
 			Gender:            spb.Gender_GenderMan,
 			CurMainAvatar:     spb.HeroBasicType_BoyWarrior,
 			HeroBasicTypeInfo: g.GetHeroBasicTypeInfo(),
@@ -21,12 +21,17 @@ func (g *GamePlayer) GetAvatar() *spb.Avatar {
 	return db.Avatar
 }
 
-func (g *GamePlayer) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
-	bin := g.GetAvatar()
-	if bin.Avatar == nil {
-		bin.Avatar = make(map[uint32]*spb.AvatarBin)
+func (g *GamePlayer) GetAvatarList() map[uint32]*spb.AvatarBin {
+	db := g.GetAvatar()
+	if db.AvatarList == nil {
+		db.AvatarList = make(map[uint32]*spb.AvatarBin)
 	}
-	return bin.Avatar[avatarId]
+	return db.AvatarList
+}
+
+func (g *GamePlayer) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
+	bin := g.GetAvatarList()
+	return bin[avatarId]
 }
 
 func (g *GamePlayer) GetHeroBasicTypeInfo() []*spb.HeroBasicTypeInfo {
@@ -53,7 +58,8 @@ func (g *GamePlayer) GetHeroBasicTypeInfo() []*spb.HeroBasicTypeInfo {
 
 func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 	skilltreeList := make([]*spb.AvatarSkillBin, 0)
-	if avatarId/1000 == 8 || g.BasicBin.Avatar.Avatar[avatarId] == nil {
+	avatarBin := g.GetAvatarBinById(avatarId)
+	if avatarId/1000 == 8 || avatarBin == nil {
 		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
 			avatarSkillBin := &spb.AvatarSkillBin{
 				PointId: id,
@@ -63,7 +69,7 @@ func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 		}
 		return skilltreeList
 	}
-	if g.BasicBin.Avatar.Avatar[avatarId].SkilltreeList == nil {
+	if avatarBin.SkilltreeList == nil {
 		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
 			avatarSkillBin := &spb.AvatarSkillBin{
 				PointId: id,
@@ -71,14 +77,15 @@ func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 			}
 			skilltreeList = append(skilltreeList, avatarSkillBin)
 		}
-		g.BasicBin.Avatar.Avatar[avatarId].SkilltreeList = skilltreeList
+		avatarBin.SkilltreeList = skilltreeList
 	}
-	return g.BasicBin.Avatar.Avatar[avatarId].SkilltreeList
+	return avatarBin.SkilltreeList
 }
 
 func (g *GamePlayer) AddAvatar(avatarId uint32) {
-	var pileItem []*Material
-	if g.BasicBin.Avatar.Avatar[avatarId] != nil {
+	db := g.GetAvatarList()
+	if db[avatarId] != nil {
+		var pileItem []*Material
 		pileItem = append(pileItem, &Material{
 			Tid: avatarId + 10000,
 			Num: 1,
@@ -86,8 +93,7 @@ func (g *GamePlayer) AddAvatar(avatarId uint32) {
 		g.AddMaterial(pileItem)
 		return
 	}
-
-	g.BasicBin.Avatar.Avatar[avatarId] = &spb.AvatarBin{
+	db[avatarId] = &spb.AvatarBin{
 		AvatarId:          avatarId,
 		Exp:               0,
 		Level:             1,
@@ -110,10 +116,30 @@ func (g *GamePlayer) AddAvatar(avatarId uint32) {
 	g.AvatarPlayerSyncScNotify(avatarId)
 }
 
+func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus) {
+	for _, avatarStt := range abi {
+		avatarBin := g.GetAvatarBinById(avatarStt.Id)
+		if avatarBin == nil {
+			continue
+		}
+		switch bt {
+		case proto.BattleEndStatus_BATTLE_END_NONE:
+		case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
+			avatarBin.Hp = uint32((avatarStt.AvatarStatus.LeftSp / avatarStt.AvatarStatus.MaxSp) * 10000)
+			avatarBin.SpBar.CurSp = uint32((avatarStt.AvatarStatus.LeftHp / avatarStt.AvatarStatus.MaxHp) * 10000)
+		case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
+			avatarBin.Hp = 2000
+			avatarBin.SpBar.CurSp = 5000
+		case proto.BattleEndStatus_BATTLE_END_QUIT: // 撤退
+
+		}
+	}
+}
+
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
-	avatardb := g.GetAvatar().Avatar[avatarId]
+	avatardb := g.GetAvatarBinById(avatarId)
 	if avatardb == nil {
 		return nil
 	}
@@ -179,7 +205,7 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 			Id:            avatarBin.AvatarId,
 			Level:         avatarBin.Level,
 			Rank:          avatarBin.Rank,
-			Index:         uint32(id),
+			Index:         id,
 			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
 			EquipmentList: make([]*proto.BattleEquipment, 0),
 			Hp:            avatarBin.Hp,

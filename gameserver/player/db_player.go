@@ -27,7 +27,6 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 	g.BasicBin = new(spb.PlayerBasicCompBin)
 	g.BasicBin = &spb.PlayerBasicCompBin{
 		Level:                   1,
-		Exp:                     0,
 		Nickname:                "hkrpg-go",
 		WorldLevel:              0,
 		Activity:                g.GetActivity(),
@@ -39,7 +38,7 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		Rot:                     g.NewRot(),
 		Avatar:                  g.GetAvatar(),
 		LineUp:                  g.NewLineUp(),
-		Item:                    g.GetItem(),
+		Item:                    g.NewItem(),
 		Gacha:                   g.GetGacha(),
 		Battle:                  g.NewBattle(),
 		RewardTakenLevelList:    nil,

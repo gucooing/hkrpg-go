@@ -33,13 +33,12 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	// 获取队伍
 	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
 	curLine := g.GetCurLineUp()
+	if foorMap.Groups[groupID] == nil || curLine == nil {
+		return
+	}
 	// 获取世界
 	for _, anchor := range foorMap.Groups[groupID].AnchorList {
 		if anchor.ID == anchorID {
-			curLineUp := g.GetCurLineUp()
-			if foorMap.Groups[groupID] == nil || curLineUp == nil {
-				return
-			}
 			pos := &proto.Vector{
 				X: int32(anchor.PosX * 1000),
 				Y: int32(anchor.PosY * 1000),

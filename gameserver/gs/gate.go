@@ -191,7 +191,7 @@ func (ge *gateServer) GetPlayerDate(accountId uint32, g *player.GamePlayer) {
 		// 初始化完毕保存账号数据
 		dbPlayer.Uid = g.Uid
 		dbPlayer.Level = g.GetLevel()
-		dbPlayer.Exp = g.BasicBin.Exp
+		dbPlayer.Exp = g.GetMaterialById(player.Exp)
 		dbPlayer.Nickname = g.GetNickname()
 		dbPlayer.BinData, err = pb.Marshal(g.BasicBin)
 		dbPlayer.DataVersion = g.GetDataVersion()

@@ -40,7 +40,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		RelicList:                     make([]*proto.RelicArchive, 0),
 	}
 
-	for _, avatar := range g.BasicBin.Avatar.Avatar {
+	for _, avatar := range g.BasicBin.Avatar.AvatarList {
 		archiveData.ArchiveMissingAvatarIdList = append(archiveData.ArchiveMissingAvatarIdList, avatar.AvatarId)
 	}
 

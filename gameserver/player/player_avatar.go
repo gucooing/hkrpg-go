@@ -52,7 +52,7 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 
 	avatarDb := g.GetAvatar()
 
-	for avatarId, _ := range avatarDb.Avatar {
+	for avatarId, _ := range avatarDb.AvatarList {
 		avatarList := g.GetProtoAvatarById(avatarId)
 		if avatarId/1000 == 8 {
 			avatarList.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
@@ -72,7 +72,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 		Num: 1,
 	})
 
-	g.GetAvatar().Avatar[req.BaseAvatarId].Rank++
+	g.GetAvatar().AvatarList[req.BaseAvatarId].Rank++
 	g.DelMaterial(pileItem)
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 
@@ -95,7 +95,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	var addExp uint32   // 增加的经验
 
 	// 从背包获取需要升级的角色
-	dbAvatar := g.GetAvatar().Avatar[req.BaseAvatarId]
+	dbAvatar := g.GetAvatar().AvatarList[req.BaseAvatarId]
 	if dbAvatar == nil {
 		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
@@ -183,7 +183,7 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
 	var delScoin uint32      // 扣除的信用点
 
 	// 从背包获取需要升级的角色
-	dbAvatar := g.GetAvatar().Avatar[req.BaseAvatarId]
+	dbAvatar := g.GetAvatar().AvatarList[req.BaseAvatarId]
 	if dbAvatar == nil {
 		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
@@ -231,7 +231,7 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 
 	avatarId := req.PointId / 1000 // 获取要升级技能的角色Id
 	// TODO 此处要做主角特殊处理
-	avatarDb := g.GetAvatar().Avatar[avatarId]
+	avatarDb := g.GetAvatar().AvatarList[avatarId]
 	if avatarDb == nil {
 		rsp := &proto.UnlockSkilltreeScRsp{
 			Retcode: uint32(proto.Retcode_RET_FAIL),
@@ -256,7 +256,7 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 		g.DelMaterial(pileItem)
 	}
 	// 升级
-	for id, skilltree := range g.BasicBin.Avatar.Avatar[avatarId].SkilltreeList {
+	for id, skilltree := range g.BasicBin.Avatar.AvatarList[avatarId].SkilltreeList {
 		if skilltree.PointId == req.PointId {
 			avatarDb.SkilltreeList[id].Level = req.Level
 		}
@@ -275,7 +275,7 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.TakePromotionRewardCsReq, payloadMsg)
 	req := msg.(*proto.TakePromotionRewardCsReq)
 	var pileItem []*Material
-	avatarDb := g.GetAvatar().Avatar[req.BaseAvatarId]
+	avatarDb := g.GetAvatar().AvatarList[req.BaseAvatarId]
 	if avatarDb == nil {
 		rsp := &proto.TakePromotionRewardScRsp{
 			Retcode: uint32(proto.Retcode_RET_FAIL),

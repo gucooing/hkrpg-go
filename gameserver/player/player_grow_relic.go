@@ -23,7 +23,7 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramLi
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		RelicList:  make([]*proto.Relic, 0),
 	}
-	avatardb := g.BasicBin.Avatar.Avatar[avatarId]
+	avatardb := g.BasicBin.Avatar.AvatarList[avatarId]
 	// 是否已被装备
 	for _, relic := range paramList {
 		relicdb := g.GetItem().RelicMap[relic.RelicUniqueId]
@@ -32,7 +32,7 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramLi
 		}
 		if relicdb.BaseAvatarId != 0 {
 			// 进入交换
-			avatarDbs := g.BasicBin.Avatar.Avatar[relicdb.BaseAvatarId]
+			avatarDbs := g.BasicBin.Avatar.AvatarList[relicdb.BaseAvatarId]
 			if avatardb.EquipRelic[relic.Slot] == 0 {
 				delete(avatarDbs.EquipRelic, relic.Slot)
 			} else {
