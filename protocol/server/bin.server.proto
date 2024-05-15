@@ -60,8 +60,8 @@ message Activity{
 
 message Scene {
   uint32 entryId = 1;
-//  uint32 planeId = 2;
-//  uint32 floorId = 3;
+  //  uint32 planeId = 2;
+  //  uint32 floorId = 3;
 }
 
 message Avatar {
@@ -112,9 +112,9 @@ message VectorBin {
 
 message LineUp {
   uint32 main_line_up = 1; // 当前上场队伍
-  // uint32 main_avatar_id = 2; // 当前上场角色
+  uint32 mp = 2; // 当前能量
   map<uint32, Line> line_up_list = 3; // 普通队伍
-  map<uint32,Line>battle_line_list = 4; // 战斗队伍
+  map<uint32, Line>battle_line_list = 4; // 战斗队伍
 }
 
 message Line {
@@ -170,7 +170,7 @@ message Material {
   uint32 num = 2; // 个数
 }
 
-message Battle { // 战斗
+message Battle {// 战斗
   BattleType battle_type = 1; // 当前状态
   Rogue rogue = 2; // 期数-情况
   Challenge challenge = 3; // 忘却之庭

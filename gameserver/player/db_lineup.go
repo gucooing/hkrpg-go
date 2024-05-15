@@ -6,11 +6,15 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-const MaxLineupList = 20 // 设置最大普通队伍数
+const (
+	MaxLineupList = 20 // 设置最大普通队伍数
+	MaxMp         = 5  // 设置最大队伍能量
+)
 
 func (g *GamePlayer) NewLineUp() *spb.LineUp {
 	return &spb.LineUp{
 		MainLineUp:     0,
+		Mp:             MaxMp,
 		LineUpList:     nil,
 		BattleLineList: nil,
 	}
@@ -21,6 +25,7 @@ func (g *GamePlayer) GetLineUp() *spb.LineUp {
 	if db.LineUp == nil {
 		db.LineUp = &spb.LineUp{
 			MainLineUp:     0,
+			Mp:             MaxMp,
 			LineUpList:     make(map[uint32]*spb.Line),
 			BattleLineList: make(map[uint32]*spb.Line),
 		}
@@ -32,6 +37,11 @@ func (g *GamePlayer) GetLineUp() *spb.LineUp {
 		db.LineUp.LineUpList[0].AvatarIdList[0] = &spb.LineAvatarList{AvatarId: uint32(g.GetAvatar().CurMainAvatar), Slot: 0}
 	}
 	return db.LineUp
+}
+
+func (g *GamePlayer) GetLineUpMp() uint32 {
+	db := g.GetLineUp()
+	return db.Mp
 }
 
 func (g *GamePlayer) GetLineUpById(index uint32) *spb.Line {
@@ -169,8 +179,8 @@ func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
 		AvatarList:      avatarList,
 		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
 		Index:           id,
-		MaxMp:           5,
-		Mp:              5,
+		MaxMp:           MaxMp,
+		Mp:              g.GetLineUpMp(),
 		Name:            db.Name,
 		PlaneId:         0,
 	}
@@ -226,8 +236,8 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		AvatarList:      avatarList,
 		ExtraLineupType: proto.ExtraLineupType(id),
 		Index:           0,
-		MaxMp:           5,
-		Mp:              5,
+		MaxMp:           MaxMp,
+		Mp:              g.GetLineUpMp(),
 		Name:            db.Name,
 		PlaneId:         0,
 	}
