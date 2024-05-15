@@ -420,3 +420,42 @@ func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.SceneGro
 	}
 	return sceneGroupRefreshInfo
 }
+
+func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.SceneGroupRefreshInfo {
+	groupRefreshInfo := make([]*proto.SceneGroupRefreshInfo, 0)
+	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
+		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+	}
+	for _, lineAvatar := range lineUp.AvatarIdList {
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
+		if avatarBin == nil {
+			continue
+		}
+		entityId := g.GetNextGameObjectGuid()
+		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
+			AddEntity: &proto.SceneEntityInfo{
+				Actor: &proto.SceneActorInfo{
+					AvatarType:   proto.AvatarType(avatarBin.AvatarType),
+					BaseAvatarId: lineAvatar.AvatarId,
+				},
+				Motion: &proto.MotionInfo{
+					Pos: pos,
+					Rot: rot,
+				},
+				EntityId: entityId,
+			},
+		}
+		g.AddEntity(&AvatarEntity{
+			Entity: Entity{
+				EntityId: entityId,
+				GroupId:  0,
+				Pos:      pos,
+				Rot:      rot,
+			},
+			AvatarId: lineAvatar.AvatarId,
+		})
+		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
+	}
+	groupRefreshInfo = append(groupRefreshInfo, sceneGroupRefreshInfo)
+	return groupRefreshInfo
+}

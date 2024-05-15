@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -237,6 +238,9 @@ func (g *GamePlayer) GetMem(isMem []uint32) *MPEM {
 		case *PropEntity:
 			mpem.EntityId = append(mpem.EntityId, id)
 			mpem.MPid = append(mpem.MPid, entity.(*PropEntity).PropId)
+		case *NpcEntity:
+		default:
+			logger.Debug("[EntityId:%v]没有找到相关实体信息", id)
 		}
 	}
 	return mpem

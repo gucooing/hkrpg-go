@@ -19,51 +19,9 @@ func (g *GamePlayer) SyncLineupNotify(index uint32, isBattleLine bool) {
 }
 
 func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
-	notify := new(proto.SceneGroupRefreshScNotify)
-	notify.GroupRefreshInfo = make([]*proto.SceneGroupRefreshInfo, 0)
-	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
-		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+	notify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshInfo: g.GetSceneGroupRefreshInfoByLineUP(g.GetLineUpById(index), g.GetPosPb(), g.GetRotPb()),
 	}
-	db := g.GetLineUpById(index)
-	if db == nil {
-		return
-	}
-	pos := g.GetPos()
-	rot := g.GetRot()
-	for _, lineAvatar := range db.AvatarIdList {
-		if lineAvatar == nil {
-			continue
-		}
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-		if avatarBin == nil {
-			continue
-		}
-		entityId := g.GetNextGameObjectGuid()
-		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				Actor: &proto.SceneActorInfo{
-					AvatarType:   proto.AvatarType(avatarBin.AvatarType),
-					BaseAvatarId: lineAvatar.AvatarId,
-				},
-				Motion: &proto.MotionInfo{
-					Pos: &proto.Vector{
-						X: pos.X,
-						Y: pos.Y,
-						Z: pos.Z,
-					},
-					Rot: &proto.Vector{
-						X: rot.X,
-						Y: rot.Y,
-						Z: rot.Z,
-					},
-				},
-				EntityId: entityId,
-			},
-		}
-		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
-	}
-	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
-
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
 
@@ -155,29 +113,23 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 	index := req.Index
 	lineUpDb := g.GetLineUp()
 	isBattleLine := false
+	var db *spb.Line
 
 	if req.ExtraLineupType != proto.ExtraLineupType_LINEUP_NONE {
 		index = uint32(req.ExtraLineupType)
 		isBattleLine = true
 	}
-
 	if !isBattleLine {
-		db := g.GetLineUpById(index)
-		db.LeaderSlot = 0
-		db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-		for _, avatarList := range req.Slots {
-			db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{AvatarId: avatarList.Id, Slot: avatarList.Slot}
-		}
-		lineUpDb.MainLineUp = req.Index
+		db = g.GetLineUpById(index)
 	} else {
-		db := g.GetBattleLineUpById(index)
-		db.LeaderSlot = 0
-		db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-		for _, avatarList := range req.Slots {
-			db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{AvatarId: avatarList.Id, Slot: avatarList.Slot}
-		}
-		lineUpDb.MainLineUp = req.Index
+		db = g.GetBattleLineUpById(index)
 	}
+	db.LeaderSlot = 0
+	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
+	for _, avatarList := range req.Slots {
+		db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{AvatarId: avatarList.Id, Slot: avatarList.Slot}
+	}
+	lineUpDb.MainLineUp = req.Index
 
 	// 队伍更新通知
 	g.SyncLineupNotify(index, isBattleLine)
