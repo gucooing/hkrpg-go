@@ -411,10 +411,10 @@ func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.SceneGro
 			GroupId: entity.GroupId,
 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
 				{
-					DelEntity: entity.EventID,
+					DelEntity: entity.EntityId,
 				},
 			},
-			GroupRefreshType: 0,
+			GroupRefreshType: proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_LOADED,
 		}
 		sceneGroupRefreshInfo = append(sceneGroupRefreshInfo, sgri)
 	}
