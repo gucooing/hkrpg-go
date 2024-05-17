@@ -32,6 +32,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		return
 	}
 	if !mpem.IsBattle { // 不是战斗就要去处理物品效果了
+		g.SceneCastSkillProp(mpem)
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
@@ -320,4 +321,21 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	g.OnlineData.Battle[rsp.BattleInfo.BattleId] = battle
 
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
+}
+
+/***********************************物品破坏处理***********************************/
+
+func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
+	for _, propId := range pem.MPid {
+		conf := gdconf.GetMazePropId(propId)
+		if conf == nil {
+			continue
+		}
+		if conf.RecoverMp {
+			g.AddLineUpMp(2) // 如果涉及到更新战斗中的队伍状态，这部分需要改
+		}
+		if conf.RecoverHp {
+
+		}
+	}
 }

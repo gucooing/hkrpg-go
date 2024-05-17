@@ -3,6 +3,7 @@ package gdconf
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -69,6 +70,9 @@ type MazeProp struct {
 	PerformanceType      string
 	HasRendererComponent bool
 	LodPriority          uint32
+	RecoverMp            bool
+	RecoverHp            bool
+	IsDoor               bool
 }
 
 func (g *GameDataConfig) loadMazeProp() {
@@ -87,7 +91,7 @@ func (g *GameDataConfig) loadMazeProp() {
 		panic(info)
 	}
 	for id, x := range mazePropMap {
-		g.MazePropMap[alg.S2U32(id)] = &MazeProp{
+		mp := &MazeProp{
 			ID:                   x.ID,
 			PropType:             getPropType(x.PropType),
 			IsMapContent:         x.IsMapContent,
@@ -101,7 +105,14 @@ func (g *GameDataConfig) loadMazeProp() {
 			HasRendererComponent: x.HasRendererComponent,
 			LodPriority:          x.LodPriority,
 		}
-
+		if strings.Contains(x.ConfigEntityPath, "MPRecover") || strings.Contains(x.ConfigEntityPath, "MPBox") {
+			mp.RecoverMp = true
+		} else if strings.Contains(x.ConfigEntityPath, "HPRecover") || strings.Contains(x.ConfigEntityPath, "HPBox") {
+			mp.RecoverHp = true
+		} else if strings.Contains(x.ConfigEntityPath, "_Door_") {
+			mp.IsDoor = true
+		}
+		g.MazePropMap[alg.S2U32(id)] = mp
 	}
 	logger.Info("load %v MazeProp", len(g.MazePropMap))
 }

@@ -212,7 +212,8 @@ message ChallengeList {
   uint32 score_two = 3; // 第二关得分
 }
 
-message CurChallenge {
+message CurChallenge { // 正在进行的忘却之庭信息
+  uint32 challenge_id = 1;//挑战id
 
 }
 

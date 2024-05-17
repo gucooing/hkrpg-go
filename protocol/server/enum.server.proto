@@ -4,13 +4,13 @@ package proto;
 
 option go_package = "./;proto";
 
-enum Gender {
+enum Gender { // 主角性别
   GenderNone = 0;
   GenderMan = 1;
   GenderWoman = 2;
 }
 
-enum HeroBasicType {
+enum HeroBasicType { // 主角类型
   None = 0;
   BoyWarrior = 8001;
   GirlWarrior = 8002;
@@ -28,7 +28,7 @@ enum HeroBasicType {
   GirlPriest = 8014;
 }
 
-enum AvatarType {
+enum AvatarType { // 角色状态
   AVATAR_TYPE_NONE = 0;
   AVATAR_TRIAL_TYPE = 1;
   AVATAR_LIMIT_TYPE = 2;
@@ -36,7 +36,7 @@ enum AvatarType {
   AVATAR_ASSIST_TYPE = 4;
 }
 
-enum ExtraLineupType {
+enum ExtraLineupType { // 队伍类型
   LINEUP_NONE = 0;
   LINEUP_CHALLENGE = 1;
   LINEUP_ROGUE = 2;
@@ -61,7 +61,7 @@ enum BattleType{// 战斗状态
   Battle_TrialActivity = 5;
 }
 
-enum LanguageType {
+enum LanguageType { // 语言
   LANGUAGE_NONE = 0;
   LANGUAGE_SC = 1;
   LANGUAGE_TC = 2;
@@ -78,7 +78,7 @@ enum LanguageType {
   LANGUAGE_ID = 13;
 }
 
-enum PlatformType {
+enum PlatformType { // 设备类型
   EDITOR = 0;
   IOS = 1;
   ANDROID = 2;
@@ -101,7 +101,7 @@ enum PlatformType {
   CLOUD_WEB_KEYBOARD = 25;
 }
 
-enum ServerType {
+enum ServerType { // 服务分类
   SERVICE_NONE = 0;
   SERVICE_NODE = 1;
   SERVICE_GAME = 2;
@@ -111,7 +111,7 @@ enum ServerType {
   SERVICE_MUIP = 6;
 }
 
-enum PlayerStatus {
+enum PlayerStatus { // 玩家状态
   PlayerStatus_PreLogin = 0; // 登录前
   PlayerStatus_LoggingIn = 1;// 登录中
   PlayerStatus_PostLogin = 2;// 登录完成
@@ -119,7 +119,7 @@ enum PlayerStatus {
   PlayerStatus_Logout = 4;//离线等待中
 }
 
-enum PlayerOfflineReason {
+enum PlayerOfflineReason { // 玩家离线原因
   OFFLINE_NONE = 0; // 正常离线
   OFFLINE_GAME_ERROR = 1; // gs异常
   OFFLINE_REPEAT_LOGIN = 2; // 重复登录

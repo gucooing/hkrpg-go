@@ -9,6 +9,9 @@ import (
 const (
 	MaxLineupList = 20 // 设置最大普通队伍数
 	MaxMp         = 5  // 设置最大队伍能量
+	Challenge_1   = 1  // 第一个忘却之庭队伍
+	Challenge_2   = 2  // 第二个忘却之庭队伍
+	Rogue         = 3  // 第一个模拟宇宙队伍
 )
 
 func (g *GamePlayer) NewLineUp() *spb.LineUp {
@@ -125,7 +128,16 @@ func (g *GamePlayer) GetBattleLineUp() *spb.Line {
 	default:
 		return g.GetCurLineUp()
 	}
-	return g.GetBattleLineUp() // 多余了
+	return g.GetCurLineUp() // 多余了
+}
+
+func (g *GamePlayer) AddLineUpMp(mp uint32) {
+	db := g.GetLineUp()
+	if db.Mp += mp; db.Mp > 5 {
+		db.Mp = 5
+	}
+	// 更新通知
+	g.SyncLineupNotify(db.MainLineUp, false)
 }
 
 /*****************************************功能方法****************************/
@@ -189,6 +201,13 @@ func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
 
 func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 	db := g.GetBattleLineUpById(id)
+	var lineUpType proto.ExtraLineupType
+	switch id {
+	case Challenge_1:
+		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE
+	case Challenge_2:
+		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
+	}
 	var wtmLeaderSlot = false
 	if db.AvatarIdList[db.LeaderSlot] == nil {
 		wtmLeaderSlot = true
@@ -234,7 +253,7 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		IsVirtual:       false,
 		LeaderSlot:      db.LeaderSlot,
 		AvatarList:      avatarList,
-		ExtraLineupType: proto.ExtraLineupType(id),
+		ExtraLineupType: lineUpType,
 		Index:           0,
 		MaxMp:           MaxMp,
 		Mp:              g.GetLineUpMp(),

@@ -424,3 +424,17 @@ func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWav
 	}
 	return mWList, stageID
 }
+
+func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
+	challengeInfo := &proto.ChallengeInfo{
+		ChallengeId:     0,   // 挑战关卡
+		Status:          0,   // 关卡状态
+		ExtraLineupType: 0,   // 队伍type
+		StoryInfo:       nil, // 挑战buff
+		RoundCount:      0,   // 已使用回合数
+		Score:           0,   // 第一层得分
+		ScoreTwo:        0,   // 第二层得分
+	}
+
+	return challengeInfo
+}
