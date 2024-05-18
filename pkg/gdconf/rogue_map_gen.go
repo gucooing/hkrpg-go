@@ -1,7 +1,6 @@
 package gdconf
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
@@ -15,14 +14,14 @@ func (g *GameDataConfig) loadRogueMapGen() {
 	playerElementsFilePath := g.dataPrefix + "RogueMapGen.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		logger.Error("open file error: %v", err)
+		return
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &g.RogueMapGenMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		logger.Error("parse file error: %v", err)
+		return
 	}
 	logger.Info("load %v RogueMapGen", len(g.RogueMapGenMap))
 }

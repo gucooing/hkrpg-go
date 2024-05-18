@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
@@ -74,19 +73,18 @@ type GameDataConfig struct {
 	RewardDataMap               map[string]*RewardData                          // 奖励配置
 }
 
-func InitGameDataConfig() {
+func InitGameDataConfig(gameDataConfigPath string) {
 	logger.Info("读取资源文件")
 	CONF = new(GameDataConfig)
 	startTime := time.Now().Unix()
-	CONF.loadAll()
+	CONF.loadAll(gameDataConfigPath)
 	runtime.GC()
 	endTime := time.Now().Unix()
 	logger.Info("load all game data config finish, cost: %v(s)", endTime-startTime)
 }
 
-func (g *GameDataConfig) loadAll() {
-	pathPrefix := config.GetConfig().GameDataConfigPath
-
+func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
+	pathPrefix := gameDataConfigPath
 	dirInfo, err := os.Stat(pathPrefix)
 	if err != nil || !dirInfo.IsDir() {
 		info := fmt.Sprintf("open game data config dir error: %v", err)
@@ -112,8 +110,7 @@ func (g *GameDataConfig) loadAll() {
 	g.dataPrefix = "data"
 	dirInfo, err = os.Stat(g.dataPrefix)
 	if err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("open game data config data dir error: %v", err)
-		panic(info)
+		logger.Error("open game data config data dir error: %v", err)
 	}
 	g.dataPrefix += "/"
 

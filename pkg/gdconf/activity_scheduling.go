@@ -1,7 +1,6 @@
 package gdconf
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -20,14 +19,14 @@ func (g *GameDataConfig) loadActivityScheduling() {
 	playerElementsFilePath := g.dataPrefix + "ActivityScheduling.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		logger.Error("open file error: %v", err)
+		return
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &g.ActivitySchedulingMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		logger.Error("parse file error: %v", err)
+		return
 	}
 
 	logger.Info("load %v ActivityScheduling", len(g.ActivitySchedulingMap))

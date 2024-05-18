@@ -13,9 +13,9 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/config"
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
 	"github.com/gucooing/hkrpg-go/gameserver/gs"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
@@ -54,7 +54,7 @@ func main() {
 	}()
 
 	// 加载res
-	gdconf.InitGameDataConfig()
+	gdconf.InitGameDataConfig(config.GetConfig().GameDataConfigPath)
 
 	// 启动game
 	go func() {

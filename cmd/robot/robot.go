@@ -9,9 +9,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/robot/config"
-	"github.com/gucooing/hkrpg-go/robot/gdconf"
 	"github.com/gucooing/hkrpg-go/robot/robot"
 	"golang.org/x/net/context"
 )
@@ -36,7 +36,7 @@ func main() {
 	logger.InitLogger("robot", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-robot-go")
 
-	gdconf.InitGameDataConfig()
+	gdconf.InitGameDataConfig(config.GetConfig().GameDataConfigPath)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
