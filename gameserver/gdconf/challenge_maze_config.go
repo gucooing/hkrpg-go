@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -40,7 +41,8 @@ type ChallengeState struct {
 }
 
 func (g *GameDataConfig) loadChallengeMazeConfig() {
-	g.ChallengeMazeConfigMap = make(map[string]*ChallengeMazeConfig)
+	g.ChallengeMazeConfigMap = make(map[uint32]*ChallengeMazeConfig)
+	challengeMazeConfigMap := make(map[string]*ChallengeMazeConfig)
 	playerElementsFilePath := g.excelPrefix + "ChallengeMazeConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -48,7 +50,7 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ChallengeMazeConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &challengeMazeConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
@@ -61,13 +63,13 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFileStory, &g.ChallengeMazeConfigMap)
+	err = hjson.Unmarshal(playerElementsFileStory, &challengeMazeConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
 
-	for _, challengeMazeConfig := range g.ChallengeMazeConfigMap {
+	for id, challengeMazeConfig := range challengeMazeConfigMap {
 		challengeMazeConfig.ChallengeState = make(map[uint32]*ChallengeState)
 		if challengeMazeConfig.StageNum == 2 {
 			challengeState := &ChallengeState{
@@ -85,15 +87,17 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 			ConfigID:     challengeMazeConfig.ConfigList1[0],
 		}
 		challengeMazeConfig.ChallengeState[1] = challengeState
+
+		g.ChallengeMazeConfigMap[alg.S2U32(id)] = challengeMazeConfig
 	}
 
 	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeMazeConfigMap))
 }
 
-func GetChallengeMazeConfigById(questID string) *ChallengeMazeConfig {
+func GetChallengeMazeConfigById(questID uint32) *ChallengeMazeConfig {
 	return CONF.ChallengeMazeConfigMap[questID]
 }
 
-func GetChallengeMazeConfigMap() map[string]*ChallengeMazeConfig {
+func GetChallengeMazeConfigMap() map[uint32]*ChallengeMazeConfig {
 	return CONF.ChallengeMazeConfigMap
 }

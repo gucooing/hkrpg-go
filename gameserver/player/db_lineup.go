@@ -121,14 +121,28 @@ func (g *GamePlayer) GetBattleLineUp() *spb.Line {
 	case spb.BattleType_Battle_NONE:
 		return g.GetCurLineUp()
 	case spb.BattleType_Battle_CHALLENGE:
-	case spb.BattleType_Battle_CHALLENGE_Story_1:
-	case spb.BattleType_Battle_CHALLENGE_Story_2:
+		return g.GetChallengeLineUp()
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		return g.GetChallengeLineUp()
 	case spb.BattleType_Battle_ROGUE:
 	case spb.BattleType_Battle_TrialActivity:
 	default:
 		return g.GetCurLineUp()
 	}
 	return g.GetCurLineUp() // 多余了
+}
+
+func (g *GamePlayer) GetChallengeLineUp() *spb.Line {
+	challengeStatus := g.GetCurChallenge()
+	switch challengeStatus.CurStage {
+	case 1:
+		return g.GetBattleLineUpById(Challenge_1)
+	case 2:
+		return g.GetBattleLineUpById(Challenge_2)
+	default:
+		logger.Debug("[UID:%v]没有此忘却之庭队伍id:%v", g.Uid, challengeStatus.CurStage)
+		return nil
+	}
 }
 
 func (g *GamePlayer) AddLineUpMp(mp uint32) {
@@ -153,37 +167,25 @@ func (g *GamePlayer) GetLineUpPb(id uint32) *proto.LineupInfo {
 		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
+		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		if wtmLeaderSlot {
 			db.LeaderSlot = slot
 		}
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		if avatarBin == nil {
-			lineupAvatar := &proto.LineupAvatar{
-				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
-				Slot:       slot,
-				Satiety:    0,
-				Hp:         10000,
-				Id:         lineAvatar.AvatarId,
-				SpBar: &proto.SpBarInfo{
-					CurSp: 6000,
-					MaxSp: 10000,
-				},
-			}
-			avatarList = append(avatarList, lineupAvatar)
-		} else {
-			lineupAvatar := &proto.LineupAvatar{
-				AvatarType: proto.AvatarType(avatarBin.AvatarType),
-				Slot:       slot,
-				Satiety:    0,
-				Hp:         avatarBin.Hp,
-				Id:         lineAvatar.AvatarId,
-				SpBar: &proto.SpBarInfo{
-					CurSp: avatarBin.SpBar.CurSp,
-					MaxSp: avatarBin.SpBar.MaxSp,
-				},
-			}
-			avatarList = append(avatarList, lineupAvatar)
+			continue
 		}
+		lineupAvatar := &proto.LineupAvatar{
+			AvatarType: proto.AvatarType(avatarBin.AvatarType),
+			Slot:       slot,
+			Satiety:    0,
+			Hp:         avatarBin.Hp,
+			Id:         lineAvatar.AvatarId,
+			SpBar: &proto.SpBarInfo{
+				CurSp: avatarBin.SpBar.CurSp,
+				MaxSp: avatarBin.SpBar.MaxSp,
+			},
+		}
+		avatarList = append(avatarList, lineupAvatar)
 	}
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,

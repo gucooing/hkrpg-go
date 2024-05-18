@@ -4,14 +4,19 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) GetActivity() *spb.Activity {
-	if g.BasicBin.Activity == nil {
-		g.BasicBin.Activity = &spb.Activity{
-			TrialActivity: make([]uint32, 0),
-			ActivityLogin: make(map[uint32]uint32),
-		}
+func (g *GamePlayer) NewActivity() *spb.Activity {
+	return &spb.Activity{
+		TrialActivity: make([]uint32, 0),
+		ActivityLogin: make(map[uint32]uint32),
 	}
-	return g.BasicBin.Activity
+}
+
+func (g *GamePlayer) GetActivity() *spb.Activity {
+	db := g.GetBasicBin()
+	if db.Activity == nil {
+		db.Activity = g.NewActivity()
+	}
+	return db.Activity
 }
 
 func (g *GamePlayer) GetTrialActivity() []uint32 {

@@ -60,7 +60,7 @@ type GameDataConfig struct {
 	ActivitySchedulingMap       []*ActivityScheduling                           // 活动排期
 	QuestDataMap                map[string]*QuestData                           // 任务
 	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
-	ChallengeMazeConfigMap      map[string]*ChallengeMazeConfig                 // 忘却之庭配置
+	ChallengeMazeConfigMap      map[uint32]*ChallengeMazeConfig                 // 忘却之庭配置
 	ChallengeTargetConfigMap    map[string]*ChallengeTargetConfig               // 忘却之庭结算配置
 	ChallengeStoryMazeExtraMap  map[string]*ChallengeStoryMazeExtra             // 忘却之庭活动积分规则
 	BackGroundMusicMap          map[string]*BackGroundMusic                     // 背景音乐

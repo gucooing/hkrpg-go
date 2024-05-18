@@ -459,3 +459,124 @@ func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 	groupRefreshInfo = append(groupRefreshInfo, sceneGroupRefreshInfo)
 	return groupRefreshInfo
 }
+
+// 获取忘却之庭世界
+func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
+	curChallenge := g.GetCurChallenge()
+	leaderEntityId := g.GetNextGameObjectGuid()
+	var lineUp *spb.Line
+	var pos, rot *proto.Vector
+	var mazeGroupID uint32
+	var configList []uint32
+	var npcMonsterIDList []uint32
+	var eventIDList []uint32
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return nil
+	}
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
+	if mapEntrance == nil {
+		return nil
+	}
+	switch curChallenge.CurStage {
+	case 1:
+		mazeGroupID = challengeMazeConfig.MazeGroupID1
+		lineUp = g.GetBattleLineUpById(Challenge_1)
+		configList = challengeMazeConfig.ConfigList1
+		npcMonsterIDList = challengeMazeConfig.NpcMonsterIDList1
+		eventIDList = challengeMazeConfig.EventIDList1
+	case 2:
+		mazeGroupID = challengeMazeConfig.MazeGroupID2
+		lineUp = g.GetBattleLineUpById(Challenge_2)
+		configList = challengeMazeConfig.ConfigList2
+		npcMonsterIDList = challengeMazeConfig.NpcMonsterIDList2
+		eventIDList = challengeMazeConfig.EventIDList2
+	}
+	foorMap := gdconf.GetMazeByGroupId(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
+	if foorMap == nil || lineUp == nil || len(npcMonsterIDList) != len(eventIDList) || len(eventIDList) != len(configList) {
+		return nil
+	}
+	for _, anchor := range foorMap.AnchorList {
+		pos = &proto.Vector{
+			Y: int32(anchor.PosY * 1000),
+			X: int32(anchor.PosX * 1000),
+			Z: int32(anchor.PosZ * 1000),
+		}
+		rot = &proto.Vector{
+			Y: int32(anchor.RotY * 1000),
+			X: int32(anchor.RotX * 1000),
+			Z: int32(anchor.RotZ * 1000),
+		}
+		break
+	}
+	if pos == nil || rot == nil {
+		return nil
+	}
+	// 获取映射信息
+	scene := &proto.SceneInfo{
+		ClientPosVersion:   0,
+		PlaneId:            mapEntrance.PlaneID,
+		FloorId:            mapEntrance.FloorID,
+		LeaderEntityId:     leaderEntityId,
+		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		EntryId:            challengeMazeConfig.MapEntranceID,
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
+		GroupIdList:        nil,
+		LightenSectionList: nil,
+		EntityList:         nil,
+		GroupStateList:     nil,
+	}
+
+	// 将进入场景的角色添加到实体列表里
+	entityGroup := &proto.SceneEntityGroupInfo{
+		GroupId:    0,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
+	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
+	// 添加怪物实体
+	for id, config := range configList {
+		for _, monsterList := range foorMap.MonsterList {
+			if monsterList.ID != config {
+				continue
+			}
+			entityId := g.GetNextGameObjectGuid()
+			monsterPos := &proto.Vector{
+				X: int32(monsterList.PosX * 1000),
+				Y: int32(monsterList.PosY * 1000),
+				Z: int32(monsterList.PosZ * 1000),
+			}
+			monsterRot := &proto.Vector{
+				X: int32(monsterList.RotX * 1000),
+				Y: int32(monsterList.RotY * 1000),
+				Z: int32(monsterList.RotZ * 1000),
+			}
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  mazeGroupID,
+				InstId:   monsterList.ID,
+				EntityId: entityId,
+				Motion: &proto.MotionInfo{
+					Pos: monsterPos,
+					Rot: monsterRot,
+				},
+				NpcMonster: &proto.SceneNpcMonsterInfo{
+					MonsterId: npcMonsterIDList[id],
+					EventId:   eventIDList[id],
+				},
+			}
+			// 添加怪物实体
+			g.AddEntity(&MonsterEntity{
+				Entity: Entity{
+					EntityId: entityId,
+					GroupId:  mazeGroupID,
+					Pos:      monsterPos,
+					Rot:      monsterRot,
+				},
+				EventID: eventIDList[id],
+			})
+			entityGroup.EntityList = append(entityGroup.EntityList, entityList)
+		}
+	}
+	return scene
+}

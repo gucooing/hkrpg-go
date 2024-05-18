@@ -212,9 +212,11 @@ message ChallengeList {
   uint32 score_two = 3; // 第二关得分
 }
 
-message CurChallenge { // 正在进行的忘却之庭信息
+message CurChallenge {// 正在进行的忘却之庭信息
   uint32 challenge_id = 1;//挑战id
-
+  uint32 stage_num = 2; // 总共需要挑战数
+  uint32 cur_stage = 3; // 当前挑战
+  ChallengeStatus Status = 4;// 状态
 }
 
 message Gacha {

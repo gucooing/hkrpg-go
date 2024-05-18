@@ -163,11 +163,6 @@ func (g *GamePlayer) GetBattleState() *BattleState {
 	return g.OnlineData.BattleState
 }
 
-func (g *GamePlayer) NewChallengeState() *ChallengeState {
-	g.GetBattleState().ChallengeState = &ChallengeState{}
-	return g.GetBattleState().ChallengeState
-}
-
 func (g *GamePlayer) GetChallengeState() *ChallengeState {
 	if g.GetBattleState().ChallengeState == nil {
 		g.GetBattleState().ChallengeState = &ChallengeState{}
@@ -181,6 +176,8 @@ func (g *GamePlayer) GetTrialActivityState() *TrialActivityState {
 	}
 	return g.GetBattleState().TrialActivityState
 }
+
+/************************************区分一下***************************************/
 
 func (g *GamePlayer) NewBattle() *spb.Battle {
 	return &spb.Battle{
@@ -203,6 +200,11 @@ func (g *GamePlayer) GetBattleStatus() spb.BattleType {
 	return db.BattleType
 }
 
+func (g *GamePlayer) SetBattleStatus(status spb.BattleType) {
+	db := g.GetBattle()
+	db.BattleType = status
+}
+
 func (g *GamePlayer) GetChallenge() *spb.Challenge {
 	db := g.GetBattle()
 	if db.Challenge == nil {
@@ -213,6 +215,28 @@ func (g *GamePlayer) GetChallenge() *spb.Challenge {
 		}
 	}
 	return db.Challenge
+}
+
+func (g *GamePlayer) SetCurChallenge(challengeId uint32) *spb.CurChallenge {
+	db := g.GetChallenge()
+	conf := gdconf.GetChallengeMazeConfigById(challengeId)
+	db.CurChallenge = &spb.CurChallenge{
+		ChallengeId: challengeId,
+		StageNum:    conf.StageNum,
+		CurStage:    1,
+		Status:      spb.ChallengeStatus_CHALLENGE_DOING,
+	}
+	return db.CurChallenge
+}
+
+func (g *GamePlayer) GetCurChallenge() *spb.CurChallenge {
+	db := g.GetChallenge()
+	return db.CurChallenge
+}
+
+func (g *GamePlayer) NewCurChallenge() {
+	db := g.GetChallenge()
+	db.CurChallenge = &spb.CurChallenge{}
 }
 
 type MPEM struct {
@@ -278,7 +302,6 @@ func (g *GamePlayer) GetCurDbRogue() *spb.CurRogue {
 	if rogue.CurRogue == nil {
 		rogue.CurRogue = new(spb.CurRogue)
 	}
-
 	return rogue.CurRogue
 }
 
@@ -306,6 +329,8 @@ func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
 
 	return rogue.RogueArea[areaId]
 }
+
+/************************************区分一下***************************************/
 
 func (g *GamePlayer) NewRogueState() {
 	g.GetBattleState().RogueState = &RogueState{
@@ -357,6 +382,10 @@ func (g *GamePlayer) RogueAddBuff(buffId uint32) {
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.SceneBattleInfo, *BattleBackup) {
+	if mem == nil || lineUp == nil {
+		logger.Debug("[UID:%v]战斗获取失败", g.Uid)
+		return nil, nil
+	}
 	bAList := make(map[uint32]*BattleAvatar, 0)
 	for _, lp := range lineUp.AvatarIdList {
 		bA := &BattleAvatar{
@@ -377,8 +406,8 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 		StageId:             stageId,                                  // 起始战斗
 		BattleTargetInfo:    make(map[uint32]*proto.BattleTargetList), // 战斗目标
 		EventBattleInfoList: make([]*proto.BattleEventBattleInfo, 0),  // 战斗信息？？？
-		RoundsLimit:         0,                                        // 回合限制
-		BuffList:            make([]*proto.BattleBuff, 0),             // Buff列表
+		RoundsLimit:         g.GetRoundsLimit(),                       // 回合限制
+		BuffList:            g.GetBattleBuff(),                        // Buff列表
 	}
 	// 记录此次战斗
 	battleBackup := &BattleBackup{
@@ -425,16 +454,45 @@ func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWav
 	return mWList, stageID
 }
 
+// TODO 记得根据战斗情况添加buff
+func (g *GamePlayer) GetBattleBuff() []*proto.BattleBuff {
+	// status := g.GetBattleStatus()
+	return make([]*proto.BattleBuff, 0)
+}
+
 func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
+	db := g.GetCurChallenge()
+	var lineUpType proto.ExtraLineupType
+	switch db.CurStage {
+	case 1:
+		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE
+	case 2:
+		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
+	}
 	challengeInfo := &proto.ChallengeInfo{
-		ChallengeId:     0,   // 挑战关卡
-		Status:          0,   // 关卡状态
-		ExtraLineupType: 0,   // 队伍type
-		StoryInfo:       nil, // 挑战buff
-		RoundCount:      0,   // 已使用回合数
-		Score:           0,   // 第一层得分
-		ScoreTwo:        0,   // 第二层得分
+		ChallengeId:     db.ChallengeId,                   // 挑战关卡
+		Status:          proto.ChallengeStatus(db.Status), // 关卡状态
+		ExtraLineupType: lineUpType,                       // 队伍type
+		StoryInfo:       nil,                              // 挑战buff
+		RoundCount:      0,                                // 已使用回合数
+		Score:           0,                                // 第一层得分
+		ScoreTwo:        0,                                // 第二层得分
 	}
 
 	return challengeInfo
+}
+
+func (g *GamePlayer) GetRoundsLimit() uint32 {
+	status := g.GetBattleStatus()
+	switch status {
+	case spb.BattleType_Battle_CHALLENGE:
+		db := g.GetCurChallenge()
+		conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
+		return conf.ChallengeCountDown
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		db := g.GetCurChallenge()
+		conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+		return conf.TurnLimit
+	}
+	return 0
 }

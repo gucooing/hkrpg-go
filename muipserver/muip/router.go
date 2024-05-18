@@ -23,6 +23,8 @@ func (a *Api) CmdIdInitRouter(c *gin.Context) {
 	switch cmdId {
 	case 1001:
 		a.WorldLevel(c)
+	case 1002:
+		a.PlayerDb(c)
 	case 1006:
 		a.DelItem(c)
 	case 1101:

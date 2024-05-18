@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -14,27 +12,16 @@ import (
 // 获取状态
 
 func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetCurChallengeScRsp)
-
-	challengeState := g.GetChallengeState()
-
-	rsp.ChallengeInfo = &proto.ChallengeInfo{
-		ChallengeId:     challengeState.ChallengeId,
-		Status:          challengeState.Status,
-		RoundCount:      challengeState.RoundCount,
-		ExtraLineupType: challengeState.ExtraLineupType,
-		Score:           challengeState.ScoreOne,
-		ScoreTwo:        challengeState.ScoreTwo,
-		StoryInfo:       &proto.ChallengeStoryInfo{StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}}},
+	rsp := &proto.GetCurChallengeScRsp{
+		ChallengeInfo: g.GetChallengeInfo(),
 	}
-	if challengeState.ChallengeCount == 1 {
-		rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffOne}}}
-		// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
-	} else {
-		rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffTwo}}}
-		// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffTwo)
-	}
-
+	// if challengeState.ChallengeCount == 1 {
+	// 	rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffOne}}}
+	// 	// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
+	// } else {
+	// 	rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffTwo}}}
+	// 	// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffTwo)
+	// }
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
 }
 
@@ -43,228 +30,24 @@ func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
 	req := msg.(*proto.StartChallengeCsReq)
-	battleState := g.GetBattleState()
-	challengeState := g.NewChallengeState()
-
-	// 设置战斗类型
-	if req.StoryInfo != nil {
-		// battleState.BattleType = spb.BattleType_Battle_CHALLENGE_Story
-		// 缓存buff
-		challengeState.StoryBuffOne = req.StoryInfo.GetStoryBuffInfo().StoryBuffOne
-		challengeState.StoryBuffTwo = req.StoryInfo.GetStoryBuffInfo().StoryBuffTwo
-	} else {
-		battleState.BattleType = spb.BattleType_Battle_CHALLENGE
+	var lineUpId uint32
+	// 设置当前战斗的忘却之庭
+	curChallenge := g.SetCurChallenge(req.ChallengeId)
+	switch curChallenge.CurStage {
+	case 1:
+		lineUpId = Challenge_1
+	case 2:
+		lineUpId = Challenge_2
 	}
-
-	// 从表中获取数据
-	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(strconv.Itoa(int(req.ChallengeId)))
-	if challengeMazeConfig == nil {
-		rsp := &proto.StartChallengeScRsp{
-			Retcode: 2,
-		}
-		g.Send(cmd.StartChallengeScRsp, rsp)
-		return
-	}
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
-	sceneGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, challengeMazeConfig.MazeGroupID1)
-	if sceneGroup.AnchorList == nil {
-		rsp := &proto.StartChallengeScRsp{
-			Retcode: 2,
-		}
-		g.Send(cmd.StartChallengeScRsp, rsp)
-		return
-	}
-	// 设置公共数据
-	challengeState.ChallengeId = req.ChallengeId
-	challengeState.Status = proto.ChallengeStatus_CHALLENGE_DOING
-	challengeState.RoundCount = 0
-	challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE
-	// 获取坐标信息
-	challengeState.Pos = &spb.VectorBin{
-		X: int32(sceneGroup.AnchorList[0].PosX * 1000),
-		Y: int32(sceneGroup.AnchorList[0].PosY * 1000),
-		Z: int32(sceneGroup.AnchorList[0].PosZ * 1000),
-	}
-	challengeState.Rot = &spb.VectorBin{
-		X: int32(sceneGroup.AnchorList[0].RotX * 1000),
-		Y: int32(sceneGroup.AnchorList[0].RotY * 1000),
-		Z: int32(sceneGroup.AnchorList[0].RotZ * 1000),
-	}
-	challengeState.NPCMonsterPos = &spb.VectorBin{
-		X: int32(sceneGroup.MonsterList[0].PosX * 1000),
-		Y: int32(sceneGroup.MonsterList[0].PosY * 1000),
-		Z: int32(sceneGroup.MonsterList[0].PosZ * 1000),
-	}
-	challengeState.NPCMonsterRot = &spb.VectorBin{
-		X: int32(sceneGroup.MonsterList[0].RotX * 1000),
-		Y: int32(sceneGroup.MonsterList[0].RotY * 1000),
-		Z: int32(sceneGroup.MonsterList[0].RotZ * 1000),
-	}
-	challengeState.PlaneID = mapEntrance.PlaneID
-	challengeState.FloorID = mapEntrance.FloorID
-	challengeState.EntranceID = challengeMazeConfig.MapEntranceID
-	challengeState.ChallengeCount = challengeMazeConfig.StageNum
-	challengeState.CurChallengeCount = 1
-	// 添加场景buff到buff列表
-	challengeState.SceneBuffList = append(challengeState.SceneBuffList, challengeMazeConfig.MazeBuffID)
-	switch battleState.BattleType {
-	case spb.BattleType_Battle_CHALLENGE:
-		challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
-		challengeState.ChallengeCountDown = challengeMazeConfig.ChallengeCountDown
-		// case spb.BattleType_Battle_CHALLENGE_Story:
-		// 	storyMazeExtra := gdconf.GetChallengeStoryMazeExtraById(challengeState.ChallengeId)
-		// 	challengeState.ChallengeCountDown = storyMazeExtra.TurnLimit
-		// 	challengeState.ChallengeTargetID = challengeMazeConfig.ChallengeTargetID
-	}
-
-	// 添加波次
-	challengeState.CurChallengeBattle = make(map[uint32]*CurChallengeBattle)
-	for id, challengeRoom := range challengeMazeConfig.ChallengeState {
-		curChallengeBattle := &CurChallengeBattle{
-			NPCMonsterID: challengeRoom.NPCMonsterID,
-			EventID:      challengeRoom.EventID,
-			GroupID:      challengeRoom.GroupID,
-			ConfigID:     challengeRoom.ConfigID,
-		}
-		challengeState.CurChallengeBattle[id] = curChallengeBattle
-	}
-
-	// 下面是设置回包
-
-	// 获取关卡信息
-	challengeInfo := &proto.ChallengeInfo{
-		ChallengeId:     challengeState.ChallengeId,
-		Status:          challengeState.Status,
-		RoundCount:      challengeState.RoundCount,
-		ExtraLineupType: challengeState.ExtraLineupType,
-		Score:           challengeState.ChallengeScore,
-		StoryInfo:       &proto.ChallengeStoryInfo{StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}}},
-	}
-	challengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffOne}}}
-
-	// 获取世界
-	scene := g.GetChallengeScene()
-
-	// 获取队伍
-	lineup := g.GetBattleLineUpPb(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE))
-
 	rsp := &proto.StartChallengeScRsp{
-		ChallengeInfo: challengeInfo,
-		Scene:         scene,
-		Lineup:        lineup,
+		ChallengeInfo: g.GetChallengeInfo(),
+		Scene:         g.GetChallengeScene(),
+		Lineup:        g.GetBattleLineUpPb(lineUpId),
 	}
+	// 设置战斗状态
+	g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE)
 
 	g.Send(cmd.StartChallengeScRsp, rsp)
-}
-
-// 获取忘却之庭世界
-func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
-	challengeState := g.GetChallengeState()
-
-	leaderEntityId := g.GetNextGameObjectGuid()
-	// 获取映射信息
-
-	anchorPos := challengeState.Pos
-	anchorRot := challengeState.Rot
-	curChallengeBattle := challengeState.CurChallengeBattle[1]
-	scene := &proto.SceneInfo{
-		ClientPosVersion:   0,
-		PlaneId:            challengeState.PlaneID,
-		FloorId:            challengeState.FloorID,
-		LeaderEntityId:     leaderEntityId,
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(challengeState.PlaneID))).WorldID,
-		EntryId:            challengeState.EntranceID,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(challengeState.PlaneID))).PlaneType),
-		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
-		LightenSectionList: nil,
-		EntityList:         nil,
-		GroupStateList:     nil,
-	}
-
-	avatarEntity := make(map[uint32]*AvatarEntity, 0)
-	// 将进入场景的角色添加到实体列表里
-	entityGroup := &proto.SceneEntityGroupInfo{
-		GroupId:    0,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
-	curLineUp := g.GetBattleLineUpById(uint32(challengeState.ExtraLineupType))
-	for id, lineAvatar := range curLineUp.AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
-			continue
-		}
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-		entityId := g.GetNextGameObjectGuid()
-		entityList := &proto.SceneEntityInfo{
-			Actor: &proto.SceneActorInfo{
-				AvatarType:   proto.AvatarType(avatarBin.AvatarType), // TODO
-				BaseAvatarId: avatarBin.AvatarId,
-			},
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: anchorPos.X,
-					Y: anchorPos.Y,
-					Z: anchorPos.Z,
-				},
-				Rot: &proto.Vector{
-					X: anchorRot.X,
-					Y: anchorRot.Y,
-					Z: anchorRot.Z,
-				},
-			},
-		}
-		// 为进入场景的角色设置与上面相同的实体id
-		if id == curLineUp.LeaderSlot {
-			entityList.EntityId = leaderEntityId
-			avatarEntity[leaderEntityId] = &AvatarEntity{
-				AvatarId: lineAvatar.AvatarId,
-			}
-		} else {
-			avatarEntity[entityId] = &AvatarEntity{
-				AvatarId: lineAvatar.AvatarId,
-			}
-			entityList.EntityId = entityId
-		}
-		entityGroup.EntityList = append(entityGroup.EntityList, entityList)
-	}
-	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
-
-	// 添加怪物实体
-	entityGroupNPCMonster := &proto.SceneEntityGroupInfo{
-		GroupId:    curChallengeBattle.GroupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
-	entityId := g.GetNextGameObjectGuid()
-	entityList := &proto.SceneEntityInfo{
-		GroupId:  curChallengeBattle.GroupID,
-		InstId:   curChallengeBattle.ConfigID,
-		EntityId: entityId,
-		Motion: &proto.MotionInfo{
-			Pos: &proto.Vector{
-				X: challengeState.NPCMonsterPos.X,
-				Y: challengeState.NPCMonsterPos.Y,
-				Z: challengeState.NPCMonsterPos.Z,
-			},
-			Rot: &proto.Vector{
-				X: 0,
-				Y: challengeState.NPCMonsterRot.Y,
-				Z: 0,
-			},
-		},
-		NpcMonster: &proto.SceneNpcMonsterInfo{
-			WorldLevel: g.BasicBin.WorldLevel,
-			MonsterId:  curChallengeBattle.NPCMonsterID,
-			EventId:    curChallengeBattle.EventID,
-		},
-	}
-	// monsterEntity[entityId] = &MonsterEntity{
-	// 	MonsterEId: curChallengeBattle.EventID,
-	// 	GroupId:    curChallengeBattle.GroupID,
-	// }
-	entityGroupNPCMonster.EntityList = append(entityGroupNPCMonster.EntityList, entityList)
-	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupNPCMonster)
-
-	return scene
 }
 
 // 忘却之庭战斗退出/结束
@@ -283,20 +66,7 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 // 忘却之庭世界发生攻击事件
 
 func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
-	// battleState := g.GetBattleState()
 	challengeState := g.GetChallengeState()
-	// var lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	// // var targetIndex uint32 = 0
-	//
-	// // 通过波次获取队伍
-	// if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-	// 	lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE)
-	// } else {
-	// 	lineUpId = uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)
-	// }
-	//
-	// // 添加角色
-	// rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(lineUpId)
 	// 添加回合限制
 	rsp.BattleInfo.RoundsLimit = challengeState.ChallengeCountDown
 
