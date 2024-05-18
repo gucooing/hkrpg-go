@@ -456,8 +456,24 @@ func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWav
 
 // TODO 记得根据战斗情况添加buff
 func (g *GamePlayer) GetBattleBuff() []*proto.BattleBuff {
-	// status := g.GetBattleStatus()
-	return make([]*proto.BattleBuff, 0)
+	buffList := make([]*proto.BattleBuff, 0)
+	status := g.GetBattleStatus()
+	switch status {
+	case spb.BattleType_Battle_CHALLENGE:
+		db := g.GetCurChallenge()
+		conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
+		if conf.MazeBuffID != 0 {
+			buffList = append(buffList, &proto.BattleBuff{
+				Id:       conf.MazeBuffID,
+				Level:    1,
+				OwnerId:  4294967295,
+				WaveFlag: 4294967295,
+			})
+		}
+	case spb.BattleType_Battle_CHALLENGE_Story:
+
+	}
+	return buffList
 }
 
 func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {

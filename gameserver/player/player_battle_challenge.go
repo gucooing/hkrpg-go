@@ -53,7 +53,8 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 // 忘却之庭战斗退出/结束
 
 func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
-	if g.GetBattleState().ChallengeState.Status == proto.ChallengeStatus_CHALLENGE_DOING {
+	curChallenge := g.GetCurChallenge()
+	if proto.ChallengeStatus(curChallenge.Status) == proto.ChallengeStatus_CHALLENGE_DOING {
 		g.Send(cmd.QuitBattleScNotify, nil)
 	}
 	g.Send(cmd.LeaveChallengeScRsp, nil)
@@ -61,41 +62,6 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 	g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
 	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
 	g.GetBattleState().BuffList = make([]uint32, 0)
-}
-
-// 忘却之庭世界发生攻击事件
-
-func (g *GamePlayer) ChallengeSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
-	challengeState := g.GetChallengeState()
-	// 添加回合限制
-	rsp.BattleInfo.RoundsLimit = challengeState.ChallengeCountDown
-
-	// 添加场景buff
-	for _, buffId := range challengeState.SceneBuffList {
-		buffList := &proto.BattleBuff{
-			Id:       buffId,
-			Level:    1,
-			OwnerId:  4294967295,
-			WaveFlag: 4294967295, // 失效时间
-		}
-		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
-	}
-	// 添加角色buff
-	/*
-		for _, buffId := range challengeState.AvatarBuffList {
-			buffList := &proto.BattleBuff{
-				Id:              buffId,
-				Level:           1,
-				OwnerId:         targetIndex,
-				TargetIndexList: []uint32{targetIndex},
-				WaveFlag:        4294967295, // 失效时间
-			}
-			rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, buffList)
-			targetIndex++
-		}
-	*/
-
-	g.Send(cmd.SceneCastSkillScRsp, rsp)
 }
 
 // 忘却之庭世界战斗结算事件
