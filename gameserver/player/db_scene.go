@@ -399,6 +399,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	return scene
 }
 
+// 删除怪物
 func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.SceneGroupRefreshInfo {
 	sceneGroupRefreshInfo := make([]*proto.SceneGroupRefreshInfo, 0)
 	for _, id := range mem {
@@ -419,6 +420,90 @@ func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.SceneGro
 		sceneGroupRefreshInfo = append(sceneGroupRefreshInfo, sgri)
 	}
 	return sceneGroupRefreshInfo
+}
+
+// 添加怪物
+func (g *GamePlayer) GetAddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, configList, eventIDList, npcMonsterIDList []uint32, monsterList []*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
+	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
+	for id, config := range configList {
+		for _, monster := range monsterList {
+			if monster.ID != config {
+				continue
+			}
+			entityId := g.GetNextGameObjectGuid()
+			monsterPos := &proto.Vector{
+				X: int32(monster.PosX * 1000),
+				Y: int32(monster.PosY * 1000),
+				Z: int32(monster.PosZ * 1000),
+			}
+			monsterRot := &proto.Vector{
+				X: int32(monster.RotX * 1000),
+				Y: int32(monster.RotY * 1000),
+				Z: int32(monster.RotZ * 1000),
+			}
+			seri := &proto.SceneEntityRefreshInfo{
+				AddEntity: &proto.SceneEntityInfo{
+					GroupId:  mazeGroupID,
+					InstId:   monster.ID,
+					EntityId: entityId,
+					Motion: &proto.MotionInfo{
+						Pos: monsterPos,
+						Rot: monsterRot,
+					},
+					NpcMonster: &proto.SceneNpcMonsterInfo{
+						MonsterId: npcMonsterIDList[id],
+						EventId:   eventIDList[id],
+					},
+				},
+			}
+			// 添加怪物实体
+			g.AddEntity(&MonsterEntity{
+				Entity: Entity{
+					EntityId: entityId,
+					GroupId:  mazeGroupID,
+					Pos:      monsterPos,
+					Rot:      monsterRot,
+				},
+				EventID: eventIDList[id],
+			})
+			sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
+		}
+	}
+	return sceneEntityRefreshInfo
+}
+
+// 添加角色
+func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.SceneEntityRefreshInfo {
+	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
+	for _, lineAvatar := range lineUp.AvatarIdList {
+		if lineAvatar.AvatarId == 0 {
+			continue
+		}
+		entityList := &proto.SceneEntityRefreshInfo{
+			AddEntity: &proto.SceneEntityInfo{
+				Actor: &proto.SceneActorInfo{
+					AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+					BaseAvatarId: lineAvatar.AvatarId,
+				},
+				Motion: &proto.MotionInfo{
+					Pos: pos,
+					Rot: rot,
+				},
+				EntityId: g.GetNextGameObjectGuid(),
+			},
+		}
+		g.AddEntity(&AvatarEntity{
+			Entity: Entity{
+				EntityId: entityList.AddEntity.EntityId,
+				GroupId:  0,
+				Pos:      pos,
+				Rot:      rot,
+			},
+			AvatarId: lineAvatar.AvatarId,
+		})
+		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, entityList)
+	}
+	return sceneEntityRefreshInfo
 }
 
 func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.SceneGroupRefreshInfo {
@@ -464,12 +549,11 @@ func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	curChallenge := g.GetCurChallenge()
 	leaderEntityId := g.GetNextGameObjectGuid()
-	var lineUp *spb.Line
-	var pos, rot *proto.Vector
-	var mazeGroupID uint32
-	var configList []uint32
-	var npcMonsterIDList []uint32
-	var eventIDList []uint32
+	lineUp := g.GetChallengesLineUp()
+	mazeGroupID := g.GetChallengesMazeGroupID()
+	configList := g.GetChallengesConfigList()
+	npcMonsterIDList := g.GetChallengesNpcMonsterIDList()
+	eventIDList := g.GetChallengesEventIDList()
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
 	if challengeMazeConfig == nil {
 		return nil
@@ -478,37 +562,11 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	if mapEntrance == nil {
 		return nil
 	}
-	switch curChallenge.CurStage {
-	case 1:
-		mazeGroupID = challengeMazeConfig.MazeGroupID1
-		lineUp = g.GetBattleLineUpById(Challenge_1)
-		configList = challengeMazeConfig.ConfigList1
-		npcMonsterIDList = challengeMazeConfig.NpcMonsterIDList1
-		eventIDList = challengeMazeConfig.EventIDList1
-	case 2:
-		mazeGroupID = challengeMazeConfig.MazeGroupID2
-		lineUp = g.GetBattleLineUpById(Challenge_2)
-		configList = challengeMazeConfig.ConfigList2
-		npcMonsterIDList = challengeMazeConfig.NpcMonsterIDList2
-		eventIDList = challengeMazeConfig.EventIDList2
-	}
 	foorMap := gdconf.GetMazeByGroupId(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
 	if foorMap == nil || lineUp == nil || len(npcMonsterIDList) != len(eventIDList) || len(eventIDList) != len(configList) {
 		return nil
 	}
-	for _, anchor := range foorMap.AnchorList {
-		pos = &proto.Vector{
-			Y: int32(anchor.PosY * 1000),
-			X: int32(anchor.PosX * 1000),
-			Z: int32(anchor.PosZ * 1000),
-		}
-		rot = &proto.Vector{
-			Y: int32(anchor.RotY * 1000),
-			X: int32(anchor.RotX * 1000),
-			Z: int32(anchor.RotZ * 1000),
-		}
-		break
-	}
+	pos, rot := g.GetChallengesAnchor(foorMap.AnchorList)
 	if pos == nil || rot == nil {
 		return nil
 	}

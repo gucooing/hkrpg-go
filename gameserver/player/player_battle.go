@@ -90,6 +90,11 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
 	}
 
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_CHALLENGE:
+		g.ChallengePVEBattleResultCsReq(req)
+	}
+
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
 }
 

@@ -225,6 +225,7 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32) *spb.CurChallenge {
 		StageNum:    conf.StageNum,
 		CurStage:    1,
 		Status:      spb.ChallengeStatus_CHALLENGE_DOING,
+		RoundCount:  0,
 	}
 	return db.CurChallenge
 }
@@ -234,9 +235,122 @@ func (g *GamePlayer) GetCurChallenge() *spb.CurChallenge {
 	return db.CurChallenge
 }
 
-func (g *GamePlayer) NewCurChallenge() {
-	db := g.GetChallenge()
-	db.CurChallenge = &spb.CurChallenge{}
+func (g *GamePlayer) SetCurChallengeRoundCount(rc uint32) {
+	db := g.GetCurChallenge()
+	if db != nil {
+		db.RoundCount += rc
+	}
+}
+
+func (g *GamePlayer) IsNextChallenge() bool {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return false
+	}
+	if db.StageNum > db.CurStage {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (g *GamePlayer) AddChallengeCurStage(num uint32) {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return
+	}
+	db.CurStage += num
+}
+
+func (g *GamePlayer) GetChallengesMazeGroupID() uint32 {
+	curChallenge := g.GetCurChallenge()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return 0
+	}
+	switch curChallenge.CurStage {
+	case 1:
+		return challengeMazeConfig.MazeGroupID1
+	case 2:
+		return challengeMazeConfig.MazeGroupID2
+	}
+	return 0
+}
+
+func (g *GamePlayer) GetChallengesLineUp() *spb.Line {
+	curChallenge := g.GetCurChallenge()
+	switch curChallenge.CurStage {
+	case 1:
+		return g.GetBattleLineUpById(Challenge_1)
+	case 2:
+		return g.GetBattleLineUpById(Challenge_2)
+	}
+	return nil
+}
+
+func (g *GamePlayer) GetChallengesConfigList() []uint32 {
+	curChallenge := g.GetCurChallenge()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return nil
+	}
+	switch curChallenge.CurStage {
+	case 1:
+		return challengeMazeConfig.ConfigList1
+	case 2:
+		return challengeMazeConfig.ConfigList2
+	}
+	return nil
+}
+
+func (g *GamePlayer) GetChallengesNpcMonsterIDList() []uint32 {
+	curChallenge := g.GetCurChallenge()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return nil
+	}
+	switch curChallenge.CurStage {
+	case 1:
+		return challengeMazeConfig.NpcMonsterIDList1
+	case 2:
+		return challengeMazeConfig.NpcMonsterIDList1
+	}
+	return nil
+}
+
+func (g *GamePlayer) GetChallengesEventIDList() []uint32 {
+	curChallenge := g.GetCurChallenge()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return nil
+	}
+	switch curChallenge.CurStage {
+	case 1:
+		return challengeMazeConfig.EventIDList1
+	case 2:
+		return challengeMazeConfig.EventIDList1
+	}
+	return nil
+}
+
+func (g *GamePlayer) GetChallengesAnchor(anchorList []*gdconf.AnchorList) (pos, rot *proto.Vector) {
+	if anchorList == nil {
+		return nil, nil
+	}
+	for _, anchor := range anchorList {
+		pos = &proto.Vector{
+			Y: int32(anchor.PosY * 1000),
+			X: int32(anchor.PosX * 1000),
+			Z: int32(anchor.PosZ * 1000),
+		}
+		rot = &proto.Vector{
+			Y: int32(anchor.RotY * 1000),
+			X: int32(anchor.RotX * 1000),
+			Z: int32(anchor.RotZ * 1000),
+		}
+		break
+	}
+	return
 }
 
 type MPEM struct {
@@ -486,13 +600,13 @@ func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
 		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
 	}
 	challengeInfo := &proto.ChallengeInfo{
-		ChallengeId:     db.ChallengeId,                   // 挑战关卡
-		Status:          proto.ChallengeStatus(db.Status), // 关卡状态
-		ExtraLineupType: lineUpType,                       // 队伍type
-		StoryInfo:       nil,                              // 挑战buff
-		RoundCount:      0,                                // 已使用回合数
-		Score:           0,                                // 第一层得分
-		ScoreTwo:        0,                                // 第二层得分
+		ChallengeId:     db.ChallengeId,                                                                                                                                            // 挑战关卡
+		Status:          proto.ChallengeStatus(db.Status),                                                                                                                          // 关卡状态
+		ExtraLineupType: lineUpType,                                                                                                                                                // 队伍type
+		StoryInfo:       &proto.ChallengeStoryInfo{StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}}}, // 挑战buff
+		RoundCount:      db.RoundCount,                                                                                                                                             // 已使用回合数
+		Score:           0,                                                                                                                                                         // 第一层得分
+		ScoreTwo:        0,                                                                                                                                                         // 第二层得分
 	}
 
 	return challengeInfo

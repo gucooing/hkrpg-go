@@ -1,6 +1,8 @@
 package player
 
 import (
+	"strconv"
+
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -67,107 +69,66 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 // 忘却之庭世界战斗结算事件
 
 func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
-	battleState := g.GetBattleState()
-	challengeState := g.GetChallengeState()
-	pos := challengeState.Pos
-	rot := challengeState.Rot
-
-	if challengeState.ExtraLineupType == proto.ExtraLineupType_LINEUP_CHALLENGE {
-		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE))
-	} else {
-		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2))
-	}
-
+	// battleStatus := g.GetBattleStatus()
+	// curChallenge := g.GetCurChallenge()
 	// 战斗失败
 	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_LOSE {
-		// 发送战斗状态
-		challengeSettleNotify := &proto.ChallengeSettleNotify{
-			ScoreTwo:       0,
-			Stars:          0,
-			Reward:         nil, // TODO 记得发奖励
-			ChallengeId:    challengeState.ChallengeId,
-			ChallengeScore: challengeState.ChallengeScore,
-			IsWin:          false,
-		}
-		g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
 		return
 	}
+	// 更新状态
+	g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt()) // 更新已使用回合数
 
-	// 删除实体
-	nitify := &proto.SceneGroupRefreshScNotify{
-		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
-	}
-	// for _, eventId := range challengeState.MonsterEntityMap {
-	// 	entity := g.GetSceneEntity().MonsterEntity[eventId]
-	// 	if entity != nil {
-	// 		groupRefreshInfo := &proto.SceneGroupRefreshInfo{
-	// 			GroupId: entity.GroupId,
-	// 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
-	// 				{
-	// 					DelEntity: eventId,
-	// 				},
-	// 			},
+	// // 是否还有一关
+	// if g.IsNextChallenge() {
+	// 	// 战斗正常结束进入结算
+	// 	// 计算分数
+	// 	var stage uint32 = 0
+	// 	for _, challengeTargetID := range challengeState.ChallengeTargetID {
+	// 		challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
+	// 		if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
+	// 			// 是否有角色死亡
+	// 			stage += 3
+	// 		} else {
+	// 			if (challengeState.ChallengeCountDown - challengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
+	// 				stage += 2
+	// 			}
 	// 		}
-	// 		nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
-	// 		delete(g.GetSceneEntity().MonsterEntity, eventId)
 	// 	}
+	//
+	// 	// 将战斗结果储存到数据库
+	// 	challengeDb := g.GetChallengeById(challengeState.ChallengeId)
+	// 	if challengeDb.Stars < stage {
+	// 		challengeDb.Stars = stage
+	// 	}
+	// 	// 发送战斗胜利通知
+	// 	challengeSettleNotify := &proto.ChallengeSettleNotify{
+	// 		Stars:       stage,
+	// 		Reward:      nil, // TODO 记得发奖励
+	// 		ChallengeId: challengeState.ChallengeId,
+	// 		IsWin:       true,
+	// 	}
+	// 	g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
+	// 	// 战斗正式结束，还原战斗信息
+	// 	battleState.BattleType = spb.BattleType_Battle_NONE
+	// 	challengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
 	// }
-	g.Send(cmd.SceneGroupRefreshScNotify, nitify)
 
-	// 获取已使用回合数
-	challengeState.RoundCount += req.Stt.RoundCnt
-	// 通过波次数判断是否还有一关
-	if challengeState.CurChallengeCount == challengeState.ChallengeCount {
-		// 战斗正常结束进入结算
-
-		// 计算分数
-		var stage uint32 = 0
-		for _, challengeTargetID := range challengeState.ChallengeTargetID {
-			challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
-			if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
-				// 是否有角色死亡
-				stage += 3
-			} else {
-				if (challengeState.ChallengeCountDown - challengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
-					stage += 2
-				}
-			}
-		}
-
-		// 将战斗结果储存到数据库
-		challengeDb := g.GetChallengeById(challengeState.ChallengeId)
-		if challengeDb.Stars < stage {
-			challengeDb.Stars = stage
-		}
-		// 发送战斗胜利通知
-		challengeSettleNotify := &proto.ChallengeSettleNotify{
-			Stars:       stage,
-			Reward:      nil, // TODO 记得发奖励
-			ChallengeId: challengeState.ChallengeId,
-			IsWin:       true,
-		}
-		g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
-		// 战斗正式结束，还原战斗信息
-		battleState.BattleType = spb.BattleType_Battle_NONE
-		challengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
-	} else {
-		// 还差一波
-		challengeState.CurChallengeCount++
-		challengeState.ExtraLineupType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-		// challengeState.AvatarBuffList = make([]uint32, 0)
+	if g.IsNextChallenge() {
+		// 还没结束
+		g.AddChallengeCurStage(1)
 		// 添加怪物
 		g.ChallengeAddSceneGroupRefreshScNotify()
 		// 添加角色
 		g.ChallengeAddAvatarSceneGroupRefreshScNotify()
 		// 更新新的队伍
-		g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2))
-		// 通知当前战斗的队伍
-		challengeLineupNotify := &proto.ChallengeLineupNotify{
-			ExtraLineupType: challengeState.ExtraLineupType,
-		}
-		g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
+		g.SyncLineupNotify(Challenge_2, true)
+		// // 通知当前战斗的队伍
+		// challengeLineupNotify := &proto.ChallengeLineupNotify{
+		// 	ExtraLineupType: proto.ExtraLineupType_LINEUP_CHALLENGE_2,
+		// }
+		// g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
 		// 通知坐标
-		g.SceneEntityMoveScNotify(pos, rot, challengeState.EntranceID)
+		// g.SceneEntityMoveScNotify(pos, rot, challengeState.EntranceID)
 	}
 }
 
@@ -208,101 +169,62 @@ func (g *GamePlayer) ChallengeSyncLineupNotify(index uint32) {
 }
 
 func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
-	challengeState := g.GetChallengeState()
-	pos := challengeState.Pos
-	rot := challengeState.Rot
-
-	notify := new(proto.SceneGroupRefreshScNotify)
-	notify.GroupRefreshInfo = make([]*proto.SceneGroupRefreshInfo, 0)
-	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
-		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+	curChallenge := g.GetCurChallenge()
+	mazeGroupID := g.GetChallengesMazeGroupID()
+	lineUp := g.GetChallengesLineUp()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return
+	}
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
+	if mapEntrance == nil {
+		return
+	}
+	foorMap := gdconf.GetMazeByGroupId(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
+	if foorMap == nil {
+		return
+	}
+	pos, rot := g.GetChallengesAnchor(foorMap.AnchorList)
+	if pos == nil || rot == nil {
+		return
 	}
 
-	for _, lineAvatar := range g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_CHALLENGE_2)).AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
-			continue
-		}
-		entityId := g.GetNextGameObjectGuid()
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				Actor: &proto.SceneActorInfo{
-					AvatarType:   proto.AvatarType(avatarBin.AvatarType),
-					BaseAvatarId: avatarBin.AvatarId,
-				},
-				Motion: &proto.MotionInfo{
-					Pos: &proto.Vector{
-						X: pos.X,
-						Y: pos.Y,
-						Z: pos.Z,
-					},
-					Rot: &proto.Vector{
-						X: rot.X,
-						Y: rot.Y,
-						Z: rot.Z,
-					},
-				},
-				EntityId: entityId,
-			},
-		}
-		// g.GetSceneEntity().AvatarEntity[entityId] = &AvatarEntity{
-		// 	AvatarId: avatarBin.AvatarId,
-		// 	GroupId:  0,
-		// }
-		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
+	notify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+	}
+	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
+		RefreshEntity: g.GetAddAvatarSceneEntityRefreshInfo(lineUp, pos, rot),
 	}
 	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
-
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
 
 func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
-	challengeState := g.GetChallengeState()
-	nPCMonsterPos := challengeState.NPCMonsterPos
-	nPCMonsterRot := challengeState.NPCMonsterRot
+	curChallenge := g.GetCurChallenge()
+	mazeGroupID := g.GetChallengesMazeGroupID()
+	configList := g.GetChallengesConfigList()
+	eventIDList := g.GetChallengesEventIDList()
+	npcMonsterIDList := g.GetChallengesNpcMonsterIDList()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return
+	}
+	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
+	if mapEntrance == nil {
+		return
+	}
+	foorMap := gdconf.GetMazeByGroupId(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
+	if foorMap == nil || len(npcMonsterIDList) != len(eventIDList) || len(eventIDList) != len(configList) {
+		return
+	}
 
-	curChallengeBattle := challengeState.CurChallengeBattle[challengeState.CurChallengeCount]
-
-	notify := new(proto.SceneGroupRefreshScNotify)
-	notify.GroupRefreshInfo = make([]*proto.SceneGroupRefreshInfo, 0)
+	notify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+	}
 	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
-		GroupId:       curChallengeBattle.GroupID,
-		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+		GroupId:       mazeGroupID,
+		RefreshEntity: g.GetAddMonsterSceneEntityRefreshInfo(mazeGroupID, configList, eventIDList, npcMonsterIDList, foorMap.MonsterList),
 	}
-
-	// 添加怪物实体
-	entityId := g.GetNextGameObjectGuid()
-	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-		AddEntity: &proto.SceneEntityInfo{
-			GroupId:  curChallengeBattle.GroupID,
-			InstId:   curChallengeBattle.ConfigID,
-			EntityId: entityId,
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: nPCMonsterPos.X,
-					Y: nPCMonsterPos.Y,
-					Z: nPCMonsterPos.Z,
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: nPCMonsterRot.Y,
-					Z: 0,
-				},
-			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.BasicBin.WorldLevel,
-				MonsterId:  curChallengeBattle.NPCMonsterID,
-				EventId:    curChallengeBattle.EventID,
-			},
-		},
-	}
-
-	// g.GetSceneEntity().MonsterEntity[entityId] = &MonsterEntity{
-	// 	MonsterEId: curChallengeBattle.EventID,
-	// 	GroupId:    curChallengeBattle.GroupID,
-	// }
-	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
-
 	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
