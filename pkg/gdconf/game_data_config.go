@@ -42,7 +42,7 @@ type GameDataConfig struct {
 	RogueRoomMap                map[uint32]*RogueRoom                           // 模拟宇宙地图配置表
 	CocoonConfigMap             map[string]map[string]*CocoonConfig             // 挑战/周本
 	MappingInfoMap              map[string]map[string]*MappingInfo              // 挑战/周本奖励
-	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
+	AvatarSkilltreeMap          map[uint32]map[uint32]*AvatarSkilltree          // 技能库
 	MazeBuffMap                 map[string]map[string]*MazeBuff                 // 技能buff库
 	MazePlaneMap                map[string]*MazePlane                           // 场景id
 	NPCMonsterDataMap           map[string]*NPCMonsterData                      // NPC怪物表？

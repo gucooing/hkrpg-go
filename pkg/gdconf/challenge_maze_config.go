@@ -10,27 +10,27 @@ import (
 )
 
 type ChallengeMazeConfig struct {
-	ID                 uint32   `json:"ID"`
-	GroupID            uint32   `json:"GroupID"`
-	MapEntranceID      uint32   `json:"MapEntranceID"`
-	PreLevel           uint32   `json:"PreLevel"`
-	PreChallengeMazeID uint32   `json:"PreChallengeMazeID"`
-	RewardID           uint32   `json:"RewardID"`
-	DamageType1        []string `json:"DamageType1"`
-	DamageType2        []string `json:"DamageType2"`
-	ChallengeTargetID  []uint32 `json:"ChallengeTargetID"`
-	StageNum           uint32   `json:"StageNum"` // 波次
-	ChallengeCountDown uint32   `json:"ChallengeCountDown"`
-	MazeGroupID1       uint32   `json:"MazeGroupID1"`
-	ConfigList1        []uint32 `json:"ConfigList1"`
-	NpcMonsterIDList1  []uint32 `json:"NpcMonsterIDList1"`
-	EventIDList1       []uint32 `json:"EventIDList1"`
-	MazeGroupID2       uint32   `json:"MazeGroupID2"`
-	ConfigList2        []uint32 `json:"ConfigList2"`
-	NpcMonsterIDList2  []uint32 `json:"NpcMonsterIDList2"`
-	EventIDList2       []uint32 `json:"EventIDList2"`
-	MazeBuffID         uint32   `json:"MazeBuffID"`
-	ChallengeState     map[uint32]*ChallengeState
+	ID                 uint32                     `json:"ID"` // 关卡id
+	GroupID            uint32                     `json:"GroupID"`
+	MapEntranceID      uint32                     `json:"MapEntranceID"` // 地图
+	PreLevel           uint32                     `json:"PreLevel"`
+	PreChallengeMazeID uint32                     `json:"PreChallengeMazeID"`
+	RewardID           uint32                     `json:"RewardID"`    // 奖励配置id
+	DamageType1        []string                   `json:"DamageType1"` // 推荐属性
+	DamageType2        []string                   `json:"DamageType2"`
+	ChallengeTargetID  []uint32                   `json:"ChallengeTargetID"`
+	StageNum           uint32                     `json:"StageNum"`           // 关卡数
+	ChallengeCountDown uint32                     `json:"ChallengeCountDown"` // 回合限制
+	MazeGroupID1       uint32                     `json:"MazeGroupID1"`       // 关卡1
+	ConfigList1        []uint32                   `json:"ConfigList1"`
+	NpcMonsterIDList1  []uint32                   `json:"NpcMonsterIDList1"`
+	EventIDList1       []uint32                   `json:"EventIDList1"`
+	MazeGroupID2       uint32                     `json:"MazeGroupID2"` // 关卡2
+	ConfigList2        []uint32                   `json:"ConfigList2"`
+	NpcMonsterIDList2  []uint32                   `json:"NpcMonsterIDList2"`
+	EventIDList2       []uint32                   `json:"EventIDList2"`
+	MazeBuffID         uint32                     `json:"MazeBuffID"` // 关卡buff
+	ChallengeState     map[uint32]*ChallengeState // 关卡预处理结果
 }
 
 type ChallengeState struct {

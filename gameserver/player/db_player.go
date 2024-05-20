@@ -135,6 +135,14 @@ func (g *GamePlayer) GetWorldLevel() uint32 {
 	return db.WorldLevel
 }
 
+func (g *GamePlayer) SetWorldLevel(worldLevel uint32) {
+	if worldLevel < 0 || worldLevel > 6 {
+		return
+	}
+	db := g.GetBasicBin()
+	db.WorldLevel = worldLevel
+}
+
 func (g *GamePlayer) GetHeadIcon() uint32 {
 	db := g.GetBasicBin()
 	if db.HeadImageAvatarId == 0 {

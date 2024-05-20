@@ -25,6 +25,8 @@ func (a *Api) CmdIdInitRouter(c *gin.Context) {
 		a.WorldLevel(c)
 	case 1002:
 		a.PlayerDb(c)
+	case 1003:
+		a.MaxCurAvatar(c)
 	case 1006:
 		a.DelItem(c)
 	case 1101:

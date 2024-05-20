@@ -41,3 +41,19 @@ func (a *Api) PlayerDb(c *gin.Context) {
 		return
 	}
 }
+
+func (a *Api) MaxCurAvatar(c *gin.Context) {
+	uid := alg.S2U32(c.Query("uid"))
+	avatarId := alg.S2U32(c.Query("avatar_id"))
+	var isAll = false
+	all := alg.S2U32(c.Query("all"))
+	if all == 1 {
+		isAll = true
+	}
+	message := &spb.MaxCurAvatar{
+		PlayerUid: uid,
+		AvatarId:  avatarId,
+		All:       isAll,
+	}
+	a.ToNode(c, cmd.MaxCurAvatar, message)
+}

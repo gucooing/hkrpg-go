@@ -38,6 +38,11 @@ func (g *GamePlayer) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
 	return bin[avatarId]
 }
 
+func (g *GamePlayer) GetCurAvatar() *spb.AvatarBin {
+	db := g.GetSceneAvatarId()
+	return g.GetAvatarBinById(db)
+}
+
 func (g *GamePlayer) GetHeroBasicTypeInfo() []*spb.HeroBasicTypeInfo {
 	heroBasic := make([]*spb.HeroBasicTypeInfo, 0)
 	heroBasicTypeInfo := &spb.HeroBasicTypeInfo{
@@ -92,6 +97,20 @@ func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 		avatarBin.SkilltreeList = skilltreeList
 	}
 	return avatarBin.SkilltreeList
+}
+
+func (g *GamePlayer) SetAvatarMakSkillByAvatarId(avatarId uint32) {
+	db := g.GetSkillTreeList(avatarId)
+	if db == nil {
+		return
+	}
+	for _, avatarSkill := range db {
+		conf := gdconf.GetAvatarSkilltreeBySkillId(avatarSkill.PointId, 1)
+		if conf == nil {
+			continue
+		}
+		avatarSkill.Level = conf.MaxLevel
+	}
 }
 
 func (g *GamePlayer) AddAvatar(avatarId uint32) {

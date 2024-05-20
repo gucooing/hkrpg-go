@@ -31,3 +31,12 @@ func (s *GameServer) DelItem(serviceMsg pb.Message) {
 	}
 	play.p.DelItem(serviceMsg)
 }
+
+func (s *GameServer) GmMaxCurAvatar(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.MaxCurAvatar)
+	play := s.getPlayerByUid(req.PlayerUid)
+	if play == nil {
+		return
+	}
+	play.p.GmMaxCurAvatar(serviceMsg)
+}

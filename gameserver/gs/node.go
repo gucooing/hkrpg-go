@@ -101,6 +101,8 @@ func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		n.game.GmWorldLevel(serviceMsg) // 设置世界等级
 	case cmd.DelItem:
 		n.game.DelItem(serviceMsg) // 清空背包
+	case cmd.MaxCurAvatar:
+		n.game.GmMaxCurAvatar(serviceMsg)
 	default:
 		logger.Info("node -> game error cmdid:%v", cmdId)
 	}
