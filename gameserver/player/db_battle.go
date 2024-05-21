@@ -313,7 +313,7 @@ func (g *GamePlayer) GetChallengesNpcMonsterIDList() []uint32 {
 	case 1:
 		return challengeMazeConfig.NpcMonsterIDList1
 	case 2:
-		return challengeMazeConfig.NpcMonsterIDList1
+		return challengeMazeConfig.NpcMonsterIDList2
 	}
 	return nil
 }
@@ -328,7 +328,7 @@ func (g *GamePlayer) GetChallengesEventIDList() []uint32 {
 	case 1:
 		return challengeMazeConfig.EventIDList1
 	case 2:
-		return challengeMazeConfig.EventIDList1
+		return challengeMazeConfig.EventIDList2
 	}
 	return nil
 }

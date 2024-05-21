@@ -121,6 +121,7 @@ func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
 	g.BasicBin.Item.MaterialMap[11] = 240
 }
 
+// 角色一键满级
 func (g *GamePlayer) GmMaxCurAvatar(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.MaxCurAvatar)
 	if req.All {

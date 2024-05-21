@@ -161,8 +161,8 @@ func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.Batt
 		switch bt {
 		case proto.BattleEndStatus_BATTLE_END_NONE:
 		case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
-			avatarBin.Hp = sp
-			avatarBin.SpBar.CurSp = hp
+			avatarBin.Hp = hp
+			avatarBin.SpBar.CurSp = sp
 		case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
 			avatarBin.Hp = hp
 			avatarBin.SpBar.CurSp = sp

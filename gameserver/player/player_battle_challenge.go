@@ -76,7 +76,7 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 		return
 	}
 	// 更新状态
-	g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt()) // 更新已使用回合数
+	g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt() + 1) // 更新已使用回合数
 
 	// // 是否还有一关
 	// if g.IsNextChallenge() {
