@@ -12,12 +12,8 @@ import (
 func (g *GamePlayer) DressAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
-
 	g.DressAvatarPlayerSyncScNotify(req.BaseAvatarId, req.EquipmentUniqueId)
-
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.DressAvatarScRsp, rsp)
+	g.Send(cmd.DressAvatarScRsp, nil)
 }
 
 // 光锥交换通知

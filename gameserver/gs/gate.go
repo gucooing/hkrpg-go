@@ -269,7 +269,6 @@ func NewPlayer(uid, accountId uint32, msg chan player.Msg) *player.GamePlayer {
 func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 	rsp := payloadMsg.(*spb.GateToGameMsgNotify)
 	paler := ge.game.getPlayerByUid(rsp.Uid)
-	// TODO 此处应该下线玩家（通知到gate和客户端
 	if paler != nil {
 		msgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(rsp.Msg, &msgList, nil)

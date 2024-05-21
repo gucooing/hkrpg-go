@@ -7,9 +7,7 @@ import (
 )
 
 func (g *GamePlayer) HandleQueryProductInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.QuitLineupCsReq)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.QueryProductInfoScRsp, rsp)
+	g.Send(cmd.QueryProductInfoScRsp, nil)
 }
 
 func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg []byte) {

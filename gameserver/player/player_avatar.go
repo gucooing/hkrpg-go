@@ -218,9 +218,7 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
 	dbAvatar.PromoteLevel++
 	// 通知升级后角色消息
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.PromoteAvatarScRsp, rsp)
+	g.Send(cmd.PromoteAvatarScRsp, nil)
 }
 
 func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {

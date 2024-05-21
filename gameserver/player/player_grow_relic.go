@@ -11,11 +11,8 @@ import (
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressRelicAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressRelicAvatarCsReq)
-
 	g.DressRelicAvatarPlayerSyncScNotify(req.BaseAvatarId, req.ParamList)
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.DressAvatarScRsp, rsp)
+	g.Send(cmd.DressRelicAvatarScRsp, nil)
 }
 
 func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramList []*proto.RelicParam) {
