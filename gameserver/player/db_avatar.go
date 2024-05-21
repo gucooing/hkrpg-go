@@ -148,6 +148,7 @@ func (g *GamePlayer) AddAvatar(avatarId uint32) {
 }
 
 func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus) {
+	var deadAatarNum uint32 = 0
 	for _, avatarStt := range abi {
 		avatarBin := g.GetAvatarBinById(avatarStt.Id)
 		if avatarBin == nil {
@@ -156,6 +157,7 @@ func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.Batt
 		sp := uint32((avatarStt.AvatarStatus.LeftSp / avatarStt.AvatarStatus.MaxSp) * 10000)
 		hp := uint32((avatarStt.AvatarStatus.LeftHp / avatarStt.AvatarStatus.MaxHp) * 10000)
 		if hp == 0 {
+			deadAatarNum++
 			hp = 2000
 		}
 		switch bt {
@@ -169,6 +171,13 @@ func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.Batt
 		case proto.BattleEndStatus_BATTLE_END_QUIT: // 撤退
 
 		}
+	}
+
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_CHALLENGE: // 忘却之庭不需要更新状态
+		g.AddChallengeDeadAvatar(deadAatarNum)
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		g.AddChallengeDeadAvatar(deadAatarNum)
 	}
 }
 

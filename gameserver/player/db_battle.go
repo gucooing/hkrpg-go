@@ -68,40 +68,10 @@ func (g *GamePlayer) DelBattleBackupById(battleId uint32) {
 
 type BattleState struct {
 	BattleType         spb.BattleType
-	ChallengeState     *ChallengeState
 	TrialActivityState *TrialActivityState
 	BuffList           []uint32 // 进入战斗需要添加的buff
 	AvatarBuffList     []uint32 // 角色buff
 	RogueState         *RogueState
-}
-type ChallengeState struct {
-	// 回包
-	ChallengeId     uint32                // 关卡id
-	Status          proto.ChallengeStatus // 状态
-	RoundCount      uint32                // 已使用的回合数
-	ExtraLineupType proto.ExtraLineupType // 哪个队伍
-	ChallengeScore  uint32                // 活动分数
-	// 缓存状态
-	Pos                *spb.VectorBin
-	Rot                *spb.VectorBin
-	NPCMonsterPos      *spb.VectorBin
-	NPCMonsterRot      *spb.VectorBin
-	PlaneID            uint32
-	FloorID            uint32
-	EntranceID         uint32
-	CurChallengeBattle map[uint32]*CurChallengeBattle // 每一波关卡配置
-	SceneBuffList      []uint32                       // 场景buff
-	MonsterEntityMap   []uint32                       // 当前战斗实体id
-	// 下面是普通
-	ChallengeCount     uint32   // 波数
-	CurChallengeCount  uint32   // 当前波次
-	ChallengeTargetID  []uint32 // 满星条件
-	ChallengeCountDown uint32   // 总回合限制
-	// 下面是活动
-	StoryBuffOne uint32 // 第一个buff
-	StoryBuffTwo uint32 // 第二个buff
-	ScoreOne     uint32
-	ScoreTwo     uint32
 }
 type TrialActivityState struct {
 	AvatarDemoId  uint32
@@ -111,13 +81,6 @@ type TrialActivityState struct {
 	FloorID       uint32
 	EntranceID    uint32
 
-	NPCMonsterID uint32
-	EventID      uint32
-	GroupID      uint32
-	ConfigID     uint32
-}
-
-type CurChallengeBattle struct {
 	NPCMonsterID uint32
 	EventID      uint32
 	GroupID      uint32
@@ -155,20 +118,12 @@ func (g *GamePlayer) GetBattleState() *BattleState {
 	if g.OnlineData.BattleState == nil {
 		g.OnlineData.BattleState = &BattleState{
 			BattleType:         0,
-			ChallengeState:     &ChallengeState{},
 			BuffList:           make([]uint32, 0),
 			TrialActivityState: &TrialActivityState{},
 			RogueState:         &RogueState{},
 		}
 	}
 	return g.OnlineData.BattleState
-}
-
-func (g *GamePlayer) GetChallengeState() *ChallengeState {
-	if g.GetBattleState().ChallengeState == nil {
-		g.GetBattleState().ChallengeState = &ChallengeState{}
-	}
-	return g.GetBattleState().ChallengeState
 }
 
 func (g *GamePlayer) GetTrialActivityState() *TrialActivityState {
@@ -247,8 +202,14 @@ func (g *GamePlayer) NewCurChallenge() {
 	db.CurChallenge = nil
 }
 
-func (g *GamePlayer) SetCurChallenge(challengeId uint32) *spb.CurChallenge {
+func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartChallengeStoryInfo) *spb.CurChallenge {
 	db := g.GetChallenge()
+	var buffOne uint32 = 0
+	var buffTwe uint32 = 0
+	if storyInfo != nil {
+		buffOne = storyInfo.GetStoryBuffInfo().GetStoryBuffOne()
+		buffTwe = storyInfo.GetStoryBuffInfo().GetStoryBuffTwo()
+	}
 	conf := gdconf.GetChallengeMazeConfigById(challengeId)
 	db.CurChallenge = &spb.CurChallenge{
 		ChallengeId: challengeId,
@@ -256,6 +217,8 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32) *spb.CurChallenge {
 		CurStage:    1,
 		Status:      spb.ChallengeStatus_CHALLENGE_DOING,
 		RoundCount:  0,
+		BuffOne:     buffOne,
+		BuffTwo:     buffTwe,
 	}
 	return db.CurChallenge
 }
@@ -302,6 +265,9 @@ func (g *GamePlayer) SetCurChallengeStatus(status spb.ChallengeStatus) {
 
 func (g *GamePlayer) GetChallengesMazeGroupID() uint32 {
 	curChallenge := g.GetCurChallenge()
+	if curChallenge == nil {
+		return 0
+	}
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
 	if challengeMazeConfig == nil {
 		return 0
@@ -317,6 +283,9 @@ func (g *GamePlayer) GetChallengesMazeGroupID() uint32 {
 
 func (g *GamePlayer) GetChallengesLineUp() *spb.Line {
 	curChallenge := g.GetCurChallenge()
+	if curChallenge == nil {
+		return nil
+	}
 	switch curChallenge.CurStage {
 	case 1:
 		return g.GetBattleLineUpById(Challenge_1)
@@ -328,6 +297,9 @@ func (g *GamePlayer) GetChallengesLineUp() *spb.Line {
 
 func (g *GamePlayer) GetChallengesConfigList() []uint32 {
 	curChallenge := g.GetCurChallenge()
+	if curChallenge == nil {
+		return nil
+	}
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
 	if challengeMazeConfig == nil {
 		return nil
@@ -343,6 +315,9 @@ func (g *GamePlayer) GetChallengesConfigList() []uint32 {
 
 func (g *GamePlayer) GetChallengesNpcMonsterIDList() []uint32 {
 	curChallenge := g.GetCurChallenge()
+	if curChallenge == nil {
+		return nil
+	}
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
 	if challengeMazeConfig == nil {
 		return nil
@@ -371,6 +346,20 @@ func (g *GamePlayer) GetChallengesEventIDList() []uint32 {
 	return nil
 }
 
+func (g *GamePlayer) GetCurChallengeBuffId() uint32 {
+	curChallenge := g.GetCurChallenge()
+	if curChallenge == nil {
+		return 0
+	}
+	switch curChallenge.CurStage {
+	case 1:
+		return curChallenge.BuffOne
+	case 2:
+		return curChallenge.BuffTwo
+	}
+	return 0
+}
+
 func (g *GamePlayer) GetChallengesAnchor(anchorList []*gdconf.AnchorList) (pos, rot *proto.Vector) {
 	if anchorList == nil {
 		return nil, nil
@@ -389,6 +378,15 @@ func (g *GamePlayer) GetChallengesAnchor(anchorList []*gdconf.AnchorList) (pos, 
 		break
 	}
 	return
+}
+
+// 添加死亡角色数
+func (g *GamePlayer) AddChallengeDeadAvatar(deadNum uint32) {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return
+	}
+	db.DeadAvatar += deadNum
 }
 
 type MPEM struct {
@@ -576,16 +574,16 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 	battleId := g.GetBattleIdGuid()
 	monsterWaveList, stageId := g.GetSceneMonsterWave(mem)
 	battleInfo := &proto.SceneBattleInfo{
-		LogicRandomSeed:     gdconf.GetLoadingDesc(),                  // 逻辑随机种子
-		WorldLevel:          g.GetWorldLevel(),                        // 世界等级
-		BattleId:            battleId,                                 // 战斗Id
-		BattleAvatarList:    g.GetProtoBattleAvatar(bAList),           // 战斗角色列表
-		MonsterWaveList:     monsterWaveList,                          // 怪物列表
-		StageId:             stageId,                                  // 起始战斗
-		BattleTargetInfo:    make(map[uint32]*proto.BattleTargetList), // 战斗目标
-		EventBattleInfoList: make([]*proto.BattleEventBattleInfo, 0),  // 战斗信息？？？
-		RoundsLimit:         g.GetRoundsLimit(),                       // 回合限制
-		BuffList:            g.GetBattleBuff(),                        // Buff列表
+		LogicRandomSeed:     gdconf.GetLoadingDesc(),                 // 逻辑随机种子
+		WorldLevel:          g.GetWorldLevel(),                       // 世界等级
+		BattleId:            battleId,                                // 战斗Id
+		BattleAvatarList:    g.GetProtoBattleAvatar(bAList),          // 战斗角色列表
+		MonsterWaveList:     monsterWaveList,                         // 怪物列表
+		StageId:             stageId,                                 // 起始战斗
+		BattleTargetInfo:    g.GetBattleTargetInfo(),                 // 战斗目标
+		EventBattleInfoList: make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
+		RoundsLimit:         g.GetRoundsLimit(),                      // 回合限制
+		BuffList:            g.GetBattleBuff(),                       // Buff列表
 	}
 	// 记录此次战斗
 	battleBackup := &BattleBackup{
@@ -632,24 +630,45 @@ func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWav
 	return mWList, stageID
 }
 
-// TODO 记得根据战斗情况添加buff
+// 根据战斗情况添加buff
 func (g *GamePlayer) GetBattleBuff() []*proto.BattleBuff {
 	buffList := make([]*proto.BattleBuff, 0)
 	status := g.GetBattleStatus()
 	switch status {
 	case spb.BattleType_Battle_CHALLENGE:
-		db := g.GetCurChallenge()
-		conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
-		if conf.MazeBuffID != 0 {
-			buffList = append(buffList, &proto.BattleBuff{
-				Id:       conf.MazeBuffID,
-				Level:    1,
-				OwnerId:  4294967295,
-				WaveFlag: 4294967295,
-			})
-		}
+		buffList = append(buffList, g.GetCurChallengeBuff()...)
 	case spb.BattleType_Battle_CHALLENGE_Story:
+		buffList = append(buffList, g.GetCurChallengeBuff()...)
 	}
+	return buffList
+}
+
+func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
+	db := g.GetCurChallenge()
+	buffList := make([]*proto.BattleBuff, 0)
+	// 关卡buff
+	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
+	if conf.MazeBuffID != 0 {
+		buffList = append(buffList, &proto.BattleBuff{
+			Id:       conf.MazeBuffID,
+			Level:    1,
+			OwnerId:  4294967295,
+			WaveFlag: 4294967295,
+		})
+	}
+	// 自选buff
+	buffId := g.GetCurChallengeBuffId()
+	if buffId != 0 {
+		buffList = append(buffList, &proto.BattleBuff{
+			Id:              buffId,
+			Level:           1,
+			OwnerId:         0,
+			TargetIndexList: []uint32{0},
+			WaveFlag:        4294967295, // 失效时间
+			DynamicValues:   make(map[string]float32),
+		})
+	}
+	// TODO 添加角色buff
 	return buffList
 }
 
@@ -686,11 +705,56 @@ func (g *GamePlayer) GetRoundsLimit() uint32 {
 	case spb.BattleType_Battle_CHALLENGE:
 		db := g.GetCurChallenge()
 		conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
+		if conf == nil {
+			return 0
+		}
 		return conf.ChallengeCountDown
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		db := g.GetCurChallenge()
 		conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+		if conf == nil {
+			return 0
+		}
 		return conf.TurnLimit
 	}
 	return 0
+}
+
+// 添加战斗目标
+func (g *GamePlayer) GetBattleTargetInfo() map[uint32]*proto.BattleTargetList {
+	battleTargetInfoList := make(map[uint32]*proto.BattleTargetList)
+	db := g.GetCurChallenge()
+	if g.GetBattleStatus() != spb.BattleType_Battle_CHALLENGE_Story {
+		return battleTargetInfoList
+	}
+	conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+	if conf == nil {
+		return battleTargetInfoList
+	}
+	battleTargetInfoList[1] = &proto.BattleTargetList{
+		BattleTargetList: []*proto.BattleTarget{{
+			Id: 10001,
+		}},
+	}
+	battleTargetList := make([]*proto.BattleTarget, 0)
+	for _, id := range conf.BattleTargetID {
+		battleTarget := &proto.BattleTarget{
+			Id:       id,
+			Progress: 0,
+		}
+		battleTargetList = append(battleTargetList, battleTarget)
+	}
+	battleTargetInfoList[5] = &proto.BattleTargetList{
+		BattleTargetList: battleTargetList,
+	}
+	return battleTargetInfoList
+}
+
+// todo 忘却之庭奖励获取
+func (g *GamePlayer) GetChallengeReward() *proto.ItemList {
+	itemList := &proto.ItemList{
+		ItemList: make([]*proto.Item, 0),
+	}
+
+	return itemList
 }

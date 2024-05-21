@@ -223,6 +223,8 @@ message CurChallenge {// 正在进行的忘却之庭信息
   uint32  score_two = 8; // 第二层得分
   bool is_win = 9; // 是否赢
   uint32 dead_avatar = 10; // 死亡角色数
+  uint32 buff_one = 11; // 第一关buff
+  uint32 buff_two = 12; // 第二关buff
 }
 
 message Gacha {

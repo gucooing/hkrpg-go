@@ -679,7 +679,7 @@ func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, rsp *proto.PVEBattleResultScRsp) {
 	// battle := g.GetRogueBattle()[req.BattleId]
 	// 队伍状态通知
-	g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	// g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	// rsp.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	// buff同步
 	var buffList []uint32
