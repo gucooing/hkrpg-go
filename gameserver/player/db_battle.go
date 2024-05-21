@@ -674,6 +674,9 @@ func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
 
 func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
 	db := g.GetCurChallenge()
+	if db == nil {
+		return nil
+	}
 	var lineUpType proto.ExtraLineupType
 	switch db.CurStage {
 	case 1:

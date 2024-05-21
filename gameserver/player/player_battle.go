@@ -102,35 +102,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
 }
 
-// 当前坐标通知
-func (g *GamePlayer) SceneEntityMoveScNotify(pos, rot *spb.VectorBin, entryId uint32) {
-	if pos == nil {
-		pos = g.GetPos()
-	}
-	if rot == nil {
-		rot = g.GetRot()
-	}
-
-	notify := &proto.SceneEntityMoveScNotify{
-		EntryId:          entryId,
-		ClientPosVersion: 0,
-		Motion: &proto.MotionInfo{
-			Pos: &proto.Vector{
-				X: pos.X,
-				Y: pos.Y,
-				Z: pos.Z,
-			},
-			Rot: &proto.Vector{
-				X: rot.X,
-				Y: rot.Y,
-				Z: rot.Z,
-			},
-		},
-	}
-
-	g.Send(cmd.SceneEntityMoveScNotify, notify)
-}
-
 /***********************************关卡/副本***********************************/
 
 func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {

@@ -7,9 +7,9 @@ import (
 )
 
 const (
-	Hcoin    uint32 = 1
+	Hcoin    uint32 = 1  // 梦华
 	Scoin    uint32 = 2  // 金钱
-	Mcoin    uint32 = 3  //
+	Mcoin    uint32 = 3  // 星琼
 	Stamina  uint32 = 11 // 体力
 	RStamina uint32 = 12 // 后备体力
 	Exp      uint32 = 22 // 经验

@@ -91,10 +91,8 @@ func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServ
 
 	if gamePlayer.p.OnlineData == nil {
 		gamePlayer.p.OnlineData = &player.OnlineData{
-			Battle: make(map[uint32]*player.Battle),
-			BattleState: &player.BattleState{
-				ChallengeState: &player.ChallengeState{},
-			},
+			Battle:      make(map[uint32]*player.Battle),
+			BattleState: &player.BattleState{},
 		}
 	}
 	if s.playerMap[uid] == nil {

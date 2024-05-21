@@ -55,14 +55,19 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 	curChallenge := g.GetCurChallenge()
-	if proto.ChallengeStatus(curChallenge.Status) == proto.ChallengeStatus_CHALLENGE_DOING {
-		g.Send(cmd.QuitBattleScNotify, nil)
+	if curChallenge == nil {
+		return
+	}
+	if curChallenge.Status == spb.ChallengeStatus_CHALLENGE_DOING {
+		g.Send(cmd.QuitBattleScNotify, nil) // 战斗没结束就退出是主动退出
 	}
 	g.Send(cmd.LeaveChallengeScRsp, nil)
 
-	g.EnterSceneByServerScNotify(g.GetScene().EntryId, 0)
-	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
-	g.GetBattleState().BuffList = make([]uint32, 0)
+	g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
+	// 设置战斗状态为空
+	g.SetBattleStatus(spb.BattleType_Battle_NONE)
+	// 清空忘却之庭
+	g.NewCurChallenge()
 }
 
 // 忘却之庭世界战斗结算事件
@@ -78,16 +83,8 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 战斗失败
 		g.SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_UNKNOWN)
 		g.ChallengeSettleNotify()
-		// 设置战斗状态为空
-		g.SetBattleStatus(spb.BattleType_Battle_NONE)
-		// 清空忘却之庭
-		g.NewCurChallenge()
 		return
 	case proto.BattleEndStatus_BATTLE_END_QUIT: // 退出战斗
-		// 设置战斗状态为空
-		g.SetBattleStatus(spb.BattleType_Battle_NONE)
-		// 清空忘却之庭
-		g.NewCurChallenge()
 		return
 	}
 	// 更新状态
@@ -109,10 +106,8 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 		g.ChallengeSettleNotify()
 		// 将战斗结果储存到数据库
 		g.UpdateChallengeList(db)
-		// 设置战斗状态为空
-		g.SetBattleStatus(spb.BattleType_Battle_NONE)
-		// 清空忘却之庭
-		g.NewCurChallenge()
+		// 更改状态
+		g.SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_FINISH)
 	}
 }
 
