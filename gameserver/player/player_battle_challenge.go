@@ -17,13 +17,6 @@ func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
 	rsp := &proto.GetCurChallengeScRsp{
 		ChallengeInfo: g.GetChallengeInfo(),
 	}
-	// if challengeState.ChallengeCount == 1 {
-	// 	rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffOne}}}
-	// 	// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffOne)
-	// } else {
-	// 	rsp.ChallengeInfo.StoryInfo.StoryBuffs = &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: []uint32{challengeState.StoryBuffTwo}}}
-	// 	// rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList = append(rsp.ChallengeInfo.StoryInfo.CurStoryBuffs.BuffList, challengeState.StoryBuffTwo)
-	// }
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
 }
 
@@ -69,50 +62,31 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 // 忘却之庭世界战斗结算事件
 
 func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
-	// battleStatus := g.GetBattleStatus()
-	// curChallenge := g.GetCurChallenge()
-	// 战斗失败
-	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_LOSE {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return
+	}
+	switch req.EndStatus {
+	case proto.BattleEndStatus_BATTLE_END_NONE:
+		return
+	case proto.BattleEndStatus_BATTLE_END_LOSE: // 战斗失败
+		g.SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_UNKNOWN)
+		g.ChallengeSettleNotify()
+		// 设置战斗状态为空
+		g.SetBattleStatus(spb.BattleType_Battle_NONE)
+		// 清空忘却之庭
+		g.NewCurChallenge()
+		return
+	case proto.BattleEndStatus_BATTLE_END_QUIT: // 退出战斗
+		// 设置战斗状态为空
+		g.SetBattleStatus(spb.BattleType_Battle_NONE)
+		// 清空忘却之庭
+		g.NewCurChallenge()
 		return
 	}
 	// 更新状态
-	g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt() + 1) // 更新已使用回合数
-
-	// // 是否还有一关
-	// if g.IsNextChallenge() {
-	// 	// 战斗正常结束进入结算
-	// 	// 计算分数
-	// 	var stage uint32 = 0
-	// 	for _, challengeTargetID := range challengeState.ChallengeTargetID {
-	// 		challengeTargetConfig := gdconf.GetChallengeTargetConfigById(challengeTargetID)
-	// 		if challengeTargetConfig.ChallengeTargetType == "DEAD_AVATAR" {
-	// 			// 是否有角色死亡
-	// 			stage += 3
-	// 		} else {
-	// 			if (challengeState.ChallengeCountDown - challengeState.RoundCount) >= challengeTargetConfig.ChallengeTargetParam1 {
-	// 				stage += 2
-	// 			}
-	// 		}
-	// 	}
-	//
-	// 	// 将战斗结果储存到数据库
-	// 	challengeDb := g.GetChallengeById(challengeState.ChallengeId)
-	// 	if challengeDb.Stars < stage {
-	// 		challengeDb.Stars = stage
-	// 	}
-	// 	// 发送战斗胜利通知
-	// 	challengeSettleNotify := &proto.ChallengeSettleNotify{
-	// 		Stars:       stage,
-	// 		Reward:      nil, // TODO 记得发奖励
-	// 		ChallengeId: challengeState.ChallengeId,
-	// 		IsWin:       true,
-	// 	}
-	// 	g.Send(cmd.ChallengeSettleNotify, challengeSettleNotify)
-	// 	// 战斗正式结束，还原战斗信息
-	// 	battleState.BattleType = spb.BattleType_Battle_NONE
-	// 	challengeState.Status = proto.ChallengeStatus_CHALLENGE_FINISH
-	// }
-
+	g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt()) // 更新已使用回合数
+	// 回合处理
 	if g.IsNextChallenge() {
 		// 还没结束
 		g.AddChallengeCurStage(1)
@@ -122,14 +96,31 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 		g.ChallengeAddAvatarSceneGroupRefreshScNotify()
 		// 更新新的队伍
 		g.SyncLineupNotify(Challenge_2, true)
-		// // 通知当前战斗的队伍
-		// challengeLineupNotify := &proto.ChallengeLineupNotify{
-		// 	ExtraLineupType: proto.ExtraLineupType_LINEUP_CHALLENGE_2,
-		// }
-		// g.Send(cmd.ChallengeLineupNotify, challengeLineupNotify)
-		// 通知坐标
-		// g.SceneEntityMoveScNotify(pos, rot, challengeState.EntranceID)
+	} else {
+		// 结算
+		g.ChallengeSettle()
+		// 发送战斗胜利通知
+		g.ChallengeSettleNotify()
+		// 将战斗结果储存到数据库
+		g.UpdateChallengeList(db)
+		// 设置战斗状态为空
+		g.SetBattleStatus(spb.BattleType_Battle_NONE)
+		// 清空忘却之庭
+		g.NewCurChallenge()
 	}
+}
+
+func (g *GamePlayer) ChallengeSettleNotify() {
+	db := g.GetCurChallenge()
+	notify := &proto.ChallengeSettleNotify{
+		Stars:          db.Stars,                  // 得分
+		Reward:         nil,                       // 奖励
+		ChallengeId:    db.ChallengeId,            // 关卡id
+		IsWin:          db.IsWin,                  // 是否赢
+		ScoreTwo:       db.ScoreTwo,               // 二层挑战得分
+		ChallengeScore: db.ScoreOne + db.ScoreTwo, // 总得分
+	}
+	g.Send(cmd.ChallengeSettleNotify, notify)
 }
 
 func (g *GamePlayer) ChallengeSyncLineupNotify(index uint32) {
@@ -197,6 +188,17 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 	}
 	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
+
+	// 通知当前位置
+	sceneEntityMoveScNotify := &proto.SceneEntityMoveScNotify{
+		EntryId:          challengeMazeConfig.MapEntranceID,
+		ClientPosVersion: 0,
+		Motion: &proto.MotionInfo{
+			Pos: pos,
+			Rot: rot,
+		},
+	}
+	g.Send(cmd.SceneEntityMoveScNotify, sceneEntityMoveScNotify)
 }
 
 func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {

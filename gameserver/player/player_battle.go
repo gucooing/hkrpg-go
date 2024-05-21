@@ -93,47 +93,13 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	switch g.GetBattleStatus() {
 	case spb.BattleType_Battle_CHALLENGE:
 		g.ChallengePVEBattleResultCsReq(req)
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		g.ChallengePVEBattleResultCsReq(req)
 	}
+
+	g.DelBattleBackupById(req.BattleId)
 
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
-}
-
-// 队伍更新通知
-func (g *GamePlayer) BattleSyncLineupNotify(index uint32) {
-	rsq := new(proto.SyncLineupNotify)
-	lineUp := g.GetLineUpById(index)
-	lineupList := &proto.LineupInfo{
-		IsVirtual:  false,
-		LeaderSlot: 0,
-		AvatarList: make([]*proto.LineupAvatar, 0),
-		Index:      index,
-		// ExtraLineupType: proto.ExtraLineupType(lineUp.ExtraLineupType),
-		MaxMp:   5,
-		Mp:      5,
-		Name:    lineUp.Name,
-		PlaneId: 0,
-	}
-	for slot, lineAvatar := range lineUp.AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
-			continue
-		}
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-		lineupAvatar := &proto.LineupAvatar{
-			AvatarType: proto.AvatarType(avatarBin.AvatarType),
-			Slot:       slot,
-			Satiety:    0,
-			Hp:         avatarBin.Hp,
-			Id:         lineAvatar.AvatarId,
-			SpBar: &proto.SpBarInfo{
-				CurSp: avatarBin.SpBar.CurSp,
-				MaxSp: avatarBin.SpBar.MaxSp,
-			},
-		}
-		lineupList.AvatarList = append(lineupList.AvatarList, lineupAvatar)
-	}
-	rsq.Lineup = lineupList
-
-	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
 // 当前坐标通知

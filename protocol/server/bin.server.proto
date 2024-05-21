@@ -216,8 +216,13 @@ message CurChallenge {// 正在进行的忘却之庭信息
   uint32 challenge_id = 1;//挑战id
   uint32 stage_num = 2; // 总共需要挑战数
   uint32 cur_stage = 3; // 当前挑战
-  ChallengeStatus Status = 4;// 状态
+  ChallengeStatus status = 4;// 状态
   uint32 round_count = 5; // 已使用回合数
+  uint32 stars = 6;// 得分
+  uint32  score_one = 7; // 第一层得分
+  uint32  score_two = 8; // 第二层得分
+  bool is_win = 9; // 是否赢
+  uint32 dead_avatar = 10; // 死亡角色数
 }
 
 message Gacha {

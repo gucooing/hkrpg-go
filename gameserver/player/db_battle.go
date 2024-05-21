@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -217,6 +218,35 @@ func (g *GamePlayer) GetChallenge() *spb.Challenge {
 	return db.Challenge
 }
 
+func (g *GamePlayer) GetChallengeList() map[uint32]*spb.ChallengeList {
+	db := g.GetChallenge()
+	if db.ChallengeList == nil {
+		db.ChallengeList = make(map[uint32]*spb.ChallengeList)
+	}
+	return db.ChallengeList
+}
+
+func (g *GamePlayer) GetChallengeById(id uint32) *spb.ChallengeList {
+	db := g.GetChallengeList()
+	if db[id] == nil {
+		db[id] = &spb.ChallengeList{}
+	}
+	return db[id]
+}
+
+func (g *GamePlayer) UpdateChallengeList(curChallenge *spb.CurChallenge) {
+	db := g.GetChallengeById(curChallenge.ChallengeId)
+	db.Stars = alg.MaxUin32(db.Stars, curChallenge.Stars)
+	db.ScoreOne = alg.MaxUin32(db.ScoreOne, curChallenge.ScoreOne)
+	db.ScoreTwo = alg.MaxUin32(db.ScoreTwo, curChallenge.ScoreTwo)
+}
+
+// 这玩意是用来清空当前忘却之庭战斗的
+func (g *GamePlayer) NewCurChallenge() {
+	db := g.GetChallenge()
+	db.CurChallenge = nil
+}
+
 func (g *GamePlayer) SetCurChallenge(challengeId uint32) *spb.CurChallenge {
 	db := g.GetChallenge()
 	conf := gdconf.GetChallengeMazeConfigById(challengeId)
@@ -260,6 +290,14 @@ func (g *GamePlayer) AddChallengeCurStage(num uint32) {
 		return
 	}
 	db.CurStage += num
+}
+
+func (g *GamePlayer) SetCurChallengeStatus(status spb.ChallengeStatus) {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return
+	}
+	db.Status = status
 }
 
 func (g *GamePlayer) GetChallengesMazeGroupID() uint32 {
@@ -384,12 +422,38 @@ func (g *GamePlayer) GetMem(isMem []uint32) *MPEM {
 	return mpem
 }
 
-func (g *GamePlayer) GetChallengeById(id uint32) *spb.ChallengeList {
-	battle := g.GetChallenge()
-	if battle.ChallengeList[id] == nil {
-		battle.ChallengeList[id] = &spb.ChallengeList{}
+// 关卡结束，开始结算
+func (g *GamePlayer) ChallengeSettle() {
+	db := g.GetCurChallenge()
+	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
+	if conf == nil {
+		return
 	}
-	return battle.ChallengeList[id]
+	db.IsWin = true
+	// 正式得分计算
+	for _, tagId := range conf.ChallengeTargetID {
+		tagConf := gdconf.GetChallengeTargetConfigById(tagId)
+		switch tagConf.ChallengeTargetType {
+		case "DEAD_AVATAR": // 角色存活得分
+			if db.DeadAvatar <= tagConf.ChallengeTargetParam1 {
+				db.Stars += 3
+				// 添加奖励
+			}
+		case "ROUNDS_LEFT": // 剩余回合得分计算
+			if conf.ChallengeCountDown-db.RoundCount > tagConf.ChallengeTargetParam1 {
+				db.Stars += 2
+				// 添加奖励
+			}
+		case "TOTAL_SCORE": // 活动得分计算得分
+			if db.ScoreOne+db.ScoreTwo >= tagConf.ChallengeTargetParam1 {
+				db.Stars += 2
+			}
+		}
+	}
+	// 额外得分计算
+	if db.ScoreOne+db.ScoreTwo >= 30000 {
+		db.Stars++
+	}
 }
 
 func (g *GamePlayer) GetDbRogue() *spb.Rogue {
@@ -585,7 +649,6 @@ func (g *GamePlayer) GetBattleBuff() []*proto.BattleBuff {
 			})
 		}
 	case spb.BattleType_Battle_CHALLENGE_Story:
-
 	}
 	return buffList
 }
@@ -600,18 +663,23 @@ func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
 		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
 	}
 	challengeInfo := &proto.ChallengeInfo{
-		ChallengeId:     db.ChallengeId,                                                                                                                                            // 挑战关卡
-		Status:          proto.ChallengeStatus(db.Status),                                                                                                                          // 关卡状态
-		ExtraLineupType: lineUpType,                                                                                                                                                // 队伍type
-		StoryInfo:       &proto.ChallengeStoryInfo{StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{CurStoryBuffs: &proto.ChallengeStoryBuffInfo{BuffList: make([]uint32, 0)}}}, // 挑战buff
-		RoundCount:      db.RoundCount,                                                                                                                                             // 已使用回合数
-		Score:           0,                                                                                                                                                         // 第一层得分
-		ScoreTwo:        0,                                                                                                                                                         // 第二层得分
+		ChallengeId:     db.ChallengeId,                   // 挑战关卡
+		Status:          proto.ChallengeStatus(db.Status), // 关卡状态
+		ExtraLineupType: lineUpType,                       // 队伍type
+		StoryInfo:       g.GetCurChallengeStoryInfo(),     // 挑战buff
+		RoundCount:      db.RoundCount,                    // 已使用回合数
+		Score:           db.ScoreOne + db.ScoreTwo,        // 第一层得分
+		ScoreTwo:        db.ScoreTwo,                      // 第二层得分
 	}
-
 	return challengeInfo
 }
 
+// 记得添加自选的关卡buff
+func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
+	return &proto.ChallengeStoryInfo{}
+}
+
+// 获取回合限制
 func (g *GamePlayer) GetRoundsLimit() uint32 {
 	status := g.GetBattleStatus()
 	switch status {
