@@ -88,13 +88,13 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 			LoginToday:            false,
 			Battle:                nil,
 			BattleState:           nil,
-			BattleId:              0,
 			EntityBattleId:        0,
 			IsPaused:              false,
 			GameObjectGuidCounter: 0,
 			IsNickName:            false,
 			EntityMap:             g.NewEntity(),
 			CurBattle:             g.NewCurBattle(),
+			BattleId:              10000,
 		}
 	}
 
@@ -107,8 +107,17 @@ func (g *GamePlayer) GetNextGameObjectGuid() uint32 {
 }
 
 func (g *GamePlayer) GetBattleIdGuid() uint32 {
-	g.OnlineData.BattleId++
-	return 1 + g.OnlineData.BattleId
+	db := g.GetOnlineData()
+	if db.BattleId <= 0 {
+		db.BattleId = 10000
+	}
+	defer g.AddBattleIdGuid()
+	return db.BattleId
+}
+
+func (g *GamePlayer) AddBattleIdGuid() {
+	db := g.GetOnlineData()
+	db.BattleId++
 }
 
 func (g *GamePlayer) GetNickname() string {

@@ -109,13 +109,14 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	req := msg.(*proto.StartCocoonStageCsReq)
 	var targetIndex uint32 = 0
 
-	rsp := new(proto.StartCocoonStageScRsp)
-	rsp.PropEntityId = req.PropEntityId
-	rsp.CocoonId = req.CocoonId
-	rsp.Wave = req.Wave
-
+	rsp := &proto.StartCocoonStageScRsp{
+		PropEntityId: req.PropEntityId,
+		CocoonId:     req.CocoonId, // 关卡id
+		Retcode:      0,
+		Wave:         req.Wave,
+		BattleInfo:   nil,
+	}
 	cocoonConfig := gdconf.GetCocoonConfigById(req.CocoonId, req.WorldLevel)
-
 	if len(cocoonConfig.DropList) == 0 {
 		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
 		g.Send(cmd.StartCocoonStageScRsp, rsp)
