@@ -131,14 +131,15 @@ func (g *GamePlayer) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 		return nil
 	} else {
 		relic := &proto.Relic{
-			Tid:          relicDb.Tid,
-			SubAffixList: make([]*proto.RelicAffix, 0),
-			BaseAvatarId: relicDb.BaseAvatarId,
-			UniqueId:     relicDb.UniqueId,
-			Level:        relicDb.Level,
-			IsProtected:  relicDb.IsProtected,
-			MainAffixId:  relicDb.MainAffixId,
-			Exp:          relicDb.Exp,
+			Tid:           relicDb.Tid,
+			SubAffixList:  make([]*proto.RelicAffix, 0),
+			BaseAvatarId:  relicDb.BaseAvatarId,
+			EquipAvatarId: relicDb.BaseAvatarId,
+			UniqueId:      relicDb.UniqueId,
+			Level:         relicDb.Level,
+			IsProtected:   relicDb.IsProtected,
+			MainAffixId:   relicDb.MainAffixId,
+			Exp:           relicDb.Exp,
 		}
 		for _, subAffixList := range relicDb.RelicAffix {
 			relicAffix := &proto.RelicAffix{
