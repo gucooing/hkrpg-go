@@ -88,9 +88,8 @@ func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 		CurrentHeadIconId:    g.BasicBin.HeadImageAvatarId,
 		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
 		Signature:            g.BasicBin.Signature,
-		// TODO
 		DisplayAvatarVec: &proto.DisplayAvatarVec{
-			DisplayAvatarList: nil,
+			DisplayAvatarList: make([]*proto.DisplayAvatar, 0),
 			IsDisplay:         false,
 		},
 	}
@@ -186,30 +185,6 @@ func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 	req := msg.(*proto.SendMsgCsReq)
 
 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.ToUidList, req.Emote, req.MsgType, req.Text, req.ChatType)
-}
-
-func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetChallengeScRsp)
-	rsp.ChallengeList = make([]*proto.Challenge, 0)
-	rsp.ChallengeRewardList = make([]*proto.ChallengeReward, 0)
-	challengeDb := g.GetChallenge()
-	for id, stars := range challengeDb.ChallengeList {
-		challenge := &proto.Challenge{
-			ChallengeId: id,
-			Stars:       stars.Stars,
-			Score:       stars.ScoreOne,
-			TakenReward: stars.ScoreTwo,
-		}
-		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
-	}
-	for taken, id := range challengeDb.ChallengeRewardList {
-		challengeReward := &proto.ChallengeReward{
-			TakenChallengeReward: taken,
-			GroupId:              id,
-		}
-		rsp.ChallengeRewardList = append(rsp.ChallengeRewardList, challengeReward)
-	}
-	g.Send(cmd.GetChallengeScRsp, rsp)
 }
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {

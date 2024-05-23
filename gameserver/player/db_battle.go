@@ -183,6 +183,14 @@ func (g *GamePlayer) GetChallengeList() map[uint32]*spb.ChallengeList {
 	return db.ChallengeList
 }
 
+func (g *GamePlayer) GetChallengeRewardList() map[uint64]uint32 {
+	db := g.GetChallenge()
+	if db.ChallengeRewardList == nil {
+		db.ChallengeRewardList = make(map[uint64]uint32)
+	}
+	return db.ChallengeRewardList
+}
+
 func (g *GamePlayer) GetChallengeById(id uint32) *spb.ChallengeList {
 	db := g.GetChallengeList()
 	if db[id] == nil {
@@ -490,7 +498,7 @@ func (g *GamePlayer) ChallengeSettle() {
 
 func (g *GamePlayer) CocoonBattle(cocoonId, worldLevel uint32) {
 	cocoonConfig := gdconf.GetCocoonConfigById(cocoonId, worldLevel)
-	if cocoonConfig.DropList == nil {
+	if cocoonConfig == nil {
 		return
 	}
 }
@@ -806,7 +814,7 @@ func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
 
 // 记得添加自选的关卡buff
 func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
-	return &proto.ChallengeStoryInfo{}
+	return nil
 }
 
 // 获取回合限制

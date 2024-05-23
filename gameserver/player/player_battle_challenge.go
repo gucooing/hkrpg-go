@@ -11,6 +11,29 @@ import (
 
 /***********************************忘却之庭***********************************/
 
+func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
+	rsp := new(proto.GetChallengeScRsp)
+	rsp.ChallengeList = make([]*proto.Challenge, 0)
+	rsp.ChallengeRewardList = make([]*proto.ChallengeReward, 0)
+	for id, stars := range g.GetChallengeList() {
+		challenge := &proto.Challenge{
+			ChallengeId: id,
+			Stars:       stars.Stars,
+			Score:       stars.ScoreOne,
+			TakenReward: stars.ScoreTwo,
+		}
+		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
+	}
+	for taken, id := range g.GetChallengeRewardList() {
+		challengeReward := &proto.ChallengeReward{
+			TakenChallengeReward: taken,
+			GroupId:              id,
+		}
+		rsp.ChallengeRewardList = append(rsp.ChallengeRewardList, challengeReward)
+	}
+	g.Send(cmd.GetChallengeScRsp, rsp)
+}
+
 // 获取状态
 
 func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {

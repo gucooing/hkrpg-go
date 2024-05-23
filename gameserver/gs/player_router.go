@@ -123,6 +123,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetFirstTalkNpcCsReq:              g.GetFirstTalkNpcCsReq,
 		cmd.GetNpcTakenRewardCsReq:            g.GetNpcTakenRewardCsReq,            // NPC对话
 		cmd.GetFirstTalkByPerformanceNpcCsReq: g.GetFirstTalkByPerformanceNpcCsReq, // NPC商店
+		// cmd.GetPlayerDetailInfoCsReq:          g.GetPlayerDetailInfoCsReq,
 	}
 }
 
