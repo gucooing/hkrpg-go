@@ -245,6 +245,21 @@ func (g *GamePlayer) SetCurChallengeRoundCount(rc uint32) {
 	}
 }
 
+func (g *GamePlayer) SetCurChallengeScore(score uint32) {
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		db := g.GetCurChallenge()
+		if db != nil {
+			switch db.CurStage {
+			case 1:
+				db.ScoreOne = score
+			case 2:
+				db.ScoreTwo = score
+			}
+		}
+	}
+}
+
 func (g *GamePlayer) IsNextChallenge() bool {
 	db := g.GetCurChallenge()
 	if db == nil {
@@ -494,6 +509,25 @@ func (g *GamePlayer) ChallengeSettle() {
 	if db.ScoreOne+db.ScoreTwo >= 30000 {
 		db.Stars++
 	}
+}
+
+// 忘却之庭战斗失败处理
+func (g *GamePlayer) ChallengeBattleEndLose() bool {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return false
+	}
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_CHALLENGE:
+		g.SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_UNKNOWN)
+		g.ChallengeSettleNotify()
+		return false
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		if db.ScoreOne+db.ScoreTwo >= 30000 {
+			return true
+		}
+	}
+	return false
 }
 
 func (g *GamePlayer) CocoonBattle(cocoonId, worldLevel uint32) {
@@ -806,15 +840,26 @@ func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
 		ExtraLineupType: lineUpType,                       // 队伍type
 		StoryInfo:       g.GetCurChallengeStoryInfo(),     // 挑战buff
 		RoundCount:      db.RoundCount,                    // 已使用回合数
-		Score:           db.ScoreOne + db.ScoreTwo,        // 第一层得分
+		Score:           db.ScoreOne,                      // 第一层得分
 		ScoreTwo:        db.ScoreTwo,                      // 第二层得分
 	}
 	return challengeInfo
 }
 
-// 记得添加自选的关卡buff
+// 添加自选的关卡buff
 func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
-	return nil
+	buffId := g.GetCurChallengeBuffId()
+	if buffId == 0 {
+		return nil
+	}
+	challengeStoryInfo := &proto.ChallengeStoryInfo{
+		StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{
+			CurStoryBuffs: &proto.ChallengeStoryBuffInfo{
+				BuffList: []uint32{buffId},
+			},
+		},
+	}
+	return challengeStoryInfo
 }
 
 // 获取回合限制

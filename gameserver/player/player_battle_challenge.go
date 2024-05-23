@@ -100,18 +100,22 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	if db == nil {
 		return
 	}
+	stt := req.GetStt()
+	if stt != nil {
+		g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt())  // 更新已使用回合数
+		g.SetCurChallengeScore(req.Stt.GetChallengeScore()) // 更新分数
+	}
 	switch req.EndStatus {
 	case proto.BattleEndStatus_BATTLE_END_NONE:
 		return
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 战斗失败
-		g.SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_UNKNOWN)
-		g.ChallengeSettleNotify()
-		return
+		if !g.ChallengeBattleEndLose() {
+			return
+		}
 	case proto.BattleEndStatus_BATTLE_END_QUIT: // 退出战斗
 		return
 	}
-	g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt()) // 更新已使用回合数
-	g.AddCurChallengeKillMonster(1)                    // TODO 默认一次战斗一个怪物
+	g.AddCurChallengeKillMonster(1) // TODO 默认一次战斗一个怪物
 	// 场景上是否还有未处理敌人
 	if g.GetCurChallengeMonsterNum() > g.GetCurChallengeKillMonster() {
 		return // 还有就不更新状态，继续进行

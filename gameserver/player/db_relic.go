@@ -43,6 +43,36 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 	g.RelicPlayerSyncScNotify(uniqueId)
 }
 
+func (g *GamePlayer) AddBtRelic(tid uint32) {
+	uniqueId := uint32(SNOWFLAKE.GenId())
+	relicConf := gdconf.GetRelicById(strconv.Itoa(int(tid)))
+	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+
+	relic := &spb.Relic{
+		Tid:               tid,
+		UniqueId:          uniqueId,
+		Exp:               0,
+		Level:             0,
+		MainAffixId:       mainAffixConf.AffixID,
+		RelicAffix:        make(map[uint32]*spb.RelicAffix),
+		BaseAvatarId:      0,
+		IsProtected:       false,
+		MainAffixProperty: mainAffixConf.Property,
+	}
+
+	relicAffix := make(map[uint32]*spb.RelicAffix)
+	g.addRelicAffix(&addRelicAffix{
+		addSubAffixes:     400,
+		mainAffixProperty: mainAffixConf.Property,
+		subAffixGroup:     relicConf.SubAffixGroup,
+		relicAffix:        relicAffix,
+	})
+	relic.RelicAffix = relicAffix
+
+	g.GetItem().RelicMap[uniqueId] = relic
+	g.RelicPlayerSyncScNotify(uniqueId)
+}
+
 type addRelicAffix struct {
 	addSubAffixes     int                        // 添加词条数
 	mainAffixProperty string                     // 主词条效果

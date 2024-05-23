@@ -594,6 +594,10 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	// 添加怪物实体
+	monsterEntityGroup := &proto.SceneEntityGroupInfo{
+		GroupId:    mazeGroupID,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
 	for id, config := range configList {
 		for _, monsterList := range foorMap.MonsterList {
 			if monsterList.ID != config {
@@ -633,8 +637,9 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 				},
 				EventID: eventIDList[id],
 			})
-			entityGroup.EntityList = append(entityGroup.EntityList, entityList)
+			monsterEntityGroup.EntityList = append(monsterEntityGroup.EntityList, entityList)
 		}
 	}
+	scene.EntityGroupList = append(scene.EntityGroupList, monsterEntityGroup)
 	return scene
 }

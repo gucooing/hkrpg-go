@@ -13,6 +13,14 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		return
 	}
 	itemConf := gdconf.GetItemConfigMap()
+
+	switch req.ItemId {
+	case 999999999:
+		for _, relic := range itemConf.Relic {
+			g.AddBtRelic(relic.ID)
+		}
+	}
+
 	if req.GiveAll {
 		var pileItem []*Material
 		// add avatar

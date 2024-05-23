@@ -181,6 +181,28 @@ func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.Batt
 	}
 }
 
+func (g *GamePlayer) SetAvatarEquipRelic(avatarId, slot, relicId uint32) {
+	db := g.GetAvatarBinById(avatarId)
+	if db == nil {
+		return
+	}
+	if db.EquipRelic == nil {
+		db.EquipRelic = make(map[uint32]uint32)
+	}
+	db.EquipRelic[slot] = relicId
+}
+
+func (g *GamePlayer) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
+	db := g.GetAvatarBinById(avatarId)
+	if db == nil {
+		return nil
+	}
+	if db.EquipRelic == nil {
+		db.EquipRelic = make(map[uint32]uint32)
+	}
+	return g.getRelicDbById(db.EquipRelic[slot])
+}
+
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {

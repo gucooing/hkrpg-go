@@ -121,6 +121,7 @@ func (n *NodeService) sendNode(cmdId uint16, playerMsg pb.Message) {
 	_, err := n.nodeConn.Write(binMsg)
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
+		n.nodeKill()
 		return
 	}
 }
