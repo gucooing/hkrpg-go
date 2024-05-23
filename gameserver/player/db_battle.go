@@ -868,6 +868,9 @@ func (g *GamePlayer) GetRoundsLimit() uint32 {
 	switch status {
 	case spb.BattleType_Battle_CHALLENGE:
 		db := g.GetCurChallenge()
+		if db == nil {
+			return 0
+		}
 		conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
 		if conf == nil {
 			return 0
@@ -875,11 +878,14 @@ func (g *GamePlayer) GetRoundsLimit() uint32 {
 		return conf.ChallengeCountDown
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		db := g.GetCurChallenge()
-		conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
-		if conf == nil {
+		if db == nil {
 			return 0
 		}
-		return conf.TurnLimit
+		// conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+		// if conf == nil {
+		// 	return 0
+		// }
+		return 20 // todo 没读到，先固定返20吧
 	}
 	return 0
 }
