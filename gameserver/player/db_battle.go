@@ -263,6 +263,30 @@ func (g *GamePlayer) SetCurChallengeStatus(status spb.ChallengeStatus) {
 	db.Status = status
 }
 
+func (g *GamePlayer) AddCurChallengeKillMonster(num uint32) {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return
+	}
+	db.KillMonster += num
+}
+
+func (g *GamePlayer) SetCurChallengeKillMonster(num uint32) {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return
+	}
+	db.KillMonster = num
+}
+
+func (g *GamePlayer) GetCurChallengeKillMonster() uint32 {
+	db := g.GetCurChallenge()
+	if db == nil {
+		return 0
+	}
+	return db.KillMonster
+}
+
 func (g *GamePlayer) GetChallengesMazeGroupID() uint32 {
 	curChallenge := g.GetCurChallenge()
 	if curChallenge == nil {
@@ -311,6 +335,14 @@ func (g *GamePlayer) GetChallengesConfigList() []uint32 {
 		return challengeMazeConfig.ConfigList2
 	}
 	return nil
+}
+
+func (g *GamePlayer) GetCurChallengeMonsterNum() uint32 {
+	conf := g.GetChallengesNpcMonsterIDList()
+	if conf == nil {
+		return 0
+	}
+	return uint32(len(conf))
 }
 
 func (g *GamePlayer) GetChallengesNpcMonsterIDList() []uint32 {

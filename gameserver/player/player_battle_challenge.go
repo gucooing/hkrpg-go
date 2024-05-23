@@ -87,8 +87,14 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	case proto.BattleEndStatus_BATTLE_END_QUIT: // 退出战斗
 		return
 	}
-	// 更新状态
 	g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt()) // 更新已使用回合数
+	g.AddCurChallengeKillMonster(1)                    // TODO 默认一次战斗一个怪物
+	// 场景上是否还有未处理敌人
+	if g.GetCurChallengeMonsterNum() > g.GetCurChallengeKillMonster() {
+		return // 还有就不更新状态，继续进行
+	}
+	// 更新状态
+	g.SetCurChallengeKillMonster(0) // 切换关卡，标记为0
 	// 回合处理
 	if g.IsNextChallenge() {
 		// 还没结束

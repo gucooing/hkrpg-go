@@ -225,6 +225,7 @@ message CurChallenge {// 正在进行的忘却之庭信息
   uint32 dead_avatar = 10; // 死亡角色数
   uint32 buff_one = 11; // 第一关buff
   uint32 buff_two = 12; // 第二关buff
+  uint32 kill_monster = 13; // 当前关卡已杀死怪物数量
 }
 
 message Gacha {
