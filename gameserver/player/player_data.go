@@ -24,9 +24,18 @@ func (g *GamePlayer) StaminaInfoScNotify() {
 func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
-	rsp.NextRecoverTime = 1698768000
+	rsp.NextRecoverTime = 1716449614
 	rsp.GameplayBirthday = g.BasicBin.Birthday
-	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
+	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
+	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
+		B1:                true,
+		B2:                true,
+		B3:                true,
+		B4:                true,
+		B5:                true,
+		B6:                true,
+		DisplayRecordType: proto.DisplayRecordType_BATTLE_RECORD_CHALLENGE,
+	}
 
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
@@ -321,24 +330,4 @@ func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, nil)
 	// TODO 主动调用
 	g.HandleGetArchiveDataCsReq(nil)
-}
-
-func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetFarmStageGachaInfoCsReq, payloadMsg)
-	req := msg.(*proto.GetFarmStageGachaInfoCsReq)
-
-	rsp := &proto.GetFarmStageGachaInfoScRsp{
-		FarmStageGachaInfoList: make([]*proto.FarmStageGachaInfo, 0),
-	}
-
-	for _, farmStageGachaId := range req.FarmStageGachaIdList {
-		farmStageGachaInfo := &proto.FarmStageGachaInfo{
-			BeginTime: 1664308800,
-			GachaId:   farmStageGachaId,
-			EndTime:   4294967295,
-		}
-		rsp.FarmStageGachaInfoList = append(rsp.FarmStageGachaInfoList, farmStageGachaInfo)
-	}
-
-	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
 }
