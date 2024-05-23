@@ -149,7 +149,7 @@ func (s *GateServer) AutoDelPlayer() {
 	for {
 		<-ticker.C
 		for _, play := range s.getAllPlayer() {
-			if getCurTime()-play.LastActiveTime > 30 {
+			if getCurTime()-play.LastActiveTime > 30000 {
 				switch play.Status {
 				case spb.PlayerStatus_PlayerStatus_PostLogin:
 					s.ttiPlayerKill(play, spb.Retcode_RET_PLAYER_TIMEOUT)
