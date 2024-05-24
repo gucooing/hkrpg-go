@@ -24,11 +24,11 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(equipAvatarId, equipmentUniqu
 	}
 
 	equipAvatarDb := g.GetAvatarBinById(equipAvatarId)
-	equipmentDb := g.GetItem().EquipmentMap[equipmentUniqueId]
+	equipmentDb := g.GetEquipmentById(equipmentUniqueId)
 	if equipAvatarDb == nil || equipmentDb == nil {
 		return
 	}
-	baseAvatarDb := g.GetAvatarBinById(equipAvatarDb.AvatarId)
+	baseAvatarDb := g.GetAvatarBinById(equipmentDb.BaseAvatarId)
 	oldEquiDb := g.GetEquipmentById(equipAvatarDb.EquipmentUniqueId)
 
 	equipAvatarDb.EquipmentUniqueId = equipmentUniqueId
