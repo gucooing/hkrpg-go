@@ -103,17 +103,19 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 	g.MaterialPlayerSyncScNotify(pileItem)
 }
 
-func (g *GamePlayer) DelMaterial(pileItem []*Material) {
+func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {
 	db := g.GetMaterialMap()
 	for _, item := range pileItem {
-		if db[item.Tid] >= item.Num {
-			db[item.Tid] -= item.Num
-		} else {
-			db[item.Tid] = 0
+		if db[item.Tid] < item.Num {
+			return false
 		}
 	}
-
+	for _, item := range pileItem {
+		db[item.Tid] -= item.Num
+	}
 	g.MaterialPlayerSyncScNotify(pileItem)
+
+	return true
 }
 
 func (g *GamePlayer) MaterialPlayerSyncScNotify(pileItem []*Material) {
@@ -147,14 +149,15 @@ func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
 		return nil
 	}
 	equipment := &proto.Equipment{
-		Exp:          equipmentDb.Exp,
-		Promotion:    equipmentDb.Promotion,
-		Level:        equipmentDb.Level,
-		BaseAvatarId: equipmentDb.BaseAvatarId,
-		IsProtected:  equipmentDb.IsProtected,
-		Rank:         equipmentDb.Rank,
-		UniqueId:     equipmentDb.UniqueId,
-		Tid:          equipmentDb.Tid,
+		Exp:           equipmentDb.Exp,
+		Promotion:     equipmentDb.Promotion,
+		Level:         equipmentDb.Level,
+		BaseAvatarId:  equipmentDb.BaseAvatarId,
+		EquipAvatarId: equipmentDb.BaseAvatarId,
+		IsProtected:   equipmentDb.IsProtected,
+		Rank:          equipmentDb.Rank,
+		UniqueId:      equipmentDb.UniqueId,
+		Tid:           equipmentDb.Tid,
 	}
 	return equipment
 }

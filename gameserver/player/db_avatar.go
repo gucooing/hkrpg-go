@@ -147,6 +147,16 @@ func (g *GamePlayer) AddAvatar(avatarId uint32) {
 	g.AvatarPlayerSyncScNotify(avatarId)
 }
 
+func (g *GamePlayer) AddAvatarRank(rank uint32, db *spb.AvatarBin) {
+	if db == nil {
+		return
+	}
+	db.Rank += rank
+	if db.Rank > 6 || db.Rank < 0 {
+		db.Rank = 6
+	}
+}
+
 func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus) {
 	var deadAatarNum uint32 = 0
 	for _, avatarStt := range abi {

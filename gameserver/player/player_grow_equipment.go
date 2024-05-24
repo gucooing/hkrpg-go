@@ -12,47 +12,38 @@ import (
 func (g *GamePlayer) DressAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
-	g.DressAvatarPlayerSyncScNotify(req.BaseAvatarId, req.EquipmentUniqueId)
+	g.DressAvatarPlayerSyncScNotify(req.GetEquipAvatarId(), req.GetEquipmentUniqueId())
 	g.Send(cmd.DressAvatarScRsp, nil)
 }
 
-// 光锥交换通知
-func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32) {
+// 光锥装备通知
+func (g *GamePlayer) DressAvatarPlayerSyncScNotify(equipAvatarId, equipmentUniqueId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync:    &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
 
-	avatardb := g.BasicBin.Avatar.AvatarList[avatarId]
-	equipmentdb := g.GetItem().EquipmentMap[equipmentUniqueId]
-
-	// 目标光锥是否已被装备
-	if equipmentdb.BaseAvatarId != 0 {
-		avatardbs := g.BasicBin.Avatar.AvatarList[equipmentdb.BaseAvatarId]
-		avatardbs.EquipmentUniqueId = avatardb.EquipmentUniqueId
-		// 获取要装备的角色光锥,与目标光锥角色交换
-		avatar := g.GetProtoAvatarById(avatardbs.AvatarId)
-		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-		// 交换光锥
-		g.BasicBin.Avatar.AvatarList[equipmentdb.BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
-		if avatardb.EquipmentUniqueId == 0 {
-		} else {
-			equipmentLists := g.GetEquipment(avatardb.EquipmentUniqueId)
-			notify.EquipmentList = append(notify.EquipmentList, equipmentLists)
-			g.GetItem().EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = avatardbs.AvatarId
-		}
+	equipAvatarDb := g.GetAvatarBinById(equipAvatarId)
+	equipmentDb := g.GetItem().EquipmentMap[equipmentUniqueId]
+	if equipAvatarDb == nil || equipmentDb == nil {
+		return
 	}
+	baseAvatarDb := g.GetAvatarBinById(equipAvatarDb.AvatarId)
+	oldEquiDb := g.GetEquipmentById(equipAvatarDb.EquipmentUniqueId)
 
-	equipmentdb.BaseAvatarId = avatarId
-	g.BasicBin.Avatar.AvatarList[avatarId].EquipmentUniqueId = equipmentUniqueId
+	equipAvatarDb.EquipmentUniqueId = equipmentUniqueId
+	equipmentDb.BaseAvatarId = equipAvatarId
+	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(equipAvatarId))
+	notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(equipmentUniqueId))
 
-	avatar := g.GetProtoAvatarById(avatarId)
-
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-
-	equipmentList := g.GetEquipment(equipmentUniqueId)
-
-	notify.EquipmentList = append(notify.EquipmentList, equipmentList)
+	if baseAvatarDb != nil {
+		baseAvatarDb.EquipmentUniqueId = 0
+		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(baseAvatarDb.AvatarId))
+	}
+	if oldEquiDb != nil {
+		oldEquiDb.BaseAvatarId = 0
+		notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(oldEquiDb.UniqueId))
+	}
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }

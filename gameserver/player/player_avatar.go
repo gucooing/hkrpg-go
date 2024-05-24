@@ -66,17 +66,19 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
 	req := msg.(*proto.RankUpAvatarCsReq)
-	var pileItem []*Material
-	pileItem = append(pileItem, &Material{
-		Tid: req.BaseAvatarId + 10000,
-		Num: 1,
-	})
-
-	g.GetAvatar().AvatarList[req.BaseAvatarId].Rank++
-	g.DelMaterial(pileItem)
-	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
-
 	rsp := new(proto.GetChallengeScRsp)
+	db := g.GetAvatarBinById(req.GetBaseAvatarId())
+	if db != nil {
+		pileItem := []*Material{{
+			Tid: req.BaseAvatarId + 10000,
+			Num: 1}}
+		if g.DelMaterial(pileItem) {
+			g.AddAvatarRank(1, db)
+			g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
+		} else {
+			rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
+		}
+	}
 	g.Send(cmd.RankUpAvatarScRsp, rsp)
 }
 

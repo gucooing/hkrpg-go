@@ -249,3 +249,8 @@ message ContentAuditBin {
 message PlayerOnlineData {
 
 }
+
+
+message Test {
+  map<uint32,uint64> test =1;
+}
