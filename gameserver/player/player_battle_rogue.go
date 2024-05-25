@@ -444,7 +444,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	entityGroupList := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	startGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, rogueRoom.GroupID)
+	startGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, rogueRoom.GroupID)
 	anchor := startGroup.AnchorList[0]
 	baseAvatarIdList := g.GetLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	for id, avatarList := range baseAvatarIdList.AvatarIdList {
@@ -486,7 +486,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	}
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupList)
 	for groupID, ida := range rogueRoom.GroupWithContent {
-		sceneGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, stou32(groupID))
+		sceneGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, stou32(groupID))
 		if sceneGroup == nil {
 			continue
 		}

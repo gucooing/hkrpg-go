@@ -217,7 +217,7 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
-		propState := gdconf.GetStateValue(propList)
+		propState := gdconf.GetStateValue(propList.State)
 		if propList.StageObjectCapture != nil {
 			propState = 1
 		}
@@ -349,7 +349,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	if mapEntrance == nil {
 		return nil
 	}
-	foorMap := gdconf.GetFloorById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	foorMap := gdconf.GetServerGroup(mapEntrance.PlaneID, mapEntrance.FloorID)
 	if foorMap == nil {
 		return nil
 	}
@@ -377,7 +377,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	// 添加队伍角色进实体列表，并设置坐标
 	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
-	for _, levelGroup := range foorMap.Groups {
+	for _, levelGroup := range foorMap {
 		if levelGroup.GroupId == 0 {
 			continue
 		}
@@ -565,7 +565,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	if mapEntrance == nil {
 		return nil
 	}
-	foorMap := gdconf.GetMazeByGroupId(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
+	foorMap := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
 	if foorMap == nil || lineUp == nil || len(npcMonsterIDList) != len(eventIDList) || len(eventIDList) != len(configList) {
 		return nil
 	}

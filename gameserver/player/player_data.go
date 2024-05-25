@@ -289,12 +289,14 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 		if excel == nil {
 			continue
 		}
-		teleport := gdconf.GetTeleportsById(excel.PlaneID, excel.FloorID)
-		if teleport == nil {
+		teleportsMap := gdconf.GetTeleportsById(excel.PlaneID, excel.FloorID)
+		if teleportsMap == nil {
 			continue
 		}
-		for tid := range teleport {
-			rsp.UnlockedTeleportList = append(rsp.UnlockedTeleportList, tid)
+		for _, teleports := range teleportsMap {
+			for tid := range teleports.Teleports {
+				rsp.UnlockedTeleportList = append(rsp.UnlockedTeleportList, tid)
+			}
 		}
 	}
 

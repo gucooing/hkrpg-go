@@ -15,44 +15,62 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	if mapEntrance == nil {
 		return
 	}
-	foorMap := gdconf.GetFloorById(mapEntrance.PlaneID, mapEntrance.FloorID)
-	if foorMap == nil {
+	teleportsMap := gdconf.GetTeleportsById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	if teleportsMap == nil {
 		return
 	}
 
-	var groupID = mapEntrance.StartGroupID
 	var anchorID = mapEntrance.StartAnchorID
-
-	if foorMap.Teleports[teleportId] != nil {
-		groupID = foorMap.Teleports[teleportId].AnchorGroupID
-		anchorID = foorMap.Teleports[teleportId].AnchorID
-	} else if anchorID == 0 {
-		groupID = foorMap.StartGroupID
-		anchorID = foorMap.StartAnchorID
+	var groupID = mapEntrance.StartGroupID
+	var pos *proto.Vector
+	var rot *proto.Vector
+	if teleportsMap[teleportId] == nil {
+		teleportId = 0
 	}
 	// 获取队伍
 	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
 	curLine := g.GetCurLineUp()
-	if foorMap.Groups[groupID] == nil || curLine == nil {
-		return
-	}
 	// 获取世界
-	for _, anchor := range foorMap.Groups[groupID].AnchorList {
-		if anchor.ID == anchorID {
-			pos := &proto.Vector{
-				X: int32(anchor.PosX * 1000),
-				Y: int32(anchor.PosY * 1000),
-				Z: int32(anchor.PosZ * 1000),
+	if teleportId != 0 {
+	te:
+		for _, teleports := range teleportsMap {
+			for id, teleport := range teleports.Teleports {
+				if id == teleportId {
+					pos = &proto.Vector{
+						X: int32(teleport.PosX * 1000),
+						Y: int32(teleport.PosY * 1000),
+						Z: int32(teleport.PosZ * 1000),
+					}
+					rot = &proto.Vector{
+						X: int32(teleport.RotX * 1000),
+						Y: int32(teleport.RotY * 1000),
+						Z: int32(teleport.RotZ * 1000),
+					}
+					break te
+				}
 			}
-			rot := &proto.Vector{
-				X: int32(anchor.RotX * 1000),
-				Y: int32(anchor.RotY * 1000),
-				Z: int32(anchor.RotZ * 1000),
+		}
+	} else {
+		if teleportsMap[groupID] != nil {
+			for _, anchor := range teleportsMap[groupID].Teleports {
+				if anchor.AnchorID == anchorID {
+					pos = &proto.Vector{
+						X: int32(anchor.PosX * 1000),
+						Y: int32(anchor.PosY * 1000),
+						Z: int32(anchor.PosZ * 1000),
+					}
+					rot = &proto.Vector{
+						X: int32(anchor.RotX * 1000),
+						Y: int32(anchor.RotY * 1000),
+						Z: int32(anchor.RotZ * 1000),
+					}
+					break
+				}
 			}
-			rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
-			break
 		}
 	}
+
+	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
 
@@ -105,12 +123,8 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 	for _, entryId := range req.EntryIdList {
 		mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
 		if mapEntrance != nil {
-			groupMap := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
-			if groupMap != nil {
-				if int(mapEntrance.StartGroupID) > len(groupMap) {
-					return
-				}
-
+			teleportsMap := gdconf.GetTeleportsById(mapEntrance.PlaneID, mapEntrance.FloorID)
+			if teleportsMap != nil {
 				mapList := &proto.MazeMapData{
 					LightenSectionList: make([]uint32, 0),
 					UnlockedChestList: []*proto.MazeChest{
@@ -127,23 +141,20 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 					mapList.LightenSectionList = append(mapList.LightenSectionList, i)
 				}
 
-				for _, groupInfo := range groupMap {
-					mazeGroup := &proto.MazeGroup{GroupId: groupInfo.GroupId}
+				for _, teleports := range teleportsMap {
+					mazeGroup := &proto.MazeGroup{GroupId: teleports.GroupId}
 					mapList.MazeGroupList = append(mapList.MazeGroupList, mazeGroup)
 				}
 
-				for _, groupMapList := range groupMap {
-					for _, propList := range groupMapList.PropList {
-						if propList.AnchorID == 0 {
-							continue
-						}
+				for _, groupMapList := range teleportsMap {
+					for _, teleports := range groupMapList.Teleports {
 						mazeProp := &proto.MazeProp{
-							State:    gdconf.CheckPointEnable,
+							State:    gdconf.GetStateValue("CheckPointEnable"), // 默认解锁
 							GroupId:  groupMapList.GroupId,
-							ConfigId: propList.ID,
+							ConfigId: teleports.ID,
 						}
 						mapList.MazePropList = append(mapList.MazePropList, mazeProp)
-						mapList.UnlockedTeleportList = append(mapList.UnlockedTeleportList, propList.MappingInfoID)
+						mapList.UnlockedTeleportList = append(mapList.UnlockedTeleportList, teleports.MappingInfoID)
 					}
 				}
 				rsp.MapList = append(rsp.MapList, mapList)

@@ -11,56 +11,18 @@ import (
 	"github.com/hjson/hjson-go/v4"
 )
 
-const (
-	Closed            = 0
-	Open              = 1
-	Locked            = 2
-	BridgeState1      = 3
-	BridgeState2      = 4
-	BridgeState3      = 5
-	BridgeState4      = 6
-	CheckPointDisable = 7
-	CheckPointEnable  = 8
-	TriggerDisable    = 9
-	TriggerEnable     = 10
-	ChestLocked       = 11
-	ChestClosed       = 12
-	ChestUsed         = 13
-	Elevator1         = 14
-	Elevator2         = 15
-	Elevator3         = 16
-	WaitActive        = 17
-	EventClose        = 18
-	EventOpen         = 19
-	Hidden            = 20
-	TeleportGate0     = 21
-	TeleportGate1     = 22
-	TeleportGate2     = 23
-	TeleportGate3     = 24
-	Destructed        = 25
-	CustomState01     = 101
-	CustomState02     = 102
-	CustomState03     = 103
-	CustomState04     = 104
-	CustomState05     = 105
-	CustomState06     = 106
-	CustomState07     = 107
-	CustomState08     = 108
-	CustomState09     = 109
-)
-
 type LevelGroup struct {
 	GroupId         uint32
 	GroupName       string           `json:"GroupName"`
-	LoadSide        string           `json:"LoadSide"`
-	Category        string           `json:"Category"` // 类别
-	LoadCondition   *LoadCondition   `json:"LoadCondition"`
-	UnloadCondition *UnloadCondition `json:"UnloadCondition"`
-	LoadOnInitial   bool             `json:"LoadOnInitial"`
-	PropList        []*PropList      `json:"PropList"`    // 实体列表
-	MonsterList     []*MonsterList   `json:"MonsterList"` // 怪物列表
-	NPCList         []*NPCList       `json:"NPCList"`     // NPC列表
-	AnchorList      []*AnchorList    `json:"AnchorList"`  // 锚点列表
+	LoadSide        string           `json:"LoadSide"`        // 负载端
+	Category        string           `json:"Category"`        // 类别
+	LoadCondition   *LoadCondition   `json:"LoadCondition"`   // 加载条件
+	UnloadCondition *UnloadCondition `json:"UnloadCondition"` // 卸载条件
+	LoadOnInitial   bool             `json:"LoadOnInitial"`   // 是否默认加载
+	PropList        []*PropList      `json:"PropList"`        // 实体列表
+	MonsterList     []*MonsterList   `json:"MonsterList"`     // 怪物列表
+	NPCList         []*NPCList       `json:"NPCList"`         // NPC列表
+	AnchorList      []*AnchorList    `json:"AnchorList"`      // 锚点列表
 }
 type LoadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
@@ -247,7 +209,7 @@ func extractNumbers(filename string) (uint32, uint32, uint32) {
 	return uint32(pValue), uint32(fValue), uint32(gValue)
 }
 
-func GetStateValue(propList *PropList) uint32 {
+func GetStateValue(state string) uint32 {
 	stateMap := map[string]uint32{
 		"Closed":            0,
 		"Open":              1,
@@ -286,7 +248,7 @@ func GetStateValue(propList *PropList) uint32 {
 		"CustomState09":     109,
 	}
 
-	value, ok := stateMap[propList.State]
+	value, ok := stateMap[state]
 	if !ok {
 		return 0
 	}
@@ -362,51 +324,4 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) ([]*NPCList, []*NPCList)
 	}
 
 	return npcList, nPCList
-}
-
-func GetSceneByPF(planeId, floorId uint32) map[uint32]*LevelGroup {
-	var nPCList []*NPCList
-	levelGroup := make(map[uint32]*LevelGroup)
-	for _, groupList := range CONF.GroupMap[planeId][floorId] {
-		levelGroup[groupList.GroupId] = &LevelGroup{
-			GroupId:         groupList.GroupId,
-			GroupName:       groupList.GroupName,
-			LoadSide:        groupList.LoadSide,
-			Category:        groupList.Category,
-			LoadCondition:   groupList.LoadCondition,
-			UnloadCondition: groupList.UnloadCondition,
-			LoadOnInitial:   groupList.LoadOnInitial,
-			PropList:        nil,
-			MonsterList:     nil,
-			NPCList:         nil,
-			AnchorList:      groupList.AnchorList,
-		}
-		if groupList.LoadSide != "Server" { // 不是服务端发的不要
-			continue
-		}
-		if groupList.Category == "Mission" { // 是任务的不要
-			continue
-		}
-		if groupList.LoadCondition != nil { // 有前置加载条件的康康是不是满足
-			IsCont := true
-			for _, cond := range groupList.LoadCondition.Conditions {
-				if cond.Phase == "Finish" {
-					IsCont = false //
-					break
-				}
-			}
-			if IsCont {
-				continue
-			}
-		}
-		if groupList.UnloadCondition != nil { // 有前置卸载条件的康康能不能重复生成
-			if !groupList.UnloadCondition.DelayToLevelReload {
-				continue
-			}
-		}
-		levelGroup[groupList.GroupId].PropList = LoadProp(groupList)
-		levelGroup[groupList.GroupId].MonsterList = LoadMonster(groupList)
-		levelGroup[groupList.GroupId].NPCList, nPCList = LoadNpc(groupList, nPCList)
-	}
-	return levelGroup
 }

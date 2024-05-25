@@ -170,7 +170,7 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 	if mapEntrance == nil {
 		return
 	}
-	foorMap := gdconf.GetMazeByGroupId(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
+	foorMap := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
 	if foorMap == nil {
 		return
 	}
@@ -214,7 +214,7 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 	if mapEntrance == nil {
 		return
 	}
-	foorMap := gdconf.GetMazeByGroupId(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
+	foorMap := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
 	if foorMap == nil || len(npcMonsterIDList) != len(eventIDList) || len(eventIDList) != len(configList) {
 		return
 	}

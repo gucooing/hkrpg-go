@@ -17,8 +17,6 @@ type LevelFloor struct {
 	StartGroupID  uint32       `json:"StartGroupID"`
 	StartAnchorID uint32       `json:"StartAnchorID"`
 	GroupList     []*GroupList `json:"GroupList"`
-	Groups        map[uint32]*LevelGroup
-	Teleports     map[uint32]*PropList
 }
 type GroupList struct {
 	ID        uint32 `json:"ID"`
@@ -52,30 +50,13 @@ func (g *GameDataConfig) loadFloor() {
 			panic(info)
 		}
 
-		if levelFloor.Teleports == nil {
-			levelFloor.Teleports = make(map[uint32]*PropList)
-		}
-
 		if g.FloorMap[planeId] == nil {
 			g.FloorMap[planeId] = make(map[uint32]*LevelFloor)
 		}
 		if g.FloorMap[planeId][floorId] == nil {
 			g.FloorMap[planeId][floorId] = new(LevelFloor)
 		}
-		if g.FloorMap[planeId][floorId].Teleports == nil {
-			g.FloorMap[planeId][floorId].Teleports = make(map[uint32]*PropList)
-		}
-
-		for _, groupList := range g.GroupMap[planeId][floorId] {
-			for _, prop := range groupList.PropList {
-				if prop.MappingInfoID != 0 && prop.AnchorID != 0 {
-					levelFloor.Teleports[prop.MappingInfoID] = prop
-				}
-			}
-		}
-
 		g.FloorMap[planeId][floorId] = levelFloor
-		g.FloorMap[planeId][floorId].Groups = GetSceneByPF(planeId, floorId)
 
 	}
 
@@ -86,20 +67,8 @@ func GetFloorById(planeId, floorId uint32) *LevelFloor {
 	return CONF.FloorMap[planeId][floorId]
 }
 
-func GetMazeByGroupId(planeId, floorId, groupId uint32) *LevelGroup {
-	conf := CONF.FloorMap[planeId][floorId]
-	if conf == nil {
-		return nil
-	}
-	return conf.Groups[groupId]
-}
-
 func GetFloorMap() map[uint32]map[uint32]*LevelFloor {
 	return CONF.FloorMap
-}
-
-func GetTeleportsById(planeId, floorId uint32) map[uint32]*PropList {
-	return CONF.FloorMap[planeId][floorId].Teleports
 }
 
 func extractNumbersFloor(filename string) (uint32, uint32) {

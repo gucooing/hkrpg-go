@@ -71,6 +71,10 @@ type GameDataConfig struct {
 	ShopConfigMap               map[uint32][]uint32                             // 商店配置
 	ShopGoodsConfigMap          map[uint32]map[uint32]*ShopGoodsConfig          // 商品配置
 	RewardDataMap               map[string]*RewardData                          // 奖励配置
+	// 下面是预处理
+	ServerGroupMap  map[uint32]map[uint32]map[uint32]*LevelGroup // 预处理服务器场景
+	MissionGroupMap map[uint32]map[uint32]map[uint32]*LevelGroup // 预处理任务场景
+	Teleports       map[uint32]map[uint32]map[uint32]*Teleports  // 预处理传送锚点
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {
@@ -172,4 +176,7 @@ func (g *GameDataConfig) load() {
 	g.loadShopConfig()               // 商店配置
 	g.loadShopGoodsConfig()          // 商品配置
 	g.loadRewardData()               // 奖励配置
+	g.goppServerGroup()              // 预处理服务器场景
+	g.goppMissionGroup()             // 预处理任务场景
+	g.goppTeleports()                // 预处理传送锚点
 }
