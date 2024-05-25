@@ -222,7 +222,7 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		if wtmLeaderSlot {
 			db.LeaderSlot = slot
 		}
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
+		avatarBin := g.GetBattleAvatarBinById(lineAvatar.AvatarId)
 		if avatarBin == nil {
 			lineupAvatar := &proto.LineupAvatar{
 				AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,

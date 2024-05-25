@@ -14,6 +14,7 @@ func (g *GamePlayer) NewAvatar() *spb.Avatar {
 		Gender:            spb.Gender_GenderMan,
 		CurMainAvatar:     spb.HeroBasicType_BoyWarrior,
 		HeroBasicTypeInfo: g.GetHeroBasicTypeInfo(),
+		BattleAvatarList:  make(map[uint32]*spb.AvatarBin),
 	}
 }
 
@@ -33,8 +34,32 @@ func (g *GamePlayer) GetAvatarList() map[uint32]*spb.AvatarBin {
 	return db.AvatarList
 }
 
+func (g *GamePlayer) GetBattleAvatarList() map[uint32]*spb.AvatarBin {
+	db := g.GetAvatar()
+	if db.BattleAvatarList == nil {
+		db.BattleAvatarList = make(map[uint32]*spb.AvatarBin)
+	}
+	return db.BattleAvatarList
+}
+
 func (g *GamePlayer) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
 	bin := g.GetAvatarList()
+	return bin[avatarId]
+}
+
+func (g *GamePlayer) GetBattleAvatarBinById(avatarId uint32) *spb.AvatarBin {
+	bin := g.GetBattleAvatarList()
+	return bin[avatarId]
+}
+
+func (g *GamePlayer) GetAvatarById(avatarId uint32) *spb.AvatarBin {
+	var bin map[uint32]*spb.AvatarBin
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_NONE:
+		bin = g.GetAvatarList()
+	default:
+		bin = g.GetBattleAvatarList()
+	}
 	return bin[avatarId]
 }
 
@@ -147,6 +172,32 @@ func (g *GamePlayer) AddAvatar(avatarId uint32) {
 	g.AvatarPlayerSyncScNotify(avatarId)
 }
 
+func (g *GamePlayer) CopyBattleAvatar(avatarBin *spb.AvatarBin) {
+	db := g.GetBattleAvatarList()
+	if avatarBin == nil {
+		return
+	}
+	db[avatarBin.AvatarId] = &spb.AvatarBin{
+		AvatarId:          avatarBin.AvatarId,
+		Exp:               avatarBin.Exp,
+		Level:             avatarBin.Level,
+		AvatarType:        uint32(spb.AvatarType_AVATAR_FORMAL_TYPE),
+		FirstMetTimeStamp: avatarBin.FirstMetTimeStamp,
+		PromoteLevel:      avatarBin.PromoteLevel,
+		Rank:              avatarBin.Rank,
+		Hp:                10000,
+		SpBar: &spb.AvatarSpBarInfo{
+			CurSp: 5000,
+			MaxSp: 10000,
+		},
+		SkilltreeList:     avatarBin.SkilltreeList,
+		EquipmentUniqueId: avatarBin.EquipmentUniqueId,
+		EquipRelic:        avatarBin.EquipRelic,
+		TakenRewards:      avatarBin.TakenRewards,
+		BuffList:          avatarBin.BuffList,
+	}
+}
+
 func (g *GamePlayer) AddAvatarRank(rank uint32, db *spb.AvatarBin) {
 	if db == nil {
 		return
@@ -159,8 +210,18 @@ func (g *GamePlayer) AddAvatarRank(rank uint32, db *spb.AvatarBin) {
 
 func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus) {
 	var deadAatarNum uint32 = 0
+re:
 	for _, avatarStt := range abi {
-		avatarBin := g.GetAvatarBinById(avatarStt.Id)
+		switch bt {
+		case proto.BattleEndStatus_BATTLE_END_NONE:
+			break re
+		case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
+		case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
+		case proto.BattleEndStatus_BATTLE_END_QUIT: // 撤退
+			break re
+		}
+
+		avatarBin := g.GetAvatarById(avatarStt.Id)
 		if avatarBin == nil {
 			continue
 		}
@@ -170,21 +231,12 @@ func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.Batt
 			deadAatarNum++
 			hp = 2000
 		}
-		switch bt {
-		case proto.BattleEndStatus_BATTLE_END_NONE:
-		case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
-			avatarBin.Hp = hp
-			avatarBin.SpBar.CurSp = sp
-		case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
-			avatarBin.Hp = hp
-			avatarBin.SpBar.CurSp = sp
-		case proto.BattleEndStatus_BATTLE_END_QUIT: // 撤退
-
-		}
+		avatarBin.Hp = hp
+		avatarBin.SpBar.CurSp = sp
 	}
 
 	switch g.GetBattleStatus() {
-	case spb.BattleType_Battle_CHALLENGE: // 忘却之庭不需要更新状态
+	case spb.BattleType_Battle_CHALLENGE:
 		g.AddChallengeDeadAvatar(deadAatarNum)
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		g.AddChallengeDeadAvatar(deadAatarNum)
@@ -272,7 +324,7 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 		if bA.IsAssist {
 			// TODO 助战情况
 		} else {
-			avatarBin = g.GetAvatarBinById(bA.AvatarId)
+			avatarBin = g.GetAvatarById(bA.AvatarId)
 		}
 		if avatarBin == nil {
 			continue

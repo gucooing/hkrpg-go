@@ -107,6 +107,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartCocoonStageCsReq, payloadMsg)
 	req := msg.(*proto.StartCocoonStageCsReq)
+	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 设置战斗状态
 	battleInfo, battleBackup := g.GetCocoonBattleInfo(g.GetCurLineUp(), req)
 	if battleInfo == nil {
 		g.Send(cmd.StartCocoonStageScRsp, &proto.StartCocoonStageScRsp{Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)})

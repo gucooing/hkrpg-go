@@ -69,6 +69,7 @@ message Avatar {
   Gender gender = 2; // 性别
   HeroBasicType cur_main_avatar = 3;
   repeated HeroBasicTypeInfo hero_basic_type_info = 4;
+  map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
 }
 
 message HeroBasicTypeInfo {
@@ -120,7 +121,7 @@ message LineUp {
 message Line {
   string name = 1; // 队伍名称
   map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
-  // ExtraLineupType extra_lineup_type = 3; // 队伍类型
+  // map<uint32, LineAvatarList>  avatar_list = 3; // 角色列表
   uint32 LeaderSlot = 4; // 当前角色是第几个
 }
 

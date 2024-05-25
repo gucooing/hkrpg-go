@@ -137,7 +137,13 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 
 	// 队伍更新通知
 	g.SyncLineupNotify(index, isBattleLine)
-	if !isBattleLine {
+	if isBattleLine {
+		// 将角色属性拷贝出来
+		for _, avatar := range req.Slots {
+			avatarBin := g.GetAvatarBinById(avatar.Id)
+			g.CopyBattleAvatar(avatarBin)
+		}
+	} else {
 		g.SceneGroupRefreshScNotify(req.Index)
 	}
 
