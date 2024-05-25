@@ -77,26 +77,27 @@ type Conditions struct {
 	ID    uint32 `json:"ID"`
 }
 type PropList struct {
-	ID                       uint32  `json:"ID"`
-	PosX                     float64 `json:"PosX"`
-	PosY                     float64 `json:"PosY"`
-	PosZ                     float64 `json:"PosZ"`
-	RotX                     float64 `json:"RotX"`
-	RotY                     float64 `json:"RotY"`
-	RotZ                     float64 `json:"RotZ "`
-	Name                     string  `json:"Name"`
-	PropID                   uint32  `json:"PropID"`
-	IsDelete                 bool    `json:"IsDelete"`
-	IsClientOnly             bool    `json:"IsClientOnly"`
-	IsOverrideInitLevelGraph bool    `json:"IsOverrideInitLevelGraph"`
-	CampID                   uint32  `json:"CampID"`
-	EventID                  uint32  `json:"EventID"`
-	MapLayerID               uint32  `json:"MapLayerID"`
-	AnchorGroupID            uint32  `json:"AnchorGroupID"`
-	AnchorID                 uint32  `json:"AnchorID"`
-	MappingInfoID            uint32  `json:"MappingInfoID"`
-	ChestClosed              string  `json:"ChestClosed"`
-	State                    string  `json:"State"`
+	ID                       uint32              `json:"ID"`
+	PosX                     float64             `json:"PosX"`
+	PosY                     float64             `json:"PosY"`
+	PosZ                     float64             `json:"PosZ"`
+	RotX                     float64             `json:"RotX"`
+	RotY                     float64             `json:"RotY"`
+	RotZ                     float64             `json:"RotZ "`
+	Name                     string              `json:"Name"`
+	PropID                   uint32              `json:"PropID"`
+	IsDelete                 bool                `json:"IsDelete"`
+	IsClientOnly             bool                `json:"IsClientOnly"`
+	IsOverrideInitLevelGraph bool                `json:"IsOverrideInitLevelGraph"`
+	CampID                   uint32              `json:"CampID"`
+	EventID                  uint32              `json:"EventID"`
+	MapLayerID               uint32              `json:"MapLayerID"`
+	AnchorGroupID            uint32              `json:"AnchorGroupID"`
+	AnchorID                 uint32              `json:"AnchorID"`
+	MappingInfoID            uint32              `json:"MappingInfoID"`
+	ChestClosed              string              `json:"ChestClosed"`
+	State                    string              `json:"State"`
+	StageObjectCapture       *StageObjectCapture `json:"StageObjectCapture"`
 }
 type AnchorList struct {
 	ID         uint32  `json:"ID"`
@@ -149,6 +150,11 @@ type NPCList struct {
 type BattleArea struct {
 	GroupID uint32 `json:"GroupID"`
 	ID      uint32 `json:"ID"`
+}
+
+type StageObjectCapture struct {
+	BlockAlias  string `json:"BlockAlias"`
+	PrefabAlias string `json:"PrefabAlias"`
 }
 
 func (g *GameDataConfig) loadGroup() {

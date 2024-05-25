@@ -218,6 +218,9 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		propState := gdconf.GetStateValue(propList)
+		if propList.StageObjectCapture != nil {
+			propState = 1
+		}
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
