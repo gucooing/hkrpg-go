@@ -157,15 +157,6 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 }
 
-func (g *GamePlayer) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
-	for _, equipment := range equipmentList {
-		delete(g.GetItem().EquipmentMap, equipment)
-	}
-
-	notify := &proto.PlayerSyncScNotify{DelEquipmentList: equipmentList}
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
 func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpEquipmentCsReq, payloadMsg)
 	req := msg.(*proto.RankUpEquipmentCsReq)

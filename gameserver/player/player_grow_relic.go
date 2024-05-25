@@ -26,7 +26,7 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(equipAvatarId uint32, pa
 
 	equipAvatarDb := g.GetAvatarBinById(equipAvatarId)
 	for _, relic := range paramList {
-		relicDb := g.getRelicDbById(relic.RelicUniqueId)
+		relicDb := g.GetRelicById(relic.RelicUniqueId)
 		if relicDb == nil {
 			continue
 		}
@@ -66,7 +66,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	var oldLevel uint32      // 升级前等级
 
 	// 从背包获取需要升级的圣遗物
-	dbRelic := g.getRelicDbById(req.RelicUniqueId)
+	dbRelic := g.GetRelicById(req.RelicUniqueId)
 	if dbRelic == nil {
 		rsp := &proto.ExpUpRelicScRsp{}
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -174,13 +174,4 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	g.RelicPlayerSyncScNotify(req.RelicUniqueId)
 	rsp := &proto.ExpUpRelicScRsp{}
 	g.Send(cmd.ExpUpRelicScRsp, rsp)
-}
-
-func (g *GamePlayer) DelRelicPlayerSyncScNotify(relicList []uint32) {
-	for _, relic := range relicList {
-		delete(g.GetItem().RelicMap, relic)
-	}
-
-	notify := &proto.PlayerSyncScNotify{DelRelicList: relicList}
-	g.Send(cmd.PlayerSyncScNotify, notify)
 }

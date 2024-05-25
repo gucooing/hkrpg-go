@@ -262,7 +262,7 @@ func (g *GamePlayer) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
 	if db.EquipRelic == nil {
 		db.EquipRelic = make(map[uint32]uint32)
 	}
-	return g.getRelicDbById(db.EquipRelic[slot])
+	return g.GetRelicById(db.EquipRelic[slot])
 }
 
 /****************************************************功能***************************************************/

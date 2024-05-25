@@ -29,8 +29,8 @@ type GameDataConfig struct {
 	RelicSubAffixConfigMap      map[uint32]map[uint32]*RelicSubAffixConfig      // 圣遗物副属性配置
 	RelicExpTypeMap             map[string]map[string]*RelicExpType             // 圣遗物经验配置
 	ItemConfigMap               *ItemList                                       // 材料
-	ItemConfigEquipmentMap      map[string]*ItemConfigEquipment                 // 背包光锥配置
-	ItemConfigRelicMap          map[string]*ItemConfigRelic                     // 背包遗器配置
+	ItemConfigEquipmentMap      map[uint32]*ItemConfigEquipment                 // 背包光锥配置
+	ItemConfigRelicMap          map[uint32]*ItemConfigRelic                     // 背包遗器配置
 	RogueTalentMap              map[string]*RogueTalent                         // 模拟宇宙天赋
 	RogueMapGenMap              map[string][]uint32                             // 模拟宇宙id场景映射表
 	RogueManagerMap             *RogueManager                                   // 模拟宇宙排期表

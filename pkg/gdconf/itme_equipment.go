@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -17,7 +18,7 @@ type ItemConfigEquipment struct {
 	IsVisible           bool                `json:"isVisible"`
 	PileLimit           uint32              `json:"PileLimit"`
 	IsSellable          bool                `json:"IsSellable"`
-	ReturnItemIDList    []*ReturnItemIDList `json:"ReturnItemIDList"`
+	ReturnItemIDList    []*ReturnItemIDList `json:"ReturnItemIDList"` // 销毁返还物品
 	SellType            string              `json:"SellType"`
 }
 
@@ -27,7 +28,8 @@ type ReturnItemIDList struct {
 }
 
 func (g *GameDataConfig) loadItemConfigEquipment() {
-	g.ItemConfigEquipmentMap = make(map[string]*ItemConfigEquipment)
+	itemConfigEquipmentMap := make(map[string]*ItemConfigEquipment)
+	g.ItemConfigEquipmentMap = make(map[uint32]*ItemConfigEquipment)
 	playerElementsFilePath := g.excelPrefix + "ItemConfigEquipment.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -35,18 +37,21 @@ func (g *GameDataConfig) loadItemConfigEquipment() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ItemConfigEquipmentMap)
+	err = hjson.Unmarshal(playerElementsFile, &itemConfigEquipmentMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for id, equipment := range itemConfigEquipmentMap {
+		g.ItemConfigEquipmentMap[alg.S2U32(id)] = equipment
+	}
 	logger.Info("load %v ItemConfigEquipment", len(g.ItemConfigEquipmentMap))
 }
 
-func GetItemConfigEquipmentById(ID string) *ItemConfigEquipment {
+func GetItemConfigEquipmentById(ID uint32) *ItemConfigEquipment {
 	return CONF.ItemConfigEquipmentMap[ID]
 }
 
-func GetItemConfigEquipmentMap() map[string]*ItemConfigEquipment {
+func GetItemConfigEquipmentMap() map[uint32]*ItemConfigEquipment {
 	return CONF.ItemConfigEquipmentMap
 }
