@@ -848,14 +848,14 @@ func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
 
 // 添加自选的关卡buff
 func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
-	buffId := g.GetCurChallengeBuffId()
-	if buffId == 0 {
+	db := g.GetCurChallenge()
+	if db == nil {
 		return nil
 	}
 	challengeStoryInfo := &proto.ChallengeStoryInfo{
 		StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{
 			CurStoryBuffs: &proto.ChallengeStoryBuffInfo{
-				BuffList: []uint32{buffId},
+				BuffList: []uint32{db.BuffOne, db.BuffTwo},
 			},
 		},
 	}

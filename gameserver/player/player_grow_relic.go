@@ -11,11 +11,14 @@ import (
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressRelicAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressRelicAvatarCsReq)
-	g.DressRelicAvatarPlayerSyncScNotify(req.EquipAvatarId, req.ParamList)
+	g.DressRelicAvatarPlayerSyncScNotify(req.GetEquipAvatarId(), req.GetParamList())
 	g.Send(cmd.DressRelicAvatarScRsp, nil)
 }
 
 func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(equipAvatarId uint32, paramList []*proto.RelicParam) {
+	if paramList == nil {
+		return
+	}
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		RelicList:  make([]*proto.Relic, 0),
@@ -84,11 +87,10 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 		if pileList.GetPileItem() == nil {
 			continue
 		}
-		pile := new(Material)
-		pile.Tid = pileList.GetPileItem().ItemId
-		pile.Num = pileList.GetPileItem().ItemNum
-
-		pileItem = append(pileItem, pile)
+		pileItem = append(pileItem, &Material{
+			Tid: pileList.GetPileItem().ItemId,
+			Num: pileList.GetPileItem().ItemNum,
+		})
 		// 获取材料配置
 		pileconf := gdconf.GetRelicById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
 		if pileconf == nil {

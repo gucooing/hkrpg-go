@@ -20,7 +20,8 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 			ChallengeId: id,
 			Stars:       stars.Stars,
 			Score:       stars.ScoreOne,
-			TakenReward: stars.ScoreTwo,
+			ScoreTwo:    stars.ScoreTwo,
+			TakenReward: 0,
 		}
 		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
 	}
@@ -147,12 +148,12 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 func (g *GamePlayer) ChallengeSettleNotify() {
 	db := g.GetCurChallenge()
 	notify := &proto.ChallengeSettleNotify{
-		Stars:          db.Stars,                  // 得分
-		Reward:         g.GetChallengeReward(),    // 奖励
-		ChallengeId:    db.ChallengeId,            // 关卡id
-		IsWin:          db.IsWin,                  // 是否赢
-		ScoreTwo:       db.ScoreTwo,               // 二层挑战得分
-		ChallengeScore: db.ScoreOne + db.ScoreTwo, // 总得分
+		Stars:          db.Stars,               // 得分
+		Reward:         g.GetChallengeReward(), // 奖励
+		ChallengeId:    db.ChallengeId,         // 关卡id
+		IsWin:          db.IsWin,               // 是否赢
+		ScoreTwo:       db.ScoreTwo,            // 二层挑战得分
+		ChallengeScore: db.ScoreOne,            // 一层挑战得分
 	}
 	g.Send(cmd.ChallengeSettleNotify, notify)
 }

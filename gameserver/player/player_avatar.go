@@ -66,7 +66,6 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
 	req := msg.(*proto.RankUpAvatarCsReq)
-	rsp := new(proto.GetChallengeScRsp)
 	db := g.GetAvatarBinById(req.GetBaseAvatarId())
 	if db != nil {
 		pileItem := []*Material{{
@@ -76,17 +75,17 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 			g.AddAvatarRank(1, db)
 			g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
 		} else {
-			rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
+			// Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		}
 	}
-	g.Send(cmd.RankUpAvatarScRsp, rsp)
+	g.Send(cmd.RankUpAvatarScRsp, nil)
 }
 
 func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.AvatarExpUpCsReq, payloadMsg)
 	req := msg.(*proto.AvatarExpUpCsReq)
+	rsp := &proto.AvatarExpUpScRsp{}
 	if req.BaseAvatarId == 0 {
-		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
@@ -99,7 +98,6 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	// 从背包获取需要升级的角色
 	dbAvatar := g.GetAvatar().AvatarList[req.BaseAvatarId]
 	if dbAvatar == nil {
-		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
@@ -120,7 +118,6 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 		// 获取材料配置
 		pileconf := gdconf.GetAvatarExpItemConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
 		if pileconf == nil {
-			rsp := &proto.AvatarExpUpScRsp{}
 			g.Send(cmd.AvatarExpUpScRsp, rsp)
 			return
 		}
@@ -136,7 +133,6 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	// 获取能升级到的等级和升级后经验
 	level, exp, newExp := gdconf.GetExpTypeByLevel(gdconfAvatar.ExpGroup, exp, dbAvatar.Level, dbAvatar.PromoteLevel, dbAvatar.AvatarId)
 	if level == 0 && exp == 0 {
-		rsp := &proto.AvatarExpUpScRsp{}
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 	}
 
@@ -157,6 +153,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	// 通知角色还有多少信用点
 	g.PlayerPlayerSyncScNotify()
 	// 返还升级材料
+	rsp.ReturnItemList = make([]*proto.PileItem, 0)
 	if newExp >= 1000 {
 		num := (newExp / 1000) % 10
 		if num >= 5 {
@@ -164,16 +161,23 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 				Tid: 212,
 				Num: num / 5,
 			})
+			rsp.ReturnItemList = append(rsp.ReturnItemList, &proto.PileItem{
+				ItemId:  212,
+				ItemNum: num % 5,
+			})
 		}
 		aPileItem = append(aPileItem, &Material{
 			Tid: 211,
 			Num: num % 5,
 		})
+		rsp.ReturnItemList = append(rsp.ReturnItemList, &proto.PileItem{
+			ItemId:  211,
+			ItemNum: num % 5,
+		})
 		g.AddMaterial(aPileItem)
 	}
 	// 通知升级后角色消息
 	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
-	rsp := &proto.AvatarExpUpScRsp{}
 	g.Send(cmd.AvatarExpUpScRsp, rsp)
 }
 
@@ -281,6 +285,7 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg []byte) {
 			Retcode: uint32(proto.Retcode_RET_FAIL),
 		}
 		g.Send(cmd.TakePromotionRewardScRsp, rsp)
+		return
 	}
 	avatarDb.TakenRewards = append(avatarDb.TakenRewards, req.Promotion)
 	// 通知升级后角色信息

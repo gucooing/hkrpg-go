@@ -17,14 +17,7 @@ type OnlineData struct {
 	CurBattle             *CurBattle           // 正在进行的战斗
 }
 
-type Vector struct {
-	X int32
-	Y int32
-	Z int32
-}
-
 func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
-	g.BasicBin = new(spb.PlayerBasicCompBin)
 	g.BasicBin = &spb.PlayerBasicCompBin{
 		Level:                   1,
 		Nickname:                "hkrpg-go",
