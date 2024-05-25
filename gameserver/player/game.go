@@ -21,13 +21,13 @@ type GamePlayer struct {
 	AccountId uint32
 	GateAppId uint32
 	// 玩家数据
-	Player    *PlayerData
-	PlayerPb  *spb.PlayerBasicCompBin // 玩家pb数据
-	GateConn  net.Conn
-	closeOnce sync.Once
-	stop      chan struct{}
-	Ticker    *time.Timer
-	MsgChan   chan Msg // 消息通道
+	OnlineData *OnlineData
+	BasicBin   *spb.PlayerBasicCompBin // 玩家pb数据
+	GateConn   net.Conn
+	closeOnce  sync.Once
+	stop       chan struct{}
+	Ticker     *time.Timer
+	MsgChan    chan Msg // 消息通道
 }
 
 type Msg struct {
@@ -36,22 +36,9 @@ type Msg struct {
 	PlayerMsg pb.Message
 }
 
-var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatCsReq, cmd.PlayerHeartBeatScRsp} // 黑名单
-func isValid(cmdid uint16) bool {
-	for _, value := range blacklist {
-		if cmdid == value {
-			return false
-		}
-	}
-	return true
-}
-
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 	// 打印需要的数据包
-	if isValid(cmdId) {
-		data := protojson.Format(playerMsg)
-		logger.Debug("[UID:%v] S --> C : CmdId: %v KcpMsg: \n%s\n", g.Uid, cmdId, data)
-	}
+	go LogMsgSeed(cmdId, playerMsg)
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
@@ -81,11 +68,6 @@ func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb
 		logger.Error("unmarshal proto data err: %v", err)
 		return nil
 	}
-	// 打印需要的数据包
-	if isValid(cmdId) {
-		data := protojson.Format(protoObj)
-		logger.Debug("[UID:%v] C --> S : NAME: %s KcpMsg: \n%s\n", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
-	}
 	return protoObj
 }
 
@@ -95,4 +77,39 @@ func stou32(msg string) uint32 {
 	}
 	ms, _ := strconv.ParseUint(msg, 10, 32)
 	return uint32(ms)
+}
+
+var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatCsReq, cmd.PlayerHeartBeatScRsp} // 黑名单
+func IsValid(cmdid uint16) bool {
+	for _, value := range blacklist {
+		if cmdid == value {
+			return false
+		}
+	}
+	return true
+}
+
+// 异步打印数据包
+func LogMsgSeed(cmdId uint16, playerMsg pb.Message) {
+	if IsValid(cmdId) {
+		data := protojson.Format(playerMsg)
+		logger.Debug("S --> C : NAME: %s KcpMsg: \n%s\n", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
+	}
+}
+
+func LogMsgRecv(cmdId uint16, payloadMsg []byte) {
+	if IsValid(cmdId) {
+		protoObj := cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
+		if protoObj == nil {
+			logger.Error("get new proto object is nil")
+			return
+		}
+		err := pb.Unmarshal(payloadMsg, protoObj)
+		if err != nil {
+			logger.Error("unmarshal proto data err: %v", err)
+			return
+		}
+		data := protojson.Format(protoObj)
+		logger.Debug("C --> S : NAME: %s KcpMsg: \n%s\n", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
+	}
 }

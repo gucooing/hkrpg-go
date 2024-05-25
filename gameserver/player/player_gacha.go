@@ -4,10 +4,30 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
+
+func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetFarmStageGachaInfoCsReq, payloadMsg)
+	req := msg.(*proto.GetFarmStageGachaInfoCsReq)
+
+	rsp := &proto.GetFarmStageGachaInfoScRsp{
+		FarmStageGachaInfoList: make([]*proto.FarmStageGachaInfo, 0),
+	}
+
+	for _, farmStageGachaId := range req.FarmStageGachaIdList {
+		farmStageGachaInfo := &proto.FarmStageGachaInfo{
+			BeginTime: 1664308800,
+			GachaId:   farmStageGachaId,
+			EndTime:   4294967295,
+		}
+		rsp.FarmStageGachaInfoList = append(rsp.FarmStageGachaInfoList, farmStageGachaInfo)
+	}
+
+	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
+}
 
 func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetGachaInfoScRsp)

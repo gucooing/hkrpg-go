@@ -1,7 +1,6 @@
 package gdconf
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -23,14 +22,14 @@ func (g *GameDataConfig) loadBanners() {
 	playerElementsFilePath := g.dataPrefix + "Banners.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		logger.Error("open file error: %v", err)
+		return
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &banners)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		logger.Error("parse file error: %v", err)
+		return
 	}
 	for _, banner := range banners {
 		g.BannersMap[banner.Id] = banner

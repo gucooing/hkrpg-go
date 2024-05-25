@@ -3,7 +3,7 @@ package player
 import (
 	"strconv"
 
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -241,7 +241,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	dbRogue := g.GetDbRogue()
 	rogue := g.GetRogue()
 
-	scene, avatarEntity, monsterEntity := g.GetRogueScene(dbRogue.CurRogue.RogueSceneMap[dbRogue.CurRogue.CurSiteId].RoomId)
+	scene, _, _ := g.GetRogueScene(dbRogue.CurRogue.RogueSceneMap[dbRogue.CurRogue.CurSiteId].RoomId)
 	if scene == nil {
 		rsp := &proto.StartRogueScRsp{
 			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
@@ -249,9 +249,6 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 		g.Send(cmd.StartRogueScRsp, rsp)
 		return
 	}
-
-	g.GetSceneEntity().AvatarEntity = avatarEntity
-	g.GetSceneEntity().MonsterEntity = monsterEntity
 
 	rsp := &proto.StartRogueScRsp{
 		Scene:     scene,
@@ -424,7 +421,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		return nil, nil, nil
 	}
 
-	leaderEntityId := uint32(g.GetNextGameObjectGuid())
+	leaderEntityId := g.GetNextGameObjectGuid()
 	scene := &proto.SceneInfo{
 		ClientPosVersion:   5,
 		PlaneId:            mapEntrance.PlaneID,
@@ -454,7 +451,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		if avatarList == nil || avatarList.AvatarId == 0 {
 			continue
 		}
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
 		entityList := &proto.SceneEntityInfo{
 			Actor: &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
@@ -478,13 +475,11 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 			entityList.EntityId = leaderEntityId
 			avatarEntity[leaderEntityId] = &AvatarEntity{
 				AvatarId: avatarList.AvatarId,
-				GroupId:  rogueRoom.GroupID,
 			}
 		} else {
 			entityList.EntityId = entityId
 			avatarEntity[entityId] = &AvatarEntity{
 				AvatarId: avatarList.AvatarId,
-				GroupId:  rogueRoom.GroupID,
 			}
 		}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
@@ -510,7 +505,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		entityGroupLists, x := g.GetRogueNPCMonsterByID(entityGroupLists, sceneGroup, stou32(groupID), monsterEntity, ida)
 		monsterEntity = x
 		// 添加NPC实体
-		entityGroupLists = g.GetNPCByID(entityGroupLists, sceneGroup, stou32(groupID))
+		entityGroupLists = g.GetNPCByID(entityGroupLists, sceneGroup)
 		if len(entityGroupLists.EntityList) != 0 {
 			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 		}
@@ -528,7 +523,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  groupID,     // 文件名后那个G
 			InstId:   propList.ID, // ID
-			EntityId: uint32(g.GetNextGameObjectGuid()),
+			EntityId: g.GetNextGameObjectGuid(),
 			Motion: &proto.MotionInfo{
 				Pos: &proto.Vector{
 					X: int32(propList.PosX * 1000),
@@ -594,7 +589,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 
 func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
 	for _, monsterList := range sceneGroup.MonsterList {
-		entityId := uint32(g.GetNextGameObjectGuid())
+		entityId := g.GetNextGameObjectGuid()
 		rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)
 		rogueMonster := gdconf.GetRogueMonsterByRogueMonsterID(rogueMonsterID)
 		entityList := &proto.SceneEntityInfo{
@@ -614,25 +609,25 @@ func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGr
 				},
 			},
 			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.PlayerPb.WorldLevel,
+				WorldLevel: g.BasicBin.WorldLevel,
 				MonsterId:  rogueMonster.NpcMonsterID,
 				EventId:    rogueMonster.EventID,
 			},
 		}
 		// 添加实体
 		entityMap[entityId] = &MonsterEntity{
-			MonsterEId: rogueMonster.EventID,
-			GroupId:    groupID,
-			Pos: &Vector{
-				X: int32(monsterList.PosX * 1000),
-				Y: int32(monsterList.PosY * 1000),
-				Z: int32(monsterList.PosZ * 1000),
-			},
-			Rot: &Vector{
-				X: 0,
-				Y: int32(monsterList.RotY * 1000),
-				Z: 0,
-			},
+			// MonsterEId: rogueMonster.EventID,
+			// GroupId:    groupID,
+			// Pos: &Vector{
+			// 	X: int32(monsterList.PosX * 1000),
+			// 	Y: int32(monsterList.PosY * 1000),
+			// 	Z: int32(monsterList.PosZ * 1000),
+			// },
+			// Rot: &Vector{
+			// 	X: 0,
+			// 	Y: int32(monsterList.RotY * 1000),
+			// 	Z: 0,
+			// },
 		}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
@@ -655,7 +650,7 @@ func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	}
 	rsp.BattleInfo.BattleTargetInfo[2].BattleTargetList = battleTargetList
 	// 添加角色
-	rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	// rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	// 添加buff
 	rsp.BattleInfo.BuffList = make([]*proto.BattleBuff, 0)
 	for id, buff := range g.GetRogueBuff() {
@@ -682,10 +677,10 @@ func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 
 // 模拟宇宙攻击事件结算
 func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, rsp *proto.PVEBattleResultScRsp) {
-	battle := g.GetRogueBattle()[req.BattleId]
+	// battle := g.GetRogueBattle()[req.BattleId]
 	// 队伍状态通知
-	g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
-	rsp.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	// g.ChallengeSyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	// rsp.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 	// buff同步
 	var buffList []uint32
 	g.SyncEntityBuffChangeListScNotify(buffList)
@@ -707,21 +702,21 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, 
 	nitify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
 	}
-	for _, eventId := range battle.monsterEntityMap {
-		entity := g.GetSceneEntity().MonsterEntity[eventId]
-		if entity != nil {
-			groupRefreshInfo := &proto.SceneGroupRefreshInfo{
-				GroupId: entity.GroupId,
-				RefreshEntity: []*proto.SceneEntityRefreshInfo{
-					{
-						DelEntity: eventId,
-					},
-				},
-			}
-			nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
-			delete(g.GetSceneEntity().MonsterEntity, eventId)
-		}
-	}
+	// for _, eventId := range battle.monsterEntityMap {
+	// 	entity := g.GetSceneEntity().MonsterEntity[eventId]
+	// 	if entity != nil {
+	// 		groupRefreshInfo := &proto.SceneGroupRefreshInfo{
+	// 			GroupId: entity.GroupId,
+	// 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
+	// 				{
+	// 					DelEntity: eventId,
+	// 				},
+	// 			},
+	// 		}
+	// 		nitify.GroupRefreshInfo = append(nitify.GroupRefreshInfo, groupRefreshInfo)
+	// 		delete(g.GetSceneEntity().MonsterEntity, eventId)
+	// 	}
+	// }
 	// 刷新门
 	g.Send(cmd.SceneGroupRefreshScNotify, nitify)
 
@@ -734,10 +729,11 @@ func (g *GamePlayer) QuitRogueCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
+	curLine := g.GetCurLineUp()
 	rsp := &proto.LeaveRogueScRsp{
 		RogueInfo: g.GetRogueInfo(),
 		Lineup:    g.GetLineUpPb(g.GetLineUp().MainLineUp),
-		Scene:     g.GetSceneInfo(g.GetScene().EntryId, g.GetPos(), g.GetRot()),
+		Scene:     g.GetSceneInfo(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb(), curLine),
 	}
 
 	g.Send(cmd.LeaveRogueScRsp, rsp)
@@ -785,7 +781,7 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	curRogue.CurSiteId = req.SiteId
 	// 更新通知
 	g.SyncRogueMapRoomScNotify()
-	scene, avatarEntity, monsterEntity := g.GetRogueScene(req.RoomId)
+	scene, _, _ := g.GetRogueScene(req.RoomId)
 	if scene == nil {
 		rsp := &proto.StartRogueScRsp{
 			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
@@ -794,8 +790,6 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 		return
 	}
 
-	g.GetSceneEntity().AvatarEntity = avatarEntity
-	g.GetSceneEntity().MonsterEntity = monsterEntity
 	rsp := &proto.EnterRogueMapRoomScRsp{
 		Lineup:    g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_ROGUE)),
 		CurSiteId: req.SiteId,

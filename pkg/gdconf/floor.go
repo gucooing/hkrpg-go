@@ -86,6 +86,14 @@ func GetFloorById(planeId, floorId uint32) *LevelFloor {
 	return CONF.FloorMap[planeId][floorId]
 }
 
+func GetMazeByGroupId(planeId, floorId, groupId uint32) *LevelGroup {
+	conf := CONF.FloorMap[planeId][floorId]
+	if conf == nil {
+		return nil
+	}
+	return conf.Groups[groupId]
+}
+
 func GetFloorMap() map[uint32]map[uint32]*LevelFloor {
 	return CONF.FloorMap
 }

@@ -48,6 +48,8 @@ func (s *Service) muipRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.GmWorldLevel(serviceMsg)
 	case cmd.DelItem:
 		s.DelItem(serviceMsg)
+	case cmd.MaxCurAvatar:
+		s.MaxCurAvatar(serviceMsg)
 	default:
 		logger.Info("muip -> node error cmdid:%v", cmdId)
 	}
@@ -111,6 +113,18 @@ func (s *Service) DelItem(serviceMsg pb.Message) {
 			PlayerUid: req.PlayerUid,
 		}
 		gs.sendHandle(cmd.DelItem, notify)
+	}
+}
+
+func (s *Service) MaxCurAvatar(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.MaxCurAvatar)
+	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
+		notify := &spb.MaxCurAvatar{
+			PlayerUid: req.PlayerUid,
+			AvatarId:  req.AvatarId,
+			All:       req.All,
+		}
+		gs.sendHandle(cmd.MaxCurAvatar, notify)
 	}
 }
 

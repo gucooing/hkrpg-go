@@ -265,7 +265,7 @@ func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
 	if play != nil {
 		switch play.Status {
 		case spb.PlayerStatus_PlayerStatus_LoggingIn: // 登录中收到下线，肯定是重复登录下线回复
-			logger.Warn("[UID:%v]🖥️🦐不是，兄弟！你登录流程都没跑完怎么收到的下线通知?", rsp.Uid)
+			logger.Warn("[UID:%v]🖥️🦐不是，哥们！你登录流程都没跑完怎么收到的下线通知?", rsp.Uid)
 		case spb.PlayerStatus_PlayerStatus_PostLogin: // 已登录状态收到下线，滚
 			gs.gate.passPlayerKill(play, spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN)
 		case spb.PlayerStatus_PlayerStatus_Logout_Wait: // 离线等待中收到下线

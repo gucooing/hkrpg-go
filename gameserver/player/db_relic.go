@@ -5,7 +5,8 @@ import (
 	"math/rand"
 	"strconv"
 
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -32,6 +33,36 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 	relicAffix := make(map[uint32]*spb.RelicAffix)
 	g.addRelicAffix(&addRelicAffix{
 		addSubAffixes:     addSubAffixes,
+		mainAffixProperty: mainAffixConf.Property,
+		subAffixGroup:     relicConf.SubAffixGroup,
+		relicAffix:        relicAffix,
+	})
+	relic.RelicAffix = relicAffix
+
+	g.GetItem().RelicMap[uniqueId] = relic
+	g.RelicPlayerSyncScNotify(uniqueId)
+}
+
+func (g *GamePlayer) AddBtRelic(tid uint32) {
+	uniqueId := uint32(SNOWFLAKE.GenId())
+	relicConf := gdconf.GetRelicById(strconv.Itoa(int(tid)))
+	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+
+	relic := &spb.Relic{
+		Tid:               tid,
+		UniqueId:          uniqueId,
+		Exp:               0,
+		Level:             0,
+		MainAffixId:       mainAffixConf.AffixID,
+		RelicAffix:        make(map[uint32]*spb.RelicAffix),
+		BaseAvatarId:      0,
+		IsProtected:       false,
+		MainAffixProperty: mainAffixConf.Property,
+	}
+
+	relicAffix := make(map[uint32]*spb.RelicAffix)
+	g.addRelicAffix(&addRelicAffix{
+		addSubAffixes:     400,
 		mainAffixProperty: mainAffixConf.Property,
 		subAffixGroup:     relicConf.SubAffixGroup,
 		relicAffix:        relicAffix,
@@ -100,14 +131,15 @@ func (g *GamePlayer) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 		return nil
 	} else {
 		relic := &proto.Relic{
-			Tid:          relicDb.Tid,
-			SubAffixList: make([]*proto.RelicAffix, 0),
-			BaseAvatarId: relicDb.BaseAvatarId,
-			UniqueId:     relicDb.UniqueId,
-			Level:        relicDb.Level,
-			IsProtected:  relicDb.IsProtected,
-			MainAffixId:  relicDb.MainAffixId,
-			Exp:          relicDb.Exp,
+			Tid:           relicDb.Tid,
+			SubAffixList:  make([]*proto.RelicAffix, 0),
+			BaseAvatarId:  relicDb.BaseAvatarId,
+			EquipAvatarId: relicDb.BaseAvatarId,
+			UniqueId:      relicDb.UniqueId,
+			Level:         relicDb.Level,
+			IsProtected:   relicDb.IsProtected,
+			MainAffixId:   relicDb.MainAffixId,
+			Exp:           relicDb.Exp,
 		}
 		for _, subAffixList := range relicDb.RelicAffix {
 			relicAffix := &proto.RelicAffix{
@@ -144,4 +176,25 @@ func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 
 		return relic
 	}
+}
+
+func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
+	relicItme := g.GetProtoRelicById(uniqueId)
+	// 通知客户端增加了物品
+	notify := &proto.ScenePlaneEventScNotify{
+		GetItemList: &proto.ItemList{
+			ItemList: make([]*proto.Item, 0),
+		},
+	}
+	item := &proto.Item{
+		ItemId:      relicItme.Tid,
+		Level:       relicItme.Level,
+		Num:         1,
+		MainAffixId: relicItme.MainAffixId,
+		Rank:        0,
+		Promotion:   0,
+		UniqueId:    relicItme.UniqueId,
+	}
+	notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
+	g.Send(cmd.ScenePlaneEventScNotify, notify)
 }

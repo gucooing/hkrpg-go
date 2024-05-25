@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -12,10 +12,11 @@ import (
 )
 
 func (g *GamePlayer) StaminaInfoScNotify() {
+	db := g.GetMaterialMap()
 	notify := &proto.StaminaInfoScNotify{
 		NextRecoverTime: 0,
-		Stamina:         g.GetItem().MaterialMap[11],
-		ReserveStamina:  g.GetItem().MaterialMap[12],
+		Stamina:         db[Stamina],
+		ReserveStamina:  db[RStamina],
 	}
 	g.Send(cmd.StaminaInfoScNotify, notify)
 }
@@ -23,9 +24,18 @@ func (g *GamePlayer) StaminaInfoScNotify() {
 func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
-	rsp.NextRecoverTime = 1698768000
-	rsp.GameplayBirthday = g.PlayerPb.Birthday
-	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{}
+	rsp.NextRecoverTime = 1716449614
+	rsp.GameplayBirthday = g.BasicBin.Birthday
+	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
+	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
+		B1:                true,
+		B2:                true,
+		B3:                true,
+		B4:                true,
+		B5:                true,
+		B6:                true,
+		DisplayRecordType: proto.DisplayRecordType_BATTLE_RECORD_CHALLENGE,
+	}
 
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
@@ -40,7 +50,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		RelicList:                     make([]*proto.RelicArchive, 0),
 	}
 
-	for _, avatar := range g.PlayerPb.Avatar.Avatar {
+	for _, avatar := range g.BasicBin.Avatar.AvatarList {
 		archiveData.ArchiveMissingAvatarIdList = append(archiveData.ArchiveMissingAvatarIdList, avatar.AvatarId)
 	}
 
@@ -75,12 +85,11 @@ func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.PlayerPb.HeadImageAvatarId,
+		CurrentHeadIconId:    g.BasicBin.HeadImageAvatarId,
 		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
-		Signature:            g.PlayerPb.Signature,
-		// TODO
+		Signature:            g.BasicBin.Signature,
 		DisplayAvatarVec: &proto.DisplayAvatarVec{
-			DisplayAvatarList: nil,
+			DisplayAvatarList: make([]*proto.DisplayAvatar, 0),
 			IsDisplay:         false,
 		},
 	}
@@ -99,7 +108,7 @@ func (g *GamePlayer) SetHeadIconCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeadIconCsReq, payloadMsg)
 	req := msg.(*proto.SetHeadIconCsReq)
 
-	g.PlayerPb.HeadImageAvatarId = req.Id
+	g.BasicBin.HeadImageAvatarId = req.Id
 
 	rsp := &proto.SetHeadIconScRsp{
 		CurrentHeadIconId: req.Id,
@@ -113,7 +122,7 @@ func (g *GamePlayer) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeroBasicTypeCsReq, payloadMsg)
 	req := msg.(*proto.SetHeroBasicTypeCsReq)
 
-	g.PlayerPb.Avatar.CurMainAvatar = spb.HeroBasicType(req.BasicType)
+	g.BasicBin.Avatar.CurMainAvatar = spb.HeroBasicType(req.BasicType)
 
 	rsp := &proto.SetHeroBasicTypeScRsp{
 		BasicType: req.BasicType,
@@ -178,30 +187,6 @@ func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.ToUidList, req.Emote, req.MsgType, req.Text, req.ChatType)
 }
 
-func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetChallengeScRsp)
-	rsp.ChallengeList = make([]*proto.Challenge, 0)
-	rsp.ChallengeRewardList = make([]*proto.ChallengeReward, 0)
-	challengeDb := g.GetChallenge()
-	for id, stars := range challengeDb.ChallengeList {
-		challenge := &proto.Challenge{
-			ChallengeId: id,
-			Stars:       stars.Stars,
-			Score:       stars.ScoreOne,
-			TakenReward: stars.ScoreTwo,
-		}
-		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
-	}
-	for taken, id := range challengeDb.ChallengeRewardList {
-		challengeReward := &proto.ChallengeReward{
-			TakenChallengeReward: taken,
-			GroupId:              id,
-		}
-		rsp.ChallengeRewardList = append(rsp.ChallengeRewardList, challengeReward)
-	}
-	g.Send(cmd.GetChallengeScRsp, rsp)
-}
-
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetChatEmojiListScRsp, nil)
 }
@@ -212,8 +197,8 @@ func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) SetClientPausedCsReq(payloadMsg []byte) {
 	rsp := new(proto.SetClientPausedScRsp)
-	g.Player.IsPaused = !g.Player.IsPaused
-	rsp.Paused = g.Player.IsPaused
+	g.OnlineData.IsPaused = !g.OnlineData.IsPaused
+	rsp.Paused = g.OnlineData.IsPaused
 
 	g.Send(cmd.SetClientPausedScRsp, rsp)
 }
@@ -247,11 +232,11 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetNicknameCsReq, payloadMsg)
 	req := msg.(*proto.SetNicknameCsReq)
 
-	if g.Player.IsNickName {
-		g.PlayerPb.Nickname = req.Nickname
+	if g.OnlineData.IsNickName {
+		g.BasicBin.Nickname = req.Nickname
 	}
 
-	g.Player.IsNickName = !g.Player.IsNickName
+	g.OnlineData.IsNickName = !g.OnlineData.IsNickName
 
 	g.PlayerPlayerSyncScNotify()
 	g.Send(cmd.SetNicknameScRsp, nil)
@@ -261,7 +246,7 @@ func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetGameplayBirthdayCsReq, payloadMsg)
 	req := msg.(*proto.SetGameplayBirthdayCsReq)
 
-	g.PlayerPb.Birthday = req.Birthday
+	g.BasicBin.Birthday = req.Birthday
 
 	rsp := &proto.SetGameplayBirthdayScRsp{Birthday: req.Birthday}
 
@@ -272,7 +257,7 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetSignatureCsReq, payloadMsg)
 	req := msg.(*proto.SetSignatureCsReq)
 
-	g.PlayerPb.Signature = req.Signature
+	g.BasicBin.Signature = req.Signature
 
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
 
@@ -320,24 +305,4 @@ func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, nil)
 	// TODO 主动调用
 	g.HandleGetArchiveDataCsReq(nil)
-}
-
-func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetFarmStageGachaInfoCsReq, payloadMsg)
-	req := msg.(*proto.GetFarmStageGachaInfoCsReq)
-
-	rsp := &proto.GetFarmStageGachaInfoScRsp{
-		FarmStageGachaInfoList: make([]*proto.FarmStageGachaInfo, 0),
-	}
-
-	for _, farmStageGachaId := range req.FarmStageGachaIdList {
-		farmStageGachaInfo := &proto.FarmStageGachaInfo{
-			BeginTime: 1664308800,
-			GachaId:   farmStageGachaId,
-			EndTime:   4294967295,
-		}
-		rsp.FarmStageGachaInfoList = append(rsp.FarmStageGachaInfoList, farmStageGachaInfo)
-	}
-
-	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
 }

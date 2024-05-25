@@ -19,7 +19,7 @@ type PlayerGame struct {
 	Seed           uint64
 	XorKey         []byte // 密钥
 	KcpConn        *kcp.UDPSession
-	LastActiveTime int64 // 最近一次的活跃时间
+	LastActiveTime uint64 // 最近一次的活跃时间
 	RouteManager   *RouteManager
 	ticker         *time.Timer
 	stop           chan struct{}
@@ -149,7 +149,7 @@ func (s *GateServer) AutoDelPlayer() {
 	for {
 		<-ticker.C
 		for _, play := range s.getAllPlayer() {
-			if time.Now().Unix()-play.LastActiveTime > 30 {
+			if getCurTime()-play.LastActiveTime > 300000 {
 				switch play.Status {
 				case spb.PlayerStatus_PlayerStatus_PostLogin:
 					s.ttiPlayerKill(play, spb.Retcode_RET_PLAYER_TIMEOUT)

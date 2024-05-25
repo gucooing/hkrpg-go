@@ -6,7 +6,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
@@ -43,11 +42,11 @@ type GameDataConfig struct {
 	RogueRoomMap                map[uint32]*RogueRoom                           // 模拟宇宙地图配置表
 	CocoonConfigMap             map[string]map[string]*CocoonConfig             // 挑战/周本
 	MappingInfoMap              map[string]map[string]*MappingInfo              // 挑战/周本奖励
-	AvatarSkilltreeMap          map[string]map[string]*AvatarSkilltree          // 技能库
+	AvatarSkilltreeMap          map[uint32]map[uint32]*AvatarSkilltree          // 技能库
 	MazeBuffMap                 map[string]map[string]*MazeBuff                 // 技能buff库
 	MazePlaneMap                map[string]*MazePlane                           // 场景id
 	NPCMonsterDataMap           map[string]*NPCMonsterData                      // NPC怪物表？
-	MazePropMap                 map[string]*MazeProp                            // 实体列表？
+	MazePropMap                 map[uint32]*MazeProp                            // 实体列表？
 	NPCDataMap                  map[string]*NPCData                             // NPC列表？
 	GroupMap                    map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                    map[uint32]map[uint32]*LevelFloor               // ?
@@ -60,8 +59,8 @@ type GameDataConfig struct {
 	ActivitySchedulingMap       []*ActivityScheduling                           // 活动排期
 	QuestDataMap                map[string]*QuestData                           // 任务
 	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
-	ChallengeMazeConfigMap      map[string]*ChallengeMazeConfig                 // 忘却之庭配置
-	ChallengeTargetConfigMap    map[string]*ChallengeTargetConfig               // 忘却之庭结算配置
+	ChallengeMazeConfigMap      map[uint32]*ChallengeMazeConfig                 // 忘却之庭配置
+	ChallengeTargetConfigMap    map[uint32]*ChallengeTargetConfig               // 忘却之庭结算配置
 	ChallengeStoryMazeExtraMap  map[string]*ChallengeStoryMazeExtra             // 忘却之庭活动积分规则
 	BackGroundMusicMap          map[string]*BackGroundMusic                     // 背景音乐
 	PlayerLevelConfigMap        map[string]*PlayerLevelConfig                   // 账号等级经验配置
@@ -74,19 +73,18 @@ type GameDataConfig struct {
 	RewardDataMap               map[string]*RewardData                          // 奖励配置
 }
 
-func InitGameDataConfig() {
+func InitGameDataConfig(gameDataConfigPath string) {
 	logger.Info("读取资源文件")
 	CONF = new(GameDataConfig)
 	startTime := time.Now().Unix()
-	CONF.loadAll()
+	CONF.loadAll(gameDataConfigPath)
 	runtime.GC()
 	endTime := time.Now().Unix()
 	logger.Info("load all game data config finish, cost: %v(s)", endTime-startTime)
 }
 
-func (g *GameDataConfig) loadAll() {
-	pathPrefix := config.GetConfig().GameDataConfigPath
-
+func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
+	pathPrefix := gameDataConfigPath
 	dirInfo, err := os.Stat(pathPrefix)
 	if err != nil || !dirInfo.IsDir() {
 		info := fmt.Sprintf("open game data config dir error: %v", err)
@@ -112,8 +110,7 @@ func (g *GameDataConfig) loadAll() {
 	g.dataPrefix = "data"
 	dirInfo, err = os.Stat(g.dataPrefix)
 	if err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("open game data config data dir error: %v", err)
-		panic(info)
+		logger.Error("open game data config data dir error: %v", err)
 	}
 	g.dataPrefix += "/"
 

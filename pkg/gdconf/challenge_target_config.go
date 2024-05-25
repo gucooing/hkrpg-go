@@ -3,8 +3,8 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -17,15 +17,15 @@ type ChallengeTargetConfig struct {
 }
 
 func (g *GameDataConfig) loadChallengeTargetConfig() {
-	g.ChallengeTargetConfigMap = make(map[string]*ChallengeTargetConfig)
+	challengeTargetConfigMap := make(map[string]*ChallengeTargetConfig)
+	g.ChallengeTargetConfigMap = make(map[uint32]*ChallengeTargetConfig)
 	playerElementsFilePath := g.excelPrefix + "ChallengeTargetConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-
-	err = hjson.Unmarshal(playerElementsFile, &g.ChallengeTargetConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &challengeTargetConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
@@ -37,16 +37,19 @@ func (g *GameDataConfig) loadChallengeTargetConfig() {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-
-	err = hjson.Unmarshal(playerElementsFileStory, &g.ChallengeTargetConfigMap)
+	err = hjson.Unmarshal(playerElementsFileStory, &challengeTargetConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+
+	for id, tagConf := range challengeTargetConfigMap {
+		g.ChallengeTargetConfigMap[alg.S2U32(id)] = tagConf
 	}
 
 	logger.Info("load %v ChallengeTargetConfig", len(g.ChallengeTargetConfigMap))
 }
 
 func GetChallengeTargetConfigById(id uint32) *ChallengeTargetConfig {
-	return CONF.ChallengeTargetConfigMap[strconv.Itoa(int(id))]
+	return CONF.ChallengeTargetConfigMap[id]
 }

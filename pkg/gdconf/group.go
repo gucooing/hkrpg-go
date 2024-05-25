@@ -11,15 +11,70 @@ import (
 	"github.com/hjson/hjson-go/v4"
 )
 
+const (
+	Closed            = 0
+	Open              = 1
+	Locked            = 2
+	BridgeState1      = 3
+	BridgeState2      = 4
+	BridgeState3      = 5
+	BridgeState4      = 6
+	CheckPointDisable = 7
+	CheckPointEnable  = 8
+	TriggerDisable    = 9
+	TriggerEnable     = 10
+	ChestLocked       = 11
+	ChestClosed       = 12
+	ChestUsed         = 13
+	Elevator1         = 14
+	Elevator2         = 15
+	Elevator3         = 16
+	WaitActive        = 17
+	EventClose        = 18
+	EventOpen         = 19
+	Hidden            = 20
+	TeleportGate0     = 21
+	TeleportGate1     = 22
+	TeleportGate2     = 23
+	TeleportGate3     = 24
+	Destructed        = 25
+	CustomState01     = 101
+	CustomState02     = 102
+	CustomState03     = 103
+	CustomState04     = 104
+	CustomState05     = 105
+	CustomState06     = 106
+	CustomState07     = 107
+	CustomState08     = 108
+	CustomState09     = 109
+)
+
 type LevelGroup struct {
-	GroupId       uint32
-	GroupName     string         `json:"GroupName"`
-	LoadSide      string         `json:"LoadSide"`
-	LoadOnInitial bool           `json:"LoadOnInitial"`
-	PropList      []*PropList    `json:"PropList"`    // 实体列表
-	MonsterList   []*MonsterList `json:"MonsterList"` // 怪物列表
-	NPCList       []*NPCList     `json:"NPCList"`     // NPC列表
-	AnchorList    []*AnchorList  `json:"AnchorList"`  // 锚点列表
+	GroupId         uint32
+	GroupName       string           `json:"GroupName"`
+	LoadSide        string           `json:"LoadSide"`
+	Category        string           `json:"Category"` // 类别
+	LoadCondition   *LoadCondition   `json:"LoadCondition"`
+	UnloadCondition *UnloadCondition `json:"UnloadCondition"`
+	LoadOnInitial   bool             `json:"LoadOnInitial"`
+	PropList        []*PropList      `json:"PropList"`    // 实体列表
+	MonsterList     []*MonsterList   `json:"MonsterList"` // 怪物列表
+	NPCList         []*NPCList       `json:"NPCList"`     // NPC列表
+	AnchorList      []*AnchorList    `json:"AnchorList"`  // 锚点列表
+}
+type LoadCondition struct {
+	Conditions         []*Conditions `json:"Conditions"`
+	Operation          string        `json:"Operation"`
+	DelayToLevelReload bool          `json:"DelayToLevelReload"`
+}
+type UnloadCondition struct {
+	Conditions         []*Conditions `json:"Conditions"`
+	DelayToLevelReload bool          `json:"DelayToLevelReload"`
+}
+type Conditions struct {
+	Type  string `json:"Type"`
+	Phase string `json:"Phase"`
+	ID    uint32 `json:"ID"`
 }
 type PropList struct {
 	ID                       uint32  `json:"ID"`
@@ -32,6 +87,7 @@ type PropList struct {
 	Name                     string  `json:"Name"`
 	PropID                   uint32  `json:"PropID"`
 	IsDelete                 bool    `json:"IsDelete"`
+	IsClientOnly             bool    `json:"IsClientOnly"`
 	IsOverrideInitLevelGraph bool    `json:"IsOverrideInitLevelGraph"`
 	CampID                   uint32  `json:"CampID"`
 	EventID                  uint32  `json:"EventID"`
@@ -64,6 +120,7 @@ type MonsterList struct {
 	RotY         float64     `json:"RotY"`
 	RotZ         float64     `json:"RotZ "`
 	IsDelete     bool        `json:"IsDelete"`
+	IsClientOnly bool        `json:"IsClientOnly"`
 	NPCMonsterID uint32      `json:"NPCMonsterID"`
 	CampID       uint32      `json:"CampID"`
 	EventID      uint32      `json:"EventID"`
@@ -81,6 +138,7 @@ type NPCList struct {
 	RotZ                 float64  `json:"RotZ "`
 	NPCID                uint32   `json:"NPCID"`
 	IsDelete             bool     `json:"IsDelete"`
+	IsClientOnly         bool     `json:"IsClientOnly"`
 	DialogueGroups       []uint32 `json:"DialogueGroups"`
 	MapLayerID           uint32   `json:"MapLayerID"`
 	BoardShowList        []uint32 `json:"BoardShowList"`
@@ -183,7 +241,7 @@ func extractNumbers(filename string) (uint32, uint32, uint32) {
 	return uint32(pValue), uint32(fValue), uint32(gValue)
 }
 
-func GetStateValue(state string) uint32 {
+func GetStateValue(propList *PropList) uint32 {
 	stateMap := map[string]uint32{
 		"Closed":            0,
 		"Open":              1,
@@ -222,7 +280,7 @@ func GetStateValue(state string) uint32 {
 		"CustomState09":     109,
 	}
 
-	value, ok := stateMap[state]
+	value, ok := stateMap[propList.State]
 	if !ok {
 		return 0
 	}
@@ -230,14 +288,13 @@ func GetStateValue(state string) uint32 {
 	return value
 }
 
-func LoadMonster(planeId, floorId, groupId uint32) []*MonsterList {
+func LoadMonster(groupList *LevelGroup) []*MonsterList {
 	var monsterList []*MonsterList
-	groupList := CONF.GroupMap[planeId][floorId][groupId]
-	if groupList.MonsterList == nil || len(groupList.MonsterList) == 0 {
+	if groupList == nil || groupList.MonsterList == nil {
 		return nil
 	}
 	for _, monster := range groupList.MonsterList {
-		if monster.IsDelete {
+		if monster.IsDelete || monster.IsClientOnly {
 			continue
 		}
 		npcMonsterExcel := GetNPCMonsterId(strconv.Itoa(int(monster.NPCMonsterID)))
@@ -251,17 +308,16 @@ func LoadMonster(planeId, floorId, groupId uint32) []*MonsterList {
 	return monsterList
 }
 
-func LoadProp(planeId, floorId, groupId uint32) []*PropList {
+func LoadProp(groupList *LevelGroup) []*PropList {
 	var propList []*PropList
-	groupList := CONF.GroupMap[planeId][floorId][groupId]
-	if groupList.PropList == nil || len(groupList.PropList) == 0 {
+	if groupList == nil || groupList.PropList == nil {
 		return nil
 	}
 	for _, prop := range groupList.PropList {
-		if prop.IsDelete {
+		if prop.IsDelete || prop.IsClientOnly {
 			continue
 		}
-		MazePropExcel := GetMazePropId(strconv.Itoa(int(prop.PropID)))
+		MazePropExcel := GetMazePropId(prop.PropID)
 		if MazePropExcel == nil {
 			continue
 		}
@@ -271,21 +327,19 @@ func LoadProp(planeId, floorId, groupId uint32) []*PropList {
 	return propList
 }
 
-func LoadNpc(planeId, floorId, groupId uint32, nPCList []*NPCList) ([]*NPCList, []*NPCList) {
+func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) ([]*NPCList, []*NPCList) {
 	var npcList []*NPCList
-	groupList := CONF.GroupMap[planeId][floorId][groupId]
-	if groupList.NPCList == nil || len(groupList.NPCList) == 0 {
+	if groupList == nil || groupList.NPCList == nil {
 		return nil, nPCList
 	}
 	for _, npc := range groupList.NPCList {
-		if npc.IsDelete {
+		if npc.IsDelete || npc.IsClientOnly {
 			continue
 		}
 		NPCDataExcel := GetNPCDataId(strconv.Itoa(int(npc.NPCID)))
 		if NPCDataExcel == nil {
 			continue
 		}
-
 		repeatNpc := false
 		for _, npcl := range nPCList {
 			if npcl.NPCID == npc.NPCID {
@@ -305,23 +359,48 @@ func LoadNpc(planeId, floorId, groupId uint32, nPCList []*NPCList) ([]*NPCList, 
 }
 
 func GetSceneByPF(planeId, floorId uint32) map[uint32]*LevelGroup {
-	var levelGroup map[uint32]*LevelGroup
 	var nPCList []*NPCList
-	levelGroup = make(map[uint32]*LevelGroup)
+	levelGroup := make(map[uint32]*LevelGroup)
 	for _, groupList := range CONF.GroupMap[planeId][floorId] {
-		group := new(LevelGroup)
-		group.AnchorList = groupList.AnchorList
-		if groupList.LoadSide != "Server" {
-		} else {
-			group.GroupId = groupList.GroupId
-			group.GroupName = groupList.GroupName
-			group.LoadSide = groupList.LoadSide
-			group.LoadOnInitial = groupList.LoadOnInitial
-			group.PropList = LoadProp(planeId, floorId, groupList.GroupId)
-			group.MonsterList = LoadMonster(planeId, floorId, groupList.GroupId)
-			group.NPCList, nPCList = LoadNpc(planeId, floorId, groupList.GroupId, nPCList)
+		levelGroup[groupList.GroupId] = &LevelGroup{
+			GroupId:         groupList.GroupId,
+			GroupName:       groupList.GroupName,
+			LoadSide:        groupList.LoadSide,
+			Category:        groupList.Category,
+			LoadCondition:   groupList.LoadCondition,
+			UnloadCondition: groupList.UnloadCondition,
+			LoadOnInitial:   groupList.LoadOnInitial,
+			PropList:        nil,
+			MonsterList:     nil,
+			NPCList:         nil,
+			AnchorList:      groupList.AnchorList,
 		}
-		levelGroup[groupList.GroupId] = group
+		if groupList.LoadSide != "Server" { // 不是服务端发的不要
+			continue
+		}
+		if groupList.Category == "Mission" { // 是任务的不要
+			continue
+		}
+		if groupList.LoadCondition != nil { // 有前置加载条件的康康是不是满足
+			IsCont := true
+			for _, cond := range groupList.LoadCondition.Conditions {
+				if cond.Phase == "Finish" {
+					IsCont = false //
+					break
+				}
+			}
+			if IsCont {
+				continue
+			}
+		}
+		if groupList.UnloadCondition != nil { // 有前置卸载条件的康康能不能重复生成
+			if !groupList.UnloadCondition.DelayToLevelReload {
+				continue
+			}
+		}
+		levelGroup[groupList.GroupId].PropList = LoadProp(groupList)
+		levelGroup[groupList.GroupId].MonsterList = LoadMonster(groupList)
+		levelGroup[groupList.GroupId].NPCList, nPCList = LoadNpc(groupList, nPCList)
 	}
 	return levelGroup
 }

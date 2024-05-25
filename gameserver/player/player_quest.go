@@ -1,7 +1,7 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -56,7 +56,7 @@ func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg []byte) {
 
 	for i := 1; i < 5; i++ {
 		dailyActivityInfo := &proto.DailyActivityInfo{
-			WorldLevel:       g.PlayerPb.WorldLevel,
+			WorldLevel:       g.BasicBin.WorldLevel,
 			Level:            uint32(i),
 			DailyActivePoint: uint32(i * 100),
 			IsHasTaken:       true,

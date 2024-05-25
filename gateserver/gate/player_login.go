@@ -14,8 +14,8 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func getCurTime() int64 {
-	return time.Now().Unix()
+func getCurTime() uint64 {
+	return uint64(time.Now().UnixMilli())
 }
 
 // 玩家ping包处理
@@ -25,7 +25,7 @@ func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
 	sTime := getCurTime()
 
 	rsp := new(proto.PlayerHeartbeatScRsp)
-	rsp.ServerTimeMs = uint64(sTime)
+	rsp.ServerTimeMs = sTime
 	rsp.ClientTimeMs = req.ClientTimeMs
 	p.LastActiveTime = sTime
 

@@ -9,7 +9,7 @@ import "enum.server.proto";
 message PlayerBasicCompBin {
   // uint32 uid = 1; // uid
   uint32 level = 2; // 等级
-  uint32 exp = 3; // 经验
+  //uint32 exp = 3; // 经验
   string nickname = 4; // 昵称
   uint32 world_level = 5; // 世界等级
   Activity activity = 6; // 米币
@@ -60,12 +60,12 @@ message Activity{
 
 message Scene {
   uint32 entryId = 1;
-  uint32 planeId = 2;
-  uint32 floorId = 3;
+  //  uint32 planeId = 2;
+  //  uint32 floorId = 3;
 }
 
 message Avatar {
-  map<uint32, AvatarBin> avatar = 1;
+  map<uint32, AvatarBin> avatar_list = 1;
   Gender gender = 2; // 性别
   HeroBasicType cur_main_avatar = 3;
   repeated HeroBasicTypeInfo hero_basic_type_info = 4;
@@ -112,9 +112,9 @@ message VectorBin {
 
 message LineUp {
   uint32 main_line_up = 1; // 当前上场队伍
-  // uint32 main_avatar_id = 2; // 当前上场角色
+  uint32 mp = 2; // 当前能量
   map<uint32, Line> line_up_list = 3; // 普通队伍
-  map<uint32,Line>battle_line_list = 4; // 战斗队伍
+  map<uint32, Line>battle_line_list = 4; // 战斗队伍
 }
 
 message Line {
@@ -170,9 +170,10 @@ message Material {
   uint32 num = 2; // 个数
 }
 
-message Battle {
-  Rogue rogue = 1; // 期数-情况
-  Challenge challenge = 2;
+message Battle {// 战斗
+  BattleType battle_type = 1; // 当前状态
+  Rogue rogue = 2; // 期数-情况
+  Challenge challenge = 3; // 忘却之庭
 }
 
 message Rogue {
@@ -200,17 +201,31 @@ message RogueRoom {
 }
 
 message Challenge {
-  map<uint32, ChallengeList> challenge_list = 1;
+  map<uint32, ChallengeList> challenge_list = 1; // 通关状态
   map<uint64, uint32> challenge_reward_list = 2;
+  CurChallenge cur_challenge = 3; // 当前战斗状态
 }
+
 message ChallengeList {
-  uint32 stars = 1;
-  uint32 score_one = 2;
-  uint32 score_two = 3;
+  uint32 stars = 1; // 星数
+  uint32 score_one = 2; // 第一关得分
+  uint32 score_two = 3; // 第二关得分
 }
 
-message BattleList{
-
+message CurChallenge {// 正在进行的忘却之庭信息
+  uint32 challenge_id = 1;//挑战id
+  uint32 stage_num = 2; // 总共需要挑战数
+  uint32 cur_stage = 3; // 当前挑战
+  ChallengeStatus status = 4;// 状态
+  uint32 round_count = 5; // 已使用回合数
+  uint32 stars = 6;// 得分
+  uint32  score_one = 7; // 第一层得分
+  uint32  score_two = 8; // 第二层得分
+  bool is_win = 9; // 是否赢
+  uint32 dead_avatar = 10; // 死亡角色数
+  uint32 buff_one = 11; // 第一关buff
+  uint32 buff_two = 12; // 第二关buff
+  uint32 kill_monster = 13; // 当前关卡已杀死怪物数量
 }
 
 message Gacha {
@@ -233,4 +248,9 @@ message ContentAuditBin {
 
 message PlayerOnlineData {
 
+}
+
+
+message Test {
+  map<uint32,uint64> test =1;
 }

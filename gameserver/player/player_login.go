@@ -40,18 +40,19 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
-	rsp.Stamina = g.GetItem().MaterialMap[11]
+	db := g.GetMaterialMap()
+	rsp.Stamina = db[Stamina]
 	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
 	rsp.CurTimezone = 8 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
-		Nickname:   g.PlayerPb.Nickname,
-		Level:      g.PlayerPb.Level,
-		Exp:        g.PlayerPb.Exp,
-		Hcoin:      g.GetItem().MaterialMap[1],
-		Scoin:      g.GetItem().MaterialMap[2],
-		Mcoin:      g.GetItem().MaterialMap[3],
-		Stamina:    g.GetItem().MaterialMap[11],
-		WorldLevel: g.PlayerPb.WorldLevel,
+		Nickname:   g.GetNickname(),
+		Level:      g.GetLevel(),
+		WorldLevel: g.GetWorldLevel(),
+		Hcoin:      db[Hcoin],
+		Scoin:      db[Scoin],
+		Mcoin:      db[Mcoin],
+		Stamina:    db[Stamina],
+		Exp:        db[Exp],
 	}
 	g.closechan()
 	g.Send(cmd.PlayerLoginScRsp, rsp)

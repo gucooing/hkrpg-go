@@ -6,76 +6,127 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+const (
+	Hcoin    uint32 = 1  // 梦华
+	Scoin    uint32 = 2  // 金钱
+	Mcoin    uint32 = 3  // 星琼
+	Stamina  uint32 = 11 // 体力
+	RStamina uint32 = 12 // 后备体力
+	Exp      uint32 = 22 // 经验
+)
+
 type Material struct {
 	Tid uint32 // id
 	Num uint32 // 个数
 }
 
+func (g *GamePlayer) NewItem() *spb.Item {
+	item := &spb.Item{
+		RelicMap:     make(map[uint32]*spb.Relic),
+		EquipmentMap: make(map[uint32]*spb.Equipment),
+		MaterialMap:  make(map[uint32]uint32),
+		HeadIcon:     make([]uint32, 0),
+	}
+	item.MaterialMap[Stamina] = 240
+	return item
+}
+
 func (g *GamePlayer) GetItem() *spb.Item {
-	if g.PlayerPb.Item == nil {
-		g.PlayerPb.Item = &spb.Item{
-			RelicMap:     make(map[uint32]*spb.Relic),
-			EquipmentMap: make(map[uint32]*spb.Equipment),
-			MaterialMap:  make(map[uint32]uint32),
-			HeadIcon:     make([]uint32, 0),
-		}
-		g.PlayerPb.Item.MaterialMap[11] = 240
+	db := g.GetBasicBin()
+	if db.Item == nil {
+		db.Item = g.NewItem()
 	}
-	if g.PlayerPb.Item.RelicMap == nil {
-		g.PlayerPb.Item.RelicMap = make(map[uint32]*spb.Relic)
+	return db.Item
+}
+
+func (g *GamePlayer) GetRelicMap() map[uint32]*spb.Relic {
+	db := g.GetItem()
+	if db.RelicMap == nil {
+		db.RelicMap = make(map[uint32]*spb.Relic)
 	}
-	if g.PlayerPb.Item.EquipmentMap == nil {
-		g.PlayerPb.Item.EquipmentMap = make(map[uint32]*spb.Equipment)
+	return db.RelicMap
+}
+
+func (g *GamePlayer) GetRelicById(id uint32) *spb.Relic {
+	db := g.GetRelicMap()
+	return db[id]
+}
+
+func (g *GamePlayer) GetEquipmentMap() map[uint32]*spb.Equipment {
+	db := g.GetItem()
+	if db.EquipmentMap == nil {
+		db.EquipmentMap = make(map[uint32]*spb.Equipment)
 	}
-	if g.PlayerPb.Item.MaterialMap == nil {
-		g.PlayerPb.Item.MaterialMap = make(map[uint32]uint32)
+	return db.EquipmentMap
+}
+
+func (g *GamePlayer) GetEquipmentById(id uint32) *spb.Equipment {
+	db := g.GetEquipmentMap()
+	return db[id]
+}
+
+func (g *GamePlayer) GetMaterialMap() map[uint32]uint32 {
+	db := g.GetItem()
+	if db.MaterialMap == nil {
+		db.MaterialMap = make(map[uint32]uint32)
 	}
-	return g.PlayerPb.Item
+	return db.MaterialMap
+}
+
+func (g *GamePlayer) GetMaterialById(id uint32) uint32 {
+	db := g.GetMaterialMap()
+	return db[id]
 }
 
 func (g *GamePlayer) AddMaterial(pileItem []*Material) {
+	db := g.GetMaterialMap()
 	for _, material := range pileItem {
 		// 特殊物品处理
 		switch material.Tid {
-		case 11:
-			g.GetItem().MaterialMap[material.Tid] += material.Num
-			if g.GetItem().MaterialMap[material.Tid] > 240 {
-				g.GetItem().MaterialMap[material.Tid] = 240
+		case Stamina:
+			db[material.Tid] += material.Num
+			if db[material.Tid] > 240 {
+				db[material.Tid] = 240
 			}
-		case 12:
-			g.GetItem().MaterialMap[material.Tid] += material.Num
-			if g.GetItem().MaterialMap[material.Tid] > 2400 {
-				g.GetItem().MaterialMap[material.Tid] = 2400
+		case RStamina:
+			db[material.Tid] += material.Num
+			if db[material.Tid] > 2400 {
+				db[material.Tid] = 2400
 			}
-		case 22:
+		case Exp:
 			g.AddTrailblazerExp(material.Num)
 		default:
-			g.GetItem().MaterialMap[material.Tid] += material.Num
+			db[material.Tid] += material.Num
 		}
 	}
 	g.ScenePlaneEventScNotify(pileItem)
 	g.MaterialPlayerSyncScNotify(pileItem)
 }
 
-func (g *GamePlayer) DelMaterial(pileItem []*Material) {
+func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {
+	db := g.GetMaterialMap()
 	for _, item := range pileItem {
-		if g.GetItem().MaterialMap[item.Tid] >= item.Num {
-			g.GetItem().MaterialMap[item.Tid] -= item.Num
+		if db[item.Tid] < item.Num {
+			return false
 		}
 	}
-
+	for _, item := range pileItem {
+		db[item.Tid] -= item.Num
+	}
 	g.MaterialPlayerSyncScNotify(pileItem)
+
+	return true
 }
 
 func (g *GamePlayer) MaterialPlayerSyncScNotify(pileItem []*Material) {
 	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
 	for _, item := range pileItem {
-		if item.Tid == 22 {
+		if item.Tid == Exp {
 			continue
 		}
 		material := &proto.Material{
 			Tid: item.Tid,
-			Num: g.GetItem().MaterialMap[item.Tid],
+			Num: g.GetMaterialById(item.Tid),
 		}
 		notify.MaterialList = append(notify.MaterialList, material)
 	}
@@ -93,26 +144,28 @@ func (g *GamePlayer) AddHeadIcon(headIconId uint32) {
 }
 
 func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
-	equipmentDb := g.GetItem().EquipmentMap[uniqueId]
+	equipmentDb := g.GetEquipmentById(uniqueId)
 	if equipmentDb == nil {
 		return nil
 	}
 	equipment := &proto.Equipment{
-		Exp:          equipmentDb.Exp,
-		Promotion:    equipmentDb.Promotion,
-		Level:        equipmentDb.Level,
-		BaseAvatarId: equipmentDb.BaseAvatarId,
-		IsProtected:  equipmentDb.IsProtected,
-		Rank:         equipmentDb.Rank,
-		UniqueId:     equipmentDb.UniqueId,
-		Tid:          equipmentDb.Tid,
+		Exp:           equipmentDb.Exp,
+		Promotion:     equipmentDb.Promotion,
+		Level:         equipmentDb.Level,
+		BaseAvatarId:  equipmentDb.BaseAvatarId,
+		EquipAvatarId: equipmentDb.BaseAvatarId,
+		IsProtected:   equipmentDb.IsProtected,
+		Rank:          equipmentDb.Rank,
+		UniqueId:      equipmentDb.UniqueId,
+		Tid:           equipmentDb.Tid,
 	}
 	return equipment
 }
 
 func (g *GamePlayer) AddEquipment(tid uint32) {
 	uniqueId := uint32(SNOWFLAKE.GenId())
-	g.GetItem().EquipmentMap[uniqueId] = &spb.Equipment{
+	db := g.GetEquipmentMap()
+	db[uniqueId] = &spb.Equipment{
 		Tid:          tid,
 		UniqueId:     uniqueId,
 		Exp:          0,
