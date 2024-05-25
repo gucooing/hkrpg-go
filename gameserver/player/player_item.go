@@ -53,3 +53,12 @@ func (g *GamePlayer) HandleGetBagCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.GetBagScRsp, rsp)
 }
+
+func (g *GamePlayer) DestroyItemCsReq(payloadMsg []byte) {
+	req := new(proto.DestroyItemCsReq)
+	db := g.GetMaterialById(req.ItemId)
+	if db == req.CurItemCount {
+		g.DelMaterial([]*Material{{Tid: req.ItemId, Num: req.ItemCount}})
+	}
+	g.Send(cmd.DestroyItemScRsp, nil)
+}

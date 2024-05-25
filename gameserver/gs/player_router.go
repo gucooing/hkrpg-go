@@ -75,7 +75,8 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetCurChallengeCsReq: g.GetCurChallengeCsReq,    // 获取忘却之庭状态
 		cmd.LeaveChallengeCsReq:  g.LeaveChallengeCsReq,     // 退出忘却之庭
 		// 背包
-		cmd.GetBagCsReq: g.HandleGetBagCsReq, // 获取背包物品
+		cmd.GetBagCsReq:      g.HandleGetBagCsReq, // 获取背包物品
+		cmd.DestroyItemCsReq: g.DestroyItemCsReq,  // 销毁物品
 		// 交易
 		cmd.GetShopListCsReq:            g.GetShopListCsReq,            // 获取商店物品列表
 		cmd.ExchangeHcoinCsReq:          g.ExchangeHcoinCsReq,          // 梦华兑换
