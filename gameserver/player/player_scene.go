@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -24,52 +25,48 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	var groupID = mapEntrance.StartGroupID
 	var pos *proto.Vector
 	var rot *proto.Vector
-	if teleportsMap[teleportId] == nil {
-		teleportId = 0
+	if teleportsMap.Teleports[teleportId] != nil {
+		anchorID = teleportsMap.Teleports[teleportId].AnchorID
+		groupID = teleportsMap.Teleports[teleportId].AnchorGroupID
 	}
 	// 获取队伍
 	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
 	curLine := g.GetCurLineUp()
-	// 获取世界
-	if teleportId != 0 {
-	te:
-		for _, teleports := range teleportsMap {
-			for id, teleport := range teleports.Teleports {
-				if id == teleportId {
-					pos = &proto.Vector{
-						X: int32(teleport.PosX * 1000),
-						Y: int32(teleport.PosY * 1000),
-						Z: int32(teleport.PosZ * 1000),
-					}
-					rot = &proto.Vector{
-						X: int32(teleport.RotX * 1000),
-						Y: int32(teleport.RotY * 1000),
-						Z: int32(teleport.RotZ * 1000),
-					}
-					break te
-				}
-			}
+	// 获取坐标
+	if teleportsMap.TeleportsByGroupId[groupID] != nil {
+		anchor := teleportsMap.TeleportsByGroupId[groupID].AnchorList[anchorID]
+		pos = &proto.Vector{
+			X: int32(anchor.PosX * 1000),
+			Y: int32(anchor.PosY * 1000),
+			Z: int32(anchor.PosZ * 1000),
 		}
-	} else {
-		if teleportsMap[groupID] != nil {
-			for _, anchor := range teleportsMap[groupID].Teleports {
-				if anchor.AnchorID == anchorID {
-					pos = &proto.Vector{
-						X: int32(anchor.PosX * 1000),
-						Y: int32(anchor.PosY * 1000),
-						Z: int32(anchor.PosZ * 1000),
-					}
-					rot = &proto.Vector{
-						X: int32(anchor.RotX * 1000),
-						Y: int32(anchor.RotY * 1000),
-						Z: int32(anchor.RotZ * 1000),
-					}
-					break
-				}
-			}
+		rot = &proto.Vector{
+			X: int32(anchor.RotX * 1000),
+			Y: int32(anchor.RotY * 1000),
+			Z: int32(anchor.RotZ * 1000),
 		}
 	}
-
+	// 实在找不到就随便找一个锚点传送
+	if pos == nil {
+		for _, anchor := range teleportsMap.Teleports {
+			pos = &proto.Vector{
+				X: int32(anchor.PosX * 1000),
+				Y: int32(anchor.PosY * 1000),
+				Z: int32(anchor.PosZ * 1000),
+			}
+			rot = &proto.Vector{
+				X: int32(anchor.RotX * 1000),
+				Y: int32(anchor.RotY * 1000),
+				Z: int32(anchor.RotZ * 1000),
+			}
+			break
+		}
+	}
+	if pos == nil {
+		// 这都没有那就不要传送了
+		logger.Debug("entryId:%v,teleportId:%v error", entryId, teleportId)
+		return
+	}
 	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
@@ -141,21 +138,19 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 					mapList.LightenSectionList = append(mapList.LightenSectionList, i)
 				}
 
-				for _, teleports := range teleportsMap {
+				for _, teleports := range teleportsMap.TeleportsByGroupId {
 					mazeGroup := &proto.MazeGroup{GroupId: teleports.GroupId}
 					mapList.MazeGroupList = append(mapList.MazeGroupList, mazeGroup)
 				}
 
-				for _, groupMapList := range teleportsMap {
-					for _, teleports := range groupMapList.Teleports {
-						mazeProp := &proto.MazeProp{
-							State:    gdconf.GetStateValue("CheckPointEnable"), // 默认解锁
-							GroupId:  groupMapList.GroupId,
-							ConfigId: teleports.ID,
-						}
-						mapList.MazePropList = append(mapList.MazePropList, mazeProp)
-						mapList.UnlockedTeleportList = append(mapList.UnlockedTeleportList, teleports.MappingInfoID)
+				for _, teleports := range teleportsMap.Teleports {
+					mazeProp := &proto.MazeProp{
+						State:    gdconf.GetStateValue("CheckPointEnable"), // 默认解锁
+						GroupId:  teleports.AnchorGroupID,
+						ConfigId: teleports.ID,
 					}
+					mapList.MazePropList = append(mapList.MazePropList, mazeProp)
+					mapList.UnlockedTeleportList = append(mapList.UnlockedTeleportList, teleports.MappingInfoID)
 				}
 				rsp.MapList = append(rsp.MapList, mapList)
 			}

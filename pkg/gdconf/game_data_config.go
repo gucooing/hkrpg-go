@@ -74,7 +74,7 @@ type GameDataConfig struct {
 	// 下面是预处理
 	ServerGroupMap  map[uint32]map[uint32]map[uint32]*LevelGroup // 预处理服务器场景
 	MissionGroupMap map[uint32]map[uint32]map[uint32]*LevelGroup // 预处理任务场景
-	Teleports       map[uint32]map[uint32]map[uint32]*Teleports  // 预处理传送锚点
+	Teleports       map[uint32]map[uint32]*Teleports             // 预处理传送锚点
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {
