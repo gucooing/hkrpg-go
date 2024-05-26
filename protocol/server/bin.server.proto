@@ -32,7 +32,7 @@ message PlayerBasicCompBin {
   fixed32 last_login_time = 23; // 上次登录时间
   uint32 last_login_platform = 24; // 最后登录平台
   fixed32 last_logout_time = 25; // 最后退出时间
-  bool is_rebate_mail_sent = 26; // 是否已发送反利邮件
+  Mail mail = 26; // 邮件
   bool is_rebate_mail_received = 27; // 是否已收到回扣邮件
   uint32 data_version = 28; // 数据版本
   fixed32 last_daily_refresh_time = 29; // 最后每日刷新时间
@@ -247,11 +247,17 @@ message ContentAuditBin {
   uint32 submit_count = 4; // 提交计数
 }
 
-message PlayerOnlineData {
+message Mail {
+  map<uint32, MailDts>MailList = 1;// 已领取邮件
+}
 
+message MailDts {
+  uint32 mail_id = 1;//邮件id
+  bool is_del = 2; // 是否删除
+  bool is_read = 3; // 是否领取
 }
 
 
 message Test {
-  map<uint32,uint64> test =1;
+  map<uint32, uint64> test = 1;
 }

@@ -30,3 +30,10 @@ func (s *Store) UpdatePlayer(player *database.PlayerData) error {
 		return err
 	}
 }
+
+// 拉取全部邮件
+func (s *Store) GetAllMail() []*database.Mail {
+	var mailMap []*database.Mail
+	s.ServerConf.Find(&mailMap)
+	return mailMap
+}

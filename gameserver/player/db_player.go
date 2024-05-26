@@ -42,7 +42,7 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		LastLoginTime:           0,
 		LastLoginPlatform:       0,
 		LastLogoutTime:          0,
-		IsRebateMailSent:        false,
+		Mail:                    g.NewMail(),
 		IsRebateMailReceived:    false,
 		DataVersion:             0,
 		LastDailyRefreshTime:    0,

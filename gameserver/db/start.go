@@ -14,6 +14,7 @@ import (
 type Store struct {
 	config               *config.Config
 	PlayerDataMysql      *gorm.DB
+	ServerConf           *gorm.DB
 	LoginRedis           *redis.Client
 	StatusRedis          *redis.Client
 	PlayerBriefDataRedis *redis.Client // 玩家简要信息
@@ -27,6 +28,9 @@ func NewStore(config *config.Config) *Store {
 	mysqlPlayerDataConf := config.MysqlConf["player"]
 	s.PlayerDataMysql = database.NewMysql(mysqlPlayerDataConf.Dsn)
 	s.PlayerDataMysql.AutoMigrate(&database.PlayerData{})
+	mysqlServerConf := config.MysqlConf["conf"]
+	s.ServerConf = database.NewMysql(mysqlServerConf.Dsn)
+	s.ServerConf.AutoMigrate(&database.Mail{})
 
 	redisLoginConf := config.RedisConf["player_login"]
 	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
@@ -36,5 +40,6 @@ func NewStore(config *config.Config) *Store {
 	s.PlayerBriefDataRedis = database.NewRedis(playerBriefDataRedis.Addr, playerBriefDataRedis.Password, playerBriefDataRedis.DB)
 
 	logger.Info("数据库连接成功")
+	s.GetDbConf() // 初始化数据库配置表
 	return s
 }

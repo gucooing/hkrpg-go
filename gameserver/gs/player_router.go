@@ -84,7 +84,11 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.ExchangeRogueRewardKeyCsReq: g.ExchangeRogueRewardKeyCsReq, // 储存沉浸器
 		cmd.BuyGoodsCsReq:               g.BuyGoodsCsReq,               // 商店交易
 		// 社交
-		cmd.GetMailCsReq: g.GetMailCsReq, // 获取邮件
+		// 邮件
+		cmd.MarkReadMailCsReq:       g.MarkReadMailCsReq,       // 读取邮件
+		cmd.GetMailCsReq:            g.GetMailCsReq,            // 获取邮件
+		cmd.DelMailCsReq:            g.DelMailCsReq,            // 删除邮件
+		cmd.TakeMailAttachmentCsReq: g.TakeMailAttachmentCsReq, // 领取邮件
 		// 卡池
 		cmd.GetGachaInfoCsReq:    g.HandleGetGachaInfoCsReq,    // 获取卡池信息
 		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
