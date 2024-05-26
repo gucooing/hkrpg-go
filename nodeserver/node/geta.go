@@ -39,23 +39,23 @@ func (s *Service) gateRecvHandle() {
 
 func (s *Service) gateRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.GetAllServiceGameReq: // 心跳包
-		s.gateGetAllServiceGameReq(serviceMsg)
+	case cmd.GateToNodePingReq: // 心跳包
+		s.GateToNodePingReq(serviceMsg)
 	default:
 		logger.Info("gateRegister error cmdid:%v", cmdId)
 	}
 }
 
-func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
+func (s *Service) GateToNodePingReq(serviceMsg pb.Message) {
 	s.lastAliveTime = time.Now().Unix()
-	req := serviceMsg.(*spb.GetAllServiceGameReq)
+	req := serviceMsg.(*spb.GateToNodePingReq)
 	if req.ServiceType != s.ServerType {
 		logger.Debug("Service registration failed")
 		s.n.killService(s)
 		return
 	}
 	s.PlayerNum = req.PlayerNum
-	rsp := &spb.GetAllServiceGameRsp{
+	rsp := &spb.GateToNodePingRsp{
 		GameServiceList: make([]*spb.ServiceAll, 0),
 		GateTime:        req.GateTime,
 		NodeTime:        time.Now().UnixNano() / 1e6,
@@ -70,5 +70,14 @@ func (s *Service) gateGetAllServiceGameReq(serviceMsg pb.Message) {
 		}
 		rsp.GameServiceList = append(rsp.GameServiceList, serviceAll)
 	}
-	s.sendHandle(cmd.GetAllServiceGameRsp, rsp)
+	for _, service := range s.n.GetAllServiceByType(spb.ServerType_SERVICE_MULTI) {
+		rsp.MultiService = &spb.ServiceAll{
+			ServiceType: service.ServerType,
+			Addr:        service.Addr,
+			Port:        service.Port,
+			PlayerNum:   service.PlayerNum,
+			AppId:       service.AppId,
+		}
+	}
+	s.sendHandle(cmd.GateToNodePingRsp, rsp)
 }

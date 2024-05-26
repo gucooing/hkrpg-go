@@ -69,6 +69,8 @@ func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_MULTI,
 		AppId:      n.s.AppId,
+		Addr:       n.s.addr,
+		Port:       n.s.port,
 	}
 
 	n.sendNode(cmd.ServiceConnectionReq, req)

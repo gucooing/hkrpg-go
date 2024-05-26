@@ -51,7 +51,7 @@ func (n *NodeService) nodeTicler(tickerCtx context.Context) {
 	for {
 		select {
 		case <-n.ticker.C:
-			n.gateGetAllServiceGameReq() // ping包
+			n.GateToNodePingReq() // ping包
 		case <-tickerCtx.Done():
 			n.ticker.Stop()
 			return
@@ -93,8 +93,8 @@ func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
 	case cmd.ServiceConnectionRsp:
 		n.ServiceConnectionRsp(serviceMsg) // 注册包
-	case cmd.GetAllServiceGameRsp:
-		n.GetAllServiceGameRsp(serviceMsg) // 心跳包
+	case cmd.GateToNodePingRsp:
+		n.GateToNodePingRsp(serviceMsg) // 心跳包
 	default:
 		logger.Info("nodeRegister error cmdid:%v", cmdId)
 	}
@@ -124,18 +124,18 @@ func (n *NodeService) ServiceConnectionRsp(serviceMsg pb.Message) {
 	}
 }
 
-func (n *NodeService) gateGetAllServiceGameReq() {
+func (n *NodeService) GateToNodePingReq() {
 	// 心跳包
-	req := &spb.GetAllServiceGameReq{
+	req := &spb.GateToNodePingReq{
 		ServiceType: spb.ServerType_SERVICE_GATE,
 		GateTime:    time.Now().UnixNano() / 1e6,
 		PlayerNum:   int64(CLIENT_CONN_NUM),
 	}
-	n.sendNode(cmd.GetAllServiceGameReq, req)
+	n.sendNode(cmd.GateToNodePingReq, req)
 }
 
-func (n *NodeService) GetAllServiceGameRsp(serviceMsg pb.Message) {
-	rsp := serviceMsg.(*spb.GetAllServiceGameRsp)
+func (n *NodeService) GateToNodePingRsp(serviceMsg pb.Message) {
+	rsp := serviceMsg.(*spb.GateToNodePingRsp)
 	for _, service := range rsp.GameServiceList {
 		if service.Addr == "" || service.AppId == 0 || service.ServiceType != spb.ServerType_SERVICE_GAME {
 			continue

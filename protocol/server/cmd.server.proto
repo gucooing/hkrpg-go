@@ -37,12 +37,6 @@ message ServiceAll{
   string port = 5;
 }
 
-message GetAllServiceGameReq {// 获取全部gs服务请求
-  ServerType service_type = 1;
-  int64 gate_time = 2;
-  int64 player_num = 3;
-}
-
 message GateToNodePingReq {// gate to node ping包请求
   ServerType service_type = 1;
   int64 gate_time = 2;
@@ -50,13 +44,10 @@ message GateToNodePingReq {// gate to node ping包请求
 }
 
 message GateToNodePingRsp {// gate to node ping包回复
-
-}
-
-message GetAllServiceGameRsp {// 获取全部gs服务回复
-  repeated ServiceAll game_service_list = 1;
-  int64 gate_time = 2;
-  int64 node_time = 3;
+  ServiceAll multi_service = 1;
+  repeated ServiceAll game_service_list = 2;
+  int64 gate_time = 3;
+  int64 node_time = 4;
 }
 
 message GameToNodePingReq{// game to node ping包请求

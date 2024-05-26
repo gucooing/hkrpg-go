@@ -14,7 +14,7 @@ func (s *Service) multiRecvHandle() {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Error("!!! DISPATCH SERVICE MAIN LOOP PANIC !!!")
+			logger.Error("!!! MULTI SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			s.n.killService(s)

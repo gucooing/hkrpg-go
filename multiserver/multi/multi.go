@@ -26,6 +26,7 @@ type Multi struct {
 	Config       *config.Config
 	AppId        uint32
 	addr         string
+	port         string
 	listener     *gunet.TcpListener
 	Node         *NodeService
 	store        *db.Store
@@ -49,13 +50,14 @@ func NewMulti(cfg *config.Config, appid string, store *db.Store) *Multi {
 	s.store = store
 	s.gateList = make(map[uint32]*gateServer)
 	// 开启tcp服务
-	port := s.Config.AppList[appid].App["port_service"].Port
-	if port == "" {
+	s.port = s.Config.AppList[appid].App["port_service"].Port
+	if s.port == "" {
 		log.Println("MultiServer Port error")
 		os.Exit(0)
 	}
-	s.addr = s.Config.OuterIp + ":" + port
-	s.listener, err = gunet.NewTcpS(s.addr)
+	s.addr = s.Config.OuterIp
+	addr := s.Config.OuterIp + ":" + s.port
+	s.listener, err = gunet.NewTcpS(addr)
 	if err != nil {
 		log.Println(err.Error())
 		os.Exit(0)
@@ -103,12 +105,13 @@ func (s *Multi) recvTcp(conn *gunet.TcpConn) {
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			switch msg.CmdId {
-			case cmd.GateLoginMultiReq:
+			if msg.CmdId == cmd.GateLoginMultiReq {
 				rsp := serviceMsg.(*spb.GateLoginMultiReq)
 				go s.recvGate(conn, rsp.AppId)
+				return
+			} else {
+
 			}
-			return
 		}
 	}
 }

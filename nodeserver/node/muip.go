@@ -15,7 +15,7 @@ func (s *Service) muipRecvHandle() {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Error("!!! DISPATCH SERVICE MAIN LOOP PANIC !!!")
+			logger.Error("!!! MUIP SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			s.n.killService(s)
