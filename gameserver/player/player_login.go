@@ -42,7 +42,7 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
 	db := g.GetMaterialMap()
 	rsp.Stamina = db[Stamina]
-	rsp.ServerTimestampMs = uint64(time.Now().UnixNano() / 1e6)
+	rsp.ServerTimestampMs = uint64(time.Now().UnixMilli())
 	rsp.CurTimezone = 8 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
 		Nickname:   g.GetNickname(),

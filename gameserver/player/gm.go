@@ -19,6 +19,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		for _, relic := range itemConf.Relic {
 			g.AddBtRelic(relic.ID)
 		}
+		return
 	}
 
 	if req.GiveAll {

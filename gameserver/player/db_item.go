@@ -193,6 +193,7 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 	uniqueId := uint32(SNOWFLAKE.GenId())
 	relicConf := gdconf.GetRelicById(strconv.Itoa(int(tid)))
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+	db := g.GetRelicMap()
 
 	relic := &spb.Relic{
 		Tid:               tid,
@@ -217,7 +218,7 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 	})
 	relic.RelicAffix = relicAffix
 
-	g.GetItem().RelicMap[uniqueId] = relic
+	db[uniqueId] = relic
 	g.RelicPlayerSyncScNotify(uniqueId)
 }
 
@@ -225,6 +226,7 @@ func (g *GamePlayer) AddBtRelic(tid uint32) {
 	uniqueId := uint32(SNOWFLAKE.GenId())
 	relicConf := gdconf.GetRelicById(strconv.Itoa(int(tid)))
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+	db := g.GetRelicMap()
 
 	relic := &spb.Relic{
 		Tid:               tid,
@@ -247,7 +249,7 @@ func (g *GamePlayer) AddBtRelic(tid uint32) {
 	})
 	relic.RelicAffix = relicAffix
 
-	g.GetItem().RelicMap[uniqueId] = relic
+	db[uniqueId] = relic
 	g.RelicPlayerSyncScNotify(uniqueId)
 }
 
