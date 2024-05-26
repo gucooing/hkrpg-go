@@ -10,6 +10,7 @@ type Config struct {
 	LogLevel   string               `json:"LogLevel"`
 	AutoCreate bool                 `json:"AutoCreate"`
 	Dispatch   []Dispatch           `json:"Dispatch"`
+	InnerAddr  string               `json:"InnerAddr"`
 	OuterIp    string               `json:"OuterIp"`
 	AppList    map[string]AppList   `json:"AppList"`
 	NetConf    map[string]string    `json:"NetConf"`
@@ -93,7 +94,8 @@ var DefaultConfig = &Config{
 			DispatchUrl: "/query_gateway_capture",
 		},
 	},
-	OuterIp: "127.0.0.1",
+	InnerAddr: "http://127.0.0.1:8080",
+	OuterIp:   "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
 			App: map[string]App{

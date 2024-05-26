@@ -17,6 +17,7 @@ func (s *Server) InitRouter() {
 	s.Router.GET("/query_dispatch/gucooing/anz", s.QueryDispatchHandler)
 	s.Router.GET("/query_gateway", s.QueryGatewayHandler)
 	s.Router.GET("/query_gateway_capture", s.QueryGatewayHandlerCapture)
+	s.Router.GET("/query_gateway_capture_cn", s.QueryGatewayHandlerCaptureCn)
 
 	// 登录
 	s.Router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)

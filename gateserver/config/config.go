@@ -10,6 +10,7 @@ type Config struct {
 	LogLevel   string               `json:"LogLevel"`
 	MaxPlayer  int32                `json:"MaxPlayer"`
 	AutoCreate bool                 `json:"AutoCreate"`
+	InnerIp    string               `json:"InnerIp"`
 	OuterIp    string               `json:"OuterIp"`
 	AppList    map[string]AppList   `json:"AppList"`
 	NetConf    map[string]string    `json:"NetConf"`
@@ -67,6 +68,7 @@ var DefaultConfig = &Config{
 	LogLevel:   "Info",
 	MaxPlayer:  -1,
 	AutoCreate: true,
+	InnerIp:    "0.0.0.0",
 	OuterIp:    "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
