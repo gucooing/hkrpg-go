@@ -126,7 +126,7 @@ func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 	}
 	urlPath := c.Request.URL.RawQuery
 
-	rsps, err := http.Get("https://prod-official-asia-dp01.starrails.com/query_gateway?" + urlPath)
+	rsps, err := http.Get("https://prod-gf-cn-dp01.bhsr.com/query_gateway?" + urlPath)
 	if err != nil {
 		logger.Error("Request failed:", err)
 		return
