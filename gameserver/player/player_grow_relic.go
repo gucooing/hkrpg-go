@@ -11,11 +11,11 @@ import (
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressRelicAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressRelicAvatarCsReq)
-	g.DressRelicAvatarPlayerSyncScNotify(req.GetEquipAvatarId(), req.GetParamList())
+	g.DressRelicAvatarPlayerSyncScNotify(req.GetDressAvatarId(), req.GetSwitchList())
 	g.Send(cmd.DressRelicAvatarScRsp, nil)
 }
 
-func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(equipAvatarId uint32, paramList []*proto.RelicParam) {
+func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(equipAvatarId uint32, paramList []*proto.DressRelicParam) {
 	if paramList == nil {
 		return
 	}
@@ -33,16 +33,16 @@ func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(equipAvatarId uint32, pa
 		baseAvatarDb := g.GetAvatarBinById(relicDb.BaseAvatarId)
 		relicDb.BaseAvatarId = equipAvatarId
 		if equipAvatarDb != nil {
-			oldRelicDb := g.GetAvatarEquipRelic(equipAvatarId, relic.Slot)
+			oldRelicDb := g.GetAvatarEquipRelic(equipAvatarId, relic.RelicType)
 			if oldRelicDb != nil {
 				oldRelicDb.BaseAvatarId = 0
 				notify.RelicList = append(notify.RelicList, g.GetProtoRelicById(oldRelicDb.UniqueId))
 			}
-			g.SetAvatarEquipRelic(equipAvatarId, relic.Slot, relic.RelicUniqueId)
+			g.SetAvatarEquipRelic(equipAvatarId, relic.RelicType, relic.RelicUniqueId)
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(equipAvatarId))
 		}
 		if baseAvatarDb != nil {
-			g.SetAvatarEquipRelic(baseAvatarDb.AvatarId, relic.Slot, 0)
+			g.SetAvatarEquipRelic(baseAvatarDb.AvatarId, relic.RelicType, 0)
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(baseAvatarDb.AvatarId))
 		}
 		notify.RelicList = append(notify.RelicList, g.GetProtoRelicById(relic.RelicUniqueId))
@@ -82,7 +82,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue
@@ -105,7 +105,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的光锥
-	for _, relic := range req.ItemCostList.ItemList {
+	for _, relic := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if relic.GetRelicUniqueId() == 0 {
 			continue

@@ -4,6 +4,8 @@ package proto;
 
 option go_package = "./;proto";
 
+import "enum.server.proto";
+
 message MailRedisData {
   MailBin mail_bin = 1; // 邮件内容
   uint32 id = 2; // id
@@ -39,7 +41,7 @@ enum PlayerStatusType {
   PLAYER_STATUS_ONLINE = 1;
 }
 
-message PlayerStatusRedisData { // 玩家状态db
+message PlayerStatusRedisData {// 玩家状态db
   PlayerStatusType status = 1; // 玩家状态
   uint32 gameserver_id = 2; // 登录的gameserver
   uint32 gateserver_id = 3; // 登录的gateserver
@@ -50,21 +52,20 @@ message PlayerStatusRedisData { // 玩家状态db
 }
 
 message RedisMessageData{
-  uint32 last_index = 1; // 房间号
-  repeated ReadMessage read_message_list = 2; // 离线消息（已读
-  repeated UnreadMessages unread_messages_list = 3; // 离线消息（未读
+  uint64 chat_room_id = 1; // 房间号
+  repeated Message chat_list = 2; // 消息队列
 }
 
-message ReadMessage {
-  fixed32 time = 1;
-  uint32 index = 2;
+message Message {
+  uint64 send_time = 1; // 发送时间
+  uint32 to_uid = 2; // 目标uid
+  uint32 from_uid = 3; // 发送者uid
+  MsgType msg_type = 4; // 消息类型
+  string text = 5; // 文本消息内容
+  uint32 emote = 6; // 表情消息内容
 }
 
-message UnreadMessages {
-
-}
-
-message PlayerBasicBriefData { // 玩家简要信息
+message PlayerBasicBriefData {// 玩家简要信息
   string nickname = 1; // 昵称
   uint32 level = 2; // 等级
   uint32 world_level = 3; // 世界等级

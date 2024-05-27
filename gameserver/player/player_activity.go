@@ -8,15 +8,15 @@ import (
 
 func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
-	rsp.ActivityScheduleList = make([]*proto.ActivityScheduleInfo, 0)
+	rsp.ScheduleData = make([]*proto.ActivityScheduleData, 0)
 	for _, activity := range gdconf.GetActivitySchedulingMap() {
-		activityScheduleList := &proto.ActivityScheduleInfo{
+		activityScheduleList := &proto.ActivityScheduleData{
 			ActivityId: activity.ActivityId,
 			EndTime:    activity.EndTime,
-			ModuleId:   activity.ModuleId,
+			PanelId:    activity.ModuleId,
 			BeginTime:  activity.BeginTime,
 		}
-		rsp.ActivityScheduleList = append(rsp.ActivityScheduleList, activityScheduleList)
+		rsp.ScheduleData = append(rsp.ScheduleData, activityScheduleList)
 	}
 
 	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
@@ -53,10 +53,10 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg []byte) {
 	var pileItem []*Material
 
 	activityLoginConfig := gdconf.GetActivityLoginConfigById(req.Id)
-	rewardData := gdconf.GetRewardDataById(activityLoginConfig.RewardList[req.LoginDays-1])
+	rewardData := gdconf.GetRewardDataById(activityLoginConfig.RewardList[req.TakeDays-1])
 
 	rsp := &proto.TakeLoginActivityRewardScRsp{
-		TakeDays: req.LoginDays,
+		TakeDays: req.TakeDays,
 		Id:       req.Id,
 		Reward: &proto.ItemList{
 			ItemList: make([]*proto.Item, 0),
@@ -84,7 +84,7 @@ func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg []byte) {
 	}
 
 	for _, id := range g.GetTrialActivity() {
-		trialActivityInfo := &proto.TrialActivityInfo{TrialActivityId: id}
+		trialActivityInfo := &proto.TrialActivityInfo{StageId: id}
 		rsp.TrialActivityList = append(rsp.TrialActivityList, trialActivityInfo)
 	}
 
@@ -98,7 +98,7 @@ func (g *GamePlayer) TakeTrialActivityRewardCsReq(payloadMsg []byte) {
 	var pileItem []*Material
 
 	rsp := &proto.TakeTrialActivityRewardScRsp{
-		TrialActivityId: req.TrialActivityId,
+		StageId: req.StageId,
 		Reward: &proto.ItemList{
 			ItemList: make([]*proto.Item, 0),
 		},

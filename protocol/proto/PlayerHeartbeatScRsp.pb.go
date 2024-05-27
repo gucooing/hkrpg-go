@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v5.26.0
-// source: PlayerHeartbeatScRsp.proto
+// source: PlayerHeartBeatScRsp.proto
 
 package proto
 
@@ -20,33 +20,34 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type PlayerHeartbeatScRsp struct {
+type PlayerHeartBeatScRsp struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Retcode      uint32 `protobuf:"varint,10,opt,name=retcode,proto3" json:"retcode,omitempty"`
-	ClientTimeMs uint64 `protobuf:"varint,6,opt,name=client_time_ms,json=clientTimeMs,proto3" json:"client_time_ms,omitempty"`
-	ServerTimeMs uint64 `protobuf:"varint,15,opt,name=server_time_ms,json=serverTimeMs,proto3" json:"server_time_ms,omitempty"`
+	DownloadData *ClientDownloadData `protobuf:"bytes,13,opt,name=download_data,json=downloadData,proto3" json:"download_data,omitempty"`
+	Retcode      uint32              `protobuf:"varint,10,opt,name=retcode,proto3" json:"retcode,omitempty"`
+	ClientTimeMs uint64              `protobuf:"varint,6,opt,name=client_time_ms,json=clientTimeMs,proto3" json:"client_time_ms,omitempty"`
+	ServerTimeMs uint64              `protobuf:"varint,15,opt,name=server_time_ms,json=serverTimeMs,proto3" json:"server_time_ms,omitempty"`
 }
 
-func (x *PlayerHeartbeatScRsp) Reset() {
-	*x = PlayerHeartbeatScRsp{}
+func (x *PlayerHeartBeatScRsp) Reset() {
+	*x = PlayerHeartBeatScRsp{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_PlayerHeartbeatScRsp_proto_msgTypes[0]
+		mi := &file_PlayerHeartBeatScRsp_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *PlayerHeartbeatScRsp) String() string {
+func (x *PlayerHeartBeatScRsp) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PlayerHeartbeatScRsp) ProtoMessage() {}
+func (*PlayerHeartBeatScRsp) ProtoMessage() {}
 
-func (x *PlayerHeartbeatScRsp) ProtoReflect() protoreflect.Message {
-	mi := &file_PlayerHeartbeatScRsp_proto_msgTypes[0]
+func (x *PlayerHeartBeatScRsp) ProtoReflect() protoreflect.Message {
+	mi := &file_PlayerHeartBeatScRsp_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -57,80 +58,96 @@ func (x *PlayerHeartbeatScRsp) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PlayerHeartbeatScRsp.ProtoReflect.Descriptor instead.
-func (*PlayerHeartbeatScRsp) Descriptor() ([]byte, []int) {
-	return file_PlayerHeartbeatScRsp_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use PlayerHeartBeatScRsp.ProtoReflect.Descriptor instead.
+func (*PlayerHeartBeatScRsp) Descriptor() ([]byte, []int) {
+	return file_PlayerHeartBeatScRsp_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *PlayerHeartbeatScRsp) GetRetcode() uint32 {
+func (x *PlayerHeartBeatScRsp) GetDownloadData() *ClientDownloadData {
+	if x != nil {
+		return x.DownloadData
+	}
+	return nil
+}
+
+func (x *PlayerHeartBeatScRsp) GetRetcode() uint32 {
 	if x != nil {
 		return x.Retcode
 	}
 	return 0
 }
 
-func (x *PlayerHeartbeatScRsp) GetClientTimeMs() uint64 {
+func (x *PlayerHeartBeatScRsp) GetClientTimeMs() uint64 {
 	if x != nil {
 		return x.ClientTimeMs
 	}
 	return 0
 }
 
-func (x *PlayerHeartbeatScRsp) GetServerTimeMs() uint64 {
+func (x *PlayerHeartBeatScRsp) GetServerTimeMs() uint64 {
 	if x != nil {
 		return x.ServerTimeMs
 	}
 	return 0
 }
 
-var File_PlayerHeartbeatScRsp_proto protoreflect.FileDescriptor
+var File_PlayerHeartBeatScRsp_proto protoreflect.FileDescriptor
 
-var file_PlayerHeartbeatScRsp_proto_rawDesc = []byte{
-	0x0a, 0x1a, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61,
-	0x74, 0x53, 0x63, 0x52, 0x73, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x7c, 0x0a, 0x14,
-	0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x48, 0x65, 0x61, 0x72, 0x74, 0x62, 0x65, 0x61, 0x74, 0x53,
-	0x63, 0x52, 0x73, 0x70, 0x12, 0x18, 0x0a, 0x07, 0x72, 0x65, 0x74, 0x63, 0x6f, 0x64, 0x65, 0x18,
-	0x0a, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x72, 0x65, 0x74, 0x63, 0x6f, 0x64, 0x65, 0x12, 0x24,
-	0x0a, 0x0e, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x5f, 0x6d, 0x73,
-	0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x54, 0x69,
-	0x6d, 0x65, 0x4d, 0x73, 0x12, 0x24, 0x0a, 0x0e, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x5f, 0x74,
-	0x69, 0x6d, 0x65, 0x5f, 0x6d, 0x73, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x73, 0x65,
-	0x72, 0x76, 0x65, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x4d, 0x73, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f,
-	0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+var file_PlayerHeartBeatScRsp_proto_rawDesc = []byte{
+	0x0a, 0x1a, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x48, 0x65, 0x61, 0x72, 0x74, 0x42, 0x65, 0x61,
+	0x74, 0x53, 0x63, 0x52, 0x73, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x18, 0x43, 0x6c,
+	0x69, 0x65, 0x6e, 0x74, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x44, 0x61, 0x74, 0x61,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb6, 0x01, 0x0a, 0x14, 0x50, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x48, 0x65, 0x61, 0x72, 0x74, 0x42, 0x65, 0x61, 0x74, 0x53, 0x63, 0x52, 0x73, 0x70, 0x12,
+	0x38, 0x0a, 0x0d, 0x64, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x5f, 0x64, 0x61, 0x74, 0x61,
+	0x18, 0x0d, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x44,
+	0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x44, 0x61, 0x74, 0x61, 0x52, 0x0c, 0x64, 0x6f, 0x77,
+	0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x44, 0x61, 0x74, 0x61, 0x12, 0x18, 0x0a, 0x07, 0x72, 0x65, 0x74,
+	0x63, 0x6f, 0x64, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x72, 0x65, 0x74, 0x63,
+	0x6f, 0x64, 0x65, 0x12, 0x24, 0x0a, 0x0e, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x5f, 0x74, 0x69,
+	0x6d, 0x65, 0x5f, 0x6d, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28, 0x04, 0x52, 0x0c, 0x63, 0x6c, 0x69,
+	0x65, 0x6e, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x4d, 0x73, 0x12, 0x24, 0x0a, 0x0e, 0x73, 0x65, 0x72,
+	0x76, 0x65, 0x72, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x5f, 0x6d, 0x73, 0x18, 0x0f, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x0c, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x69, 0x6d, 0x65, 0x4d, 0x73, 0x42,
+	0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
-	file_PlayerHeartbeatScRsp_proto_rawDescOnce sync.Once
-	file_PlayerHeartbeatScRsp_proto_rawDescData = file_PlayerHeartbeatScRsp_proto_rawDesc
+	file_PlayerHeartBeatScRsp_proto_rawDescOnce sync.Once
+	file_PlayerHeartBeatScRsp_proto_rawDescData = file_PlayerHeartBeatScRsp_proto_rawDesc
 )
 
-func file_PlayerHeartbeatScRsp_proto_rawDescGZIP() []byte {
-	file_PlayerHeartbeatScRsp_proto_rawDescOnce.Do(func() {
-		file_PlayerHeartbeatScRsp_proto_rawDescData = protoimpl.X.CompressGZIP(file_PlayerHeartbeatScRsp_proto_rawDescData)
+func file_PlayerHeartBeatScRsp_proto_rawDescGZIP() []byte {
+	file_PlayerHeartBeatScRsp_proto_rawDescOnce.Do(func() {
+		file_PlayerHeartBeatScRsp_proto_rawDescData = protoimpl.X.CompressGZIP(file_PlayerHeartBeatScRsp_proto_rawDescData)
 	})
-	return file_PlayerHeartbeatScRsp_proto_rawDescData
+	return file_PlayerHeartBeatScRsp_proto_rawDescData
 }
 
-var file_PlayerHeartbeatScRsp_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_PlayerHeartbeatScRsp_proto_goTypes = []interface{}{
-	(*PlayerHeartbeatScRsp)(nil), // 0: PlayerHeartbeatScRsp
+var file_PlayerHeartBeatScRsp_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_PlayerHeartBeatScRsp_proto_goTypes = []interface{}{
+	(*PlayerHeartBeatScRsp)(nil), // 0: PlayerHeartBeatScRsp
+	(*ClientDownloadData)(nil),   // 1: ClientDownloadData
 }
-var file_PlayerHeartbeatScRsp_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+var file_PlayerHeartBeatScRsp_proto_depIdxs = []int32{
+	1, // 0: PlayerHeartBeatScRsp.download_data:type_name -> ClientDownloadData
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_PlayerHeartbeatScRsp_proto_init() }
-func file_PlayerHeartbeatScRsp_proto_init() {
-	if File_PlayerHeartbeatScRsp_proto != nil {
+func init() { file_PlayerHeartBeatScRsp_proto_init() }
+func file_PlayerHeartBeatScRsp_proto_init() {
+	if File_PlayerHeartBeatScRsp_proto != nil {
 		return
 	}
+	file_ClientDownloadData_proto_init()
 	if !protoimpl.UnsafeEnabled {
-		file_PlayerHeartbeatScRsp_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PlayerHeartbeatScRsp); i {
+		file_PlayerHeartBeatScRsp_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PlayerHeartBeatScRsp); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -146,18 +163,18 @@ func file_PlayerHeartbeatScRsp_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_PlayerHeartbeatScRsp_proto_rawDesc,
+			RawDescriptor: file_PlayerHeartBeatScRsp_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_PlayerHeartbeatScRsp_proto_goTypes,
-		DependencyIndexes: file_PlayerHeartbeatScRsp_proto_depIdxs,
-		MessageInfos:      file_PlayerHeartbeatScRsp_proto_msgTypes,
+		GoTypes:           file_PlayerHeartBeatScRsp_proto_goTypes,
+		DependencyIndexes: file_PlayerHeartBeatScRsp_proto_depIdxs,
+		MessageInfos:      file_PlayerHeartBeatScRsp_proto_msgTypes,
 	}.Build()
-	File_PlayerHeartbeatScRsp_proto = out.File
-	file_PlayerHeartbeatScRsp_proto_rawDesc = nil
-	file_PlayerHeartbeatScRsp_proto_goTypes = nil
-	file_PlayerHeartbeatScRsp_proto_depIdxs = nil
+	File_PlayerHeartBeatScRsp_proto = out.File
+	file_PlayerHeartBeatScRsp_proto_rawDesc = nil
+	file_PlayerHeartBeatScRsp_proto_goTypes = nil
+	file_PlayerHeartBeatScRsp_proto_depIdxs = nil
 }

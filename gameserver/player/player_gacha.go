@@ -34,26 +34,26 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 	rsp.GachaInfoList = make([]*proto.GachaInfo, 0)
 
 	for _, bannerslist := range gdconf.GetBannersMap() {
-		gacha := g.GetDbGacha(bannerslist.Id)
+		// gacha := g.GetDbGacha(bannerslist.Id)
 		gachaInfoList := &proto.GachaInfo{
-			HistoryUrl: "http://127.0.0.1:8080/api/gacha/history", // 历史记录
-			DetailUrl:  "http://127.0.0.1:8080",                   // 卡池详情
-			Featured:   bannerslist.RateUpItems5,                  // 五星up
-			UpInfo:     bannerslist.RateUpItems4,                  // 四星up
-			GachaId:    bannerslist.Id,
+			DropHistoryWebview: "http://127.0.0.1:8080/api/gacha/history", // 历史记录
+			DetailWebview:      "http://127.0.0.1:8080",                   // 卡池详情
+			ItemDetailList:     bannerslist.RateUpItems5,                  // 五星up
+			PrizeItemList:      bannerslist.RateUpItems4,                  // 四星up
+			GachaId:            bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {
-			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
-				IsClaimed:  false,
+			gachaInfoList.GachaInfoList = &proto.GachaCeiling{
+				// IsClaimed:  false,
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-				CeilingNum: gacha.CeilingNum,
+				// CeilingNum: gacha.CeilingNum,
 			}
 			for _, id := range bannerslist.RateUpItems5 {
 				avatarlist := &proto.GachaCeilingAvatar{
 					RepeatedCnt: 0,
 					AvatarId:    id,
 				}
-				gachaInfoList.GachaCeiling.AvatarList = append(gachaInfoList.GachaCeiling.AvatarList, avatarlist)
+				gachaInfoList.GachaInfoList.AvatarList = append(gachaInfoList.GachaInfoList.AvatarList, avatarlist)
 			}
 		} else {
 			gachaInfoList.BeginTime = bannerslist.BeginTime // 开始时间
@@ -67,24 +67,24 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
-	req := msg.(*proto.GetGachaCeilingCsReq)
+	// msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
+	// req := msg.(*proto.GetGachaCeilingCsReq)
 
 	rsp := &proto.GetGachaCeilingScRsp{
-		GachaType: req.GachaType,
+		// GachaType: req.GachaType,
 	}
 	list := []uint32{1003, 1101, 1211}
-	rsp.GachaCeiling = &proto.GachaCeiling{
-		IsClaimed:  false,
+	rsp.GachaInfoList = &proto.GachaCeiling{
+		// IsClaimed:  false,
 		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-		CeilingNum: g.GetDbGacha(1001).CeilingNum,
+		// CeilingNum: g.GetDbGacha(1001).CeilingNum,
 	}
 	for _, id := range list {
 		avatarlist := &proto.GachaCeilingAvatar{
 			RepeatedCnt: 0,
 			AvatarId:    id,
 		}
-		rsp.GachaCeiling.AvatarList = append(rsp.GachaCeiling.AvatarList, avatarlist)
+		rsp.GachaInfoList.AvatarList = append(rsp.GachaInfoList.AvatarList, avatarlist)
 	}
 
 	g.Send(cmd.GetGachaCeilingScRsp, rsp)

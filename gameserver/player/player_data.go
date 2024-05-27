@@ -27,15 +27,15 @@ func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp.NextRecoverTime = 1716449614
 	rsp.GameplayBirthday = g.BasicBin.Birthday
 	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
-	rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
-		B1:                true,
-		B2:                true,
-		B3:                true,
-		B4:                true,
-		B5:                true,
-		B6:                true,
-		DisplayRecordType: proto.DisplayRecordType_BATTLE_RECORD_CHALLENGE,
-	}
+	// rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
+	// 	B1:                true,
+	// 	B2:                true,
+	// 	B3:                true,
+	// 	B4:                true,
+	// 	B5:                true,
+	// 	B6:                true,
+	// 	DisplayRecordType: proto.DisplayRecordType_BATTLE_RECORD_CHALLENGE,
+	// }
 
 	g.Send(cmd.GetBasicInfoScRsp, rsp)
 }
@@ -43,15 +43,15 @@ func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetArchiveDataScRsp)
 	archiveData := &proto.ArchiveData{
-		ArchiveMissingAvatarIdList:    make([]uint32, 0),
+		ArchiveAvatarIdList:           make([]uint32, 0),
 		ArchiveEquipmentIdList:        make([]uint32, 0),
 		ArchiveMissingEquipmentIdList: make([]uint32, 0),
-		ArchiveMonsterIdList:          make([]*proto.MonsterArchive, 0),
-		RelicList:                     make([]*proto.RelicArchive, 0),
+		ArchiveMonsterIdList:          make([]*proto.ArchiveMonsterId, 0),
+		RelicList:                     make([]*proto.RelicList, 0),
 	}
 
 	for _, avatar := range g.BasicBin.Avatar.AvatarList {
-		archiveData.ArchiveMissingAvatarIdList = append(archiveData.ArchiveMissingAvatarIdList, avatar.AvatarId)
+		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.AvatarId)
 	}
 
 	for _, equipment := range gdconf.GetItemConfigEquipmentMap() {
@@ -59,7 +59,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	}
 
 	for _, monsterList := range gdconf.GetMonsterConfigMap() {
-		archiveMonsterIdList := &proto.MonsterArchive{
+		archiveMonsterIdList := &proto.ArchiveMonsterId{
 			Num:       1,
 			MonsterId: monsterList.MonsterID,
 		}
@@ -67,14 +67,14 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	}
 
 	for _, relicList := range gdconf.GetRelicMap() {
-		archiveRelicList := &proto.RelicArchive{
-			RelicId: relicList.ID,
-			Slot:    relicList.SetID,
+		archiveRelicList := &proto.RelicList{
+			SetId: relicList.ID,
+			Type:  relicList.SetID,
 		}
 		archiveData.RelicList = append(archiveData.RelicList, archiveRelicList)
 	}
 
-	rsp.ArchiveData = archiveData
+	rsp.ArchiveInfo = archiveData
 
 	g.Send(cmd.GetArchiveDataScRsp, rsp)
 }
@@ -86,16 +86,16 @@ func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetPlayerBoardDataScRsp{
 		CurrentHeadIconId:    g.BasicBin.HeadImageAvatarId,
-		UnlockedHeadIconList: make([]*proto.HeadIcon, 0),
+		UnlockedHeadIconList: make([]*proto.HeadIconData, 0),
 		Signature:            g.BasicBin.Signature,
 		DisplayAvatarVec: &proto.DisplayAvatarVec{
-			DisplayAvatarList: make([]*proto.DisplayAvatar, 0),
+			DisplayAvatarList: make([]*proto.DisplayAvatarData, 0),
 			IsDisplay:         false,
 		},
 	}
 
 	for _, avatar := range g.GetHeadIconList() {
-		headIcon := &proto.HeadIcon{
+		headIcon := &proto.HeadIconData{
 			Id: avatar,
 		}
 		rsp.UnlockedHeadIconList = append(rsp.UnlockedHeadIconList, headIcon)
@@ -141,14 +141,14 @@ func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetFriendListInfoScRsp)
-	rsp.FriendList = make([]*proto.FriendListInfo, 0)
-	simpleInfo := &proto.SimpleInfo{
+	rsp.FriendList = make([]*proto.FriendSimpleInfo, 0)
+	simpleInfo := &proto.PlayerSimpleInfo{
 		Signature:      "欢迎来到免费私人服务器 hkrpg-go",
 		LastActiveTime: time.Now().Unix(),
 		Level:          999,
 		ChatBubbleId:   220003,
-		PlatformType:   proto.PlatformType_MAC,
-		AssistSimpleInfo: []*proto.AssistSimpleInfo{
+		Platform:       proto.PlatformType_MAC,
+		AssistSimpleList: []*proto.AssistSimpleInfo{
 			{
 				Pos:           0,
 				AvatarId:      1212,
@@ -161,7 +161,7 @@ func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
 		Nickname:     "hkrpg-go",
 		OnlineStatus: proto.FriendOnlineStatus_FRIEND_ONLINE_STATUS_ONLINE,
 	}
-	friendListInfo := &proto.FriendListInfo{SimpleInfo: simpleInfo}
+	friendListInfo := &proto.FriendSimpleInfo{PlayerInfo: simpleInfo}
 	rsp.FriendList = append(rsp.FriendList, friendListInfo)
 
 	g.Send(cmd.GetFriendListInfoScRsp, rsp)
@@ -172,27 +172,39 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 	req := msg.(*proto.GetPrivateChatHistoryCsReq)
 
 	rsp := &proto.GetPrivateChatHistoryScRsp{
-		SenderUid: req.SenderUid,
-		ToUid:     req.ToUid,
-		Retcode:   0,
-		ChatList:  nil,
+		ChatMessageList: make([]*proto.ChatMessageData, 0),
+		OLIGKFNJKMA:     0,
+		ContactId:       req.ContactId,
+		Retcode:         0,
 	}
 	g.Send(cmd.GetPrivateChatHistoryScRsp, rsp)
+}
+
+func (g *GamePlayer) GetChatFriendHistoryCsReq(payloadMsg []byte) {
+	g.Send(cmd.GetChatFriendHistoryScRsp, &proto.GetChatFriendHistoryScRsp{
+		FriendHistoryInfo: []*proto.FriendHistoryInfo{
+			{
+				LastSendTime: time.Now().Unix(),
+				ContactId:    999,
+			},
+		},
+		Retcode: 0,
+	})
 }
 
 func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SendMsgCsReq, payloadMsg)
 	req := msg.(*proto.SendMsgCsReq)
-	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.ToUidList, req.Emote, req.MsgType, req.Text, req.ChatType)
+	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.TargetList, req.ExtraId, req.MessageType, req.MessageText, req.ChatType)
 
-	for _, touid := range req.ToUidList {
+	for _, touid := range req.TargetList {
 		notify := &proto.RevcMsgScNotify{
-			ToUid:    touid,
-			Emote:    req.Emote,
-			MsgType:  req.MsgType,
-			FromUid:  g.Uid,
-			Text:     req.Text,
-			ChatType: req.ChatType,
+			TargetUid:   touid,
+			ExtraId:     req.ExtraId,
+			MessageType: req.MessageType,
+			SourceUid:   g.Uid,
+			MessageText: req.MessageText,
+			ChatType:    req.ChatType,
 		}
 		g.Send(cmd.RevcMsgScNotify, notify)
 	}
@@ -218,15 +230,15 @@ func (g *GamePlayer) SetClientPausedCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandleGetJukeboxDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetJukeboxDataScRsp)
-	rsp.PlayingId = 210000
-	rsp.MusicList = make([]*proto.UnlockedMusic, 0)
+	rsp.CurrentMusicId = 210000
+	rsp.UnlockedMusicList = make([]*proto.MusicData, 0)
 	for _, backMusicList := range gdconf.GetBackGroundMusicMap() {
-		musicList := &proto.UnlockedMusic{
-			GroupId: backMusicList.GroupID,
-			Unkbool: true,
-			Id:      backMusicList.ID,
+		musicList := &proto.MusicData{
+			GroupId:  backMusicList.GroupID,
+			IsPlayed: true,
+			Id:       backMusicList.ID,
 		}
-		rsp.MusicList = append(rsp.MusicList, musicList)
+		rsp.UnlockedMusicList = append(rsp.UnlockedMusicList, musicList)
 	}
 	g.Send(cmd.GetJukeboxDataScRsp, rsp)
 }
@@ -279,13 +291,13 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) TextJoinQueryCsReq(payloadMsg []byte) {
 	rsp := new(proto.TextJoinQueryScRsp)
-	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
-		textJoinList := &proto.TextJoinInfo{
-			TextItemId:       textJoin.TextJoinID,
-			TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
-		}
-		rsp.TextJoinList = append(rsp.TextJoinList, textJoinList)
-	}
+	// for _, textJoin := range gdconf.GetTextJoinConfigMap() {
+	// 	textJoinList := &proto.TextJoinInfo{
+	// 		TextItemId:       textJoin.TextJoinID,
+	// 		TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
+	// 	}
+	// 	rsp.TextJoinInfoList = append(rsp.TextJoinInfoList, textJoinList)
+	// }
 
 	g.Send(cmd.TextJoinQueryScRsp, rsp)
 }
@@ -294,7 +306,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetUnlockTeleportCsReq, payloadMsg)
 	req := msg.(*proto.GetUnlockTeleportCsReq)
 	rsp := &proto.GetUnlockTeleportScRsp{
-		UnlockedTeleportList: make([]uint32, 0),
+		UnlockTeleportList: make([]uint32, 0),
 	}
 
 	for _, id := range req.EntryIdList {
@@ -307,7 +319,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 			continue
 		}
 		for _, teleports := range teleportsMap.Teleports {
-			rsp.UnlockedTeleportList = append(rsp.UnlockedTeleportList, teleports.MappingInfoID)
+			rsp.UnlockTeleportList = append(rsp.UnlockTeleportList, teleports.MappingInfoID)
 		}
 	}
 

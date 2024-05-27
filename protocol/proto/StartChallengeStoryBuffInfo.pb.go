@@ -25,8 +25,8 @@ type StartChallengeStoryBuffInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	StoryBuffOne uint32 `protobuf:"varint,9,opt,name=story_buff_one,json=storyBuffOne,proto3" json:"story_buff_one,omitempty"` // ?
-	StoryBuffTwo uint32 `protobuf:"varint,8,opt,name=story_buff_two,json=storyBuffTwo,proto3" json:"story_buff_two,omitempty"` // ?
+	StoryBuffOne uint32 `protobuf:"varint,9,opt,name=story_buff_one,json=storyBuffOne,proto3" json:"story_buff_one,omitempty"`
+	StoryBuffTwo uint32 `protobuf:"varint,8,opt,name=story_buff_two,json=storyBuffTwo,proto3" json:"story_buff_two,omitempty"`
 }
 
 func (x *StartChallengeStoryBuffInfo) Reset() {

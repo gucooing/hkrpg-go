@@ -83,7 +83,13 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.ExchangeHcoinCsReq:          g.ExchangeHcoinCsReq,          // 梦华兑换
 		cmd.ExchangeRogueRewardKeyCsReq: g.ExchangeRogueRewardKeyCsReq, // 储存沉浸器
 		cmd.BuyGoodsCsReq:               g.BuyGoodsCsReq,               // 商店交易
-		// 社交
+		// 好友
+		cmd.GetFriendLoginInfoCsReq:    g.HandleGetFriendLoginInfoCsReq, // 获取好友信息列表
+		cmd.GetFriendListInfoCsReq:     g.GetFriendListInfoCsReq,        // 获取好友信息
+		cmd.GetPrivateChatHistoryCsReq: g.GetPrivateChatHistoryCsReq,    // 获取私聊记录
+		cmd.SendMsgCsReq:               g.SendMsgCsReq,                  // 发送聊天信息
+		// cmd.SearchPlayerCsReq:          g.SearchPlayerCsReq,             // 搜索玩家？
+		cmd.GetChatFriendHistoryCsReq: g.GetChatFriendHistoryCsReq, // 获取正在进行的聊天室
 		// 邮件
 		cmd.MarkReadMailCsReq:       g.MarkReadMailCsReq,       // 读取邮件
 		cmd.GetMailCsReq:            g.GetMailCsReq,            // 获取邮件
@@ -116,11 +122,6 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.SetSignatureCsReq:          g.SetSignatureCsReq,             // 简介修改请求
 		cmd.GetPlayerBoardDataCsReq:    g.HandleGetPlayerBoardDataCsReq, // 获取角色名片页信息
 		cmd.GetFarmStageGachaInfoCsReq: g.GetFarmStageGachaInfoCsReq,    // 获取怪物刷新情况
-		// 好友
-		cmd.GetFriendLoginInfoCsReq:    g.HandleGetFriendLoginInfoCsReq, // 获取好友信息列表
-		cmd.GetFriendListInfoCsReq:     g.GetFriendListInfoCsReq,        // 获取好友信息
-		cmd.GetPrivateChatHistoryCsReq: g.GetPrivateChatHistoryCsReq,    // 获取私聊记录
-		cmd.SendMsgCsReq:               g.SendMsgCsReq,                  // 发送聊天信息
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集

@@ -14,23 +14,23 @@ import (
 func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
-	rsp.ChallengeRewardList = make([]*proto.ChallengeReward, 0)
+	rsp.ChallengeGroupList = make([]*proto.ChallengeGroup, 0)
 	for id, stars := range g.GetChallengeList() {
 		challenge := &proto.Challenge{
 			ChallengeId: id,
-			Stars:       stars.Stars,
-			Score:       stars.ScoreOne,
+			Star:        stars.Stars,
+			ScoreId:     stars.ScoreOne,
 			ScoreTwo:    stars.ScoreTwo,
 			TakenReward: 0,
 		}
 		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
 	}
 	for taken, id := range g.GetChallengeRewardList() {
-		challengeReward := &proto.ChallengeReward{
-			TakenChallengeReward: taken,
-			GroupId:              id,
+		challengeGroup := &proto.ChallengeGroup{
+			TakenStarsCountReward: taken,
+			GroupId:               id,
 		}
-		rsp.ChallengeRewardList = append(rsp.ChallengeRewardList, challengeReward)
+		rsp.ChallengeGroupList = append(rsp.ChallengeGroupList, challengeGroup)
 	}
 	g.Send(cmd.GetChallengeScRsp, rsp)
 }
@@ -39,7 +39,7 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
 	rsp := &proto.GetCurChallengeScRsp{
-		ChallengeInfo: g.GetChallengeInfo(),
+		CurChallenge: g.GetChallengeInfo(),
 	}
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
 }
@@ -50,7 +50,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
 	req := msg.(*proto.StartChallengeCsReq)
 	// 设置战斗状态
-	storyInfo := req.GetStoryInfo()
+	storyInfo := req.GetPlayerInfo()
 	if storyInfo == nil {
 		g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE)
 	} else {
@@ -67,9 +67,9 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 		lineUpId = Challenge_2
 	}
 	rsp := &proto.StartChallengeScRsp{
-		ChallengeInfo: g.GetChallengeInfo(),
-		Scene:         g.GetChallengeScene(),
-		Lineup:        g.GetBattleLineUpPb(lineUpId),
+		CurChallenge: g.GetChallengeInfo(),
+		Scene:        g.GetChallengeScene(),
+		Lineup:       g.GetBattleLineUpPb(lineUpId),
 	}
 
 	g.Send(cmd.StartChallengeScRsp, rsp)
@@ -148,7 +148,7 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 func (g *GamePlayer) ChallengeSettleNotify() {
 	db := g.GetCurChallenge()
 	notify := &proto.ChallengeSettleNotify{
-		Stars:          db.Stars,               // 得分
+		Star:           db.Stars,               // 得分
 		Reward:         g.GetChallengeReward(), // 奖励
 		ChallengeId:    db.ChallengeId,         // 关卡id
 		IsWin:          db.IsWin,               // 是否赢
@@ -180,12 +180,12 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 	}
 
 	notify := &proto.SceneGroupRefreshScNotify{
-		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
-	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
+	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		RefreshEntity: g.GetAddAvatarSceneEntityRefreshInfo(lineUp, pos, rot),
 	}
-	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
+	notify.GroupRefreshList = append(notify.GroupRefreshList, sceneGroupRefreshInfo)
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 
 	// 通知当前位置
@@ -220,13 +220,13 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 	}
 
 	notify := &proto.SceneGroupRefreshScNotify{
-		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
-	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
+	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		GroupId:       mazeGroupID,
 		RefreshEntity: g.GetAddMonsterSceneEntityRefreshInfo(mazeGroupID, configList, eventIDList, npcMonsterIDList, foorMap.MonsterList),
 	}
-	notify.GroupRefreshInfo = append(notify.GroupRefreshInfo, sceneGroupRefreshInfo)
+	notify.GroupRefreshList = append(notify.GroupRefreshList, sceneGroupRefreshInfo)
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }

@@ -657,16 +657,16 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 	battleId := g.GetBattleIdGuid()
 	monsterWaveList, stageId := g.GetSceneMonsterWave(mem)
 	battleInfo := &proto.SceneBattleInfo{
-		LogicRandomSeed:     gdconf.GetLoadingDesc(),                 // 逻辑随机种子
-		WorldLevel:          g.GetWorldLevel(),                       // 世界等级
-		BattleId:            battleId,                                // 战斗Id
-		BattleAvatarList:    g.GetProtoBattleAvatar(bAList),          // 战斗角色列表
-		MonsterWaveList:     monsterWaveList,                         // 怪物列表
-		StageId:             stageId,                                 // 起始战斗
-		BattleTargetInfo:    g.GetBattleTargetInfo(),                 // 战斗目标
-		EventBattleInfoList: make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
-		RoundsLimit:         g.GetRoundsLimit(),                      // 回合限制
-		BuffList:            g.GetBattleBuff(),                       // Buff列表
+		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
+		WorldLevel:       g.GetWorldLevel(),                       // 世界等级
+		BattleId:         battleId,                                // 战斗Id
+		BattleAvatarList: g.GetProtoBattleAvatar(bAList),          // 战斗角色列表
+		MonsterWaveList:  monsterWaveList,                         // 怪物列表
+		StageId:          stageId,                                 // 起始战斗
+		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
+		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
+		RoundsLimit:      g.GetRoundsLimit(),                      // 回合限制
+		BuffList:         g.GetBattleBuff(),                       // Buff列表
 	}
 	// 记录此次战斗
 	battleBackup := &BattleBackup{
@@ -711,16 +711,16 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 	}
 	battleId := g.GetBattleIdGuid()
 	battleInfo := &proto.SceneBattleInfo{
-		LogicRandomSeed:     gdconf.GetLoadingDesc(),                 // 逻辑随机种子
-		WorldLevel:          req.GetWorldLevel(),                     // 关卡等级
-		BattleId:            battleId,                                // 战斗Id
-		StageId:             stageID,                                 // 起始战斗
-		BattleAvatarList:    g.GetProtoBattleAvatar(bAList),          // 战斗角色列表
-		MonsterWaveList:     monsterWaveList,                         // 怪物列表
-		BattleTargetInfo:    g.GetBattleTargetInfo(),                 // 战斗目标
-		EventBattleInfoList: make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
-		RoundsLimit:         g.GetRoundsLimit(),                      // 回合限制
-		BuffList:            g.GetBattleBuff(),                       // Buff列表
+		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
+		WorldLevel:       req.GetWorldLevel(),                     // 关卡等级
+		BattleId:         battleId,                                // 战斗Id
+		StageId:          stageID,                                 // 起始战斗
+		BattleAvatarList: g.GetProtoBattleAvatar(bAList),          // 战斗角色列表
+		MonsterWaveList:  monsterWaveList,                         // 怪物列表
+		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
+		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
+		RoundsLimit:      g.GetRoundsLimit(),                      // 回合限制
+		BuffList:         g.GetBattleBuff(),                       // Buff列表
 	}
 	// 记录此次战斗
 	battleBackup := &BattleBackup{
@@ -766,7 +766,7 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) []*proto.Scene
 			WaveId:      1,
 			DropList:    make([]*proto.ItemList, 0),
 			MonsterList: make([]*proto.SceneMonster, 0),
-			WaveParam:   &proto.SceneMonsterWaveParam{},
+			// MonsterParam:   &proto.SceneMonsterWaveParam{},
 		}
 		for _, monsterList := range monsterListMap {
 			sceneMonster := &proto.SceneMonster{
@@ -800,10 +800,10 @@ func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
 	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
 	if conf.MazeBuffID != 0 {
 		buffList = append(buffList, &proto.BattleBuff{
-			Id:       conf.MazeBuffID,
-			Level:    1,
-			OwnerId:  4294967295,
-			WaveFlag: 4294967295,
+			Id:         conf.MazeBuffID,
+			Level:      1,
+			OwnerIndex: 4294967295,
+			WaveFlag:   4294967295,
 		})
 	}
 	// 自选buff
@@ -812,7 +812,7 @@ func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
 		buffList = append(buffList, &proto.BattleBuff{
 			Id:              buffId,
 			Level:           1,
-			OwnerId:         0,
+			OwnerIndex:      0,
 			TargetIndexList: []uint32{0},
 			WaveFlag:        4294967295, // 失效时间
 			DynamicValues:   make(map[string]float32),
@@ -822,7 +822,7 @@ func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
 	return buffList
 }
 
-func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
+func (g *GamePlayer) GetChallengeInfo() *proto.CurChallenge {
 	db := g.GetCurChallenge()
 	if db == nil {
 		return nil
@@ -834,13 +834,13 @@ func (g *GamePlayer) GetChallengeInfo() *proto.ChallengeInfo {
 	case 2:
 		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
 	}
-	challengeInfo := &proto.ChallengeInfo{
+	challengeInfo := &proto.CurChallenge{
 		ChallengeId:     db.ChallengeId,                   // 挑战关卡
 		Status:          proto.ChallengeStatus(db.Status), // 关卡状态
 		ExtraLineupType: lineUpType,                       // 队伍type
-		StoryInfo:       g.GetCurChallengeStoryInfo(),     // 挑战buff
+		PlayerInfo:      g.GetCurChallengeStoryInfo(),     // 挑战buff
 		RoundCount:      db.RoundCount,                    // 已使用回合数
-		Score:           db.ScoreOne,                      // 第一层得分
+		ScoreOne:        db.ScoreOne,                      // 第一层得分
 		ScoreTwo:        db.ScoreTwo,                      // 第二层得分
 	}
 	return challengeInfo
@@ -853,8 +853,8 @@ func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
 		return nil
 	}
 	challengeStoryInfo := &proto.ChallengeStoryInfo{
-		StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuffs{
-			CurStoryBuffs: &proto.ChallengeStoryBuffInfo{
+		StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuff{
+			CurStoryBuff: &proto.ChallengeStoryBuffInfo{
 				BuffList: []uint32{db.BuffOne, db.BuffTwo},
 			},
 		},

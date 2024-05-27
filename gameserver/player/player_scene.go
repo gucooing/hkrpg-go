@@ -89,11 +89,11 @@ func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 	if mapEntrance == nil {
 		return
 	}
-	enteredSceneInfo := &proto.EnteredSceneInfo{
+	enteredSceneInfo := &proto.EnteredScene{
 		FloorId: mapEntrance.FloorID,
 		PlaneId: mapEntrance.PlaneID,
 	}
-	rsp.EnteredSceneInfo = []*proto.EnteredSceneInfo{enteredSceneInfo}
+	rsp.EnteredSceneList = []*proto.EnteredScene{enteredSceneInfo}
 
 	g.Send(cmd.GetEnteredSceneScRsp, rsp)
 }
@@ -122,14 +122,14 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 		if mapEntrance != nil {
 			teleportsMap := gdconf.GetTeleportsById(mapEntrance.PlaneID, mapEntrance.FloorID)
 			if teleportsMap != nil {
-				mapList := &proto.MazeMapData{
+				mapList := &proto.SceneMapInfo{
 					LightenSectionList: make([]uint32, 0),
-					UnlockedChestList: []*proto.MazeChest{
-						{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_NORMAL},
-						{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
-						{MapInfoChestType: proto.MapInfoChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
+					ChestList: []*proto.ChestInfo{
+						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_NORMAL},
+						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
+						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
 					},
-					UnlockedTeleportList: make([]uint32, 0),
+					// UnlockedTeleportList: make([]uint32, 0),
 				}
 
 				mapList.EntryId = entryId
@@ -144,15 +144,15 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 				}
 
 				for _, teleports := range teleportsMap.Teleports {
-					mazeProp := &proto.MazeProp{
+					mazeProp := &proto.MazePropState{
 						State:    gdconf.GetStateValue("CheckPointEnable"), // 默认解锁
 						GroupId:  teleports.AnchorGroupID,
 						ConfigId: teleports.ID,
 					}
 					mapList.MazePropList = append(mapList.MazePropList, mazeProp)
-					mapList.UnlockedTeleportList = append(mapList.UnlockedTeleportList, teleports.MappingInfoID)
+					mapList.UnlockTeleportList = append(mapList.UnlockTeleportList, teleports.MappingInfoID)
 				}
-				rsp.MapList = append(rsp.MapList, mapList)
+				rsp.SceneMapInfo = append(rsp.SceneMapInfo, mapList)
 			}
 		}
 	}
