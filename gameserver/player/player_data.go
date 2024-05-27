@@ -183,8 +183,21 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SendMsgCsReq, payloadMsg)
 	req := msg.(*proto.SendMsgCsReq)
-
 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.ToUidList, req.Emote, req.MsgType, req.Text, req.ChatType)
+
+	for _, touid := range req.ToUidList {
+		notify := &proto.RevcMsgScNotify{
+			ToUid:    touid,
+			Emote:    req.Emote,
+			MsgType:  req.MsgType,
+			FromUid:  g.Uid,
+			Text:     req.Text,
+			ChatType: req.ChatType,
+		}
+		g.Send(cmd.RevcMsgScNotify, notify)
+	}
+
+	g.Send(cmd.SendMsgScRsp, nil)
 }
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
