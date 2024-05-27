@@ -53,6 +53,24 @@ func (g *GamePlayer) DelMail(id uint32) {
 	db.IsDel = true
 }
 
+// TODO 邮件奖励兑换方法（拓展此处以支持更多奖励物品
+func (g *GamePlayer) MailReadItem(itemList []*database.Item) bool {
+	pileItem := make([]*Material, 0)
+	for _, item := range itemList {
+		switch item.ItemType {
+		case database.MailAvatar:
+			g.AddAvatar(item.ItemId)
+		case database.MailMaterial:
+			pileItem = append(pileItem, &Material{
+				Tid: item.ItemId,
+				Num: item.Num,
+			})
+		}
+	}
+	g.AddMaterial(pileItem)
+	return true
+}
+
 func (g *GamePlayer) GetAllMail() []*proto.ClientMail {
 	mailList := make([]*proto.ClientMail, 0)
 	mailMap := gadb.GetAllMail()

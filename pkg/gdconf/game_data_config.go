@@ -17,7 +17,7 @@ type GameDataConfig struct {
 	configPrefix string
 	dataPrefix   string
 	// 配置表数据
-	AvatarDataMap               map[string]*AvatarData                          // 角色
+	AvatarDataMap               map[uint32]*AvatarData                          // 角色
 	AvatarExpItemConfigMap      map[string]*AvatarExpItemConfig                 // 角色升级经验材料配置
 	AvatarPromotionConfigMap    map[string]map[string]*AvatarPromotionConfig    // 角色突破配置
 	ExpTypeMap                  map[string]map[string]*ExpType                  // 经验配置

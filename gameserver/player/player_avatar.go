@@ -8,16 +8,6 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
-func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
-	notify := &proto.PlayerSyncScNotify{
-		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
-	}
-	avatar := g.GetProtoAvatarById(avatarId)
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
 func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetHeroBasicTypeInfoScRsp)
 	avatarDb := g.GetAvatar()
@@ -102,7 +92,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 		return
 	}
 
-	gdconfAvatar := gdconf.GetAvatarDataById(strconv.Itoa(int(req.BaseAvatarId)))
+	gdconfAvatar := gdconf.GetAvatarDataById(req.BaseAvatarId)
 
 	// 遍历用来升级的材料
 	for _, pileList := range req.ItemCostList.ItemList {

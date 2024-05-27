@@ -31,6 +31,11 @@ func (g *GamePlayer) GetAvatarList() map[uint32]*spb.AvatarBin {
 	if db.AvatarList == nil {
 		db.AvatarList = make(map[uint32]*spb.AvatarBin)
 	}
+	// for id := range db.AvatarList {
+	// 	if gdconf.GetAvatarDataById(id) == nil {
+	// 		delete(db.AvatarList, id)
+	// 	}
+	// }
 	return db.AvatarList
 }
 
@@ -139,6 +144,9 @@ func (g *GamePlayer) SetAvatarMakSkillByAvatarId(avatarId uint32) {
 }
 
 func (g *GamePlayer) AddAvatar(avatarId uint32) {
+	if gdconf.GetAvatarDataById(avatarId) == nil {
+		return // 过滤没有的角色
+	}
 	db := g.GetAvatarList()
 	if db[avatarId] != nil {
 		var pileItem []*Material

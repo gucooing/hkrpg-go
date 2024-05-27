@@ -382,6 +382,8 @@ func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 	}
 }
 
+/*************************************PlayerSyncScNotify大全*******************************/
+// 添加物品通知
 func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
 	relicItme := g.GetProtoRelicById(uniqueId)
 	// 通知客户端增加了物品
@@ -429,8 +431,17 @@ func (g *GamePlayer) MaterialPlayerSyncScNotify(pileItem []*Material) {
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
-// 删除物品
+func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
+	notify := &proto.PlayerSyncScNotify{
+		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
+	}
+	avatar := g.GetProtoAvatarById(avatarId)
+	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
 
+	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
+// 删除物品通知
 func (g *GamePlayer) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
 	notify := &proto.PlayerSyncScNotify{DelEquipmentList: make([]uint32, 0)}
 	db := g.GetEquipmentMap()

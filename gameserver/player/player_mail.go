@@ -51,7 +51,9 @@ func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg []byte) {
 		mail := gadb.GetMailById(id)
 		rsp.Attachment.ItemList = append(rsp.Attachment.ItemList, g.GetAttachment(mail.ItemList)...)
 		rsp.SuccMailIdList = append(rsp.SuccMailIdList, id)
-		// g.ReadMail(id)
+		if g.MailReadItem(mail.ItemList) {
+			g.ReadMail(id)
+		}
 	}
 	g.Send(cmd.TakeMailAttachmentScRsp, rsp)
 }

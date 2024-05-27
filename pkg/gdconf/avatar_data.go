@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -24,7 +25,8 @@ type RewardList struct {
 }
 
 func (g *GameDataConfig) loadAvatarData() {
-	g.AvatarDataMap = make(map[string]*AvatarData)
+	avatarDataMap := make(map[string]*AvatarData)
+	g.AvatarDataMap = make(map[uint32]*AvatarData)
 	playerElementsFilePath := g.excelPrefix + "AvatarConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -32,19 +34,22 @@ func (g *GameDataConfig) loadAvatarData() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.AvatarDataMap)
+	err = hjson.Unmarshal(playerElementsFile, &avatarDataMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for id, avatarData := range avatarDataMap {
+		g.AvatarDataMap[alg.S2U32(id)] = avatarData
+	}
 	logger.Info("load %v AvatarConfig", len(g.AvatarDataMap))
 }
 
-func GetAvatarDataById(avatarId string) *AvatarData {
+func GetAvatarDataById(avatarId uint32) *AvatarData {
 	return CONF.AvatarDataMap[avatarId]
 }
 
-func GetAvatarDataMap() map[string]*AvatarData {
+func GetAvatarDataMap() map[uint32]*AvatarData {
 	return CONF.AvatarDataMap
 }
 
