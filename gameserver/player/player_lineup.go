@@ -19,7 +19,7 @@ func (g *GamePlayer) SyncLineupNotify(index uint32, isBattleLine bool) {
 
 func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
 	notify := &proto.SceneGroupRefreshScNotify{
-		GroupRefreshInfo: g.GetSceneGroupRefreshInfoByLineUP(g.GetLineUpById(index), g.GetPosPb(), g.GetRotPb()),
+		GroupRefreshList: g.GetSceneGroupRefreshInfoByLineUP(g.GetLineUpById(index), g.GetPosPb(), g.GetRotPb()),
 	}
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
@@ -131,7 +131,7 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 	}
 	db.LeaderSlot = 0
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-	for _, avatarList := range req.Slots {
+	for _, avatarList := range req.LineupSlotList {
 		db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{AvatarId: avatarList.Id, Slot: avatarList.Slot}
 	}
 
@@ -139,7 +139,7 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 	g.SyncLineupNotify(index, isBattleLine)
 	if isBattleLine {
 		// 将角色属性拷贝出来
-		for _, avatar := range req.Slots {
+		for _, avatar := range req.LineupSlotList {
 			avatarBin := g.GetAvatarBinById(avatar.Id)
 			g.CopyBattleAvatar(avatarBin)
 		}

@@ -403,22 +403,22 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 }
 
 // 删除怪物
-func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.SceneGroupRefreshInfo {
-	sceneGroupRefreshInfo := make([]*proto.SceneGroupRefreshInfo, 0)
+func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.GroupRefreshInfo {
+	sceneGroupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
 	for _, id := range mem {
 		entity := g.GetMonsterEntityById(id)
 		if entity == nil {
 			continue
 		}
-		sgri := &proto.SceneGroupRefreshInfo{
+		sgri := &proto.GroupRefreshInfo{
 			State:   0,
 			GroupId: entity.GroupId,
 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
 				{
-					DelEntity: entity.EntityId,
+					DeleteEntity: entity.EntityId,
 				},
 			},
-			GroupRefreshType: proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_LOADED,
+			RefreshType: proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_LOADED,
 		}
 		sceneGroupRefreshInfo = append(sceneGroupRefreshInfo, sgri)
 	}
@@ -509,9 +509,9 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 	return sceneEntityRefreshInfo
 }
 
-func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.SceneGroupRefreshInfo {
-	groupRefreshInfo := make([]*proto.SceneGroupRefreshInfo, 0)
-	sceneGroupRefreshInfo := &proto.SceneGroupRefreshInfo{
+func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
+	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
+	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
 	}
 	for _, lineAvatar := range lineUp.AvatarIdList {

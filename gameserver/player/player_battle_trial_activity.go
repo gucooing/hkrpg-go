@@ -12,18 +12,18 @@ import (
 func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
 	req := msg.(*proto.StartTrialActivityCsReq)
-	if req.TrialActivityId == 0 {
+	if req.StageId == 0 {
 		return
 	}
 
-	avatarDemo := gdconf.GetAvatarDemoConfigById(req.TrialActivityId)
+	avatarDemo := gdconf.GetAvatarDemoConfigById(req.StageId)
 	if avatarDemo == nil {
 		return
 	}
 	lineup := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ACTIVITY))
 
 	trialActivityState := g.GetTrialActivityState()
-	trialActivityState.AvatarDemoId = req.TrialActivityId
+	trialActivityState.AvatarDemoId = req.StageId
 	// 记录场景
 	trialActivityState.PlaneID = avatarDemo.PlaneID
 	trialActivityState.FloorID = avatarDemo.FloorID
@@ -50,7 +50,7 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 
 	g.GetBattleState().BattleType = spb.BattleType_Battle_TrialActivity
 
-	rsp := &proto.StartTrialActivityScRsp{TrialActivityId: req.TrialActivityId}
+	rsp := &proto.StartTrialActivityScRsp{StageId: req.StageId}
 	g.Send(cmd.StartTrialActivityScRsp, rsp)
 }
 
@@ -348,14 +348,14 @@ func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResul
 		// 发送通关通知
 		scNotify := &proto.TrialActivityDataChangeScNotify{
 			TrialActivityInfo: &proto.TrialActivityInfo{
-				TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
-				TakenReward:     false,
+				StageId:     g.GetTrialActivityState().AvatarDemoId,
+				TakenReward: false,
 			},
 		}
 		g.Send(cmd.TrialActivityDataChangeScNotify, scNotify)
 		notify := &proto.CurTrialActivityScNotify{
-			TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
-			Status:          proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
+			// TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
+			Status: proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
 		}
 		g.Send(cmd.CurTrialActivityScNotify, notify)
 		// 恢复战斗状态为空

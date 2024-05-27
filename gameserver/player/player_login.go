@@ -34,7 +34,7 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
-	logger.Info("[UID:%v]登录的系统是:%s", g.Uid, req.SystemVersion)
+	logger.Info("[UID:%v]登录的客户端版本是:%s", g.Uid, req.ClientVersion)
 	g.HandlePlayerLoginScRsp()
 }
 
@@ -43,7 +43,7 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	db := g.GetMaterialMap()
 	rsp.Stamina = db[Stamina]
 	rsp.ServerTimestampMs = uint64(time.Now().UnixMilli())
-	rsp.CurTimezone = 8 // 时区
+	rsp.CurTimezone = 4 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
 		Nickname:   g.GetNickname(),
 		Level:      g.GetLevel(),
@@ -65,7 +65,7 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 	req := msg.(*proto.SyncClientResVersionCsReq)
 
 	rsp := new(proto.SyncClientResVersionScRsp)
-	rsp.ClientResVersion = req.ClientResVersion
+	rsp.ResVersion = req.ResVersion
 
 	g.Send(cmd.SyncClientResVersionScRsp, rsp)
 }
@@ -73,18 +73,18 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 func (g *GamePlayer) BattlePassInfoNotify() {
 	// 战斗通行证信息通知
 	notify := &proto.BattlePassInfoNotify{
-		TakenPremiumExtendedReward: 127,
-		TakenFreeExtendedReward:    2,
+		// TakenPremiumExtendedReward: 127,
+		// TakenFreeExtendedReward:    2,
 		// Unkfield:                   4,
-		TakenPremiumReward2:        7,
-		TakenFreeReward:            6,
-		TakenPremiumReward1:        2,
-		TakenPremiumOptionalReward: 2251799813685246,
-		Exp:                        1,
-		Level:                      70,
-		CurBpId:                    5,
-		CurWeekAddExpSum:           8000,
-		BpTierType:                 proto.BattlePassInfoNotify_BP_TIER_TYPE_PREMIUM_2,
+		// TakenPremiumReward2:        7,
+		// TakenFreeReward:            6,
+		// TakenPremiumReward1:        2,
+		// TakenPremiumOptionalReward: 2251799813685246,
+		Exp:   1,
+		Level: 70,
+		// CurBpId:                    5,
+		// CurWeekAddExpSum:           8000,
+		BpTier: proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
 	}
 	g.Send(cmd.BattlePassInfoNotify, notify)
 }

@@ -15,11 +15,11 @@ import (
 
 func (s *Server) QueryDispatchHandler(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_dispatch", c.Request.RemoteAddr)
-	dispatchRegionsData := new(proto.DispatchRegionData)
+	dispatchRegionsData := new(proto.Dispatch)
 	dispatchRegionsData.TopSeverRegionName = "hkrpg-go"
-	serverList := make([]*proto.RegionEntry, 0)
+	serverList := make([]*proto.RegionInfo, 0)
 	for _, cfg := range config.GetConfig().Dispatch {
-		server := &proto.RegionEntry{
+		server := &proto.RegionInfo{
 			Name:        cfg.Name,
 			Title:       cfg.Title,
 			EnvType:     cfg.Type,
@@ -52,18 +52,18 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 		s.ErrorGate(c)
 		return
 	}
-	queryGateway := new(proto.Gateserver)
+	queryGateway := new(proto.GateServer)
 	queryGateway.Msg = "OK"
 	queryGateway.Ip = gate.Ip
 	queryGateway.RegionName = "hkrpg-go"
 	queryGateway.Port = gate.Port
 	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
-	queryGateway.Unk1 = true
-	queryGateway.Unk2 = true
-	queryGateway.Unk3 = true
-	queryGateway.Unk4 = true
-	queryGateway.Unk5 = true
-	queryGateway.Unk6 = true
+	queryGateway.B1 = true
+	queryGateway.B2 = true
+	queryGateway.B3 = true
+	queryGateway.B4 = true
+	queryGateway.B5 = true
+	queryGateway.B6 = true
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 
 	datamsg, _ := base64.StdEncoding.DecodeString(string(data))
 
-	dispatch := new(proto.Gateserver)
+	dispatch := new(proto.GateServer)
 
 	err = pb.Unmarshal(datamsg, dispatch)
 	if err != nil {
@@ -141,7 +141,7 @@ func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 
 	datamsg, _ := base64.StdEncoding.DecodeString(string(data))
 
-	dispatch := new(proto.Gateserver)
+	dispatch := new(proto.GateServer)
 
 	err = pb.Unmarshal(datamsg, dispatch)
 	if err != nil {
@@ -160,7 +160,7 @@ func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 }
 
 func (s *Server) ErrorGate(c *gin.Context) {
-	queryGateway := new(proto.Gateserver)
+	queryGateway := new(proto.GateServer)
 	// queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
 	queryGateway.RegionName = "hkrpg-go"
 	queryGateway.Msg = "gate error"

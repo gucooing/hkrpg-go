@@ -14,7 +14,7 @@ func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	rsp.Gender = proto.Gender(avatarDb.Gender)
 	rsp.CurBasicType = proto.HeroBasicType(avatarDb.CurMainAvatar)
 	for _, heroBasic := range g.GetHeroBasicTypeInfo() {
-		basicTypeInfoList := &proto.HeroBasicTypeInfo{
+		basicTypeInfoList := &proto.PlayerHeroBasicTypeInfo{
 			BasicType:     proto.HeroBasicType(heroBasic.BasicType),
 			SkillTreeList: make([]*proto.AvatarSkillTree, 0),
 			Rank:          heroBasic.Rank,
@@ -95,7 +95,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	gdconfAvatar := gdconf.GetAvatarDataById(req.BaseAvatarId)
 
 	// 遍历用来升级的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.ItemCost.ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue

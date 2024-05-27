@@ -34,7 +34,6 @@ type GateServer struct {
 	Ec2b               *random.Ec2b
 	gsList             map[uint32]*gameServer // gs列表
 	gsListLock         sync.Mutex             // gs列表互斥锁
-	multi              *Multi                 // 连接的multi
 	Ticker             *time.Ticker
 	Stop               chan struct{}
 	loginPlayerMap     map[uint32]*PlayerGame // 正在登录的玩家列表

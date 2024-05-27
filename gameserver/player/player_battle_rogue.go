@@ -15,9 +15,9 @@ func (g *GamePlayer) SyncRogueMapRoomScNotify() {
 
 	notify := &proto.SyncRogueMapRoomScNotify{
 		CurRoom: &proto.RogueRoom{
-			RoomStatus: proto.RogueRoomStatus(rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomStatus),
-			SiteId:     rogue.CurRogue.CurSiteId,
-			RoomId:     rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomId,
+			CurStatus: proto.RogueRoomStatus(rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomStatus),
+			SiteId:    rogue.CurRogue.CurSiteId,
+			RoomId:    rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomId,
 		},
 		MapId: rogue.CurRogue.RogueMapID,
 	}
@@ -27,7 +27,7 @@ func (g *GamePlayer) SyncRogueMapRoomScNotify() {
 func (g *GamePlayer) SyncRogueVirtualItemInfoScNotify() {
 	notify := &proto.SyncRogueVirtualItemInfoScNotify{
 		RogueVirtualItemInfo: &proto.RogueVirtualItemInfo{
-			RogueCoin: g.GetDbRogue().CurRogue.CosmicFragment,
+			// RogueCoin: g.GetDbRogue().CurRogue.CosmicFragment,
 			// X:     8,
 		},
 	}
@@ -40,9 +40,9 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 	rogue := g.GetRogue()
 	rogue.BuffNum += uint32(len(buffIdList))
 	notify := &proto.SyncRogueCommonPendingActionScNotify{
-		RogueCommonPendingAction: &proto.RogueCommonPendingAction{
-			UniqueId:    rogue.BuffNum,
-			RogueAction: &proto.RogueAction{
+		Action: &proto.RogueCommonPendingAction{
+			QueuePosition: rogue.BuffNum,
+			RogueAction:   &proto.RogueAction{
 				/*
 					BuffSelectInfo: &proto.RogueCommonBuffSelectInfo{
 						HandbookUnlockBuffIdList: make([]uint32, 0),
@@ -72,59 +72,59 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 }
 
 func (g *GamePlayer) SyncEntityBuffChangeListScNotify(buffIdList []uint32) {
-	rogue := g.GetRogue()
+	// rogue := g.GetRogue()
 	notify := &proto.SyncEntityBuffChangeListScNotify{
-		EntityBuffInfoList: make([]*proto.EntityBuffChangeInfo, 0),
+		EntityBuffChangeList: make([]*proto.EntityBuffChange, 0),
 	}
-	if len(buffIdList) == 0 {
-		for id, buff := range rogue.BuffList {
-			rntityBuffChangeInfo := &proto.EntityBuffChangeInfo{
-				AddBuffInfo: &proto.BuffInfo{
-					BuffId:    id,
-					Level:     buff.Level,
-					AddTimeMs: buff.AddTimeMs,
-					LifeTime:  -1,
-					Count:     4294967295,
-				},
-				RemoveBuffId: 0,
-				EntityId:     6291457,
-			}
-			notify.EntityBuffInfoList = append(notify.EntityBuffInfoList, rntityBuffChangeInfo)
-		}
-	} else {
-		for _, id := range buffIdList {
-			if rogue.BuffList[id] == nil {
-				continue
-			}
-			rntityBuffChangeInfo := &proto.EntityBuffChangeInfo{
-				AddBuffInfo: &proto.BuffInfo{
-					BuffId:    id,
-					Level:     rogue.BuffList[id].Level,
-					AddTimeMs: rogue.BuffList[id].AddTimeMs,
-					LifeTime:  -1,
-					Count:     4294967295,
-				},
-				RemoveBuffId: 0,
-				EntityId:     6291457,
-			}
-			notify.EntityBuffInfoList = append(notify.EntityBuffInfoList, rntityBuffChangeInfo)
-		}
-	}
+	// if len(buffIdList) == 0 {
+	// 	for id, buff := range rogue.BuffList {
+	// 		rntityBuffChangeInfo := &proto.EntityBuffChange{
+	// 			AddBuffInfo: &proto.BuffInfo{
+	// 				BuffId:    id,
+	// 				Level:     buff.Level,
+	// 				AddTimeMs: buff.AddTimeMs,
+	// 				LifeTime:  -1,
+	// 				Count:     4294967295,
+	// 			},
+	// 			RemoveBuffId: 0,
+	// 			EntityId:     6291457,
+	// 		}
+	// 		notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, rntityBuffChangeInfo)
+	// 	}
+	// } else {
+	// 	for _, id := range buffIdList {
+	// 		if rogue.BuffList[id] == nil {
+	// 			continue
+	// 		}
+	// 		rntityBuffChangeInfo := &proto.EntityBuffChange{
+	// 			AddBuffInfo: &proto.BuffInfo{
+	// 				BuffId:    id,
+	// 				Level:     rogue.BuffList[id].Level,
+	// 				AddTimeMs: rogue.BuffList[id].AddTimeMs,
+	// 				LifeTime:  -1,
+	// 				Count:     4294967295,
+	// 			},
+	// 			RemoveBuffId: 0,
+	// 			EntityId:     6291457,
+	// 		}
+	// 		notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, rntityBuffChangeInfo)
+	// 	}
+	// }
 
 	g.Send(cmd.SyncEntityBuffChangeListScNotify, notify)
 }
 
-func (g *GamePlayer) CommonRogueUpdateScNotify() {
-	rogue := g.GetDbRogue()
-	notify := &proto.CommonRogueUpdateScNotify{
-		RogueUpdate: &proto.RogueUpdate{
-			MapId:  rogue.CurRogue.RogueMapID,
-			AreaId: rogue.CurRogue.CurAreaId,
-		},
-	}
-
-	g.Send(cmd.CommonRogueUpdateScNotify, notify)
-}
+// func (g *GamePlayer) CommonRogueUpdateScNotify() {
+// 	rogue := g.GetDbRogue()
+// 	notify := &proto.CommonRogueUpdateScNotify{
+// 		RogueUpdate: &proto.RogueUpdate{
+// 			MapId:  rogue.CurRogue.RogueMapID,
+// 			AreaId: rogue.CurRogue.CurAreaId,
+// 		},
+// 	}
+//
+// 	g.Send(cmd.CommonRogueUpdateScNotify, notify)
+// }
 
 func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 	rogue := g.GetRogue()
@@ -151,14 +151,14 @@ func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 
 func (g *GamePlayer) GetRogueScoreRewardInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetRogueScoreRewardInfoScRsp)
-	rsp.ScoreRewardInfo = &proto.RogueScoreRewardInfo{
+	rsp.Info = &proto.RogueScoreRewardInfo{
 		// TODO 注意时间
 		BeginTime:            1706472000,
 		EndTime:              4294967295,
 		HasTakenInitialScore: true,
 		PoolRefreshed:        true,
 		PoolId:               22,
-		Score:                5000, // 本期分数
+		ExploreScore:         5000, // 本期分数
 	}
 
 	g.Send(cmd.GetRogueScoreRewardInfoScRsp, rsp)
@@ -166,8 +166,8 @@ func (g *GamePlayer) GetRogueScoreRewardInfoCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueTalentInfoScRsp{
-		TalentInfo: &proto.RogueTalentInfo{
-			RogueTalent: make([]*proto.RogueTalent, 0),
+		RogueTalentInfo: &proto.RogueTalentInfo{
+			RogueTalentList: make([]*proto.RogueTalent, 0),
 		},
 	}
 
@@ -176,7 +176,7 @@ func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg []byte) {
 			Status:   proto.RogueTalentStatus_ROGUE_TALENT_STATUS_ENABLE,
 			TalentId: talent,
 		}
-		rsp.TalentInfo.RogueTalent = append(rsp.TalentInfo.RogueTalent, rogueTalent)
+		rsp.RogueTalentInfo.RogueTalentList = append(rsp.RogueTalentInfo.RogueTalentList, rogueTalent)
 	}
 
 	g.Send(cmd.GetRogueTalentInfoScRsp, rsp)
@@ -184,21 +184,21 @@ func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueHandbookDataScRsp{
-		HandbookInfo: &proto.RogueHandbookData{
-			MiracleList: make([]*proto.RogueHandbookMiracle, 0),
-			RogueEvent:  make([]*proto.RogueHandbookEvent, 0),
-			BuffList:    make([]*proto.RogueHandbookBuff, 0),
+		HandbookInfo: &proto.RogueHandbook{
+			// MiracleList: make([]*proto.RogueHandbookMiracle, 0),
+			// RogueEvent:  make([]*proto.RogueHandbookEvent, 0),
+			// BuffList:    make([]*proto.RogueHandbookBuff, 0),
 		},
 	}
 
 	// 解锁全部祝福
-	allBuffList := gdconf.GetAllBuff()
-	for _, id := range allBuffList {
-		buff := &proto.RogueHandbookBuff{
-			BuffId: id,
-		}
-		rsp.HandbookInfo.BuffList = append(rsp.HandbookInfo.BuffList, buff)
-	}
+	// allBuffList := gdconf.GetAllBuff()
+	// for _, id := range allBuffList {
+	// 	buff := &proto.RogueHandbookBuff{
+	// 		BuffId: id,
+	// 	}
+	// 	rsp.HandbookInfo.BuffList = append(rsp.HandbookInfo.BuffList, buff)
+	// }
 
 	g.Send(cmd.GetRogueHandbookDataScRsp, rsp)
 }
@@ -227,7 +227,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	//
 	g.SyncRogueVirtualItemInfoScNotify()
 	syncRogueStatusScNotify := &proto.SyncRogueStatusScNotify{
-		RogueStatus: proto.RogueStatus_ROGUE_STATUS_DOING,
+		Status: proto.RogueStatus_ROGUE_STATUS_DOING,
 	}
 	g.Send(cmd.SyncRogueStatusScNotify, syncRogueStatusScNotify)
 	// 区域通知
@@ -237,7 +237,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	g.SyncLineupNotify(uint32(proto.ExtraLineupType_LINEUP_ROGUE), true)
 	var buffList []uint32
 	g.SyncEntityBuffChangeListScNotify(buffList)
-	g.CommonRogueUpdateScNotify()
+	// g.CommonRogueUpdateScNotify()
 	dbRogue := g.GetDbRogue()
 	rogue := g.GetRogue()
 
@@ -256,31 +256,10 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 		RogueInfo: g.GetRogueInfo(),
 	}
 	rsp.RogueInfo.RogueCurrentInfo = &proto.RogueCurrentInfo{
-		PendingAction: &proto.RogueCommonPendingAction{UniqueId: rogue.BuffNum},
-		RogueAeonInfo: &proto.RogueAeon{
-			IsUnlockEnhanceBuff: true,
-			AeonId:              req.BuffAeonId, // 解锁的命途
-		},
-		RogueAvatarInfo: &proto.RogueAvatarInfo{
-			BaseAvatarIdList: req.BaseAvatarIdList,
-			/*
-				AJJJNLPCEED: &proto.CLPDAOOAHOE{
-					MGEFFLOEPBK: &proto.ItemCostList{
-						ItemList: []*proto.ItemCost{
-							{
-								PileItem: &proto.PileItem{
-									ItemNum: 80,
-									ItemId:  31,
-								},
-							},
-						},
-					},
-				},
-			*/
-		},
-		RoomMap: g.GetRogueMap(),
-		RogueVirtualItem: &proto.RogueVirtualItemInfo{
-			RogueCoin: g.GetDbRogue().CurRogue.CosmicFragment,
+		PendingAction: &proto.RogueCommonPendingAction{QueuePosition: rogue.BuffNum},
+		RogueAeonInfo: &proto.GameAeonInfo{
+			IsUnlocked: true,
+			AeonId:     req.AeonId, // 解锁的命途
 		},
 		Status: proto.RogueStatus_ROGUE_STATUS_DOING,
 	}
@@ -293,27 +272,27 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 	cfRogueManager := gdconf.GetRogueManager()
 	rogueInfo := &proto.RogueInfo{
-		RogueInfoData: &proto.RogueInfoData{
+		RogueGetInfo: &proto.RogueGetInfo{
 			RogueSeasonInfo: &proto.RogueSeasonInfo{
 				BeginTime: cfRogueManager.BeginTime,
 				EndTime:   cfRogueManager.EndTime,
-				SeasonId:  cfRogueManager.RogueSeason,
+				Season:    cfRogueManager.RogueSeason,
 			},
-			RogueScoreInfo: &proto.RogueScoreRewardInfo{
-				BeginTime:            cfRogueManager.BeginTime,
-				EndTime:              cfRogueManager.EndTime,
-				HasTakenInitialScore: true,
-				PoolId:               22,
-				PoolRefreshed:        true,
-				HasTakenReward:       nil,  // 已领取奖励
-				Score:                5000, // 本期得分
+			RogueScoreRewardInfo: &proto.RogueScoreRewardInfo{
+				BeginTime:              cfRogueManager.BeginTime,
+				EndTime:                cfRogueManager.EndTime,
+				HasTakenInitialScore:   true,
+				PoolId:                 22,
+				PoolRefreshed:          true,
+				TakenNormalFreeRowList: nil,  // 已领取奖励
+				ExploreScore:           5000, // 本期得分
 			},
-			RogueAreaInfo: &proto.RogueAreaInfo{RogueArea: g.GetRogueArea()},
+			RogueAreaInfo: &proto.RogueAreaInfo{RogueAreaList: g.GetRogueArea()},
 			RogueAeonInfo: &proto.RogueAeonInfo{
 				// TODO
-				AeonIdList:    []uint32{1, 2, 3, 4, 5, 6, 7, 8, 9},
-				IsUnlocked:    true,
-				UnlockAeonNum: 9,
+				AeonIdList:      []uint32{1, 2, 3, 4, 5, 6, 7, 8, 9},
+				IsUnlocked:      true,
+				UnlockedAeonNum: 9,
 			},
 		},
 	}
@@ -328,8 +307,8 @@ func (g *GamePlayer) GetRogueArea() []*proto.RogueArea {
 	for _, rogueArea := range cfRogueManager.RogueAreaIDList {
 		dbRogueArea := g.GetDbRogueArea(rogueArea)
 		RogueArea := &proto.RogueArea{
-			AreaId:          dbRogueArea.AreaId,
-			RogueAreaStatus: uint32(dbRogueArea.RogueAreaStatus),
+			AreaId:     dbRogueArea.AreaId,
+			AreaStatus: proto.RogueAreaStatus(dbRogueArea.RogueAreaStatus),
 		}
 		rogueAreaList = append(rogueAreaList, RogueArea)
 	}
@@ -400,9 +379,9 @@ func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
 
 	for id, rogueScene := range rogue.CurRogue.RogueSceneMap {
 		roomList := &proto.RogueRoom{
-			SiteId:     id,
-			RoomId:     rogueScene.RoomId,
-			RoomStatus: proto.RogueRoomStatus(rogueScene.RoomStatus),
+			SiteId:    id,
+			RoomId:    rogueScene.RoomId,
+			CurStatus: proto.RogueRoomStatus(rogueScene.RoomStatus),
 		}
 
 		roomMap.RoomList = append(roomMap.RoomList, roomList)
@@ -570,7 +549,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 					entityList.Prop.PropId = 1021
 				}
 				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
-					Info: &proto.PropExtraInfo_RogueInfo{
+					InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
 						RogueInfo: &proto.PropRogueInfo{
 							RoomId: nextRoom.RoomId,
 							SiteId: siteId,
@@ -655,10 +634,10 @@ func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	rsp.BattleInfo.BuffList = make([]*proto.BattleBuff, 0)
 	for id, buff := range g.GetRogueBuff() {
 		battleBuff := &proto.BattleBuff{
-			Id:       id,
-			Level:    buff.Level,
-			OwnerId:  4294967295,
-			WaveFlag: 4294967295,
+			Id:         id,
+			Level:      buff.Level,
+			OwnerIndex: 4294967295,
+			WaveFlag:   4294967295,
 		}
 		rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, battleBuff)
 	}
@@ -700,7 +679,7 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, 
 	// 场景实体刷新通知 SceneGroupRefreshScNotify （门和删除刚刚战斗的实体）
 	// 删除实体
 	nitify := &proto.SceneGroupRefreshScNotify{
-		GroupRefreshInfo: make([]*proto.SceneGroupRefreshInfo, 0),
+		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
 	// for _, eventId := range battle.monsterEntityMap {
 	// 	entity := g.GetSceneEntity().MonsterEntity[eventId]
@@ -763,7 +742,7 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 	// 模拟宇宙图鉴更新通知？ SyncRogueHandbookDataUpdateScNotify
 	// 模拟宇宙常见操作结果通知 SyncRogueCommonActionResultScNotify // add buff, buff状态
 	rsp := &proto.HandleRogueCommonPendingActionScRsp{
-		Times: rogue.BuffNum,
+		// Times: rogue.BuffNum,
 	}
 
 	g.Send(cmd.HandleRogueCommonPendingActionScRsp, rsp)

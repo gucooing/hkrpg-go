@@ -12,7 +12,7 @@ import (
 func (g *GamePlayer) DressAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
-	g.DressAvatarPlayerSyncScNotify(req.GetEquipAvatarId(), req.GetEquipmentUniqueId())
+	g.DressAvatarPlayerSyncScNotify(req.GetDressAvatarId(), req.GetEquipmentUniqueId())
 	g.Send(cmd.DressAvatarScRsp, nil)
 }
 
@@ -78,7 +78,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue
@@ -102,7 +102,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的光锥
-	for _, equipment := range req.ItemCostList.ItemList {
+	for _, equipment := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if equipment.GetEquipmentUniqueId() == 0 {
 			continue
@@ -175,7 +175,7 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 	gdconfEquipment := gdconf.GetEquipmentConfigById(strconv.Itoa(int(dbEquipment.Tid)))
 
 	// 遍历用来叠影的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue
@@ -207,7 +207,7 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来叠影的光锥
-	for _, equipment := range req.ItemCostList.ItemList {
+	for _, equipment := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if equipment.GetEquipmentUniqueId() == 0 {
 			continue
@@ -251,7 +251,7 @@ func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 	// 遍历用来突破的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue

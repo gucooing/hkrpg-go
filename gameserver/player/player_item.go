@@ -79,7 +79,7 @@ func (g *GamePlayer) SellItemCsReq(payloadMsg []byte) {
 		},
 		Retcode: 0,
 	}
-	itemCost := req.GetItemCostList()
+	itemCost := req.GetCostData()
 	for _, item := range itemCost.GetItemList() {
 		// pileItem := item.GetPileItem()
 		equipmentUniqueId := item.GetEquipmentUniqueId()

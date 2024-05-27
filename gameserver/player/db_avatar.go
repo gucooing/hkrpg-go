@@ -281,16 +281,16 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 		return nil
 	}
 	avatar := &proto.Avatar{
-		SkilltreeList:     make([]*proto.AvatarSkillTree, 0),
-		Exp:               avatardb.Exp,
-		BaseAvatarId:      avatardb.AvatarId,
-		Rank:              avatardb.Rank,
-		EquipmentUniqueId: avatardb.EquipmentUniqueId,
-		EquipRelicList:    make([]*proto.EquipRelic, 0),
-		TakenRewards:      avatardb.TakenRewards,
-		FirstMetTimestamp: avatardb.FirstMetTimeStamp,
-		Promotion:         avatardb.PromoteLevel,
-		Level:             avatardb.Level,
+		SkilltreeList:               make([]*proto.AvatarSkillTree, 0),
+		Exp:                         avatardb.Exp,
+		BaseAvatarId:                avatardb.AvatarId,
+		Rank:                        avatardb.Rank,
+		EquipmentUniqueId:           avatardb.EquipmentUniqueId,
+		EquipRelicList:              make([]*proto.EquipRelic, 0),
+		HasTakenPromotionRewardList: avatardb.TakenRewards,
+		FirstMetTimeStamp:           avatardb.FirstMetTimeStamp,
+		Promotion:                   avatardb.PromoteLevel,
+		Level:                       avatardb.Level,
 	}
 	for _, skill := range g.GetSkillTreeList(avatarId) {
 		if avatarId/1000 == 8 {
@@ -310,7 +310,7 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 			continue
 		}
 		equipRelic := &proto.EquipRelic{
-			Slot:          id,
+			Type:          id,
 			RelicUniqueId: relic,
 		}
 		avatar.EquipRelicList = append(avatar.EquipRelicList, equipRelic)

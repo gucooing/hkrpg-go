@@ -15,7 +15,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCsReq, payloadMsg)
 	req := msg.(*proto.SceneCastSkillCsReq)
 	rsp := &proto.SceneCastSkillScRsp{
-		AttackedGroupId: req.AttackedGroupId,
+		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
 	// 根据各种情况进行处理
 	if req.SkillIndex != 0 { // 这里的情况是角色释放技能
@@ -25,7 +25,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	var mpem *MPEM
 	mpem = g.GetMem(req.HitTargetEntityIdList)
 	if len(mpem.EntityId) == 0 { // 这里的情况是，是怪物主动攻击发生的战斗
-		mpem = g.GetMem([]uint32{req.CasterId})
+		mpem = g.GetMem([]uint32{req.AttackedByEntityId})
 	}
 	if len(mpem.EntityId) == 0 { // 这里的情况是角色普通攻击并没有命中怪物
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
@@ -62,17 +62,17 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		EndStatus:        req.EndStatus, // 战斗结算状态
 		CheckIdentical:   true,          // 反作弊验证
 		BinVersion:       "",
-		ResVersion:       strconv.Itoa(int(req.ClientResVersion)), // 版本验证
+		ResVersion:       strconv.Itoa(int(req.ClientVersion)), // 版本验证
 	}
 	// 更新角色状态
-	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
+	g.BattleUpAvatar(req.Stt.GetAvatarBattleList(), req.GetEndStatus())
 
 	// 根据不同结算状态处理
 	switch req.EndStatus {
 	case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
 		// 删除怪物实体
 		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
-			GroupRefreshInfo: g.GetDelSceneGroupRefreshInfo(battleBin.monsterEntity),
+			GroupRefreshList: g.GetDelSceneGroupRefreshInfo(battleBin.monsterEntity),
 		})
 		// 账号状态改变通知
 		g.PlayerPlayerSyncScNotify()
