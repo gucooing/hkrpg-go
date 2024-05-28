@@ -132,7 +132,7 @@ func (s *GameServer) AutoUpDataPlayer() {
 		timestamp := time.Now().Unix()
 		if timestamp-lastActiveTime >= 180 {
 			logger.Debug("[UID:%v]玩家数据自动保存", g.p.Uid)
-			s.upDataPlayer(g.p)
+			g.p.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE)
 			g.LastActiveTime = timestamp + rand.Int63n(120)
 		}
 	}
@@ -144,7 +144,7 @@ func (s *GameServer) Close() error {
 		if g.p.Uid == 0 {
 			continue
 		}
-		s.upDataPlayer(g.p)
+		g.p.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
 	}
 	return nil
 }

@@ -2,7 +2,6 @@ package player
 
 import (
 	"strconv"
-	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -132,41 +131,6 @@ func (g *GamePlayer) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 
 }
 
-func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetFriendLoginInfoScRsp)
-	rsp.FriendUidList = []uint32{999}
-
-	g.Send(cmd.GetFriendLoginInfoScRsp, rsp)
-}
-
-func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetFriendListInfoScRsp)
-	rsp.FriendList = make([]*proto.FriendSimpleInfo, 0)
-	simpleInfo := &proto.PlayerSimpleInfo{
-		Signature:      "欢迎来到免费私人服务器 hkrpg-go",
-		LastActiveTime: time.Now().Unix(),
-		Level:          999,
-		ChatBubbleId:   220003,
-		Platform:       proto.PlatformType_MAC,
-		AssistSimpleList: []*proto.AssistSimpleInfo{
-			{
-				Pos:           0,
-				AvatarId:      1212,
-				Level:         80,
-				DressedSkinId: 0,
-			},
-		},
-		Uid:          999,
-		HeadIcon:     200106,
-		Nickname:     "hkrpg-go",
-		OnlineStatus: proto.FriendOnlineStatus_FRIEND_ONLINE_STATUS_ONLINE,
-	}
-	friendListInfo := &proto.FriendSimpleInfo{PlayerInfo: simpleInfo}
-	rsp.FriendList = append(rsp.FriendList, friendListInfo)
-
-	g.Send(cmd.GetFriendListInfoScRsp, rsp)
-}
-
 func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetPrivateChatHistoryCsReq, payloadMsg)
 	req := msg.(*proto.GetPrivateChatHistoryCsReq)
@@ -178,18 +142,6 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 		Retcode:         0,
 	}
 	g.Send(cmd.GetPrivateChatHistoryScRsp, rsp)
-}
-
-func (g *GamePlayer) GetChatFriendHistoryCsReq(payloadMsg []byte) {
-	g.Send(cmd.GetChatFriendHistoryScRsp, &proto.GetChatFriendHistoryScRsp{
-		FriendHistoryInfo: []*proto.FriendHistoryInfo{
-			{
-				LastSendTime: time.Now().Unix(),
-				ContactId:    999,
-			},
-		},
-		Retcode: 0,
-	})
 }
 
 func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {

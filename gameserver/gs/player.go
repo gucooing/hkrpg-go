@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/player"
-	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -29,52 +28,10 @@ type GamePlayer struct {
 
 // 这个kill玩家不会通知给gate
 func (s *GameServer) killPlayer(p *GamePlayer) {
-	s.upDataPlayer(p.p)
+	p.p.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
 	s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.p.AccountId)))
 	s.delPlayerMap(p.p.Uid)
 	logger.Info("[UID:%v]玩家下线成功", p.p.Uid)
-}
-
-// 玩家数据唯一修改方法
-func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
-	redisDb, ok := s.Store.GetPlayerStatus(strconv.Itoa(int(p.AccountId)))
-	if !ok {
-		return
-	}
-	statu := new(spb.PlayerStatusRedisData)
-	err := pb.Unmarshal(redisDb, statu)
-	if err != nil {
-		logger.Error("PlayerStatusRedisData Unmarshal error")
-		s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
-		return
-	}
-	if statu.GameserverId != s.AppId && statu.DataVersion != p.GetDataVersion() {
-		// 脏数据
-		logger.Info("[UID:%v]数据过期，已丢弃", p.Uid)
-		return
-	}
-	//  确认写入，更新数据版本
-	p.AddDataVersion()
-	dbDate := new(database.PlayerData)
-	dbDate.Uid = p.Uid
-	dbDate.Level = p.GetLevel()
-	dbDate.Exp = p.GetMaterialById(player.Exp)
-	dbDate.Nickname = p.GetNickname()
-	dbDate.BinData, err = pb.Marshal(p.BasicBin)
-	dbDate.DataVersion = p.GetDataVersion()
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return
-	}
-
-	if err = s.Store.UpdatePlayer(dbDate); err != nil {
-		logger.Error("Update Player error")
-		return
-	}
-	if !s.SetPlayerPlayerBasicBriefData(p) {
-		logger.Error("[UID:%v]玩家简要信息保存失败", p.Uid)
-	}
-	return
 }
 
 /************************************接口*********************************/
@@ -149,25 +106,4 @@ func (s *GameServer) AddPlayerStatus(g *GamePlayer) error {
 		logger.Info("玩家状态锁加锁失败")
 	}
 	return err
-}
-
-func (s *GameServer) SetPlayerPlayerBasicBriefData(g *player.GamePlayer) bool {
-	playerBasicBrief := &spb.PlayerBasicBriefData{
-		Nickname:          g.GetNickname(),
-		Level:             g.GetLevel(),
-		WorldLevel:        g.GetWorldLevel(),
-		LastLoginTime:     time.Now().Unix(),
-		HeadImageAvatarId: g.GetHeadIcon(),
-		Exp:               g.GetMaterialById(player.Exp),
-		PlatformType:      0,
-		Uid:               g.Uid,
-	}
-
-	bin, err := pb.Marshal(playerBasicBrief)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return false
-	}
-
-	return s.Store.SetPlayerPlayerBasicBriefData(g.Uid, bin)
 }

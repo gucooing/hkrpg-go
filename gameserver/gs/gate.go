@@ -8,7 +8,6 @@ import (
 	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -168,9 +167,9 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 		ge.GateGamePlayerLoginRsp(rsp)
 		return
 	}
-	p := NewPlayer(req.Uid, req.AccountId, ge.msgChan)
+	p := ge.NewPlayer(req.Uid, req.AccountId, ge.msgChan)
 	// 拉取账户数据
-	ge.GetPlayerDate(req.Uid, p)
+	p.GetPlayerDateByDb()
 	g, ok := ge.game.addPlayerMap(req.Uid, p, ge)
 	if !ok {
 		logger.Warn("[UID:%v]超出预期的玩家重复登录", p.Uid)
@@ -179,40 +178,6 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	logger.Info("[UID:%v]登录game", p.Uid)
 	ge.game.AddPlayerStatus(g)
 	ge.GateGamePlayerLoginRsp(rsp)
-}
-
-func (ge *gateServer) GetPlayerDate(accountId uint32, g *player.GamePlayer) {
-	var err error
-	dbPlayer := ge.game.Store.QueryAccountUidByFieldPlayer(accountId)
-	if dbPlayer == nil || dbPlayer.BinData == nil {
-		dbPlayer = new(database.PlayerData)
-		logger.Info("新账号登录，进入初始化流程")
-		g.BasicBin = g.NewBasicBin()
-		// 初始化完毕保存账号数据
-		dbPlayer.Uid = g.Uid
-		dbPlayer.Level = g.GetLevel()
-		dbPlayer.Exp = g.GetMaterialById(player.Exp)
-		dbPlayer.Nickname = g.GetNickname()
-		dbPlayer.BinData, err = pb.Marshal(g.BasicBin)
-		dbPlayer.DataVersion = g.GetDataVersion()
-		if err != nil {
-			logger.Error("pb marshal error: %v", err)
-		}
-
-		err = ge.game.Store.AddDatePlayerFieldByFieldName(dbPlayer)
-		if err != nil {
-			logger.Error("账号数据储存失败")
-			return
-		}
-	} else {
-		g.BasicBin = new(spb.PlayerBasicCompBin)
-		err = pb.Unmarshal(dbPlayer.BinData, g.BasicBin)
-		if err != nil {
-			logger.Error("unmarshal proto data err: %v", err)
-			g.BasicBin = g.NewBasicBin()
-			return
-		}
-	}
 }
 
 func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
@@ -257,11 +222,13 @@ func (ge *gateServer) playerRepeatLogin(req *spb.GetToGamePlayerLogoutReq) {
 	ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
 }
 
-func NewPlayer(uid, accountId uint32, msg chan player.Msg) *player.GamePlayer {
+func (ge *gateServer) NewPlayer(uid, accountId uint32, msg chan player.Msg) *player.GamePlayer {
 	g := new(player.GamePlayer)
 	g.Uid = uid
 	g.AccountId = accountId
 	g.MsgChan = msg
+	g.GameAppId = ge.game.AppId
+	g.GateAppId = ge.appid
 
 	return g
 }

@@ -1,11 +1,13 @@
 package player
 
 import (
+	"encoding/base64"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) closechan() {
@@ -35,6 +37,8 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v]登录的客户端版本是:%s", g.Uid, req.ClientVersion)
+	g.Platform = spb.PlatformType(req.Platform)
+	go g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE) // 异步更新一次数据
 	g.HandlePlayerLoginScRsp()
 }
 
@@ -103,6 +107,7 @@ func (g *GamePlayer) LoginNotify() {
 	g.Send(cmd.NewMailScNotify, nil)
 	g.Send(cmd.NewAssistHistoryNotify, nil)
 	// g.ServerAnnounceNotify()
+	// g.ClientDownloadDataScNotify()
 }
 
 // 飘窗通知
@@ -120,4 +125,17 @@ func (g *GamePlayer) ServerAnnounceNotify() {
 		BeginTime:   1664308800,
 	})
 	g.Send(cmd.ServerAnnounceNotify, notify)
+}
+
+// wind
+func (g *GamePlayer) ClientDownloadDataScNotify() {
+	luac, _ := base64.StdEncoding.DecodeString("wind")
+	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{
+		DownloadData: &proto.ClientDownloadData{
+			Version: 1,
+			Time:    1735664461,
+			Data:    luac,
+		},
+	},
+	)
 }

@@ -11,6 +11,8 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
+var Db *Store
+
 type Store struct {
 	config               *config.Config
 	PlayerDataMysql      *gorm.DB
@@ -25,6 +27,7 @@ var ctx = context.Background()
 // NewStore 创建一个新的 store。
 func NewStore(config *config.Config) *Store {
 	s := &Store{config: config}
+	Db = s
 	mysqlPlayerDataConf := config.MysqlConf["player"]
 	s.PlayerDataMysql = database.NewMysql(mysqlPlayerDataConf.Dsn)
 	s.PlayerDataMysql.AutoMigrate(&database.PlayerData{})
@@ -42,4 +45,8 @@ func NewStore(config *config.Config) *Store {
 	logger.Info("数据库连接成功")
 	s.GetDbConf() // 初始化数据库配置表
 	return s
+}
+
+func GetDb() *Store {
+	return Db
 }
