@@ -44,7 +44,7 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 		}
 		if bannerslist.GachaType == "Normal" {
 			gachaInfoList.GachaInfoList = &proto.GachaCeiling{
-				// IsClaimed:  false,
+				// IsClaimed:  false, // 是否已领取自选
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
 				// CeilingNum: gacha.CeilingNum,
 			}

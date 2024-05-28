@@ -88,8 +88,13 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetFriendListInfoCsReq:     g.GetFriendListInfoCsReq,        // 获取好友信息
 		cmd.GetPrivateChatHistoryCsReq: g.GetPrivateChatHistoryCsReq,    // 获取私聊记录
 		cmd.SendMsgCsReq:               g.SendMsgCsReq,                  // 发送聊天信息
-		// cmd.SearchPlayerCsReq:          g.SearchPlayerCsReq,             // 搜索玩家？
-		cmd.GetChatFriendHistoryCsReq: g.GetChatFriendHistoryCsReq, // 获取正在进行的聊天室
+		cmd.GetChatFriendHistoryCsReq:  g.GetChatFriendHistoryCsReq,     // 获取正在进行的聊天室
+		// cmd.SearchPlayerCsReq:               g.SearchPlayerCsReq,               // 查找玩家
+		// cmd.GetFriendApplyListInfoCsReq:     g.GetFriendApplyListInfoCsReq,     // 获取好友申请列表
+		// cmd.HandleFriendCsReq:               g.HandleFriendCsReq,               // 处理好友申请
+		// cmd.GetFriendRecommendListInfoCsReq: g.GetFriendRecommendListInfoCsReq, // 获取附近的人
+		// cmd.ApplyFriendCsReq:                g.ApplyFriendCsReq,                // 发送好友申请
+		// cmd.GetPlayerDetailInfoCsReq:          g.GetPlayerDetailInfoCsReq, // 获取玩家详细信息
 		// 邮件
 		cmd.MarkReadMailCsReq:       g.MarkReadMailCsReq,       // 读取邮件
 		cmd.GetMailCsReq:            g.GetMailCsReq,            // 获取邮件
@@ -130,7 +135,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetFirstTalkNpcCsReq:              g.GetFirstTalkNpcCsReq,
 		cmd.GetNpcTakenRewardCsReq:            g.GetNpcTakenRewardCsReq,            // NPC对话
 		cmd.GetFirstTalkByPerformanceNpcCsReq: g.GetFirstTalkByPerformanceNpcCsReq, // NPC商店
-		// cmd.GetPlayerDetailInfoCsReq:          g.GetPlayerDetailInfoCsReq,
+		// 提示
 	}
 }
 

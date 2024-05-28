@@ -102,4 +102,22 @@ func (g *GamePlayer) LoginNotify() {
 	g.Send(cmd.GeneralVirtualItemDataNotify, nil)
 	g.Send(cmd.NewMailScNotify, nil)
 	g.Send(cmd.NewAssistHistoryNotify, nil)
+	// g.ServerAnnounceNotify()
+}
+
+// 飘窗通知
+func (g *GamePlayer) ServerAnnounceNotify() {
+	notify := &proto.ServerAnnounceNotify{AnnounceDataList: make([]*proto.AnnounceData, 0)}
+	notify.AnnounceDataList = append(notify.AnnounceDataList, &proto.AnnounceData{
+		OEFAEICOAAK: "1",
+		NCPMKFHMCCF: "2",
+		EndTime:     4294967295,
+		BLOAEHJLPFN: 0,
+		OKMBMPIOPDC: false,
+		DFBOGDOGCPP: 0,
+		ConfigId:    0,
+		CHJOJJLOBEI: "通知文本",
+		BeginTime:   1664308800,
+	})
+	g.Send(cmd.ServerAnnounceNotify, notify)
 }
