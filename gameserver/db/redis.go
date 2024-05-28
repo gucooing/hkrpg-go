@@ -86,26 +86,3 @@ func (s *Store) GetPlayerPlayerBasicBriefData(uid uint32) ([]byte, bool) {
 		return bin, false
 	}
 }
-
-// 获取玩家好友信息
-func (s *Store) GetPlayerFriend(uid uint32) ([]byte, bool) {
-	key := "player_friend:" + strconv.Itoa(int(uid))
-	bin, err := s.PlayerBriefDataRedis.Get(ctx, key).Bytes()
-	if err == nil {
-		return bin, true
-	} else if err == redis.Nil {
-		return bin, false
-	} else {
-		return bin, false
-	}
-}
-
-// 设置玩家好友信息
-func (s *Store) SetPlayerFriend(uid uint32, value []byte) bool {
-	key := "player_friend:" + strconv.Itoa(int(uid))
-	err := s.PlayerBriefDataRedis.Set(ctx, key, value, 0).Err()
-	if err != nil {
-		return false
-	}
-	return true
-}

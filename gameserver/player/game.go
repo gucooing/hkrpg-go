@@ -142,7 +142,7 @@ func (g *GamePlayer) UpdatePlayerFriend() {
 		logger.Error("pb marshal error: %v", err)
 		return
 	}
-	db.GetDb().SetPlayerFriend(g.Uid, bin)
+	database.SetPlayerFriend(db.Db.PlayerBriefDataRedis, g.Uid, bin)
 }
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {

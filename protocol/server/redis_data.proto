@@ -81,7 +81,7 @@ message PlayerBasicBriefData {// 玩家简要信息
 message PlayerFriend {// 好友信息，单玩家好友不多
   uint32 uid = 1; // 玩家
   repeated uint32 friend_list = 2; // 好友uid列表
-  repeated ReceiveApply recv_apply_friend = 3; // 接收到的好友申请
+  map<uint32,ReceiveApply> recv_apply_friend = 3; // 接收到的好友申请
   repeated uint32 send_apply_friend = 4; // 发送的好友申请
 }
 

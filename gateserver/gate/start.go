@@ -102,6 +102,7 @@ func (s *GateServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
 	g.KcpConn = kcpConn
 	g.XorKey = s.Ec2b.XorKey()
 	g.LastActiveTime = getCurTime()
+	g.ga = s
 	// 初始化路由
 	g.RouteManager = NewRouteManager(g)
 

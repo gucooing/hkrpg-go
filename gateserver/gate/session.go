@@ -13,6 +13,7 @@ import (
 
 type PlayerGame struct {
 	gs             *gameServer
+	ga             *GateServer
 	Status         spb.PlayerStatus
 	Uid            uint32 // uid
 	AccountId      uint32
@@ -42,6 +43,8 @@ func (r *RouteManager) initRoute(p *PlayerGame) {
 		cmd.PlayerHeartBeatCsReq: p.HandlePlayerHeartBeatCsReq,
 		cmd.PlayerLogoutCsReq:    p.PlayerLogoutCsReq,
 		cmd.GetAuthkeyCsReq:      p.nilProto,
+		// 好友
+		cmd.ApplyFriendCsReq: p.ApplyFriendCsReq, // 发送好友申请
 	}
 }
 
@@ -55,7 +58,9 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	return
 }
 
-func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {}
+func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {
+	logger.Info("", tcpMsg.ProtoData)
+}
 
 // 将玩家消息转发到game
 func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {

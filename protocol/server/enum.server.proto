@@ -132,10 +132,16 @@ enum ChallengeStatus {// 正在进行的忘却之庭关卡状态
   CHALLENGE_FAILED = 3;
 }
 
-enum MsgType { // 消息类型
+enum MsgType {// 消息类型
   MSG_TYPE_NONE = 0; // 空
   MSG_TYPE_CUSTOM_TEXT = 1; // 文本
   MSG_TYPE_EMOJI = 2; // 表情
+}
+
+enum PlayerMsgType{
+  PMT_NONE = 0;//无
+  PMT_APPLYFRIEND = 1;  //申请好友
+  PMT_CHAT = 2; // 聊天消息
 }
 
 enum RogueAreaStatus {

@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gateserver/config"
@@ -20,8 +19,8 @@ func getCurTime() uint64 {
 
 // 玩家ping包处理
 func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
-	req := new(proto.PlayerHeartBeatCsReq)
-	pb.Unmarshal(tcpMsg.ProtoData, req)
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.PlayerHeartBeatCsReq)
 	sTime := getCurTime()
 
 	rsp := new(proto.PlayerHeartBeatScRsp)
@@ -32,12 +31,17 @@ func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
 	p.GateToPlayer(cmd.PlayerHeartBeatScRsp, rsp)
 }
 
-func stou32(msg string) uint32 {
-	if msg == "" {
-		return 0
-	}
-	ms, _ := strconv.ParseUint(msg, 10, 32)
-	return uint32(ms)
+func (p *PlayerGame) ApplyFriendCsReq(tcpMsg *alg.PackMsg) {
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.ApplyFriendCsReq)
+	// 发送到node
+	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
+		MsgType:  spb.PlayerMsgType_PMT_APPLYFRIEND,
+		ApplyUid: p.Uid,
+		SendUid:  req.Uid,
+	})
+	// 返回给玩家
+	p.GateToPlayer(cmd.ApplyFriendScRsp, &proto.ApplyFriendScRsp{Uid: req.Uid})
 }
 
 /******************************************NewLogin***************************************/
@@ -60,7 +64,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		}
 	}
 
-	accountUid := stou32(req.AccountUid)
+	accountUid := alg.S2U32(req.AccountUid)
 	dbComboToken := s.Store.GetComboTokenByAccountId(req.AccountUid)
 	// token验证
 	if dbComboToken != req.Token {

@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	base "github.com/gucooing/hkrpg-go/gameserver/db"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -12,12 +13,12 @@ import (
 
 // 获取好友数据每次都去redis里取
 func (g *GamePlayer) GetFriend() *spb.PlayerFriend {
-	redisDb, ok := base.GetDb().GetPlayerFriend(g.Uid)
+	redisDb, ok := database.GetPlayerFriend(base.Db.PlayerBriefDataRedis, g.Uid)
 	if !ok {
 		return &spb.PlayerFriend{
 			Uid:             g.Uid,
 			FriendList:      []uint32{0},
-			RecvApplyFriend: make([]*spb.ReceiveApply, 0),
+			RecvApplyFriend: make(map[uint32]*spb.ReceiveApply, 0),
 			SendApplyFriend: make([]uint32, 0),
 		}
 	}
@@ -28,7 +29,7 @@ func (g *GamePlayer) GetFriend() *spb.PlayerFriend {
 		return &spb.PlayerFriend{
 			Uid:             g.Uid,
 			FriendList:      []uint32{0},
-			RecvApplyFriend: make([]*spb.ReceiveApply, 0),
+			RecvApplyFriend: make(map[uint32]*spb.ReceiveApply, 0),
 			SendApplyFriend: make([]uint32, 0),
 		}
 	}
@@ -43,10 +44,10 @@ func (g *GamePlayer) GetFriendList() []uint32 {
 	return db.FriendList
 }
 
-func (g *GamePlayer) GetRecvApplyFriend() []*spb.ReceiveApply {
+func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 	db := g.GetFriend()
 	if db.RecvApplyFriend == nil {
-		db.RecvApplyFriend = make([]*spb.ReceiveApply, 0)
+		db.RecvApplyFriend = make(map[uint32]*spb.ReceiveApply)
 	}
 	return db.RecvApplyFriend
 }
@@ -95,11 +96,18 @@ func (g *GamePlayer) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
 		return nil
 	}
 	simpleInfo := &proto.PlayerSimpleInfo{
-		Signature:      friend.Signature,
-		LastActiveTime: friend.LastLoginTime,
-		Level:          friend.Level,
+		AILINANGJNE:    "",
 		ChatBubbleId:   220003,
+		IsBanned:       false,
+		HeadIcon:       friend.HeadImageAvatarId,
+		LDFIOFJHJJA:    "",
+		Signature:      friend.Signature,
 		Platform:       proto.PlatformType(friend.PlatformType),
+		LastActiveTime: friend.LastLoginTime,
+		OnlineStatus:   proto.FriendOnlineStatus(friend.Status),
+		Nickname:       friend.Nickname,
+		Uid:            friend.Uid,
+		Level:          friend.Level,
 		AssistSimpleList: []*proto.AssistSimpleInfo{
 			{
 				Pos:           0,
@@ -108,10 +116,6 @@ func (g *GamePlayer) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
 				DressedSkinId: 0,
 			},
 		},
-		Uid:          friend.Uid,
-		HeadIcon:     friend.HeadImageAvatarId,
-		Nickname:     friend.Nickname,
-		OnlineStatus: proto.FriendOnlineStatus(friend.Status),
 	}
 	return simpleInfo
 }
@@ -123,22 +127,34 @@ func (g *GamePlayer) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 	}
 	playerDetailInfo := &proto.PlayerDetailInfo{
 		DisplayAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
-		Record:            nil,
-		AILINANGJNE:       "",
-		WorldLevel:        friend.WorldLevel,
-		Uid:               friend.Uid,
-		EFNHCOEKDCN:       false,
-		AssistAvatarList:  make([]*proto.DisplayAvatarDetailInfo, 0),
-		Level:             friend.Level,
-		IsBanned:          false,
-		MAPJDADPKOL:       0,
-		HeadIcon:          friend.HeadImageAvatarId,
-		Platform:          proto.PlatformType(friend.PlatformType),
-		AKFPFMGILAO:       0,
-		RecordInfo:        &proto.DisplayRecordInfo{},
-		LDFIOFJHJJA:       "",
-		Signature:         friend.Signature,
-		Nickname:          friend.Nickname,
+		Record: &proto.PlayerBasicBrief{
+			Level:                  friend.Level,
+			UnlockedAvatarNum:      999,
+			UnlockedAchievementNum: 999,
+			UnlockedBookNum:        999,
+			UnlockedMusicNum:       999,
+			FKBLOGEAFJJ:            2000,
+			CollectionInfo: &proto.PlayerCollectionInfo{
+				DCIOBLHLICO: 2006,
+				KLLEONMNLDI: 60,
+			},
+			WorldLevel: friend.WorldLevel,
+		},
+		AILINANGJNE:      "",
+		WorldLevel:       friend.WorldLevel,
+		Uid:              friend.Uid,
+		EFNHCOEKDCN:      true, // 隐藏/公开
+		AssistAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
+		Level:            friend.Level,
+		IsBanned:         false,
+		MAPJDADPKOL:      0,
+		HeadIcon:         friend.HeadImageAvatarId,
+		Platform:         proto.PlatformType(friend.PlatformType),
+		AKFPFMGILAO:      0,
+		RecordInfo:       &proto.DisplayRecordInfo{},
+		LDFIOFJHJJA:      "",
+		Signature:        friend.Signature,
+		Nickname:         friend.Nickname,
 	}
 
 	return playerDetailInfo

@@ -164,3 +164,9 @@ message MuipToNodePingRsp {// node回复muip的ping包
 message MuipServiceAll {
   repeated ServiceAll service_list = 1;
 }
+
+message PlayerMsgGateToNodeNotify{// 将玩家操作通知到node
+  PlayerMsgType msg_type = 1; // 类型
+  uint32 apply_uid = 2; // 发起玩家
+  uint32 send_uid = 3; // 接收玩家
+}

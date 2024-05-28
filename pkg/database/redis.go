@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -44,4 +45,27 @@ func NewRedis(addr, password string, db int) *redis.Client {
 		panic("redis connect fail" + err.Error())
 	}
 	return rdb
+}
+
+// 获取玩家好友信息
+func GetPlayerFriend(rc *redis.Client, uid uint32) ([]byte, bool) {
+	key := "player_friend:" + strconv.Itoa(int(uid))
+	bin, err := rc.Get(ctx, key).Bytes()
+	if err == nil {
+		return bin, true
+	} else if err == redis.Nil {
+		return bin, false
+	} else {
+		return bin, false
+	}
+}
+
+// 设置玩家好友信息
+func SetPlayerFriend(rc *redis.Client, uid uint32, value []byte) bool {
+	key := "player_friend:" + strconv.Itoa(int(uid))
+	err := rc.Set(ctx, key, value, 0).Err()
+	if err != nil {
+		return false
+	}
+	return true
 }

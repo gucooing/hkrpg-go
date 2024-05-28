@@ -8,13 +8,17 @@ import (
 )
 
 type Store struct {
-	StatusRedis *redis.Client // 在线状态数据库
+	StatusRedis          *redis.Client // 在线状态数据库
+	PlayerBriefDataRedis *redis.Client // 玩家简要信息
 }
 
 func NewStore(conf *config.Config) *Store {
 	s := new(Store)
 	redisStatusConf := conf.RedisConf["player_status"]
 	s.StatusRedis = database.NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
+	playerBriefDataRedis := conf.RedisConf["player_brief_data"]
+	s.PlayerBriefDataRedis = database.NewRedis(playerBriefDataRedis.Addr, playerBriefDataRedis.Password, playerBriefDataRedis.DB)
+
 	logger.Info("数据库连接成功")
 	return s
 }

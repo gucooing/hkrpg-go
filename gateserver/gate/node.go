@@ -20,6 +20,14 @@ type NodeService struct {
 	ticker       *time.Ticker // 定时器
 }
 
+func (s *GateServer) sendNode(cmdId uint16, playerMsg pb.Message) {
+	node := s.node
+	if node == nil {
+		return
+	}
+	node.sendNode(cmdId, playerMsg)
+}
+
 func (s *GateServer) newNode() {
 	n := new(NodeService)
 	tcpConn, err := gunet.NewTcpC(s.Config.NetConf["Node"])
