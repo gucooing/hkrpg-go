@@ -18,7 +18,7 @@ func (g *GameDataConfig) goppMissionGroup() {
 			var nPCList []*NPCList
 			levelGroup := GetGroupById(planeId, floorId)
 			if levelGroup == nil {
-				logger.Warn("goppMissionGroup planeId:%v,floorId:%v,error", planeId, floorId)
+				logger.Debug("goppMissionGroup planeId:%v,floorId:%v,error", planeId, floorId)
 				continue
 			}
 			for groupsId, groups := range levelGroup {

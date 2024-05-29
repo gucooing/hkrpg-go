@@ -71,6 +71,7 @@ func (g *GamePlayer) BattlePassInfoNotify() {
 
 // 登录通知包
 func (g *GamePlayer) LoginNotify() {
+	// g.MissionAcceptScNotify()
 	g.StaminaInfoScNotify()
 	g.Send(cmd.UpdateFeatureSwitchScNotify, nil)
 	g.Send(cmd.SyncServerSceneChangeNotify, nil)

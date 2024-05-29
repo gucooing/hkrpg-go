@@ -93,7 +93,7 @@ func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
 
 func (g *GamePlayer) NewScene() *spb.Scene {
 	return &spb.Scene{
-		EntryId: 1010101,
+		EntryId: 2000101,
 	}
 }
 
@@ -117,16 +117,16 @@ func (g *GamePlayer) SetCurEntryId(id uint32) {
 
 func (g *GamePlayer) NewPos() *spb.VectorBin {
 	return &spb.VectorBin{
-		X: -43300,
-		Y: 6,
-		Z: -37960,
+		X: 99,
+		Y: 62,
+		Z: -4800,
 	}
 }
 
 func (g *GamePlayer) NewRot() *spb.VectorBin {
 	return &spb.VectorBin{
 		X: 0,
-		Y: 90000,
+		Y: 0,
 		Z: 0,
 	}
 }
