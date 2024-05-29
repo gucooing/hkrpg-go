@@ -44,6 +44,25 @@ func (p *PlayerGame) ApplyFriendCsReq(tcpMsg *alg.PackMsg) {
 	p.GateToPlayer(cmd.ApplyFriendScRsp, &proto.ApplyFriendScRsp{Uid: req.Uid})
 }
 
+func (p *PlayerGame) HandleFriendCsReq(tcpMsg *alg.PackMsg) {
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.HandleFriendCsReq)
+	// 发送到node
+	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
+		MsgType:        spb.PlayerMsgType_PMT_ACCEPTFRIEND,
+		ApplyUid:       req.Uid,
+		SendUid:        p.Uid,
+		IsAcceptFriend: req.IsAccept,
+	})
+	if req.IsAccept {
+		// 发送到gameserver
+		p.GateToGame(tcpMsg)
+	} else {
+		// 返回给玩家
+		p.GateToPlayer(cmd.HandleFriendScRsp, &proto.HandleFriendScRsp{Uid: req.Uid, IsAccept: req.IsAccept})
+	}
+}
+
 /******************************************NewLogin***************************************/
 
 func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {

@@ -1652,9 +1652,10 @@ type PlayerMsgGateToNodeNotify struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	MsgType  PlayerMsgType `protobuf:"varint,1,opt,name=msg_type,json=msgType,proto3,enum=proto.PlayerMsgType" json:"msg_type,omitempty"` // 类型
-	ApplyUid uint32        `protobuf:"varint,2,opt,name=apply_uid,json=applyUid,proto3" json:"apply_uid,omitempty"`                       // 发起玩家
-	SendUid  uint32        `protobuf:"varint,3,opt,name=send_uid,json=sendUid,proto3" json:"send_uid,omitempty"`                          // 接收玩家
+	MsgType        PlayerMsgType `protobuf:"varint,1,opt,name=msg_type,json=msgType,proto3,enum=proto.PlayerMsgType" json:"msg_type,omitempty"` // 类型
+	ApplyUid       uint32        `protobuf:"varint,2,opt,name=apply_uid,json=applyUid,proto3" json:"apply_uid,omitempty"`                       // 发起玩家
+	SendUid        uint32        `protobuf:"varint,3,opt,name=send_uid,json=sendUid,proto3" json:"send_uid,omitempty"`                          // 接收玩家
+	IsAcceptFriend bool          `protobuf:"varint,4,opt,name=is_accept_friend,json=isAcceptFriend,proto3" json:"is_accept_friend,omitempty"`   // 是否接受好友
 }
 
 func (x *PlayerMsgGateToNodeNotify) Reset() {
@@ -1708,6 +1709,84 @@ func (x *PlayerMsgGateToNodeNotify) GetSendUid() uint32 {
 		return x.SendUid
 	}
 	return 0
+}
+
+func (x *PlayerMsgGateToNodeNotify) GetIsAcceptFriend() bool {
+	if x != nil {
+		return x.IsAcceptFriend
+	}
+	return false
+}
+
+type PlayerMsgNodeToGameNotify struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	MsgType        PlayerMsgType `protobuf:"varint,1,opt,name=msg_type,json=msgType,proto3,enum=proto.PlayerMsgType" json:"msg_type,omitempty"` // 类型
+	ApplyUid       uint32        `protobuf:"varint,2,opt,name=apply_uid,json=applyUid,proto3" json:"apply_uid,omitempty"`                       // 发起玩家
+	SendUid        uint32        `protobuf:"varint,3,opt,name=send_uid,json=sendUid,proto3" json:"send_uid,omitempty"`                          // 接收玩家
+	IsAcceptFriend bool          `protobuf:"varint,4,opt,name=is_accept_friend,json=isAcceptFriend,proto3" json:"is_accept_friend,omitempty"`   // 是否接受好友
+}
+
+func (x *PlayerMsgNodeToGameNotify) Reset() {
+	*x = PlayerMsgNodeToGameNotify{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[29]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PlayerMsgNodeToGameNotify) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PlayerMsgNodeToGameNotify) ProtoMessage() {}
+
+func (x *PlayerMsgNodeToGameNotify) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[29]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PlayerMsgNodeToGameNotify.ProtoReflect.Descriptor instead.
+func (*PlayerMsgNodeToGameNotify) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *PlayerMsgNodeToGameNotify) GetMsgType() PlayerMsgType {
+	if x != nil {
+		return x.MsgType
+	}
+	return PlayerMsgType_PMT_NONE
+}
+
+func (x *PlayerMsgNodeToGameNotify) GetApplyUid() uint32 {
+	if x != nil {
+		return x.ApplyUid
+	}
+	return 0
+}
+
+func (x *PlayerMsgNodeToGameNotify) GetSendUid() uint32 {
+	if x != nil {
+		return x.SendUid
+	}
+	return 0
+}
+
+func (x *PlayerMsgNodeToGameNotify) GetIsAcceptFriend() bool {
+	if x != nil {
+		return x.IsAcceptFriend
+	}
+	return false
 }
 
 var File_cmd_server_proto protoreflect.FileDescriptor
@@ -1912,7 +1991,7 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28,
 	0x0b, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63,
 	0x65, 0x41, 0x6c, 0x6c, 0x52, 0x0b, 0x73, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x4c, 0x69, 0x73,
-	0x74, 0x22, 0x84, 0x01, 0x0a, 0x19, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x47,
+	0x74, 0x22, 0xae, 0x01, 0x0a, 0x19, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4d, 0x73, 0x67, 0x47,
 	0x61, 0x74, 0x65, 0x54, 0x6f, 0x4e, 0x6f, 0x64, 0x65, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12,
 	0x2f, 0x0a, 0x08, 0x6d, 0x73, 0x67, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x0e, 0x32, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72,
@@ -1920,8 +1999,22 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x12, 0x1b, 0x0a, 0x09, 0x61, 0x70, 0x70, 0x6c, 0x79, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x0d, 0x52, 0x08, 0x61, 0x70, 0x70, 0x6c, 0x79, 0x55, 0x69, 0x64, 0x12, 0x19, 0x0a,
 	0x08, 0x73, 0x65, 0x6e, 0x64, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52,
-	0x07, 0x73, 0x65, 0x6e, 0x64, 0x55, 0x69, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x07, 0x73, 0x65, 0x6e, 0x64, 0x55, 0x69, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x69, 0x73, 0x5f, 0x61,
+	0x63, 0x63, 0x65, 0x70, 0x74, 0x5f, 0x66, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x0e, 0x69, 0x73, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x46, 0x72, 0x69, 0x65,
+	0x6e, 0x64, 0x22, 0xae, 0x01, 0x0a, 0x19, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4d, 0x73, 0x67,
+	0x4e, 0x6f, 0x64, 0x65, 0x54, 0x6f, 0x47, 0x61, 0x6d, 0x65, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79,
+	0x12, 0x2f, 0x0a, 0x08, 0x6d, 0x73, 0x67, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0e, 0x32, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65,
+	0x72, 0x4d, 0x73, 0x67, 0x54, 0x79, 0x70, 0x65, 0x52, 0x07, 0x6d, 0x73, 0x67, 0x54, 0x79, 0x70,
+	0x65, 0x12, 0x1b, 0x0a, 0x09, 0x61, 0x70, 0x70, 0x6c, 0x79, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x61, 0x70, 0x70, 0x6c, 0x79, 0x55, 0x69, 0x64, 0x12, 0x19,
+	0x0a, 0x08, 0x73, 0x65, 0x6e, 0x64, 0x5f, 0x75, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d,
+	0x52, 0x07, 0x73, 0x65, 0x6e, 0x64, 0x55, 0x69, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x69, 0x73, 0x5f,
+	0x61, 0x63, 0x63, 0x65, 0x70, 0x74, 0x5f, 0x66, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x18, 0x04, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x0e, 0x69, 0x73, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x46, 0x72, 0x69,
+	0x65, 0x6e, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1936,7 +2029,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),         // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),         // 1: proto.ServiceConnectionRsp
@@ -1967,37 +2060,39 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*MuipToNodePingRsp)(nil),            // 26: proto.MuipToNodePingRsp
 	(*MuipServiceAll)(nil),               // 27: proto.MuipServiceAll
 	(*PlayerMsgGateToNodeNotify)(nil),    // 28: proto.PlayerMsgGateToNodeNotify
-	nil,                                  // 29: proto.MuipToNodePingRsp.ServiceListEntry
-	(ServerType)(0),                      // 30: proto.ServerType
-	(Retcode)(0),                         // 31: proto.Retcode
-	(PlayerMsgType)(0),                   // 32: proto.PlayerMsgType
+	(*PlayerMsgNodeToGameNotify)(nil),    // 29: proto.PlayerMsgNodeToGameNotify
+	nil,                                  // 30: proto.MuipToNodePingRsp.ServiceListEntry
+	(ServerType)(0),                      // 31: proto.ServerType
+	(Retcode)(0),                         // 32: proto.Retcode
+	(PlayerMsgType)(0),                   // 33: proto.PlayerMsgType
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	30, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	30, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	30, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
+	31, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	31, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	31, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
 	4,  // 3: proto.GetAllServiceGateRsp.gate_service_list:type_name -> proto.ServiceAll
-	30, // 4: proto.ServiceAll.service_type:type_name -> proto.ServerType
-	30, // 5: proto.GateToNodePingReq.service_type:type_name -> proto.ServerType
+	31, // 4: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	31, // 5: proto.GateToNodePingReq.service_type:type_name -> proto.ServerType
 	4,  // 6: proto.GateToNodePingRsp.multi_service:type_name -> proto.ServiceAll
 	4,  // 7: proto.GateToNodePingRsp.game_service_list:type_name -> proto.ServiceAll
-	30, // 8: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
-	31, // 9: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
-	31, // 10: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
-	31, // 11: proto.GetToGamePlayerLogoutReq.retcode:type_name -> proto.Retcode
-	31, // 12: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
+	31, // 8: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
+	32, // 9: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
+	32, // 10: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
+	32, // 11: proto.GetToGamePlayerLogoutReq.retcode:type_name -> proto.Retcode
+	32, // 12: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
 	4,  // 13: proto.MultiToNodePingRsp.game_service_list:type_name -> proto.ServiceAll
-	30, // 14: proto.GateLoginMultiReq.server_type:type_name -> proto.ServerType
-	31, // 15: proto.GateLoginMultiRsp.retcode:type_name -> proto.Retcode
-	29, // 16: proto.MuipToNodePingRsp.service_list:type_name -> proto.MuipToNodePingRsp.ServiceListEntry
+	31, // 14: proto.GateLoginMultiReq.server_type:type_name -> proto.ServerType
+	32, // 15: proto.GateLoginMultiRsp.retcode:type_name -> proto.Retcode
+	30, // 16: proto.MuipToNodePingRsp.service_list:type_name -> proto.MuipToNodePingRsp.ServiceListEntry
 	4,  // 17: proto.MuipServiceAll.service_list:type_name -> proto.ServiceAll
-	32, // 18: proto.PlayerMsgGateToNodeNotify.msg_type:type_name -> proto.PlayerMsgType
-	27, // 19: proto.MuipToNodePingRsp.ServiceListEntry.value:type_name -> proto.MuipServiceAll
-	20, // [20:20] is the sub-list for method output_type
-	20, // [20:20] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	33, // 18: proto.PlayerMsgGateToNodeNotify.msg_type:type_name -> proto.PlayerMsgType
+	33, // 19: proto.PlayerMsgNodeToGameNotify.msg_type:type_name -> proto.PlayerMsgType
+	27, // 20: proto.MuipToNodePingRsp.ServiceListEntry.value:type_name -> proto.MuipServiceAll
+	21, // [21:21] is the sub-list for method output_type
+	21, // [21:21] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_cmd_server_proto_init() }
@@ -2355,6 +2450,18 @@ func file_cmd_server_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_server_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PlayerMsgNodeToGameNotify); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2362,7 +2469,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   30,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

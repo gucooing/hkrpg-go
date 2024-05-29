@@ -11,53 +11,58 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-// 获取好友数据每次都去redis里取
-func (g *GamePlayer) GetFriend() *spb.PlayerFriend {
-	redisDb, ok := database.GetPlayerFriend(base.Db.PlayerBriefDataRedis, g.Uid)
-	if !ok {
-		return &spb.PlayerFriend{
-			Uid:             g.Uid,
-			FriendList:      []uint32{0},
-			RecvApplyFriend: make(map[uint32]*spb.ReceiveApply, 0),
-			SendApplyFriend: make([]uint32, 0),
-		}
-	}
-	friend := new(spb.PlayerFriend)
-	err := pb.Unmarshal(redisDb, friend)
-	if err != nil {
-		logger.Error("PlayerFriend Unmarshal error")
-		return &spb.PlayerFriend{
-			Uid:             g.Uid,
-			FriendList:      []uint32{0},
-			RecvApplyFriend: make(map[uint32]*spb.ReceiveApply, 0),
-			SendApplyFriend: make([]uint32, 0),
-		}
-	}
-	return friend
+func NewFriend() *spb.PlayerFriend {
+	return &spb.PlayerFriend{}
 }
 
-func (g *GamePlayer) GetFriendList() []uint32 {
+func (g *GamePlayer) GetFriend() *spb.PlayerFriend {
+	bin := g.GetBasicBin()
+	if bin.Friend == nil {
+		bin.Friend = NewFriend()
+	}
+	return bin.Friend
+}
+
+func (g *GamePlayer) GetFriendList() map[uint32]*spb.Friend {
 	db := g.GetFriend()
 	if db.FriendList == nil {
-		db.FriendList = []uint32{0}
+		db.FriendList = make(map[uint32]*spb.Friend)
+		db.FriendList[0] = &spb.Friend{
+			Uid:        0,
+			IsMarked:   true,
+			RemarkName: "",
+		}
 	}
 	return db.FriendList
 }
 
-func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
-	db := g.GetFriend()
-	if db.RecvApplyFriend == nil {
-		db.RecvApplyFriend = make(map[uint32]*spb.ReceiveApply)
-	}
-	return db.RecvApplyFriend
+func (g *GamePlayer) GetFriendByUid(uid uint32) *spb.Friend {
+	db := g.GetFriendList()
+	return db[uid]
 }
 
-func (g *GamePlayer) GetSendApplyFriend() []uint32 {
-	db := g.GetFriend()
-	if db.SendApplyFriend == nil {
-		db.SendApplyFriend = make([]uint32, 0)
+func (g *GamePlayer) AddFriend(uid uint32) {
+	db := g.GetFriendList()
+	db[uid] = &spb.Friend{
+		Uid:        uid,
+		IsMarked:   false,
+		RemarkName: "",
 	}
-	return db.SendApplyFriend
+}
+
+// 获取好友申请每次都去redis里取
+func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
+	friend := new(spb.ApplyFriend)
+	redisDb, ok := database.GetPlayerFriend(base.Db.PlayerBriefDataRedis, g.Uid)
+	if !ok {
+		return make(map[uint32]*spb.ReceiveApply, 0)
+	}
+	err := pb.Unmarshal(redisDb, friend)
+	if err != nil {
+		logger.Error("PlayerFriend Unmarshal error")
+		return make(map[uint32]*spb.ReceiveApply, 0)
+	}
+	return friend.RecvApplyFriend
 }
 
 func (g *GamePlayer) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefData {
@@ -86,6 +91,27 @@ func (g *GamePlayer) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefDa
 		return nil
 	}
 	return friend
+}
+
+// 将redis里的好友加入mysql里
+func (g *GamePlayer) InspectionRedisAcceptApplyFriend() {
+	friend := new(spb.AcceptApplyFriend)
+	redisDb, ok := database.GetAcceptApplyFriend(base.Db.PlayerBriefDataRedis, g.Uid)
+	if !ok {
+		return
+	}
+	err := pb.Unmarshal(redisDb, friend)
+	if err != nil {
+		logger.Error("PlayerFriend Unmarshal error")
+		return
+	}
+	if friend.RecvApplyFriend != nil {
+		for uid := range friend.RecvApplyFriend {
+			g.AddFriend(uid)
+		}
+	}
+	// TODO 处理完了要通知node删掉该信息(无所谓我自己删，覆写就覆写
+	database.DelAcceptApplyFriend(base.Db.PlayerBriefDataRedis, g.Uid)
 }
 
 /*******************************************接口*******************************************/
@@ -143,7 +169,7 @@ func (g *GamePlayer) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 		AILINANGJNE:      "",
 		WorldLevel:       friend.WorldLevel,
 		Uid:              friend.Uid,
-		EFNHCOEKDCN:      true, // 隐藏/公开
+		EFNHCOEKDCN:      true,
 		AssistAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
 		Level:            friend.Level,
 		IsBanned:         false,
@@ -166,4 +192,20 @@ func (g *GamePlayer) GetFriendApplyInfo(receiveApply *spb.ReceiveApply) *proto.F
 		PlayerInfo: g.GetPlayerSimpleInfo(receiveApply.ApplyUid),
 	}
 	return friendApplyInfo
+}
+
+func (g *GamePlayer) GetFriendSimpleInfo(uid uint32) *proto.FriendSimpleInfo {
+	db := g.GetFriendByUid(uid)
+	simpleInfo := g.GetPlayerSimpleInfo(uid)
+	if db == nil || simpleInfo == nil {
+		return nil
+	}
+	friendSimpleInfo := &proto.FriendSimpleInfo{
+		PlayerInfo:  simpleInfo,    // 基本信息
+		RemarkName:  db.RemarkName, // 备注
+		PlayerState: 0,
+		CFMIKLHJMLE: nil,
+		IsMarked:    db.IsMarked, // 是否特别关注
+	}
+	return friendSimpleInfo
 }

@@ -142,6 +142,7 @@ enum PlayerMsgType{
   PMT_NONE = 0;//无
   PMT_APPLYFRIEND = 1;  //申请好友
   PMT_CHAT = 2; // 聊天消息
+  PMT_ACCEPTFRIEND = 3; // 同意/拒绝好友申请
 }
 
 enum RogueAreaStatus {

@@ -1,4 +1,4 @@
-package chat
+package sociality
 
 // 每个聊天室只保留最新200条消息
 

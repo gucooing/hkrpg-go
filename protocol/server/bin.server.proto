@@ -1,3 +1,4 @@
+// TODO 不要轻易修改已有字段类型！！！！！！
 syntax = "proto3";
 
 package proto;
@@ -33,7 +34,7 @@ message PlayerBasicCompBin {
   uint32 last_login_platform = 24; // 最后登录平台
   fixed32 last_logout_time = 25; // 最后退出时间
   Mail mail = 26; // 邮件
-  bool is_rebate_mail_received = 27; // 是否已收到回扣邮件
+  PlayerFriend friend = 27; // 好友
   uint32 data_version = 28; // 数据版本
   fixed32 last_daily_refresh_time = 29; // 最后每日刷新时间
   uint32 profile_picture_costume_id = 30; // 个人资料图片ID
@@ -255,6 +256,16 @@ message MailDts {
   uint32 mail_id = 1;//邮件id
   bool is_del = 2; // 是否删除
   bool is_read = 3; // 是否领取
+}
+
+message PlayerFriend {
+  map<uint32, Friend> friend_list = 1;// 好友列表
+}
+
+message Friend {
+  uint32 uid = 1; // 好友uid
+  bool is_marked = 2; // 是否关注
+  string remark_name = 3; // 备注
 }
 
 

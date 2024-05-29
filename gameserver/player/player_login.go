@@ -10,30 +10,7 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) closechan() {
-	g.closeOnce.Do(func() {
-		close(g.stop)
-	})
-}
-
-func (g *GamePlayer) loginTicker() {
-	select {
-	case <-g.Ticker.C:
-		logger.Info("玩家登录超时")
-		g.Ticker.Stop()
-		return
-	case <-g.stop:
-		g.Ticker.Stop()
-		return
-	}
-}
-
 func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
-	// 添加定时器
-	g.Ticker = time.NewTimer(4 * time.Second)
-	g.stop = make(chan struct{})
-	go g.loginTicker()
-
 	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
 	req := msg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v]登录的客户端版本是:%s", g.Uid, req.ClientVersion)
@@ -58,9 +35,8 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 		Stamina:    db[Stamina],
 		Exp:        db[Exp],
 	}
-	g.closechan()
+	g.LoginReady() // 登录准备工作
 	g.Send(cmd.PlayerLoginScRsp, rsp)
-
 	g.LoginNotify()
 }
 
@@ -138,4 +114,10 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 		},
 	},
 	)
+}
+
+// 1.检查是否有好友再redis里
+// 2.检查redis里是否有私人邮件
+func (g *GamePlayer) LoginReady() { // 登录准备工作
+	g.InspectionRedisAcceptApplyFriend()
 }

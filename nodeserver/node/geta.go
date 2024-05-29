@@ -3,8 +3,8 @@ package node
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/nodeserver/sociality"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -89,19 +89,19 @@ func (s *Service) PlayerMsgGateToNodeNotify(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.PlayerMsgGateToNodeNotify)
 	switch req.MsgType {
 	case spb.PlayerMsgType_PMT_APPLYFRIEND:
-		s.ApplyFriend(req)
+		s.ApplyFriend(req) // 申请添加好友
+	case spb.PlayerMsgType_PMT_ACCEPTFRIEND:
+		s.AcceptFriend(req) // 同意好友申请
 	}
 }
 
-// 添加玩家操作
+// 申请添加好友
 func (s *Service) ApplyFriend(req *spb.PlayerMsgGateToNodeNotify) {
 	if gs, _, ok := s.getPlayerStatusRedis(req.SendUid); ok {
 		logger.Debug("玩家:%v,gs:%v", req.SendUid, gs.AppId)
 	}
 	logger.Info("玩家:%v,向玩家:%v,发起好友申请", req.ApplyUid, req.SendUid)
-	bin, _ := database.GetPlayerFriend(s.n.Store.PlayerBriefDataRedis, req.SendUid)
-	friend := new(spb.PlayerFriend)
-	pb.Unmarshal(bin, friend)
+	friend := sociality.GetApplyFriendByUid(req.SendUid)
 	if friend.RecvApplyFriend == nil {
 		friend.RecvApplyFriend = make(map[uint32]*spb.ReceiveApply)
 	}
@@ -109,11 +109,41 @@ func (s *Service) ApplyFriend(req *spb.PlayerMsgGateToNodeNotify) {
 		ApplyUid:  req.ApplyUid,
 		ApplyTime: time.Now().Unix(),
 	}
-	ubin, err := pb.Marshal(friend)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return
+	if !sociality.UpdateApplyFriend(req.SendUid) {
+		logger.Warn("UpdateApplyFriend写入失败")
+		s.ApplyFriend(req) // 写失败，再来一次
 	}
-	database.SetPlayerFriend(s.n.Store.PlayerBriefDataRedis, req.SendUid, ubin)
+}
 
+// 同意好友申请
+func (s *Service) AcceptFriend(req *spb.PlayerMsgGateToNodeNotify) {
+	friend := sociality.GetApplyFriendByUid(req.SendUid)
+	if friend.RecvApplyFriend == nil {
+		friend.RecvApplyFriend = make(map[uint32]*spb.ReceiveApply)
+	}
+	if req.IsAcceptFriend {
+		if gs, _, ok := s.getPlayerStatusRedis(req.ApplyUid); ok {
+			logger.Debug("玩家:%v,gs:%v", req.ApplyUid, gs.AppId)
+		} else {
+			logger.Debug("目标玩家:%v不在线,将好友缓存入redis", req.ApplyUid)
+			accep := sociality.GetAcceptApplyFriendByUid(req.ApplyUid)
+			if accep.RecvApplyFriend == nil {
+				accep.RecvApplyFriend = make(map[uint32]*spb.ReceiveApply)
+			}
+			accep.RecvApplyFriend[req.SendUid] = &spb.ReceiveApply{
+				ApplyUid:  req.SendUid,
+				ApplyTime: time.Now().Unix(),
+			}
+			sociality.UpdateAcceptApplyFriend(req.ApplyUid)
+		}
+		logger.Debug("玩家:%v处理来自向玩家:%v,发起的好友申请，结果:%s", req.SendUid, req.ApplyUid, req.IsAcceptFriend)
+
+	}
+	if friend.RecvApplyFriend[req.ApplyUid] != nil {
+		delete(friend.RecvApplyFriend, req.ApplyUid)
+	}
+	if !sociality.UpdateApplyFriend(req.SendUid) {
+		logger.Warn("UpdateApplyFriend写入失败")
+		s.AcceptFriend(req) // 写失败，再来一次
+	}
 }

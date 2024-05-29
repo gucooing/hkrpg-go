@@ -8,9 +8,13 @@ import (
 )
 
 func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
+	db := g.GetFriendList()
 	rsp := &proto.GetFriendLoginInfoScRsp{
-		FriendUidList: g.GetFriendList(),
+		FriendUidList: make([]uint32, 0),
 		Retcode:       0,
+	}
+	for uid := range db {
+		rsp.FriendUidList = append(rsp.FriendUidList, uid)
 	}
 	g.Send(cmd.GetFriendLoginInfoScRsp, rsp)
 }
@@ -18,18 +22,8 @@ func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetFriendListInfoScRsp)
 	rsp.FriendList = make([]*proto.FriendSimpleInfo, 0)
-	for _, uid := range g.GetFriendList() {
-		simpleInfo := g.GetPlayerSimpleInfo(uid)
-		if simpleInfo == nil {
-			continue
-		}
-		rsp.FriendList = append(rsp.FriendList, &proto.FriendSimpleInfo{
-			PlayerInfo:  simpleInfo,
-			RemarkName:  "",
-			PlayerState: 0,
-			CFMIKLHJMLE: nil,
-			IsMarked:    false, // 是否特别关注
-		})
+	for uid := range g.GetFriendList() {
+		rsp.FriendList = append(rsp.FriendList, g.GetFriendSimpleInfo(uid))
 	}
 	g.Send(cmd.GetFriendListInfoScRsp, rsp)
 }
@@ -90,4 +84,19 @@ func (g *GamePlayer) SearchPlayerCsReq(payloadMsg []byte) {
 		rsp.ResultUidList = append(rsp.ResultUidList, uid)
 	}
 	g.Send(cmd.SearchPlayerScRsp, rsp)
+}
+
+func (g *GamePlayer) HandleFriendCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.HandleFriendCsReq, payloadMsg)
+	req := msg.(*proto.HandleFriendCsReq)
+	if req.IsAccept {
+		g.AddFriend(req.Uid)
+	}
+	rsp := &proto.HandleFriendScRsp{
+		IsAccept:   req.IsAccept,
+		Uid:        req.Uid,
+		Retcode:    0,
+		FriendInfo: g.GetFriendSimpleInfo(req.Uid),
+	}
+	g.Send(cmd.HandleFriendScRsp, rsp)
 }

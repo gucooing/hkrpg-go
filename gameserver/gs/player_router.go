@@ -91,7 +91,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetChatFriendHistoryCsReq:   g.GetChatFriendHistoryCsReq,     // 获取正在进行的聊天室
 		cmd.SearchPlayerCsReq:           g.SearchPlayerCsReq,             // 查找玩家
 		cmd.GetFriendApplyListInfoCsReq: g.GetFriendApplyListInfoCsReq,   // 获取好友申请列表
-		// cmd.HandleFriendCsReq:               g.HandleFriendCsReq,               // 处理好友申请
+		cmd.HandleFriendCsReq:           g.HandleFriendCsReq,             // 处理好友申请
 		// cmd.GetFriendRecommendListInfoCsReq: g.GetFriendRecommendListInfoCsReq, // 获取附近的人
 		cmd.GetPlayerDetailInfoCsReq: g.GetPlayerDetailInfoCsReq, // 获取玩家详细信息
 		// 邮件

@@ -44,7 +44,8 @@ func (r *RouteManager) initRoute(p *PlayerGame) {
 		cmd.PlayerLogoutCsReq:    p.PlayerLogoutCsReq,
 		cmd.GetAuthkeyCsReq:      p.nilProto,
 		// 好友
-		cmd.ApplyFriendCsReq: p.ApplyFriendCsReq, // 发送好友申请
+		cmd.ApplyFriendCsReq:  p.ApplyFriendCsReq,  // 发送好友申请
+		cmd.HandleFriendCsReq: p.HandleFriendCsReq, // 处理好友申请
 	}
 }
 

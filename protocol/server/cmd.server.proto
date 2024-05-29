@@ -169,4 +169,12 @@ message PlayerMsgGateToNodeNotify{// 将玩家操作通知到node
   PlayerMsgType msg_type = 1; // 类型
   uint32 apply_uid = 2; // 发起玩家
   uint32 send_uid = 3; // 接收玩家
+  bool is_accept_friend = 4;// 是否接受好友
+}
+
+message PlayerMsgNodeToGameNotify{// node将处理后的玩家操作转发给game
+  PlayerMsgType msg_type = 1; // 类型
+  uint32 apply_uid = 2; // 发起玩家
+  uint32 send_uid = 3; // 接收玩家
+  bool is_accept_friend = 4;// 是否接受好友
 }

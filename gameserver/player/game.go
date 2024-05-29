@@ -2,7 +2,6 @@ package player
 
 import (
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/db"
@@ -26,10 +25,7 @@ type GamePlayer struct {
 	Platform   spb.PlatformType        // 登录设备
 	OnlineData *OnlineData             // 玩家在线数据
 	BasicBin   *spb.PlayerBasicCompBin // 玩家pb数据
-	closeOnce  sync.Once
-	stop       chan struct{}
-	Ticker     *time.Timer
-	MsgChan    chan Msg // 消息通道
+	MsgChan    chan Msg                // 消息通道
 }
 
 type Msg struct {
@@ -105,7 +101,6 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 		logger.Error("Update Player error")
 		return false
 	}
-	g.UpdatePlayerFriend() // 保存好友信息
 	if !g.SetPlayerPlayerBasicBriefData(status) {
 		logger.Error("[UID:%v]玩家简要信息保存失败", g.Uid)
 	}
@@ -133,16 +128,6 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 	}
 
 	return db.GetDb().SetPlayerPlayerBasicBriefData(g.Uid, bin)
-}
-
-func (g *GamePlayer) UpdatePlayerFriend() {
-	playerFriend := g.GetFriend()
-	bin, err := pb.Marshal(playerFriend)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return
-	}
-	database.SetPlayerFriend(db.Db.PlayerBriefDataRedis, g.Uid, bin)
 }
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
