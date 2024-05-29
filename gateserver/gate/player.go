@@ -63,6 +63,34 @@ func (p *PlayerGame) HandleFriendCsReq(tcpMsg *alg.PackMsg) {
 	}
 }
 
+func (p *PlayerGame) SendMsgCsReq(tcpMsg *alg.PackMsg) {
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.SendMsgCsReq)
+	for _, touid := range req.TargetList {
+		notify := &proto.RevcMsgScNotify{
+			TargetUid:   touid,
+			ExtraId:     req.ExtraId,
+			MessageType: req.MessageType,
+			SourceUid:   p.Uid,
+			MessageText: req.MessageText,
+			ChatType:    req.ChatType,
+		}
+		p.GateToPlayer(cmd.RevcMsgScNotify, notify)
+		if touid == 0 {
+			notify0 := &proto.RevcMsgScNotify{
+				TargetUid:   p.Uid,
+				ExtraId:     0,
+				MessageType: proto.MsgType_MSG_TYPE_CUSTOM_TEXT,
+				SourceUid:   touid,
+				MessageText: "欢迎来到免费私人服务器 hkrpg-go(tips:没有写chat指令",
+				ChatType:    proto.ChatType_CHAT_TYPE_PRIVATE,
+			}
+			p.GateToPlayer(cmd.RevcMsgScNotify, notify0)
+		}
+	}
+	p.GateToPlayer(cmd.SendMsgScRsp, nil)
+}
+
 /******************************************NewLogin***************************************/
 
 func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {

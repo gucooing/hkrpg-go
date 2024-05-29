@@ -46,6 +46,7 @@ func (r *RouteManager) initRoute(p *PlayerGame) {
 		// 好友
 		cmd.ApplyFriendCsReq:  p.ApplyFriendCsReq,  // 发送好友申请
 		cmd.HandleFriendCsReq: p.HandleFriendCsReq, // 处理好友申请
+		cmd.SendMsgCsReq:      p.SendMsgCsReq,      // 发送聊天信息
 	}
 }
 

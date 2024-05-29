@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -144,25 +143,28 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetPrivateChatHistoryScRsp, rsp)
 }
 
-func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SendMsgCsReq, payloadMsg)
-	req := msg.(*proto.SendMsgCsReq)
-	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.TargetList, req.ExtraId, req.MessageType, req.MessageText, req.ChatType)
-
-	for _, touid := range req.TargetList {
-		notify := &proto.RevcMsgScNotify{
-			TargetUid:   touid,
-			ExtraId:     req.ExtraId,
-			MessageType: req.MessageType,
-			SourceUid:   g.Uid,
-			MessageText: req.MessageText,
-			ChatType:    req.ChatType,
-		}
-		g.Send(cmd.RevcMsgScNotify, notify)
-	}
-
-	g.Send(cmd.SendMsgScRsp, nil)
-}
+// func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
+// 	msg := g.DecodePayloadToProto(cmd.SendMsgCsReq, payloadMsg)
+// 	req := msg.(*proto.SendMsgCsReq)
+// 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.TargetList, req.ExtraId, req.MessageType, req.MessageText, req.ChatType)
+//
+// 	for _, touid := range req.TargetList {
+// 		if touid == 0 {
+//
+// 		}
+// 		notify := &proto.RevcMsgScNotify{
+// 			TargetUid:   touid,
+// 			ExtraId:     req.ExtraId,
+// 			MessageType: req.MessageType,
+// 			SourceUid:   g.Uid,
+// 			MessageText: req.MessageText,
+// 			ChatType:    req.ChatType,
+// 		}
+// 		g.Send(cmd.RevcMsgScNotify, notify)
+// 	}
+//
+// 	g.Send(cmd.SendMsgScRsp, nil)
+// }
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetChatEmojiListScRsp, nil)

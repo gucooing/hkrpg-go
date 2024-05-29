@@ -177,4 +177,9 @@ message PlayerMsgNodeToGameNotify{// node将处理后的玩家操作转发给gam
   uint32 apply_uid = 2; // 发起玩家
   uint32 send_uid = 3; // 接收玩家
   bool is_accept_friend = 4;// 是否接受好友
+  ChatMsg chat_msg = 5;// 消息内容
+}
+
+message ChatMsg {
+  repeated uint32 msg_to_uid_list = 2;// 消息发送目标列表
 }
