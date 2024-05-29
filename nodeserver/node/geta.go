@@ -111,7 +111,7 @@ func (s *Service) ApplyFriend(req *spb.PlayerMsgGateToNodeNotify) {
 	}
 	if !sociality.UpdateApplyFriend(req.SendUid) {
 		logger.Warn("UpdateApplyFriend写入失败")
-		s.ApplyFriend(req) // 写失败，再来一次
+		s.ApplyFriend(req) // 写失败，再来一次 TODO 死循环警告，后面出问题了第一个看这里
 	}
 }
 
@@ -144,6 +144,6 @@ func (s *Service) AcceptFriend(req *spb.PlayerMsgGateToNodeNotify) {
 	}
 	if !sociality.UpdateApplyFriend(req.SendUid) {
 		logger.Warn("UpdateApplyFriend写入失败")
-		s.AcceptFriend(req) // 写失败，再来一次
+		s.AcceptFriend(req) // 写失败，再来一次 TODO 死循环警告，后面出问题了第一个看这里
 	}
 }
