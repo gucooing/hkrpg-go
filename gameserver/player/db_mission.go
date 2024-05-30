@@ -89,6 +89,9 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 // 处理战斗任务
 func (g *GamePlayer) UpBattleSubMission(req *proto.PVEBattleResultCsReq) {
 	db := g.GetBattleBackupById(req.BattleId)
+	if db.EventId == 0 {
+		return
+	}
 	for id := range g.GetSubMainMissionList() {
 		conf := gdconf.GetSubMainMissionById(id)
 		if conf == nil {
