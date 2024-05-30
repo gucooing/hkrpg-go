@@ -9,6 +9,11 @@ import (
 	"github.com/hjson/hjson-go/v4"
 )
 
+type GoppMission struct {
+	GoppMainMission    map[uint32]*GoppMainMission // 预处理主线任务
+	GoppSubMainMission map[uint32]*SubMission      // 预处理主线子任务
+}
+
 type GoppMainMission struct {
 	MainMissionID        uint32        `json:"MainMissionID"`
 	StartSubMissionList  []uint32      `json:"StartSubMissionList"`
@@ -58,7 +63,10 @@ type MapProp struct {
 }
 
 func (g *GameDataConfig) goppMainMission() {
-	g.GoppMainMission = make(map[uint32]*GoppMainMission)
+	g.GoppMission = &GoppMission{
+		GoppMainMission:    make(map[uint32]*GoppMainMission),
+		GoppSubMainMission: make(map[uint32]*SubMission),
+	}
 
 	for id := range GetMainMission() {
 		goppMainMission := new(GoppMainMission)
@@ -73,16 +81,31 @@ func (g *GameDataConfig) goppMainMission() {
 			info := fmt.Sprintf("parse MainMission error: %v", err)
 			panic(info)
 		}
-		g.GoppMainMission[id] = goppMainMission
+		if g.GoppMission.GoppMainMission == nil {
+			g.GoppMission.GoppMainMission = make(map[uint32]*GoppMainMission)
+		}
+		g.GoppMission.GoppMainMission[id] = goppMainMission
+
+		for _, subMission := range goppMainMission.SubMissionList {
+			if g.GoppMission.GoppSubMainMission == nil {
+				g.GoppMission.GoppSubMainMission = make(map[uint32]*SubMission)
+			}
+			g.GoppMission.GoppSubMainMission[subMission.ID] = subMission
+		}
 	}
 
-	logger.Info("gopp %v MainMission", len(g.GoppMainMission))
+	logger.Info("gopp %v MainMission", len(g.GoppMission.GoppMainMission))
+	logger.Info("gopp %v SubMainMission", len(g.GoppMission.GoppSubMainMission))
 }
 
 func GetGoppMainMission() map[uint32]*GoppMainMission {
-	return CONF.GoppMainMission
+	return CONF.GoppMission.GoppMainMission
 }
 
 func GetGoppMainMissionById(id uint32) *GoppMainMission {
-	return CONF.GoppMainMission[id]
+	return CONF.GoppMission.GoppMainMission[id]
+}
+
+func GetSubMainMissionById(id uint32) *SubMission {
+	return CONF.GoppMission.GoppSubMainMission[id]
 }

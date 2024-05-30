@@ -281,8 +281,7 @@ message MainMission{// 主线任务
 }
 
 message MissionInfo{
-  uint32 mission_id = 1; // 上层任务id
-  uint32 sub_mission_id = 2;//任务id
+  uint32 mission_id = 1; //任务id
   uint32 progress = 3; // 步骤
   MissionStatus status = 4;// 任务状态
 }

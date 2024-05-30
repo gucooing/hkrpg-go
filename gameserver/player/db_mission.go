@@ -76,10 +76,9 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) {
 	}
 
 	finishSubMainMissionList[subMissionId] = &spb.MissionInfo{
-		MissionId:    subMission.MissionId,
-		SubMissionId: subMission.SubMissionId,
-		Progress:     subMission.Progress + 1,
-		Status:       spb.MissionStatus_MISSION_FINISH,
+		MissionId: subMission.MissionId,
+		Progress:  subMission.Progress + 1,
+		Status:    spb.MissionStatus_MISSION_FINISH,
 	}
 	delete(subMainMissionList, subMissionId)
 }
@@ -88,11 +87,11 @@ func (g *GamePlayer) GetNextSubMission(subMissionId uint32) []uint32 {
 	nextList := make([]uint32, 0)
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	subMainMissionList := g.GetSubMainMissionList()
-	subMission := g.GetFinishSubMainMissionById(subMissionId)
-	if subMission == nil {
+	subMissionConf := gdconf.GetSubMainMissionById(subMissionId)
+	if subMissionConf == nil {
 		return nextList
 	}
-	conf := gdconf.GetGoppMainMissionById(subMission.MissionId)
+	conf := gdconf.GetGoppMainMissionById(subMissionConf.MainMissionID)
 	if conf == nil {
 		return nextList
 	}
@@ -113,10 +112,9 @@ func (g *GamePlayer) GetNextSubMission(subMissionId uint32) []uint32 {
 		if isNext {
 			nextList = append(nextList, confSubMission.ID)
 			subMainMissionList[confSubMission.ID] = &spb.MissionInfo{
-				MissionId:    subMission.MissionId,
-				SubMissionId: confSubMission.ID,
-				Progress:     0,
-				Status:       spb.MissionStatus_MISSION_DOING,
+				MissionId: confSubMission.ID,
+				Progress:  0,
+				Status:    spb.MissionStatus_MISSION_DOING,
 			}
 		}
 	}
@@ -151,10 +149,9 @@ func (g *GamePlayer) ReadyMainMission() {
 					continue
 				}
 				subMainMissionList[subId] = &spb.MissionInfo{
-					MissionId:    id,
-					SubMissionId: subId,
-					Progress:     0,
-					Status:       spb.MissionStatus_MISSION_DOING,
+					MissionId: subId,
+					Progress:  0,
+					Status:    spb.MissionStatus_MISSION_DOING,
 				}
 			}
 		}

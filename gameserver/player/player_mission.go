@@ -87,7 +87,7 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg []byte) {
 	// add sub mission
 	for _, subMission := range subMainMissionList {
 		rsp.MissionList = append(rsp.MissionList, &proto.Mission{
-			Id:       subMission.SubMissionId,
+			Id:       subMission.MissionId,
 			Progress: subMission.Progress,
 			Status:   proto.MissionStatus(subMission.Status),
 		})
@@ -134,7 +134,7 @@ func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finish []uint32) {
 			continue
 		}
 		notify.MissionSync.MissionList = append(notify.MissionSync.MissionList, &proto.Mission{
-			Id:       db.SubMissionId,
+			Id:       db.MissionId,
 			Progress: db.Progress,
 			Status:   proto.MissionStatus(db.Status),
 		})
@@ -145,7 +145,7 @@ func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finish []uint32) {
 			continue
 		}
 		notify.MissionSync.MissionList = append(notify.MissionSync.MissionList, &proto.Mission{
-			Id:       db.SubMissionId,
+			Id:       db.MissionId,
 			Progress: db.Progress,
 			Status:   proto.MissionStatus(db.Status),
 		})
