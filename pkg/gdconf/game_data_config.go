@@ -71,11 +71,14 @@ type GameDataConfig struct {
 	ShopConfigMap               map[uint32][]uint32                             // 商店配置
 	ShopGoodsConfigMap          map[uint32]map[uint32]*ShopGoodsConfig          // 商品配置
 	RewardDataMap               map[string]*RewardData                          // 奖励配置
+	MainMissionMap              map[uint32]*MainMission                         // 主线任务
 	EventMissionMap             map[uint32]*EventMission                        // 事件任务？
+	VideoVersionKey             []*VideoVersionKey                              // 视频key
 	// 下面是预处理
 	ServerGroupMap  map[uint32]map[uint32]map[uint32]*LevelGroup // 预处理服务器场景
 	MissionGroupMap map[uint32]map[uint32]map[uint32]*LevelGroup // 预处理任务场景
 	Teleports       map[uint32]map[uint32]*Teleports             // 预处理传送锚点
+	GoppMainMission map[uint32]*GoppMainMission                  // 预处理主线任务
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {
@@ -177,9 +180,12 @@ func (g *GameDataConfig) load() {
 	g.loadShopConfig()               // 商店配置
 	g.loadShopGoodsConfig()          // 商品配置
 	g.loadRewardData()               // 奖励配置
+	g.loadMainMission()              // 主线任务
 	g.loadEventMission()             // 事件任务？
+	g.loadVideoVersionKey()          // 视频key
 	// 下面是预处理
 	g.goppServerGroup()  // 预处理服务器场景
 	g.goppMissionGroup() // 预处理任务场景
 	g.goppTeleports()    // 预处理传送锚点
+	g.goppMainMission()  // 预处理主线任务
 }

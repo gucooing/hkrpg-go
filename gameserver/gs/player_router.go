@@ -60,6 +60,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.SceneCastSkillCsReq:   g.SceneCastSkillCsReq,   // 场景开启战斗
 		cmd.PVEBattleResultCsReq:  g.PVEBattleResultCsReq,  // PVE战斗结算
 		cmd.StartCocoonStageCsReq: g.StartCocoonStageCsReq, // 副本/周本等
+		cmd.SceneEnterStageCsReq:  g.SceneEnterStageCsReq,  // 场景直接发起战斗
 		// 模拟宇宙
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙状态
 		cmd.GetRogueTalentInfoCsReq:             g.GetRogueTalentInfoCsReq,             // 获取天赋信息
@@ -104,9 +105,13 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
 		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
 		// 任务
-		cmd.GetMissionEventDataCsReq: g.GetMissionEventDataCsReq,
-		cmd.GetQuestDataCsReq:        g.GetQuestDataCsReq, // 获取任务信息
+		cmd.GetMissionEventDataCsReq: g.GetMissionEventDataCsReq, // 获取任务状态
+		cmd.GetQuestDataCsReq:        g.GetQuestDataCsReq,        // 获取任务信息
 		cmd.GetMissionStatusCsReq:    g.HandleGetMissionStatusCsReq,
+		cmd.GetMissionDataCsReq:      g.GetMissionDataCsReq,     // 获取任务数据
+		cmd.FinishTalkMissionCsReq:   g.FinishTalkMissionCsReq,  // 完成任务
+		cmd.GetVideoVersionKeyCsReq:  g.GetVideoVersionKeyCsReq, // 获取key
+		cmd.GetSecretKeyInfoCsReq:    g.GetSecretKeyInfoCsReq,   // key
 		// 活动
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
 		cmd.GetDailyActiveInfoCsReq:        g.GetDailyActiveInfoCsReq,              // 每日任务

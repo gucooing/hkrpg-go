@@ -145,6 +145,13 @@ enum PlayerMsgType{
   PMT_ACCEPTFRIEND = 3; // 同意/拒绝好友申请
 }
 
+enum MissionStatus{//任务状态
+    MISSION_NONE = 0;
+    MISSION_DOING = 1;
+    MISSION_FINISH = 2;
+    MISSION_PREPARED = 3;
+}
+
 enum RogueAreaStatus {
   RogueAreaStatus_ROGUE_AREA_STATUS_LOCK = 0;
   RogueAreaStatus_ROGUE_AREA_STATUS_UNLOCK = 1;

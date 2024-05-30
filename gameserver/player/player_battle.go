@@ -9,6 +9,19 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SceneEnterStageCsReq, payloadMsg)
+	req := msg.(*proto.SceneEnterStageCsReq)
+	battleInfo, battleBackup := g.GetSceneBattleInfo([]uint32{req.EventId}, g.GetBattleLineUp())
+	rsp := &proto.SceneEnterStageScRsp{
+		Retcode:    0,
+		BattleInfo: battleInfo,
+	}
+	// 记录战斗
+	g.AddBattleBackup(battleBackup)
+	g.Send(cmd.SceneEnterStageScRsp, rsp)
+}
+
 /***********************************攻击事件处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {

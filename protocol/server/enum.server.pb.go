@@ -844,6 +844,58 @@ func (PlayerMsgType) EnumDescriptor() ([]byte, []int) {
 	return file_enum_server_proto_rawDescGZIP(), []int{12}
 }
 
+type MissionStatus int32
+
+const (
+	MissionStatus_MISSION_NONE     MissionStatus = 0
+	MissionStatus_MISSION_DOING    MissionStatus = 1
+	MissionStatus_MISSION_FINISH   MissionStatus = 2
+	MissionStatus_MISSION_PREPARED MissionStatus = 3
+)
+
+// Enum value maps for MissionStatus.
+var (
+	MissionStatus_name = map[int32]string{
+		0: "MISSION_NONE",
+		1: "MISSION_DOING",
+		2: "MISSION_FINISH",
+		3: "MISSION_PREPARED",
+	}
+	MissionStatus_value = map[string]int32{
+		"MISSION_NONE":     0,
+		"MISSION_DOING":    1,
+		"MISSION_FINISH":   2,
+		"MISSION_PREPARED": 3,
+	}
+)
+
+func (x MissionStatus) Enum() *MissionStatus {
+	p := new(MissionStatus)
+	*p = x
+	return p
+}
+
+func (x MissionStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (MissionStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_enum_server_proto_enumTypes[13].Descriptor()
+}
+
+func (MissionStatus) Type() protoreflect.EnumType {
+	return &file_enum_server_proto_enumTypes[13]
+}
+
+func (x MissionStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use MissionStatus.Descriptor instead.
+func (MissionStatus) EnumDescriptor() ([]byte, []int) {
+	return file_enum_server_proto_rawDescGZIP(), []int{13}
+}
+
 type RogueAreaStatus int32
 
 const (
@@ -880,11 +932,11 @@ func (x RogueAreaStatus) String() string {
 }
 
 func (RogueAreaStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_enum_server_proto_enumTypes[13].Descriptor()
+	return file_enum_server_proto_enumTypes[14].Descriptor()
 }
 
 func (RogueAreaStatus) Type() protoreflect.EnumType {
-	return &file_enum_server_proto_enumTypes[13]
+	return &file_enum_server_proto_enumTypes[14]
 }
 
 func (x RogueAreaStatus) Number() protoreflect.EnumNumber {
@@ -893,7 +945,7 @@ func (x RogueAreaStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RogueAreaStatus.Descriptor instead.
 func (RogueAreaStatus) EnumDescriptor() ([]byte, []int) {
-	return file_enum_server_proto_rawDescGZIP(), []int{13}
+	return file_enum_server_proto_rawDescGZIP(), []int{14}
 }
 
 type RoomStatus int32
@@ -935,11 +987,11 @@ func (x RoomStatus) String() string {
 }
 
 func (RoomStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_enum_server_proto_enumTypes[14].Descriptor()
+	return file_enum_server_proto_enumTypes[15].Descriptor()
 }
 
 func (RoomStatus) Type() protoreflect.EnumType {
-	return &file_enum_server_proto_enumTypes[14]
+	return &file_enum_server_proto_enumTypes[15]
 }
 
 func (x RoomStatus) Number() protoreflect.EnumNumber {
@@ -948,7 +1000,7 @@ func (x RoomStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RoomStatus.Descriptor instead.
 func (RoomStatus) EnumDescriptor() ([]byte, []int) {
-	return file_enum_server_proto_rawDescGZIP(), []int{14}
+	return file_enum_server_proto_rawDescGZIP(), []int{15}
 }
 
 type Retcode int32
@@ -1008,11 +1060,11 @@ func (x Retcode) String() string {
 }
 
 func (Retcode) Descriptor() protoreflect.EnumDescriptor {
-	return file_enum_server_proto_enumTypes[15].Descriptor()
+	return file_enum_server_proto_enumTypes[16].Descriptor()
 }
 
 func (Retcode) Type() protoreflect.EnumType {
-	return &file_enum_server_proto_enumTypes[15]
+	return &file_enum_server_proto_enumTypes[16]
 }
 
 func (x Retcode) Number() protoreflect.EnumNumber {
@@ -1021,7 +1073,7 @@ func (x Retcode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Retcode.Descriptor instead.
 func (Retcode) EnumDescriptor() ([]byte, []int) {
-	return file_enum_server_proto_rawDescGZIP(), []int{15}
+	return file_enum_server_proto_rawDescGZIP(), []int{16}
 }
 
 var File_enum_server_proto protoreflect.FileDescriptor
@@ -1160,7 +1212,13 @@ var file_enum_server_proto_rawDesc = []byte{
 	0x4f, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x13, 0x0a, 0x0f, 0x50, 0x4d, 0x54, 0x5f, 0x41, 0x50, 0x50,
 	0x4c, 0x59, 0x46, 0x52, 0x49, 0x45, 0x4e, 0x44, 0x10, 0x01, 0x12, 0x0c, 0x0a, 0x08, 0x50, 0x4d,
 	0x54, 0x5f, 0x43, 0x48, 0x41, 0x54, 0x10, 0x02, 0x12, 0x14, 0x0a, 0x10, 0x50, 0x4d, 0x54, 0x5f,
-	0x41, 0x43, 0x43, 0x45, 0x50, 0x54, 0x46, 0x52, 0x49, 0x45, 0x4e, 0x44, 0x10, 0x03, 0x2a, 0xca,
+	0x41, 0x43, 0x43, 0x45, 0x50, 0x54, 0x46, 0x52, 0x49, 0x45, 0x4e, 0x44, 0x10, 0x03, 0x2a, 0x5e,
+	0x0a, 0x0d, 0x4d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12,
+	0x10, 0x0a, 0x0c, 0x4d, 0x49, 0x53, 0x53, 0x49, 0x4f, 0x4e, 0x5f, 0x4e, 0x4f, 0x4e, 0x45, 0x10,
+	0x00, 0x12, 0x11, 0x0a, 0x0d, 0x4d, 0x49, 0x53, 0x53, 0x49, 0x4f, 0x4e, 0x5f, 0x44, 0x4f, 0x49,
+	0x4e, 0x47, 0x10, 0x01, 0x12, 0x12, 0x0a, 0x0e, 0x4d, 0x49, 0x53, 0x53, 0x49, 0x4f, 0x4e, 0x5f,
+	0x46, 0x49, 0x4e, 0x49, 0x53, 0x48, 0x10, 0x02, 0x12, 0x14, 0x0a, 0x10, 0x4d, 0x49, 0x53, 0x53,
+	0x49, 0x4f, 0x4e, 0x5f, 0x50, 0x52, 0x45, 0x50, 0x41, 0x52, 0x45, 0x44, 0x10, 0x03, 0x2a, 0xca,
 	0x01, 0x0a, 0x0f, 0x52, 0x6f, 0x67, 0x75, 0x65, 0x41, 0x72, 0x65, 0x61, 0x53, 0x74, 0x61, 0x74,
 	0x75, 0x73, 0x12, 0x2a, 0x0a, 0x26, 0x52, 0x6f, 0x67, 0x75, 0x65, 0x41, 0x72, 0x65, 0x61, 0x53,
 	0x74, 0x61, 0x74, 0x75, 0x73, 0x5f, 0x52, 0x4f, 0x47, 0x55, 0x45, 0x5f, 0x41, 0x52, 0x45, 0x41,
@@ -1221,7 +1279,7 @@ func file_enum_server_proto_rawDescGZIP() []byte {
 	return file_enum_server_proto_rawDescData
 }
 
-var file_enum_server_proto_enumTypes = make([]protoimpl.EnumInfo, 16)
+var file_enum_server_proto_enumTypes = make([]protoimpl.EnumInfo, 17)
 var file_enum_server_proto_goTypes = []interface{}{
 	(Gender)(0),              // 0: proto.Gender
 	(HeroBasicType)(0),       // 1: proto.HeroBasicType
@@ -1236,9 +1294,10 @@ var file_enum_server_proto_goTypes = []interface{}{
 	(ChallengeStatus)(0),     // 10: proto.ChallengeStatus
 	(MsgType)(0),             // 11: proto.MsgType
 	(PlayerMsgType)(0),       // 12: proto.PlayerMsgType
-	(RogueAreaStatus)(0),     // 13: proto.RogueAreaStatus
-	(RoomStatus)(0),          // 14: proto.RoomStatus
-	(Retcode)(0),             // 15: proto.Retcode
+	(MissionStatus)(0),       // 13: proto.MissionStatus
+	(RogueAreaStatus)(0),     // 14: proto.RogueAreaStatus
+	(RoomStatus)(0),          // 15: proto.RoomStatus
+	(Retcode)(0),             // 16: proto.Retcode
 }
 var file_enum_server_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -1258,7 +1317,7 @@ func file_enum_server_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_enum_server_proto_rawDesc,
-			NumEnums:      16,
+			NumEnums:      17,
 			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   0,

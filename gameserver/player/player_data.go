@@ -166,6 +166,43 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 // 	g.Send(cmd.SendMsgScRsp, nil)
 // }
 
+func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg []byte) {
+	conf := gdconf.GetVideoVersionKey()
+	rsp := &proto.GetVideoVersionKeyScRsp{
+		Retcode:          0,
+		VideoKeyInfoList: make([]*proto.VideoKeyInfo, 0),
+	}
+	for _, video := range conf {
+		rsp.VideoKeyInfoList = append(rsp.VideoKeyInfoList, &proto.VideoKeyInfo{
+			VideoKey: video.VideoKey,
+			Id:       video.Id,
+		})
+	}
+	g.Send(cmd.GetVideoVersionKeyScRsp, rsp)
+}
+
+func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg []byte) {
+	rsp := &proto.GetSecretKeyInfoScRsp{
+		SecretInfo: []*proto.SecretKeyInfo{
+			{
+				Type: proto.SecretKeyType_SECRET_KEY_SERVER_CHECK,
+				Key:  "F9hx2TEZ",
+			},
+			{
+				Type: proto.SecretKeyType_SECRET_KEY_VIDEO,
+				Key:  "10120425825329403",
+			},
+			{
+				Type: proto.SecretKeyType_SECRET_KEY_BATTLE_TIME,
+				Key:  "2597701279",
+			},
+		},
+		Retcode:     0,
+		JGHFBNMOFDP: nil,
+	}
+	g.Send(cmd.GetSecretKeyInfoScRsp, rsp)
+}
+
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetChatEmojiListScRsp, nil)
 }

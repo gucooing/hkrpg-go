@@ -6,30 +6,6 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
-func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg []byte) {
-	g.Send(cmd.GetMissionEventDataScRsp, nil)
-}
-
-func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetMissionStatusCsReq, payloadMsg)
-	req := msg.(*proto.GetMissionStatusCsReq)
-
-	rsp := new(proto.GetMissionStatusScRsp)
-	rsp.FinishedMainMissionIdList = []uint32{}
-	rsp.SubMissionStatusList = make([]*proto.Mission, 0)
-	for _, id := range req.MainMissionIdList {
-		rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, id)
-	}
-	for _, id := range req.SubMissionIdList {
-		rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
-			Id:     id,
-			Status: proto.MissionStatus_MISSION_FINISH,
-		})
-	}
-
-	g.Send(cmd.GetMissionStatusScRsp, rsp)
-}
-
 func (g *GamePlayer) GetQuestDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetQuestDataScRsp)
 	rsp.QuestList = make([]*proto.Quest, 0)

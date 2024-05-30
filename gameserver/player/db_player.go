@@ -44,10 +44,11 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		LastLogoutTime:          0,
 		Mail:                    g.NewMail(),
 		Friend:                  NewFriend(),
+		Mission:                 newMission(),
 		DataVersion:             0,
 		LastDailyRefreshTime:    0,
 		ProfilePictureCostumeId: 0,
-		PsnId:                   "",
+		IsProficientPlayer:      false,
 		LanguageType:            0,
 		ClientAppVersion:        "",
 		ClientDeviceInfo:        "",
@@ -66,6 +67,11 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 	g.AddAvatar(uint32(g.GetAvatar().CurMainAvatar))
 
 	return g.BasicBin
+}
+
+func (g *GamePlayer) GetIsProficientPlayer() bool {
+	db := g.GetBasicBin()
+	return db.IsProficientPlayer
 }
 
 func (g *GamePlayer) GetBasicBin() *spb.PlayerBasicCompBin {

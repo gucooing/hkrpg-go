@@ -65,6 +65,11 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			g.BasicBin = g.NewBasicBin()
 		}
 	}
+	if g.GetIsProficientPlayer() { // 是否是老玩家
+
+	} else {
+
+	}
 }
 
 func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
