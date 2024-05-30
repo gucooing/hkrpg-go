@@ -2,6 +2,7 @@ package player
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
@@ -67,12 +68,13 @@ func (g *GamePlayer) GetFinishSubMainMissionById(id uint32) *spb.MissionInfo {
 	return db[id]
 }
 
-func (g *GamePlayer) UpSubMainMission(subMissionId uint32) {
+// 将子任务转成完成状态
+func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	subMainMissionList := g.GetSubMainMissionList()
 	subMission := subMainMissionList[subMissionId]
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	if subMission == nil {
-		return
+		return false
 	}
 
 	finishSubMainMissionList[subMissionId] = &spb.MissionInfo{
@@ -81,19 +83,42 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) {
 		Status:    spb.MissionStatus_MISSION_FINISH,
 	}
 	delete(subMainMissionList, subMissionId)
+	return true
 }
 
-func (g *GamePlayer) GetNextSubMission(subMissionId uint32) []uint32 {
+// 处理战斗任务
+func (g *GamePlayer) UpBattleSubMission(req *proto.PVEBattleResultCsReq) {
+	db := g.GetBattleBackupById(req.BattleId)
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		switch conf.FinishType {
+		case "StageWin":
+			if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN && db.EventId == conf.ParamInt1 {
+				g.FinishSubMission(id)
+			}
+		}
+	}
+}
+
+// 完成子任务并拉取下一个任务和通知
+func (g *GamePlayer) FinishSubMission(missionId uint32) {
+	// 先完成子任务
+	if !g.UpSubMainMission(missionId) {
+		return
+	}
 	nextList := make([]uint32, 0)
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	subMainMissionList := g.GetSubMainMissionList()
-	subMissionConf := gdconf.GetSubMainMissionById(subMissionId)
+	subMissionConf := gdconf.GetSubMainMissionById(missionId)
 	if subMissionConf == nil {
-		return nextList
+		return
 	}
 	conf := gdconf.GetGoppMainMissionById(subMissionConf.MainMissionID)
 	if conf == nil {
-		return nextList
+		return
 	}
 	for _, confSubMission := range conf.SubMissionList {
 		var isNext = false
@@ -103,7 +128,6 @@ func (g *GamePlayer) GetNextSubMission(subMissionId uint32) []uint32 {
 		for _, takeParamId := range confSubMission.TakeParamIntList {
 			if finishSubMainMissionList[takeParamId] != nil {
 				isNext = true
-				break
 			} else {
 				isNext = false
 				break
@@ -118,7 +142,8 @@ func (g *GamePlayer) GetNextSubMission(subMissionId uint32) []uint32 {
 			}
 		}
 	}
-	return nextList
+	// 通知状态
+	g.MissionPlayerSyncScNotify(nextList, []uint32{missionId}) // 发送通知
 }
 
 // 登录事件-自动接取任务

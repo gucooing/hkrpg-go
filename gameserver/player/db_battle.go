@@ -25,6 +25,7 @@ type BattleBackup struct {
 	monsterEntity    []uint32                 // 参战怪物实体id
 	CocoonId         uint32                   // 关卡id
 	WorldLevel       uint32                   // 关卡等级
+	EventId          uint32                   // 任务用的
 	// 奖励
 }
 

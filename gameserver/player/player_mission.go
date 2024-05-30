@@ -99,10 +99,8 @@ func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.FinishTalkMissionCsReq, payloadMsg)
 	req := msg.(*proto.FinishTalkMissionCsReq)
 	subMissionId := getMissionUin32(req.TalkStr) // 获取子任务
-	g.UpSubMainMission(subMissionId)             // 完成子任务
-	nextSub := g.GetNextSubMission(subMissionId) // 获取子任务接下来的任务
+	g.FinishSubMission(subMissionId)             // 完成子任务
 	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{SubMissionId: subMissionId})
-	g.MissionPlayerSyncScNotify(nextSub, []uint32{subMissionId}) // 发送通知
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr})
 }
 
