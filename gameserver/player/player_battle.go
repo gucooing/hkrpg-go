@@ -111,7 +111,9 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.ChallengePVEBattleResultCsReq(req)
 	}
 	// 任务判断
-	g.UpBattleSubMission(req)
+	if battleBin.EventId != 0 {
+		g.UpBattleSubMission(req)
+	}
 	// 副本处理
 	g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)
 	g.DelBattleBackupById(req.BattleId)

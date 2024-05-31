@@ -2742,16 +2742,17 @@ func (x *MissionInfo) GetStatus() MissionStatus {
 	return MissionStatus_MISSION_NONE
 }
 
-type Test struct {
+type BlockBin struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Test map[uint32]uint64 `protobuf:"bytes,1,rep,name=test,proto3" json:"test,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+	EntryId   uint32                `protobuf:"varint,1,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`                                                                                               // 地图
+	BlockList map[uint32]*BlockList `protobuf:"bytes,2,rep,name=block_list,json=blockList,proto3" json:"block_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 区块信息
 }
 
-func (x *Test) Reset() {
-	*x = Test{}
+func (x *BlockBin) Reset() {
+	*x = BlockBin{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_bin_server_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2759,13 +2760,13 @@ func (x *Test) Reset() {
 	}
 }
 
-func (x *Test) String() string {
+func (x *BlockBin) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Test) ProtoMessage() {}
+func (*BlockBin) ProtoMessage() {}
 
-func (x *Test) ProtoReflect() protoreflect.Message {
+func (x *BlockBin) ProtoReflect() protoreflect.Message {
 	mi := &file_bin_server_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2777,16 +2778,133 @@ func (x *Test) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Test.ProtoReflect.Descriptor instead.
-func (*Test) Descriptor() ([]byte, []int) {
+// Deprecated: Use BlockBin.ProtoReflect.Descriptor instead.
+func (*BlockBin) Descriptor() ([]byte, []int) {
 	return file_bin_server_proto_rawDescGZIP(), []int{35}
 }
 
-func (x *Test) GetTest() map[uint32]uint64 {
+func (x *BlockBin) GetEntryId() uint32 {
 	if x != nil {
-		return x.Test
+		return x.EntryId
+	}
+	return 0
+}
+
+func (x *BlockBin) GetBlockList() map[uint32]*BlockList {
+	if x != nil {
+		return x.BlockList
 	}
 	return nil
+}
+
+type BlockList struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PropInfo map[uint32]*PropInfo `protobuf:"bytes,1,rep,name=prop_info,json=propInfo,proto3" json:"prop_info,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 物品实体信息
+}
+
+func (x *BlockList) Reset() {
+	*x = BlockList{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bin_server_proto_msgTypes[36]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *BlockList) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BlockList) ProtoMessage() {}
+
+func (x *BlockList) ProtoReflect() protoreflect.Message {
+	mi := &file_bin_server_proto_msgTypes[36]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BlockList.ProtoReflect.Descriptor instead.
+func (*BlockList) Descriptor() ([]byte, []int) {
+	return file_bin_server_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *BlockList) GetPropInfo() map[uint32]*PropInfo {
+	if x != nil {
+		return x.PropInfo
+	}
+	return nil
+}
+
+type PropInfo struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	InstId    uint32 `protobuf:"varint,1,opt,name=inst_id,json=instId,proto3" json:"inst_id,omitempty"`          // instid
+	PropId    uint32 `protobuf:"varint,2,opt,name=prop_id,json=propId,proto3" json:"prop_id,omitempty"`          // propid
+	PropState uint32 `protobuf:"varint,3,opt,name=prop_state,json=propState,proto3" json:"prop_state,omitempty"` // 状态
+}
+
+func (x *PropInfo) Reset() {
+	*x = PropInfo{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_bin_server_proto_msgTypes[37]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PropInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PropInfo) ProtoMessage() {}
+
+func (x *PropInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_bin_server_proto_msgTypes[37]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PropInfo.ProtoReflect.Descriptor instead.
+func (*PropInfo) Descriptor() ([]byte, []int) {
+	return file_bin_server_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *PropInfo) GetInstId() uint32 {
+	if x != nil {
+		return x.InstId
+	}
+	return 0
+}
+
+func (x *PropInfo) GetPropId() uint32 {
+	if x != nil {
+		return x.PropId
+	}
+	return 0
+}
+
+func (x *PropInfo) GetPropState() uint32 {
+	if x != nil {
+		return x.PropState
+	}
+	return 0
 }
 
 var File_bin_server_proto protoreflect.FileDescriptor
@@ -3363,15 +3481,35 @@ var file_bin_server_proto_rawDesc = []byte{
 	0x6f, 0x67, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2c, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73,
 	0x18, 0x04, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d,
 	0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06, 0x73, 0x74,
-	0x61, 0x74, 0x75, 0x73, 0x22, 0x6a, 0x0a, 0x04, 0x54, 0x65, 0x73, 0x74, 0x12, 0x29, 0x0a, 0x04,
-	0x74, 0x65, 0x73, 0x74, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x15, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x2e, 0x54, 0x65, 0x73, 0x74, 0x2e, 0x54, 0x65, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x72,
-	0x79, 0x52, 0x04, 0x74, 0x65, 0x73, 0x74, 0x1a, 0x37, 0x0a, 0x09, 0x54, 0x65, 0x73, 0x74, 0x45,
-	0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01,
-	0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x61, 0x74, 0x75, 0x73, 0x22, 0xb4, 0x01, 0x0a, 0x08, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x42, 0x69,
+	0x6e, 0x12, 0x19, 0x0a, 0x08, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0d, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x49, 0x64, 0x12, 0x3d, 0x0a, 0x0a,
+	0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x1e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x42, 0x69,
+	0x6e, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x52, 0x09, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x1a, 0x4e, 0x0a, 0x0e, 0x42,
+	0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a,
+	0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12,
+	0x26, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x10,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74,
+	0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x96, 0x01, 0x0a, 0x09,
+	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x3b, 0x0a, 0x09, 0x70, 0x72, 0x6f,
+	0x70, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x2e, 0x50,
+	0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x08, 0x70, 0x72,
+	0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x1a, 0x4c, 0x0a, 0x0d, 0x50, 0x72, 0x6f, 0x70, 0x49, 0x6e,
+	0x66, 0x6f, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x25, 0x0a, 0x05, 0x76, 0x61, 0x6c,
+	0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x50, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65,
+	0x3a, 0x02, 0x38, 0x01, 0x22, 0x5b, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f,
+	0x12, 0x17, 0x0a, 0x07, 0x69, 0x6e, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0d, 0x52, 0x06, 0x69, 0x6e, 0x73, 0x74, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07, 0x70, 0x72, 0x6f,
+	0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x70, 0x72, 0x6f, 0x70,
+	0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x53, 0x74, 0x61, 0x74,
+	0x65, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3386,7 +3524,7 @@ func file_bin_server_proto_rawDescGZIP() []byte {
 	return file_bin_server_proto_rawDescData
 }
 
-var file_bin_server_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
+var file_bin_server_proto_msgTypes = make([]protoimpl.MessageInfo, 63)
 var file_bin_server_proto_goTypes = []interface{}{
 	(*PlayerBasicCompBin)(nil), // 0: proto.PlayerBasicCompBin
 	(*Activity)(nil),           // 1: proto.Activity
@@ -3423,38 +3561,41 @@ var file_bin_server_proto_goTypes = []interface{}{
 	(*Mission)(nil),            // 32: proto.Mission
 	(*MainMission)(nil),        // 33: proto.MainMission
 	(*MissionInfo)(nil),        // 34: proto.MissionInfo
-	(*Test)(nil),               // 35: proto.Test
-	nil,                        // 36: proto.PlayerBasicCompBin.OpenStateMapEntry
-	nil,                        // 37: proto.Activity.ActivityLoginEntry
-	nil,                        // 38: proto.Avatar.AvatarListEntry
-	nil,                        // 39: proto.Avatar.BattleAvatarListEntry
-	nil,                        // 40: proto.AvatarBin.EquipRelicEntry
-	nil,                        // 41: proto.LineUp.LineUpListEntry
-	nil,                        // 42: proto.LineUp.BattleLineListEntry
-	nil,                        // 43: proto.Line.AvatarIdListEntry
-	nil,                        // 44: proto.Item.RelicMapEntry
-	nil,                        // 45: proto.Item.EquipmentMapEntry
-	nil,                        // 46: proto.Item.MaterialMapEntry
-	nil,                        // 47: proto.Relic.RelicAffixEntry
-	nil,                        // 48: proto.Rogue.RogueAreaEntry
-	nil,                        // 49: proto.CurRogue.RogueSceneMapEntry
-	nil,                        // 50: proto.Challenge.ChallengeListEntry
-	nil,                        // 51: proto.Challenge.ChallengeRewardListEntry
-	nil,                        // 52: proto.Gacha.GachaMapEntry
-	nil,                        // 53: proto.Mail.MailListEntry
-	nil,                        // 54: proto.PlayerFriend.FriendListEntry
-	nil,                        // 55: proto.MainMission.MainMissionListEntry
-	nil,                        // 56: proto.MainMission.SubMissionListEntry
-	nil,                        // 57: proto.MainMission.FinishMainMissionListEntry
-	nil,                        // 58: proto.MainMission.FinishSubMissionListEntry
-	nil,                        // 59: proto.Test.TestEntry
-	(Gender)(0),                // 60: proto.Gender
-	(HeroBasicType)(0),         // 61: proto.HeroBasicType
-	(BattleType)(0),            // 62: proto.BattleType
-	(RogueAreaStatus)(0),       // 63: proto.RogueAreaStatus
-	(RoomStatus)(0),            // 64: proto.RoomStatus
-	(ChallengeStatus)(0),       // 65: proto.ChallengeStatus
-	(MissionStatus)(0),         // 66: proto.MissionStatus
+	(*BlockBin)(nil),           // 35: proto.BlockBin
+	(*BlockList)(nil),          // 36: proto.BlockList
+	(*PropInfo)(nil),           // 37: proto.PropInfo
+	nil,                        // 38: proto.PlayerBasicCompBin.OpenStateMapEntry
+	nil,                        // 39: proto.Activity.ActivityLoginEntry
+	nil,                        // 40: proto.Avatar.AvatarListEntry
+	nil,                        // 41: proto.Avatar.BattleAvatarListEntry
+	nil,                        // 42: proto.AvatarBin.EquipRelicEntry
+	nil,                        // 43: proto.LineUp.LineUpListEntry
+	nil,                        // 44: proto.LineUp.BattleLineListEntry
+	nil,                        // 45: proto.Line.AvatarIdListEntry
+	nil,                        // 46: proto.Item.RelicMapEntry
+	nil,                        // 47: proto.Item.EquipmentMapEntry
+	nil,                        // 48: proto.Item.MaterialMapEntry
+	nil,                        // 49: proto.Relic.RelicAffixEntry
+	nil,                        // 50: proto.Rogue.RogueAreaEntry
+	nil,                        // 51: proto.CurRogue.RogueSceneMapEntry
+	nil,                        // 52: proto.Challenge.ChallengeListEntry
+	nil,                        // 53: proto.Challenge.ChallengeRewardListEntry
+	nil,                        // 54: proto.Gacha.GachaMapEntry
+	nil,                        // 55: proto.Mail.MailListEntry
+	nil,                        // 56: proto.PlayerFriend.FriendListEntry
+	nil,                        // 57: proto.MainMission.MainMissionListEntry
+	nil,                        // 58: proto.MainMission.SubMissionListEntry
+	nil,                        // 59: proto.MainMission.FinishMainMissionListEntry
+	nil,                        // 60: proto.MainMission.FinishSubMissionListEntry
+	nil,                        // 61: proto.BlockBin.BlockListEntry
+	nil,                        // 62: proto.BlockList.PropInfoEntry
+	(Gender)(0),                // 63: proto.Gender
+	(HeroBasicType)(0),         // 64: proto.HeroBasicType
+	(BattleType)(0),            // 65: proto.BattleType
+	(RogueAreaStatus)(0),       // 66: proto.RogueAreaStatus
+	(RoomStatus)(0),            // 67: proto.RoomStatus
+	(ChallengeStatus)(0),       // 68: proto.ChallengeStatus
+	(MissionStatus)(0),         // 69: proto.MissionStatus
 }
 var file_bin_server_proto_depIdxs = []int32{
 	1,  // 0: proto.PlayerBasicCompBin.activity:type_name -> proto.Activity
@@ -3466,74 +3607,77 @@ var file_bin_server_proto_depIdxs = []int32{
 	12, // 6: proto.PlayerBasicCompBin.item:type_name -> proto.Item
 	25, // 7: proto.PlayerBasicCompBin.gacha:type_name -> proto.Gacha
 	17, // 8: proto.PlayerBasicCompBin.battle:type_name -> proto.Battle
-	36, // 9: proto.PlayerBasicCompBin.open_state_map:type_name -> proto.PlayerBasicCompBin.OpenStateMapEntry
+	38, // 9: proto.PlayerBasicCompBin.open_state_map:type_name -> proto.PlayerBasicCompBin.OpenStateMapEntry
 	28, // 10: proto.PlayerBasicCompBin.mail:type_name -> proto.Mail
 	30, // 11: proto.PlayerBasicCompBin.friend:type_name -> proto.PlayerFriend
 	27, // 12: proto.PlayerBasicCompBin.nickname_audit_bin:type_name -> proto.ContentAuditBin
 	32, // 13: proto.PlayerBasicCompBin.mission:type_name -> proto.Mission
-	37, // 14: proto.Activity.activity_login:type_name -> proto.Activity.ActivityLoginEntry
-	38, // 15: proto.Avatar.avatar_list:type_name -> proto.Avatar.AvatarListEntry
-	60, // 16: proto.Avatar.gender:type_name -> proto.Gender
-	61, // 17: proto.Avatar.cur_main_avatar:type_name -> proto.HeroBasicType
+	39, // 14: proto.Activity.activity_login:type_name -> proto.Activity.ActivityLoginEntry
+	40, // 15: proto.Avatar.avatar_list:type_name -> proto.Avatar.AvatarListEntry
+	63, // 16: proto.Avatar.gender:type_name -> proto.Gender
+	64, // 17: proto.Avatar.cur_main_avatar:type_name -> proto.HeroBasicType
 	4,  // 18: proto.Avatar.hero_basic_type_info:type_name -> proto.HeroBasicTypeInfo
-	39, // 19: proto.Avatar.battle_avatar_list:type_name -> proto.Avatar.BattleAvatarListEntry
-	61, // 20: proto.HeroBasicTypeInfo.basic_type:type_name -> proto.HeroBasicType
+	41, // 19: proto.Avatar.battle_avatar_list:type_name -> proto.Avatar.BattleAvatarListEntry
+	64, // 20: proto.HeroBasicTypeInfo.basic_type:type_name -> proto.HeroBasicType
 	7,  // 21: proto.HeroBasicTypeInfo.skill_tree_list:type_name -> proto.AvatarSkillBin
 	6,  // 22: proto.AvatarBin.sp_bar:type_name -> proto.AvatarSpBarInfo
 	7,  // 23: proto.AvatarBin.skilltree_list:type_name -> proto.AvatarSkillBin
-	40, // 24: proto.AvatarBin.equip_relic:type_name -> proto.AvatarBin.EquipRelicEntry
-	41, // 25: proto.LineUp.line_up_list:type_name -> proto.LineUp.LineUpListEntry
-	42, // 26: proto.LineUp.battle_line_list:type_name -> proto.LineUp.BattleLineListEntry
-	43, // 27: proto.Line.avatar_id_list:type_name -> proto.Line.AvatarIdListEntry
-	44, // 28: proto.Item.relic_map:type_name -> proto.Item.RelicMapEntry
-	45, // 29: proto.Item.equipment_map:type_name -> proto.Item.EquipmentMapEntry
-	46, // 30: proto.Item.material_map:type_name -> proto.Item.MaterialMapEntry
-	47, // 31: proto.Relic.relic_affix:type_name -> proto.Relic.RelicAffixEntry
-	62, // 32: proto.Battle.battle_type:type_name -> proto.BattleType
+	42, // 24: proto.AvatarBin.equip_relic:type_name -> proto.AvatarBin.EquipRelicEntry
+	43, // 25: proto.LineUp.line_up_list:type_name -> proto.LineUp.LineUpListEntry
+	44, // 26: proto.LineUp.battle_line_list:type_name -> proto.LineUp.BattleLineListEntry
+	45, // 27: proto.Line.avatar_id_list:type_name -> proto.Line.AvatarIdListEntry
+	46, // 28: proto.Item.relic_map:type_name -> proto.Item.RelicMapEntry
+	47, // 29: proto.Item.equipment_map:type_name -> proto.Item.EquipmentMapEntry
+	48, // 30: proto.Item.material_map:type_name -> proto.Item.MaterialMapEntry
+	49, // 31: proto.Relic.relic_affix:type_name -> proto.Relic.RelicAffixEntry
+	65, // 32: proto.Battle.battle_type:type_name -> proto.BattleType
 	18, // 33: proto.Battle.rogue:type_name -> proto.Rogue
 	22, // 34: proto.Battle.challenge:type_name -> proto.Challenge
-	48, // 35: proto.Rogue.rogue_area:type_name -> proto.Rogue.RogueAreaEntry
+	50, // 35: proto.Rogue.rogue_area:type_name -> proto.Rogue.RogueAreaEntry
 	20, // 36: proto.Rogue.cur_rogue:type_name -> proto.CurRogue
-	63, // 37: proto.RogueArea.rogue_area_status:type_name -> proto.RogueAreaStatus
-	49, // 38: proto.CurRogue.rogue_scene_map:type_name -> proto.CurRogue.RogueSceneMapEntry
-	64, // 39: proto.RogueRoom.room_status:type_name -> proto.RoomStatus
-	50, // 40: proto.Challenge.challenge_list:type_name -> proto.Challenge.ChallengeListEntry
-	51, // 41: proto.Challenge.challenge_reward_list:type_name -> proto.Challenge.ChallengeRewardListEntry
+	66, // 37: proto.RogueArea.rogue_area_status:type_name -> proto.RogueAreaStatus
+	51, // 38: proto.CurRogue.rogue_scene_map:type_name -> proto.CurRogue.RogueSceneMapEntry
+	67, // 39: proto.RogueRoom.room_status:type_name -> proto.RoomStatus
+	52, // 40: proto.Challenge.challenge_list:type_name -> proto.Challenge.ChallengeListEntry
+	53, // 41: proto.Challenge.challenge_reward_list:type_name -> proto.Challenge.ChallengeRewardListEntry
 	24, // 42: proto.Challenge.cur_challenge:type_name -> proto.CurChallenge
-	65, // 43: proto.CurChallenge.status:type_name -> proto.ChallengeStatus
-	52, // 44: proto.Gacha.gacha_map:type_name -> proto.Gacha.GachaMapEntry
-	53, // 45: proto.Mail.MailList:type_name -> proto.Mail.MailListEntry
-	54, // 46: proto.PlayerFriend.friend_list:type_name -> proto.PlayerFriend.FriendListEntry
+	68, // 43: proto.CurChallenge.status:type_name -> proto.ChallengeStatus
+	54, // 44: proto.Gacha.gacha_map:type_name -> proto.Gacha.GachaMapEntry
+	55, // 45: proto.Mail.MailList:type_name -> proto.Mail.MailListEntry
+	56, // 46: proto.PlayerFriend.friend_list:type_name -> proto.PlayerFriend.FriendListEntry
 	33, // 47: proto.Mission.main_mission:type_name -> proto.MainMission
-	55, // 48: proto.MainMission.main_mission_list:type_name -> proto.MainMission.MainMissionListEntry
-	56, // 49: proto.MainMission.sub_mission_list:type_name -> proto.MainMission.SubMissionListEntry
-	57, // 50: proto.MainMission.finish_main_mission_list:type_name -> proto.MainMission.FinishMainMissionListEntry
-	58, // 51: proto.MainMission.finish_sub_mission_list:type_name -> proto.MainMission.FinishSubMissionListEntry
-	66, // 52: proto.MissionInfo.status:type_name -> proto.MissionStatus
-	59, // 53: proto.Test.test:type_name -> proto.Test.TestEntry
-	5,  // 54: proto.Avatar.AvatarListEntry.value:type_name -> proto.AvatarBin
-	5,  // 55: proto.Avatar.BattleAvatarListEntry.value:type_name -> proto.AvatarBin
-	10, // 56: proto.LineUp.LineUpListEntry.value:type_name -> proto.Line
-	10, // 57: proto.LineUp.BattleLineListEntry.value:type_name -> proto.Line
-	11, // 58: proto.Line.AvatarIdListEntry.value:type_name -> proto.LineAvatarList
-	13, // 59: proto.Item.RelicMapEntry.value:type_name -> proto.Relic
-	15, // 60: proto.Item.EquipmentMapEntry.value:type_name -> proto.Equipment
-	14, // 61: proto.Relic.RelicAffixEntry.value:type_name -> proto.RelicAffix
-	19, // 62: proto.Rogue.RogueAreaEntry.value:type_name -> proto.RogueArea
-	21, // 63: proto.CurRogue.RogueSceneMapEntry.value:type_name -> proto.RogueRoom
-	23, // 64: proto.Challenge.ChallengeListEntry.value:type_name -> proto.ChallengeList
-	26, // 65: proto.Gacha.GachaMapEntry.value:type_name -> proto.GachaNum
-	29, // 66: proto.Mail.MailListEntry.value:type_name -> proto.MailDts
-	31, // 67: proto.PlayerFriend.FriendListEntry.value:type_name -> proto.Friend
-	34, // 68: proto.MainMission.MainMissionListEntry.value:type_name -> proto.MissionInfo
-	34, // 69: proto.MainMission.SubMissionListEntry.value:type_name -> proto.MissionInfo
-	34, // 70: proto.MainMission.FinishMainMissionListEntry.value:type_name -> proto.MissionInfo
-	34, // 71: proto.MainMission.FinishSubMissionListEntry.value:type_name -> proto.MissionInfo
-	72, // [72:72] is the sub-list for method output_type
-	72, // [72:72] is the sub-list for method input_type
-	72, // [72:72] is the sub-list for extension type_name
-	72, // [72:72] is the sub-list for extension extendee
-	0,  // [0:72] is the sub-list for field type_name
+	57, // 48: proto.MainMission.main_mission_list:type_name -> proto.MainMission.MainMissionListEntry
+	58, // 49: proto.MainMission.sub_mission_list:type_name -> proto.MainMission.SubMissionListEntry
+	59, // 50: proto.MainMission.finish_main_mission_list:type_name -> proto.MainMission.FinishMainMissionListEntry
+	60, // 51: proto.MainMission.finish_sub_mission_list:type_name -> proto.MainMission.FinishSubMissionListEntry
+	69, // 52: proto.MissionInfo.status:type_name -> proto.MissionStatus
+	61, // 53: proto.BlockBin.block_list:type_name -> proto.BlockBin.BlockListEntry
+	62, // 54: proto.BlockList.prop_info:type_name -> proto.BlockList.PropInfoEntry
+	5,  // 55: proto.Avatar.AvatarListEntry.value:type_name -> proto.AvatarBin
+	5,  // 56: proto.Avatar.BattleAvatarListEntry.value:type_name -> proto.AvatarBin
+	10, // 57: proto.LineUp.LineUpListEntry.value:type_name -> proto.Line
+	10, // 58: proto.LineUp.BattleLineListEntry.value:type_name -> proto.Line
+	11, // 59: proto.Line.AvatarIdListEntry.value:type_name -> proto.LineAvatarList
+	13, // 60: proto.Item.RelicMapEntry.value:type_name -> proto.Relic
+	15, // 61: proto.Item.EquipmentMapEntry.value:type_name -> proto.Equipment
+	14, // 62: proto.Relic.RelicAffixEntry.value:type_name -> proto.RelicAffix
+	19, // 63: proto.Rogue.RogueAreaEntry.value:type_name -> proto.RogueArea
+	21, // 64: proto.CurRogue.RogueSceneMapEntry.value:type_name -> proto.RogueRoom
+	23, // 65: proto.Challenge.ChallengeListEntry.value:type_name -> proto.ChallengeList
+	26, // 66: proto.Gacha.GachaMapEntry.value:type_name -> proto.GachaNum
+	29, // 67: proto.Mail.MailListEntry.value:type_name -> proto.MailDts
+	31, // 68: proto.PlayerFriend.FriendListEntry.value:type_name -> proto.Friend
+	34, // 69: proto.MainMission.MainMissionListEntry.value:type_name -> proto.MissionInfo
+	34, // 70: proto.MainMission.SubMissionListEntry.value:type_name -> proto.MissionInfo
+	34, // 71: proto.MainMission.FinishMainMissionListEntry.value:type_name -> proto.MissionInfo
+	34, // 72: proto.MainMission.FinishSubMissionListEntry.value:type_name -> proto.MissionInfo
+	36, // 73: proto.BlockBin.BlockListEntry.value:type_name -> proto.BlockList
+	37, // 74: proto.BlockList.PropInfoEntry.value:type_name -> proto.PropInfo
+	75, // [75:75] is the sub-list for method output_type
+	75, // [75:75] is the sub-list for method input_type
+	75, // [75:75] is the sub-list for extension type_name
+	75, // [75:75] is the sub-list for extension extendee
+	0,  // [0:75] is the sub-list for field type_name
 }
 
 func init() { file_bin_server_proto_init() }
@@ -3964,7 +4108,31 @@ func file_bin_server_proto_init() {
 			}
 		}
 		file_bin_server_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Test); i {
+			switch v := v.(*BlockBin); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bin_server_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*BlockList); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_bin_server_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PropInfo); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3982,7 +4150,7 @@ func file_bin_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bin_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   60,
+			NumMessages:   63,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

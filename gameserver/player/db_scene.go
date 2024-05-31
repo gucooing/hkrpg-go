@@ -3,9 +3,13 @@ package player
 import (
 	"strconv"
 
+	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type EntityAll interface {
@@ -161,6 +165,59 @@ func (g *GamePlayer) SetRot(x, y, z int32) {
 	db.Z = z
 }
 
+// 从db拉取地图数据
+func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
+	bin := gsdb.GetDb().GetBlockData(g.Uid, entryId)
+	block := new(spb.BlockBin)
+	if err := pb.Unmarshal(bin.BinData, block); err != nil {
+		logger.Debug("entryId:%v,block error", entryId)
+	}
+	block.EntryId = entryId
+	return block
+}
+
+// 更新地图数据到数据库
+func (g *GamePlayer) UpdateBlock(block *spb.BlockBin) {
+	bin, err := pb.Marshal(block)
+	if err != nil {
+		return
+	}
+	blockData := &database.BlockData{
+		Uid:         g.Uid,
+		EntryId:     block.EntryId,
+		DataVersion: 0, // TODO
+		BinData:     bin,
+	}
+	if err = gsdb.GetDb().UpdateBlockData(blockData); err != nil {
+		logger.Debug("updata block data error:%s", err.Error())
+	}
+}
+
+func (g *GamePlayer) GetPropState(db *spb.BlockBin, groupId uint32, prop *gdconf.PropList) uint32 {
+	if db == nil {
+		return gdconf.GetStateValue(prop.State)
+	}
+	if db.BlockList == nil {
+		db.BlockList = make(map[uint32]*spb.BlockList)
+	}
+	if db.BlockList[groupId] == nil {
+		db.BlockList[groupId] = &spb.BlockList{
+			PropInfo: make(map[uint32]*spb.PropInfo),
+		}
+	}
+	if db.BlockList[groupId].PropInfo == nil {
+		db.BlockList[groupId].PropInfo = make(map[uint32]*spb.PropInfo)
+	}
+	if db.BlockList[groupId].PropInfo[prop.ID] == nil {
+		db.BlockList[groupId].PropInfo[prop.ID] = &spb.PropInfo{
+			InstId:    prop.ID,
+			PropId:    prop.PropID,
+			PropState: gdconf.GetStateValue(prop.State),
+		}
+	}
+	return db.BlockList[groupId].PropInfo[prop.ID].PropState
+}
+
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetPosPb() *proto.Vector {
@@ -215,12 +272,8 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 	}
 }
 
-func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, db *spb.BlockBin) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
-		propState := gdconf.GetStateValue(propList.State)
-		if propList.StageObjectCapture != nil {
-			propState = 1
-		}
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
@@ -242,7 +295,7 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 			},
 			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
-				PropState: propState,
+				PropState: g.GetPropState(db, sceneGroup.GroupId, propList),
 			},
 		}
 		// 添加物品实体
@@ -376,6 +429,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	g.NewEntity()
 	// 添加队伍角色进实体列表，并设置坐标
 	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
+	blockBin := g.GetBlock(entryId)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	for _, levelGroup := range foorMap {
 		if levelGroup.GroupId == 0 {
@@ -390,7 +444,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
 		// 添加物品实体
-		g.GetPropByID(entityGroupLists, levelGroup)
+		g.GetPropByID(entityGroupLists, levelGroup, blockBin)
 		// 添加怪物实体
 		g.GetNPCMonsterByID(entityGroupLists, levelGroup)
 		// 添加NPC实体
@@ -399,6 +453,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 		}
 	}
+	g.UpdateBlock(blockBin)
 	return scene
 }
 

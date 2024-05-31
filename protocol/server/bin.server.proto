@@ -286,6 +286,17 @@ message MissionInfo{
   MissionStatus status = 4;// 任务状态
 }
 
-message Test {
-  map<uint32, uint64> test = 1;
+message BlockBin{// 地图配置
+  uint32 entry_id = 1; // 地图
+  map<uint32, BlockList> block_list = 2; // 区块信息
+}
+
+message BlockList{
+  map<uint32, PropInfo>  prop_info = 1;// 物品实体信息
+}
+
+message PropInfo{
+  uint32 inst_id = 1; // instid
+  uint32 prop_id = 2; // propid
+  uint32 prop_state = 3; // 状态
 }
