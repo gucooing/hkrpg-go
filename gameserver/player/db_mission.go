@@ -2,6 +2,7 @@ package player
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -86,6 +87,18 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	return true
 }
 
+func (g *GamePlayer) TalkStrSubMission(talkStr string) {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		if conf.ParamStr1 == talkStr {
+			g.FinishSubMission(id) // 完成子任务
+		}
+	}
+}
+
 // 处理战斗任务
 func (g *GamePlayer) UpBattleSubMission(req *proto.PVEBattleResultCsReq) {
 	db := g.GetBattleBackupById(req.BattleId)
@@ -138,12 +151,27 @@ func (g *GamePlayer) UpKillMonsterSubMission(me *MonsterEntity) {
 	}
 }
 
+// 完成由服务端完成的任务
+func (g *GamePlayer) AutoServerFinishMission() {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		switch conf.FinishType {
+		case "GetTrialAvatar": // 试用角色
+			g.FinishSubMission(id)
+		}
+	}
+}
+
 // 完成子任务并拉取下一个任务和通知
 func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	// 先完成子任务
 	if !g.UpSubMainMission(missionId) {
 		return
 	}
+	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{SubMissionId: missionId})
 	nextList := make([]uint32, 0)
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	subMainMissionList := g.GetSubMainMissionList()
@@ -179,6 +207,8 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	}
 	// 通知状态
 	g.MissionPlayerSyncScNotify(nextList, []uint32{missionId}) // 发送通知
+
+	g.AutoServerFinishMission() // 检查一次任务会不会需要自动完成
 }
 
 // 登录事件-自动接取任务

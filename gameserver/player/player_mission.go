@@ -1,9 +1,6 @@
 package player
 
 import (
-	"regexp"
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -112,24 +109,8 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg []byte) {
 func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.FinishTalkMissionCsReq, payloadMsg)
 	req := msg.(*proto.FinishTalkMissionCsReq)
-	subMissionId := getMissionUin32(req.TalkStr) // 获取子任务
-	g.FinishSubMission(subMissionId)             // 完成子任务
-	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{SubMissionId: subMissionId})
+	g.TalkStrSubMission(req.TalkStr) // 获取子任务
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr})
-}
-
-func getMissionUin32(talkStr string) uint32 {
-	pattern := regexp.MustCompile(`\d+`)
-	matches := pattern.FindAllString(talkStr, -1)
-	var numbers uint32
-	for _, match := range matches {
-		num, err := strconv.ParseUint(match, 10, 32)
-		if err == nil {
-			numbers = uint32(num)
-			break
-		}
-	}
-	return numbers
 }
 
 func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finish []uint32) {
