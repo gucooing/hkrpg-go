@@ -190,7 +190,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-		g.GetPropByID(propList, levelGroup, nil)
+		g.GetPropByID(propList, levelGroup, nil, trialActivityState.EntranceID)
 		if len(propList.EntityList) != 0 {
 			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
 		}

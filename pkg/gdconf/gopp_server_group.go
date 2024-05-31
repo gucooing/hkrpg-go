@@ -22,7 +22,7 @@ func (g *GameDataConfig) goppServerGroup() {
 				continue
 			}
 			for groupsId, groups := range levelGroup {
-				if groups.LoadSide != "Server" || groups.Category == "Mission" {
+				if groups.LoadSide != "Server" {
 					continue
 				}
 				g.ServerGroupMap[planeId][floorId][groupsId] = &LevelGroup{

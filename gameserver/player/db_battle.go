@@ -66,6 +66,10 @@ func (g *GamePlayer) AddBattleBackup(bb *BattleBackup) {
 func (g *GamePlayer) DelBattleBackupById(battleId uint32) {
 	BattleBackupLock.Lock()
 	defer BattleBackupLock.Unlock()
+	me := g.GetMonsterEntityById(battleId)
+	if me != nil {
+		g.UpKillMonsterSubMission(me)
+	}
 	delete(g.GetBattleBackup(), battleId)
 }
 

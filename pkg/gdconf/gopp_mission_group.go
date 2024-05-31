@@ -47,3 +47,10 @@ func (g *GameDataConfig) goppMissionGroup() {
 
 	logger.Info("gopp %v MissionGroupMap", len(g.MissionGroupMap))
 }
+
+func GetMissionGroup(planeId, floorId uint32) map[uint32]*LevelGroup {
+	if CONF.MissionGroupMap[planeId] == nil {
+		return nil
+	}
+	return CONF.MissionGroupMap[planeId][floorId]
+}

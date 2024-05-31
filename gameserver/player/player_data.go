@@ -203,6 +203,20 @@ func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetSecretKeyInfoScRsp, rsp)
 }
 
+func (g *GamePlayer) UnlockTutorialCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.UnlockTutorialCsReq, payloadMsg)
+	req := msg.(*proto.UnlockTutorialCsReq)
+
+	rsp := &proto.UnlockTutorialScRsp{
+		Retcode: 0,
+		Tutorial: &proto.Tutorial{
+			Id:     req.TutorialId,
+			Status: proto.TutorialStatus_TUTORIAL_UNLOCK,
+		},
+	}
+	g.Send(cmd.UnlockTutorialScRsp, rsp)
+}
+
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetChatEmojiListScRsp, nil)
 }

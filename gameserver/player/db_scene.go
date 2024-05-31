@@ -2,6 +2,7 @@ package player
 
 import (
 	"strconv"
+	"strings"
 
 	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/database"
@@ -18,7 +19,9 @@ type EntityAll interface {
 
 type Entity struct {
 	EntityId uint32 // 实体id
+	InstId   uint32
 	GroupId  uint32 // 区域
+	EntryId  uint32 // 地图
 	Pos      *proto.Vector
 	Rot      *proto.Vector
 }
@@ -95,6 +98,15 @@ func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
 	return nil
 }
 
+func (g *GamePlayer) GetPropEntityById(id uint32) *PropEntity {
+	db := g.GetEntityById(id)
+	switch db.(type) {
+	case *PropEntity:
+		return db.(*PropEntity)
+	}
+	return nil
+}
+
 func (g *GamePlayer) NewScene() *spb.Scene {
 	return &spb.Scene{
 		EntryId: 2000101,
@@ -165,6 +177,56 @@ func (g *GamePlayer) SetRot(x, y, z int32) {
 	db.Z = z
 }
 
+func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.LevelGroup) bool {
+	finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
+	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
+	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
+	finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
+	isLoaded := true
+	// 检查加载条件
+	if levelGroup.LoadCondition != nil {
+		for _, conditions := range levelGroup.LoadCondition.Conditions {
+			if conditions.Phase == "Finish" { // 完成了这个任务
+				if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
+					isLoaded = true
+					if levelGroup.LoadCondition.Operation == "Or" {
+						break
+					}
+				}
+			}
+			if conditions.Type == "SubMission" && conditions.Phase == "" { // 接取了这个子任务
+				if subMainMissionList[conditions.ID] != nil {
+					isLoaded = true
+				}
+				if levelGroup.LoadCondition.Operation == "Or" {
+					break
+				}
+			}
+			if conditions.Type == "" && conditions.Phase == "" { // 接取主线任务
+				if mainMissionList[conditions.ID] != nil {
+					isLoaded = true
+				}
+				if levelGroup.LoadCondition.Operation == "Or" {
+					break
+				}
+			}
+		}
+	}
+
+	// 检查卸载条件
+	if levelGroup.UnloadCondition != nil {
+		for _, conditions := range levelGroup.UnloadCondition.Conditions {
+			if conditions.Phase == "Finish" { // 完成了这个任务
+				if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
+					isLoaded = false
+				}
+			}
+		}
+	}
+
+	return isLoaded
+}
+
 // 从db拉取地图数据
 func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
 	bin := gsdb.GetDb().GetBlockData(g.Uid, entryId)
@@ -193,9 +255,9 @@ func (g *GamePlayer) UpdateBlock(block *spb.BlockBin) {
 	}
 }
 
-func (g *GamePlayer) GetPropState(db *spb.BlockBin, groupId uint32, prop *gdconf.PropList) uint32 {
+func (g *GamePlayer) GetPropState(db *spb.BlockBin, groupId, propId uint32, state string) uint32 {
 	if db == nil {
-		return gdconf.GetStateValue(prop.State)
+		return gdconf.GetStateValue(state)
 	}
 	if db.BlockList == nil {
 		db.BlockList = make(map[uint32]*spb.BlockList)
@@ -208,14 +270,36 @@ func (g *GamePlayer) GetPropState(db *spb.BlockBin, groupId uint32, prop *gdconf
 	if db.BlockList[groupId].PropInfo == nil {
 		db.BlockList[groupId].PropInfo = make(map[uint32]*spb.PropInfo)
 	}
-	if db.BlockList[groupId].PropInfo[prop.ID] == nil {
-		db.BlockList[groupId].PropInfo[prop.ID] = &spb.PropInfo{
-			InstId:    prop.ID,
-			PropId:    prop.PropID,
-			PropState: gdconf.GetStateValue(prop.State),
+	if db.BlockList[groupId].PropInfo[propId] == nil {
+		db.BlockList[groupId].PropInfo[propId] = &spb.PropInfo{
+			InstId: propId,
+			// PropId:    prop.PropID,
+			PropState: gdconf.GetStateValue(state),
 		}
 	}
-	return db.BlockList[groupId].PropInfo[prop.ID].PropState
+	return db.BlockList[groupId].PropInfo[propId].PropState
+}
+
+func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
+	if db.BlockList == nil {
+		db.BlockList = make(map[uint32]*spb.BlockList)
+	}
+	if db.BlockList[groupId] == nil {
+		db.BlockList[groupId] = &spb.BlockList{
+			PropInfo: make(map[uint32]*spb.PropInfo),
+		}
+	}
+	if db.BlockList[groupId].PropInfo == nil {
+		db.BlockList[groupId].PropInfo = make(map[uint32]*spb.PropInfo)
+	}
+	if db.BlockList[groupId].PropInfo[propId] == nil {
+		db.BlockList[groupId].PropInfo[propId] = &spb.PropInfo{
+			InstId:    propId,
+			PropState: state,
+		}
+	} else {
+		db.BlockList[groupId].PropInfo[propId].PropState = state
+	}
 }
 
 /****************************************************功能***************************************************/
@@ -272,9 +356,12 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 	}
 }
 
-func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, db *spb.BlockBin) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
+		if strings.Contains(propList.Name, "Door") { // 门直接设置成开启
+			g.UpPropState(db, sceneGroup.GroupId, propList.ID, 1)
+		}
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
 			Y: int32(propList.PosY * 1000),
@@ -295,13 +382,15 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 			},
 			Prop: &proto.ScenePropInfo{
 				PropId:    propList.PropID, // PropID
-				PropState: g.GetPropState(db, sceneGroup.GroupId, propList),
+				PropState: g.GetPropState(db, sceneGroup.GroupId, propList.ID, propList.State),
 			},
 		}
 		// 添加物品实体
 		g.AddEntity(&PropEntity{
 			Entity: Entity{
+				InstId:   propList.ID,
 				EntityId: entityId,
+				EntryId:  entryId,
 				GroupId:  sceneGroup.GroupId,
 				Pos:      pos,
 				Rot:      rot,
@@ -343,6 +432,7 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 		// 添加怪物实体
 		g.AddEntity(&MonsterEntity{
 			Entity: Entity{
+				InstId:   monsterList.ID,
 				EntityId: entityId,
 				GroupId:  sceneGroup.GroupId,
 				Pos:      pos,
@@ -438,13 +528,16 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
 			continue
 		}
+		if !g.IfLoadMap(levelGroup) {
+			continue
+		}
 		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
 		// 添加物品实体
-		g.GetPropByID(entityGroupLists, levelGroup, blockBin)
+		g.GetPropByID(entityGroupLists, levelGroup, blockBin, entryId)
 		// 添加怪物实体
 		g.GetNPCMonsterByID(entityGroupLists, levelGroup)
 		// 添加NPC实体

@@ -50,6 +50,9 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 	rsp.FinishedMainMissionIdList = []uint32{}
 	rsp.SubMissionStatusList = make([]*proto.Mission, 0)
 	finishMainDb := g.GetFinishMainMissionList()
+	finishMainSubDb := g.GetFinishSubMainMissionList()
+	curMainSubDb := g.GetSubMainMissionList()
+	// 处理主线任务
 	for _, id := range req.MainMissionIdList {
 		if finishMainDb[id] != nil {
 			rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, id)
@@ -57,10 +60,21 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 			rsp.UnfinishedMainMissionIdList = append(rsp.UnfinishedMainMissionIdList, id)
 		}
 	}
+	// 处理子任务
 	for _, id := range req.SubMissionIdList {
+		var status proto.MissionStatus
+		if curMainSubDb[id] == nil {
+			if finishMainSubDb[id] == nil {
+				status = proto.MissionStatus_MISSION_NONE
+			} else {
+				status = proto.MissionStatus(finishMainSubDb[id].Status)
+			}
+		} else {
+			status = proto.MissionStatus(curMainSubDb[id].Status)
+		}
 		rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
 			Id:     id,
-			Status: proto.MissionStatus_MISSION_FINISH,
+			Status: status,
 		})
 	}
 

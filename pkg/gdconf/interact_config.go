@@ -10,6 +10,11 @@ import (
 )
 
 type InteractConfig struct {
+	InteractID  uint32 `json:"InteractID"`
+	SrcState    string `json:"SrcState"`
+	TargetState string `json:"TargetState"`
+	IsEvent     bool   `json:"IsEvent"`
+	// ItemCostList []uint32 `json:"ItemCostList"`
 }
 
 func (g *GameDataConfig) loadInteractConfig() {

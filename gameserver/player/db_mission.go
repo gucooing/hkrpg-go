@@ -106,6 +106,38 @@ func (g *GamePlayer) UpBattleSubMission(req *proto.PVEBattleResultCsReq) {
 	}
 }
 
+// 处理交互任务
+func (g *GamePlayer) UpInteractSubMission(pe *PropEntity, propState uint32) {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		switch conf.FinishType {
+		case "PropState":
+			if pe.GroupId == conf.ParamInt1 && pe.InstId == conf.ParamInt2 && conf.ParamInt3 == propState {
+				g.FinishSubMission(id)
+			}
+		}
+	}
+}
+
+// 处理删除实体任务
+func (g *GamePlayer) UpKillMonsterSubMission(me *MonsterEntity) {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		switch conf.FinishType {
+		case "KillMonster":
+			if me.GroupId == conf.ParamInt1 && me.InstId == conf.ParamInt2 {
+				g.FinishSubMission(id)
+			}
+		}
+	}
+}
+
 // 完成子任务并拉取下一个任务和通知
 func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	// 先完成子任务

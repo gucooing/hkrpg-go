@@ -7,6 +7,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 // 通知客户端进入场景
@@ -175,9 +176,78 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg []byte) {
 func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.InteractPropCsReq, payloadMsg)
 	req := msg.(*proto.InteractPropCsReq)
+	rsp := &proto.InteractPropScRsp{
+		Retcode:      0,
+		PropState:    0,
+		PropEntityId: req.PropEntityId,
+	}
+	var propEntityIdList []uint32
 
-	rsp := new(proto.InteractPropScRsp)
-	rsp.PropEntityId = req.PropEntityId
+	pe := g.GetPropEntityById(req.PropEntityId)
+	if pe == nil {
+		g.Send(cmd.InteractPropScRsp, rsp)
+		return
+	}
 
+	blockBin := g.GetBlock(pe.EntryId)
+
+	confInteract := gdconf.GetInteractConfigById(req.InteractId)
+	if confInteract == nil {
+		g.Send(cmd.InteractPropScRsp, rsp)
+		return
+	}
+	propEntityIdList = append(propEntityIdList, req.PropEntityId)
+
+	rsp.PropState = gdconf.GetStateValue(confInteract.TargetState)
+
+	g.UpPropState(blockBin, pe.GroupId, pe.InstId, rsp.PropState)
+
+	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin)
+
+	g.UpInteractSubMission(pe, rsp.PropState)
+
+	g.UpdateBlock(blockBin)
 	g.Send(cmd.InteractPropScRsp, rsp)
+}
+
+func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db *spb.BlockBin) {
+	notify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
+	}
+	for _, propId := range propEntityIdList {
+		pe := g.GetPropEntityById(propId)
+		if pe == nil {
+			continue
+		}
+		isAddend := true
+		info := new(proto.GroupRefreshInfo)
+		for _, ninfo := range notify.GroupRefreshList {
+			if ninfo.GroupId == pe.GroupId {
+				info = ninfo
+				isAddend = false
+				break
+			}
+		}
+		info.RefreshEntity = append(info.RefreshEntity, &proto.SceneEntityRefreshInfo{
+			AddEntity: &proto.SceneEntityInfo{
+				EntityId: pe.EntityId,
+				GroupId:  pe.GroupId,
+				InstId:   pe.InstId,
+				Motion: &proto.MotionInfo{
+					Pos: pe.Pos,
+					Rot: pe.Rot,
+				},
+				Prop: &proto.ScenePropInfo{
+					PropId:    pe.PropId, // PropID
+					PropState: g.GetPropState(db, pe.GroupId, pe.InstId, ""),
+				},
+			},
+		})
+		if isAddend {
+			info.GroupId = pe.GroupId
+			notify.GroupRefreshList = append(notify.GroupRefreshList, info)
+		}
+	}
+
+	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
