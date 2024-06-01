@@ -64,7 +64,11 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		IpRegionName:            "",
 	}
 
-	g.AddAvatar(uint32(g.GetAvatar().CurMainAvatar))
+	g.AddAvatar(1001)
+	g.AddAvatar(8001)
+
+	g.SetIsChangeLineup(true)
+	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
 
 	return g.BasicBin
 }
@@ -125,6 +129,11 @@ func (g *GamePlayer) GetNickname() string {
 		db.Nickname = "hkrpg-go"
 	}
 	return db.Nickname
+}
+
+func (g *GamePlayer) SetNickname(name string) {
+	db := g.GetBasicBin()
+	db.Nickname = name
 }
 
 func (g *GamePlayer) GetLevel() uint32 {

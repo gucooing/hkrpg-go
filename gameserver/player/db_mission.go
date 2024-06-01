@@ -151,6 +151,20 @@ func (g *GamePlayer) UpKillMonsterSubMission(me *MonsterEntity) {
 	}
 }
 
+// 处理创建角色任务
+func (g *GamePlayer) CreateCharacterSubMission() {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		switch conf.FinishType {
+		case "CreateCharacter":
+			g.FinishSubMission(id)
+		}
+	}
+}
+
 // 完成由服务端完成的任务
 func (g *GamePlayer) AutoServerFinishMission() {
 	for id := range g.GetSubMainMissionList() {
@@ -159,8 +173,30 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			continue
 		}
 		switch conf.FinishType {
-		case "GetTrialAvatar": // 试用角色
+		case "GetTrialAvatar": // 加载试用角色
 			g.FinishSubMission(id)
+		case "DelTrialAvatar": // 卸载试用角色
+			g.FinishSubMission(id)
+		}
+	}
+}
+
+// 接取任务后完成服务端动作（不结束任务
+func (g *GamePlayer) AutoServerMissionFinishAction() {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		if conf.FinishActionList == nil {
+			continue
+		}
+		for _, finishAction := range conf.FinishActionList {
+			switch finishAction.FinishActionType {
+			case "ChangeLineup": // 强制更新队伍
+				g.SetIsChangeLineup(true)                     // 设置成强制队伍
+				g.NewTrialLine(finishAction.FinishActionPara) // 设置队伍角色
+			}
 		}
 	}
 }
@@ -182,6 +218,11 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	conf := gdconf.GetGoppMainMissionById(subMissionConf.MainMissionID)
 	if conf == nil {
 		return
+	}
+	for _, finishSubMission := range conf.FinishSubMissionList {
+		if missionId == finishSubMission {
+			//  完成该主线任务，并接取下一个主线任务
+		}
 	}
 	for _, confSubMission := range conf.SubMissionList {
 		var isNext = false
@@ -208,12 +249,15 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	// 通知状态
 	g.MissionPlayerSyncScNotify(nextList, []uint32{missionId}) // 发送通知
 
-	g.AutoServerFinishMission() // 检查一次任务会不会需要自动完成
+	g.AutoServerFinishMission()       // 检查一次任务会不会需要自动完成
+	g.AutoServerMissionFinishAction() // 任务自动行为检查
 }
 
 // 登录事件-自动接取任务
 func (g *GamePlayer) ReadyMission() {
-	g.ReadyMainMission() // 主线检查
+	g.ReadyMainMission()              // 主线检查
+	g.AutoServerMissionFinishAction() // 任务自动行为检查
+	g.AutoServerFinishMission()       // 检查服务端任务动作
 }
 
 // 主线检查

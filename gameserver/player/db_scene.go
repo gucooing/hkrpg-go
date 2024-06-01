@@ -327,11 +327,26 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 		if lineAvatar.AvatarId == 0 {
 			continue
 		}
+		actor := &proto.SceneActorInfo{
+			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+			BaseAvatarId: lineAvatar.AvatarId,
+			MapLayer:     0,
+			Uid:          0,
+		}
+		if lineAvatar.IsTrial {
+			conf := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId)
+			if conf == nil {
+				continue
+			}
+			actor = &proto.SceneActorInfo{
+				AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
+				BaseAvatarId: conf.AvatarID,
+				MapLayer:     0,
+				Uid:          0,
+			}
+		}
 		entityList := &proto.SceneEntityInfo{
-			Actor: &proto.SceneActorInfo{
-				AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-				BaseAvatarId: lineAvatar.AvatarId,
-			},
+			Actor: actor,
 			Motion: &proto.MotionInfo{
 				Pos: pos,
 				Rot: rot,

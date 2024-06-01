@@ -654,13 +654,13 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 		return nil, nil
 	}
 	bAList := make(map[uint32]*BattleAvatar, 0)
-	for _, lp := range lineUp.AvatarIdList {
+	for id, lp := range lineUp.AvatarIdList {
 		bA := &BattleAvatar{
 			AssistUid: 0,
 			AvatarId:  lp.AvatarId,
 			IsAssist:  false,
 		}
-		bAList[lp.AvatarId] = bA
+		bAList[id] = bA
 	}
 	battleId := g.GetBattleIdGuid()
 	monsterWaveList, stageId := g.GetSceneMonsterWave(mem)

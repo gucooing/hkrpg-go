@@ -252,7 +252,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 
 	rsp := &proto.StartRogueScRsp{
 		Scene:     scene,
-		Lineup:    g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_ROGUE)),
+		Lineup:    g.GetLineUpPb(g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))),
 		RogueInfo: g.GetRogueInfo(),
 	}
 	rsp.RogueInfo.RogueCurrentInfo = &proto.RogueCurrentInfo{
@@ -711,7 +711,7 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 	curLine := g.GetCurLineUp()
 	rsp := &proto.LeaveRogueScRsp{
 		RogueInfo: g.GetRogueInfo(),
-		Lineup:    g.GetLineUpPb(g.GetLineUp().MainLineUp),
+		Lineup:    g.GetLineUpPb(curLine),
 		Scene:     g.GetSceneInfo(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb(), curLine),
 	}
 
@@ -770,7 +770,7 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	}
 
 	rsp := &proto.EnterRogueMapRoomScRsp{
-		Lineup:    g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_ROGUE)),
+		Lineup:    g.GetLineUpPb(g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))),
 		CurSiteId: req.SiteId,
 		Retcode:   0,
 		Scene:     scene,

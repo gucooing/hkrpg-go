@@ -31,8 +31,8 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		groupID = teleportsMap.Teleports[teleportId].AnchorGroupID
 	}
 	// 获取队伍
-	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
 	curLine := g.GetCurLineUp()
+	rsp.Lineup = g.GetLineUpPb(curLine)
 	// 获取坐标
 	if teleportsMap.TeleportsByGroupId[groupID] != nil {
 		anchor := teleportsMap.TeleportsByGroupId[groupID].AnchorList[anchorID]
@@ -76,8 +76,8 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 func (g *GamePlayer) SceneByServerScNotify(entryId uint32, pos, rot *proto.Vector) {
 	rsp := new(proto.EnterSceneByServerScNotify)
 	// 获取队伍
-	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
 	curLine := g.GetCurLineUp()
+	rsp.Lineup = g.GetLineUpPb(curLine)
 	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
 
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)

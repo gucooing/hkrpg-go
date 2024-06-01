@@ -39,3 +39,21 @@ func (g *GamePlayer) AddTrailblazerExp(num uint32) {
 		g.PlayerPlayerSyncScNotify()
 	}
 }
+
+func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SetPlayerInfoCsReq, payloadMsg)
+	req := msg.(*proto.SetPlayerInfoCsReq)
+
+	g.SetNickname(req.Nickname)
+
+	rsp := &proto.SetPlayerInfoScRsp{
+		Retcode:      0,
+		CurBasicType: proto.HeroBasicType(g.GetAvatar().CurMainAvatar),
+		EGCIPLNFHGD:  0,
+		IsModify:     req.IsModify,
+	}
+	if req.IsModify {
+		g.CreateCharacterSubMission()
+	}
+	g.Send(cmd.SetPlayerInfoScRsp, rsp)
+}

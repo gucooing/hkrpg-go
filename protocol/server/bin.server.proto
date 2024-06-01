@@ -118,18 +118,21 @@ message LineUp {
   uint32 mp = 2; // 当前能量
   map<uint32, Line> line_up_list = 3; // 普通队伍
   map<uint32, Line>battle_line_list = 4; // 战斗队伍
+  bool is_change_lineup = 5; // 是否被强制更新队伍
+  Line trial_line = 6;// 剧情试用队伍
 }
 
 message Line {
   string name = 1; // 队伍名称
   map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
-  // map<uint32, LineAvatarList>  avatar_list = 3; // 角色列表
-  uint32 LeaderSlot = 4; // 当前角色是第几个
+  uint32 index = 3; // 第几个队伍
+  uint32 leader_slot = 4; // 当前角色是第几个
 }
 
 message LineAvatarList {
   uint32 slot = 1;//第几个
   uint32 avatar_id = 2;;//角色id
+  bool is_trial = 3; // 是试用角色
 }
 
 message Item  {
