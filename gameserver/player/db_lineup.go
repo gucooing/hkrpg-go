@@ -108,7 +108,7 @@ func (g *GamePlayer) GetTrialLine() *spb.Line {
 func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 	db := g.GetTrialLine()
 	for slot, id := range trialList {
-		if id == 0 || slot == 4 {
+		if slot == 4 {
 			continue
 		}
 		if db.AvatarIdList == nil {
@@ -119,6 +119,39 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 			db.LeaderSlot = uint32(slot)
 		}
 	}
+}
+
+func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
+	db := g.GetTrialLine()
+	for _, id := range db.AvatarIdList {
+		if id.AvatarId == 0 {
+			id.AvatarId = trialAvatarId
+			id.IsTrial = true
+			break
+		}
+	}
+	g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, true, g.GetPosPb(), g.GetRotPb())
+	g.TrialSyncLineupNotify(db)
+}
+
+func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
+	db := g.GetTrialLine()
+	for _, id := range db.AvatarIdList {
+		if id.AvatarId == trialAvatarId {
+			id.AvatarId = 0
+			id.IsTrial = true
+		}
+	}
+	isDelTrial := true
+	for _, id := range db.AvatarIdList {
+		if id.AvatarId != 0 {
+			isDelTrial = false
+		}
+	}
+	if isDelTrial {
+		g.SetIsChangeLineup(false) // 关闭试用队伍
+	}
+	// TODO 记得补齐同步通知包
 }
 
 func (g *GamePlayer) GetCurLineUp() *spb.Line {

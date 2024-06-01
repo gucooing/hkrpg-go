@@ -174,8 +174,10 @@ func (g *GamePlayer) AutoServerFinishMission() {
 		}
 		switch conf.FinishType {
 		case "GetTrialAvatar": // 加载试用角色
+			g.GetTrialAvatar(conf.ParamInt1)
 			g.FinishSubMission(id)
 		case "DelTrialAvatar": // 卸载试用角色
+			g.DelTrialAvatar(conf.ParamInt1)
 			g.FinishSubMission(id)
 		}
 	}

@@ -329,6 +329,9 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
 	for id, bA := range bAList {
 		var avatarBin *spb.AvatarBin
+		if bA.AvatarId == 0 {
+			continue
+		}
 		if bA.IsAssist {
 			// TODO 助战情况
 		} else {

@@ -251,3 +251,51 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
+
+func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial bool, pos, rot *proto.Vector) {
+	notify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
+	}
+	info := new(proto.GroupRefreshInfo)
+	actor := &proto.SceneActorInfo{
+		AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+		BaseAvatarId: avatarId,
+		MapLayer:     0,
+		Uid:          0,
+	}
+	entityId := g.GetNextGameObjectGuid()
+	if isTrial {
+		conf := gdconf.GetSpecialAvatarById(avatarId)
+		if conf == nil {
+			return
+		}
+		actor = &proto.SceneActorInfo{
+			AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
+			BaseAvatarId: conf.AvatarID,
+			MapLayer:     0,
+			Uid:          0,
+		}
+	}
+	info.RefreshEntity = append(info.RefreshEntity, &proto.SceneEntityRefreshInfo{
+		AddEntity: &proto.SceneEntityInfo{
+			EntityId: entityId,
+			Actor:    actor,
+			Motion: &proto.MotionInfo{
+				Rot: pos,
+				Pos: rot,
+			},
+		},
+	})
+	g.AddEntity(&AvatarEntity{
+		Entity: Entity{
+			EntityId: entityId,
+			GroupId:  0,
+			Pos:      pos,
+			Rot:      rot,
+		},
+		AvatarId: actor.BaseAvatarId,
+	})
+	notify.GroupRefreshList = append(notify.GroupRefreshList, info)
+
+	g.Send(cmd.SceneGroupRefreshScNotify, notify)
+}

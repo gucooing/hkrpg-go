@@ -17,6 +17,12 @@ func (g *GamePlayer) SyncLineupNotify(index uint32, isBattleLine bool) {
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
+func (g *GamePlayer) TrialSyncLineupNotify(db *spb.Line) {
+	rsq := new(proto.SyncLineupNotify)
+	rsq.Lineup = g.GetLineUpPb(db)
+	g.Send(cmd.SyncLineupNotify, rsq)
+}
+
 func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
 	notify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshList: g.GetSceneGroupRefreshInfoByLineUP(g.GetLineUpById(index), g.GetPosPb(), g.GetRotPb()),

@@ -655,6 +655,9 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 	}
 	bAList := make(map[uint32]*BattleAvatar, 0)
 	for id, lp := range lineUp.AvatarIdList {
+		if lp.AvatarId == 0 {
+			continue
+		}
 		bA := &BattleAvatar{
 			AssistUid: 0,
 			AvatarId:  lp.AvatarId,
