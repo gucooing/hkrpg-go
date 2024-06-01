@@ -59,7 +59,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	leaderEntityId := g.GetNextGameObjectGuid()
 	trialActivityState := g.GetTrialActivityState()
 
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(trialActivityState.EntranceID)))
+	mapEntrance := gdconf.GetMapEntranceById(trialActivityState.EntranceID)
 	if mapEntrance == nil {
 		return
 	}

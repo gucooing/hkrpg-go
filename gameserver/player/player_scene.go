@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -13,7 +11,7 @@ import (
 // 通知客户端进入场景
 func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	rsp := new(proto.EnterSceneByServerScNotify)
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+	mapEntrance := gdconf.GetMapEntranceById(entryId)
 	if mapEntrance == nil {
 		return
 	}
@@ -86,7 +84,7 @@ func (g *GamePlayer) SceneByServerScNotify(entryId uint32, pos, rot *proto.Vecto
 func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetEnteredSceneScRsp)
 	db := g.GetScene()
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(db.EntryId)))
+	mapEntrance := gdconf.GetMapEntranceById(db.EntryId)
 	if mapEntrance == nil {
 		return
 	}
@@ -119,7 +117,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 
 	rsp := new(proto.GetSceneMapInfoScRsp)
 	for _, entryId := range req.EntryIdList {
-		mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+		mapEntrance := gdconf.GetMapEntranceById(entryId)
 		if mapEntrance != nil {
 			teleportsMap := gdconf.GetTeleportsById(mapEntrance.PlaneID, mapEntrance.FloorID)
 			if teleportsMap != nil {

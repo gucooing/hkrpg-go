@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -166,7 +164,7 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 	if challengeMazeConfig == nil {
 		return
 	}
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
+	mapEntrance := gdconf.GetMapEntranceById(challengeMazeConfig.MapEntranceID)
 	if mapEntrance == nil {
 		return
 	}
@@ -210,7 +208,7 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 	if challengeMazeConfig == nil {
 		return
 	}
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
+	mapEntrance := gdconf.GetMapEntranceById(challengeMazeConfig.MapEntranceID)
 	if mapEntrance == nil {
 		return
 	}

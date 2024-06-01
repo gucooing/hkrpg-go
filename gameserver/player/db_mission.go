@@ -179,6 +179,9 @@ func (g *GamePlayer) AutoServerFinishMission() {
 		case "DelTrialAvatar": // 卸载试用角色
 			g.DelTrialAvatar(conf.ParamInt1)
 			g.FinishSubMission(id)
+		case "EnterFloor": // 传送
+			g.EnterSceneByServerScNotify(gdconf.GetEntryId(conf.ParamInt1, conf.ParamInt2), 0)
+			g.FinishSubMission(id)
 		}
 	}
 }

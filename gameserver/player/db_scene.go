@@ -503,7 +503,7 @@ func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 
 func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp *spb.Line) *proto.SceneInfo {
 	leaderEntityId := g.GetNextGameObjectGuid()
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(entryId)))
+	mapEntrance := gdconf.GetMapEntranceById(entryId)
 	if mapEntrance == nil {
 		return nil
 	}
@@ -728,7 +728,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	if challengeMazeConfig == nil {
 		return nil
 	}
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(challengeMazeConfig.MapEntranceID)))
+	mapEntrance := gdconf.GetMapEntranceById(challengeMazeConfig.MapEntranceID)
 	if mapEntrance == nil {
 		return nil
 	}

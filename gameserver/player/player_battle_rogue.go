@@ -395,7 +395,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	if rogueRoom == nil {
 		return nil, nil, nil
 	}
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(rogueRoom.MapEntrance)))
+	mapEntrance := gdconf.GetMapEntranceById(rogueRoom.MapEntrance)
 	if mapEntrance == nil {
 		return nil, nil, nil
 	}

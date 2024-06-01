@@ -50,7 +50,7 @@ type GameDataConfig struct {
 	NPCDataMap                  map[string]*NPCData                             // NPC列表？
 	GroupMap                    map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                    map[uint32]map[uint32]*LevelFloor               // ?
-	MapEntranceMap              map[string]*MapEntrance                         // 地图入口
+	MapEntranceMap              map[uint32]*MapEntrance                         // 地图入口
 	BannersMap                  map[uint32]*Banners                             // 卡池信息
 	ActivityPanelMap            map[string]*ActivityPanel                       // 活动
 	ActivityLoginConfigMap      map[string]*ActivityLoginConfig                 // 登录活动表

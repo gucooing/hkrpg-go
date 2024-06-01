@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -21,7 +22,8 @@ type MapEntrance struct {
 }
 
 func (g *GameDataConfig) loadMapEntrance() {
-	g.MapEntranceMap = make(map[string]*MapEntrance)
+	g.MapEntranceMap = make(map[uint32]*MapEntrance)
+	mapEntranceMap := make(map[string]*MapEntrance)
 	playerElementsFilePath := g.excelPrefix + "MapEntrance.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -29,19 +31,23 @@ func (g *GameDataConfig) loadMapEntrance() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MapEntranceMap)
+	err = hjson.Unmarshal(playerElementsFile, &mapEntranceMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+
+	for id, mapEntrance := range mapEntranceMap {
+		g.MapEntranceMap[alg.S2U32(id)] = mapEntrance
+	}
 	logger.Info("load %v MapEntrance", len(g.MapEntranceMap))
 }
 
-func GetMapEntranceById(entryId string) *MapEntrance {
+func GetMapEntranceById(entryId uint32) *MapEntrance {
 	return CONF.MapEntranceMap[entryId]
 }
 
-func GetMapEntranceMap() map[string]*MapEntrance {
+func GetMapEntranceMap() map[uint32]*MapEntrance {
 	return CONF.MapEntranceMap
 }
 
@@ -51,4 +57,14 @@ func GetEntryIdList() []uint32 {
 		entryIdList = append(entryIdList, id.ID)
 	}
 	return entryIdList
+}
+
+func GetEntryId(planeID, floorID uint32) uint32 {
+	var entryId uint32 = 0
+	for id, mapEntrance := range CONF.MapEntranceMap {
+		if mapEntrance.PlaneID == planeID && mapEntrance.FloorID == floorID {
+			entryId = id
+		}
+	}
+	return entryId
 }

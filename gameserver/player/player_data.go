@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -315,7 +313,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 	}
 
 	for _, id := range req.EntryIdList {
-		excel := gdconf.GetMapEntranceById(strconv.Itoa(int(id)))
+		excel := gdconf.GetMapEntranceById(id)
 		if excel == nil {
 			continue
 		}
