@@ -177,7 +177,7 @@ func (g *GamePlayer) SetRot(x, y, z int32) {
 	db.Z = z
 }
 
-func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.LevelGroup) bool {
+func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
 	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
 	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
@@ -371,7 +371,7 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 	}
 }
 
-func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
 		if strings.Contains(propList.Name, "Door") { // 门直接设置成开启
@@ -417,7 +417,7 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 	return entityGroupList
 }
 
-func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) *proto.SceneEntityGroupInfo {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
@@ -460,7 +460,7 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 	return entityGroupList
 }
 
-func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) *proto.SceneEntityGroupInfo {
 	for _, npcList := range sceneGroup.NPCList {
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
@@ -589,7 +589,7 @@ func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.GroupRef
 }
 
 // 添加怪物
-func (g *GamePlayer) GetAddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, configList, eventIDList, npcMonsterIDList []uint32, monsterList []*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
+func (g *GamePlayer) GetAddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, configList, eventIDList, npcMonsterIDList []uint32, monsterList map[uint32]*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for id, config := range configList {
 		for _, monster := range monsterList {

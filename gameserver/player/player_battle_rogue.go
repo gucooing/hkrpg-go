@@ -493,7 +493,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	return scene, avatarEntity, monsterEntity
 }
 
-func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.GoppLevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
 	entityGroupLists := &proto.SceneEntityGroupInfo{
 		GroupId:    groupID,
 		EntityList: make([]*proto.SceneEntityInfo, 0),
@@ -566,7 +566,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 	return entityGroupLists
 }
 
-func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
+func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := g.GetNextGameObjectGuid()
 		rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)

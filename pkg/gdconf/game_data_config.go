@@ -76,9 +76,9 @@ type GameDataConfig struct {
 	VideoVersionKey             []*VideoVersionKey                              // 视频key
 	InteractConfigMap           map[uint32]*InteractConfig                      // 互动配置
 	// 下面是预处理
-	ServerGroupMap map[uint32]map[uint32]map[uint32]*LevelGroup // 预处理服务器场景
-	Teleports      map[uint32]map[uint32]*Teleports             // 预处理传送锚点
-	GoppMission    *GoppMission                                 // 预处理任务
+	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
+	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
+	GoppMission    *GoppMission                                     // 预处理任务
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {

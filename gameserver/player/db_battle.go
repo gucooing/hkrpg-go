@@ -425,7 +425,7 @@ func (g *GamePlayer) GetCurChallengeBuffId() uint32 {
 	return 0
 }
 
-func (g *GamePlayer) GetChallengesAnchor(anchorList []*gdconf.AnchorList) (pos, rot *proto.Vector) {
+func (g *GamePlayer) GetChallengesAnchor(anchorList map[uint32]*gdconf.AnchorList) (pos, rot *proto.Vector) {
 	if anchorList == nil {
 		return nil, nil
 	}
