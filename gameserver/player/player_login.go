@@ -121,6 +121,6 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 2.任务检查
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
-	g.InspectionRedisAcceptApplyFriend()
-	g.ReadyMission()
+	g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
+	g.ReadyMission()                     // 任务检查
 }

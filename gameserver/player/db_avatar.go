@@ -319,45 +319,30 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 	return avatar
 }
 
+type AvatarType uint32
+
+const (
+	Mi     AvatarType = 1 // 自己的
+	Assist AvatarType = 2 // 援助
+	Trial  AvatarType = 3 // 试用
+)
+
 type BattleAvatar struct {
-	AvatarId  uint32 // 角色id
-	IsAssist  bool   // 是否助战
-	AssistUid uint32 // 助战uid
+	AvatarId   uint32     // 角色id
+	AvatarType AvatarType // 角色类型
+	AssistUid  uint32     // 助战uid
 }
 
 func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*proto.BattleAvatar {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
 	for id, bA := range bAList {
-		var avatarBin *spb.AvatarBin
 		if bA.AvatarId == 0 {
 			continue
 		}
-		if bA.IsAssist {
-			// TODO 助战情况
-		} else {
-			avatarBin = g.GetAvatarById(bA.AvatarId)
-		}
 		battleAvatar := new(proto.BattleAvatar)
-		if avatarBin == nil {
-			battleAvatar = &proto.BattleAvatar{
-				AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
-				Id:            bA.AvatarId,
-				Level:         10,
-				Rank:          0,
-				Index:         id,
-				SkilltreeList: make([]*proto.AvatarSkillTree, 0),
-				EquipmentList: make([]*proto.BattleEquipment, 0),
-				Hp:            10000,
-				Promotion:     0,
-				RelicList:     make([]*proto.BattleRelic, 0),
-				WorldLevel:    g.GetWorldLevel(),
-				AssistUid:     bA.AssistUid,
-				SpBar: &proto.SpBarInfo{
-					CurSp: 10000,
-					MaxSp: 10000,
-				},
-			}
-		} else {
+		switch bA.AvatarType {
+		case Mi:
+			avatarBin := g.GetAvatarById(bA.AvatarId)
 			battleAvatar = &proto.BattleAvatar{
 				AvatarType:    proto.AvatarType(avatarBin.AvatarType),
 				Id:            avatarBin.AvatarId,
@@ -407,6 +392,29 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 				}
 				battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
 			}
+		case Trial:
+			avatarBin := gdconf.GetSpecialAvatarById(bA.AvatarId)
+			battleAvatar = &proto.BattleAvatar{
+				AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
+				Id:            bA.AvatarId,
+				Level:         avatarBin.Level,
+				Rank:          0,
+				Index:         id,
+				SkilltreeList: make([]*proto.AvatarSkillTree, 0),
+				EquipmentList: make([]*proto.BattleEquipment, 0),
+				Hp:            10000,
+				Promotion:     avatarBin.Promotion,
+				RelicList:     make([]*proto.BattleRelic, 0),
+				WorldLevel:    g.GetWorldLevel(),
+				AssistUid:     bA.AssistUid,
+				SpBar: &proto.SpBarInfo{
+					CurSp: 6000,
+					MaxSp: 10000,
+				},
+			}
+		case Assist:
+		default:
+			continue
 		}
 		battleAvatarList = append(battleAvatarList, battleAvatar)
 	}

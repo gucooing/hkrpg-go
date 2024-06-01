@@ -114,7 +114,11 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 		if db.AvatarIdList == nil {
 			db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
 		}
-		db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{AvatarId: id, Slot: uint32(slot), IsTrial: true}
+		isTrial := true
+		if g.GetAvatarById(id) != nil {
+			isTrial = false
+		}
+		db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{AvatarId: id, Slot: uint32(slot), IsTrial: isTrial}
 		if id == trialList[4] {
 			db.LeaderSlot = uint32(slot)
 		}
@@ -123,10 +127,14 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 
 func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 	db := g.GetTrialLine()
-	for _, id := range db.AvatarIdList {
-		if id.AvatarId == 0 {
-			id.AvatarId = trialAvatarId
-			id.IsTrial = true
+	for _, avatar := range db.AvatarIdList {
+		if avatar.AvatarId == 0 {
+			isTrial := true
+			if g.GetAvatarById(avatar.AvatarId) != nil {
+				isTrial = false
+			}
+			avatar.AvatarId = trialAvatarId
+			avatar.IsTrial = isTrial
 			break
 		}
 	}
@@ -139,7 +147,7 @@ func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
 	for _, id := range db.AvatarIdList {
 		if id.AvatarId == trialAvatarId {
 			id.AvatarId = 0
-			id.IsTrial = true
+			id.IsTrial = false
 		}
 	}
 	isDelTrial := true
@@ -150,8 +158,10 @@ func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
 	}
 	if isDelTrial {
 		g.SetIsChangeLineup(false) // 关闭试用队伍
+		db = g.GetCurLineUp()      // 关闭后队伍改成当前队伍
 	}
-	// TODO 记得补齐同步通知包
+	g.GetAddAvatarSceneEntityRefreshInfo(db, g.GetPosPb(), g.GetRotPb())
+	g.TrialSyncLineupNotify(db)
 }
 
 func (g *GamePlayer) GetCurLineUp() *spb.Line {
@@ -241,12 +251,11 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
 			continue
 		}
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 		if wtmLeaderSlot {
 			db.LeaderSlot = slot
 		}
 		lineupAvatar := &proto.LineupAvatar{}
-		if avatarBin == nil {
+		if lineAvatar.IsTrial {
 			lineupAvatar = &proto.LineupAvatar{
 				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
 				Slot:       slot,
@@ -254,11 +263,15 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 				Hp:         10000,
 				Id:         lineAvatar.AvatarId,
 				SpBar: &proto.SpBarInfo{
-					CurSp: 10000,
+					CurSp: 6000,
 					MaxSp: 10000,
 				},
 			}
 		} else {
+			avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
+			if avatarBin == nil {
+				continue
+			}
 			lineupAvatar = &proto.LineupAvatar{
 				AvatarType: proto.AvatarType(avatarBin.AvatarType),
 				Slot:       slot,
@@ -308,10 +321,10 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		if wtmLeaderSlot {
 			db.LeaderSlot = slot
 		}
-		avatarBin := g.GetBattleAvatarBinById(lineAvatar.AvatarId)
-		if avatarBin == nil {
-			lineupAvatar := &proto.LineupAvatar{
-				AvatarType: proto.AvatarType_AVATAR_FORMAL_TYPE,
+		lineupAvatar := &proto.LineupAvatar{}
+		if lineAvatar.IsTrial {
+			lineupAvatar = &proto.LineupAvatar{
+				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
 				Slot:       slot,
 				Satiety:    0,
 				Hp:         10000,
@@ -321,9 +334,12 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 					MaxSp: 10000,
 				},
 			}
-			avatarList = append(avatarList, lineupAvatar)
 		} else {
-			lineupAvatar := &proto.LineupAvatar{
+			avatarBin := g.GetBattleAvatarBinById(lineAvatar.AvatarId)
+			if avatarBin == nil {
+				continue
+			}
+			lineupAvatar = &proto.LineupAvatar{
 				AvatarType: proto.AvatarType(avatarBin.AvatarType),
 				Slot:       slot,
 				Satiety:    0,
@@ -334,8 +350,8 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 					MaxSp: avatarBin.SpBar.MaxSp,
 				},
 			}
-			avatarList = append(avatarList, lineupAvatar)
 		}
+		avatarList = append(avatarList, lineupAvatar)
 	}
 	lineupList := &proto.LineupInfo{
 		IsVirtual:       false,

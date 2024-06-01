@@ -251,11 +251,10 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	// 通知状态
 	g.MissionPlayerSyncScNotify(nextList, []uint32{missionId}) // 发送通知
 
-	g.AutoServerFinishMission()       // 检查一次任务会不会需要自动完成
-	g.AutoServerMissionFinishAction() // 任务自动行为检查
+	g.ReadyMission()
 }
 
-// 登录事件-自动接取任务
+// 任务检查
 func (g *GamePlayer) ReadyMission() {
 	g.ReadyMainMission()              // 主线检查
 	g.AutoServerMissionFinishAction() // 任务自动行为检查

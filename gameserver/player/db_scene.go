@@ -645,12 +645,16 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 		if lineAvatar.AvatarId == 0 {
 			continue
 		}
+		actor := &proto.SceneActorInfo{
+			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+			BaseAvatarId: lineAvatar.AvatarId,
+		}
+		if lineAvatar.IsTrial {
+			actor.AvatarType = proto.AvatarType_AVATAR_TRIAL_TYPE
+		}
 		entityList := &proto.SceneEntityRefreshInfo{
 			AddEntity: &proto.SceneEntityInfo{
-				Actor: &proto.SceneActorInfo{
-					AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-					BaseAvatarId: lineAvatar.AvatarId,
-				},
+				Actor: actor,
 				Motion: &proto.MotionInfo{
 					Pos: pos,
 					Rot: rot,
@@ -678,17 +682,17 @@ func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
 	}
 	for _, lineAvatar := range lineUp.AvatarIdList {
-		avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-		if avatarBin == nil {
-			continue
+		actor := &proto.SceneActorInfo{
+			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
+			BaseAvatarId: lineAvatar.AvatarId,
+		}
+		if lineAvatar.IsTrial {
+			actor.AvatarType = proto.AvatarType_AVATAR_TRIAL_TYPE
 		}
 		entityId := g.GetNextGameObjectGuid()
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
 			AddEntity: &proto.SceneEntityInfo{
-				Actor: &proto.SceneActorInfo{
-					AvatarType:   proto.AvatarType(avatarBin.AvatarType),
-					BaseAvatarId: lineAvatar.AvatarId,
-				},
+				Actor: actor,
 				Motion: &proto.MotionInfo{
 					Pos: pos,
 					Rot: rot,

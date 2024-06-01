@@ -34,6 +34,7 @@ func GetAllMail() map[uint32]*database.Mail {
 		itemList := make([]*database.Item, 0)
 		err := hjson.Unmarshal([]byte(mail.Item), &itemList)
 		if err != nil {
+			// 如果你是在登录的时候看到了这个报错，并且你的配置没有问题，那就是这玩意空的没填报错了
 			logger.Error("mail item error: %v", err)
 		}
 		mailMap[id].ItemList = itemList
