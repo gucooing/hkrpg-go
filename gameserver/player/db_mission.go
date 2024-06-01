@@ -69,6 +69,24 @@ func (g *GamePlayer) GetFinishSubMainMissionById(id uint32) *spb.MissionInfo {
 	return db[id]
 }
 
+// 将主任务转成完成状态
+func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
+	mainMissionList := g.GetMainMissionList()
+	subMission := mainMissionList[mainMissionId]
+	finishMainMissionList := g.GetFinishMainMissionList()
+	if subMission == nil {
+		return false
+	}
+
+	finishMainMissionList[mainMissionId] = &spb.MissionInfo{
+		MissionId: subMission.MissionId,
+		Progress:  subMission.Progress + 1,
+		Status:    spb.MissionStatus_MISSION_FINISH,
+	}
+	delete(mainMissionList, mainMissionId)
+	return true
+}
+
 // 将子任务转成完成状态
 func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	subMainMissionList := g.GetSubMainMissionList()
@@ -227,6 +245,7 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	for _, finishSubMission := range conf.FinishSubMissionList {
 		if missionId == finishSubMission {
 			//  完成该主线任务，并接取下一个主线任务
+			g.UpMainMission(conf.MainMissionID) // 结束主任务
 		}
 	}
 	for _, confSubMission := range conf.SubMissionList {
@@ -271,6 +290,7 @@ func (g *GamePlayer) ReadyMainMission() {
 	subMainMissionList := g.GetSubMainMissionList()
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	conf := gdconf.GetMainMission()
+	var nextList []uint32
 	for id, mission := range conf {
 		if g.IsReceiveMission(mission, mainMissionList, finishMainMissionList) {
 			goppConf := gdconf.GetGoppMainMissionById(id)
@@ -286,6 +306,7 @@ func (g *GamePlayer) ReadyMainMission() {
 				if finishSubMainMissionList[subId] != nil {
 					continue
 				}
+				nextList = append(nextList, subId)
 				subMainMissionList[subId] = &spb.MissionInfo{
 					MissionId: subId,
 					Progress:  0,
@@ -294,6 +315,8 @@ func (g *GamePlayer) ReadyMainMission() {
 			}
 		}
 	}
+	// 通知状态
+	g.MissionPlayerSyncScNotify(nextList, make([]uint32, 0)) // 发送通知
 }
 
 func (g *GamePlayer) IsReceiveMission(mission *gdconf.MainMission, mainMissionList, finishMainMissionList map[uint32]*spb.MissionInfo) bool {
@@ -308,6 +331,10 @@ func (g *GamePlayer) IsReceiveMission(mission *gdconf.MainMission, mainMissionLi
 		switch take.Type {
 		case "Auto":
 			isReceive = true
+		case "MultiSequence":
+			if finishMainMissionList[take.Value] != nil {
+				isReceive = true
+			}
 		default:
 			isReceive = false
 		}
