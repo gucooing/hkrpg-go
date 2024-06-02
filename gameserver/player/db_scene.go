@@ -56,17 +56,23 @@ type PropEntity struct {
 	PropId uint32 // 物品id
 }
 
-func (g *GamePlayer) NewSceneMap() *SceneMap { // 清空实体列表用的
-	db := g.GetSceneMap()
-	db.LoadedGroup = make(map[uint32]*GroupInfo)
-	db.NoLoadedGroup = make(map[uint32]*GroupInfo)
+func NewSceneMap() *SceneMap { // 清空实体列表用的
+	db := &SceneMap{
+		LoadedGroup:   make(map[uint32]*GroupInfo),
+		NoLoadedGroup: make(map[uint32]*GroupInfo),
+	}
 	return db
+}
+
+func (g *GamePlayer) UpSceneMap() {
+	db := g.GetOnlineData()
+	db.SceneMap = NewSceneMap()
 }
 
 func (g *GamePlayer) GetSceneMap() *SceneMap {
 	db := g.GetOnlineData()
 	if db.SceneMap == nil {
-		db.SceneMap = g.NewSceneMap()
+		db.SceneMap = NewSceneMap()
 	}
 	return db.SceneMap
 }
@@ -90,29 +96,39 @@ func (g *GamePlayer) GetNoLoadedGroup() map[uint32]*GroupInfo {
 func (g *GamePlayer) AddLoadedGroup(entryId, planeID, floorID, groupID uint32) {
 	db := g.GetLoadedGroup()
 	db[groupID] = &GroupInfo{
-		EntryId: entryId,
-		PlaneID: planeID,
-		FloorID: floorID,
-		GroupID: groupID,
+		EntryId:   entryId,
+		PlaneID:   planeID,
+		FloorID:   floorID,
+		GroupID:   groupID,
+		EntityMap: make(map[uint32]EntityAll),
 	}
 }
 
 func (g *GamePlayer) AddNoLoadedGroup(entryId, planeID, floorID, groupID uint32) {
 	db := g.GetNoLoadedGroup()
 	db[groupID] = &GroupInfo{
-		EntryId: entryId,
-		PlaneID: planeID,
-		FloorID: floorID,
-		GroupID: groupID,
+		EntryId:   entryId,
+		PlaneID:   planeID,
+		FloorID:   floorID,
+		GroupID:   groupID,
+		EntityMap: make(map[uint32]EntityAll),
 	}
 }
 
-func (g *GamePlayer) GetEntity(groupID uint32) map[uint32]EntityAll {
+func (g *GamePlayer) GetGroupInfoByGroupID(groupID uint32) *GroupInfo {
 	db := g.GetLoadedGroup()
 	if db[groupID] == nil {
-		db[groupID].EntityMap = make(map[uint32]EntityAll)
+		db[groupID] = &GroupInfo{}
 	}
-	return db[groupID].EntityMap
+	return db[groupID]
+}
+
+func (g *GamePlayer) GetEntity(groupID uint32) map[uint32]EntityAll {
+	db := g.GetGroupInfoByGroupID(groupID)
+	if db.EntityMap == nil {
+		db.EntityMap = make(map[uint32]EntityAll)
+	}
+	return db.EntityMap
 }
 
 func (ae *AvatarEntity) AddEntity(g *GamePlayer, groupID uint32) {
@@ -151,6 +167,22 @@ func (g *GamePlayer) GetEntityById(id uint32) EntityAll { // 根据实体id拉�
 		}
 	}
 	return nil
+}
+
+func (g *GamePlayer) GetEntryId(t EntityAll) uint32 {
+	if t == nil {
+		return 0
+	}
+	switch t.(type) {
+	case *PropEntity:
+		return t.(*PropEntity).EntityId
+	case *MonsterEntity:
+		return t.(*MonsterEntity).EntityId
+	case *NpcEntity:
+		return t.(*NpcEntity).EntityId
+	default:
+		return 0
+	}
 }
 
 func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
@@ -265,7 +297,13 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
 	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
 	finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
-	isLoaded := true
+	isLoaded := false
+	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil {
+		return true
+	}
+	if levelGroup.Category == "Mission" {
+		isLoaded = false
+	}
 	// 检查加载条件
 	if levelGroup.LoadCondition != nil {
 		for _, conditions := range levelGroup.LoadCondition.Conditions {
@@ -275,6 +313,8 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 					if levelGroup.LoadCondition.Operation == "Or" {
 						break
 					}
+				} else {
+					isLoaded = false
 				}
 			}
 			if conditions.Type == "SubMission" && conditions.Phase == "" { // 接取了这个子任务
@@ -283,7 +323,10 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 					if levelGroup.LoadCondition.Operation == "Or" {
 						break
 					}
+				} else {
+					isLoaded = false
 				}
+
 			}
 			if conditions.Type == "" && conditions.Phase == "" { // 接取主线任务
 				if mainMissionList[conditions.ID] != nil {
@@ -291,6 +334,8 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 					if levelGroup.LoadCondition.Operation == "Or" {
 						break
 					}
+				} else {
+					isLoaded = false
 				}
 			}
 		}
@@ -313,28 +358,39 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 
 // 检查场景上是否有实体需要卸载/加载
 func (g *GamePlayer) AutoEntryGroup() {
-	loadedGroup := g.GetLoadedGroup()     // 已加载区域
-	noLoadedGroup := g.GetNoLoadedGroup() // 未加载区域
+	loadedGroup := g.GetLoadedGroup()        // 已加载区域
+	noLoadedGroup := g.GetNoLoadedGroup()    // 未加载区域
+	uninstallGroup := make([]*GroupInfo, 0)  // 卸载场景列表
+	loadedGroupList := make([]*GroupInfo, 0) // 加载列表
 	// 检查已加载区域是否需要卸载
-	for _, info := range loadedGroup {
+	for id, info := range loadedGroup {
 		group := gdconf.GetServerGroupById(info.PlaneID, info.FloorID, info.GroupID)
 		if group == nil {
 			continue
 		}
 		if !g.IfLoadMap(group) {
-			// 此处卸载逻辑
+			// 此处卸载
+			uninstallGroup = append(uninstallGroup, info)
+			noLoadedGroup[id] = info
+			delete(loadedGroup, id)
 		}
 	}
 	// 检查未加载区域是否需要加载
-	for _, info := range noLoadedGroup {
+	for id, info := range noLoadedGroup {
 		group := gdconf.GetServerGroupById(info.PlaneID, info.FloorID, info.GroupID)
 		if group == nil {
 			continue
 		}
 		if g.IfLoadMap(group) {
-			// 此处加载逻辑
+			// 此处加载
+			loadedGroupList = append(loadedGroupList, info)
+			loadedGroup[id] = info
+			delete(noLoadedGroup, id)
 		}
 	}
+
+	// 卸载/加载
+	g.UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList)
 }
 
 // 从db拉取地图数据
@@ -549,7 +605,7 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 				Rot: rot,
 			},
 			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.BasicBin.WorldLevel,
+				WorldLevel: g.GetWorldLevel(),
 				MonsterId:  monsterList.NPCMonsterID,
 				EventId:    monsterList.EventID,
 			},
@@ -603,6 +659,7 @@ func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 				GroupId:  sceneGroup.GroupId,
 				Pos:      pos,
 				Rot:      rot,
+				InstId:   npcList.ID,
 			},
 			NpcId: npcList.NPCID,
 		})
@@ -641,7 +698,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
 	// 清理老实体列表
-	g.NewSceneMap()
+	g.UpSceneMap()
 	// 添加队伍角色进实体列表，并设置坐标
 	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
 	blockBin := g.GetBlock(entryId)
@@ -702,51 +759,140 @@ func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.GroupRef
 }
 
 // 添加怪物
-func (g *GamePlayer) GetAddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, configList, eventIDList, npcMonsterIDList []uint32, monsterList map[uint32]*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
+func (g *GamePlayer) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monsterList map[uint32]*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
-	for id, config := range configList {
-		for _, monster := range monsterList {
-			if monster.ID != config {
-				continue
-			}
-			entityId := g.GetNextGameObjectGuid()
-			monsterPos := &proto.Vector{
-				X: int32(monster.PosX * 1000),
-				Y: int32(monster.PosY * 1000),
-				Z: int32(monster.PosZ * 1000),
-			}
-			monsterRot := &proto.Vector{
-				X: int32(monster.RotX * 1000),
-				Y: int32(monster.RotY * 1000),
-				Z: int32(monster.RotZ * 1000),
-			}
-			seri := &proto.SceneEntityRefreshInfo{
-				AddEntity: &proto.SceneEntityInfo{
-					GroupId:  mazeGroupID,
-					InstId:   monster.ID,
-					EntityId: entityId,
-					Motion: &proto.MotionInfo{
-						Pos: monsterPos,
-						Rot: monsterRot,
-					},
-					NpcMonster: &proto.SceneNpcMonsterInfo{
-						MonsterId: npcMonsterIDList[id],
-						EventId:   eventIDList[id],
-					},
-				},
-			}
-			// 添加怪物实体
-			g.AddEntity(mazeGroupID, &MonsterEntity{
-				Entity: Entity{
-					EntityId: entityId,
-					GroupId:  mazeGroupID,
-					Pos:      monsterPos,
-					Rot:      monsterRot,
-				},
-				EventID: eventIDList[id],
-			})
-			sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
+	for _, monster := range monsterList {
+		entityId := g.GetNextGameObjectGuid()
+		monsterPos := &proto.Vector{
+			X: int32(monster.PosX * 1000),
+			Y: int32(monster.PosY * 1000),
+			Z: int32(monster.PosZ * 1000),
 		}
+		monsterRot := &proto.Vector{
+			X: int32(monster.RotX * 1000),
+			Y: int32(monster.RotY * 1000),
+			Z: int32(monster.RotZ * 1000),
+		}
+		seri := &proto.SceneEntityRefreshInfo{
+			AddEntity: &proto.SceneEntityInfo{
+				GroupId:  mazeGroupID,
+				InstId:   monster.ID,
+				EntityId: entityId,
+				Motion: &proto.MotionInfo{
+					Pos: monsterPos,
+					Rot: monsterRot,
+				},
+				NpcMonster: &proto.SceneNpcMonsterInfo{
+					WorldLevel: g.GetWorldLevel(),
+					MonsterId:  monster.NPCMonsterID,
+					EventId:    monster.EventID,
+				},
+			},
+		}
+		// 添加怪物实体
+		g.AddEntity(mazeGroupID, &MonsterEntity{
+			Entity: Entity{
+				EntityId: entityId,
+				GroupId:  mazeGroupID,
+				Pos:      monsterPos,
+				Rot:      monsterRot,
+			},
+			EventID: monster.EventID,
+		})
+		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
+	}
+	return sceneEntityRefreshInfo
+}
+
+// 添加Npc
+func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList map[uint32]*gdconf.NPCList) []*proto.SceneEntityRefreshInfo {
+	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
+	for _, npc := range npcList {
+		entityId := g.GetNextGameObjectGuid()
+		pos := &proto.Vector{
+			X: int32(npc.PosX * 1000),
+			Y: int32(npc.PosY * 1000),
+			Z: int32(npc.PosZ * 1000),
+		}
+		rot := &proto.Vector{
+			X: int32(npc.RotX * 1000),
+			Y: int32(npc.RotY * 1000),
+			Z: int32(npc.RotZ * 1000),
+		}
+		seri := &proto.SceneEntityRefreshInfo{
+			AddEntity: &proto.SceneEntityInfo{
+				GroupId:  mazeGroupID,
+				InstId:   npc.ID,
+				EntityId: entityId,
+				Motion: &proto.MotionInfo{
+					Pos: pos,
+					Rot: rot,
+				},
+				Npc: &proto.SceneNpcInfo{
+					ExtraInfo: nil,
+					NpcId:     npc.NPCID,
+				},
+			},
+		}
+		// 添加怪物实体
+		g.AddEntity(mazeGroupID, &NpcEntity{
+			Entity: Entity{
+				EntityId: entityId,
+				GroupId:  mazeGroupID,
+				Pos:      pos,
+				Rot:      rot,
+				InstId:   npc.ID,
+			},
+			NpcId: npc.NPCID,
+		})
+		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
+	}
+	return sceneEntityRefreshInfo
+}
+
+// 添加实体
+func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
+	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
+	for _, prop := range propList {
+		entityId := g.GetNextGameObjectGuid()
+		pos := &proto.Vector{
+			X: int32(prop.PosX * 1000),
+			Y: int32(prop.PosY * 1000),
+			Z: int32(prop.PosZ * 1000),
+		}
+		rot := &proto.Vector{
+			X: int32(prop.RotX * 1000),
+			Y: int32(prop.RotY * 1000),
+			Z: int32(prop.RotZ * 1000),
+		}
+		seri := &proto.SceneEntityRefreshInfo{
+			AddEntity: &proto.SceneEntityInfo{
+				GroupId:  mazeGroupID,
+				InstId:   prop.ID,
+				EntityId: entityId,
+				Motion: &proto.MotionInfo{
+					Pos: pos,
+					Rot: rot,
+				},
+				Prop: &proto.ScenePropInfo{
+					PropId:    prop.PropID, // PropID
+					PropState: g.GetPropState(db, mazeGroupID, prop.ID, prop.State),
+				},
+			},
+		}
+		// 添加怪物实体
+		g.AddEntity(mazeGroupID, &PropEntity{
+			Entity: Entity{
+				EntityId: entityId,
+				InstId:   prop.ID,
+				EntryId:  entityId,
+				GroupId:  mazeGroupID,
+				Pos:      pos,
+				Rot:      rot,
+			},
+			PropId: prop.PropID,
+		})
+		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
 	}
 	return sceneEntityRefreshInfo
 }

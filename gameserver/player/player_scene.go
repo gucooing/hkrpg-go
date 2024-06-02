@@ -325,3 +325,52 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial
 }
 
 // 卸载/加载场景
+func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList []*GroupInfo) {
+	notify := &proto.SceneGroupRefreshScNotify{
+		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
+	}
+
+	// 卸载
+	for _, groupInfo := range uninstallGroup {
+		if groupInfo.GroupID == 0 { // 不能卸载角色
+			continue
+		}
+		groupRefreshInfo := &proto.GroupRefreshInfo{
+			GroupId:       groupInfo.GroupID,
+			RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+		}
+
+		for _, entify := range groupInfo.EntityMap {
+			groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, &proto.SceneEntityRefreshInfo{
+				DeleteEntity: g.GetEntryId(entify),
+			})
+		}
+
+		notify.GroupRefreshList = append(notify.GroupRefreshList, groupRefreshInfo)
+	}
+	// 加载
+	for _, groupInfo := range loadedGroupList {
+		if groupInfo.GroupID == 0 { // 不能卸载角色
+			continue
+		}
+		group := gdconf.GetServerGroupById(groupInfo.PlaneID, groupInfo.FloorID, groupInfo.GroupID)
+		if group == nil {
+			continue
+		}
+		db := g.GetBlock(groupInfo.EntryId)
+		groupRefreshInfo := &proto.GroupRefreshInfo{
+			GroupId:       groupInfo.GroupID,
+			RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+		}
+		// 添加怪物
+		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddMonsterSceneEntityRefreshInfo(groupInfo.GroupID, group.MonsterList)...)
+		// 添加npc
+		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddNpcSceneEntityRefreshInfo(groupInfo.GroupID, group.NPCList)...)
+		// 添加实体
+		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddPropSceneEntityRefreshInfo(groupInfo.GroupID, group.PropList, db)...)
+		notify.GroupRefreshList = append(notify.GroupRefreshList, groupRefreshInfo)
+		g.UpdateBlock(db)
+	}
+
+	g.Send(cmd.SceneGroupRefreshScNotify, notify)
+}

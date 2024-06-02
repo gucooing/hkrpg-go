@@ -94,6 +94,7 @@ func (g *GamePlayer) GetTrialLine() *spb.Line {
 
 func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 	db := g.GetTrialLine()
+	isChangeLineup := false
 	for slot, id := range trialList {
 		if slot == 4 {
 			continue
@@ -101,14 +102,18 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 		if db.AvatarIdList == nil {
 			db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
 		}
-		isTrial := true
-		if g.GetAvatarById(id) != nil {
-			isTrial = false
+		isTrial := false
+		if g.GetAvatarById(id) == nil {
+			isTrial = true
+			isChangeLineup = true
 		}
 		db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{AvatarId: id, Slot: uint32(slot), IsTrial: isTrial}
 		if id == trialList[4] {
 			db.LeaderSlot = uint32(slot)
 		}
+	}
+	if isChangeLineup {
+		g.SetIsChangeLineup(true) // 设置成强制队伍
 	}
 }
 

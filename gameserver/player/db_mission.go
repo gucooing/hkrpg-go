@@ -235,7 +235,6 @@ func (g *GamePlayer) AutoServerMissionFinishAction() {
 		for _, finishAction := range conf.FinishActionList {
 			switch finishAction.FinishActionType {
 			case "ChangeLineup": // 强制更新队伍
-				g.SetIsChangeLineup(true)                     // 设置成强制队伍
 				g.NewTrialLine(finishAction.FinishActionPara) // 设置队伍角色
 			}
 		}

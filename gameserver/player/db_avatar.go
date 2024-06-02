@@ -11,8 +11,8 @@ import (
 func NewAvatar() *spb.Avatar {
 	return &spb.Avatar{
 		AvatarList:        make(map[uint32]*spb.AvatarBin),
-		Gender:            spb.Gender_GenderWoman,
-		CurMainAvatar:     spb.HeroBasicType_GirlWarrior,
+		Gender:            spb.Gender_GenderMan,
+		CurMainAvatar:     spb.HeroBasicType_BoyWarrior,
 		HeroBasicTypeInfo: make([]*spb.HeroBasicTypeInfo, 0),
 		BattleAvatarList:  make(map[uint32]*spb.AvatarBin),
 	}
@@ -343,6 +343,9 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 		switch bA.AvatarType {
 		case Mi:
 			avatarBin := g.GetAvatarById(bA.AvatarId)
+			if avatarBin == nil {
+				continue
+			}
 			battleAvatar = &proto.BattleAvatar{
 				AvatarType:    proto.AvatarType(avatarBin.AvatarType),
 				Id:            avatarBin.AvatarId,
@@ -394,6 +397,9 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 			}
 		case Trial:
 			avatarBin := gdconf.GetSpecialAvatarById(bA.AvatarId)
+			if avatarBin == nil {
+				continue
+			}
 			battleAvatar = &proto.BattleAvatar{
 				AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
 				Id:            bA.AvatarId,

@@ -222,9 +222,59 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 	}
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		GroupId:       mazeGroupID,
-		RefreshEntity: g.GetAddMonsterSceneEntityRefreshInfo(mazeGroupID, configList, eventIDList, npcMonsterIDList, foorMap.MonsterList),
+		RefreshEntity: g.ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID, configList, eventIDList, npcMonsterIDList, foorMap.MonsterList),
 	}
 	notify.GroupRefreshList = append(notify.GroupRefreshList, sceneGroupRefreshInfo)
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
+}
+
+// 添加怪物
+func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, configList, eventIDList, npcMonsterIDList []uint32, monsterList map[uint32]*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
+	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
+	for id, config := range configList {
+		for _, monster := range monsterList {
+			if monster.ID != config {
+				continue
+			}
+			entityId := g.GetNextGameObjectGuid()
+			monsterPos := &proto.Vector{
+				X: int32(monster.PosX * 1000),
+				Y: int32(monster.PosY * 1000),
+				Z: int32(monster.PosZ * 1000),
+			}
+			monsterRot := &proto.Vector{
+				X: int32(monster.RotX * 1000),
+				Y: int32(monster.RotY * 1000),
+				Z: int32(monster.RotZ * 1000),
+			}
+			seri := &proto.SceneEntityRefreshInfo{
+				AddEntity: &proto.SceneEntityInfo{
+					GroupId:  mazeGroupID,
+					InstId:   monster.ID,
+					EntityId: entityId,
+					Motion: &proto.MotionInfo{
+						Pos: monsterPos,
+						Rot: monsterRot,
+					},
+					NpcMonster: &proto.SceneNpcMonsterInfo{
+						MonsterId: npcMonsterIDList[id],
+						EventId:   eventIDList[id],
+					},
+				},
+			}
+			// 添加怪物实体
+			g.AddEntity(mazeGroupID, &MonsterEntity{
+				Entity: Entity{
+					EntityId: entityId,
+					GroupId:  mazeGroupID,
+					Pos:      monsterPos,
+					Rot:      monsterRot,
+				},
+				EventID: eventIDList[id],
+			})
+			sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
+		}
+	}
+	return sceneEntityRefreshInfo
 }
