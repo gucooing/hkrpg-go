@@ -32,8 +32,9 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	curLine := g.GetCurLineUp()
 	rsp.Lineup = g.GetLineUpPb(curLine)
 	// 获取坐标
-	if teleportsMap.TeleportsByGroupId[groupID] != nil {
-		anchor := teleportsMap.TeleportsByGroupId[groupID].AnchorList[anchorID]
+	serverGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, groupID)
+	if serverGroup != nil || serverGroup.AnchorList != nil || serverGroup.AnchorList[anchorID] != nil {
+		anchor := serverGroup.AnchorList[anchorID]
 		pos = &proto.Vector{
 			X: int32(anchor.PosX * 1000),
 			Y: int32(anchor.PosY * 1000),
