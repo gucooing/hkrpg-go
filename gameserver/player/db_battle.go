@@ -468,6 +468,9 @@ func (g *GamePlayer) GetMem(isMem []uint32) *MPEM {
 	}
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
+		if entity == nil {
+			continue
+		}
 		switch entity.(type) {
 		case *AvatarEntity:
 		case *MonsterEntity:

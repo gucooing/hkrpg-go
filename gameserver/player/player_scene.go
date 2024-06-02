@@ -232,6 +232,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 
+// 更新实体状态
 func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db *spb.BlockBin) {
 	notify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
@@ -274,6 +275,7 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
 
+// 添加角色
 func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial bool, pos, rot *proto.Vector) {
 	notify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
@@ -308,7 +310,7 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial
 			},
 		},
 	})
-	g.AddEntity(&AvatarEntity{
+	g.AddEntity(0, &AvatarEntity{
 		Entity: Entity{
 			EntityId: entityId,
 			GroupId:  0,
@@ -321,3 +323,5 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
+
+// 卸载/加载场景
