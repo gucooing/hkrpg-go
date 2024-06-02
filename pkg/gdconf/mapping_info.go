@@ -47,10 +47,12 @@ func GetMappingInfoById(stageID, worldLevel uint32) *MappingInfo {
 
 func GetEntryId(planeID, floorID uint32) uint32 {
 	var entryId uint32 = 0
+tv:
 	for _, mappingInfo := range CONF.MappingInfoMap {
 		for _, mapEntrance := range mappingInfo {
 			if mapEntrance.PlaneID == planeID && mapEntrance.FloorID == floorID {
 				entryId = mapEntrance.ID
+				break tv
 			}
 		}
 	}
