@@ -68,6 +68,7 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		return
 	}
 	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
+	g.SetCurEntryId(entryId)
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
 
@@ -166,7 +167,6 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg []byte) {
 	rsp := &proto.GetEnteredSceneScRsp{}
 
 	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId)
-	g.SetCurEntryId(req.EntryId)
 
 	g.Send(cmd.EnterSceneScRsp, rsp)
 	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
@@ -187,25 +187,48 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
 	}
-
 	blockBin := g.GetBlock(pe.EntryId)
-
+	mapEntrance := gdconf.GetMapEntranceById(pe.EntryId)
+	if mapEntrance == nil {
+		g.Send(cmd.InteractPropScRsp, rsp)
+		return
+	}
 	confInteract := gdconf.GetInteractConfigById(req.InteractId)
 	if confInteract == nil {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
 	}
+	mazeProp := gdconf.GetMazePropId(pe.PropId)
+	if mazeProp == nil {
+		g.Send(cmd.InteractPropScRsp, rsp)
+		return
+	}
+	switch mazeProp.PropType {
+	case gdconf.PROP_ORDINARY:
+		confProp := gdconf.GetServerPropById(mapEntrance.PlaneID, mapEntrance.FloorID, pe.GroupId, pe.InstId)
+		if confProp == nil {
+			return
+		}
+		// 处理交互的物体
+		if confProp.GoppValue != nil {
+			for _, goppValue := range confProp.GoppValue {
+				g.UpPropState(blockBin, goppValue.GroupId, goppValue.InstId, 1) // 更新地图
+				enep := g.GetPropEntity(goppValue.GroupId, goppValue.InstId)
+				if enep == nil {
+					continue
+				}
+				propEntityIdList = append(propEntityIdList, enep.EntityId)
+			}
+		}
+	}
+	// 更新本体
 	propEntityIdList = append(propEntityIdList, req.PropEntityId)
-
-	rsp.PropState = gdconf.GetStateValue(confInteract.TargetState)
-
-	g.UpPropState(blockBin, pe.GroupId, pe.InstId, rsp.PropState)
-
-	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin)
-
-	g.UpInteractSubMission(pe, rsp.PropState)
-
-	g.UpdateBlock(blockBin)
+	rsp.PropState = gdconf.GetStateValue(confInteract.TargetState) // 获取新状态
+	g.UpPropState(blockBin, pe.GroupId, pe.InstId, rsp.PropState)  // 更新地图
+	// 统一通知
+	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
+	g.UpInteractSubMission(pe, rsp.PropState)                   // 检查交互任务
+	g.UpdateBlock(blockBin)                                     // 保存地图
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 

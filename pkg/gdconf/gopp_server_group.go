@@ -81,3 +81,13 @@ func GetServerGroupById(planeId, floorId, groupId uint32) *GoppLevelGroup {
 	}
 	return CONF.ServerGroupMap[planeId][floorId][groupId]
 }
+
+func GetServerPropById(planeId, floorId, groupId, instId uint32) *PropList {
+	if CONF.ServerGroupMap[planeId] == nil ||
+		CONF.ServerGroupMap[planeId][floorId] == nil ||
+		CONF.ServerGroupMap[planeId][floorId][groupId] == nil ||
+		CONF.ServerGroupMap[planeId][floorId][groupId].PropList == nil {
+		return nil
+	}
+	return CONF.ServerGroupMap[planeId][floorId][groupId].PropList[instId]
+}

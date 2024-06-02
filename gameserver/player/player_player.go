@@ -55,5 +55,6 @@ func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
 	if req.IsModify {
 		g.CreateCharacterSubMission()
 	}
+	g.PlayerPlayerSyncScNotify() // 角色信息通知
 	g.Send(cmd.SetPlayerInfoScRsp, rsp)
 }

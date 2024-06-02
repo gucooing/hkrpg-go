@@ -67,8 +67,8 @@ type ValueSource struct {
 	Values []*Values `json:"Values"`
 }
 type Values struct {
-	Key   string `json:"Key"`
-	Value string `json:"Valuel"`
+	Key   string      `json:"Key"`
+	Value interface{} `json:"Value"`
 }
 type AnchorList struct {
 	ID         uint32  `json:"ID"`
@@ -301,19 +301,23 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 		// 对ValueSource进行预处理
 		if prop.ValueSource != nil && prop.ValueSource.Values != nil {
 			for _, value := range prop.ValueSource.Values {
-				if strings.Contains(value.Key, "Door") ||
-					strings.Contains(value.Key, "Bridge") ||
-					strings.Contains(value.Key, "UnlockTarget") ||
-					strings.Contains(value.Key, "Rootcontamination") ||
-					strings.Contains(value.Key, "Portal") {
-					if prop.GoppValue == nil {
-						prop.GoppValue = make([]*GoppValue, 0)
-					}
-					if groupId, instId, ok := getValue(value.Value); ok {
-						prop.GoppValue = append(prop.GoppValue, &GoppValue{
-							GroupId: groupId,
-							InstId:  instId,
-						})
+				switch value.Value.(type) {
+				case string:
+					valueStr := value.Value.(string)
+					if strings.Contains(value.Key, "Door") ||
+						strings.Contains(value.Key, "Bridge") ||
+						strings.Contains(value.Key, "UnlockTarget") ||
+						strings.Contains(value.Key, "Rootcontamination") ||
+						strings.Contains(value.Key, "Portal") {
+						if prop.GoppValue == nil {
+							prop.GoppValue = make([]*GoppValue, 0)
+						}
+						if groupId, instId, ok := getValue(valueStr); ok {
+							prop.GoppValue = append(prop.GoppValue, &GoppValue{
+								GroupId: groupId,
+								InstId:  instId,
+							})
+						}
 					}
 				}
 			}

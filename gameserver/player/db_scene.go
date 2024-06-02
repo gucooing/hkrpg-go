@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strings"
-
 	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
@@ -18,9 +16,9 @@ type EntityAll interface {
 
 type Entity struct {
 	EntityId uint32 // 实体id
-	InstId   uint32
-	GroupId  uint32 // 区域
+	InstId   uint32 // 配置表中id
 	EntryId  uint32 // 地图
+	GroupId  uint32 // 区域
 	Pos      *proto.Vector
 	Rot      *proto.Vector
 }
@@ -102,6 +100,19 @@ func (g *GamePlayer) GetPropEntityById(id uint32) *PropEntity {
 	switch db.(type) {
 	case *PropEntity:
 		return db.(*PropEntity)
+	}
+	return nil
+}
+
+func (g *GamePlayer) GetPropEntity(groupId, instId uint32) *PropEntity {
+	db := g.GetEntity()
+	for _, entity := range db {
+		switch entity.(type) {
+		case *PropEntity:
+			if entity.(*PropEntity).GroupId == groupId && entity.(*PropEntity).InstId == instId {
+				return entity.(*PropEntity)
+			}
+		}
 	}
 	return nil
 }
@@ -373,9 +384,9 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
-		if strings.Contains(propList.Name, "Door") { // 门直接设置成开启
-			g.UpPropState(db, sceneGroup.GroupId, propList.ID, 1)
-		}
+		// if strings.Contains(propList.Name, "Door") { // 门直接设置成开启
+		// 	g.UpPropState(db, sceneGroup.GroupId, propList.ID, 1)
+		// }
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
 			Y: int32(propList.PosY * 1000),
@@ -402,8 +413,8 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 		// 添加物品实体
 		g.AddEntity(&PropEntity{
 			Entity: Entity{
-				InstId:   propList.ID,
 				EntityId: entityId,
+				InstId:   propList.ID,
 				EntryId:  entryId,
 				GroupId:  sceneGroup.GroupId,
 				Pos:      pos,
