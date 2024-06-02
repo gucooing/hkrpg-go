@@ -18,7 +18,6 @@ type RelicMainAffixConfig struct {
 
 func (g *GameDataConfig) loadRelicMainAffixConfig() {
 	g.RelicMainAffixConfigMap = make(map[uint32]map[uint32]*RelicMainAffixConfig)
-	relicMainAffixConfigMap := make(map[string]map[string]*RelicMainAffixConfig)
 	playerElementsFilePath := g.excelPrefix + "RelicMainAffixConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,19 +25,10 @@ func (g *GameDataConfig) loadRelicMainAffixConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &relicMainAffixConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.RelicMainAffixConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
-	}
-
-	for id, relicMainAffixConfig := range relicMainAffixConfigMap {
-		for ids, mainAffixConfig := range relicMainAffixConfig {
-			if g.RelicMainAffixConfigMap[stou32(id)] == nil {
-				g.RelicMainAffixConfigMap[stou32(id)] = make(map[uint32]*RelicMainAffixConfig)
-			}
-			g.RelicMainAffixConfigMap[stou32(id)][stou32(ids)] = mainAffixConfig
-		}
 	}
 
 	logger.Info("load %v RelicMainAffixConfig", len(g.RelicMainAffixConfigMap))

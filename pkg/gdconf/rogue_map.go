@@ -26,7 +26,7 @@ type RogueMapList struct {
 
 func (g *GameDataConfig) loadRogueMap() {
 	g.RogueMap = make(map[uint32]*RogueMap)
-	rogueMap := make(map[string]map[string]*RogueMapList)
+	rogueMap := make(map[uint32]map[uint32]*RogueMapList)
 	playerElementsFilePath := g.excelPrefix + "RogueMap.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -41,15 +41,15 @@ func (g *GameDataConfig) loadRogueMap() {
 	}
 
 	for mapID, rogueList := range rogueMap {
-		g.RogueMap[stou32(mapID)] = &RogueMap{
+		g.RogueMap[mapID] = &RogueMap{
 			StartId:  0,
 			SiteList: make(map[uint32]*RogueMapList),
 		}
 		for _, rogue := range rogueList {
 			if rogue.IsStart {
-				g.RogueMap[stou32(mapID)].StartId = rogue.SiteID
+				g.RogueMap[mapID].StartId = rogue.SiteID
 			}
-			g.RogueMap[stou32(mapID)].SiteList[rogue.SiteID] = rogue
+			g.RogueMap[mapID].SiteList[rogue.SiteID] = rogue
 		}
 	}
 

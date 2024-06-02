@@ -15,7 +15,7 @@ type TextJoinConfig struct {
 }
 
 func (g *GameDataConfig) loadTextJoinConfig() {
-	g.TextJoinConfigMap = make(map[string]*TextJoinConfig)
+	g.TextJoinConfigMap = make(map[uint32]*TextJoinConfig)
 	playerElementsFilePath := g.excelPrefix + "TextJoinConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -31,10 +31,10 @@ func (g *GameDataConfig) loadTextJoinConfig() {
 	logger.Info("load %v TextJoinConfig", len(g.TextJoinConfigMap))
 }
 
-func GetTextJoinConfigById(ID string) *TextJoinConfig {
+func GetTextJoinConfigById(ID uint32) *TextJoinConfig {
 	return CONF.TextJoinConfigMap[ID]
 }
 
-func GetTextJoinConfigMap() map[string]*TextJoinConfig {
+func GetTextJoinConfigMap() map[uint32]*TextJoinConfig {
 	return CONF.TextJoinConfigMap
 }

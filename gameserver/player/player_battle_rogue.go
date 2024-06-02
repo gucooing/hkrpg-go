@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -329,7 +327,7 @@ func (g *GamePlayer) NewRogue(avatarIdList []uint32, areaId uint32) {
 	}
 
 	// 获取地图
-	rogueAreaConfig := gdconf.GetRogueAreaConfigById(strconv.Itoa(int(areaId)))
+	rogueAreaConfig := gdconf.GetRogueAreaConfigById(areaId)
 	if rogueAreaConfig == nil {
 		rsp := &proto.StartRogueScRsp{
 			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
@@ -406,9 +404,9 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		PlaneId:            mapEntrance.PlaneID,
 		FloorId:            mapEntrance.FloorID,
 		LeaderEntityId:     leaderEntityId,
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
 		EntryId:            rogueRoom.MapEntrance,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
 		GroupIdList:        nil,
 		LightenSectionList: nil,

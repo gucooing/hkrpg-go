@@ -412,6 +412,27 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 					MaxSp: 10000,
 				},
 			}
+			// 获取技能
+			for _, skill := range g.GetSkillTreeList(avatarBin.PlayerID) {
+				if skill.Level == 0 {
+					continue
+				}
+				avatarSkillTree := &proto.AvatarSkillTree{
+					PointId: skill.PointId,
+					Level:   skill.Level,
+				}
+				battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
+			}
+			// 获取角色装备的光锥
+			if avatarBin.EquipmentID != 0 {
+				equipmentList := &proto.BattleEquipment{
+					Id:        avatarBin.EquipmentID,
+					Level:     avatarBin.EquipmentLevel,
+					Promotion: avatarBin.Promotion,
+					Rank:      avatarBin.EquipmentRank,
+				}
+				battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
+			}
 		case Assist:
 		default:
 			continue

@@ -3,14 +3,13 @@ package gdconf
 import (
 	"math/rand"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
 
 func (g *GameDataConfig) loadRogueMapGen() {
-	g.RogueMapGenMap = make(map[string][]uint32)
+	g.RogueMapGenMap = make(map[uint32][]uint32)
 	playerElementsFilePath := g.dataPrefix + "RogueMapGen.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -27,17 +26,9 @@ func (g *GameDataConfig) loadRogueMapGen() {
 }
 
 func GetRogueRoomIDBySiteID(siteID uint32) uint32 {
-	rogue := CONF.RogueMapGenMap[strconv.Itoa(int(siteID))]
+	rogue := CONF.RogueMapGenMap[siteID]
 	idIndex := rand.Intn(len(rogue))
 	rogueId := rogue[idIndex]
 
 	return rogueId
-}
-
-func stou32(msg string) uint32 {
-	if msg == "" {
-		return 0
-	}
-	ms, _ := strconv.ParseUint(msg, 10, 32)
-	return uint32(ms)
 }

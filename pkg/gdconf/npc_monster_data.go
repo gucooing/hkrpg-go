@@ -25,7 +25,7 @@ type NPCMonsterData struct {
 }
 
 func (g *GameDataConfig) loadNPCMonsterData() {
-	g.NPCMonsterDataMap = make(map[string]*NPCMonsterData)
+	g.NPCMonsterDataMap = make(map[uint32]*NPCMonsterData)
 	playerElementsFilePath := g.excelPrefix + "NPCMonsterData.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -41,6 +41,6 @@ func (g *GameDataConfig) loadNPCMonsterData() {
 	logger.Info("load %v NPCMonsterData", len(g.NPCMonsterDataMap))
 }
 
-func GetNPCMonsterId(id string) *NPCMonsterData {
+func GetNPCMonsterId(id uint32) *NPCMonsterData {
 	return CONF.NPCMonsterDataMap[id]
 }

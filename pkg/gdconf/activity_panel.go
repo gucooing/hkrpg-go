@@ -21,7 +21,7 @@ type UnlockConditions struct {
 }
 
 func (g *GameDataConfig) loadActivityPanel() {
-	g.ActivityPanelMap = make(map[string]*ActivityPanel)
+	g.ActivityPanelMap = make(map[uint32]*ActivityPanel)
 	playerElementsFilePath := g.excelPrefix + "ActivityPanel.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -37,11 +37,11 @@ func (g *GameDataConfig) loadActivityPanel() {
 	logger.Info("load %v ActivityPanel", len(g.ActivityPanelMap))
 }
 
-func GetActivityPanelById(ID string) *ActivityPanel {
+func GetActivityPanelById(ID uint32) *ActivityPanel {
 	return CONF.ActivityPanelMap[ID]
 }
 
-func GetActivityPanelMap() map[string]*ActivityPanel {
+func GetActivityPanelMap() map[uint32]*ActivityPanel {
 	return CONF.ActivityPanelMap
 }
 

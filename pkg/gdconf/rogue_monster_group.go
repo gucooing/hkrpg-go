@@ -22,7 +22,6 @@ type RogueMonsterGroup struct {
 
 func (g *GameDataConfig) loadRogueMonsterGroup() {
 	g.RogueMonsterGroupMap = make(map[uint32]*RogueMonsterGroup)
-	rogueMonsterGroupMap := make(map[string]*RogueMonsterGroups)
 	playerElementsFilePath := g.excelPrefix + "RogueMonsterGroup.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -30,14 +29,10 @@ func (g *GameDataConfig) loadRogueMonsterGroup() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &rogueMonsterGroupMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.RogueMonsterGroupMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
-	}
-
-	for mapID, rogueList := range rogueMonsterGroupMap {
-		g.RogueMonsterGroupMap[stou32(mapID)] = NewRogueMonsterGroup(rogueList.RogueMonsterListAndWeight)
 	}
 
 	logger.Info("load %v RogueMonsterGroup", len(g.RogueMonsterGroupMap))
@@ -48,13 +43,13 @@ func GetRogueMonsterGroupByGroupID(groupID uint32) uint32 {
 	return rogue.Select()
 }
 
-func NewRogueMonsterGroup(monsterListAndWeight map[string]int) *RogueMonsterGroup {
+func NewRogueMonsterGroup(monsterListAndWeight map[uint32]int) *RogueMonsterGroup {
 	var ids []uint32
 	var accWeights []int
 	var totalWeight = 0
 	for id, weight := range monsterListAndWeight {
 		totalWeight += weight
-		ids = append(ids, stou32(id))
+		ids = append(ids, id)
 		accWeights = append(accWeights, totalWeight)
 	}
 	return &RogueMonsterGroup{

@@ -1,7 +1,6 @@
 package player
 
 import (
-	"strconv"
 	"strings"
 
 	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
@@ -512,10 +511,10 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		return nil
 	}
 	scene := &proto.SceneInfo{
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
 		LeaderEntityId:     leaderEntityId,
 		FloorId:            mapEntrance.FloorID,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		PlaneId:            mapEntrance.PlaneID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
@@ -746,9 +745,9 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		PlaneId:            mapEntrance.PlaneID,
 		FloorId:            mapEntrance.FloorID,
 		LeaderEntityId:     leaderEntityId,
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
 		EntryId:            challengeMazeConfig.MapEntranceID,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
 		GroupIdList:        nil,
 		LightenSectionList: nil,

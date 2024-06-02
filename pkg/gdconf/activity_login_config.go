@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -16,7 +15,7 @@ type ActivityLoginConfig struct {
 }
 
 func (g *GameDataConfig) loadActivityLoginConfig() {
-	g.ActivityLoginConfigMap = make(map[string]*ActivityLoginConfig)
+	g.ActivityLoginConfigMap = make(map[uint32]*ActivityLoginConfig)
 	playerElementsFilePath := g.excelPrefix + "ActivityLoginConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -33,7 +32,7 @@ func (g *GameDataConfig) loadActivityLoginConfig() {
 }
 
 func GetActivityLoginConfigById(id uint32) *ActivityLoginConfig {
-	return CONF.ActivityLoginConfigMap[strconv.Itoa(int(id))]
+	return CONF.ActivityLoginConfigMap[id]
 }
 
 func GetActivityLoginListById() []uint32 {

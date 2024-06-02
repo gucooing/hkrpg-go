@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -76,7 +75,7 @@ type MazeProp struct {
 }
 
 func (g *GameDataConfig) loadMazeProp() {
-	mazePropMap := make(map[string]*mazeProp)
+	mazePropMap := make(map[uint32]*mazeProp)
 	g.MazePropMap = make(map[uint32]*MazeProp)
 	playerElementsFilePath := g.excelPrefix + "MazeProp.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
@@ -112,7 +111,7 @@ func (g *GameDataConfig) loadMazeProp() {
 		} else if strings.Contains(x.ConfigEntityPath, "_Door_") {
 			mp.IsDoor = true
 		}
-		g.MazePropMap[alg.S2U32(id)] = mp
+		g.MazePropMap[id] = mp
 	}
 	logger.Info("load %v MazeProp", len(g.MazePropMap))
 }

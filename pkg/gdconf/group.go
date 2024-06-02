@@ -274,7 +274,7 @@ func LoadMonster(groupList *LevelGroup) map[uint32]*MonsterList {
 		if monster.IsDelete || monster.IsClientOnly {
 			continue
 		}
-		npcMonsterExcel := GetNPCMonsterId(strconv.Itoa(int(monster.NPCMonsterID)))
+		npcMonsterExcel := GetNPCMonsterId(monster.NPCMonsterID)
 		if npcMonsterExcel == nil {
 			continue
 		}
@@ -356,7 +356,7 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) (map[uint32]*NPCList, []
 		if npc.IsDelete || npc.IsClientOnly {
 			continue
 		}
-		NPCDataExcel := GetNPCDataId(strconv.Itoa(int(npc.NPCID)))
+		NPCDataExcel := GetNPCDataId(npc.NPCID)
 		if NPCDataExcel == nil {
 			continue
 		}

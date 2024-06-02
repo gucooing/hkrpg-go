@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -23,7 +22,6 @@ type MapEntrance struct {
 
 func (g *GameDataConfig) loadMapEntrance() {
 	g.MapEntranceMap = make(map[uint32]*MapEntrance)
-	mapEntranceMap := make(map[string]*MapEntrance)
 	playerElementsFilePath := g.excelPrefix + "MapEntrance.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -31,14 +29,10 @@ func (g *GameDataConfig) loadMapEntrance() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &mapEntranceMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.MapEntranceMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
-	}
-
-	for id, mapEntrance := range mapEntranceMap {
-		g.MapEntranceMap[alg.S2U32(id)] = mapEntrance
 	}
 	logger.Info("load %v MapEntrance", len(g.MapEntranceMap))
 }

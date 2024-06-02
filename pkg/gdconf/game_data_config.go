@@ -18,59 +18,59 @@ type GameDataConfig struct {
 	dataPrefix   string
 	// 配置表数据
 	AvatarDataMap               map[uint32]*AvatarData                          // 角色
-	AvatarExpItemConfigMap      map[string]*AvatarExpItemConfig                 // 角色升级经验材料配置
-	AvatarPromotionConfigMap    map[string]map[string]*AvatarPromotionConfig    // 角色突破配置
-	ExpTypeMap                  map[string]map[string]*ExpType                  // 经验配置
-	EquipmentConfigMap          map[string]*EquipmentConfig                     // 光锥
-	EquipmentExpTypeMap         map[string]map[string]*EquipmentExp             // 光锥经验配置
-	EquipmentPromotionConfigMap map[string]map[string]*EquipmentPromotionConfig // 光锥突破配置
-	RelicMap                    map[string]*Relic                               // 遗器
+	AvatarExpItemConfigMap      map[uint32]*AvatarExpItemConfig                 // 角色升级经验材料配置
+	AvatarPromotionConfigMap    map[uint32]map[uint32]*AvatarPromotionConfig    // 角色突破配置
+	ExpTypeMap                  map[uint32]map[uint32]*ExpType                  // 经验配置
+	EquipmentConfigMap          map[uint32]*EquipmentConfig                     // 光锥
+	EquipmentExpTypeMap         map[uint32]map[uint32]*EquipmentExp             // 光锥经验配置
+	EquipmentPromotionConfigMap map[uint32]map[uint32]*EquipmentPromotionConfig // 光锥突破配置
+	RelicMap                    map[uint32]*Relic                               // 遗器
 	RelicMainAffixConfigMap     map[uint32]map[uint32]*RelicMainAffixConfig     // 圣遗物主属性配置
 	RelicSubAffixConfigMap      map[uint32]map[uint32]*RelicSubAffixConfig      // 圣遗物副属性配置
-	RelicExpTypeMap             map[string]map[string]*RelicExpType             // 圣遗物经验配置
+	RelicExpTypeMap             map[uint32]map[uint32]*RelicExpType             // 圣遗物经验配置
 	ItemConfigMap               *ItemList                                       // 材料
 	ItemConfigEquipmentMap      map[uint32]*ItemConfigEquipment                 // 背包光锥配置
 	ItemConfigRelicMap          map[uint32]*ItemConfigRelic                     // 背包遗器配置
-	RogueTalentMap              map[string]*RogueTalent                         // 模拟宇宙天赋
-	RogueMapGenMap              map[string][]uint32                             // 模拟宇宙id场景映射表
+	RogueTalentMap              map[uint32]*RogueTalent                         // 模拟宇宙天赋
+	RogueMapGenMap              map[uint32][]uint32                             // 模拟宇宙id场景映射表
 	RogueManagerMap             *RogueManager                                   // 模拟宇宙排期表
 	RogueMonsterMap             map[uint32]*RogueMonster                        // 模拟宇宙怪物配置
 	RogueMonsterGroupMap        map[uint32]*RogueMonsterGroup                   // 模拟宇宙怪物生成配置
 	RogueBuffMap                *RogueBuffList                                  // 模拟宇宙buff列表
-	RogueAreaConfigMap          map[string]*RogueAreaConfig                     // 模拟宇宙关卡配置
+	RogueAreaConfigMap          map[uint32]*RogueAreaConfig                     // 模拟宇宙关卡配置
 	RogueMap                    map[uint32]*RogueMap                            // 模拟宇宙关卡地图表
 	RogueRoomMap                map[uint32]*RogueRoom                           // 模拟宇宙地图配置表
-	CocoonConfigMap             map[string]map[string]*CocoonConfig             // 挑战/周本
-	MappingInfoMap              map[string]map[string]*MappingInfo              // 挑战/周本奖励
+	CocoonConfigMap             map[uint32]map[uint32]*CocoonConfig             // 挑战/周本
+	MappingInfoMap              map[uint32]map[uint32]*MappingInfo              // 挑战/周本奖励
 	AvatarSkilltreeMap          map[uint32]map[uint32]*AvatarSkilltree          // 技能库
-	MazeBuffMap                 map[string]map[string]*MazeBuff                 // 技能buff库
-	MazePlaneMap                map[string]*MazePlane                           // 场景id
-	NPCMonsterDataMap           map[string]*NPCMonsterData                      // NPC怪物表？
+	MazeBuffMap                 map[uint32]map[uint32]*MazeBuff                 // 技能buff库
+	MazePlaneMap                map[uint32]*MazePlane                           // 场景id
+	NPCMonsterDataMap           map[uint32]*NPCMonsterData                      // NPC怪物表？
 	MazePropMap                 map[uint32]*MazeProp                            // 实体列表？
-	NPCDataMap                  map[string]*NPCData                             // NPC列表？
+	NPCDataMap                  map[uint32]*NPCData                             // NPC列表？
 	GroupMap                    map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                    map[uint32]map[uint32]*LevelFloor               // ?
 	MapEntranceMap              map[uint32]*MapEntrance                         // 地图入口
 	BannersMap                  map[uint32]*Banners                             // 卡池信息
-	ActivityPanelMap            map[string]*ActivityPanel                       // 活动
-	ActivityLoginConfigMap      map[string]*ActivityLoginConfig                 // 登录活动表
-	AvatarDemoConfigMap         map[string]*AvatarDemoConfig                    // 角色试用信息
-	SpecialAvatarMap            map[string]map[string]*SpecialAvatar            // 预设角色映射表
+	ActivityPanelMap            map[uint32]*ActivityPanel                       // 活动
+	ActivityLoginConfigMap      map[uint32]*ActivityLoginConfig                 // 登录活动表
+	AvatarDemoConfigMap         map[uint32]*AvatarDemoConfig                    // 角色试用信息
+	SpecialAvatarMap            map[uint32]map[uint32]*SpecialAvatar            // 预设角色映射表
 	ActivitySchedulingMap       []*ActivityScheduling                           // 活动排期
-	QuestDataMap                map[string]*QuestData                           // 任务
-	MonsterConfigMap            map[string]*MonsterConfig                       // 怪物配置
+	QuestDataMap                map[uint32]*QuestData                           // 任务
+	MonsterConfigMap            map[uint32]*MonsterConfig                       // 怪物配置
 	ChallengeMazeConfigMap      map[uint32]*ChallengeMazeConfig                 // 忘却之庭配置
 	ChallengeTargetConfigMap    map[uint32]*ChallengeTargetConfig               // 忘却之庭结算配置
-	ChallengeStoryMazeExtraMap  map[string]*ChallengeStoryMazeExtra             // 忘却之庭活动积分规则
-	BackGroundMusicMap          map[string]*BackGroundMusic                     // 背景音乐
-	PlayerLevelConfigMap        map[string]*PlayerLevelConfig                   // 账号等级经验配置
-	TextJoinConfigMap           map[string]*TextJoinConfig                      // 文本？
-	PlaneEventMap               map[string]map[string]*PlaneEvent               // 大世界怪物信息
-	StageConfigMap              map[string]*StageConfig                         // 具体怪物群信息
-	LoadingDescMap              map[string]*LoadingDesc                         // 战斗随机种子
+	ChallengeStoryMazeExtraMap  map[uint32]*ChallengeStoryMazeExtra             // 忘却之庭活动积分规则
+	BackGroundMusicMap          map[uint32]*BackGroundMusic                     // 背景音乐
+	PlayerLevelConfigMap        map[uint32]*PlayerLevelConfig                   // 账号等级经验配置
+	TextJoinConfigMap           map[uint32]*TextJoinConfig                      // 文本？
+	PlaneEventMap               map[uint32]map[uint32]*PlaneEvent               // 大世界怪物信息
+	StageConfigMap              map[uint32]*StageConfig                         // 具体怪物群信息
+	LoadingDescMap              map[uint32]*LoadingDesc                         // 战斗随机种子
 	ShopConfigMap               map[uint32][]uint32                             // 商店配置
 	ShopGoodsConfigMap          map[uint32]map[uint32]*ShopGoodsConfig          // 商品配置
-	RewardDataMap               map[string]*RewardData                          // 奖励配置
+	RewardDataMap               map[uint32]*RewardData                          // 奖励配置
 	MainMissionMap              map[uint32]*MainMission                         // 主线任务
 	EventMissionMap             map[uint32]*EventMission                        // 事件任务？
 	VideoVersionKey             []*VideoVersionKey                              // 视频key

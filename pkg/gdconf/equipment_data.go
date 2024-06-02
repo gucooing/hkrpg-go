@@ -24,7 +24,7 @@ type EquipmentConfig struct {
 }
 
 func (g *GameDataConfig) loadEquipmentConfig() {
-	g.EquipmentConfigMap = make(map[string]*EquipmentConfig)
+	g.EquipmentConfigMap = make(map[uint32]*EquipmentConfig)
 	playerElementsFilePath := g.excelPrefix + "EquipmentConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -53,11 +53,11 @@ func (g *GameDataConfig) loadEquipmentConfig() {
 	logger.Info("load %v EquipmentConfig", len(g.EquipmentConfigMap))
 }
 
-func GetEquipmentConfigById(ID string) *EquipmentConfig {
+func GetEquipmentConfigById(ID uint32) *EquipmentConfig {
 	return CONF.EquipmentConfigMap[ID]
 }
 
-func GetEquipmentConfigMap() map[string]*EquipmentConfig {
+func GetEquipmentConfigMap() map[uint32]*EquipmentConfig {
 	return CONF.EquipmentConfigMap
 }
 

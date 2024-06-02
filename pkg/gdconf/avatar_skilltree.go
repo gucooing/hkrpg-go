@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	"github.com/hjson/hjson-go/v4"
@@ -21,7 +20,6 @@ type AvatarSkilltree struct {
 }
 
 func (g *GameDataConfig) loadAvatarSkilltree() {
-	avatarSkilltreeMap := make(map[string]map[string]*AvatarSkilltree)
 	g.AvatarSkilltreeMap = make(map[uint32]map[uint32]*AvatarSkilltree)
 	playerElementsFilePath := g.excelPrefix + "AvatarSkillTreeConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
@@ -30,18 +28,10 @@ func (g *GameDataConfig) loadAvatarSkilltree() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &avatarSkilltreeMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.AvatarSkilltreeMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
-	}
-	for skillid, skillList := range avatarSkilltreeMap {
-		if g.AvatarSkilltreeMap[alg.S2U32(skillid)] == nil {
-			g.AvatarSkilltreeMap[alg.S2U32(skillid)] = make(map[uint32]*AvatarSkilltree)
-		}
-		for leve, skill := range skillList {
-			g.AvatarSkilltreeMap[alg.S2U32(skillid)][alg.S2U32(leve)] = skill
-		}
 	}
 	logger.Info("load %v AvatarSkillTreeConfig", len(g.AvatarSkilltreeMap))
 }

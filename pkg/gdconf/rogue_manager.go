@@ -31,7 +31,7 @@ func (g *GameDataConfig) loadRogueManager() {
 		RogueManagerList: make(map[uint32]*RogueManagerList),
 	}
 
-	rogueManagerMap := make(map[string]*RogueManagerList)
+	rogueManagerMap := make(map[uint32]*RogueManagerList)
 	playerElementsFilePath := g.excelPrefix + "RogueManager.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {

@@ -16,7 +16,7 @@ type BackGroundMusic struct {
 }
 
 func (g *GameDataConfig) loadBackGroundMusic() {
-	g.BackGroundMusicMap = make(map[string]*BackGroundMusic)
+	g.BackGroundMusicMap = make(map[uint32]*BackGroundMusic)
 	playerElementsFilePath := g.excelPrefix + "BackGroundMusic.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -32,10 +32,10 @@ func (g *GameDataConfig) loadBackGroundMusic() {
 	logger.Info("load %v BackGroundMusic", len(g.BackGroundMusicMap))
 }
 
-func GetBackGroundMusicById(iD string) *BackGroundMusic {
+func GetBackGroundMusicById(iD uint32) *BackGroundMusic {
 	return CONF.BackGroundMusicMap[iD]
 }
 
-func GetBackGroundMusicMap() map[string]*BackGroundMusic {
+func GetBackGroundMusicMap() map[uint32]*BackGroundMusic {
 	return CONF.BackGroundMusicMap
 }

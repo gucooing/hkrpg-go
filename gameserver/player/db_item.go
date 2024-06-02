@@ -3,7 +3,6 @@ package player
 import (
 	"math"
 	"math/rand"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -191,7 +190,7 @@ func (g *GamePlayer) DelEquipment(uniqueId uint32) []*Material {
 
 func (g *GamePlayer) AddRelic(tid uint32) {
 	uniqueId := uint32(SNOWFLAKE.GenId())
-	relicConf := gdconf.GetRelicById(strconv.Itoa(int(tid)))
+	relicConf := gdconf.GetRelicById(tid)
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
 	db := g.GetRelicMap()
 
@@ -224,7 +223,7 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 
 func (g *GamePlayer) AddBtRelic(tid uint32) {
 	uniqueId := uint32(SNOWFLAKE.GenId())
-	relicConf := gdconf.GetRelicById(strconv.Itoa(int(tid)))
+	relicConf := gdconf.GetRelicById(tid)
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
 	db := g.GetRelicMap()
 

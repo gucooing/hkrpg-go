@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -16,7 +15,7 @@ type ExpType struct {
 }
 
 func (g *GameDataConfig) loadExpType() {
-	g.ExpTypeMap = make(map[string]map[string]*ExpType)
+	g.ExpTypeMap = make(map[uint32]map[uint32]*ExpType)
 	playerElementsFilePath := g.excelPrefix + "ExpType.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -35,12 +34,12 @@ func (g *GameDataConfig) loadExpType() {
 func GetExpTypeByLevel(expType, exp, level, promotion, avatarId uint32) (uint32, uint32, uint32) {
 	maxLevel := GetAvatarMaxLevel(avatarId, promotion)
 	for ; level <= maxLevel; level++ {
-		if exp < CONF.ExpTypeMap[strconv.Itoa(int(expType))][strconv.Itoa(int(level))].Exp {
+		if exp < CONF.ExpTypeMap[expType][level].Exp {
 			return level, exp, 0
 		} else {
-			exp -= CONF.ExpTypeMap[strconv.Itoa(int(expType))][strconv.Itoa(int(level))].Exp
+			exp -= CONF.ExpTypeMap[expType][level].Exp
 		}
 	}
-	newExp := CONF.ExpTypeMap[strconv.Itoa(int(expType))][strconv.Itoa(int(maxLevel))].Exp
+	newExp := CONF.ExpTypeMap[expType][maxLevel].Exp
 	return maxLevel, newExp, exp - newExp
 }

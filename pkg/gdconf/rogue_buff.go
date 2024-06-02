@@ -31,7 +31,7 @@ func (g *GameDataConfig) loadRogueBuff() {
 		StartId:  make([]uint32, 0),
 		SiteList: make(map[uint32]map[uint32]*RogueBuff),
 	}
-	rogueBuffMap := make(map[string]map[string]*RogueBuff)
+	rogueBuffMap := make(map[uint32]map[uint32]*RogueBuff)
 	playerElementsFilePath := g.excelPrefix + "RogueBuff.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -46,10 +46,10 @@ func (g *GameDataConfig) loadRogueBuff() {
 	}
 
 	for buffID, rogueBuff := range rogueBuffMap {
-		g.RogueBuffMap.StartId = append(g.RogueBuffMap.StartId, stou32(buffID))
-		g.RogueBuffMap.SiteList[stou32(buffID)] = make(map[uint32]*RogueBuff)
+		g.RogueBuffMap.StartId = append(g.RogueBuffMap.StartId, buffID)
+		g.RogueBuffMap.SiteList[buffID] = make(map[uint32]*RogueBuff)
 		for leve, buff := range rogueBuff {
-			g.RogueBuffMap.SiteList[stou32(buffID)][stou32(leve)] = buff
+			g.RogueBuffMap.SiteList[buffID][leve] = buff
 		}
 	}
 

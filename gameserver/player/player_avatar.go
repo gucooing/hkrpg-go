@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -106,7 +104,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 
 		pileItem = append(pileItem, pile)
 		// 获取材料配置
-		pileconf := gdconf.GetAvatarExpItemConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		pileconf := gdconf.GetAvatarExpItemConfigById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
 			g.Send(cmd.AvatarExpUpScRsp, rsp)
 			return

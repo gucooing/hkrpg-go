@@ -40,133 +40,93 @@ func (g *GameDataConfig) loadItemConfig() {
 	equipmentMap := make(map[uint32]*ItemConfig)
 	relicMap := make(map[uint32]*ItemConfig)
 
-	itemConfig := make(map[string]*ItemConfig)
 	playerElementsFileItemConfig, err := os.ReadFile(g.excelPrefix + "ItemConfig.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfig, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfig, &itemMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, item := range itemConfig {
-		itemMap[item.ID] = item
-	}
 
-	itemConfig = nil
-	itemConfig = make(map[string]*ItemConfig)
 	playerElementsFileItemConfigAvatar, err := os.ReadFile(g.excelPrefix + "ItemConfigAvatar.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigAvatar, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfigAvatar, &avatarMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, avatar := range itemConfig {
-		avatarMap[avatar.ID] = avatar
-	}
 
-	itemConfig = nil
-	itemConfig = make(map[string]*ItemConfig)
 	playerElementsFileItemConfigAvatarPlayerIcon, err := os.ReadFile(g.excelPrefix + "ItemConfigAvatarPlayerIcon.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigAvatarPlayerIcon, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfigAvatarPlayerIcon, &avatarPlayerIconMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, avatar := range itemConfig {
-		avatarPlayerIconMap[avatar.ID] = avatar
-	}
 
-	itemConfig = nil
-	itemConfig = make(map[string]*ItemConfig)
 	playerElementsFileItemConfigAvatarRank, err := os.ReadFile(g.excelPrefix + "ItemConfigAvatarRank.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigAvatarRank, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfigAvatarRank, &avatarRankMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, avatar := range itemConfig {
-		avatarRankMap[avatar.ID] = avatar
-	}
 
-	itemConfig = nil
-	itemConfig = make(map[string]*ItemConfig)
 	playerElementsFileItemConfigBook, err := os.ReadFile(g.excelPrefix + "ItemConfigBook.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigBook, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfigBook, &bookMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, book := range itemConfig {
-		bookMap[book.ID] = book
-	}
 
-	itemConfig = nil
-	itemConfig = make(map[string]*ItemConfig)
 	playerElementsFileItemConfigDisk, err := os.ReadFile(g.excelPrefix + "ItemConfigDisk.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigDisk, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfigDisk, &diskMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, disk := range itemConfig {
-		diskMap[disk.ID] = disk
-	}
 
-	itemConfig = nil
-	itemConfig = make(map[string]*ItemConfig)
 	playerElementsFileItemConfigEquipment, err := os.ReadFile(g.excelPrefix + "ItemConfigEquipment.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigEquipment, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfigEquipment, &equipmentMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, equipment := range itemConfig {
-		equipmentMap[equipment.ID] = equipment
-	}
 
-	itemConfig = nil
-	itemConfig = make(map[string]*ItemConfig)
 	playerElementsFileItemConfigRelic, err := os.ReadFile(g.excelPrefix + "ItemConfigRelic.json")
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigRelic, &itemConfig)
+	err = hjson.Unmarshal(playerElementsFileItemConfigRelic, &relicMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, relic := range itemConfig {
-		relicMap[relic.ID] = relic
-	}
-	itemConfig = nil
 
 	g.ItemConfigMap = &ItemList{
 		Item:             itemMap,

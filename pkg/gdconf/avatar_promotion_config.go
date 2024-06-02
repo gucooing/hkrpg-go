@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -37,7 +36,7 @@ type Value struct {
 }
 
 func (g *GameDataConfig) loadAvatarPromotionConfig() {
-	g.AvatarPromotionConfigMap = make(map[string]map[string]*AvatarPromotionConfig)
+	g.AvatarPromotionConfigMap = make(map[uint32]map[uint32]*AvatarPromotionConfig)
 	playerElementsFilePath := g.excelPrefix + "AvatarPromotionConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -54,7 +53,7 @@ func (g *GameDataConfig) loadAvatarPromotionConfig() {
 }
 
 func GetAvatarPromotionConfigByLevel(avatarId, promotion uint32) uint32 {
-	promotionConfig := CONF.AvatarPromotionConfigMap[strconv.Itoa(int(avatarId))][strconv.Itoa(int(promotion))]
+	promotionConfig := CONF.AvatarPromotionConfigMap[avatarId][promotion]
 	for _, promotionCost := range promotionConfig.PromotionCostList {
 		if promotionCost.ItemID == 2 {
 			return promotionCost.ItemNum
@@ -64,10 +63,10 @@ func GetAvatarPromotionConfigByLevel(avatarId, promotion uint32) uint32 {
 }
 
 func GetAvatarMaxLevel(avatarId, promotion uint32) uint32 {
-	promotionConfig := CONF.AvatarPromotionConfigMap[strconv.Itoa(int(avatarId))][strconv.Itoa(int(promotion))]
+	promotionConfig := CONF.AvatarPromotionConfigMap[avatarId][promotion]
 	return promotionConfig.MaxLevel
 }
 
-func GetAvatarPromotionConfigMap() map[string]map[string]*AvatarPromotionConfig {
+func GetAvatarPromotionConfigMap() map[uint32]map[uint32]*AvatarPromotionConfig {
 	return CONF.AvatarPromotionConfigMap
 }
