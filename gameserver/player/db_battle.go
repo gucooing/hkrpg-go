@@ -145,7 +145,7 @@ func (g *GamePlayer) GetTrialActivityState() *TrialActivityState {
 
 /************************************区分一下***************************************/
 
-func (g *GamePlayer) NewBattle() *spb.Battle {
+func NewBattle() *spb.Battle {
 	return &spb.Battle{
 		BattleType: 0,
 		Rogue:      nil,
@@ -156,7 +156,7 @@ func (g *GamePlayer) NewBattle() *spb.Battle {
 func (g *GamePlayer) GetBattle() *spb.Battle {
 	db := g.GetBasicBin()
 	if db.Battle == nil {
-		db.Battle = g.NewBattle()
+		db.Battle = NewBattle()
 	}
 	return db.Battle
 }

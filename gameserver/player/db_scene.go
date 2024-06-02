@@ -117,7 +117,7 @@ func (g *GamePlayer) GetPropEntity(groupId, instId uint32) *PropEntity {
 	return nil
 }
 
-func (g *GamePlayer) NewScene() *spb.Scene {
+func NewScene() *spb.Scene {
 	return &spb.Scene{
 		EntryId: 2000101,
 	}
@@ -126,7 +126,7 @@ func (g *GamePlayer) NewScene() *spb.Scene {
 func (g *GamePlayer) GetScene() *spb.Scene {
 	db := g.BasicBin
 	if db.Scene == nil {
-		db.Scene = g.NewScene()
+		db.Scene = NewScene()
 	}
 	return db.Scene
 }
@@ -141,7 +141,7 @@ func (g *GamePlayer) SetCurEntryId(id uint32) {
 	db.EntryId = id
 }
 
-func (g *GamePlayer) NewPos() *spb.VectorBin {
+func NewPos() *spb.VectorBin {
 	return &spb.VectorBin{
 		X: 99,
 		Y: 62,
@@ -149,7 +149,7 @@ func (g *GamePlayer) NewPos() *spb.VectorBin {
 	}
 }
 
-func (g *GamePlayer) NewRot() *spb.VectorBin {
+func NewRot() *spb.VectorBin {
 	return &spb.VectorBin{
 		X: 0,
 		Y: 0,
@@ -160,7 +160,7 @@ func (g *GamePlayer) NewRot() *spb.VectorBin {
 func (g *GamePlayer) GetPos() *spb.VectorBin {
 	db := g.GetBasicBin()
 	if db.Pos == nil {
-		db.Pos = g.NewPos()
+		db.Pos = NewPos()
 	}
 	return db.Pos
 }
@@ -168,7 +168,7 @@ func (g *GamePlayer) GetPos() *spb.VectorBin {
 func (g *GamePlayer) GetRot() *spb.VectorBin {
 	db := g.GetBasicBin()
 	if db.Rot == nil {
-		db.Rot = g.NewRot()
+		db.Rot = NewRot()
 	}
 	return db.Rot
 }
@@ -235,6 +235,11 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	}
 
 	return isLoaded
+}
+
+// 检查场景上是否有实体需要卸载/加载
+func (g *GamePlayer) AutoEntryGroup() {
+
 }
 
 // 从db拉取地图数据

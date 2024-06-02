@@ -299,6 +299,7 @@ func (g *GamePlayer) ReadyMission() {
 	g.ReadyMainMission()              // 主线检查
 	g.AutoServerMissionFinishAction() // 任务自动行为检查
 	g.AutoServerFinishMission()       // 检查服务端任务动作
+	g.AutoEntryGroup()                // 检查场景上是否有实体需要卸载/加载
 }
 
 // 主线检查

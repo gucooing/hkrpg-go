@@ -8,12 +8,12 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) NewAvatar() *spb.Avatar {
+func NewAvatar() *spb.Avatar {
 	return &spb.Avatar{
 		AvatarList:        make(map[uint32]*spb.AvatarBin),
 		Gender:            spb.Gender_GenderWoman,
 		CurMainAvatar:     spb.HeroBasicType_GirlWarrior,
-		HeroBasicTypeInfo: g.GetHeroBasicTypeInfo(),
+		HeroBasicTypeInfo: make([]*spb.HeroBasicTypeInfo, 0),
 		BattleAvatarList:  make(map[uint32]*spb.AvatarBin),
 	}
 }
@@ -21,7 +21,7 @@ func (g *GamePlayer) NewAvatar() *spb.Avatar {
 func (g *GamePlayer) GetAvatar() *spb.Avatar {
 	db := g.GetBasicBin()
 	if db.Avatar == nil {
-		db.Avatar = g.NewAvatar()
+		db.Avatar = NewAvatar()
 	}
 	return db.Avatar
 }

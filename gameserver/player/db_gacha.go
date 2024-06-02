@@ -4,7 +4,7 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) NewGacha() *spb.Gacha {
+func NewGacha() *spb.Gacha {
 	return &spb.Gacha{
 		GachaMap: make(map[uint32]*spb.GachaNum),
 	}
@@ -13,7 +13,7 @@ func (g *GamePlayer) NewGacha() *spb.Gacha {
 func (g *GamePlayer) GetGacha() *spb.Gacha {
 	db := g.GetBasicBin()
 	if db.Gacha == nil {
-		db.Gacha = g.NewGacha()
+		db.Gacha = NewGacha()
 	}
 	return db.Gacha
 }

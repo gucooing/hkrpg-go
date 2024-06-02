@@ -135,6 +135,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetTutorialGuideCsReq:      g.GetTutorialGuideCsReq,         // 获取教程指南
 		cmd.UnlockTutorialCsReq:        g.UnlockTutorialCsReq,           // 教程解锁
 		cmd.UnlockTutorialGuideCsReq:   g.UnlockTutorialGuideCsReq,      // 解锁指南
+		cmd.FinishTutorialCsReq:        g.FinishTutorialCsReq,           // 完成教程
 		cmd.SetPlayerInfoCsReq:         g.SetPlayerInfoCsReq,            // 新手设置名字
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集

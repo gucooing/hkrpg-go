@@ -7,7 +7,7 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) NewMail() *spb.Mail {
+func NewMail() *spb.Mail {
 	return &spb.Mail{
 		MailList: make(map[uint32]*spb.MailDts),
 	}
@@ -16,7 +16,7 @@ func (g *GamePlayer) NewMail() *spb.Mail {
 func (g *GamePlayer) GetMail() *spb.Mail {
 	db := g.GetBasicBin()
 	if db.Mail == nil {
-		db.Mail = g.NewMail()
+		db.Mail = NewMail()
 	}
 	return db.Mail
 }

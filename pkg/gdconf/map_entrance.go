@@ -52,13 +52,3 @@ func GetEntryIdList() []uint32 {
 	}
 	return entryIdList
 }
-
-func GetEntryId(planeID, floorID uint32) uint32 {
-	var entryId uint32 = 0
-	for id, mapEntrance := range CONF.MapEntranceMap {
-		if mapEntrance.PlaneID == planeID && mapEntrance.FloorID == floorID {
-			entryId = id
-		}
-	}
-	return entryId
-}

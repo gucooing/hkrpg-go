@@ -24,7 +24,7 @@ type Material struct {
 	Num uint32 // 个数
 }
 
-func (g *GamePlayer) NewItem() *spb.Item {
+func NewItem() *spb.Item {
 	item := &spb.Item{
 		RelicMap:     make(map[uint32]*spb.Relic),
 		EquipmentMap: make(map[uint32]*spb.Equipment),
@@ -38,7 +38,7 @@ func (g *GamePlayer) NewItem() *spb.Item {
 func (g *GamePlayer) GetItem() *spb.Item {
 	db := g.GetBasicBin()
 	if db.Item == nil {
-		db.Item = g.NewItem()
+		db.Item = NewItem()
 	}
 	return db.Item
 }

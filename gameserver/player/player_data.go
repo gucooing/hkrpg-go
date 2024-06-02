@@ -259,7 +259,22 @@ func (g *GamePlayer) UnlockTutorialGuideCsReq(payloadMsg []byte) {
 			Status: proto.TutorialStatus_TUTORIAL_UNLOCK,
 		},
 	}
-	g.Send(cmd.UnlockTutorialScRsp, rsp)
+	g.Send(cmd.UnlockTutorialGuideScRsp, rsp)
+}
+
+func (g *GamePlayer) FinishTutorialCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.FinishTutorialCsReq, payloadMsg)
+	req := msg.(*proto.FinishTutorialCsReq)
+
+	g.FinishTutorial(req.TutorialId)
+	rsp := &proto.FinishTutorialScRsp{
+		Retcode: 0,
+		Tutorial: &proto.Tutorial{
+			Id:     req.TutorialId,
+			Status: proto.TutorialStatus_TUTORIAL_FINISH,
+		},
+	}
+	g.Send(cmd.FinishTutorialScRsp, rsp)
 }
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {

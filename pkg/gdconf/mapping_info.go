@@ -44,3 +44,15 @@ func (g *GameDataConfig) loadMappingInfo() {
 func GetMappingInfoById(stageID, worldLevel uint32) *MappingInfo {
 	return CONF.MappingInfoMap[stageID][worldLevel]
 }
+
+func GetEntryId(planeID, floorID uint32) uint32 {
+	var entryId uint32 = 0
+	for _, mappingInfo := range CONF.MappingInfoMap {
+		for _, mapEntrance := range mappingInfo {
+			if mapEntrance.PlaneID == planeID && mapEntrance.FloorID == floorID {
+				entryId = mapEntrance.ID
+			}
+		}
+	}
+	return entryId
+}

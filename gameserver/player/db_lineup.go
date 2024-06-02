@@ -14,7 +14,7 @@ const (
 	Rogue         = 3  // 第一个模拟宇宙队伍
 )
 
-func (g *GamePlayer) NewLineUp() *spb.LineUp {
+func NewLineUp() *spb.LineUp {
 	return &spb.LineUp{
 		MainLineUp:     0,
 		Mp:             MaxMp,
@@ -28,20 +28,7 @@ func (g *GamePlayer) NewLineUp() *spb.LineUp {
 func (g *GamePlayer) GetLineUp() *spb.LineUp {
 	db := g.GetBasicBin()
 	if db.LineUp == nil {
-		db.LineUp = &spb.LineUp{
-			MainLineUp:     0,
-			Mp:             MaxMp,
-			LineUpList:     make(map[uint32]*spb.Line),
-			BattleLineList: make(map[uint32]*spb.Line),
-		}
-		db.LineUp.LineUpList[0] = &spb.Line{
-			Name:         "hkrpg",
-			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
-			LeaderSlot:   0,
-			Index:        0,
-		}
-		db.LineUp.LineUpList[0].AvatarIdList[0] = &spb.LineAvatarList{AvatarId: 8001, Slot: 0}
-		db.LineUp.LineUpList[0].AvatarIdList[1] = &spb.LineAvatarList{AvatarId: 1001, Slot: 1}
+		db.LineUp = NewLineUp()
 	}
 	return db.LineUp
 }
