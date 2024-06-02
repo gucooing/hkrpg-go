@@ -131,7 +131,10 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.SetSignatureCsReq:          g.SetSignatureCsReq,             // 简介修改请求
 		cmd.GetPlayerBoardDataCsReq:    g.HandleGetPlayerBoardDataCsReq, // 获取角色名片页信息
 		cmd.GetFarmStageGachaInfoCsReq: g.GetFarmStageGachaInfoCsReq,    // 获取怪物刷新情况
+		cmd.GetTutorialCsReq:           g.GetTutorialCsReq,              // 获取新手教程状态
+		cmd.GetTutorialGuideCsReq:      g.GetTutorialGuideCsReq,         // 获取教程指南
 		cmd.UnlockTutorialCsReq:        g.UnlockTutorialCsReq,           // 教程解锁
+		cmd.UnlockTutorialGuideCsReq:   g.UnlockTutorialGuideCsReq,      // 解锁指南
 		cmd.SetPlayerInfoCsReq:         g.SetPlayerInfoCsReq,            // 新手设置名字
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集

@@ -37,7 +37,7 @@ message PlayerBasicCompBin {
   PlayerFriend friend = 27; // 好友
   uint32 data_version = 28; // 数据版本
   fixed32 last_daily_refresh_time = 29; // 最后每日刷新时间
-  uint32 profile_picture_costume_id = 30; // 个人资料图片ID
+  TutorialDb tutorial = 30; // 教程
   bool is_proficient_player = 31; // 是否老玩家
   uint32 language_type = 32; // 语言
   string client_app_version = 33; // 客户端版本
@@ -287,6 +287,16 @@ message MissionInfo{
   uint32 mission_id = 1; //任务id
   uint32 progress = 3; // 步骤
   MissionStatus status = 4;// 任务状态
+}
+
+message TutorialDb {// 教程
+  map<uint32,TutorialInfo> Tutorial = 1;
+  map<uint32,TutorialInfo> TutorialGuide = 2;
+}
+
+message TutorialInfo {// 教程信息
+  uint32 id = 1;
+  TutorialStatus status = 2;
 }
 
 message BlockBin{// 地图配置

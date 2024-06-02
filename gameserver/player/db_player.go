@@ -19,49 +19,49 @@ type OnlineData struct {
 
 func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 	g.BasicBin = &spb.PlayerBasicCompBin{
-		Level:                   1,
-		Nickname:                "hkrpg-go",
-		WorldLevel:              0,
-		Activity:                g.NewActivity(),
-		Signature:               "",
-		HeadImageAvatarId:       208001,
-		Birthday:                0,
-		Scene:                   g.NewScene(),
-		Pos:                     g.NewPos(),
-		Rot:                     g.NewRot(),
-		Avatar:                  g.NewAvatar(),
-		LineUp:                  g.NewLineUp(),
-		Item:                    g.NewItem(),
-		Gacha:                   g.NewGacha(),
-		Battle:                  g.NewBattle(),
-		RewardTakenLevelList:    nil,
-		OpenStateMap:            nil,
-		RegisterTime:            0,
-		TotalLoginDays:          0,
-		TotalGameTime:           0,
-		LastLoginTime:           0,
-		LastLoginPlatform:       0,
-		LastLogoutTime:          0,
-		Mail:                    g.NewMail(),
-		Friend:                  NewFriend(),
-		Mission:                 newMission(),
-		DataVersion:             0,
-		LastDailyRefreshTime:    0,
-		ProfilePictureCostumeId: 0,
-		IsProficientPlayer:      false,
-		LanguageType:            0,
-		ClientAppVersion:        "",
-		ClientDeviceInfo:        "",
-		ClientSystemVersion:     "",
-		SetLanguageTag:          0,
-		GuidSeqId:               0,
-		IsGuest:                 false,
-		PivotClientTime:         0,
-		PivotUnixTime:           0,
-		PlayerStatId:            0,
-		NicknameAuditBin:        nil,
-		IpCountryCode:           "",
-		IpRegionName:            "",
+		Level:                1,
+		Nickname:             "hkrpg-go",
+		WorldLevel:           0,
+		Activity:             g.NewActivity(),
+		Signature:            "",
+		HeadImageAvatarId:    208001,
+		Birthday:             0,
+		Scene:                g.NewScene(),
+		Pos:                  g.NewPos(),
+		Rot:                  g.NewRot(),
+		Avatar:               g.NewAvatar(),
+		LineUp:               g.NewLineUp(),
+		Item:                 g.NewItem(),
+		Gacha:                g.NewGacha(),
+		Battle:               g.NewBattle(),
+		RewardTakenLevelList: nil,
+		OpenStateMap:         nil,
+		RegisterTime:         0,
+		TotalLoginDays:       0,
+		TotalGameTime:        0,
+		LastLoginTime:        0,
+		LastLoginPlatform:    0,
+		LastLogoutTime:       0,
+		Mail:                 g.NewMail(),
+		Friend:               NewFriend(),
+		Mission:              newMission(),
+		DataVersion:          0,
+		LastDailyRefreshTime: 0,
+		Tutorial:             NewTutorialDb(),
+		IsProficientPlayer:   false,
+		LanguageType:         0,
+		ClientAppVersion:     "",
+		ClientDeviceInfo:     "",
+		ClientSystemVersion:  "",
+		SetLanguageTag:       0,
+		GuidSeqId:            0,
+		IsGuest:              false,
+		PivotClientTime:      0,
+		PivotUnixTime:        0,
+		PlayerStatId:         0,
+		NicknameAuditBin:     nil,
+		IpCountryCode:        "",
+		IpRegionName:         "",
 	}
 
 	g.AddAvatar(1001)
@@ -182,4 +182,62 @@ func (g *GamePlayer) AddDataVersion() uint32 {
 func (g *GamePlayer) GetSignature() string {
 	db := g.GetBasicBin()
 	return db.Signature
+}
+
+func NewTutorialDb() *spb.TutorialDb {
+	return new(spb.TutorialDb)
+}
+
+func (g *GamePlayer) GetTutorialDb() *spb.TutorialDb {
+	db := g.GetBasicBin()
+	if db.Tutorial == nil {
+		db.Tutorial = NewTutorialDb()
+	}
+	return db.Tutorial
+}
+
+func (g *GamePlayer) GetTutorial() map[uint32]*spb.TutorialInfo {
+	db := g.GetTutorialDb()
+	if db.Tutorial == nil {
+		db.Tutorial = make(map[uint32]*spb.TutorialInfo)
+	}
+	return db.Tutorial
+}
+
+func (g *GamePlayer) GetTutorialGuide() map[uint32]*spb.TutorialInfo {
+	db := g.GetTutorialDb()
+	if db.TutorialGuide == nil {
+		db.TutorialGuide = make(map[uint32]*spb.TutorialInfo)
+	}
+	return db.TutorialGuide
+}
+
+func (g *GamePlayer) UnlockTutorial(id uint32) {
+	db := g.GetTutorial()
+	db[id] = &spb.TutorialInfo{
+		Id:     id,
+		Status: spb.TutorialStatus_TUTORIAL_UNLOCK,
+	}
+}
+
+func (g *GamePlayer) FinishTutorial(id uint32) {
+	db := g.GetTutorial()
+	if db[id] != nil {
+		db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
+	}
+}
+
+func (g *GamePlayer) UnlockTutorialGuide(id uint32) {
+	db := g.GetTutorialGuide()
+	db[id] = &spb.TutorialInfo{
+		Id:     id,
+		Status: spb.TutorialStatus_TUTORIAL_UNLOCK,
+	}
+}
+
+func (g *GamePlayer) FinishTutorialGuide(id uint32) {
+	db := g.GetTutorialGuide()
+	if db[id] != nil {
+		db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
+	}
 }

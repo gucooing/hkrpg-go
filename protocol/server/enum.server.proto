@@ -152,6 +152,12 @@ enum MissionStatus{//任务状态
     MISSION_PREPARED = 3;
 }
 
+enum TutorialStatus { // 教程状态
+    TUTORIAL_NONE = 0;
+    TUTORIAL_UNLOCK = 1;
+    TUTORIAL_FINISH = 2;
+}
+
 enum RogueAreaStatus {
   RogueAreaStatus_ROGUE_AREA_STATUS_LOCK = 0;
   RogueAreaStatus_ROGUE_AREA_STATUS_UNLOCK = 1;

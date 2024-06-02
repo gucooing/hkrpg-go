@@ -201,14 +201,61 @@ func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetSecretKeyInfoScRsp, rsp)
 }
 
+func (g *GamePlayer) GetTutorialCsReq(payloadMsg []byte) {
+	rsp := &proto.GetTutorialScRsp{
+		TutorialList: make([]*proto.Tutorial, 0),
+		Retcode:      0,
+	}
+	for _, db := range g.GetTutorial() {
+		rsp.TutorialList = append(rsp.TutorialList, &proto.Tutorial{
+			Id:     db.Id,
+			Status: proto.TutorialStatus(db.Status),
+		})
+	}
+
+	g.Send(cmd.GetTutorialScRsp, rsp)
+}
+
+func (g *GamePlayer) GetTutorialGuideCsReq(payloadMsg []byte) {
+	rsp := &proto.GetTutorialGuideScRsp{
+		Retcode:           0,
+		TutorialGuideList: make([]*proto.TutorialGuide, 0),
+	}
+
+	for _, db := range g.GetTutorialGuide() {
+		rsp.TutorialGuideList = append(rsp.TutorialGuideList, &proto.TutorialGuide{
+			Id:     db.Id,
+			Status: proto.TutorialStatus(db.Status),
+		})
+	}
+
+	g.Send(cmd.GetTutorialGuideScRsp, rsp)
+}
+
 func (g *GamePlayer) UnlockTutorialCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.UnlockTutorialCsReq, payloadMsg)
 	req := msg.(*proto.UnlockTutorialCsReq)
 
+	g.UnlockTutorial(req.TutorialId)
 	rsp := &proto.UnlockTutorialScRsp{
 		Retcode: 0,
 		Tutorial: &proto.Tutorial{
 			Id:     req.TutorialId,
+			Status: proto.TutorialStatus_TUTORIAL_UNLOCK,
+		},
+	}
+	g.Send(cmd.UnlockTutorialScRsp, rsp)
+}
+
+func (g *GamePlayer) UnlockTutorialGuideCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.UnlockTutorialGuideCsReq, payloadMsg)
+	req := msg.(*proto.UnlockTutorialGuideCsReq)
+
+	g.UnlockTutorialGuide(req.GroupId)
+	rsp := &proto.UnlockTutorialGuideScRsp{
+		Retcode: 0,
+		TutorialGuide: &proto.TutorialGuide{
+			Id:     req.GroupId,
 			Status: proto.TutorialStatus_TUTORIAL_UNLOCK,
 		},
 	}
