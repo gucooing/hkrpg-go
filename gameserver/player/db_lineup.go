@@ -243,7 +243,7 @@ func (g *GamePlayer) AddLineUpMp(mp uint32) {
 
 func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 	var wtmLeaderSlot = false
-	if db.AvatarIdList[db.LeaderSlot] == nil {
+	if db.AvatarIdList[db.LeaderSlot] == nil || db.AvatarIdList[db.LeaderSlot].AvatarId == 0 {
 		wtmLeaderSlot = true
 	}
 	avatarList := make([]*proto.LineupAvatar, 0)

@@ -84,6 +84,24 @@ func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
 		Status:    spb.MissionStatus_MISSION_FINISH,
 	}
 	delete(mainMissionList, mainMissionId)
+	conf := gdconf.GetMainMissionById(mainMissionId) // 发放奖励
+	if conf != nil {
+		rewardConf := gdconf.GetRewardDataById(conf.RewardID)
+		if rewardConf != nil {
+			pileItem := make([]*Material, 0)
+			pileItem = append(pileItem, &Material{
+				Tid: Hcoin,
+				Num: rewardConf.Hcoin,
+			})
+			for _, data := range rewardConf.Items {
+				pileItem = append(pileItem, &Material{
+					Tid: data.ItemID,
+					Num: data.Count,
+				})
+			}
+			g.AddMaterial(pileItem)
+		}
+	}
 	return true
 }
 
