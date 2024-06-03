@@ -99,7 +99,7 @@ func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
 					Num: data.Count,
 				})
 			}
-			g.AddMaterial(pileItem)
+			g.AddItem(pileItem)
 		}
 	}
 	return true

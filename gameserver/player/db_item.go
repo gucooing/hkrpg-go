@@ -5,6 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -80,6 +81,52 @@ func (g *GamePlayer) GetMaterialMap() map[uint32]uint32 {
 func (g *GamePlayer) GetMaterialById(id uint32) uint32 {
 	db := g.GetMaterialMap()
 	return db[id]
+}
+
+func (g *GamePlayer) AddItem(pileItem []*Material) {
+	itemConf := gdconf.GetItemConfigMap()
+	materialList := make([]*Material, 0)
+	for _, itemInfo := range pileItem {
+		if itemInfo.Num <= 0 {
+			continue
+		}
+		if itemConf.Item[itemInfo.Tid] != nil {
+			materialList = append(materialList, itemInfo)
+			continue
+		}
+		if itemConf.Avatar[itemInfo.Tid] != nil {
+			g.AddAvatar(itemInfo.Tid)
+			continue
+		}
+		if itemConf.AvatarPlayerIcon[itemInfo.Tid] != nil {
+			g.AddHeadIcon(itemInfo.Tid)
+			continue
+		}
+		if itemConf.AvatarRank[itemInfo.Tid] != nil {
+			materialList = append(materialList, itemInfo)
+			continue
+		}
+		if itemConf.Book[itemInfo.Tid] != nil {
+			materialList = append(materialList, itemInfo)
+			continue
+		}
+		if itemConf.Disk[itemInfo.Tid] != nil {
+			materialList = append(materialList, itemInfo)
+			continue
+		}
+		if itemConf.Equipment[itemInfo.Tid] != nil {
+			g.AddEquipment(itemInfo.Tid)
+			continue
+		}
+		if itemConf.Relic[itemInfo.Tid] != nil {
+			g.AddRelic(itemInfo.Tid)
+			continue
+		}
+		logger.Debug("AddItemId:%v error", itemInfo.Tid)
+	}
+	if len(materialList) > 0 {
+		g.AddMaterial(materialList)
+	}
 }
 
 func (g *GamePlayer) AddMaterial(pileItem []*Material) {

@@ -63,51 +63,10 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		g.AddMaterial(pileItem)
 		// g.ScenePlaneEventScNotify(pileItem)
 	} else {
-		var pileItem []*Material
-		for _, item := range itemConf.Item {
-			if item.ID == req.ItemId {
-				pileItem = append(pileItem, &Material{
-					Tid: item.ID,
-					Num: req.ItemCount,
-				})
-				g.AddMaterial(pileItem)
-				return
-			}
-		}
-		for _, avatar := range itemConf.Avatar {
-			if avatar.ID == req.ItemId {
-				g.AddAvatar(avatar.ID)
-				return
-			}
-		}
-		for _, avatar := range itemConf.AvatarRank {
-			if avatar.ID == req.ItemId {
-				pileItem = append(pileItem, &Material{
-					Tid: avatar.ID,
-					Num: req.ItemCount,
-				})
-				g.AddMaterial(pileItem)
-				return
-			}
-		}
-		for _, avatar := range itemConf.AvatarPlayerIcon {
-			if avatar.ID == req.ItemId {
-				g.AddHeadIcon(avatar.ID)
-				return
-			}
-		}
-		for _, equipment := range itemConf.Equipment {
-			if equipment.ID == req.ItemId {
-				g.AddEquipment(equipment.ID)
-				return
-			}
-		}
-		for _, relic := range itemConf.Relic {
-			if relic.ID == req.ItemId {
-				g.AddRelic(relic.ID)
-				return
-			}
-		}
+		g.AddItem([]*Material{{
+			Tid: req.ItemId,
+			Num: req.ItemCount,
+		}})
 	}
 }
 
