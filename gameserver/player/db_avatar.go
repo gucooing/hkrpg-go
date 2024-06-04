@@ -373,6 +373,9 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 					MaxSp: avatarBin.SpBar.MaxSp,
 				},
 			}
+			if bA.AvatarId == 8001 {
+				battleAvatar.Id = uint32(g.GetAvatar().CurMainAvatar)
+			}
 			// 获取技能
 			for _, skill := range g.GetSkillTreeList(bA.AvatarId) {
 				if skill.Level == 0 {

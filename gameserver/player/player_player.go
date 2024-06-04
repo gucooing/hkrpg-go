@@ -4,6 +4,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 // 角色状态改变时需要发送通知
@@ -53,6 +54,13 @@ func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
 		IsModify:     req.IsModify,
 	}
 	if req.IsModify {
+		if req.Gender == proto.Gender_GenderWoman {
+			g.Send(cmd.HeroBasicTypeChangedNotify, &proto.HeroBasicTypeChangedNotify{CurBasicType: proto.HeroBasicType_GirlWarrior})
+			db := g.GetAvatar()
+			db.Gender = spb.Gender_GenderWoman
+			db.CurMainAvatar = spb.HeroBasicType_GirlWarrior
+			g.AvatarPlayerSyncScNotify(8001)
+		}
 		g.CreateCharacterSubMission()
 	}
 	g.PlayerPlayerSyncScNotify() // 角色信息通知
