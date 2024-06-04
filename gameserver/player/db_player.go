@@ -67,7 +67,6 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 	g.AddAvatar(1001)
 	g.AddAvatar(8001)
 
-	g.SetIsChangeLineup(true)
 	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
 
 	return g.BasicBin

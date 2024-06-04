@@ -298,11 +298,8 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
 	finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
 	isLoaded := false
-	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil {
+	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil && levelGroup.Category != "Mission" {
 		return true
-	}
-	if levelGroup.Category == "Mission" {
-		isLoaded = false
 	}
 	// 检查加载条件
 	if levelGroup.LoadCondition != nil {
@@ -344,12 +341,12 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	// 检查卸载条件
 	if levelGroup.UnloadCondition != nil {
 		for _, conditions := range levelGroup.UnloadCondition.Conditions {
-			if conditions.Phase == "Finish" { // 完成了这个任务
-				if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
-					isLoaded = false
-					break
-				}
+			// if conditions.Phase == "Finish" { // 完成了这个任务
+			if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
+				isLoaded = false
+				break
 			}
+			// }
 		}
 	}
 
@@ -499,7 +496,7 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 			MapLayer:     0,
 			Uid:          0,
 		}
-		if lineAvatar.IsTrial {
+		if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
 			conf := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId)
 			if conf == nil {
 				continue
@@ -908,7 +905,7 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 			BaseAvatarId: lineAvatar.AvatarId,
 		}
-		if lineAvatar.IsTrial {
+		if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
 			actor.AvatarType = proto.AvatarType_AVATAR_TRIAL_TYPE
 		}
 		entityList := &proto.SceneEntityRefreshInfo{
@@ -945,7 +942,7 @@ func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 			BaseAvatarId: lineAvatar.AvatarId,
 		}
-		if lineAvatar.IsTrial {
+		if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
 			actor.AvatarType = proto.AvatarType_AVATAR_TRIAL_TYPE
 		}
 		entityId := g.GetNextGameObjectGuid()

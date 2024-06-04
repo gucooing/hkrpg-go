@@ -661,14 +661,10 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 		if lp.AvatarId == 0 {
 			continue
 		}
-		avatarType := Mi
-		if lp.IsTrial {
-			avatarType = Trial
-		}
 		bA := &BattleAvatar{
 			AssistUid:  0,
 			AvatarId:   lp.AvatarId,
-			AvatarType: avatarType,
+			AvatarType: lp.LineAvatarType,
 		}
 		bAList[id] = bA
 	}
@@ -704,14 +700,10 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 	var monsterWaveList []*proto.SceneMonsterWave
 	bAList := make(map[uint32]*BattleAvatar, 0)
 	for _, lp := range lineUp.AvatarIdList {
-		avatarType := Mi
-		if lp.IsTrial {
-			avatarType = Trial
-		}
 		bA := &BattleAvatar{
 			AssistUid:  0,
 			AvatarId:   lp.AvatarId,
-			AvatarType: avatarType,
+			AvatarType: lp.LineAvatarType,
 		}
 		bAList[lp.AvatarId] = bA
 	}

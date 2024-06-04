@@ -118,8 +118,6 @@ message LineUp {
   uint32 mp = 2; // 当前能量
   map<uint32, Line> line_up_list = 3; // 普通队伍
   map<uint32, Line>battle_line_list = 4; // 战斗队伍
-  bool is_change_lineup = 5; // 是否被强制更新队伍
-  Line trial_line = 6;// 剧情试用队伍
 }
 
 message Line {
@@ -132,7 +130,7 @@ message Line {
 message LineAvatarList {
   uint32 slot = 1;//第几个
   uint32 avatar_id = 2;;//角色id
-  bool is_trial = 3; // 是试用角色
+  LineAvatarType line_avatar_type = 3; // 角色属性
 }
 
 message Item  {

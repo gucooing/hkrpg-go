@@ -17,7 +17,7 @@ func (g *GamePlayer) SyncLineupNotify(index uint32, isBattleLine bool) {
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
-func (g *GamePlayer) TrialSyncLineupNotify(db *spb.Line) {
+func (g *GamePlayer) SyncLineupNotifyByLineBin(db *spb.Line) {
 	rsq := new(proto.SyncLineupNotify)
 	rsq.Lineup = g.GetLineUpPb(db)
 	g.Send(cmd.SyncLineupNotify, rsq)

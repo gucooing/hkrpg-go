@@ -319,18 +319,10 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 	return avatar
 }
 
-type AvatarType uint32
-
-const (
-	Mi     AvatarType = 1 // 自己的
-	Assist AvatarType = 2 // 援助
-	Trial  AvatarType = 3 // 试用
-)
-
 type BattleAvatar struct {
-	AvatarId   uint32     // 角色id
-	AvatarType AvatarType // 角色类型
-	AssistUid  uint32     // 助战uid
+	AvatarId   uint32             // 角色id
+	AvatarType spb.LineAvatarType // 角色类型
+	AssistUid  uint32             // 助战uid
 }
 
 func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*proto.BattleAvatar {
@@ -341,7 +333,7 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 		}
 		battleAvatar := new(proto.BattleAvatar)
 		switch bA.AvatarType {
-		case Mi:
+		case spb.LineAvatarType_LineAvatarType_MI:
 			avatarBin := g.GetAvatarById(bA.AvatarId)
 			if avatarBin == nil {
 				continue
@@ -395,7 +387,7 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 				}
 				battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
 			}
-		case Trial:
+		case spb.LineAvatarType_LineAvatarType_TRIAL:
 			avatarBin := gdconf.GetSpecialAvatarById(bA.AvatarId)
 			if avatarBin == nil {
 				continue
@@ -439,7 +431,6 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 				}
 				battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
 			}
-		case Assist:
 		default:
 			continue
 		}
