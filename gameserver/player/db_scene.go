@@ -793,6 +793,7 @@ func (g *GamePlayer) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monste
 				GroupId:  mazeGroupID,
 				Pos:      monsterPos,
 				Rot:      monsterRot,
+				InstId:   monster.ID,
 			},
 			EventID: monster.EventID,
 		})
@@ -1060,6 +1061,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 					GroupId:  mazeGroupID,
 					Pos:      monsterPos,
 					Rot:      monsterRot,
+					InstId:   monsterList.ID,
 				},
 				EventID: eventIDList[id],
 			})

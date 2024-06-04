@@ -13,7 +13,7 @@ func NewAvatar() *spb.Avatar {
 		AvatarList:        make(map[uint32]*spb.AvatarBin),
 		Gender:            spb.Gender_GenderMan,
 		CurMainAvatar:     spb.HeroBasicType_BoyWarrior,
-		HeroBasicTypeInfo: make([]*spb.HeroBasicTypeInfo, 0),
+		HeroBasicTypeInfo: make(map[uint32]*spb.HeroBasicTypeInfo),
 		BattleAvatarList:  make(map[uint32]*spb.AvatarBin),
 	}
 }
@@ -31,11 +31,6 @@ func (g *GamePlayer) GetAvatarList() map[uint32]*spb.AvatarBin {
 	if db.AvatarList == nil {
 		db.AvatarList = make(map[uint32]*spb.AvatarBin)
 	}
-	// for id := range db.AvatarList {
-	// 	if gdconf.GetAvatarDataById(id) == nil {
-	// 		delete(db.AvatarList, id)
-	// 	}
-	// }
 	return db.AvatarList
 }
 
@@ -73,22 +68,29 @@ func (g *GamePlayer) GetCurAvatar() *spb.AvatarBin {
 	return g.GetAvatarBinById(db)
 }
 
-func (g *GamePlayer) GetHeroBasicTypeInfo() []*spb.HeroBasicTypeInfo {
-	heroBasic := make([]*spb.HeroBasicTypeInfo, 0)
-	heroBasicTypeInfo := &spb.HeroBasicTypeInfo{
-		Rank:          0,
-		BasicType:     spb.HeroBasicType_GirlWarrior,
-		SkillTreeList: g.GetBasicTypeSkillTreeList(uint32(spb.HeroBasicType_GirlWarrior)),
+func (g *GamePlayer) GetHeroBasicTypeInfo() map[uint32]*spb.HeroBasicTypeInfo {
+	db := g.GetAvatar()
+	if db.HeroBasicTypeInfo == nil {
+		db.HeroBasicTypeInfo = make(map[uint32]*spb.HeroBasicTypeInfo)
 	}
-	heroBasic = append(heroBasic, heroBasicTypeInfo)
+	return db.HeroBasicTypeInfo
+}
 
-	heroBasicTypeInfo = &spb.HeroBasicTypeInfo{
-		Rank:          0,
-		BasicType:     spb.HeroBasicType_GirlKnight,
-		SkillTreeList: g.GetBasicTypeSkillTreeList(uint32(spb.HeroBasicType_GirlKnight)),
+func (g *GamePlayer) GetHeroBasicTypeInfoBy(basicType spb.HeroBasicType) *spb.HeroBasicTypeInfo {
+	db := g.GetHeroBasicTypeInfo()
+	return db[uint32(basicType)]
+}
+
+func (g *GamePlayer) AddHeroBasicTypeInfo(basicType spb.HeroBasicType) {
+	db := g.GetHeroBasicTypeInfo()
+	if db[uint32(basicType)] != nil {
+		return
 	}
-	heroBasic = append(heroBasic, heroBasicTypeInfo)
-	return heroBasic
+	db[uint32(basicType)] = &spb.HeroBasicTypeInfo{
+		Rank:          0,
+		BasicType:     basicType,
+		SkillTreeList: g.GetBasicTypeSkillTreeList(uint32(basicType)),
+	}
 }
 
 func (g *GamePlayer) GetBasicTypeSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
@@ -106,7 +108,25 @@ func (g *GamePlayer) GetBasicTypeSkillTreeList(avatarId uint32) []*spb.AvatarSki
 func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 	skilltreeList := make([]*spb.AvatarSkillBin, 0)
 	avatarBin := g.GetAvatarBinById(avatarId)
-	if avatarId/1000 == 8 || avatarBin == nil {
+	if avatarId == 8001 {
+		basicInfo := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
+		if basicInfo == nil {
+			g.AddHeroBasicTypeInfo(g.GetAvatar().CurMainAvatar)
+			basicInfo = g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
+		}
+		for _, info := range basicInfo.SkillTreeList {
+			if info.Level == 0 {
+				continue
+			}
+			avatarSkillBin := &spb.AvatarSkillBin{
+				PointId: info.PointId,
+				Level:   info.Level,
+			}
+			skilltreeList = append(skilltreeList, avatarSkillBin)
+		}
+		return skilltreeList
+	}
+	if avatarBin == nil {
 		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
 			avatarSkillBin := &spb.AvatarSkillBin{
 				PointId: id,
@@ -293,9 +313,6 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 		Level:                       avatardb.Level,
 	}
 	for _, skill := range g.GetSkillTreeList(avatarId) {
-		if avatarId/1000 == 8 {
-			break
-		}
 		if skill.Level == 0 {
 			continue
 		}
@@ -357,7 +374,7 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 				},
 			}
 			// 获取技能
-			for _, skill := range avatarBin.GetSkilltreeList() {
+			for _, skill := range g.GetSkillTreeList(bA.AvatarId) {
 				if skill.Level == 0 {
 					continue
 				}

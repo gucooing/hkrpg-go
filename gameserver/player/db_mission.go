@@ -249,6 +249,7 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	}
 	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{SubMissionId: missionId})
 	nextList := make([]uint32, 0)
+	curFinishMain := make([]uint32, 0)
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	subMainMissionList := g.GetSubMainMissionList()
 	subMissionConf := gdconf.GetSubMainMissionById(missionId)
@@ -262,6 +263,7 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	for _, finishSubMission := range conf.FinishSubMissionList {
 		if missionId == finishSubMission {
 			//  完成该主线任务，并接取下一个主线任务
+			curFinishMain = append(curFinishMain, conf.MainMissionID)
 			g.UpMainMission(conf.MainMissionID) // 结束主任务
 		}
 	}
@@ -288,7 +290,7 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 		}
 	}
 	// 通知状态
-	g.MissionPlayerSyncScNotify(nextList, []uint32{missionId}) // 发送通知
+	g.MissionPlayerSyncScNotify(nextList, []uint32{missionId}, curFinishMain) // 发送通知
 
 	g.ReadyMission()
 }
@@ -334,7 +336,7 @@ func (g *GamePlayer) ReadyMainMission() {
 		}
 	}
 	// 通知状态
-	g.MissionPlayerSyncScNotify(nextList, make([]uint32, 0)) // 发送通知
+	g.MissionPlayerSyncScNotify(nextList, make([]uint32, 0), make([]uint32, 0)) // 发送通知
 }
 
 func (g *GamePlayer) IsReceiveMission(mission *gdconf.MainMission, mainMissionList, finishMainMissionList map[uint32]*spb.MissionInfo) bool {

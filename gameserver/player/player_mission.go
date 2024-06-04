@@ -113,10 +113,11 @@ func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr})
 }
 
-func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finish []uint32) {
+func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finish, curFinishMain []uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		MissionSync: &proto.MissionSync{
-			MissionList: make([]*proto.Mission, 0),
+			MissionList:       make([]*proto.Mission, 0),
+			MainMissionIdList: curFinishMain,
 		},
 	}
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()

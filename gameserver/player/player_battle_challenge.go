@@ -270,6 +270,7 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 					GroupId:  mazeGroupID,
 					Pos:      monsterPos,
 					Rot:      monsterRot,
+					InstId:   monster.ID,
 				},
 				EventID: eventIDList[id],
 			})

@@ -81,9 +81,9 @@ func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.BasicBin.HeadImageAvatarId,
+		CurrentHeadIconId:    g.GetHeadIcon(),
 		UnlockedHeadIconList: make([]*proto.HeadIconData, 0),
-		Signature:            g.BasicBin.Signature,
+		Signature:            g.GetSignature(),
 		DisplayAvatarVec: &proto.DisplayAvatarVec{
 			DisplayAvatarList: make([]*proto.DisplayAvatarData, 0),
 			IsDisplay:         false,
@@ -275,6 +275,24 @@ func (g *GamePlayer) FinishTutorialCsReq(payloadMsg []byte) {
 		},
 	}
 	g.Send(cmd.FinishTutorialScRsp, rsp)
+}
+
+func (g *GamePlayer) FinishTutorialGuideCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.FinishTutorialGuideCsReq, payloadMsg)
+	req := msg.(*proto.FinishTutorialGuideCsReq)
+
+	// g.FinishTutorial(req.TutorialId)
+	rsp := &proto.FinishTutorialGuideScRsp{
+		Retcode: 0,
+		Reward: &proto.ItemList{
+			ItemList: make([]*proto.Item, 0),
+		},
+		TutorialGuide: &proto.TutorialGuide{
+			Id:     req.GroupId,
+			Status: proto.TutorialStatus_TUTORIAL_FINISH,
+		},
+	}
+	g.Send(cmd.FinishTutorialGuideScRsp, rsp)
 }
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {

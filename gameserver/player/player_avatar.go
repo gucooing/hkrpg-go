@@ -42,9 +42,6 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 
 	for avatarId, _ := range avatarDb.AvatarList {
 		avatarList := g.GetProtoAvatarById(avatarId)
-		if avatarId/1000 == 8 {
-			avatarList.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
-		}
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 

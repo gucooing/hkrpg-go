@@ -67,10 +67,10 @@ message Scene {
 }
 
 message Avatar {
-  map<uint32, AvatarBin> avatar_list = 1;
+  map<uint32, AvatarBin> avatar_list = 1; // 角色列表
   Gender gender = 2; // 性别
-  HeroBasicType cur_main_avatar = 3;
-  repeated HeroBasicTypeInfo hero_basic_type_info = 4;
+  HeroBasicType cur_main_avatar = 3; // 主角属性
+  map<uint32,HeroBasicTypeInfo> hero_basic_type_info = 4; // 主角属性列表
   map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
 }
 

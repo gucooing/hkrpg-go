@@ -64,9 +64,10 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		IpRegionName:         "",
 	}
 
+	// 添加默认数据
 	g.AddAvatar(1001)
 	g.AddAvatar(8001)
-
+	g.AddHeroBasicTypeInfo(spb.HeroBasicType_BoyWarrior)
 	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
 
 	return g.BasicBin
@@ -162,7 +163,7 @@ func (g *GamePlayer) SetWorldLevel(worldLevel uint32) {
 func (g *GamePlayer) GetHeadIcon() uint32 {
 	db := g.GetBasicBin()
 	if db.HeadImageAvatarId == 0 {
-		db.HeadImageAvatarId = 208001
+		db.HeadImageAvatarId = 0
 	}
 	return db.HeadImageAvatarId
 }
