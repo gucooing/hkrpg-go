@@ -36,6 +36,7 @@ type SubMission struct {
 	ParamInt2         uint32          `json:"ParamInt2"`
 	ParamInt3         uint32          `json:"ParamInt3"`
 	ParamStr1         string          `json:"ParamStr1"`
+	ParamIntList      []uint32        `json:"ParamIntList"`
 	ParamItemList     []*ParamItem    `json:"ParamItemList"`
 	FinishActionList  []*FinishAction `json:"FinishActionList"`
 	Progress          uint32          `json:"Progress"`

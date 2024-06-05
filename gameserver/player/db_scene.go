@@ -546,9 +546,9 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 			Z: int32(propList.PosZ * 1000),
 		}
 		rot := &proto.Vector{
-			X: 0,
+			X: int32(propList.RotX * 1000),
 			Y: int32(propList.RotY * 1000),
-			Z: 0,
+			Z: int32(propList.RotZ * 1000),
 		}
 		entityList := &proto.SceneEntityInfo{
 			GroupId:  sceneGroup.GroupId, // 文件名后那个G

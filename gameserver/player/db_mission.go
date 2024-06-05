@@ -201,6 +201,30 @@ func (g *GamePlayer) CreateCharacterSubMission() {
 	}
 }
 
+// 完成列表中的任务即可
+func (g *GamePlayer) ListContain(id uint32) {
+	db := g.GetSubMainMissionList()[id]
+	conf := gdconf.GetSubMainMissionById(id)
+	if conf == nil || db == nil {
+		return
+	}
+	db.Progress = 0
+	finishSubMainMissionList := g.GetFinishSubMainMissionList()
+	finishMainMissionList := g.GetFinishMainMissionList()
+	for _, paramInt := range conf.ParamIntList {
+		if finishSubMainMissionList[paramInt] != nil || finishMainMissionList[paramInt] != nil {
+			db.Progress++
+		}
+	}
+	if db.Progress == uint32(len(conf.ParamIntList)) {
+		db.Progress = conf.Progress
+		// 完成任务
+		g.FinishSubMission(id)
+	} else {
+		g.MissionPlayerSyncScNotify([]uint32{id}, make([]uint32, 0), make([]uint32, 0))
+	}
+}
+
 // 完成由服务端完成的任务
 func (g *GamePlayer) AutoServerFinishMission() {
 	for id := range g.GetSubMainMissionList() {
@@ -218,6 +242,8 @@ func (g *GamePlayer) AutoServerFinishMission() {
 		case "EnterFloor": // 传送
 			g.EnterSceneByServerScNotify(gdconf.GetEntryId(conf.ParamInt1, conf.ParamInt2), 0)
 			g.FinishSubMission(id)
+		case "SubMissionFinishCnt": // 完成列表中的任务即可
+			g.ListContain(id)
 		}
 	}
 }
@@ -247,9 +273,11 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 	if !g.UpSubMainMission(missionId) {
 		return
 	}
-	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{SubMissionId: missionId})
 	nextList := make([]uint32, 0)
 	curFinishMain := make([]uint32, 0)
+	finisSub := make([]uint32, 0)
+	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{SubMissionId: missionId})
+	finisSub = append(finisSub, missionId)
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	subMainMissionList := g.GetSubMainMissionList()
 	subMissionConf := gdconf.GetSubMainMissionById(missionId)
@@ -290,7 +318,7 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 		}
 	}
 	// 通知状态
-	g.MissionPlayerSyncScNotify(nextList, []uint32{missionId}, curFinishMain) // 发送通知
+	g.MissionPlayerSyncScNotify(nextList, finisSub, curFinishMain) // 发送通知
 
 	g.ReadyMission()
 }
