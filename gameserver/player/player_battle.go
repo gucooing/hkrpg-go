@@ -36,10 +36,14 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
+	if len(req.HitTargetEntityIdList) == 0 {
+		g.Send(cmd.SceneCastSkillScRsp, rsp)
+		return
+	}
 	var mpem *MPEM
-	mpem = g.GetMem(req.HitTargetEntityIdList)
-	if len(mpem.EntityId) == 0 { // 这里的情况是，是怪物主动攻击发生的战斗
-		mpem = g.GetMem([]uint32{req.AttackedByEntityId})
+	mpem = g.GetMem(req.HitTargetEntityIdList) // 被攻击者
+	if len(mpem.EntityId) == 0 {               // 这里的情况是，是怪物主动攻击发生的战斗
+		mpem = g.GetMem([]uint32{req.AttackedByEntityId}) // 发起攻击者
 	}
 	if len(mpem.EntityId) == 0 { // 这里的情况是角色普通攻击并没有命中怪物
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
