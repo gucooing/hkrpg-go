@@ -145,6 +145,7 @@ func GetSubMainMissionById(id uint32) *SubMission {
 
 func GetEntryId(id uint32) (uint32, bool) {
 	var entryId uint32
+	var isFloor = false
 	conf := CONF.GoppMission.GoppMissionJson[id]
 	if conf == nil {
 		return 0, false
@@ -156,9 +157,10 @@ func GetEntryId(id uint32) (uint32, bool) {
 		for _, task := range info.TaskList {
 			entryId = task.EntranceID
 			if CONF.MapEntranceMap[entryId] != nil {
+				isFloor = true
 				break
 			}
 		}
 	}
-	return entryId, true
+	return entryId, isFloor
 }

@@ -123,3 +123,16 @@ func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
 	// 通知角色信息
 	g.AvatarPlayerSyncScNotify(db.AvatarId)
 }
+
+func (g *GamePlayer) RecoverLine() {
+	db := g.GetCurLineUp()
+	for _, a := range db.AvatarIdList {
+		bin := g.GetAvatarById(a.AvatarId)
+		if bin != nil {
+			bin.Hp = 10000
+			bin.SpBar.CurSp = 10000
+			// 通知角色信息
+			g.AvatarPlayerSyncScNotify(a.AvatarId)
+		}
+	}
+}

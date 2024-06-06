@@ -247,6 +247,8 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			g.FinishSubMission(id)
 		case "SubMissionFinishCnt": // 完成列表中的任务即可
 			g.ListContain(id)
+		case "MessagePerformSectionFinish": // 对话框显示
+
 		}
 	}
 }
@@ -265,6 +267,8 @@ func (g *GamePlayer) AutoServerMissionFinishAction() {
 			switch finishAction.FinishActionType {
 			case "ChangeLineup": // 强制更新队伍
 				g.NewTrialLine(finishAction.FinishActionPara) // 设置队伍角色
+			case "Recover": // 恢复队伍
+				g.RecoverLine()
 			}
 		}
 	}

@@ -247,9 +247,12 @@ func (g *GamePlayer) GetCurChallenge() *spb.CurChallenge {
 }
 
 func (g *GamePlayer) SetCurChallengeRoundCount(rc uint32) {
-	db := g.GetCurChallenge()
-	if db != nil {
-		db.RoundCount += rc
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_CHALLENGE:
+		db := g.GetCurChallenge()
+		if db != nil {
+			db.RoundCount += rc
+		}
 	}
 }
 
@@ -895,11 +898,11 @@ func (g *GamePlayer) GetRoundsLimit() uint32 {
 		if db == nil {
 			return 0
 		}
-		// conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
-		// if conf == nil {
-		// 	return 0
-		// }
-		return 20 // todo 没读到，先固定返20吧
+		conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+		if conf == nil {
+			return 0
+		}
+		return conf.TurnLimit
 	}
 	return 0
 }

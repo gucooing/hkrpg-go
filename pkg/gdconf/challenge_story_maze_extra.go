@@ -10,7 +10,7 @@ import (
 
 type ChallengeStoryMazeExtra struct {
 	ID             uint32   `json:"ID"`
-	TurnLimit      uint32   `json:"TurnLimit"`
+	TurnLimit      uint32   `json:"TurnLimit"` // 回合限制
 	BattleTargetID []uint32 `json:"BattleTargetID"`
 	ClearScore     uint32   `json:"ClearScore"`
 }
