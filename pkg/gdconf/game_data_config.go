@@ -13,6 +13,7 @@ var CONF *GameDataConfig = nil
 
 type GameDataConfig struct {
 	// 配置表路径前缀
+	resPrefix    string
 	excelPrefix  string
 	configPrefix string
 	dataPrefix   string
@@ -98,6 +99,9 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 		info := fmt.Sprintf("open game data config dir error: %v", err)
 		panic(info)
 	}
+
+	g.resPrefix = pathPrefix
+	g.resPrefix += "/"
 
 	g.excelPrefix = pathPrefix + "/ExcelOutput"
 	dirInfo, err = os.Stat(g.excelPrefix)

@@ -34,7 +34,6 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	// 根据各种情况进行处理
 	if req.SkillIndex != 0 { // 这里的情况是角色释放技能
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
-		return
 	}
 	if len(req.HitTargetEntityIdList) == 0 {
 		g.Send(cmd.SceneCastSkillScRsp, rsp)

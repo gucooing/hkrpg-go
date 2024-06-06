@@ -12,6 +12,7 @@ import (
 type GoppMission struct {
 	GoppMainMission    map[uint32]*GoppMainMission // 预处理主线任务
 	GoppSubMainMission map[uint32]*SubMission      // 预处理主线子任务
+	GoppMissionJson    map[uint32]*MissionJson     // json中任务配置
 }
 
 type GoppMainMission struct {
@@ -66,6 +67,19 @@ type MapProp struct {
 	PropID  uint32 `json:"PropID"`
 }
 
+type MissionJson struct {
+	OnStartSequece []*OnStartSequece `json:"OnStartSequece"`
+	Type           string            `json:"Type"`
+}
+
+type OnStartSequece struct {
+	TaskList []*Task `json:"TaskList"`
+}
+
+type Task struct {
+	EntranceID uint32 `json:"EntranceID"`
+}
+
 func (g *GameDataConfig) goppMainMission() {
 	g.GoppMission = &GoppMission{
 		GoppMainMission:    make(map[uint32]*GoppMainMission),
@@ -94,12 +108,27 @@ func (g *GameDataConfig) goppMainMission() {
 			if g.GoppMission.GoppSubMainMission == nil {
 				g.GoppMission.GoppSubMainMission = make(map[uint32]*SubMission)
 			}
+			if g.GoppMission.GoppMissionJson == nil {
+				g.GoppMission.GoppMissionJson = make(map[uint32]*MissionJson)
+			}
+			missionJsonPathFilePath := g.resPrefix + subMission.MissionJsonPath
+			missionJsonPathFile, err := os.ReadFile(missionJsonPathFilePath)
+			if err == nil {
+				mj := new(MissionJson)
+				err = hjson.Unmarshal(missionJsonPathFile, &mj)
+				if err != nil {
+					logger.Debug("open MissionJsonPath error:%s", err)
+				} else {
+					g.GoppMission.GoppMissionJson[subMission.ID] = mj
+				}
+			}
 			g.GoppMission.GoppSubMainMission[subMission.ID] = subMission
 		}
 	}
 
 	logger.Info("gopp %v MainMission", len(g.GoppMission.GoppMainMission))
 	logger.Info("gopp %v SubMainMission", len(g.GoppMission.GoppSubMainMission))
+	logger.Info("gopp %v MissionJson", len(g.GoppMission.GoppMissionJson))
 }
 
 func GetGoppMainMission() map[uint32]*GoppMainMission {
@@ -112,4 +141,24 @@ func GetGoppMainMissionById(id uint32) *GoppMainMission {
 
 func GetSubMainMissionById(id uint32) *SubMission {
 	return CONF.GoppMission.GoppSubMainMission[id]
+}
+
+func GetEntryId(id uint32) (uint32, bool) {
+	var entryId uint32
+	conf := CONF.GoppMission.GoppMissionJson[id]
+	if conf == nil {
+		return 0, false
+	}
+	for _, info := range conf.OnStartSequece {
+		if info.TaskList == nil {
+			continue
+		}
+		for _, task := range info.TaskList {
+			entryId = task.EntranceID
+			if CONF.MapEntranceMap[entryId] != nil {
+				break
+			}
+		}
+	}
+	return entryId, true
 }

@@ -240,7 +240,9 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			g.DelTrialAvatar(conf.ParamInt1)
 			g.FinishSubMission(id)
 		case "EnterFloor": // 传送
-			g.EnterSceneByServerScNotify(gdconf.GetEntryId(conf.ParamInt1, conf.ParamInt2), 0)
+			if entryId, ok := gdconf.GetEntryId(id); ok {
+				g.EnterSceneByServerScNotify(entryId, 0)
+			}
 			g.FinishSubMission(id)
 		case "SubMissionFinishCnt": // 完成列表中的任务即可
 			g.ListContain(id)

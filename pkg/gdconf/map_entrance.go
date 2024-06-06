@@ -3,9 +3,7 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -53,19 +51,4 @@ func GetEntryIdList() []uint32 {
 		entryIdList = append(entryIdList, id.ID)
 	}
 	return entryIdList
-}
-
-func GetEntryId(planeID, floorID uint32) uint32 {
-	var entryId uint32 = 0
-	for _, mappingInfo := range CONF.MapEntranceMap {
-		if mappingInfo.PlaneID == planeID && mappingInfo.FloorID == floorID {
-			entryId = mappingInfo.ID
-			break
-		}
-	}
-	uinStr := strconv.FormatUint(uint64(entryId), 10)
-	if len(uinStr) > 7 {
-		uinStr = uinStr[:7]
-	}
-	return alg.S2U32(uinStr)
 }
