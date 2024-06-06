@@ -93,6 +93,12 @@ func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DoGachaCsReq, payloadMsg)
 	req := msg.(*proto.DoGachaCsReq)
+	rsp := &proto.DoGachaScRsp{
+		GachaId:       req.GachaId,
+		CeilingNum:    0,
+		GachaItemList: make([]*proto.GachaItem, 0),
+		GachaNum:      req.GachaNum,
+	}
 	var dPileItem []*Material
 	var pileItem []*Material
 
@@ -101,25 +107,33 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 	}
 	// 先扣球再抽卡
 	upBanners := gdconf.GetBannersMap()[req.GachaId]
-	if upBanners.GachaType == "Normal" {
+	switch upBanners.GachaType {
+	case "Normal":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 101,
 			Num: req.GachaNum,
 		})
-	} else {
+	case "NewPlayer":
+		dPileItem = append(dPileItem, &Material{
+			Tid: 101,
+			Num: 8,
+		})
+	case "AvatarUp":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 102,
 			Num: req.GachaNum,
 		})
+	case "WeaponUp":
+		dPileItem = append(dPileItem, &Material{
+			Tid: 102,
+			Num: req.GachaNum,
+		})
+	default:
+		g.Send(cmd.DoGachaScRsp, rsp)
+		return
 	}
 	g.DelMaterial(dPileItem)
 
-	rsp := &proto.DoGachaScRsp{
-		GachaId:       req.GachaId,
-		CeilingNum:    0,
-		GachaItemList: make([]*proto.GachaItem, 0),
-		GachaNum:      req.GachaNum,
-	}
 	for i := 0; i < int(req.GachaNum); i++ {
 		id := g.GachaRandom(req.GachaId)
 		isAvatar, isNew := g.AddGachaItem(id)

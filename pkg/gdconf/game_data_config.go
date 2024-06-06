@@ -76,6 +76,7 @@ type GameDataConfig struct {
 	EventMissionMap             map[uint32]*EventMission                        // 事件任务？
 	VideoVersionKey             []*VideoVersionKey                              // 视频key
 	InteractConfigMap           map[uint32]*InteractConfig                      // 互动配置
+	MessageGroupConfig          *MessageGroupConfig                             // 消息配置
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -188,6 +189,7 @@ func (g *GameDataConfig) load() {
 	g.loadEventMission()             // 事件任务？
 	g.loadVideoVersionKey()          // 视频key
 	g.loadInteractConfig()           // 互动配置
+	g.loadMessageGroupConfig()       // 消息配置
 	// 下面是预处理
 	g.goppServerGroup() // 预处理服务器场景
 	g.goppTeleports()   // 预处理传送锚点

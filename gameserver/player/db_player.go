@@ -56,7 +56,7 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		ClientSystemVersion:  "",
 		SetLanguageTag:       0,
 		GuidSeqId:            0,
-		IsGuest:              false,
+		MessageGroupList:     NewMessageGroup(),
 		PivotClientTime:      0,
 		PivotUnixTime:        0,
 		PlayerStatId:         0,

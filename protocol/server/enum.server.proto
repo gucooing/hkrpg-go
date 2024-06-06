@@ -158,6 +158,20 @@ enum TutorialStatus {// 教程状态
   TUTORIAL_FINISH = 2;
 }
 
+enum MessageGroupStatus {
+    MESSAGE_GROUP_NONE = 0;
+    MESSAGE_GROUP_DOING = 1;
+    MESSAGE_GROUP_FINISH = 2;
+    MESSAGE_GROUP_FROZEN = 3;
+}
+
+enum MessageSectionStatus{
+    MESSAGE_SECTION_NONE = 0;
+    MESSAGE_SECTION_DOING = 1;
+    MESSAGE_SECTION_FINISH = 2;
+    MESSAGE_SECTION_FROZEN = 3;
+}
+
 enum LineAvatarType {// 队伍角色属性
   LineAvatarType_MI = 0;
   LineAvatarType_TRIAL = 1;// 试用

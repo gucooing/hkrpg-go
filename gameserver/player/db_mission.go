@@ -120,6 +120,17 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 		Status:    spb.MissionStatus_MISSION_FINISH,
 	}
 	delete(subMainMissionList, subMissionId)
+
+	triggerMissions := map[uint32]uint32{
+		100040115: 100040116,
+		100040116: 100040115,
+		100040121: 100040122,
+		100040122: 100040121,
+	}
+	if triggerID, ok := triggerMissions[subMissionId]; ok && finishSubMainMissionList[triggerID] == nil {
+		g.UpSubMainMission(triggerID)
+	}
+
 	return true
 }
 
@@ -226,6 +237,20 @@ func (g *GamePlayer) ListContain(id uint32) {
 	}
 }
 
+func (g *GamePlayer) MessagePerformSectionFinish(sectionId uint32) { // 处理npc聊天任务
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		if conf.FinishType == "MessagePerformSectionFinish" {
+			if conf.ParamInt1 == sectionId {
+				g.FinishSubMission(id)
+			}
+		}
+	}
+}
+
 // 完成由服务端完成的任务
 func (g *GamePlayer) AutoServerFinishMission() {
 	for id := range g.GetSubMainMissionList() {
@@ -248,7 +273,7 @@ func (g *GamePlayer) AutoServerFinishMission() {
 		case "SubMissionFinishCnt": // 完成列表中的任务即可
 			g.ListContain(id)
 		case "MessagePerformSectionFinish": // 对话框显示
-
+			g.AddMessageGroup(conf.ParamInt1)
 		}
 	}
 }

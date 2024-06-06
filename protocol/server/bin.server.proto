@@ -45,7 +45,7 @@ message PlayerBasicCompBin {
   string client_system_version = 35; // 客户端系统版本
   uint32 set_language_tag = 36; // 设置语言标签
   uint32 guid_seq_id = 37; // 序列号
-  bool is_guest = 38; // 是否游客登录
+  map<uint32, MessageGroup> message_group_list = 38; // NPC聊天信息
   double pivot_client_time = 39; // 客户端时间
   double pivot_unix_time = 40; // unix时间
   uint64 player_stat_id = 41; // 玩家统计id
@@ -70,7 +70,7 @@ message Avatar {
   map<uint32, AvatarBin> avatar_list = 1; // 角色列表
   Gender gender = 2; // 性别
   HeroBasicType cur_main_avatar = 3; // 主角属性
-  map<uint32,HeroBasicTypeInfo> hero_basic_type_info = 4; // 主角属性列表
+  map<uint32, HeroBasicTypeInfo> hero_basic_type_info = 4; // 主角属性列表
   map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
 }
 
@@ -288,13 +288,26 @@ message MissionInfo{
 }
 
 message TutorialDb {// 教程
-  map<uint32,TutorialInfo> Tutorial = 1;
-  map<uint32,TutorialInfo> TutorialGuide = 2;
+  map<uint32, TutorialInfo> Tutorial = 1;
+  map<uint32, TutorialInfo> TutorialGuide = 2;
 }
 
 message TutorialInfo {// 教程信息
   uint32 id = 1;
   TutorialStatus status = 2;
+}
+
+message MessageGroup {//NPC聊天信息
+  uint32 contact_id = 1;
+  uint32 id = 2;
+  map<uint32, MessageSection>message_section_list = 3;
+  int64 refresh_time = 4;
+  MessageGroupStatus status = 5;
+}
+
+message MessageSection {
+  uint32 id = 1;
+  MessageSectionStatus status = 2;
 }
 
 message BlockBin{// 地图配置
