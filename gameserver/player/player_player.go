@@ -30,7 +30,7 @@ func (g *GamePlayer) AddTrailblazerExp(num uint32) {
 	material := g.GetMaterialMap()
 	db := g.GetBasicBin()
 	material[Exp] += num
-	level, exp, worldLevel := gdconf.GetPlayerLevelConfigByLevel(material[22], g.GetLevel(), g.GetWorldLevel())
+	level, exp, worldLevel := gdconf.GetPlayerLevelConfigByLevel(material[Exp], g.GetLevel(), g.GetWorldLevel())
 	if level == 0 && exp == 0 {
 		return
 	} else {

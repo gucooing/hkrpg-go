@@ -74,34 +74,35 @@ func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
 	mainMissionList := g.GetMainMissionList()
 	subMission := mainMissionList[mainMissionId]
 	finishMainMissionList := g.GetFinishMainMissionList()
+	conf := gdconf.GetMainMissionById(mainMissionId) // 发放奖励
+	if conf == nil {
+		return false
+	}
 	if subMission == nil {
 		return false
 	}
-
 	finishMainMissionList[mainMissionId] = &spb.MissionInfo{
 		MissionId: subMission.MissionId,
 		Progress:  subMission.Progress + 1,
 		Status:    spb.MissionStatus_MISSION_FINISH,
 	}
 	delete(mainMissionList, mainMissionId)
-	conf := gdconf.GetMainMissionById(mainMissionId) // 发放奖励
-	if conf != nil {
-		rewardConf := gdconf.GetRewardDataById(conf.RewardID)
-		if rewardConf != nil {
-			pileItem := make([]*Material, 0)
+	rewardConf := gdconf.GetRewardDataById(conf.RewardID)
+	if rewardConf != nil {
+		pileItem := make([]*Material, 0)
+		pileItem = append(pileItem, &Material{
+			Tid: Hcoin,
+			Num: rewardConf.Hcoin,
+		})
+		for _, data := range rewardConf.Items {
 			pileItem = append(pileItem, &Material{
-				Tid: Hcoin,
-				Num: rewardConf.Hcoin,
+				Tid: data.ItemID,
+				Num: data.Count,
 			})
-			for _, data := range rewardConf.Items {
-				pileItem = append(pileItem, &Material{
-					Tid: data.ItemID,
-					Num: data.Count,
-				})
-			}
-			g.AddItem(pileItem)
 		}
+		g.AddItem(pileItem)
 	}
+
 	return true
 }
 
@@ -213,8 +214,8 @@ func (g *GamePlayer) CreateCharacterSubMission() {
 	}
 }
 
-// 完成列表中的任务即可
-func (g *GamePlayer) ListContain(id uint32) {
+// 完成列表中的子任务即可
+func (g *GamePlayer) SubMissionFinishCnt(id uint32) {
 	db := g.GetSubMainMissionList()[id]
 	conf := gdconf.GetSubMainMissionById(id)
 	if conf == nil || db == nil {
@@ -225,6 +226,29 @@ func (g *GamePlayer) ListContain(id uint32) {
 	finishMainMissionList := g.GetFinishMainMissionList()
 	for _, paramInt := range conf.ParamIntList {
 		if finishSubMainMissionList[paramInt] != nil || finishMainMissionList[paramInt] != nil {
+			db.Progress++
+		}
+	}
+	if db.Progress == uint32(len(conf.ParamIntList)) {
+		db.Progress = conf.Progress
+		// 完成任务
+		g.FinishSubMission(id)
+	} else {
+		g.MissionPlayerSyncScNotify([]uint32{id}, make([]uint32, 0), make([]uint32, 0))
+	}
+}
+
+// 完成列表中的主任务即可
+func (g *GamePlayer) FinishMission(id uint32) {
+	db := g.GetSubMainMissionList()[id]
+	conf := gdconf.GetSubMainMissionById(id)
+	if conf == nil || db == nil {
+		return
+	}
+	db.Progress = 0
+	finishMainMissionList := g.GetFinishMainMissionList()
+	for _, paramInt := range conf.ParamIntList {
+		if finishMainMissionList[paramInt] != nil {
 			db.Progress++
 		}
 	}
@@ -270,8 +294,10 @@ func (g *GamePlayer) AutoServerFinishMission() {
 				g.EnterSceneByServerScNotify(entryId, 0)
 			}
 			g.FinishSubMission(id)
-		case "SubMissionFinishCnt": // 完成列表中的任务即可
-			g.ListContain(id)
+		case "SubMissionFinishCnt": // 完成列表中的子任务即可
+			g.SubMissionFinishCnt(id)
+		case "FinishMission": // 完成列表中的主任务即可
+			g.FinishMission(id)
 		case "MessagePerformSectionFinish": // 对话框显示
 			g.AddMessageGroup(conf.ParamInt1)
 		}
@@ -324,7 +350,15 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 		if missionId == finishSubMission {
 			//  完成该主线任务，并接取下一个主线任务
 			curFinishMain = append(curFinishMain, conf.MainMissionID)
+			g.Send(cmd.StartFinishMainMissionScNotify, &proto.StartFinishMainMissionScNotify{MainMissionId: conf.MainMissionID})
 			g.UpMainMission(conf.MainMissionID) // 结束主任务
+			// 将主任务下还没有完成的子任务全部完成
+			for _, subInfo := range conf.SubMissionList {
+				if subMainMissionList[subInfo.ID] != nil {
+					g.UpSubMainMission(subInfo.ID)
+					finisSub = append(finisSub, subInfo.ID)
+				}
+			}
 		}
 	}
 	for _, confSubMission := range conf.SubMissionList {
@@ -440,4 +474,20 @@ func (g *GamePlayer) IsReceiveMission(mission *gdconf.MainMission, mainMissionLi
 	}
 
 	return isReceive
+}
+
+// 将已完成的主任务下还没有完成的子任务全部完成
+func (g *GamePlayer) CheckMission() {
+	subMainMissionList := g.GetSubMainMissionList()
+	for _, main := range g.GetFinishMainMissionList() {
+		conf := gdconf.GetGoppMainMissionById(main.MissionId)
+		if conf == nil {
+			return
+		}
+		for _, subInfo := range conf.SubMissionList {
+			if subMainMissionList[subInfo.ID] != nil {
+				g.UpSubMainMission(subInfo.ID)
+			}
+		}
+	}
 }

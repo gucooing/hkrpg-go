@@ -33,57 +33,57 @@ func (g *GameDataConfig) loadPlayerLevelConfig() {
 }
 
 func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32, uint32) {
-	level++
 	for ; level < 71; level++ {
-		if exp < CONF.PlayerLevelConfigMap[level].PlayerExp {
+		newExp := CONF.PlayerLevelConfigMap[level+1].PlayerExp - CONF.PlayerLevelConfigMap[level].PlayerExp
+		if exp < newExp {
 			switch worldLevel {
 			case 0:
 				if level >= 20 {
 					return 20, exp, 0
 				} else {
-					return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 0
+					return level, exp, 0
 				}
 			case 1:
 				if level >= 30 {
 					return 30, exp, 1
 				} else {
-					return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 1
+					return level, exp, 1
 				}
 			case 2:
 				if level >= 40 {
 					return 40, exp, 2
 				} else {
-					return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 2
+					return level, exp, 2
 				}
 			case 3:
 				if level >= 50 {
 					return 50, exp, 3
 				} else {
-					return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 3
+					return level, exp, 3
 				}
 			case 4:
 				if level >= 60 {
 					return 60, exp, 4
 				} else {
-					return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 4
+					return level, exp, 4
 				}
 			case 5:
 				if level >= 65 {
 					return 65, exp, 5
 				} else {
-					return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 5
+					return level, exp, 5
 				}
 			case 6:
 				if level >= 70 {
 					return 70, exp, 6
 				} else {
-					return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 6
+					return level, exp, 6
 				}
 			}
 			if level >= 70 {
 				return 70, exp, 6
 			} else {
-				return CONF.PlayerLevelConfigMap[level].Level - 1, exp, 6
+				return level, exp, 6
 			}
 		} else {
 			if level == 70 {
@@ -93,7 +93,8 @@ func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32,
 					return 70, CONF.PlayerLevelConfigMap[70].PlayerExp, 6
 				}
 			}
-			exp -= CONF.PlayerLevelConfigMap[level].PlayerExp
+			exp -= newExp
+			level++
 		}
 	}
 	return 0, 0, 0

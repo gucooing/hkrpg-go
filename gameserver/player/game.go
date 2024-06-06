@@ -178,7 +178,7 @@ func stou32(msg string) uint32 {
 	return uint32(ms)
 }
 
-var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatCsReq, cmd.PlayerHeartBeatScRsp} // 黑名单
+var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq} // 黑名单
 func IsValid(cmdid uint16) bool {
 	for _, value := range blacklist {
 		if cmdid == value {
