@@ -95,7 +95,7 @@ func (g *GamePlayer) AddItem(pileItem []*Material) {
 			continue
 		}
 		if itemConf.Avatar[itemInfo.Tid] != nil {
-			g.AddAvatar(itemInfo.Tid)
+			g.AddAvatar(itemInfo.Tid, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 			continue
 		}
 		if itemConf.AvatarPlayerIcon[itemInfo.Tid] != nil {

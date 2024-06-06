@@ -299,6 +299,7 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial
 			MapLayer:     0,
 			Uid:          0,
 		}
+		info.RefreshType = proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_UNLOAD
 	}
 	info.RefreshEntity = append(info.RefreshEntity, &proto.SceneEntityRefreshInfo{
 		AddEntity: &proto.SceneEntityInfo{

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -163,7 +164,7 @@ func (g *GamePlayer) SetAvatarMakSkillByAvatarId(avatarId uint32) {
 	}
 }
 
-func (g *GamePlayer) AddAvatar(avatarId uint32) {
+func (g *GamePlayer) AddAvatar(avatarId uint32, src proto.AddAvatarSrcState) {
 	if gdconf.GetAvatarDataById(avatarId) == nil {
 		return // 过滤没有的角色
 	}
@@ -198,6 +199,12 @@ func (g *GamePlayer) AddAvatar(avatarId uint32) {
 	}
 
 	g.AvatarPlayerSyncScNotify(avatarId)
+	g.Send(cmd.AddAvatarScNotify, &proto.AddAvatarScNotify{
+		Reward:       nil,
+		BaseAvatarId: avatarId,
+		Src:          src,
+		IsNew:        true,
+	})
 }
 
 func (g *GamePlayer) CopyBattleAvatar(avatarBin *spb.AvatarBin) {

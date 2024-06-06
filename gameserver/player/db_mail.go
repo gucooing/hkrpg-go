@@ -59,7 +59,7 @@ func (g *GamePlayer) MailReadItem(itemList []*database.Item) bool {
 	for _, item := range itemList {
 		switch item.ItemType {
 		case database.MailAvatar:
-			g.AddAvatar(item.ItemId)
+			g.AddAvatar(item.ItemId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 		case database.MailMaterial:
 			pileItem = append(pileItem, &Material{
 				Tid: item.ItemId,

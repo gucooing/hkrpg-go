@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
@@ -65,8 +66,8 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 	}
 
 	// 添加默认数据
-	g.AddAvatar(1001)
-	g.AddAvatar(8001)
+	g.AddAvatar(1001, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
+	g.AddAvatar(8001, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 	g.AddHeroBasicTypeInfo(spb.HeroBasicType_BoyWarrior)
 	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
 

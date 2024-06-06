@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
@@ -52,7 +53,7 @@ func (g *GamePlayer) AddGachaItem(id uint32) (bool, bool) {
 			g.AddMaterial(pileItem)
 			return true, false
 		}
-		g.AddAvatar(id)
+		g.AddAvatar(id, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
 		return true, true
 	}
 }

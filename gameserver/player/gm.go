@@ -2,6 +2,7 @@ package player
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -30,7 +31,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 			if avatar.ID/1000 != 1 {
 				continue
 			}
-			g.AddAvatar(avatar.ID)
+			g.AddAvatar(avatar.ID, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 		}
 		// add playerIcon
 		var playerIconList []uint32

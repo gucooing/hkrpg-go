@@ -354,7 +354,7 @@ func (g *GamePlayer) ReadyMainMission() {
 			}
 			// 这里接取了主线
 			if id == 1000300 {
-				g.AddAvatar(1003)
+				g.AddAvatar(1003, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 				g.GetTrialAvatar(1003)
 			}
 			mainMissionList[id] = &spb.MissionInfo{
