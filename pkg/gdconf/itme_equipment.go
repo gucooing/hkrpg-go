@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -28,7 +27,6 @@ type ReturnItemIDList struct {
 }
 
 func (g *GameDataConfig) loadItemConfigEquipment() {
-	itemConfigEquipmentMap := make(map[string]*ItemConfigEquipment)
 	g.ItemConfigEquipmentMap = make(map[uint32]*ItemConfigEquipment)
 	playerElementsFilePath := g.excelPrefix + "ItemConfigEquipment.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
@@ -37,13 +35,10 @@ func (g *GameDataConfig) loadItemConfigEquipment() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &itemConfigEquipmentMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.ItemConfigEquipmentMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
-	}
-	for id, equipment := range itemConfigEquipmentMap {
-		g.ItemConfigEquipmentMap[alg.S2U32(id)] = equipment
 	}
 	logger.Info("load %v ItemConfigEquipment", len(g.ItemConfigEquipmentMap))
 }

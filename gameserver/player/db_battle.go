@@ -25,6 +25,7 @@ type BattleBackup struct {
 	monsterEntity    []uint32                 // 参战怪物实体id
 	CocoonId         uint32                   // 关卡id
 	WorldLevel       uint32                   // 关卡等级
+	EventId          uint32                   // 任务用的
 	// 奖励
 }
 
@@ -65,6 +66,13 @@ func (g *GamePlayer) AddBattleBackup(bb *BattleBackup) {
 func (g *GamePlayer) DelBattleBackupById(battleId uint32) {
 	BattleBackupLock.Lock()
 	defer BattleBackupLock.Unlock()
+	battle := g.GetBattleBackup()[battleId]
+	for _, entityId := range battle.monsterEntity {
+		me := g.GetMonsterEntityById(entityId)
+		if me != nil {
+			g.UpKillMonsterSubMission(me)
+		}
+	}
 	delete(g.GetBattleBackup(), battleId)
 }
 
@@ -137,7 +145,7 @@ func (g *GamePlayer) GetTrialActivityState() *TrialActivityState {
 
 /************************************区分一下***************************************/
 
-func (g *GamePlayer) NewBattle() *spb.Battle {
+func NewBattle() *spb.Battle {
 	return &spb.Battle{
 		BattleType: 0,
 		Rogue:      nil,
@@ -148,7 +156,7 @@ func (g *GamePlayer) NewBattle() *spb.Battle {
 func (g *GamePlayer) GetBattle() *spb.Battle {
 	db := g.GetBasicBin()
 	if db.Battle == nil {
-		db.Battle = g.NewBattle()
+		db.Battle = NewBattle()
 	}
 	return db.Battle
 }
@@ -239,9 +247,12 @@ func (g *GamePlayer) GetCurChallenge() *spb.CurChallenge {
 }
 
 func (g *GamePlayer) SetCurChallengeRoundCount(rc uint32) {
-	db := g.GetCurChallenge()
-	if db != nil {
-		db.RoundCount += rc
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_CHALLENGE:
+		db := g.GetCurChallenge()
+		if db != nil {
+			db.RoundCount += rc
+		}
 	}
 }
 
@@ -417,7 +428,7 @@ func (g *GamePlayer) GetCurChallengeBuffId() uint32 {
 	return 0
 }
 
-func (g *GamePlayer) GetChallengesAnchor(anchorList []*gdconf.AnchorList) (pos, rot *proto.Vector) {
+func (g *GamePlayer) GetChallengesAnchor(anchorList map[uint32]*gdconf.AnchorList) (pos, rot *proto.Vector) {
 	if anchorList == nil {
 		return nil, nil
 	}
@@ -460,6 +471,9 @@ func (g *GamePlayer) GetMem(isMem []uint32) *MPEM {
 	}
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
+		if entity == nil {
+			continue
+		}
 		switch entity.(type) {
 		case *AvatarEntity:
 		case *MonsterEntity:
@@ -646,13 +660,16 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 		return nil, nil
 	}
 	bAList := make(map[uint32]*BattleAvatar, 0)
-	for _, lp := range lineUp.AvatarIdList {
-		bA := &BattleAvatar{
-			AssistUid: 0,
-			AvatarId:  lp.AvatarId,
-			IsAssist:  false,
+	for id, lp := range lineUp.AvatarIdList {
+		if lp.AvatarId == 0 {
+			continue
 		}
-		bAList[lp.AvatarId] = bA
+		bA := &BattleAvatar{
+			AssistUid:  0,
+			AvatarId:   lp.AvatarId,
+			AvatarType: lp.LineAvatarType,
+		}
+		bAList[id] = bA
 	}
 	battleId := g.GetBattleIdGuid()
 	monsterWaveList, stageId := g.GetSceneMonsterWave(mem)
@@ -687,9 +704,9 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 	bAList := make(map[uint32]*BattleAvatar, 0)
 	for _, lp := range lineUp.AvatarIdList {
 		bA := &BattleAvatar{
-			AssistUid: 0,
-			AvatarId:  lp.AvatarId,
-			IsAssist:  false,
+			AssistUid:  0,
+			AvatarId:   lp.AvatarId,
+			AvatarType: lp.LineAvatarType,
 		}
 		bAList[lp.AvatarId] = bA
 	}
@@ -881,11 +898,11 @@ func (g *GamePlayer) GetRoundsLimit() uint32 {
 		if db == nil {
 			return 0
 		}
-		// conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
-		// if conf == nil {
-		// 	return 0
-		// }
-		return 20 // todo 没读到，先固定返20吧
+		conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+		if conf == nil {
+			return 0
+		}
+		return conf.TurnLimit
 	}
 	return 0
 }

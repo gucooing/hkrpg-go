@@ -50,10 +50,10 @@ func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg []byte) {
 func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.TakeLoginActivityRewardCsReq, payloadMsg)
 	req := msg.(*proto.TakeLoginActivityRewardCsReq)
-	var pileItem []*Material
-
-	activityLoginConfig := gdconf.GetActivityLoginConfigById(req.Id)
-	rewardData := gdconf.GetRewardDataById(activityLoginConfig.RewardList[req.TakeDays-1])
+	// var pileItem []*Material
+	//
+	// activityLoginConfig := gdconf.GetActivityLoginConfigById(req.Id)
+	// rewardData := gdconf.GetRewardDataById(activityLoginConfig.RewardList[req.TakeDays-1])
 
 	rsp := &proto.TakeLoginActivityRewardScRsp{
 		TakeDays: req.TakeDays,
@@ -62,18 +62,18 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg []byte) {
 			ItemList: make([]*proto.Item, 0),
 		},
 	}
-	if rewardData.Count_1 != 0 {
-		item := &proto.Item{
-			ItemId: rewardData.ItemID_1,
-			Num:    rewardData.Count_1,
-		}
-		rsp.Reward.ItemList = append(rsp.Reward.ItemList, item)
-		pileItem = append(pileItem, &Material{
-			Tid: rewardData.ItemID_1,
-			Num: rewardData.Count_1,
-		})
-		g.AddMaterial(pileItem)
-	}
+	// if rewardData.Count_1 != 0 {
+	// 	item := &proto.Item{
+	// 		ItemId: rewardData.ItemID_1,
+	// 		Num:    rewardData.Count_1,
+	// 	}
+	// 	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item)
+	// 	pileItem = append(pileItem, &Material{
+	// 		Tid: rewardData.ItemID_1,
+	// 		Num: rewardData.Count_1,
+	// 	})
+	// 	g.AddMaterial(pileItem)
+	// }
 
 	g.Send(cmd.TakeLoginActivityRewardScRsp, rsp)
 }

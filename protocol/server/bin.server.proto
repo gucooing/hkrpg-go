@@ -13,7 +13,7 @@ message PlayerBasicCompBin {
   //uint32 exp = 3; // 经验
   string nickname = 4; // 昵称
   uint32 world_level = 5; // 世界等级
-  Activity activity = 6; // 米币
+  Activity activity = 6; // 活动
   string signature = 7; // 签名
   uint32 head_image_avatar_id = 8; // 头像id
   uint32 birthday = 9; // 生日
@@ -37,21 +37,22 @@ message PlayerBasicCompBin {
   PlayerFriend friend = 27; // 好友
   uint32 data_version = 28; // 数据版本
   fixed32 last_daily_refresh_time = 29; // 最后每日刷新时间
-  uint32 profile_picture_costume_id = 30; // 个人资料图片ID
-  string psn_id = 31; // PSN id
+  TutorialDb tutorial = 30; // 教程
+  bool is_proficient_player = 31; // 是否老玩家
   uint32 language_type = 32; // 语言
   string client_app_version = 33; // 客户端版本
   string client_device_info = 34; // 客户端设备信息
   string client_system_version = 35; // 客户端系统版本
   uint32 set_language_tag = 36; // 设置语言标签
   uint32 guid_seq_id = 37; // 序列号
-  bool is_guest = 38; // 是否游客登录
+  map<uint32, MessageGroup> message_group_list = 38; // NPC聊天信息
   double pivot_client_time = 39; // 客户端时间
   double pivot_unix_time = 40; // unix时间
   uint64 player_stat_id = 41; // 玩家统计id
   ContentAuditBin nickname_audit_bin = 42; // 昵称审核bin
   string ip_country_code = 43; // ip国家代码
   string ip_region_name = 44; // ip区域名称
+  Mission mission = 45;// 任务
 }
 
 message Activity{
@@ -66,10 +67,10 @@ message Scene {
 }
 
 message Avatar {
-  map<uint32, AvatarBin> avatar_list = 1;
+  map<uint32, AvatarBin> avatar_list = 1; // 角色列表
   Gender gender = 2; // 性别
-  HeroBasicType cur_main_avatar = 3;
-  repeated HeroBasicTypeInfo hero_basic_type_info = 4;
+  HeroBasicType cur_main_avatar = 3; // 主角属性
+  map<uint32, HeroBasicTypeInfo> hero_basic_type_info = 4; // 主角属性列表
   map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
 }
 
@@ -122,13 +123,14 @@ message LineUp {
 message Line {
   string name = 1; // 队伍名称
   map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
-  // map<uint32, LineAvatarList>  avatar_list = 3; // 角色列表
-  uint32 LeaderSlot = 4; // 当前角色是第几个
+  uint32 index = 3; // 第几个队伍
+  uint32 leader_slot = 4; // 当前角色是第几个
 }
 
 message LineAvatarList {
   uint32 slot = 1;//第几个
   uint32 avatar_id = 2;;//角色id
+  LineAvatarType line_avatar_type = 3; // 角色属性
 }
 
 message Item  {
@@ -268,7 +270,57 @@ message Friend {
   string remark_name = 3; // 备注
 }
 
+message Mission {// 任务
+  MainMission main_mission = 1;//主线任务
+}
 
-message Test {
-  map<uint32, uint64> test = 1;
+message MainMission{// 主线任务
+  map<uint32, MissionInfo> main_mission_list = 1; // 主线任务
+  map<uint32, MissionInfo> sub_mission_list = 2;//主线子任务
+  map<uint32, MissionInfo> finish_main_mission_list = 3;// 已完成的主线
+  map<uint32, MissionInfo> finish_sub_mission_list = 4;//已完成支线任务
+}
+
+message MissionInfo{
+  uint32 mission_id = 1; //任务id
+  uint32 progress = 3; // 步骤
+  MissionStatus status = 4;// 任务状态
+}
+
+message TutorialDb {// 教程
+  map<uint32, TutorialInfo> Tutorial = 1;
+  map<uint32, TutorialInfo> TutorialGuide = 2;
+}
+
+message TutorialInfo {// 教程信息
+  uint32 id = 1;
+  TutorialStatus status = 2;
+}
+
+message MessageGroup {//NPC聊天信息
+  uint32 contact_id = 1;
+  uint32 id = 2;
+  map<uint32, MessageSection>message_section_list = 3;
+  int64 refresh_time = 4;
+  MessageGroupStatus status = 5;
+}
+
+message MessageSection {
+  uint32 id = 1;
+  MessageSectionStatus status = 2;
+}
+
+message BlockBin{// 地图配置
+  uint32 entry_id = 1; // 地图
+  map<uint32, BlockList> block_list = 2; // 区块信息
+}
+
+message BlockList{
+  map<uint32, PropInfo>  prop_info = 1;// 物品实体信息
+}
+
+message PropInfo{
+  uint32 inst_id = 1; // instid
+  uint32 prop_id = 2; // propid
+  uint32 prop_state = 3; // 状态
 }

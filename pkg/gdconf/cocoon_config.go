@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -27,7 +26,7 @@ type CocoonConfig struct {
 }
 
 func (g *GameDataConfig) loadCocoonConfig() {
-	g.CocoonConfigMap = make(map[string]map[string]*CocoonConfig)
+	g.CocoonConfigMap = make(map[uint32]map[uint32]*CocoonConfig)
 	playerElementsFilePath := g.excelPrefix + "CocoonConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -45,5 +44,5 @@ func (g *GameDataConfig) loadCocoonConfig() {
 }
 
 func GetCocoonConfigById(stageID, worldLevel uint32) *CocoonConfig {
-	return CONF.CocoonConfigMap[strconv.Itoa(int(stageID))][strconv.Itoa(int(worldLevel))]
+	return CONF.CocoonConfigMap[stageID][worldLevel]
 }

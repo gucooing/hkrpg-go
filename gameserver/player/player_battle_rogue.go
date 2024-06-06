@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -252,7 +250,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 
 	rsp := &proto.StartRogueScRsp{
 		Scene:     scene,
-		Lineup:    g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_ROGUE)),
+		Lineup:    g.GetLineUpPb(g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))),
 		RogueInfo: g.GetRogueInfo(),
 	}
 	rsp.RogueInfo.RogueCurrentInfo = &proto.RogueCurrentInfo{
@@ -329,7 +327,7 @@ func (g *GamePlayer) NewRogue(avatarIdList []uint32, areaId uint32) {
 	}
 
 	// 获取地图
-	rogueAreaConfig := gdconf.GetRogueAreaConfigById(strconv.Itoa(int(areaId)))
+	rogueAreaConfig := gdconf.GetRogueAreaConfigById(areaId)
 	if rogueAreaConfig == nil {
 		rsp := &proto.StartRogueScRsp{
 			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
@@ -395,7 +393,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	if rogueRoom == nil {
 		return nil, nil, nil
 	}
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(rogueRoom.MapEntrance)))
+	mapEntrance := gdconf.GetMapEntranceById(rogueRoom.MapEntrance)
 	if mapEntrance == nil {
 		return nil, nil, nil
 	}
@@ -406,9 +404,9 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 		PlaneId:            mapEntrance.PlaneID,
 		FloorId:            mapEntrance.FloorID,
 		LeaderEntityId:     leaderEntityId,
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).WorldID,
+		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
 		EntryId:            rogueRoom.MapEntrance,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(mapEntrance.PlaneID))).PlaneType),
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
 		GroupIdList:        nil,
 		LightenSectionList: nil,
@@ -493,7 +491,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) (*proto.SceneInfo, map[uint32]
 	return scene, avatarEntity, monsterEntity
 }
 
-func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
+func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.GoppLevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
 	entityGroupLists := &proto.SceneEntityGroupInfo{
 		GroupId:    groupID,
 		EntityList: make([]*proto.SceneEntityInfo, 0),
@@ -566,7 +564,7 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.LevelGroup, groupID uin
 	return entityGroupLists
 }
 
-func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.LevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
+func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := g.GetNextGameObjectGuid()
 		rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)
@@ -711,7 +709,7 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 	curLine := g.GetCurLineUp()
 	rsp := &proto.LeaveRogueScRsp{
 		RogueInfo: g.GetRogueInfo(),
-		Lineup:    g.GetLineUpPb(g.GetLineUp().MainLineUp),
+		Lineup:    g.GetLineUpPb(curLine),
 		Scene:     g.GetSceneInfo(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb(), curLine),
 	}
 
@@ -770,7 +768,7 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	}
 
 	rsp := &proto.EnterRogueMapRoomScRsp{
-		Lineup:    g.GetLineUpPb(uint32(proto.ExtraLineupType_LINEUP_ROGUE)),
+		Lineup:    g.GetLineUpPb(g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))),
 		CurSiteId: req.SiteId,
 		Retcode:   0,
 		Scene:     scene,

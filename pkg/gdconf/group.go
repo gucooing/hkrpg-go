@@ -60,6 +60,15 @@ type PropList struct {
 	ChestClosed              string              `json:"ChestClosed"`
 	State                    string              `json:"State"`
 	StageObjectCapture       *StageObjectCapture `json:"StageObjectCapture"`
+	ValueSource              *ValueSource        `json:"ValueSource"`
+	GoppValue                []*GoppValue        `json:"_"`
+}
+type ValueSource struct {
+	Values []*Values `json:"Values"`
+}
+type Values struct {
+	Key   string      `json:"Key"`
+	Value interface{} `json:"Value"`
 }
 type AnchorList struct {
 	ID         uint32  `json:"ID"`
@@ -213,7 +222,7 @@ func GetStateValue(state string) uint32 {
 	stateMap := map[string]uint32{
 		"Closed":            0,
 		"Open":              1,
-		"Locked":            2,
+		"Locked":            0,
 		"BridgeState1":      3,
 		"BridgeState2":      4,
 		"BridgeState3":      5,
@@ -256,8 +265,8 @@ func GetStateValue(state string) uint32 {
 	return value
 }
 
-func LoadMonster(groupList *LevelGroup) []*MonsterList {
-	var monsterList []*MonsterList
+func LoadMonster(groupList *LevelGroup) map[uint32]*MonsterList {
+	monsterList := make(map[uint32]*MonsterList)
 	if groupList == nil || groupList.MonsterList == nil {
 		return nil
 	}
@@ -265,19 +274,19 @@ func LoadMonster(groupList *LevelGroup) []*MonsterList {
 		if monster.IsDelete || monster.IsClientOnly {
 			continue
 		}
-		npcMonsterExcel := GetNPCMonsterId(strconv.Itoa(int(monster.NPCMonsterID)))
+		npcMonsterExcel := GetNPCMonsterId(monster.NPCMonsterID)
 		if npcMonsterExcel == nil {
 			continue
 		}
 
-		monsterList = append(monsterList, monster)
+		monsterList[monster.ID] = monster
 	}
 
 	return monsterList
 }
 
-func LoadProp(groupList *LevelGroup) []*PropList {
-	var propList []*PropList
+func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
+	propList := make(map[uint32]*PropList)
 	if groupList == nil || groupList.PropList == nil {
 		return nil
 	}
@@ -289,14 +298,61 @@ func LoadProp(groupList *LevelGroup) []*PropList {
 		if MazePropExcel == nil {
 			continue
 		}
-
-		propList = append(propList, prop)
+		// 对ValueSource进行预处理
+		if prop.ValueSource != nil && prop.ValueSource.Values != nil {
+			for _, value := range prop.ValueSource.Values {
+				switch value.Value.(type) {
+				case string:
+					valueStr := value.Value.(string)
+					if strings.Contains(value.Key, "Door") ||
+						strings.Contains(value.Key, "Bridge") ||
+						strings.Contains(value.Key, "UnlockTarget") ||
+						strings.Contains(value.Key, "Rootcontamination") ||
+						strings.Contains(value.Key, "Portal") {
+						if prop.GoppValue == nil {
+							prop.GoppValue = make([]*GoppValue, 0)
+						}
+						if groupId, instId, ok := getValue(valueStr); ok {
+							prop.GoppValue = append(prop.GoppValue, &GoppValue{
+								GroupId: groupId,
+								InstId:  instId,
+							})
+						}
+					}
+				}
+			}
+		}
+		propList[prop.ID] = prop
 	}
 	return propList
 }
 
-func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) ([]*NPCList, []*NPCList) {
-	var npcList []*NPCList
+func getValue(value string) (uint32, uint32, bool) {
+	ok := true
+	var groupId uint32
+	var instId uint32
+	parts := strings.Split(value, ",")
+	if len(parts) != 2 {
+		ok = false
+		return groupId, instId, ok
+	}
+	num1, err := strconv.ParseUint(parts[0], 10, 32)
+	if err != nil {
+		ok = false
+		return groupId, instId, ok
+	}
+	num2, err := strconv.ParseUint(parts[1], 10, 32)
+	if err != nil {
+		ok = false
+		return groupId, instId, ok
+	}
+	groupId = uint32(num1)
+	instId = uint32(num2)
+	return groupId, instId, ok
+}
+
+func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) (map[uint32]*NPCList, []*NPCList) {
+	npcList := make(map[uint32]*NPCList)
 	if groupList == nil || groupList.NPCList == nil {
 		return nil, nPCList
 	}
@@ -304,7 +360,7 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) ([]*NPCList, []*NPCList)
 		if npc.IsDelete || npc.IsClientOnly {
 			continue
 		}
-		NPCDataExcel := GetNPCDataId(strconv.Itoa(int(npc.NPCID)))
+		NPCDataExcel := GetNPCDataId(npc.NPCID)
 		if NPCDataExcel == nil {
 			continue
 		}
@@ -320,8 +376,20 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) ([]*NPCList, []*NPCList)
 		}
 
 		nPCList = append(nPCList, npc)
-		npcList = append(npcList, npc)
+		npcList[npc.ID] = npc
 	}
 
 	return npcList, nPCList
+}
+
+func LoadAnchor(groupList *LevelGroup) map[uint32]*AnchorList {
+	anchorList := make(map[uint32]*AnchorList)
+	if groupList == nil || groupList.AnchorList == nil {
+		return anchorList
+	}
+	for _, anchor := range groupList.AnchorList {
+		anchorList[anchor.ID] = anchor
+	}
+
+	return anchorList
 }

@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -29,7 +28,7 @@ type AvatarDemoConfig struct {
 }
 
 func (g *GameDataConfig) loadAvatarDemoConfig() {
-	g.AvatarDemoConfigMap = make(map[string]*AvatarDemoConfig)
+	g.AvatarDemoConfigMap = make(map[uint32]*AvatarDemoConfig)
 	playerElementsFilePath := g.excelPrefix + "AvatarDemoConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -46,5 +45,5 @@ func (g *GameDataConfig) loadAvatarDemoConfig() {
 }
 
 func GetAvatarDemoConfigById(stageID uint32) *AvatarDemoConfig {
-	return CONF.AvatarDemoConfigMap[strconv.Itoa(int(stageID))]
+	return CONF.AvatarDemoConfigMap[stageID]
 }

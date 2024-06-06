@@ -1,10 +1,11 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-func (g *GamePlayer) NewGacha() *spb.Gacha {
+func NewGacha() *spb.Gacha {
 	return &spb.Gacha{
 		GachaMap: make(map[uint32]*spb.GachaNum),
 	}
@@ -13,7 +14,7 @@ func (g *GamePlayer) NewGacha() *spb.Gacha {
 func (g *GamePlayer) GetGacha() *spb.Gacha {
 	db := g.GetBasicBin()
 	if db.Gacha == nil {
-		db.Gacha = g.NewGacha()
+		db.Gacha = NewGacha()
 	}
 	return db.Gacha
 }
@@ -52,7 +53,7 @@ func (g *GamePlayer) AddGachaItem(id uint32) (bool, bool) {
 			g.AddMaterial(pileItem)
 			return true, false
 		}
-		g.AddAvatar(id)
+		g.AddAvatar(id, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
 		return true, true
 	}
 }

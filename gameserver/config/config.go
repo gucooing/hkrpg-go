@@ -9,6 +9,7 @@ import (
 type Config struct {
 	LogLevel           string               `json:"LogLevel"`
 	GameDataConfigPath string               `json:"GameDataConfigPath"`
+	IsJumpMission      bool                 `json:"IsJumpMission"`
 	OuterIp            string               `json:"OuterIp"`
 	AppList            map[string]AppList   `json:"AppList"`
 	NetConf            map[string]string    `json:"NetConf"`
@@ -65,6 +66,7 @@ func LoadConfig(confName string) error {
 var DefaultConfig = &Config{
 	LogLevel:           "Info",
 	GameDataConfigPath: "resources",
+	IsJumpMission:      false,
 	OuterIp:            "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {

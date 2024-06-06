@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -18,7 +17,7 @@ type StageConfig struct {
 }
 
 func (g *GameDataConfig) loadStageConfig() {
-	g.StageConfigMap = make(map[string]*StageConfig)
+	g.StageConfigMap = make(map[uint32]*StageConfig)
 	playerElementsFilePath := g.excelPrefix + "StageConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -36,5 +35,5 @@ func (g *GameDataConfig) loadStageConfig() {
 }
 
 func GetStageConfigById(stageID uint32) *StageConfig {
-	return CONF.StageConfigMap[strconv.Itoa(int(stageID))]
+	return CONF.StageConfigMap[stageID]
 }

@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -19,7 +18,7 @@ type EquipmentPromotionConfig struct {
 }
 
 func (g *GameDataConfig) loadEquipmentPromotionConfig() {
-	g.EquipmentPromotionConfigMap = make(map[string]map[string]*EquipmentPromotionConfig)
+	g.EquipmentPromotionConfigMap = make(map[uint32]map[uint32]*EquipmentPromotionConfig)
 	playerElementsFilePath := g.excelPrefix + "EquipmentPromotionConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -36,7 +35,7 @@ func (g *GameDataConfig) loadEquipmentPromotionConfig() {
 }
 
 func GetEquipmentPromotionConfigByLevel(equipmentID, promotion uint32) uint32 {
-	promotionConfig := CONF.EquipmentPromotionConfigMap[strconv.Itoa(int(equipmentID))][strconv.Itoa(int(promotion))]
+	promotionConfig := CONF.EquipmentPromotionConfigMap[equipmentID][promotion]
 	for _, promotionCost := range promotionConfig.PromotionCostList {
 		if promotionCost.ItemID == 2 {
 			return promotionCost.ItemNum
@@ -46,6 +45,6 @@ func GetEquipmentPromotionConfigByLevel(equipmentID, promotion uint32) uint32 {
 }
 
 func GetEquipmentMaxLevel(equipmentId, promotion uint32) uint32 {
-	promotionConfig := CONF.EquipmentPromotionConfigMap[strconv.Itoa(int(equipmentId))][strconv.Itoa(int(promotion))]
+	promotionConfig := CONF.EquipmentPromotionConfigMap[equipmentId][promotion]
 	return promotionConfig.MaxLevel
 }

@@ -23,7 +23,7 @@ type ShopGoodsConfig struct {
 
 func (g *GameDataConfig) loadShopGoodsConfig() {
 	g.ShopGoodsConfigMap = make(map[uint32]map[uint32]*ShopGoodsConfig)
-	shopGoodsConfigMap := make(map[string]*ShopGoodsConfig)
+	shopGoodsConfigMap := make(map[uint32]*ShopGoodsConfig)
 	playerElementsFilePath := g.excelPrefix + "ShopGoodsConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {

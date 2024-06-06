@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -11,13 +10,13 @@ import (
 
 type ChallengeStoryMazeExtra struct {
 	ID             uint32   `json:"ID"`
-	TurnLimit      uint32   `json:"TurnLimit"`
+	TurnLimit      uint32   `json:"TurnLimit"` // 回合限制
 	BattleTargetID []uint32 `json:"BattleTargetID"`
 	ClearScore     uint32   `json:"ClearScore"`
 }
 
 func (g *GameDataConfig) loadChallengeStoryMazeExtra() {
-	g.ChallengeStoryMazeExtraMap = make(map[string]*ChallengeStoryMazeExtra, 0)
+	g.ChallengeStoryMazeExtraMap = make(map[uint32]*ChallengeStoryMazeExtra, 0)
 	playerElementsFilePath := g.excelPrefix + "ChallengeStoryMazeExtra.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -35,5 +34,5 @@ func (g *GameDataConfig) loadChallengeStoryMazeExtra() {
 }
 
 func GetChallengeStoryMazeExtraById(id uint32) *ChallengeStoryMazeExtra {
-	return CONF.ChallengeStoryMazeExtraMap[strconv.Itoa(int(id))]
+	return CONF.ChallengeStoryMazeExtraMap[id]
 }

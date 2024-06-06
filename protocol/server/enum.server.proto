@@ -145,6 +145,39 @@ enum PlayerMsgType{
   PMT_ACCEPTFRIEND = 3; // 同意/拒绝好友申请
 }
 
+enum MissionStatus{//任务状态
+  MISSION_NONE = 0;
+  MISSION_DOING = 1;
+  MISSION_FINISH = 2;
+  MISSION_PREPARED = 3;
+}
+
+enum TutorialStatus {// 教程状态
+  TUTORIAL_NONE = 0;
+  TUTORIAL_UNLOCK = 1;
+  TUTORIAL_FINISH = 2;
+}
+
+enum MessageGroupStatus {
+    MESSAGE_GROUP_NONE = 0;
+    MESSAGE_GROUP_DOING = 1;
+    MESSAGE_GROUP_FINISH = 2;
+    MESSAGE_GROUP_FROZEN = 3;
+}
+
+enum MessageSectionStatus{
+    MESSAGE_SECTION_NONE = 0;
+    MESSAGE_SECTION_DOING = 1;
+    MESSAGE_SECTION_FINISH = 2;
+    MESSAGE_SECTION_FROZEN = 3;
+}
+
+enum LineAvatarType {// 队伍角色属性
+  LineAvatarType_MI = 0;
+  LineAvatarType_TRIAL = 1;// 试用
+  LineAvatarType_ASSIST = 2;// 援助
+}
+
 enum RogueAreaStatus {
   RogueAreaStatus_ROGUE_AREA_STATUS_LOCK = 0;
   RogueAreaStatus_ROGUE_AREA_STATUS_UNLOCK = 1;

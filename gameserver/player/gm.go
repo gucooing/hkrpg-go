@@ -2,6 +2,7 @@ package player
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -30,7 +31,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 			if avatar.ID/1000 != 1 {
 				continue
 			}
-			g.AddAvatar(avatar.ID)
+			g.AddAvatar(avatar.ID, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 		}
 		// add playerIcon
 		var playerIconList []uint32
@@ -63,51 +64,10 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		g.AddMaterial(pileItem)
 		// g.ScenePlaneEventScNotify(pileItem)
 	} else {
-		var pileItem []*Material
-		for _, item := range itemConf.Item {
-			if item.ID == req.ItemId {
-				pileItem = append(pileItem, &Material{
-					Tid: item.ID,
-					Num: req.ItemCount,
-				})
-				g.AddMaterial(pileItem)
-				return
-			}
-		}
-		for _, avatar := range itemConf.Avatar {
-			if avatar.ID == req.ItemId {
-				g.AddAvatar(avatar.ID)
-				return
-			}
-		}
-		for _, avatar := range itemConf.AvatarRank {
-			if avatar.ID == req.ItemId {
-				pileItem = append(pileItem, &Material{
-					Tid: avatar.ID,
-					Num: req.ItemCount,
-				})
-				g.AddMaterial(pileItem)
-				return
-			}
-		}
-		for _, avatar := range itemConf.AvatarPlayerIcon {
-			if avatar.ID == req.ItemId {
-				g.AddHeadIcon(avatar.ID)
-				return
-			}
-		}
-		for _, equipment := range itemConf.Equipment {
-			if equipment.ID == req.ItemId {
-				g.AddEquipment(equipment.ID)
-				return
-			}
-		}
-		for _, relic := range itemConf.Relic {
-			if relic.ID == req.ItemId {
-				g.AddRelic(relic.ID)
-				return
-			}
-		}
+		g.AddItem([]*Material{{
+			Tid: req.ItemId,
+			Num: req.ItemCount,
+		}})
 	}
 }
 
@@ -163,4 +123,17 @@ func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
 	g.SetAvatarMakSkillByAvatarId(db.AvatarId) // 技能满级
 	// 通知角色信息
 	g.AvatarPlayerSyncScNotify(db.AvatarId)
+}
+
+func (g *GamePlayer) RecoverLine() {
+	db := g.GetCurLineUp()
+	for _, a := range db.AvatarIdList {
+		bin := g.GetAvatarById(a.AvatarId)
+		if bin != nil {
+			bin.Hp = 10000
+			bin.SpBar.CurSp = 10000
+			// 通知角色信息
+			g.AvatarPlayerSyncScNotify(a.AvatarId)
+		}
+	}
 }

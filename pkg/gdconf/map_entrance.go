@@ -21,7 +21,7 @@ type MapEntrance struct {
 }
 
 func (g *GameDataConfig) loadMapEntrance() {
-	g.MapEntranceMap = make(map[string]*MapEntrance)
+	g.MapEntranceMap = make(map[uint32]*MapEntrance)
 	playerElementsFilePath := g.excelPrefix + "MapEntrance.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -37,11 +37,11 @@ func (g *GameDataConfig) loadMapEntrance() {
 	logger.Info("load %v MapEntrance", len(g.MapEntranceMap))
 }
 
-func GetMapEntranceById(entryId string) *MapEntrance {
+func GetMapEntranceById(entryId uint32) *MapEntrance {
 	return CONF.MapEntranceMap[entryId]
 }
 
-func GetMapEntranceMap() map[string]*MapEntrance {
+func GetMapEntranceMap() map[uint32]*MapEntrance {
 	return CONF.MapEntranceMap
 }
 

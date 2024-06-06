@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -23,7 +22,6 @@ type ItemConfigRelic struct {
 }
 
 func (g *GameDataConfig) loadItemConfigRelic() {
-	itemConfigRelicMap := make(map[string]*ItemConfigRelic)
 	g.ItemConfigRelicMap = make(map[uint32]*ItemConfigRelic)
 	playerElementsFilePath := g.excelPrefix + "ItemConfigRelic.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
@@ -32,13 +30,10 @@ func (g *GameDataConfig) loadItemConfigRelic() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &itemConfigRelicMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.ItemConfigRelicMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
-	}
-	for id, relic := range itemConfigRelicMap {
-		g.ItemConfigRelicMap[alg.S2U32(id)] = relic
 	}
 	logger.Info("load %v ItemConfigRelic", len(g.ItemConfigRelicMap))
 }

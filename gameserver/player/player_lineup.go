@@ -12,8 +12,14 @@ func (g *GamePlayer) SyncLineupNotify(index uint32, isBattleLine bool) {
 	if isBattleLine {
 		rsq.Lineup = g.GetBattleLineUpPb(index)
 	} else {
-		rsq.Lineup = g.GetLineUpPb(index)
+		rsq.Lineup = g.GetLineUpPb(g.GetLineUpById(index))
 	}
+	g.Send(cmd.SyncLineupNotify, rsq)
+}
+
+func (g *GamePlayer) SyncLineupNotifyByLineBin(db *spb.Line) {
+	rsq := new(proto.SyncLineupNotify)
+	rsq.Lineup = g.GetLineUpPb(db)
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
@@ -32,7 +38,7 @@ func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 
 	// 添加普通队伍
 	for i := 0; i < MaxLineupList; i++ {
-		lineupList := g.GetLineUpPb(uint32(i))
+		lineupList := g.GetLineUpPb(g.GetLineUpById(uint32(i)))
 		rsp.LineupList = append(rsp.LineupList, lineupList)
 	}
 
@@ -41,7 +47,7 @@ func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetCurLineupDataScRsp)
-	rsp.Lineup = g.GetLineUpPb(g.GetLineUp().MainLineUp)
+	rsp.Lineup = g.GetLineUpPb(g.GetCurLineUp())
 
 	g.Send(cmd.GetCurLineupDataScRsp, rsp)
 }

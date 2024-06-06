@@ -18,7 +18,7 @@ type MazePlane struct {
 }
 
 func (g *GameDataConfig) loadMazePlane() {
-	g.MazePlaneMap = make(map[string]*MazePlane)
+	g.MazePlaneMap = make(map[uint32]*MazePlane)
 	playerElementsFilePath := g.excelPrefix + "MazePlane.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -34,11 +34,11 @@ func (g *GameDataConfig) loadMazePlane() {
 	logger.Info("load %v MazePlane", len(g.MazePlaneMap))
 }
 
-func GetMazePlaneById(planeID string) *MazePlane {
+func GetMazePlaneById(planeID uint32) *MazePlane {
 	return CONF.MazePlaneMap[planeID]
 }
 
-func GetMazePlaneMap() map[string]*MazePlane {
+func GetMazePlaneMap() map[uint32]*MazePlane {
 	return CONF.MazePlaneMap
 }
 

@@ -29,7 +29,7 @@ type RogueAreaConfig struct {
 }
 
 func (g *GameDataConfig) loadRogueAreaConfig() {
-	g.RogueAreaConfigMap = make(map[string]*RogueAreaConfig)
+	g.RogueAreaConfigMap = make(map[uint32]*RogueAreaConfig)
 	playerElementsFilePath := g.excelPrefix + "RogueAreaConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -45,9 +45,9 @@ func (g *GameDataConfig) loadRogueAreaConfig() {
 	logger.Info("load %v RogueAreaConfig", len(g.RogueAreaConfigMap))
 }
 
-func GetRogueAreaMap() map[string]*RogueAreaConfig {
+func GetRogueAreaMap() map[uint32]*RogueAreaConfig {
 	return CONF.RogueAreaConfigMap
 }
-func GetRogueAreaConfigById(AreaID string) *RogueAreaConfig {
+func GetRogueAreaConfigById(AreaID uint32) *RogueAreaConfig {
 	return CONF.RogueAreaConfigMap[AreaID]
 }

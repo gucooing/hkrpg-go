@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -70,7 +68,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 	// 获取需要升级光锥的配置信息
-	equConf := gdconf.GetEquipmentConfigById(strconv.Itoa(int(dbEquipment.Tid)))
+	equConf := gdconf.GetEquipmentConfigById(dbEquipment.Tid)
 	if equConf == nil {
 		rsp := &proto.ExpUpEquipmentScRsp{}
 		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -89,7 +87,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 
 		pileItem = append(pileItem, pile)
 		// 获取材料配置
-		pileconf := gdconf.GetEquipmentConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		pileconf := gdconf.GetEquipmentConfigById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
 			g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -109,7 +107,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		}
 		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
 		// 获取光锥配置
-		equipmentconfig := gdconf.GetEquipmentConfigById(strconv.Itoa(int(g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)))
+		equipmentconfig := gdconf.GetEquipmentConfigById(g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)
 		if equipmentconfig == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
 			g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -172,7 +170,7 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 
-	gdconfEquipment := gdconf.GetEquipmentConfigById(strconv.Itoa(int(dbEquipment.Tid)))
+	gdconfEquipment := gdconf.GetEquipmentConfigById(dbEquipment.Tid)
 
 	// 遍历用来叠影的材料
 	for _, pileList := range req.GetCostData().ItemList {

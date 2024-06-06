@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -20,7 +19,7 @@ type RogueTalent struct {
 }
 
 func (g *GameDataConfig) loadRogueTalent() {
-	g.RogueTalentMap = make(map[string]*RogueTalent)
+	g.RogueTalentMap = make(map[uint32]*RogueTalent)
 	playerElementsFilePath := g.excelPrefix + "RogueTalent.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -38,7 +37,7 @@ func (g *GameDataConfig) loadRogueTalent() {
 }
 
 func GetRogueTalentById(talentID uint32) *RogueTalent {
-	return CONF.RogueTalentMap[strconv.Itoa(int(talentID))]
+	return CONF.RogueTalentMap[talentID]
 }
 
 func GetTalentIDList() []uint32 {

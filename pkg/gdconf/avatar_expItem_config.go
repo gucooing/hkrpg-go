@@ -14,7 +14,7 @@ type AvatarExpItemConfig struct {
 }
 
 func (g *GameDataConfig) loadAvatarExpItemConfig() {
-	g.AvatarExpItemConfigMap = make(map[string]*AvatarExpItemConfig)
+	g.AvatarExpItemConfigMap = make(map[uint32]*AvatarExpItemConfig)
 	playerElementsFilePath := g.excelPrefix + "AvatarExpItemConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -30,10 +30,10 @@ func (g *GameDataConfig) loadAvatarExpItemConfig() {
 	logger.Info("load %v AvatarExpItemConfig", len(g.AvatarExpItemConfigMap))
 }
 
-func GetAvatarExpItemConfigById(itemID string) *AvatarExpItemConfig {
+func GetAvatarExpItemConfigById(itemID uint32) *AvatarExpItemConfig {
 	return CONF.AvatarExpItemConfigMap[itemID]
 }
 
-func GetAvatarExpItemConfigMap() map[string]*AvatarExpItemConfig {
+func GetAvatarExpItemConfigMap() map[uint32]*AvatarExpItemConfig {
 	return CONF.AvatarExpItemConfigMap
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -26,7 +25,6 @@ type EventMission struct {
 }
 
 func (g *GameDataConfig) loadEventMission() {
-	eventMissionMap := make(map[string]*EventMission)
 	g.EventMissionMap = make(map[uint32]*EventMission)
 	playerElementsFilePath := g.excelPrefix + "EventMission.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
@@ -35,13 +33,15 @@ func (g *GameDataConfig) loadEventMission() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &eventMissionMap)
+	err = hjson.Unmarshal(playerElementsFile, &g.EventMissionMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for id, mission := range eventMissionMap {
-		g.EventMissionMap[alg.S2U32(id)] = mission
-	}
+
 	logger.Info("load %v EventMission", len(g.EventMissionMap))
+}
+
+func GetEventMission() map[uint32]*EventMission {
+	return CONF.EventMissionMap
 }

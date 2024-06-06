@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -42,7 +41,7 @@ type ChallengeState struct {
 
 func (g *GameDataConfig) loadChallengeMazeConfig() {
 	g.ChallengeMazeConfigMap = make(map[uint32]*ChallengeMazeConfig)
-	challengeMazeConfigMap := make(map[string]*ChallengeMazeConfig)
+	challengeMazeConfigMap := make(map[uint32]*ChallengeMazeConfig)
 	playerElementsFilePath := g.excelPrefix + "ChallengeMazeConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -88,7 +87,7 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		}
 		challengeMazeConfig.ChallengeState[1] = challengeState
 
-		g.ChallengeMazeConfigMap[alg.S2U32(id)] = challengeMazeConfig
+		g.ChallengeMazeConfigMap[id] = challengeMazeConfig
 	}
 
 	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeMazeConfigMap))

@@ -1,11 +1,10 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
@@ -13,7 +12,17 @@ func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	avatarDb := g.GetAvatar()
 	rsp.Gender = proto.Gender(avatarDb.Gender)
 	rsp.CurBasicType = proto.HeroBasicType(avatarDb.CurMainAvatar)
-	for _, heroBasic := range g.GetHeroBasicTypeInfo() {
+	for id, heroBasic := range g.GetHeroBasicTypeInfo() {
+		switch avatarDb.Gender {
+		case spb.Gender_GenderMan:
+			if id%2 == 0 {
+				continue
+			}
+		case spb.Gender_GenderWoman:
+			if id%2 != 0 {
+				continue
+			}
+		}
 		basicTypeInfoList := &proto.PlayerHeroBasicTypeInfo{
 			BasicType:     proto.HeroBasicType(heroBasic.BasicType),
 			SkillTreeList: make([]*proto.AvatarSkillTree, 0),
@@ -44,9 +53,6 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 
 	for avatarId, _ := range avatarDb.AvatarList {
 		avatarList := g.GetProtoAvatarById(avatarId)
-		if avatarId/1000 == 8 {
-			avatarList.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
-		}
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 
@@ -106,7 +112,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 
 		pileItem = append(pileItem, pile)
 		// 获取材料配置
-		pileconf := gdconf.GetAvatarExpItemConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		pileconf := gdconf.GetAvatarExpItemConfigById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
 			g.Send(cmd.AvatarExpUpScRsp, rsp)
 			return

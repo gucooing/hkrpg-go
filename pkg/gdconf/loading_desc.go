@@ -18,7 +18,7 @@ type LoadingDesc struct {
 }
 
 func (g *GameDataConfig) loadLoadingDesc() {
-	g.LoadingDescMap = make(map[string]*LoadingDesc)
+	g.LoadingDescMap = make(map[uint32]*LoadingDesc)
 	playerElementsFilePath := g.excelPrefix + "LoadingDesc.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {

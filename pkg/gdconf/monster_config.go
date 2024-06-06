@@ -17,7 +17,7 @@ type MonsterConfig struct {
 }
 
 func (g *GameDataConfig) loadMonsterConfig() {
-	g.MonsterConfigMap = make(map[string]*MonsterConfig)
+	g.MonsterConfigMap = make(map[uint32]*MonsterConfig)
 	playerElementsFilePath := g.excelPrefix + "MonsterConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -33,10 +33,10 @@ func (g *GameDataConfig) loadMonsterConfig() {
 	logger.Info("load %v MonsterConfig", len(g.MonsterConfigMap))
 }
 
-func GetMonsterConfigById(monsterID string) *MonsterConfig {
+func GetMonsterConfigById(monsterID uint32) *MonsterConfig {
 	return CONF.MonsterConfigMap[monsterID]
 }
 
-func GetMonsterConfigMap() map[string]*MonsterConfig {
+func GetMonsterConfigMap() map[uint32]*MonsterConfig {
 	return CONF.MonsterConfigMap
 }

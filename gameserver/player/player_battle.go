@@ -9,6 +9,20 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SceneEnterStageCsReq, payloadMsg)
+	req := msg.(*proto.SceneEnterStageCsReq)
+	battleInfo, battleBackup := g.GetSceneBattleInfo([]uint32{req.EventId}, g.GetBattleLineUp())
+	rsp := &proto.SceneEnterStageScRsp{
+		Retcode:    0,
+		BattleInfo: battleInfo,
+	}
+	// 记录战斗
+	battleBackup.EventId = req.EventId
+	g.AddBattleBackup(battleBackup)
+	g.Send(cmd.SceneEnterStageScRsp, rsp)
+}
+
 /***********************************攻击事件处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
@@ -20,12 +34,15 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	// 根据各种情况进行处理
 	if req.SkillIndex != 0 { // 这里的情况是角色释放技能
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
+	}
+	if len(req.HitTargetEntityIdList) == 0 {
+		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
 	var mpem *MPEM
-	mpem = g.GetMem(req.HitTargetEntityIdList)
-	if len(mpem.EntityId) == 0 { // 这里的情况是，是怪物主动攻击发生的战斗
-		mpem = g.GetMem([]uint32{req.AttackedByEntityId})
+	mpem = g.GetMem(req.HitTargetEntityIdList) // 被攻击者
+	if len(mpem.EntityId) == 0 {               // 这里的情况是，是怪物主动攻击发生的战斗
+		mpem = g.GetMem([]uint32{req.AttackedByEntityId}) // 发起攻击者
 	}
 	if len(mpem.EntityId) == 0 { // 这里的情况是角色普通攻击并没有命中怪物
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
@@ -95,6 +112,10 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.ChallengePVEBattleResultCsReq(req)
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		g.ChallengePVEBattleResultCsReq(req)
+	}
+	// 任务判断
+	if battleBin.EventId != 0 {
+		g.UpBattleSubMission(req)
 	}
 	// 副本处理
 	g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)

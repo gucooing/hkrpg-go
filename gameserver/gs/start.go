@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	Ticker                 = 5  // 定时器间隔时间 / s
-	AutoUpDataPlayerTicker = 60 // 定时执行玩家数据保存间隔时间 / s
+	Ticker                 = 5   // 定时器间隔时间 / s
+	AutoUpDataPlayerTicker = 120 // 定时执行玩家数据保存间隔时间 / s
 )
 
 var PLAYERNUM int64 // 玩家人数
@@ -124,12 +124,12 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 
 func (s *GameServer) AutoUpDataPlayer() {
 	logger.Info("开始自动保存玩家数据")
+	timestamp := time.Now().Unix()
 	for _, g := range s.getAllPlayer() {
 		if g.p.Uid == 0 {
 			continue
 		}
 		lastActiveTime := g.LastActiveTime
-		timestamp := time.Now().Unix()
 		if timestamp-lastActiveTime >= 180 {
 			logger.Debug("[UID:%v]玩家数据自动保存", g.p.Uid)
 			g.p.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE)

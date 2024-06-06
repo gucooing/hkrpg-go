@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -30,7 +29,7 @@ type MazeBuff struct {
 }
 
 func (g *GameDataConfig) loadMazeBuff() {
-	g.MazeBuffMap = make(map[string]map[string]*MazeBuff)
+	g.MazeBuffMap = make(map[uint32]map[uint32]*MazeBuff)
 	playerElementsFilePath := g.excelPrefix + "MazeBuff.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -48,5 +47,5 @@ func (g *GameDataConfig) loadMazeBuff() {
 }
 
 func GetMazeBuffById(buffId, index uint32) *MazeBuff {
-	return CONF.MazeBuffMap[strconv.Itoa(int(buffId))][strconv.Itoa(int(index))]
+	return CONF.MazeBuffMap[buffId][index]
 }

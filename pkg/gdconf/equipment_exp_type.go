@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -16,7 +15,7 @@ type EquipmentExp struct {
 }
 
 func (g *GameDataConfig) loadEquipmentExpType() {
-	g.EquipmentExpTypeMap = make(map[string]map[string]*EquipmentExp)
+	g.EquipmentExpTypeMap = make(map[uint32]map[uint32]*EquipmentExp)
 	playerElementsFilePath := g.excelPrefix + "EquipmentExpType.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -35,12 +34,12 @@ func (g *GameDataConfig) loadEquipmentExpType() {
 func GetEquipmentExpByLevel(equipmentType, exp, level, promotion, equipmentId uint32) (uint32, uint32) {
 	maxLevel := GetEquipmentMaxLevel(equipmentId, promotion)
 	for ; level <= maxLevel; level++ {
-		if exp < CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Exp {
+		if exp < CONF.EquipmentExpTypeMap[equipmentType][level].Exp {
 			return level, exp
 		} else {
-			exp -= CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(level))].Exp
+			exp -= CONF.EquipmentExpTypeMap[equipmentType][level].Exp
 		}
 	}
-	newExp := CONF.EquipmentExpTypeMap[strconv.Itoa(int(equipmentType))][strconv.Itoa(int(maxLevel))].Exp
+	newExp := CONF.EquipmentExpTypeMap[equipmentType][maxLevel].Exp
 	return maxLevel, newExp
 }

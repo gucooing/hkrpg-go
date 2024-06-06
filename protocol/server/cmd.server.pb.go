@@ -1727,6 +1727,7 @@ type PlayerMsgNodeToGameNotify struct {
 	ApplyUid       uint32        `protobuf:"varint,2,opt,name=apply_uid,json=applyUid,proto3" json:"apply_uid,omitempty"`                       // 发起玩家
 	SendUid        uint32        `protobuf:"varint,3,opt,name=send_uid,json=sendUid,proto3" json:"send_uid,omitempty"`                          // 接收玩家
 	IsAcceptFriend bool          `protobuf:"varint,4,opt,name=is_accept_friend,json=isAcceptFriend,proto3" json:"is_accept_friend,omitempty"`   // 是否接受好友
+	ChatMsg        *ChatMsg      `protobuf:"bytes,5,opt,name=chat_msg,json=chatMsg,proto3" json:"chat_msg,omitempty"`                           // 消息内容
 }
 
 func (x *PlayerMsgNodeToGameNotify) Reset() {
@@ -1787,6 +1788,60 @@ func (x *PlayerMsgNodeToGameNotify) GetIsAcceptFriend() bool {
 		return x.IsAcceptFriend
 	}
 	return false
+}
+
+func (x *PlayerMsgNodeToGameNotify) GetChatMsg() *ChatMsg {
+	if x != nil {
+		return x.ChatMsg
+	}
+	return nil
+}
+
+type ChatMsg struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	MsgToUidList []uint32 `protobuf:"varint,2,rep,packed,name=msg_to_uid_list,json=msgToUidList,proto3" json:"msg_to_uid_list,omitempty"` // 消息发送目标列表
+}
+
+func (x *ChatMsg) Reset() {
+	*x = ChatMsg{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[30]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ChatMsg) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChatMsg) ProtoMessage() {}
+
+func (x *ChatMsg) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[30]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChatMsg.ProtoReflect.Descriptor instead.
+func (*ChatMsg) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *ChatMsg) GetMsgToUidList() []uint32 {
+	if x != nil {
+		return x.MsgToUidList
+	}
+	return nil
 }
 
 var File_cmd_server_proto protoreflect.FileDescriptor
@@ -2002,7 +2057,7 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x07, 0x73, 0x65, 0x6e, 0x64, 0x55, 0x69, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x69, 0x73, 0x5f, 0x61,
 	0x63, 0x63, 0x65, 0x70, 0x74, 0x5f, 0x66, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x18, 0x04, 0x20, 0x01,
 	0x28, 0x08, 0x52, 0x0e, 0x69, 0x73, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x46, 0x72, 0x69, 0x65,
-	0x6e, 0x64, 0x22, 0xae, 0x01, 0x0a, 0x19, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4d, 0x73, 0x67,
+	0x6e, 0x64, 0x22, 0xd9, 0x01, 0x0a, 0x19, 0x50, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x4d, 0x73, 0x67,
 	0x4e, 0x6f, 0x64, 0x65, 0x54, 0x6f, 0x47, 0x61, 0x6d, 0x65, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79,
 	0x12, 0x2f, 0x0a, 0x08, 0x6d, 0x73, 0x67, 0x5f, 0x74, 0x79, 0x70, 0x65, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x0e, 0x32, 0x14, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x6c, 0x61, 0x79, 0x65,
@@ -2013,8 +2068,14 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x52, 0x07, 0x73, 0x65, 0x6e, 0x64, 0x55, 0x69, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x69, 0x73, 0x5f,
 	0x61, 0x63, 0x63, 0x65, 0x70, 0x74, 0x5f, 0x66, 0x72, 0x69, 0x65, 0x6e, 0x64, 0x18, 0x04, 0x20,
 	0x01, 0x28, 0x08, 0x52, 0x0e, 0x69, 0x73, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x46, 0x72, 0x69,
-	0x65, 0x6e, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x6e, 0x64, 0x12, 0x29, 0x0a, 0x08, 0x63, 0x68, 0x61, 0x74, 0x5f, 0x6d, 0x73, 0x67, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x43, 0x68,
+	0x61, 0x74, 0x4d, 0x73, 0x67, 0x52, 0x07, 0x63, 0x68, 0x61, 0x74, 0x4d, 0x73, 0x67, 0x22, 0x30,
+	0x0a, 0x07, 0x43, 0x68, 0x61, 0x74, 0x4d, 0x73, 0x67, 0x12, 0x25, 0x0a, 0x0f, 0x6d, 0x73, 0x67,
+	0x5f, 0x74, 0x6f, 0x5f, 0x75, 0x69, 0x64, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03,
+	0x28, 0x0d, 0x52, 0x0c, 0x6d, 0x73, 0x67, 0x54, 0x6f, 0x55, 0x69, 0x64, 0x4c, 0x69, 0x73, 0x74,
+	0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2029,7 +2090,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),         // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),         // 1: proto.ServiceConnectionRsp
@@ -2061,38 +2122,40 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*MuipServiceAll)(nil),               // 27: proto.MuipServiceAll
 	(*PlayerMsgGateToNodeNotify)(nil),    // 28: proto.PlayerMsgGateToNodeNotify
 	(*PlayerMsgNodeToGameNotify)(nil),    // 29: proto.PlayerMsgNodeToGameNotify
-	nil,                                  // 30: proto.MuipToNodePingRsp.ServiceListEntry
-	(ServerType)(0),                      // 31: proto.ServerType
-	(Retcode)(0),                         // 32: proto.Retcode
-	(PlayerMsgType)(0),                   // 33: proto.PlayerMsgType
+	(*ChatMsg)(nil),                      // 30: proto.ChatMsg
+	nil,                                  // 31: proto.MuipToNodePingRsp.ServiceListEntry
+	(ServerType)(0),                      // 32: proto.ServerType
+	(Retcode)(0),                         // 33: proto.Retcode
+	(PlayerMsgType)(0),                   // 34: proto.PlayerMsgType
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	31, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	31, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	31, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
+	32, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	32, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	32, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
 	4,  // 3: proto.GetAllServiceGateRsp.gate_service_list:type_name -> proto.ServiceAll
-	31, // 4: proto.ServiceAll.service_type:type_name -> proto.ServerType
-	31, // 5: proto.GateToNodePingReq.service_type:type_name -> proto.ServerType
+	32, // 4: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	32, // 5: proto.GateToNodePingReq.service_type:type_name -> proto.ServerType
 	4,  // 6: proto.GateToNodePingRsp.multi_service:type_name -> proto.ServiceAll
 	4,  // 7: proto.GateToNodePingRsp.game_service_list:type_name -> proto.ServiceAll
-	31, // 8: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
-	32, // 9: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
-	32, // 10: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
-	32, // 11: proto.GetToGamePlayerLogoutReq.retcode:type_name -> proto.Retcode
-	32, // 12: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
+	32, // 8: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
+	33, // 9: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
+	33, // 10: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
+	33, // 11: proto.GetToGamePlayerLogoutReq.retcode:type_name -> proto.Retcode
+	33, // 12: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
 	4,  // 13: proto.MultiToNodePingRsp.game_service_list:type_name -> proto.ServiceAll
-	31, // 14: proto.GateLoginMultiReq.server_type:type_name -> proto.ServerType
-	32, // 15: proto.GateLoginMultiRsp.retcode:type_name -> proto.Retcode
-	30, // 16: proto.MuipToNodePingRsp.service_list:type_name -> proto.MuipToNodePingRsp.ServiceListEntry
+	32, // 14: proto.GateLoginMultiReq.server_type:type_name -> proto.ServerType
+	33, // 15: proto.GateLoginMultiRsp.retcode:type_name -> proto.Retcode
+	31, // 16: proto.MuipToNodePingRsp.service_list:type_name -> proto.MuipToNodePingRsp.ServiceListEntry
 	4,  // 17: proto.MuipServiceAll.service_list:type_name -> proto.ServiceAll
-	33, // 18: proto.PlayerMsgGateToNodeNotify.msg_type:type_name -> proto.PlayerMsgType
-	33, // 19: proto.PlayerMsgNodeToGameNotify.msg_type:type_name -> proto.PlayerMsgType
-	27, // 20: proto.MuipToNodePingRsp.ServiceListEntry.value:type_name -> proto.MuipServiceAll
-	21, // [21:21] is the sub-list for method output_type
-	21, // [21:21] is the sub-list for method input_type
-	21, // [21:21] is the sub-list for extension type_name
-	21, // [21:21] is the sub-list for extension extendee
-	0,  // [0:21] is the sub-list for field type_name
+	34, // 18: proto.PlayerMsgGateToNodeNotify.msg_type:type_name -> proto.PlayerMsgType
+	34, // 19: proto.PlayerMsgNodeToGameNotify.msg_type:type_name -> proto.PlayerMsgType
+	30, // 20: proto.PlayerMsgNodeToGameNotify.chat_msg:type_name -> proto.ChatMsg
+	27, // 21: proto.MuipToNodePingRsp.ServiceListEntry.value:type_name -> proto.MuipServiceAll
+	22, // [22:22] is the sub-list for method output_type
+	22, // [22:22] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_cmd_server_proto_init() }
@@ -2462,6 +2525,18 @@ func file_cmd_server_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_server_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ChatMsg); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2469,7 +2544,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   31,
+			NumMessages:   32,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

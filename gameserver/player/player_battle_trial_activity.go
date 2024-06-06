@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -59,7 +57,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	leaderEntityId := g.GetNextGameObjectGuid()
 	trialActivityState := g.GetTrialActivityState()
 
-	mapEntrance := gdconf.GetMapEntranceById(strconv.Itoa(int(trialActivityState.EntranceID)))
+	mapEntrance := gdconf.GetMapEntranceById(trialActivityState.EntranceID)
 	if mapEntrance == nil {
 		return
 	}
@@ -124,12 +122,12 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 		ClientPosVersion:   5,
 		EntryId:            trialActivityState.EntranceID,
 		FloorId:            trialActivityState.FloorID,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(strconv.Itoa(int(trialActivityState.PlaneID))).PlaneType),
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(trialActivityState.PlaneID).PlaneType),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		LeaderEntityId:     leaderEntityId,
 		LightenSectionList: make([]uint32, 0),
 		PlaneId:            trialActivityState.PlaneID,
-		WorldId:            gdconf.GetMazePlaneById(strconv.Itoa(int(trialActivityState.PlaneID))).WorldID,
+		WorldId:            gdconf.GetMazePlaneById(trialActivityState.PlaneID).WorldID,
 	}
 
 	for i := uint32(0); i < 100; i++ {
@@ -190,7 +188,7 @@ func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-		g.GetPropByID(propList, levelGroup)
+		g.GetPropByID(propList, levelGroup, nil, trialActivityState.EntranceID)
 		if len(propList.EntityList) != 0 {
 			rsp.Scene.EntityGroupList = append(rsp.Scene.EntityGroupList, propList)
 		}

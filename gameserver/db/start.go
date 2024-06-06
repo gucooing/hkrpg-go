@@ -30,7 +30,7 @@ func NewStore(config *config.Config) *Store {
 	Db = s
 	mysqlPlayerDataConf := config.MysqlConf["player"]
 	s.PlayerDataMysql = database.NewMysql(mysqlPlayerDataConf.Dsn)
-	s.PlayerDataMysql.AutoMigrate(&database.PlayerData{})
+	s.PlayerDataMysql.AutoMigrate(&database.PlayerData{}, &database.BlockData{})
 	mysqlServerConf := config.MysqlConf["conf"]
 	s.ServerConf = database.NewMysql(mysqlServerConf.Dsn)
 	s.ServerConf.AutoMigrate(&database.Mail{})

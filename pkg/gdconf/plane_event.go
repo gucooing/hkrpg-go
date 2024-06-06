@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -18,7 +17,7 @@ type PlaneEvent struct {
 }
 
 func (g *GameDataConfig) loadPlaneEvent() {
-	g.PlaneEventMap = make(map[string]map[string]*PlaneEvent)
+	g.PlaneEventMap = make(map[uint32]map[uint32]*PlaneEvent)
 	playerElementsFilePath := g.excelPrefix + "PlaneEvent.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -35,5 +34,5 @@ func (g *GameDataConfig) loadPlaneEvent() {
 }
 
 func GetPlaneEventById(eventID, worldLevel uint32) *PlaneEvent {
-	return CONF.PlaneEventMap[strconv.Itoa(int(eventID))][strconv.Itoa(int(worldLevel))]
+	return CONF.PlaneEventMap[eventID][worldLevel]
 }

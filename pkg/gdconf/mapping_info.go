@@ -3,7 +3,6 @@ package gdconf
 import (
 	"fmt"
 	"os"
-	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -25,7 +24,7 @@ type MappingInfo struct {
 }
 
 func (g *GameDataConfig) loadMappingInfo() {
-	g.MappingInfoMap = make(map[string]map[string]*MappingInfo)
+	g.MappingInfoMap = make(map[uint32]map[uint32]*MappingInfo)
 	playerElementsFilePath := g.excelPrefix + "MappingInfo.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -43,5 +42,5 @@ func (g *GameDataConfig) loadMappingInfo() {
 }
 
 func GetMappingInfoById(stageID, worldLevel uint32) *MappingInfo {
-	return CONF.MappingInfoMap[strconv.Itoa(int(stageID))][strconv.Itoa(int(worldLevel))]
+	return CONF.MappingInfoMap[stageID][worldLevel]
 }

@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -83,9 +81,9 @@ func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.BasicBin.HeadImageAvatarId,
+		CurrentHeadIconId:    g.GetHeadIcon(),
 		UnlockedHeadIconList: make([]*proto.HeadIconData, 0),
-		Signature:            g.BasicBin.Signature,
+		Signature:            g.GetSignature(),
 		DisplayAvatarVec: &proto.DisplayAvatarVec{
 			DisplayAvatarList: make([]*proto.DisplayAvatarData, 0),
 			IsDisplay:         false,
@@ -165,6 +163,137 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 //
 // 	g.Send(cmd.SendMsgScRsp, nil)
 // }
+
+func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg []byte) {
+	conf := gdconf.GetVideoVersionKey()
+	rsp := &proto.GetVideoVersionKeyScRsp{
+		Retcode:          0,
+		VideoKeyInfoList: make([]*proto.VideoKeyInfo, 0),
+	}
+	for _, video := range conf {
+		rsp.VideoKeyInfoList = append(rsp.VideoKeyInfoList, &proto.VideoKeyInfo{
+			VideoKey: video.VideoKey,
+			Id:       video.Id,
+		})
+	}
+	g.Send(cmd.GetVideoVersionKeyScRsp, rsp)
+}
+
+func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg []byte) {
+	rsp := &proto.GetSecretKeyInfoScRsp{
+		SecretInfo: []*proto.SecretKeyInfo{
+			{
+				Type: proto.SecretKeyType_SECRET_KEY_SERVER_CHECK,
+				Key:  "F9hx2TEZ",
+			},
+			{
+				Type: proto.SecretKeyType_SECRET_KEY_VIDEO,
+				Key:  "10120425825329403",
+			},
+			{
+				Type: proto.SecretKeyType_SECRET_KEY_BATTLE_TIME,
+				Key:  "2597701279",
+			},
+		},
+		Retcode:     0,
+		JGHFBNMOFDP: nil,
+	}
+	g.Send(cmd.GetSecretKeyInfoScRsp, rsp)
+}
+
+func (g *GamePlayer) GetTutorialCsReq(payloadMsg []byte) {
+	rsp := &proto.GetTutorialScRsp{
+		TutorialList: make([]*proto.Tutorial, 0),
+		Retcode:      0,
+	}
+	for _, db := range g.GetTutorial() {
+		rsp.TutorialList = append(rsp.TutorialList, &proto.Tutorial{
+			Id:     db.Id,
+			Status: proto.TutorialStatus(db.Status),
+		})
+	}
+
+	g.Send(cmd.GetTutorialScRsp, rsp)
+}
+
+func (g *GamePlayer) GetTutorialGuideCsReq(payloadMsg []byte) {
+	rsp := &proto.GetTutorialGuideScRsp{
+		Retcode:           0,
+		TutorialGuideList: make([]*proto.TutorialGuide, 0),
+	}
+
+	for _, db := range g.GetTutorialGuide() {
+		rsp.TutorialGuideList = append(rsp.TutorialGuideList, &proto.TutorialGuide{
+			Id:     db.Id,
+			Status: proto.TutorialStatus(db.Status),
+		})
+	}
+
+	g.Send(cmd.GetTutorialGuideScRsp, rsp)
+}
+
+func (g *GamePlayer) UnlockTutorialCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.UnlockTutorialCsReq, payloadMsg)
+	req := msg.(*proto.UnlockTutorialCsReq)
+
+	g.UnlockTutorial(req.TutorialId)
+	rsp := &proto.UnlockTutorialScRsp{
+		Retcode: 0,
+		Tutorial: &proto.Tutorial{
+			Id:     req.TutorialId,
+			Status: proto.TutorialStatus_TUTORIAL_UNLOCK,
+		},
+	}
+	g.Send(cmd.UnlockTutorialScRsp, rsp)
+}
+
+func (g *GamePlayer) UnlockTutorialGuideCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.UnlockTutorialGuideCsReq, payloadMsg)
+	req := msg.(*proto.UnlockTutorialGuideCsReq)
+
+	g.UnlockTutorialGuide(req.GroupId)
+	rsp := &proto.UnlockTutorialGuideScRsp{
+		Retcode: 0,
+		TutorialGuide: &proto.TutorialGuide{
+			Id:     req.GroupId,
+			Status: proto.TutorialStatus_TUTORIAL_UNLOCK,
+		},
+	}
+	g.Send(cmd.UnlockTutorialGuideScRsp, rsp)
+}
+
+func (g *GamePlayer) FinishTutorialCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.FinishTutorialCsReq, payloadMsg)
+	req := msg.(*proto.FinishTutorialCsReq)
+
+	g.FinishTutorial(req.TutorialId)
+	rsp := &proto.FinishTutorialScRsp{
+		Retcode: 0,
+		Tutorial: &proto.Tutorial{
+			Id:     req.TutorialId,
+			Status: proto.TutorialStatus_TUTORIAL_FINISH,
+		},
+	}
+	g.Send(cmd.FinishTutorialScRsp, rsp)
+}
+
+func (g *GamePlayer) FinishTutorialGuideCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.FinishTutorialGuideCsReq, payloadMsg)
+	req := msg.(*proto.FinishTutorialGuideCsReq)
+
+	// g.FinishTutorial(req.TutorialId)
+	rsp := &proto.FinishTutorialGuideScRsp{
+		Retcode: 0,
+		Reward: &proto.ItemList{
+			ItemList: make([]*proto.Item, 0),
+		},
+		TutorialGuide: &proto.TutorialGuide{
+			Id:     req.GroupId,
+			Status: proto.TutorialStatus_TUTORIAL_FINISH,
+		},
+	}
+	g.Send(cmd.FinishTutorialGuideScRsp, rsp)
+}
 
 func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetChatEmojiListScRsp, nil)
@@ -264,7 +393,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 	}
 
 	for _, id := range req.EntryIdList {
-		excel := gdconf.GetMapEntranceById(strconv.Itoa(int(id)))
+		excel := gdconf.GetMapEntranceById(id)
 		if excel == nil {
 			continue
 		}

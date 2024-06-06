@@ -1,8 +1,6 @@
 package player
 
 import (
-	"strconv"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -74,7 +72,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	}
 	oldLevel = dbRelic.Level
 	// 获取需要升级圣遗物的配置信息
-	relicConf := gdconf.GetRelicById(strconv.Itoa(int(dbRelic.Tid)))
+	relicConf := gdconf.GetRelicById(dbRelic.Tid)
 	if relicConf == nil {
 		rsp := &proto.ExpUpRelicScRsp{}
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -92,7 +90,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 			Num: pileList.GetPileItem().ItemNum,
 		})
 		// 获取材料配置
-		pileconf := gdconf.GetRelicById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		pileconf := gdconf.GetRelicById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
 			rsp := &proto.ExpUpRelicScRsp{}
 			g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -112,7 +110,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 		}
 		relicList = append(relicList, relic.GetRelicUniqueId())
 		// 获取光锥配置
-		relicconfig := gdconf.GetRelicById(strconv.Itoa(int(g.GetProtoRelicById(relic.GetRelicUniqueId()).Tid)))
+		relicconfig := gdconf.GetRelicById(g.GetProtoRelicById(relic.GetRelicUniqueId()).Tid)
 		if relicconfig == nil {
 			rsp := &proto.ExpUpRelicScRsp{}
 			g.Send(cmd.ExpUpRelicScRsp, rsp)
