@@ -156,7 +156,7 @@ func (g *GamePlayer) UpBattleSubMission(req *proto.PVEBattleResultCsReq) {
 }
 
 // 处理交互任务
-func (g *GamePlayer) UpInteractSubMission(pe *PropEntity, propState uint32) {
+func (g *GamePlayer) UpInteractSubMission(db *spb.BlockBin) {
 	for id := range g.GetSubMainMissionList() {
 		conf := gdconf.GetSubMainMissionById(id)
 		if conf == nil {
@@ -164,7 +164,8 @@ func (g *GamePlayer) UpInteractSubMission(pe *PropEntity, propState uint32) {
 		}
 		switch conf.FinishType {
 		case "PropState":
-			if pe.GroupId == conf.ParamInt1 && pe.InstId == conf.ParamInt2 && conf.ParamInt3 == propState {
+			propState := g.GetPropState(db, conf.ParamInt1, conf.ParamInt2, "")
+			if conf.ParamInt3 == propState {
 				g.FinishSubMission(id)
 			}
 		}
@@ -347,22 +348,41 @@ func (g *GamePlayer) ReadyMainMission() {
 			if goppConf == nil {
 				continue
 			}
+			// 这里接取了主线
+			if id == 1000300 {
+				g.AddAvatar(1003)
+				g.GetTrialAvatar(1003)
+			}
 			mainMissionList[id] = &spb.MissionInfo{
 				MissionId: id,
 				Progress:  0,
 				Status:    spb.MissionStatus_MISSION_DOING,
 			}
-			for _, subId := range goppConf.StartSubMissionList {
-				if finishSubMainMissionList[subId] != nil {
+			// 接取该主线子任务
+			for _, subInfo := range goppConf.SubMissionList {
+				if finishSubMainMissionList[subInfo.ID] != nil {
 					continue
 				}
-				nextList = append(nextList, subId)
-				subMainMissionList[subId] = &spb.MissionInfo{
-					MissionId: subId,
-					Progress:  0,
-					Status:    spb.MissionStatus_MISSION_DOING,
+				if subInfo.TakeType == "Auto" {
+					nextList = append(nextList, subInfo.ID)
+					subMainMissionList[subInfo.ID] = &spb.MissionInfo{
+						MissionId: subInfo.ID,
+						Progress:  0,
+						Status:    spb.MissionStatus_MISSION_DOING,
+					}
 				}
 			}
+			// for _, subId := range goppConf.StartSubMissionList {
+			// 	if finishSubMainMissionList[subId] != nil {
+			// 		continue
+			// 	}
+			// 	nextList = append(nextList, subId)
+			// 	subMainMissionList[subId] = &spb.MissionInfo{
+			// 		MissionId: subId,
+			// 		Progress:  0,
+			// 		Status:    spb.MissionStatus_MISSION_DOING,
+			// 	}
+			// }
 		}
 	}
 	// 通知状态

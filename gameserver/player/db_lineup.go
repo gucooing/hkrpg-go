@@ -43,7 +43,7 @@ func (g *GamePlayer) GetLineUpById(index uint32) *spb.Line {
 		db.LineUpList = make(map[uint32]*spb.Line)
 		db.LineUpList[0] = &spb.Line{
 			Name:         "hkrpg",
-			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList, 4),
 			LeaderSlot:   0,
 			Index:        0,
 		}
@@ -53,7 +53,7 @@ func (g *GamePlayer) GetLineUpById(index uint32) *spb.Line {
 	if db.LineUpList[index] == nil {
 		db.LineUpList[index] = &spb.Line{
 			Name:         "",
-			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList, 4),
 			LeaderSlot:   0,
 			Index:        index,
 		}
@@ -68,7 +68,7 @@ func (g *GamePlayer) GetBattleLineUpById(index uint32) *spb.Line {
 	}
 	if db.BattleLineList[index] == nil {
 		db.BattleLineList[index] = &spb.Line{
-			AvatarIdList: make(map[uint32]*spb.LineAvatarList),
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList, 4),
 			LeaderSlot:   0,
 		}
 	}
@@ -81,7 +81,7 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 		return
 	}
 	db.LeaderSlot = 0
-	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
+	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList, 4)
 	for slot, id := range trialList {
 		if slot == 4 {
 			continue

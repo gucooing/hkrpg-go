@@ -222,6 +222,22 @@ func (g *GamePlayer) GetPropEntity(groupId, instId uint32) *PropEntity {
 	return nil
 }
 
+func (g *GamePlayer) GetAllPropEntity() []*PropEntity {
+	peList := make([]*PropEntity, 0)
+	db := g.GetLoadedGroup()
+	for _, groupInfo := range db {
+		if groupInfo.EntityMap != nil {
+			for _, info := range groupInfo.EntityMap {
+				switch info.(type) {
+				case *PropEntity:
+					peList = append(peList, info.(*PropEntity))
+				}
+			}
+		}
+	}
+	return peList
+}
+
 func NewScene() *spb.Scene {
 	return &spb.Scene{
 		EntryId: 2000101,
