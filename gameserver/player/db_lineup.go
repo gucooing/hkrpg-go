@@ -115,27 +115,39 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 
 func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 	db := g.GetCurLineUp()
-	for slot, avatar := range db.AvatarIdList {
-		if avatar.AvatarId == 0 {
-			if g.GetAvatarById(trialAvatarId) != nil {
-				db.AvatarIdList[slot] = &spb.LineAvatarList{
-					AvatarId:       trialAvatarId,
-					Slot:           slot,
-					LineAvatarType: spb.LineAvatarType_LineAvatarType_MI,
-				}
+	var lineAvatarType spb.LineAvatarType
+	if g.GetAvatarById(trialAvatarId) != nil {
+		lineAvatarType = spb.LineAvatarType_LineAvatarType_MI
+	}
+	if gdconf.GetSpecialAvatarById(trialAvatarId) != nil {
+		lineAvatarType = spb.LineAvatarType_LineAvatarType_TRIAL
+	}
+	isUp := false
+	for i := 0; i < 4; i++ {
+		if db.AvatarIdList[uint32(i)] == nil {
+			db.AvatarIdList[uint32(i)] = &spb.LineAvatarList{
+				Slot:           uint32(i),
+				AvatarId:       trialAvatarId,
+				LineAvatarType: lineAvatarType,
 			}
-			if gdconf.GetSpecialAvatarById(trialAvatarId) != nil {
-				db.AvatarIdList[slot] = &spb.LineAvatarList{
-					AvatarId:       trialAvatarId,
-					Slot:           slot,
-					LineAvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
-				}
-			}
+			isUp = true
 			break
+		} else {
+			if db.AvatarIdList[uint32(i)].AvatarId == 0 {
+				db.AvatarIdList[uint32(i)] = &spb.LineAvatarList{
+					Slot:           uint32(i),
+					AvatarId:       trialAvatarId,
+					LineAvatarType: lineAvatarType,
+				}
+				isUp = true
+				break
+			}
 		}
 	}
-	g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, true, g.GetPosPb(), g.GetRotPb())
-	g.SyncLineupNotifyByLineBin(db)
+	if isUp {
+		g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, true, g.GetPosPb(), g.GetRotPb())
+		g.SyncLineupNotifyByLineBin(db)
+	}
 }
 
 func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
