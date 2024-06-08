@@ -455,6 +455,7 @@ func (g *GamePlayer) FinishMissionAuto() {
 func (g *GamePlayer) LoginReadyMission() {
 	// g.ReadyMainMission() // 主线检查
 	// g.AllFinishMission() // 检查是否有子任务应该完成但未完成
+	g.ReadyMainMission() // 主线接取检查
 	g.FinishMissionAuto()
 }
 
