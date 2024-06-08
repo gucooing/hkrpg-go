@@ -29,12 +29,20 @@ func NewMailDts(id uint32) *spb.MailDts {
 	}
 }
 
-func (g *GamePlayer) GetMailById(id uint32) *spb.MailDts {
+func (g *GamePlayer) GetMailList() map[uint32]*spb.MailDts {
 	db := g.GetMail()
-	if db.MailList[id] == nil {
-		db.MailList[id] = NewMailDts(id)
+	if db.MailList == nil {
+		db.MailList = make(map[uint32]*spb.MailDts)
 	}
-	return db.MailList[id]
+	return db.MailList
+}
+
+func (g *GamePlayer) GetMailById(id uint32) *spb.MailDts {
+	db := g.GetMailList()
+	if db[id] == nil {
+		db[id] = NewMailDts(id)
+	}
+	return db[id]
 }
 
 func (g *GamePlayer) ReadMail(id uint32) {

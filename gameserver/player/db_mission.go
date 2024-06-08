@@ -345,7 +345,7 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			g.FinishMainMission(id)
 		case "MessagePerformSectionFinish": // 对话框显示
 			g.AddMessageGroup(conf.ParamInt1)
-			g.FinishSubMission(id)
+			// g.FinishSubMission(id)
 		}
 	}
 }

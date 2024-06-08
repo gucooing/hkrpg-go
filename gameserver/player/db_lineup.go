@@ -145,7 +145,7 @@ func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 		}
 	}
 	if isUp {
-		g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, true, g.GetPosPb(), g.GetRotPb())
+		g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, false, g.GetPosPb(), g.GetRotPb())
 		g.SyncLineupNotifyByLineBin(db)
 	}
 }
