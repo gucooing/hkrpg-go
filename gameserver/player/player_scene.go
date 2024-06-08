@@ -32,9 +32,8 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	curLine := g.GetCurLineUp()
 	rsp.Lineup = g.GetLineUpPb(curLine)
 	// 获取坐标
-	serverGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, groupID)
-	if serverGroup != nil && serverGroup.AnchorList != nil && serverGroup.AnchorList[anchorID] != nil {
-		anchor := serverGroup.AnchorList[anchorID]
+	if teleportsMap.TeleportsByGroupId != nil && teleportsMap.TeleportsByGroupId[groupID] != nil && teleportsMap.TeleportsByGroupId[groupID].AnchorList != nil {
+		anchor := teleportsMap.TeleportsByGroupId[groupID].AnchorList[anchorID]
 		pos = &proto.Vector{
 			X: int32(anchor.PosX * 1000),
 			Y: int32(anchor.PosY * 1000),
@@ -64,12 +63,13 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 	if pos == nil {
 		// 这都没有那就不要传送了
-		logger.Debug("entryId:%v,teleportId:%v error", entryId, teleportId)
+		logger.Error("entryId:%v,teleportId:%v error", entryId, teleportId)
 		return
 	}
 	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
 	g.SetCurEntryId(entryId)
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
+	// "2010101"
 }
 
 // 传送到指定位置

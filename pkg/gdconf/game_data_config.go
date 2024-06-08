@@ -36,7 +36,7 @@ type GameDataConfig struct {
 	RogueMapGenMap              map[uint32][]uint32                             // 模拟宇宙id场景映射表
 	RogueManagerMap             *RogueManager                                   // 模拟宇宙排期表
 	RogueMonsterMap             map[uint32]*RogueMonster                        // 模拟宇宙怪物配置
-	RogueMonsterGroupMap        map[uint32]*RogueMonsterGroup                   // 模拟宇宙怪物生成配置
+	RogueMonsterGroupMap        map[uint32]*RogueMonsterGroups                  // 模拟宇宙怪物生成配置
 	RogueBuffMap                *RogueBuffList                                  // 模拟宇宙buff列表
 	RogueAreaConfigMap          map[uint32]*RogueAreaConfig                     // 模拟宇宙关卡配置
 	RogueMap                    map[uint32]*RogueMap                            // 模拟宇宙关卡地图表

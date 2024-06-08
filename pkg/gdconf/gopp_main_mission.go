@@ -77,7 +77,27 @@ type OnStartSequece struct {
 }
 
 type Task struct {
+	Type string `json:"$type"`
+	// 传送相关
 	EntranceID uint32 `json:"EntranceID"`
+	// 战斗相关
+	EventID      *EventID    `json:"EventID"`
+	GroupID      interface{} `json:"GroupID"`
+	BattleAreaID interface{} `json:"BattleAreaID"`
+	TaskEnabled  bool        `json:"TaskEnabled"`
+}
+
+type EventID struct {
+	FixedValue *FixedValue `json:"FixedValue"`
+}
+
+type GroupID struct {
+	IsDynamic  bool        `json:"IsDynamic"`
+	FixedValue *FixedValue `json:"FixedValue"`
+}
+
+type FixedValue struct {
+	Value uint32 `json:"Value"`
 }
 
 func (g *GameDataConfig) goppMainMission() {
@@ -163,4 +183,25 @@ func GetEntryId(id uint32) (uint32, bool) {
 		}
 	}
 	return entryId, isFloor
+}
+
+func IsBattleMission(id, eventId uint32) bool {
+	isFinish := false
+	conf := CONF.GoppMission.GoppMissionJson[id]
+	if conf == nil {
+		return false
+	}
+	for _, info := range conf.OnStartSequece {
+		if info.TaskList == nil {
+			continue
+		}
+		for _, task := range info.TaskList {
+			if task.EventID != nil && task.EventID.FixedValue.Value == eventId {
+				isFinish = true
+				break
+			}
+		}
+	}
+
+	return isFinish
 }

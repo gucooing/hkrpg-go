@@ -275,10 +275,10 @@ message Mission {// 任务
 }
 
 message MainMission{// 主线任务
-  map<uint32, MissionInfo> main_mission_list = 1; // 主线任务
-  map<uint32, MissionInfo> sub_mission_list = 2;//主线子任务
-  map<uint32, MissionInfo> finish_main_mission_list = 3;// 已完成的主线
-  map<uint32, MissionInfo> finish_sub_mission_list = 4;//已完成支线任务
+  map<uint32, MissionInfo> main_mission_list = 1; // 主任务
+  map<uint32, MissionInfo> sub_mission_list = 2;//子任务
+  map<uint32, MissionInfo> finish_main_mission_list = 3;// 已完成的主任务
+  map<uint32, MissionInfo> finish_sub_mission_list = 4;//已完成支任务
 }
 
 message MissionInfo{

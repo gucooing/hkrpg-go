@@ -212,7 +212,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartRogueCsReq, payloadMsg)
 	req := msg.(*proto.StartRogueCsReq)
 
-	if req.BaseAvatarIdList == nil || req.AreaId == 0 {
+	if req.AreaId == 0 {
 		rsp := &proto.StartRogueScRsp{
 			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
 		}

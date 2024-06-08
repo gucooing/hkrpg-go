@@ -114,6 +114,9 @@ func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finish, curFinishMain []uint32) {
+	if len(nextSub) == 0 && len(finish) == 0 && len(curFinishMain) == 0 {
+		return
+	}
 	notify := &proto.PlayerSyncScNotify{
 		MissionSync: &proto.MissionSync{
 			MissionList:       make([]*proto.Mission, 0),

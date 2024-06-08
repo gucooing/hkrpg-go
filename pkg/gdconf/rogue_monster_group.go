@@ -10,8 +10,8 @@ import (
 )
 
 type RogueMonsterGroups struct {
-	RogueMonsterGroupID       uint32         `json:"RogueMonsterGroupID"`
-	RogueMonsterListAndWeight map[string]int `json:"RogueMonsterListAndWeight"`
+	RogueMonsterGroupID       uint32            `json:"RogueMonsterGroupID"`
+	RogueMonsterListAndWeight map[uint32]uint32 `json:"RogueMonsterListAndWeight"`
 }
 
 type RogueMonsterGroup struct {
@@ -21,7 +21,7 @@ type RogueMonsterGroup struct {
 }
 
 func (g *GameDataConfig) loadRogueMonsterGroup() {
-	g.RogueMonsterGroupMap = make(map[uint32]*RogueMonsterGroup)
+	g.RogueMonsterGroupMap = make(map[uint32]*RogueMonsterGroups)
 	playerElementsFilePath := g.excelPrefix + "RogueMonsterGroup.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -39,8 +39,8 @@ func (g *GameDataConfig) loadRogueMonsterGroup() {
 }
 
 func GetRogueMonsterGroupByGroupID(groupID uint32) uint32 {
-	rogue := CONF.RogueMonsterGroupMap[groupID]
-	return rogue.Select()
+	// rogue := CONF.RogueMonsterGroupMap[groupID]
+	return 1 // rogue.Select()
 }
 
 func NewRogueMonsterGroup(monsterListAndWeight map[uint32]int) *RogueMonsterGroup {

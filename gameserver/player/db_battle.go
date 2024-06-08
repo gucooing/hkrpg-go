@@ -556,15 +556,6 @@ func (g *GamePlayer) GetDbRogue() *spb.Rogue {
 		g.GetBattle().Rogue = &spb.Rogue{
 			RogueArea: make(map[uint32]*spb.RogueArea),
 		}
-
-		g.GetBattle().Rogue.RogueArea[100] = &spb.RogueArea{
-			AreaId:          100,
-			RogueAreaStatus: spb.RogueAreaStatus_RogueAreaStatus_ROGUE_AREA_STATUS_FIRST_PASS, // 教学关卡默认通关
-		}
-		g.GetBattle().Rogue.RogueArea[110] = &spb.RogueArea{
-			AreaId:          110,
-			RogueAreaStatus: spb.RogueAreaStatus_RogueAreaStatus_ROGUE_AREA_STATUS_UNLOCK, // 第一关卡默认解锁
-		}
 	}
 
 	return g.GetBattle().Rogue

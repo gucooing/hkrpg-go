@@ -15,7 +15,6 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 	req := msg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v]登录的客户端版本是:%s", g.Uid, req.ClientVersion)
 	g.Platform = spb.PlatformType(req.Platform)
-	go g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE) // 异步更新一次数据
 	g.HandlePlayerLoginScRsp()
 }
 
@@ -37,6 +36,7 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	}
 	g.LoginReady() // 登录准备工作
 	g.Send(cmd.PlayerLoginScRsp, rsp)
+	g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE) // 更新一次数据
 	g.LoginNotify()
 }
 
@@ -122,5 +122,5 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
 	g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
-	g.ReadyMission()                     // 任务检查
+	g.LoginReadyMission()                // 任务检查
 }
