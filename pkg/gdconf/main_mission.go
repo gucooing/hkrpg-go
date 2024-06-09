@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -26,8 +27,8 @@ type MainMission struct {
 }
 
 type TakeParam struct {
-	Type  string `json:"Type"`
-	Value uint32 `json:"Value"`
+	Type  constant.MissionBeginType `json:"Type"`
+	Value uint32                    `json:"Value"`
 }
 
 func (g *GameDataConfig) loadMainMission() {

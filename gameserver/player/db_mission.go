@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -153,8 +154,8 @@ func (g *GamePlayer) TalkStrSubMission(talkStr string) {
 }
 
 // 处理战斗任务
-func (g *GamePlayer) UpBattleSubMission(req *proto.PVEBattleResultCsReq) {
-	db := g.GetBattleBackupById(req.BattleId)
+func (g *GamePlayer) UpBattleSubMission(battleId uint32) {
+	db := g.GetBattleBackupById(battleId)
 	if db.EventId == 0 {
 		return
 	}
@@ -164,8 +165,8 @@ func (g *GamePlayer) UpBattleSubMission(req *proto.PVEBattleResultCsReq) {
 			continue
 		}
 		switch conf.FinishType {
-		case "StageWin":
-			if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN && gdconf.IsBattleMission(id, db.EventId) {
+		case constant.StageWin:
+			if gdconf.IsBattleMission(id, db.EventId) {
 				g.FinishSubMission(id)
 			}
 		}
@@ -180,7 +181,7 @@ func (g *GamePlayer) UpInteractSubMission(db *spb.BlockBin) {
 			continue
 		}
 		switch conf.FinishType {
-		case "PropState":
+		case constant.PropState:
 			propState := g.GetPropState(db, conf.ParamInt1, conf.ParamInt2, "")
 			if conf.ParamInt3 == propState {
 				g.FinishSubMission(id)
@@ -197,7 +198,7 @@ func (g *GamePlayer) UpKillMonsterSubMission(me *MonsterEntity) {
 			continue
 		}
 		switch conf.FinishType {
-		case "KillMonster":
+		case constant.KillMonster:
 			if me.GroupId == conf.ParamInt1 && me.InstId == conf.ParamInt2 {
 				g.FinishSubMission(id)
 			}
@@ -213,7 +214,7 @@ func (g *GamePlayer) CreateCharacterSubMission() {
 			continue
 		}
 		switch conf.FinishType {
-		case "CreateCharacter":
+		case constant.CreateCharacter:
 			g.FinishSubMission(id)
 		}
 	}
@@ -310,8 +311,28 @@ func (g *GamePlayer) MessagePerformSectionFinish(sectionId uint32) { // 处理np
 		if conf == nil {
 			continue
 		}
-		if conf.FinishType == "MessagePerformSectionFinish" {
+		if conf.FinishType == constant.MessagePerformSectionFinish {
 			if conf.ParamInt1 == sectionId {
+				g.FinishSubMission(id)
+			}
+		}
+	}
+}
+
+func (g *GamePlayer) FinishCocoon(cocoonId uint32) {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		isFinish := false
+		if conf.FinishType == constant.CocoonFinish {
+			for _, paramInt := range conf.ParamIntList {
+				if cocoonId == paramInt {
+					isFinish = true
+				}
+			}
+			if isFinish {
 				g.FinishSubMission(id)
 			}
 		}
@@ -326,26 +347,31 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			continue
 		}
 		switch conf.FinishType {
-		case "GetTrialAvatar": // 加载试用角色
+		case constant.GetTrialAvatar: // 加载试用角色
 			g.GetTrialAvatar(conf.ParamInt1)
 			g.FinishSubMission(id)
-		case "DelTrialAvatar": // 卸载试用角色
+		case constant.DelTrialAvatar: // 卸载试用角色
 			g.DelTrialAvatar(conf.ParamInt1)
 			g.FinishSubMission(id)
-		case "EnterFloor": // 传送
+		case constant.EnterFloor: // 传送
 			if entryId, ok := gdconf.GetEntryId(id); ok {
 				g.EnterSceneByServerScNotify(entryId, 0)
 			} else {
 				logger.Error("EnterFloor MissionId:%v error", id)
 			}
 			g.FinishSubMission(id)
-		case "SubMissionFinishCnt": // 完成列表中的子任务即可
+		case constant.SubMissionFinishCnt: // 完成列表中的子任务即可
 			g.SubMissionFinishCnt(id)
-		case "FinishMission": // 完成列表中的主任务即可
+		case constant.FinishMission: // 完成列表中的主任务即可
 			g.FinishMainMission(id)
-		case "MessagePerformSectionFinish": // 对话框显示
+		case constant.MessagePerformSectionFinish: // 对话框显示
 			g.AddMessageGroup(conf.ParamInt1)
-			// g.FinishSubMission(id)
+		// g.FinishSubMission(id)
+		case constant.MessageSectionFinish: //
+			// g.AddMessageGroup(conf.ParamInt1)
+			g.FinishSubMission(id)
+		case constant.Unknown:
+			g.FinishSubMission(id)
 		}
 	}
 }
@@ -362,10 +388,12 @@ func (g *GamePlayer) AutoServerMissionFinishAction() {
 		}
 		for _, finishAction := range conf.FinishActionList {
 			switch finishAction.FinishActionType {
-			case "ChangeLineup": // 强制更新队伍
+			case constant.ChangeLineup: // 强制更新队伍
 				g.NewTrialLine(finishAction.FinishActionPara) // 设置队伍角色
-			case "Recover": // 恢复队伍
+			case constant.Recover: // 恢复队伍
 				g.RecoverLine()
+			case constant.AddMissionItem: // 添加任务道具
+
 			}
 		}
 	}
@@ -488,7 +516,7 @@ func (g *GamePlayer) ReadyMainMission() {
 				if finishSubMainMissionList[subInfo.ID] != nil {
 					continue
 				}
-				if subInfo.TakeType == "Auto" {
+				if subInfo.TakeType == constant.Auto {
 					nextList = append(nextList, subInfo.ID)
 					subMainMissionList[subInfo.ID] = &spb.MissionInfo{
 						MissionId: subInfo.ID,
@@ -514,14 +542,18 @@ func (g *GamePlayer) IsReceiveMission(mission *gdconf.MainMission, mainMissionLi
 is:
 	for _, take := range mission.TakeParam {
 		switch take.Type {
-		case "Auto":
+		case constant.Auto:
 			isReceive = true
-		case "MultiSequence":
+		case constant.MultiSequence:
 			if finishMainMissionList[take.Value] != nil {
 				isReceive = true
 			} else {
 				isReceive = false
 				break is
+			}
+		case constant.MBTPlayerLevel:
+			if take.Value >= g.GetLevel() {
+				isReceive = true
 			}
 		default:
 			isReceive = false

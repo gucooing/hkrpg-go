@@ -95,6 +95,13 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.PlayerPlayerSyncScNotify()
 		// 体力改变通知
 		g.StaminaInfoScNotify()
+		// 任务判断
+		if battleBin.EventId != 0 {
+			g.UpBattleSubMission(req.BattleId)
+		}
+		if battleBin.CocoonId != 0 {
+			g.FinishCocoon(battleBin.CocoonId)
+		}
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
 		teleportToAnchor = true
 	case proto.BattleEndStatus_BATTLE_END_QUIT:
@@ -112,10 +119,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.ChallengePVEBattleResultCsReq(req)
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		g.ChallengePVEBattleResultCsReq(req)
-	}
-	// 任务判断
-	if battleBin.EventId != 0 {
-		g.UpBattleSubMission(req)
 	}
 	// 副本处理
 	g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)

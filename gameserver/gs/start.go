@@ -125,7 +125,8 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 func (s *GameServer) AutoUpDataPlayer() {
 	logger.Info("开始自动保存玩家数据")
 	timestamp := time.Now().Unix()
-	for _, g := range s.getAllPlayer() {
+	playerList := s.getAllPlayer()
+	for _, g := range playerList {
 		if g.p.Uid == 0 {
 			continue
 		}
@@ -155,7 +156,7 @@ func (s *GameServer) gameTicker() {
 		case <-s.Ticker.C:
 			s.GlobalRotationEvent5s()
 		case <-s.autoUpDataPlayer.C:
-			s.AutoUpDataPlayer()
+			go s.AutoUpDataPlayer()
 		case <-s.everyDay4.C: // 4点事件
 			s.GlobalRotationEvent4h()
 		case <-s.Stop:

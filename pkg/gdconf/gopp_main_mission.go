@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -23,28 +24,28 @@ type GoppMainMission struct {
 }
 
 type SubMission struct {
-	ID                uint32          `json:"ID"`
-	MainMissionID     uint32          `json:"MainMissionID"`
-	MissionJsonPath   string          `json:"MissionJsonPath"`
-	LevelPlaneID      uint32          `json:"LevelPlaneID"`
-	LevelFloorID      uint32          `json:"LevelFloorID"`
-	AudioEmotionState string          `json:"AudioEmotionState"`
-	TakeType          string          `json:"TakeType"`
-	TakeParamIntList  []uint32        `json:"TakeParamIntList"`
-	FinishType        string          `json:"FinishType"`
-	ParamType         string          `json:"ParamType"`
-	ParamInt1         uint32          `json:"ParamInt1"`
-	ParamInt2         uint32          `json:"ParamInt2"`
-	ParamInt3         uint32          `json:"ParamInt3"`
-	ParamStr1         string          `json:"ParamStr1"`
-	ParamIntList      []uint32        `json:"ParamIntList"`
-	ParamItemList     []*ParamItem    `json:"ParamItemList"`
-	FinishActionList  []*FinishAction `json:"FinishActionList"`
-	Progress          uint32          `json:"Progress"`
-	IsShow            bool            `json:"IsShow"`
-	WayPointFloorID   uint32          `json:"WayPointFloorID"`
-	MapNPCList        []*MapNPC       `json:"MapNPCList"`
-	MapPropList       []*MapProp      `json:"MapPropList"`
+	ID                uint32                    `json:"ID"`
+	MainMissionID     uint32                    `json:"MainMissionID"`
+	MissionJsonPath   string                    `json:"MissionJsonPath"`
+	LevelPlaneID      uint32                    `json:"LevelPlaneID"`
+	LevelFloorID      uint32                    `json:"LevelFloorID"`
+	AudioEmotionState string                    `json:"AudioEmotionState"`
+	TakeType          constant.MissionBeginType `json:"TakeType"`
+	TakeParamIntList  []uint32                  `json:"TakeParamIntList"`
+	FinishType        constant.QuestFinishType  `json:"FinishType"`
+	ParamType         string                    `json:"ParamType"`
+	ParamInt1         uint32                    `json:"ParamInt1"`
+	ParamInt2         uint32                    `json:"ParamInt2"`
+	ParamInt3         uint32                    `json:"ParamInt3"`
+	ParamStr1         string                    `json:"ParamStr1"`
+	ParamIntList      []uint32                  `json:"ParamIntList"`
+	ParamItemList     []*ParamItem              `json:"ParamItemList"`
+	FinishActionList  []*FinishAction           `json:"FinishActionList"`
+	Progress          uint32                    `json:"Progress"`
+	IsShow            bool                      `json:"IsShow"`
+	WayPointFloorID   uint32                    `json:"WayPointFloorID"`
+	MapNPCList        []*MapNPC                 `json:"MapNPCList"`
+	MapPropList       []*MapProp                `json:"MapPropList"`
 }
 
 type ParamItem struct {
@@ -53,8 +54,8 @@ type ParamItem struct {
 }
 
 type FinishAction struct {
-	FinishActionType string   `json:"FinishActionType"`
-	FinishActionPara []uint32 `json:"FinishActionPara"`
+	FinishActionType constant.FinishActionType `json:"FinishActionType"`
+	FinishActionPara []uint32                  `json:"FinishActionPara"`
 }
 
 type MapNPC struct {
