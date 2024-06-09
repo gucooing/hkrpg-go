@@ -104,5 +104,5 @@ func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32,
 			level++
 		}
 	}
-	return 0, 0, 0
+	return 70, CONF.PlayerLevelConfigMap[70].PlayerExp, 6
 }
