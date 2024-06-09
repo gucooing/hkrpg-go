@@ -156,7 +156,7 @@ func (s *GameServer) gameTicker() {
 		case <-s.Ticker.C:
 			s.GlobalRotationEvent5s()
 		case <-s.autoUpDataPlayer.C:
-			go s.AutoUpDataPlayer()
+			s.AutoUpDataPlayer()
 		case <-s.everyDay4.C: // 4点事件
 			s.GlobalRotationEvent4h()
 		case <-s.Stop:

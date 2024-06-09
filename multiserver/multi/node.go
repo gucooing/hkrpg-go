@@ -40,7 +40,7 @@ func (s *Multi) newNode() {
 	// 向node注册
 	n.ServiceConnectionReq()
 	// 开启node定时器
-	n.nodeTicler(tickerCtx)
+	go n.nodeTicler(tickerCtx)
 }
 
 func (n *NodeService) nodeKill() {
