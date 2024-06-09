@@ -238,6 +238,9 @@ func (g *GamePlayer) SubMissionFinishCnt(id uint32) {
 			isFinish = false
 		}
 	}
+	if db.Progress == conf.Progress {
+		isFinish = true
+	}
 	if isFinish { // 完成任务
 		db.Progress = conf.Progress
 		g.FinishSubMission(id)

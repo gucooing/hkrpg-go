@@ -11,7 +11,7 @@ func (g *GamePlayer) GetQuestDataCsReq(payloadMsg []byte) {
 	rsp.QuestList = make([]*proto.Quest, 0)
 	for _, questList := range gdconf.GetQuestDataMap() {
 		quest := &proto.Quest{
-			Progress:   1,
+			Progress:   0,
 			Status:     proto.QuestStatus_QUEST_DOING,
 			Id:         questList.QuestID,
 			FinishTime: 1699688465,

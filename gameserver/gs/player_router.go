@@ -106,7 +106,6 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
 		// 任务
 		cmd.GetMissionEventDataCsReq: g.GetMissionEventDataCsReq, // 获取任务状态
-		cmd.GetQuestDataCsReq:        g.GetQuestDataCsReq,        // 获取任务信息
 		cmd.GetMissionStatusCsReq:    g.HandleGetMissionStatusCsReq,
 		cmd.GetMissionDataCsReq:      g.GetMissionDataCsReq,     // 获取任务数据
 		cmd.FinishTalkMissionCsReq:   g.FinishTalkMissionCsReq,  // 完成任务
@@ -142,6 +141,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集
 		cmd.GetRogueHandbookDataCsReq:  g.GetRogueHandbookDataCsReq,  // 图鉴
+		cmd.GetQuestDataCsReq:          g.GetQuestDataCsReq,          // 获取成就信息
 		// NPC
 		cmd.GetFirstTalkNpcCsReq:              g.GetFirstTalkNpcCsReq,
 		cmd.GetNpcTakenRewardCsReq:            g.GetNpcTakenRewardCsReq,            // NPC对话
