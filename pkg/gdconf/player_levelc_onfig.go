@@ -35,9 +35,16 @@ func (g *GameDataConfig) loadPlayerLevelConfig() {
 func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32, uint32) {
 	for ; level < 71; level++ {
 		if level == 70 {
-			return exp, level, worldLevel
+			return level, exp, worldLevel
 		}
-		newExp := CONF.PlayerLevelConfigMap[level+1].PlayerExp - CONF.PlayerLevelConfigMap[level].PlayerExp
+		var newExp uint32
+		olConf := CONF.PlayerLevelConfigMap[level]
+		newConf := CONF.PlayerLevelConfigMap[level+1]
+		if newConf == nil {
+			newExp = olConf.PlayerExp
+		} else {
+			newExp = newConf.PlayerExp - olConf.PlayerExp
+		}
 		if exp < newExp {
 			switch worldLevel {
 			case 0:
