@@ -552,7 +552,7 @@ is:
 				break is
 			}
 		case constant.MBTPlayerLevel:
-			if take.Value >= g.GetLevel() {
+			if take.Value <= g.GetLevel() {
 				isReceive = true
 			}
 		default:

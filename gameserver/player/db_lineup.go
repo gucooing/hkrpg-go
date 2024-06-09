@@ -144,10 +144,15 @@ func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 			}
 		}
 	}
-	if isUp {
-		g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, false, g.GetPosPb(), g.GetRotPb())
-		g.SyncLineupNotifyByLineBin(db)
+	if !isUp {
+		db.AvatarIdList[3] = &spb.LineAvatarList{
+			Slot:           3,
+			AvatarId:       trialAvatarId,
+			LineAvatarType: lineAvatarType,
+		}
 	}
+	g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, false, g.GetPosPb(), g.GetRotPb())
+	g.SyncLineupNotifyByLineBin(db)
 }
 
 func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
