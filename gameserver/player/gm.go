@@ -137,3 +137,54 @@ func (g *GamePlayer) RecoverLine() {
 		}
 	}
 }
+
+func (g *GamePlayer) GmMission(req *spb.GmMission) {
+	if req.FinishAll {
+		g.FinishAllMission()
+		g.FinishAllTutorial()
+		return
+	}
+}
+
+func (g *GamePlayer) FinishAllMission() {
+	db := g.GetMainMission()
+	db.SubMissionList = make(map[uint32]*spb.MissionInfo)
+	db.MainMissionList = make(map[uint32]*spb.MissionInfo)
+	for id, info := range gdconf.GetSubMainMission() {
+		if db.FinishSubMissionList == nil {
+			db.FinishSubMissionList = make(map[uint32]*spb.MissionInfo)
+		}
+		db.FinishSubMissionList[id] = &spb.MissionInfo{
+			MissionId: id,
+			Progress:  info.Progress,
+			Status:    spb.MissionStatus_MISSION_FINISH,
+		}
+	}
+	for id := range gdconf.GetGoppMainMission() {
+		if db.FinishMainMissionList == nil {
+			db.FinishMainMissionList = make(map[uint32]*spb.MissionInfo)
+		}
+		db.FinishMainMissionList[id] = &spb.MissionInfo{
+			MissionId: id,
+			Progress:  1,
+			Status:    spb.MissionStatus_MISSION_FINISH,
+		}
+	}
+}
+
+func (g *GamePlayer) FinishAllTutorial() {
+	tDb := g.GetTutorial()
+	for id := range gdconf.GetTutorialData() {
+		tDb[id] = &spb.TutorialInfo{
+			Id:     id,
+			Status: spb.TutorialStatus_TUTORIAL_FINISH,
+		}
+	}
+	gDb := g.GetTutorialGuide()
+	for id := range gdconf.GetTutorialGuideGroup() {
+		gDb[id] = &spb.TutorialInfo{
+			Id:     id,
+			Status: spb.TutorialStatus_TUTORIAL_FINISH,
+		}
+	}
+}

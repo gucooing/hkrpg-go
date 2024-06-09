@@ -2628,10 +2628,10 @@ type MainMission struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	MainMissionList       map[uint32]*MissionInfo `protobuf:"bytes,1,rep,name=main_mission_list,json=mainMissionList,proto3" json:"main_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`                     // 主线任务
-	SubMissionList        map[uint32]*MissionInfo `protobuf:"bytes,2,rep,name=sub_mission_list,json=subMissionList,proto3" json:"sub_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`                        //主线子任务
-	FinishMainMissionList map[uint32]*MissionInfo `protobuf:"bytes,3,rep,name=finish_main_mission_list,json=finishMainMissionList,proto3" json:"finish_main_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 已完成的主线
-	FinishSubMissionList  map[uint32]*MissionInfo `protobuf:"bytes,4,rep,name=finish_sub_mission_list,json=finishSubMissionList,proto3" json:"finish_sub_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`    //已完成支线任务
+	MainMissionList       map[uint32]*MissionInfo `protobuf:"bytes,1,rep,name=main_mission_list,json=mainMissionList,proto3" json:"main_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`                     // 主任务
+	SubMissionList        map[uint32]*MissionInfo `protobuf:"bytes,2,rep,name=sub_mission_list,json=subMissionList,proto3" json:"sub_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`                        //子任务
+	FinishMainMissionList map[uint32]*MissionInfo `protobuf:"bytes,3,rep,name=finish_main_mission_list,json=finishMainMissionList,proto3" json:"finish_main_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 已完成的主任务
+	FinishSubMissionList  map[uint32]*MissionInfo `protobuf:"bytes,4,rep,name=finish_sub_mission_list,json=finishSubMissionList,proto3" json:"finish_sub_mission_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`    //已完成支任务
 }
 
 func (x *MainMission) Reset() {

@@ -256,6 +256,69 @@ func (x *MaxCurAvatar) GetAll() bool {
 	return false
 }
 
+type GmMission struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PlayerUid uint32 `protobuf:"varint,1,opt,name=player_uid,json=playerUid,proto3" json:"player_uid,omitempty"`
+	FinishAll bool   `protobuf:"varint,2,opt,name=finish_all,json=finishAll,proto3" json:"finish_all,omitempty"`
+	MissionId uint32 `protobuf:"varint,3,opt,name=mission_id,json=missionId,proto3" json:"mission_id,omitempty"`
+}
+
+func (x *GmMission) Reset() {
+	*x = GmMission{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_common_server_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GmMission) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GmMission) ProtoMessage() {}
+
+func (x *GmMission) ProtoReflect() protoreflect.Message {
+	mi := &file_common_server_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GmMission.ProtoReflect.Descriptor instead.
+func (*GmMission) Descriptor() ([]byte, []int) {
+	return file_common_server_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GmMission) GetPlayerUid() uint32 {
+	if x != nil {
+		return x.PlayerUid
+	}
+	return 0
+}
+
+func (x *GmMission) GetFinishAll() bool {
+	if x != nil {
+		return x.FinishAll
+	}
+	return false
+}
+
+func (x *GmMission) GetMissionId() uint32 {
+	if x != nil {
+		return x.MissionId
+	}
+	return 0
+}
+
 var File_common_server_proto protoreflect.FileDescriptor
 
 var file_common_server_proto_rawDesc = []byte{
@@ -281,8 +344,15 @@ var file_common_server_proto_rawDesc = []byte{
 	0x09, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x55, 0x69, 0x64, 0x12, 0x1b, 0x0a, 0x09, 0x61, 0x76,
 	0x61, 0x74, 0x61, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x08, 0x61,
 	0x76, 0x61, 0x74, 0x61, 0x72, 0x49, 0x64, 0x12, 0x10, 0x0a, 0x03, 0x61, 0x6c, 0x6c, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x61, 0x6c, 0x6c, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x20, 0x01, 0x28, 0x08, 0x52, 0x03, 0x61, 0x6c, 0x6c, 0x22, 0x68, 0x0a, 0x09, 0x47, 0x6d, 0x4d,
+	0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72,
+	0x5f, 0x75, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x6c, 0x61, 0x79,
+	0x65, 0x72, 0x55, 0x69, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x66, 0x69, 0x6e, 0x69, 0x73, 0x68, 0x5f,
+	0x61, 0x6c, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x09, 0x66, 0x69, 0x6e, 0x69, 0x73,
+	0x68, 0x41, 0x6c, 0x6c, 0x12, 0x1d, 0x0a, 0x0a, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x5f,
+	0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x6d, 0x69, 0x73, 0x73, 0x69, 0x6f,
+	0x6e, 0x49, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -297,12 +367,13 @@ func file_common_server_proto_rawDescGZIP() []byte {
 	return file_common_server_proto_rawDescData
 }
 
-var file_common_server_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_common_server_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
 var file_common_server_proto_goTypes = []interface{}{
 	(*GmGive)(nil),       // 0: GmGive
 	(*GmWorldLevel)(nil), // 1: GmWorldLevel
 	(*DelItem)(nil),      // 2: DelItem
 	(*MaxCurAvatar)(nil), // 3: MaxCurAvatar
+	(*GmMission)(nil),    // 4: GmMission
 }
 var file_common_server_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -366,6 +437,18 @@ func file_common_server_proto_init() {
 				return nil
 			}
 		}
+		file_common_server_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GmMission); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -373,7 +456,7 @@ func file_common_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_common_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

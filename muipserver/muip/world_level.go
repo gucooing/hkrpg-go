@@ -57,3 +57,18 @@ func (a *Api) MaxCurAvatar(c *gin.Context) {
 	}
 	a.ToNode(c, cmd.MaxCurAvatar, message)
 }
+
+func (a *Api) GmMission(c *gin.Context) {
+	uid := alg.S2U32(c.Query("uid"))
+	var allFinish = false
+	all := alg.S2U32(c.Query("all"))
+	if all == 1 {
+		allFinish = true
+	}
+	message := &spb.GmMission{
+		PlayerUid: uid,
+		FinishAll: allFinish,
+		MissionId: 0,
+	}
+	a.ToNode(c, cmd.GmMission, message)
+}

@@ -77,6 +77,8 @@ type GameDataConfig struct {
 	VideoVersionKey             []*VideoVersionKey                              // 视频key
 	InteractConfigMap           map[uint32]*InteractConfig                      // 互动配置
 	MessageGroupConfig          *MessageGroupConfig                             // 消息配置
+	TutorialDataMap             map[uint32]*TutorialData                        // 教程
+	TutorialGuideGroupMap       map[uint32]*TutorialGuideGroup                  // 图鉴教程
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -190,6 +192,8 @@ func (g *GameDataConfig) load() {
 	g.loadVideoVersionKey()          // 视频key
 	g.loadInteractConfig()           // 互动配置
 	g.loadMessageGroupConfig()       // 消息配置
+	g.loadTutorialData()             // 教程
+	g.loadTutorialGuideGroup()       // 图鉴教程
 	// 下面是预处理
 	g.goppServerGroup() // 预处理服务器场景
 	g.goppTeleports()   // 预处理传送锚点

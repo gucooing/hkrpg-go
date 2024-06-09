@@ -1370,6 +1370,7 @@ const (
 	GmWorldLevel = 12002
 	DelItem      = 12003
 	MaxCurAvatar = 12004
+	GmMission    = 12005
 )
 
 func (c *CmdProtoMap) registerAllMessage() {
@@ -2568,8 +2569,7 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GateLoginMultiRsp, func() any { return new(spb.GateLoginMultiRsp) })
 	c.regMsg(GameToGatePlayerLogoutNotify, func() any { return new(spb.GameToGatePlayerLogoutNotify) })
 	c.regMsg(GateToGamePlayerLogoutNotify, func() any { return new(spb.GateToGamePlayerLogoutNotify) })
-
-	// c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
+	c.regMsg(GmMission, func() any { return new(spb.GmMission) })
 	c.regMsg(PlayerMsgGateToNodeNotify, func() any { return new(spb.PlayerMsgGateToNodeNotify) })
 	c.regMsg(GameToNodePingReq, func() any { return new(spb.GameToNodePingReq) })
 	c.regMsg(GameToNodePingRsp, func() any { return new(spb.GameToNodePingRsp) })

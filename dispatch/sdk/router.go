@@ -14,7 +14,7 @@ func (s *Server) InitRouter() {
 
 	// 调度
 	s.Router.GET("/query_dispatch", s.QueryDispatchHandler)
-	s.Router.GET("/query_dispatch/gucooing/anz", s.QueryDispatchHandler)
+	s.Router.GET("/query_dispatch/gucooing/az", s.QueryDispatchHandler)
 	s.Router.GET("/query_gateway", s.QueryGatewayHandler)
 	s.Router.GET("/query_gateway_capture", s.QueryGatewayHandlerCapture)
 	s.Router.GET("/query_gateway_capture_cn", s.QueryGatewayHandlerCaptureCn)

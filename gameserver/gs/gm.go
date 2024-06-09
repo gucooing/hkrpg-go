@@ -40,3 +40,12 @@ func (s *GameServer) GmMaxCurAvatar(serviceMsg pb.Message) {
 	}
 	play.p.GmMaxCurAvatar(serviceMsg)
 }
+
+func (s *GameServer) GmMission(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GmMission)
+	play := s.getPlayerByUid(req.PlayerUid)
+	if play == nil {
+		return
+	}
+	play.p.GmMission(req)
+}

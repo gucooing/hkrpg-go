@@ -160,6 +160,10 @@ func GetGoppMainMissionById(id uint32) *GoppMainMission {
 	return CONF.GoppMission.GoppMainMission[id]
 }
 
+func GetSubMainMission() map[uint32]*SubMission {
+	return CONF.GoppMission.GoppSubMainMission
+}
+
 func GetSubMainMissionById(id uint32) *SubMission {
 	return CONF.GoppMission.GoppSubMainMission[id]
 }

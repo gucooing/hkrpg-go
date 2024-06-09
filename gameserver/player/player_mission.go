@@ -59,15 +59,12 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 	}
 	// 处理子任务
 	for _, id := range req.SubMissionIdList {
-		var status proto.MissionStatus
-		if curMainSubDb[id] == nil {
-			if finishMainSubDb[id] == nil {
-				status = proto.MissionStatus_MISSION_NONE
-			} else {
-				status = proto.MissionStatus(finishMainSubDb[id].Status)
-			}
-		} else {
-			status = proto.MissionStatus(curMainSubDb[id].Status)
+		status := proto.MissionStatus_MISSION_NONE
+		if curMainSubDb[id] != nil {
+			status = proto.MissionStatus_MISSION_DOING
+		}
+		if finishMainSubDb[id] != nil {
+			status = proto.MissionStatus_MISSION_FINISH
 		}
 		rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
 			Id:     id,

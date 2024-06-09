@@ -103,6 +103,8 @@ func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		n.game.DelItem(serviceMsg) // 清空背包
 	case cmd.MaxCurAvatar:
 		n.game.GmMaxCurAvatar(serviceMsg)
+	case cmd.GmMission:
+		n.game.GmMission(serviceMsg)
 	default:
 		logger.Info("node -> game error cmdid:%v", cmdId)
 	}
