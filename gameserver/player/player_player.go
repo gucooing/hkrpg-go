@@ -31,14 +31,10 @@ func (g *GamePlayer) AddTrailblazerExp(num uint32) {
 	db := g.GetBasicBin()
 	material[Exp] += num
 	level, exp, worldLevel := gdconf.GetPlayerLevelConfigByLevel(material[Exp], g.GetLevel(), g.GetWorldLevel())
-	if level == 0 && exp == 0 {
-		return
-	} else {
-		material[Exp] = exp
-		db.Level = level
-		db.WorldLevel = worldLevel
-		g.PlayerPlayerSyncScNotify()
-	}
+	material[Exp] = exp
+	db.Level = level
+	db.WorldLevel = worldLevel
+	g.PlayerPlayerSyncScNotify()
 }
 
 func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
