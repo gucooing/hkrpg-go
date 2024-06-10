@@ -176,11 +176,16 @@ func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {
 }
 
 func (g *GamePlayer) GetHeadIconList() []uint32 {
-	return g.GetItem().HeadIcon
+	db := g.GetItem()
+	if db.HeadIcon == nil {
+		db.HeadIcon = make([]uint32, 0)
+	}
+	return db.HeadIcon
 }
 
 func (g *GamePlayer) AddHeadIcon(headIconId uint32) {
-	g.GetItem().HeadIcon = append(g.GetItem().HeadIcon, headIconId)
+	db := g.GetHeadIconList()
+	db = append(db, headIconId)
 	// TODO
 	// g.ScenePlaneEventScNotify(headIconId, 1)
 }

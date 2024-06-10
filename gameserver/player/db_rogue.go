@@ -104,11 +104,11 @@ func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 
 func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 	info := &proto.RogueCurrentInfo{
-		RogueAeonInfo:    nil,
+		RogueAeonInfo:    g.GetGameAeonInfo(),
 		GameMiracleInfo:  nil,
 		RogueLineupInfo:  nil,
 		Status:           0,
-		MapInfo:          nil,
+		MapInfo:          g.GetRogueMap(),
 		PendingAction:    nil,
 		IsWin:            false,
 		ModuleInfo:       nil,
@@ -186,6 +186,36 @@ func (g *GamePlayer) GetRogueAeonInfo() *proto.RogueAeonInfo {
 	}
 
 	return info
+}
+
+func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
+	info := &proto.GameAeonInfo{
+		IsUnlocked:             true,
+		UnlockedAeonEnhanceNum: 3,
+		AeonId:                 4,
+	}
+	return info
+}
+
+func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
+	rogue := g.GetCurRogue()
+	roomMap := &proto.RogueMapInfo{
+		MapId:     rogue.RogueMapID,
+		AreaId:    rogue.CurAreaId,
+		CurSiteId: rogue.CurSiteId, // 当前id
+		CurRoomId: rogue.RogueRoomMap[rogue.CurSiteId].RoomId,
+		RoomList:  make([]*proto.RogueRoom, 0),
+	}
+	for id, rogueScene := range rogue.RogueRoomMap {
+		roomList := &proto.RogueRoom{
+			SiteId:    id,
+			RoomId:    rogueScene.RoomId,
+			CurStatus: proto.RogueRoomStatus(rogueScene.RoomStatus),
+		}
+		roomMap.RoomList = append(roomMap.RoomList, roomList)
+	}
+
+	return roomMap
 }
 
 func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {

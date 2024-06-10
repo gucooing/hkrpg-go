@@ -293,29 +293,6 @@ func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetRogueHandbookDataScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
-	rogue := g.GetDbRogue()
-	roomMap := &proto.RogueMapInfo{
-		MapId:     rogue.CurRogue.RogueMapID,
-		AreaId:    rogue.CurRogue.CurAreaId,
-		CurSiteId: rogue.CurRogue.CurSiteId, // 当前id
-		// CurRoomId: rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomId,
-		RoomList: make([]*proto.RogueRoom, 0),
-	}
-
-	// for id, rogueScene := range rogue.CurRogue.RogueSceneMap {
-	// 	roomList := &proto.RogueRoom{
-	// 		SiteId:    id,
-	// 		RoomId:    rogueScene.RoomId,
-	// 		CurStatus: proto.RogueRoomStatus(rogueScene.RoomStatus),
-	// 	}
-	//
-	// 	roomMap.RoomList = append(roomMap.RoomList, roomList)
-	// }
-
-	return roomMap
-}
-
 func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.GoppLevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
 	entityGroupLists := &proto.SceneEntityGroupInfo{
 		GroupId:    groupID,
