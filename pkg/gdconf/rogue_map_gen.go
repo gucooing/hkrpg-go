@@ -28,7 +28,20 @@ func (g *GameDataConfig) loadRogueMapGen() {
 func GetRogueRoomTypeBySiteID(siteID uint32) uint32 {
 	rogue := CONF.RogueMapGenMap[siteID]
 	idIndex := rand.Intn(len(rogue))
-	rogueId := rogue[idIndex]
+	typeId := rogue[idIndex]
 
-	return rogueId
+	return GetRogueRoomByType(typeId)
+}
+
+func GetRogueRoomTypeBy100(siteID uint32) uint32 {
+	roomMap := map[uint32]uint32{
+		1: 2,
+		2: 6,
+		3: 5,
+		4: 2,
+		5: 3,
+		6: 5,
+		7: 7,
+	}
+	return GetRogueRoomByType(roomMap[siteID])
 }

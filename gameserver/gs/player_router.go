@@ -63,6 +63,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.SceneEnterStageCsReq:  g.SceneEnterStageCsReq,  // 场景直接发起战斗
 		// 模拟宇宙
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙状态
+		cmd.GetRogueInitialScoreCsReq:           g.GetRogueInitialScoreCsReq,           // 查询模拟宇宙当前分数
 		cmd.GetRogueTalentInfoCsReq:             g.GetRogueTalentInfoCsReq,             // 获取天赋信息
 		cmd.GetRogueInfoCsReq:                   g.GetRogueInfoCsReq,                   // 获取模拟宇宙
 		cmd.StartRogueCsReq:                     g.StartRogueCsReq,                     // 模拟宇宙,启动!

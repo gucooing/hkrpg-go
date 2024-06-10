@@ -18,6 +18,7 @@ const (
 	Stamina  uint32 = 11 // 体力
 	RStamina uint32 = 12 // 后备体力
 	Exp      uint32 = 22 // 经验
+	Cf       uint32 = 31 // 宇宙碎片
 )
 
 type Material struct {
@@ -81,6 +82,11 @@ func (g *GamePlayer) GetMaterialMap() map[uint32]uint32 {
 func (g *GamePlayer) GetMaterialById(id uint32) uint32 {
 	db := g.GetMaterialMap()
 	return db[id]
+}
+
+func (g *GamePlayer) SetMaterialById(id, num uint32) {
+	db := g.GetMaterialMap()
+	db[id] = num
 }
 
 func (g *GamePlayer) AddItem(pileItem []*Material) {

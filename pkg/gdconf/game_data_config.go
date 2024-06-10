@@ -34,7 +34,7 @@ type GameDataConfig struct {
 	ItemConfigRelicMap          map[uint32]*ItemConfigRelic                     // 背包遗器配置
 	RogueTalentMap              map[uint32]*RogueTalent                         // 模拟宇宙天赋
 	RogueMapGenMap              map[uint32][]uint32                             // 模拟宇宙id场景映射表
-	RogueManagerMap             *RogueManager                                   // 模拟宇宙排期表
+	RogueManagerMap             map[uint32]*RogueManagerList                    // 模拟宇宙排期表
 	RogueMonsterMap             map[uint32]*RogueMonster                        // 模拟宇宙怪物配置
 	RogueMonsterGroupMap        map[uint32]*RogueMonsterGroups                  // 模拟宇宙怪物生成配置
 	RogueBuffMap                *RogueBuffList                                  // 模拟宇宙buff列表

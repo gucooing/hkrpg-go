@@ -49,7 +49,7 @@ func (g *GameDataConfig) goppRogueRoom() {
 		g.RogueRoomMap.RogueRoomByType[v.RogueRoomType] = append(g.RogueRoomMap.RogueRoomByType[v.RogueRoomType], v)
 	}
 
-	logger.Info("load %v RogueRoom", len(g.RogueRoomMap.RogueRoomJson))
+	logger.Info("gopp %v RogueRoom", len(g.RogueRoomMap.RogueRoomJson))
 }
 
 func GetRogueRoomById(roomId uint32) *RogueRoom {

@@ -181,8 +181,9 @@ message Battle {// 战斗
 }
 
 message Rogue {
-  map<uint32, RogueArea> rogue_area = 1; // 关卡开启解锁
+  map<uint32, RogueArea> rogue_area = 1; // 关卡状态
   CurRogue cur_rogue = 2; // 当前正在进行的
+  map<uint32, RogueHistory> rogue_history_list = 3;// 历史领取信息
 }
 
 message RogueArea {
@@ -193,7 +194,7 @@ message RogueArea {
 message CurRogue {
   uint32 cur_area_id = 1;
   uint32 cur_siteId = 2;
-  map<uint32, RogueRoom> rogue_scene_map = 3;
+  map<uint32, RogueRoom> rogue_room_map = 3;
   uint32 rogue_map_iD = 4;
   uint32 cosmic_fragment = 5;
 }
@@ -202,6 +203,11 @@ message RogueRoom {
   uint32 room_id = 1;
   RoomStatus room_status = 2;
   repeated uint32 next_site_id_list = 3;
+}
+
+message RogueHistory{
+  uint32 season_id = 1; // 期数
+  uint32 score = 2; // 分数
 }
 
 message Challenge {
