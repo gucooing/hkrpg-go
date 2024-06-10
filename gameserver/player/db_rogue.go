@@ -192,7 +192,7 @@ func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
 	info := &proto.GameAeonInfo{
 		IsUnlocked:             true,
 		UnlockedAeonEnhanceNum: 3,
-		AeonId:                 4,
+		AeonId:                 4, // TODO 改成选择的命途
 	}
 	return info
 }
