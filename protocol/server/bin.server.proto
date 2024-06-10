@@ -181,7 +181,7 @@ message Battle {// 战斗
 }
 
 message Rogue {
-  map<uint32, RogueArea> rogue_area = 1; // 完成情况
+  map<uint32, RogueArea> rogue_area = 1; // 关卡开启解锁
   CurRogue cur_rogue = 2; // 当前正在进行的
 }
 

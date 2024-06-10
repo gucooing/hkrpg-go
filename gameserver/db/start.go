@@ -33,7 +33,7 @@ func NewStore(config *config.Config) *Store {
 	s.PlayerDataMysql.AutoMigrate(&database.PlayerData{}, &database.BlockData{})
 	mysqlServerConf := config.MysqlConf["conf"]
 	s.ServerConf = database.NewMysql(mysqlServerConf.Dsn)
-	s.ServerConf.AutoMigrate(&database.Mail{})
+	s.ServerConf.AutoMigrate(&database.Mail{}, &database.RogueConf{}, &database.ScheduleConf{})
 
 	redisLoginConf := config.RedisConf["player_login"]
 	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)

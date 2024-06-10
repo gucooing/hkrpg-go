@@ -38,6 +38,13 @@ func (s *Store) GetAllMail() []*database.Mail {
 	return mailMap
 }
 
+// 拉取全部模拟宇宙
+func (s *Store) GetAllRogue() []*database.RogueConf {
+	var rogueMap []*database.RogueConf
+	s.ServerConf.Find(&rogueMap)
+	return rogueMap
+}
+
 // 拉取地图文件
 func (s *Store) GetBlockData(uid, entryId uint32) *database.BlockData {
 	var blockData *database.BlockData

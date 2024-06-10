@@ -31,3 +31,15 @@ type Item struct { // 邮件奖励模板
 type ServerConf struct {
 	AutoCreate bool // 是否自动注册
 }
+
+type RogueConf struct {
+	SeasonId  uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	BeginTime sql.NullTime
+	EndTime   sql.NullTime
+}
+
+type ScheduleConf struct {
+	ScheduleId uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	BeginTime  sql.NullTime
+	EndTime    sql.NullTime
+}

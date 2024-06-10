@@ -4,7 +4,6 @@ package player
 
 import (
 	"sync"
-	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
@@ -81,7 +80,6 @@ type BattleState struct {
 	TrialActivityState *TrialActivityState
 	BuffList           []uint32 // 进入战斗需要添加的buff
 	AvatarBuffList     []uint32 // 角色buff
-	RogueState         *RogueState
 }
 type TrialActivityState struct {
 	AvatarDemoId  uint32
@@ -109,28 +107,12 @@ type Battle struct {
 	BattleAvatarList []*proto.BattleAvatar // 战斗角色列表
 }
 
-type RogueState struct {
-	BuffNum       uint32
-	BuffList      map[uint32]*RogueBuff
-	AvatarEntity  map[uint32]*AvatarEntity
-	MonsterEntity map[uint32]*MonsterEntity
-	Battle        map[uint32]*RogueBattle
-}
-type RogueBattle struct {
-	monsterEntityMap []uint32 // 实体列表
-}
-type RogueBuff struct {
-	Level     uint32
-	AddTimeMs uint64
-}
-
 func (g *GamePlayer) GetBattleState() *BattleState {
 	if g.OnlineData.BattleState == nil {
 		g.OnlineData.BattleState = &BattleState{
 			BattleType:         0,
 			BuffList:           make([]uint32, 0),
 			TrialActivityState: &TrialActivityState{},
-			RogueState:         &RogueState{},
 		}
 	}
 	return g.OnlineData.BattleState
@@ -170,6 +152,8 @@ func (g *GamePlayer) SetBattleStatus(status spb.BattleType) {
 	db := g.GetBattle()
 	db.BattleType = status
 }
+
+/*************忘却之庭*************/
 
 func (g *GamePlayer) GetChallenge() *spb.Challenge {
 	db := g.GetBattle()
@@ -544,102 +528,12 @@ func (g *GamePlayer) ChallengeBattleEndLose() bool {
 	return false
 }
 
+/*************副本*************/
+
 func (g *GamePlayer) CocoonBattle(cocoonId, worldLevel uint32) {
 	cocoonConfig := gdconf.GetCocoonConfigById(cocoonId, worldLevel)
 	if cocoonConfig == nil {
 		return
-	}
-}
-
-func (g *GamePlayer) GetDbRogue() *spb.Rogue {
-	if g.GetBattle().Rogue == nil {
-		g.GetBattle().Rogue = &spb.Rogue{
-			RogueArea: make(map[uint32]*spb.RogueArea),
-		}
-	}
-
-	return g.GetBattle().Rogue
-}
-
-func (g *GamePlayer) GetCurDbRogue() *spb.CurRogue {
-	rogue := g.GetDbRogue()
-	if rogue.CurRogue == nil {
-		rogue.CurRogue = new(spb.CurRogue)
-	}
-	return rogue.CurRogue
-}
-
-func (g *GamePlayer) GetCurDbRoom() *spb.RogueRoom {
-	curRogue := g.GetCurDbRogue()
-	return curRogue.RogueSceneMap[curRogue.CurSiteId]
-}
-
-func (g *GamePlayer) GetDbRoomBySiteId(siteId uint32) *spb.RogueRoom {
-	curRogue := g.GetCurDbRogue()
-	return curRogue.RogueSceneMap[siteId]
-}
-
-func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
-	rogue := g.GetDbRogue()
-	if rogue.RogueArea == nil {
-		rogue.RogueArea = make(map[uint32]*spb.RogueArea)
-	}
-	if rogue.RogueArea[areaId] == nil {
-		rogue.RogueArea[areaId] = &spb.RogueArea{
-			AreaId:          areaId,
-			RogueAreaStatus: spb.RogueAreaStatus_RogueAreaStatus_ROGUE_AREA_STATUS_LOCK,
-		}
-	}
-
-	return rogue.RogueArea[areaId]
-}
-
-/************************************区分一下***************************************/
-
-func (g *GamePlayer) NewRogueState() {
-	g.GetBattleState().RogueState = &RogueState{
-		BuffNum:       0,
-		AvatarEntity:  make(map[uint32]*AvatarEntity),
-		MonsterEntity: make(map[uint32]*MonsterEntity),
-		Battle:        make(map[uint32]*RogueBattle),
-		BuffList:      make(map[uint32]*RogueBuff),
-	}
-}
-
-func (g *GamePlayer) GetRogue() *RogueState {
-	if g.GetBattleState().RogueState == nil {
-		g.GetBattleState().RogueState = &RogueState{
-			AvatarEntity:  make(map[uint32]*AvatarEntity),
-			MonsterEntity: make(map[uint32]*MonsterEntity),
-			Battle:        make(map[uint32]*RogueBattle),
-			BuffList:      make(map[uint32]*RogueBuff),
-		}
-	}
-
-	return g.GetBattleState().RogueState
-}
-
-func (g *GamePlayer) GetRogueBattle() map[uint32]*RogueBattle {
-	if g.GetRogue().Battle == nil {
-		g.GetRogue().Battle = make(map[uint32]*RogueBattle)
-	}
-	return g.GetRogue().Battle
-}
-
-func (g *GamePlayer) GetRogueBuff() map[uint32]*RogueBuff {
-	if g.GetRogue().BuffList == nil {
-		g.GetRogue().BuffList = make(map[uint32]*RogueBuff)
-	}
-	return g.GetRogue().BuffList
-}
-
-func (g *GamePlayer) RogueAddBuff(buffId uint32) {
-	rogue := g.GetRogue()
-	if rogue.BuffList[buffId] == nil {
-		rogue.BuffList[buffId] = &RogueBuff{
-			Level:     1,
-			AddTimeMs: uint64(time.Now().UnixNano() / 1e6),
-		}
 	}
 }
 
