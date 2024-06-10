@@ -324,6 +324,10 @@ func (g *GamePlayer) NewRogue(avatarIdList []uint32, areaId uint32) {
 		for id, avatarId := range avatarIdList {
 			db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}
 		}
+	} else {
+		for id, avatar := range g.GetCurLineUp().AvatarIdList {
+			db.AvatarIdList[id] = &spb.LineAvatarList{AvatarId: avatar.AvatarId, Slot: id}
+		}
 	}
 
 	// 获取地图
@@ -348,7 +352,7 @@ func (g *GamePlayer) NewRogue(avatarIdList []uint32, areaId uint32) {
 	rogueSceneMap := make(map[uint32]*spb.RogueRoom)
 	for id, rogue := range rogueMap.SiteList {
 		rogueSceneMap[id] = &spb.RogueRoom{
-			RoomId:         gdconf.GetRogueRoomIDBySiteID(id),
+			RoomId:         gdconf.GetRogueRoomTypeBySiteID(id),
 			RoomStatus:     spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_NONE,
 			NextSiteIdList: rogue.NextSiteIDList,
 		}

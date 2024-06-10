@@ -25,7 +25,7 @@ func (g *GameDataConfig) loadRogueMapGen() {
 	logger.Info("load %v RogueMapGen", len(g.RogueMapGenMap))
 }
 
-func GetRogueRoomIDBySiteID(siteID uint32) uint32 {
+func GetRogueRoomTypeBySiteID(siteID uint32) uint32 {
 	rogue := CONF.RogueMapGenMap[siteID]
 	idIndex := rand.Intn(len(rogue))
 	rogueId := rogue[idIndex]

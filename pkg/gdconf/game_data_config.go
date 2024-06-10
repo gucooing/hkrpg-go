@@ -40,7 +40,6 @@ type GameDataConfig struct {
 	RogueBuffMap                *RogueBuffList                                  // 模拟宇宙buff列表
 	RogueAreaConfigMap          map[uint32]*RogueAreaConfig                     // 模拟宇宙关卡配置
 	RogueMap                    map[uint32]*RogueMap                            // 模拟宇宙关卡地图表
-	RogueRoomMap                map[uint32]*RogueRoom                           // 模拟宇宙地图配置表
 	CocoonConfigMap             map[uint32]map[uint32]*CocoonConfig             // 挑战/周本
 	MappingInfoMap              map[uint32]map[uint32]*MappingInfo              // 挑战/周本奖励
 	AvatarSkilltreeMap          map[uint32]map[uint32]*AvatarSkilltree          // 技能库
@@ -83,6 +82,7 @@ type GameDataConfig struct {
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
 	GoppMission    *GoppMission                                     // 预处理任务
+	RogueRoomMap   *RogueRoomMap                                    // 模拟宇宙地图配置表
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {
@@ -155,7 +155,6 @@ func (g *GameDataConfig) load() {
 	g.loadRogueBuff()                // 模拟宇宙buff列表
 	g.loadRogueAreaConfig()          // 模拟宇宙关卡配置
 	g.loadRogueMap()                 // 模拟宇宙关卡地图表
-	g.loadRogueRoom()                // 模拟宇宙地图配置表
 	g.loadCocoonConfig()             // 挑战/周本
 	g.loadMappingInfo()              // 挑战/周本奖励
 	g.loadAvatarSkilltree()          // 技能库
@@ -198,4 +197,5 @@ func (g *GameDataConfig) load() {
 	g.goppServerGroup() // 预处理服务器场景
 	g.goppTeleports()   // 预处理传送锚点
 	g.goppMainMission() // 预处理主线任务
+	g.goppRogueRoom()   // 模拟宇宙地图配置表
 }
