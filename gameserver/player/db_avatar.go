@@ -220,10 +220,10 @@ func (g *GamePlayer) CopyBattleAvatar(avatarBin *spb.AvatarBin) {
 		FirstMetTimeStamp: avatarBin.FirstMetTimeStamp,
 		PromoteLevel:      avatarBin.PromoteLevel,
 		Rank:              avatarBin.Rank,
-		Hp:                10000,
+		Hp:                12000,
 		SpBar: &spb.AvatarSpBarInfo{
-			CurSp: 5000,
-			MaxSp: 10000,
+			CurSp: 6000,
+			MaxSp: 12000,
 		},
 		SkilltreeList:     avatarBin.SkilltreeList,
 		EquipmentUniqueId: avatarBin.EquipmentUniqueId,

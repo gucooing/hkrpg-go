@@ -85,6 +85,11 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 			lineUpDb.AvatarIdList[id] = &spb.LineAvatarList{AvatarId: avatar.AvatarId, Slot: id}
 		}
 	}
+	// 将角色属性拷贝出来
+	for _, avatar := range lineUpDb.AvatarIdList {
+		avatarBin := g.GetAvatarBinById(avatar.AvatarId)
+		g.CopyBattleAvatar(avatarBin)
+	}
 	// 取房间
 	rogueRoomMap := make(map[uint32]*spb.RogueRoom, 0)
 	switch conf.AreaProgress {
@@ -118,9 +123,10 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	db := g.GetDbRogue()
 	db.CurRogue = &spb.CurRogue{
 		CurAreaId:      req.AreaId,
+		AeonId:         req.AeonId,
 		CurSiteId:      rogueMap.StartId,
 		RogueRoomMap:   rogueRoomMap,
-		RogueMapID:     mapId,
+		RogueMapId:     mapId,
 		CosmicFragment: g.GetMaterialById(Cf),
 	}
 	// 设置状态
@@ -144,7 +150,7 @@ func (g *GamePlayer) SyncRogueMapRoomScNotify() {
 		// 	SiteId:    rogue.CurRogue.CurSiteId,
 		// 	RoomId:    rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomId,
 		// },
-		MapId: rogue.CurRogue.RogueMapID,
+		MapId: rogue.CurRogue.RogueMapId,
 	}
 	g.Send(cmd.SyncRogueMapRoomScNotify, notify)
 }
@@ -293,79 +299,6 @@ func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
 	// }
 
 	g.Send(cmd.GetRogueHandbookDataScRsp, rsp)
-}
-
-func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.GoppLevelGroup, groupID uint32) *proto.SceneEntityGroupInfo {
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    groupID,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
-	for _, propList := range sceneGroup.PropList {
-		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,     // 文件名后那个G
-			InstId:   propList.ID, // ID
-			EntityId: g.GetNextGameObjectGuid(),
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(propList.PosX * 1000),
-					Y: int32(propList.PosY * 1000),
-					Z: int32(propList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: int32(propList.RotY * 1000),
-					Z: 0,
-				},
-			},
-			Prop: &proto.ScenePropInfo{
-				PropId:    propList.PropID, // PropID
-				PropState: 0,               // gdconf.GetPropState(strconv.Itoa(int(propList.PropID))),
-			},
-		}
-		if propList.State != "CheckPointDisable" && propList.State != "CheckPointEnable" {
-			entityList.Prop.PropState = 8 // 解锁
-		}
-		// if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
-		// 	index := 0
-		// 	if propList.Name == "Door2" {
-		// 		index = 1
-		// 	}
-		// 	room := g.GetCurDbRoom()
-		// 	if propList.Name == "Door1" && len(room.NextSiteIdList) == 1 {
-		// 		continue
-		// 	}
-		// 	if len(room.NextSiteIdList) == 1 {
-		// 		index = 0
-		// 	}
-		// 	if len(room.NextSiteIdList) > 0 {
-		// 		siteId := room.NextSiteIdList[index]
-		// 		nextRoom := g.GetDbRoomBySiteId(siteId)
-		// 		exceRoom := gdconf.GetRogueRoomById(nextRoom.RoomId)
-		//
-		// 		switch exceRoom.RogueRoomType {
-		// 		case 3, 8:
-		// 			entityList.Prop.PropId = 1022
-		// 		case 5:
-		// 			entityList.Prop.PropId = 1023
-		// 		default:
-		// 			entityList.Prop.PropId = 1021
-		// 		}
-		// 		entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
-		// 			InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
-		// 				RogueInfo: &proto.PropRogueInfo{
-		// 					RoomId: nextRoom.RoomId,
-		// 					SiteId: siteId,
-		// 				},
-		// 			},
-		// 		}
-		// 	} else {
-		// 		entityList.Prop.PropId = 1000
-		// 	}
-		// 	entityList.Prop.PropState = 1
-		// }
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
-	}
-	return entityGroupLists
 }
 
 // 模拟宇宙攻击事件

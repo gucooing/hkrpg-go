@@ -32,8 +32,8 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
 	// 根据各种情况进行处理
-	if req.SkillIndex != 0 { // 这里的情况是角色释放技能
-		g.Send(cmd.SceneCastSkillScRsp, rsp)
+	if req.SkillIndex != 0 {
+		// 这里的情况是角色释放技能
 	}
 	if len(req.HitTargetEntityIdList) == 0 {
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
@@ -108,18 +108,21 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		teleportToAnchor = true
 	}
 
+	switch g.GetBattleStatus() {
+	case spb.BattleType_Battle_CHALLENGE:
+		g.ChallengePVEBattleResultCsReq(req)
+	case spb.BattleType_Battle_CHALLENGE_Story:
+		g.ChallengePVEBattleResultCsReq(req)
+	case spb.BattleType_Battle_ROGUE:
+		teleportToAnchor = false
+	}
+
 	// 是否传送到最近锚点
 	if teleportToAnchor {
 		// 当前坐标通知(移动到最近锚点)
 		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
 	}
 
-	switch g.GetBattleStatus() {
-	case spb.BattleType_Battle_CHALLENGE:
-		g.ChallengePVEBattleResultCsReq(req)
-	case spb.BattleType_Battle_CHALLENGE_Story:
-		g.ChallengePVEBattleResultCsReq(req)
-	}
 	// 副本处理
 	g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)
 	g.DelBattleBackupById(req.BattleId)

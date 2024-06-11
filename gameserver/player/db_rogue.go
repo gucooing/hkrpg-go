@@ -196,10 +196,11 @@ func (g *GamePlayer) GetRogueAeonInfo() *proto.RogueAeonInfo {
 }
 
 func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
+	rogue := g.GetCurRogue()
 	info := &proto.GameAeonInfo{
 		IsUnlocked:             true,
 		UnlockedAeonEnhanceNum: 3,
-		AeonId:                 4, // TODO 改成选择的命途
+		AeonId:                 rogue.AeonId,
 	}
 	return info
 }
@@ -207,7 +208,7 @@ func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
 func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
 	rogue := g.GetCurRogue()
 	roomMap := &proto.RogueMapInfo{
-		MapId:     rogue.RogueMapID,
+		MapId:     rogue.RogueMapId,
 		AreaId:    rogue.CurAreaId,
 		CurSiteId: rogue.CurSiteId, // 当前id
 		CurRoomId: g.GetCurRogueRoomId(),
@@ -236,7 +237,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 	}
 	leaderEntityId := g.GetNextGameObjectGuid()
 	scene := &proto.SceneInfo{
-		ClientPosVersion:   5,
+		ClientPosVersion:   0,
 		PlaneId:            mapEntrance.PlaneID,
 		FloorId:            mapEntrance.FloorID,
 		LeaderEntityId:     leaderEntityId,
@@ -281,29 +282,29 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 			continue
 		}
 		scene.GroupIdList = append(scene.GroupIdList, groupID)
-
 		sceneGroupState := &proto.SceneGroupState{
 			GroupId:   groupID,
 			IsDefault: true,
 		}
-
 		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
-		// 添加物品实体
-		entityGroupLists := g.GetRoguePropByID(sceneGroup, groupID)
-		// 添加怪物实体
-		g.GetRogueNPCMonsterByID(entityGroupLists, sceneGroup, groupID, ida)
-		// 添加NPC实体
-		entityGroupLists = g.GetNPCByID(entityGroupLists, sceneGroup)
-		if len(entityGroupLists.EntityList) != 0 {
-			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
+		entityGroupLists := &proto.SceneEntityGroupInfo{
+			GroupId:    groupID,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
+		// 添加物品实体
+		g.GetRoguePropByID(entityGroupLists, sceneGroup)
+		// 添加怪物实体
+		g.GetRogueNPCMonsterByID(entityGroupLists, sceneGroup, ida)
+		// 添加NPC实体
+		g.GetNPCByID(entityGroupLists, sceneGroup)
+		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 	}
 
 	return scene
 }
 
-func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, groupID, ida uint32) {
+func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, ida uint32) {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := g.GetNextGameObjectGuid()
 		rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)
@@ -319,7 +320,7 @@ func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGr
 			Z: int32(monsterList.RotZ * 1000),
 		}
 		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,
+			GroupId:  sceneGroup.GroupId,
 			InstId:   monsterList.ID,
 			EntityId: entityId,
 			Motion: &proto.MotionInfo{
@@ -333,6 +334,84 @@ func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGr
 			},
 		}
 		// 添加实体
+		g.AddEntity(sceneGroup.GroupId, &MonsterEntity{
+			Entity: Entity{
+				InstId:   monsterList.ID,
+				EntityId: entityId,
+				GroupId:  sceneGroup.GroupId,
+				Pos:      pos,
+				Rot:      rot,
+			},
+			EventID: rogueMonster.EventID,
+		})
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+	}
+}
+
+func (g *GamePlayer) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) {
+	for _, propList := range sceneGroup.PropList {
+		entityId := g.GetNextGameObjectGuid()
+		pos := &proto.Vector{
+			X: int32(propList.PosX * 1000),
+			Y: int32(propList.PosY * 1000),
+			Z: int32(propList.PosZ * 1000),
+		}
+		rot := &proto.Vector{
+			X: int32(propList.RotX * 1000),
+			Y: int32(propList.RotY * 1000),
+			Z: int32(propList.RotZ * 1000),
+		}
+		entityList := &proto.SceneEntityInfo{
+			GroupId:  sceneGroup.GroupId, // 文件名后那个G
+			InstId:   propList.ID,        // ID
+			EntityId: entityId,
+			Motion: &proto.MotionInfo{
+				Pos: pos,
+				Rot: rot,
+			},
+			Prop: &proto.ScenePropInfo{
+				PropId:    propList.PropID, // PropID
+				PropState: gdconf.GetStateValue(propList.State),
+			},
+		}
+		// if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
+		// 	index := 0
+		// 	if propList.Name == "Door2" {
+		// 		index = 1
+		// 	}
+		// 	room := g.GetCurDbRoom()
+		// 	if propList.Name == "Door1" && len(room.NextSiteIdList) == 1 {
+		// 		continue
+		// 	}
+		// 	if len(room.NextSiteIdList) == 1 {
+		// 		index = 0
+		// 	}
+		// 	if len(room.NextSiteIdList) > 0 {
+		// 		siteId := room.NextSiteIdList[index]
+		// 		nextRoom := g.GetDbRoomBySiteId(siteId)
+		// 		exceRoom := gdconf.GetRogueRoomById(nextRoom.RoomId)
+		//
+		// 		switch exceRoom.RogueRoomType {
+		// 		case 3, 8:
+		// 			entityList.Prop.PropId = 1022
+		// 		case 5:
+		// 			entityList.Prop.PropId = 1023
+		// 		default:
+		// 			entityList.Prop.PropId = 1021
+		// 		}
+		// 		entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
+		// 			InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
+		// 				RogueInfo: &proto.PropRogueInfo{
+		// 					RoomId: nextRoom.RoomId,
+		// 					SiteId: siteId,
+		// 				},
+		// 			},
+		// 		}
+		// 	} else {
+		// 		entityList.Prop.PropId = 1000
+		// 	}
+		// 	entityList.Prop.PropState = 1
+		// }
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 }

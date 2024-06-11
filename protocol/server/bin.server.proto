@@ -191,12 +191,13 @@ message RogueArea {
   RogueAreaStatus rogue_area_status = 2;
 }
 
-message CurRogue {
-  uint32 cur_area_id = 1;
-  uint32 cur_siteId = 2;
-  map<uint32, RogueRoom> rogue_room_map = 3;
-  uint32 rogue_map_iD = 4;
-  uint32 cosmic_fragment = 5;
+message CurRogue { // 当前正在进行的模拟宇宙
+  uint32 cur_area_id = 1; // 当前关卡
+  uint32 cur_siteId = 2; // 当前房间
+  map<uint32, RogueRoom> rogue_room_map = 3; // 房间列表
+  uint32 rogue_map_id = 4; // mapid
+  uint32 cosmic_fragment = 5; // 宇宙碎片数
+  uint32 aeon_id = 6; // 命途
 }
 
 message RogueRoom {
