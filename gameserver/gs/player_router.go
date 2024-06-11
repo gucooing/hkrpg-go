@@ -149,6 +149,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.GetFirstTalkByPerformanceNpcCsReq: g.GetFirstTalkByPerformanceNpcCsReq, // NPC商店
 		cmd.GetNpcMessageGroupCsReq:           g.GetNpcMessageGroupCsReq,           // 获取npc聊天信息
 		cmd.FinishPerformSectionIdCsReq:       g.FinishPerformSectionIdCsReq,       // 完成npc聊天
+		cmd.GetNpcStatusCsReq:                 g.GetNpcStatusCsReq,                 // 获取npc聊天状态
 	}
 }
 

@@ -123,6 +123,8 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 		RogueMapID:     mapId,
 		CosmicFragment: g.GetMaterialById(Cf),
 	}
+	// 设置状态
+	g.SetBattleStatus(spb.BattleType_Battle_ROGUE)
 
 	rsp.Lineup = g.GetLineUpPb(lineUpDb)
 	rsp.Scene = g.GetRogueScene(rogueRoomMap[rogueMap.StartId].RoomId)

@@ -25,11 +25,11 @@ type DisplayRecordInfo struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BKFKEAOKJIC bool                 `protobuf:"varint,4,opt,name=BKFKEAOKJIC,proto3" json:"BKFKEAOKJIC,omitempty"`
-	DADJOGHHEDE bool                 `protobuf:"varint,14,opt,name=DADJOGHHEDE,proto3" json:"DADJOGHHEDE,omitempty"`
-	OOAJONLNOKC bool                 `protobuf:"varint,1,opt,name=OOAJONLNOKC,proto3" json:"OOAJONLNOKC,omitempty"`
-	ACEOIOACIJO bool                 `protobuf:"varint,11,opt,name=ACEOIOACIJO,proto3" json:"ACEOIOACIJO,omitempty"`
-	KAMIFJJEHJO bool                 `protobuf:"varint,10,opt,name=KAMIFJJEHJO,proto3" json:"KAMIFJJEHJO,omitempty"`
+	BKFKEAOKJIC bool                 `protobuf:"varint,4,opt,name=BKFKEAOKJIC,proto3" json:"BKFKEAOKJIC,omitempty"`  // 是否向好友展示逐光捡金通关阵容
+	DADJOGHHEDE bool                 `protobuf:"varint,14,opt,name=DADJOGHHEDE,proto3" json:"DADJOGHHEDE,omitempty"` // 是否公开在线状态
+	OOAJONLNOKC bool                 `protobuf:"varint,1,opt,name=OOAJONLNOKC,proto3" json:"OOAJONLNOKC,omitempty"`  // 是否展示漫游签证战绩
+	ACEOIOACIJO bool                 `protobuf:"varint,11,opt,name=ACEOIOACIJO,proto3" json:"ACEOIOACIJO,omitempty"` // 是否公开漫游动态
+	KAMIFJJEHJO bool                 `protobuf:"varint,10,opt,name=KAMIFJJEHJO,proto3" json:"KAMIFJJEHJO,omitempty"` // 是否展示漫游签证收集
 	NENFHJDADJA DisplayChallengeInfo `protobuf:"varint,5,opt,name=NENFHJDADJA,proto3,enum=DisplayChallengeInfo" json:"NENFHJDADJA,omitempty"`
 }
 

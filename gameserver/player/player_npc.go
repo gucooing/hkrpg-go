@@ -3,6 +3,7 @@ package player
 import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg []byte) {
@@ -104,4 +105,26 @@ func (g *GamePlayer) MessageGroupPlayerSyncScNotify(contactId uint32) {
 	}
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
+func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg []byte) {
+	rsp := &proto.GetNpcStatusScRsp{
+		NpcStatusList: make([]*proto.NpcStatus, 0),
+		Retcode:       0,
+	}
+	db := g.GetMessageGroup()
+	if db != nil {
+		for _, info := range db {
+			isFinish := false
+			if info.Status == spb.MessageGroupStatus_MESSAGE_GROUP_FINISH {
+				isFinish = true
+			}
+			rsp.NpcStatusList = append(rsp.NpcStatusList, &proto.NpcStatus{
+				IsFinish: isFinish,
+				NpcId:    info.ContactId,
+			})
+		}
+	}
+
+	g.Send(cmd.GetNpcStatusScRsp, rsp)
 }
