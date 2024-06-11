@@ -368,53 +368,6 @@ func (g *GamePlayer) GetRoguePropByID(sceneGroup *gdconf.GoppLevelGroup, groupID
 	return entityGroupLists
 }
 
-func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, groupID uint32, entityMap map[uint32]*MonsterEntity, ida uint32) (*proto.SceneEntityGroupInfo, map[uint32]*MonsterEntity) {
-	for _, monsterList := range sceneGroup.MonsterList {
-		entityId := g.GetNextGameObjectGuid()
-		// rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)
-		// rogueMonster := gdconf.GetRogueMonsterByRogueMonsterID(rogueMonsterID)
-		entityList := &proto.SceneEntityInfo{
-			GroupId:  groupID,
-			InstId:   monsterList.ID,
-			EntityId: entityId,
-			Motion: &proto.MotionInfo{
-				Pos: &proto.Vector{
-					X: int32(monsterList.PosX * 1000),
-					Y: int32(monsterList.PosY * 1000),
-					Z: int32(monsterList.PosZ * 1000),
-				},
-				Rot: &proto.Vector{
-					X: 0,
-					Y: int32(monsterList.RotY * 1000),
-					Z: 0,
-				},
-			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.BasicBin.WorldLevel,
-				MonsterId:  monsterList.NPCMonsterID, // rogueMonster.NpcMonsterID,
-				EventId:    monsterList.EventID,      // rogueMonster.EventID,
-			},
-		}
-		// 添加实体
-		entityMap[entityId] = &MonsterEntity{
-			// MonsterEId: rogueMonster.EventID,
-			// GroupId:    groupID,
-			// Pos: &Vector{
-			// 	X: int32(monsterList.PosX * 1000),
-			// 	Y: int32(monsterList.PosY * 1000),
-			// 	Z: int32(monsterList.PosZ * 1000),
-			// },
-			// Rot: &Vector{
-			// 	X: 0,
-			// 	Y: int32(monsterList.RotY * 1000),
-			// 	Z: 0,
-			// },
-		}
-		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
-	}
-	return entityGroupList, entityMap
-}
-
 // 模拟宇宙攻击事件
 func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
 	rsp.BattleInfo.BattleTargetInfo = make(map[uint32]*proto.BattleTargetList)

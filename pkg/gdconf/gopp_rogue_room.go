@@ -19,7 +19,7 @@ type RogueRoom struct {
 	RogueRoomType     uint32            `json:"RogueRoomType"`
 	MapEntrance       uint32            `json:"MapEntrance"`
 	GroupID           uint32            `json:"GroupID"`
-	GroupWithContent  map[string]uint32 `json:"GroupWithContent"`
+	GroupWithContent  map[uint32]uint32 `json:"GroupWithContent"`
 	RogueRoomSections []uint32          `json:"RogueRoomSections"`
 }
 

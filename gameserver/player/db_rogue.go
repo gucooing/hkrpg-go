@@ -276,23 +276,23 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupList)
 
 	for groupID, ida := range rogueRoom.GroupWithContent {
-		sceneGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, stou32(groupID))
+		sceneGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, groupID)
 		if sceneGroup == nil {
 			continue
 		}
-		scene.GroupIdList = append(scene.GroupIdList, stou32(groupID))
+		scene.GroupIdList = append(scene.GroupIdList, groupID)
 
 		sceneGroupState := &proto.SceneGroupState{
-			GroupId:   stou32(groupID),
+			GroupId:   groupID,
 			IsDefault: true,
 		}
 
 		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
 		// 添加物品实体
-		entityGroupLists := g.GetRoguePropByID(sceneGroup, stou32(groupID))
+		entityGroupLists := g.GetRoguePropByID(sceneGroup, groupID)
 		// 添加怪物实体
-		entityGroupLists, _ = g.GetRogueNPCMonsterByID(entityGroupLists, sceneGroup, stou32(groupID), make(map[uint32]*MonsterEntity), ida)
+		g.GetRogueNPCMonsterByID(entityGroupLists, sceneGroup, groupID, ida)
 		// 添加NPC实体
 		entityGroupLists = g.GetNPCByID(entityGroupLists, sceneGroup)
 		if len(entityGroupLists.EntityList) != 0 {
@@ -301,4 +301,38 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 	}
 
 	return scene
+}
+
+func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, groupID, ida uint32) {
+	for _, monsterList := range sceneGroup.MonsterList {
+		entityId := g.GetNextGameObjectGuid()
+		rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)
+		rogueMonster := gdconf.GetRogueMonsterByRogueMonsterID(rogueMonsterID)
+		pos := &proto.Vector{
+			X: int32(monsterList.PosX * 1000),
+			Y: int32(monsterList.PosY * 1000),
+			Z: int32(monsterList.PosZ * 1000),
+		}
+		rot := &proto.Vector{
+			X: int32(monsterList.RotX * 1000),
+			Y: int32(monsterList.RotY * 1000),
+			Z: int32(monsterList.RotZ * 1000),
+		}
+		entityList := &proto.SceneEntityInfo{
+			GroupId:  groupID,
+			InstId:   monsterList.ID,
+			EntityId: entityId,
+			Motion: &proto.MotionInfo{
+				Pos: pos,
+				Rot: rot,
+			},
+			NpcMonster: &proto.SceneNpcMonsterInfo{
+				WorldLevel: g.GetWorldLevel(),
+				MonsterId:  rogueMonster.NpcMonsterID,
+				EventId:    rogueMonster.EventID,
+			},
+		}
+		// 添加实体
+		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
+	}
 }

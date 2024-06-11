@@ -39,39 +39,18 @@ func (g *GameDataConfig) loadRogueMonsterGroup() {
 }
 
 func GetRogueMonsterGroupByGroupID(groupID uint32) uint32 {
-	// rogue := CONF.RogueMonsterGroupMap[groupID]
-	return 1 // rogue.Select()
+	rogue := CONF.RogueMonsterGroupMap[groupID]
+	if rogue == nil {
+		rogue = CONF.RogueMonsterGroupMap[1101]
+	}
+	return rogue.Select()
 }
 
-func NewRogueMonsterGroup(monsterListAndWeight map[uint32]int) *RogueMonsterGroup {
-	var ids []uint32
-	var accWeights []int
-	var totalWeight = 0
-	for id, weight := range monsterListAndWeight {
-		totalWeight += weight
-		ids = append(ids, id)
-		accWeights = append(accWeights, totalWeight)
+func (rmg *RogueMonsterGroups) Select() uint32 {
+	keys := make([]uint32, 0, len(rmg.RogueMonsterListAndWeight))
+	for key := range rmg.RogueMonsterListAndWeight {
+		keys = append(keys, key)
 	}
-	return &RogueMonsterGroup{
-		IDs:         ids,
-		AccWeights:  accWeights,
-		TotalWeight: totalWeight,
-	}
-}
-func (rmg *RogueMonsterGroup) Select() uint32 {
-	randNum := rand.Intn(rmg.TotalWeight) + 1
-	index := binarySearch(rmg.AccWeights, randNum)
-	return rmg.IDs[index]
-}
-func binarySearch(arr []int, target int) int {
-	low, high := 0, len(arr)-1
-	for low <= high {
-		mid := low + (high-low)/2
-		if arr[mid] >= target {
-			high = mid - 1
-		} else {
-			low = mid + 1
-		}
-	}
-	return low
+	randomKey := keys[rand.Intn(len(keys))]
+	return randomKey
 }
