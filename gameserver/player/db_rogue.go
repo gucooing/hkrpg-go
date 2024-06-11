@@ -64,6 +64,13 @@ func (g *GamePlayer) GetCurRogueRoom() *spb.RogueRoom {
 	return db.RogueRoomMap[db.CurSiteId]
 }
 
+func (g *GamePlayer) GetCurRogueRoomId() uint32 {
+	db := g.GetCurRogueRoom()
+	if db == nil {
+		return 0
+	}
+	return db.RoomId
+}
 func (g *GamePlayer) GetRoomBySiteId(siteId uint32) *spb.RogueRoom {
 	db := g.GetCurRogue()
 	if db.RogueRoomMap == nil {
@@ -203,7 +210,7 @@ func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
 		MapId:     rogue.RogueMapID,
 		AreaId:    rogue.CurAreaId,
 		CurSiteId: rogue.CurSiteId, // 当前id
-		CurRoomId: rogue.RogueRoomMap[rogue.CurSiteId].RoomId,
+		CurRoomId: g.GetCurRogueRoomId(),
 		RoomList:  make([]*proto.RogueRoom, 0),
 	}
 	for id, rogueScene := range rogue.RogueRoomMap {
@@ -262,7 +269,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 		}
 		break
 	}
-	lineUp := g.GetLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	lineUp := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
 
 	// 添加队伍角色进实体列表，并设置坐标
 	g.GetSceneAvatarByLineUP(entityGroupList, lineUp, leaderEntityId, pos, rot)
