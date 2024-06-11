@@ -24,6 +24,8 @@ type GateServer struct {
 	AppId              uint32
 	WorkerId           int64
 	Port               string
+	InnerAddr          string
+	OuterAddr          string
 	Config             *config.Config
 	Store              *Store
 	snowflake          *alg.SnowflakeWorker // 雪花唯一id生成器
@@ -62,14 +64,18 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 	s.playerMap = make(map[uint32]*PlayerGame)
 	logger.Info("GateServer AppId:%s", appid)
 	// 开启kcp服务
-	port := s.Config.AppList[appid].App["port_player"].Port
-	if port == "" {
+	appConf := s.Config.AppList[appid].App["port_player"]
+	if appConf.Port == "" {
 		log.Println("GateServer Port error")
 		os.Exit(0)
 	}
-	s.Port = port
+	s.Port = appConf.Port
+	s.InnerAddr = appConf.InnerAddr
+	s.OuterAddr = appConf.OuterAddr
 
-	addr := s.Config.InnerIp + ":" + s.Port
+	addr := s.InnerAddr + ":" + s.Port
+	logger.Info("gate_server监听地址:%s", addr)
+	logger.Info("gate_server对外地址:%s", s.OuterAddr+":"+s.Port)
 	kcpListener, err := kcp.ListenWithOptions(addr)
 	if err != nil {
 		log.Printf("listen kcp err: %v\n", err)

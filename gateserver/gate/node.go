@@ -72,7 +72,7 @@ func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_GATE,
 		AppId:      n.gate.AppId,
-		Addr:       n.gate.Config.OuterIp,
+		Addr:       n.gate.OuterAddr,
 		Port:       n.gate.Port,
 	}
 

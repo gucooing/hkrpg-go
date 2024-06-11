@@ -23,7 +23,7 @@ func (s *Server) QueryDispatchHandler(c *gin.Context) {
 			Name:        cfg.Name,
 			Title:       cfg.Title,
 			EnvType:     cfg.Type,
-			DispatchUrl: s.Config.InnerAddr + cfg.DispatchUrl,
+			DispatchUrl: s.OuterAddr + cfg.DispatchUrl,
 		}
 		serverList = append(serverList, server)
 	}

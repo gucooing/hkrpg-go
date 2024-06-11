@@ -17,7 +17,7 @@
 
 ## 运行
 ### 1.准备资源：
-data resources，data使用仓库的data即可，resources使用lc项目的resources即可，但资源文件夹需要基于读写权限。
+data resources，data使用仓库的data即可，resources使用lc项目的resources即可，但资源文件夹需要给予读写权限。
 ### 2.运行，
 运行时需要携带启动参数 -i appid ， 其中appid格式为ipv4格式，如：9001.1.1.1 其中含义：
 ```bash
@@ -28,7 +28,7 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 ```
 了解到了appid的组成含义后你可以先不携带参数启动一次，使其生成各个服务的配置文件，生成的配置文件在conf文件夹里，然后根据你自己定义的appid更改默认配置文件中的appid(虽然服务采用发现形式添加新服务，但是还是推荐每一个配置文件中的appid配置表都相同)，然后根据自己的想法更改配置文件中的其他参数。
 ### 3.数据库的准备，
-安装mysql，mysql中新建数据库：hkrpg-go (utf8mb4),然后更改配置文件中的账户和密码，安装redis，更改配置文件中的密码（本服务可采用分表分库形式，但同一张表一定要是同一个数据库）
+安装mysql，mysql中新建数据库：hkrpg-go-account && hkrpg-go-user && hkrpg-go-player && hkrpg-go-conf (utf8mb4),然后更改配置文件中的账户和密码，安装redis，更改配置文件中的密码（本服务可采用分表分库形式，但同一张表一定要是同一个数据库）
 ### 4.启动，
 前期的准备工作已经全部完成了到了启动的时候了，推荐的启动顺序为：
 > 下面示例的启动方法为默认配置文件的启动参数

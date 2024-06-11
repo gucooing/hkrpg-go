@@ -121,7 +121,7 @@ func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_DISPATCH,
 		AppId:      n.s.AppId,
-		Addr:       n.s.Config.OuterIp,
+		Addr:       n.s.OuterAddr,
 		Port:       n.s.Port,
 	}
 	n.sendNode(cmd.ServiceConnectionReq, req)

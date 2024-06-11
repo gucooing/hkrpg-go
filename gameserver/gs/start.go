@@ -29,6 +29,8 @@ type GameServer struct {
 	Config           *config.Config
 	Store            *db.Store
 	Port             string
+	InnerAddr        string
+	OuterAddr        string
 	AppId            uint32
 	GSListener       *gunet.TcpListener
 	node             *NodeService
@@ -52,13 +54,15 @@ func NewGameServer(cfg *config.Config, appid string) *GameServer {
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	logger.Info("GameServer AppId:%s", appid)
 	// 开启tcp服务
-	port := s.Config.AppList[appid].App["port_gt"].Port
-	if port == "" {
+	appConf := s.Config.AppList[appid].App["port_gt"]
+	if appConf.Port == "" {
 		log.Println("GameServer Port error")
 		os.Exit(0)
 	}
-	s.Port = port
-	addr := s.Config.OuterIp + ":" + port
+	s.Port = appConf.Port
+	s.InnerAddr = appConf.InnerAddr
+	s.OuterAddr = appConf.OuterAddr
+	addr := s.InnerAddr + ":" + s.Port
 	gSListener, err := gunet.NewTcpS(addr)
 	if err != nil {
 		log.Println(err.Error())

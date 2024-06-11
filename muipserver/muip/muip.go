@@ -43,12 +43,12 @@ func NewMuip(config *config.Config, appid string) *MuipServer {
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.Store = db.NewStore(config)
 	logger.Info("MuipServer AppId:%s", appid)
-	port := s.Config.AppList[appid].App["port_http"].Port
-	if port == "" {
+	appConf := s.Config.AppList[appid].App["port_http"]
+	if appConf.Port == "" {
 		log.Println("MuipServer Port error")
 		os.Exit(0)
 	}
-	s.ApiAddr = s.Config.OuterIp + ":" + port
+	s.ApiAddr = appConf.OuterAddr + ":" + appConf.Port
 	s.Api = s.newApi()
 	s.allService = make(map[spb.ServerType][]*Service)
 	// 开启game定时器

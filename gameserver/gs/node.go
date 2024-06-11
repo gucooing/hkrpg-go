@@ -63,7 +63,7 @@ func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_GAME,
 		AppId:      n.game.AppId,
-		Addr:       n.game.Config.OuterIp,
+		Addr:       n.game.OuterAddr,
 		Port:       n.game.Port,
 	}
 
