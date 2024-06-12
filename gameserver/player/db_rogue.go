@@ -1,13 +1,38 @@
 package player
 
 import (
+	"math/rand"
+
 	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-/*************模拟宇宙*************/
+// Default Probability
+const (
+	RogueBuffType      = 900  // 各属性
+	AddRogueBuffType   = 1900 // 属性增加概率
+	RogueBuffRarityOne = 6000 // 白
+	RogueBuffRarityTwo = 3000 // 蓝
+	AddRogueBuffRarity = 1000 // 品质增加概率
+)
+
+type RogueInfoOnline struct { // 模拟宇宙临时数据
+	RogueBuffByType    map[uint32]*RogueBuffByType
+	RogueBuffRarityOne int32 // 白的概率
+	RogueBuffRarityTwo int32 // 蓝的概率
+}
+
+type RogueBuffByType struct {
+	Weight          int32                       // 权重
+	RogueBuffRarity map[uint32]*RogueBuffRarity // 稀有度
+}
+
+type RogueBuffRarity struct {
+	Rarity   uint32   // 稀有度
+	BuffList []uint32 // buff列表
+}
 
 func (g *GamePlayer) GetDbRogue() *spb.Rogue {
 	db := g.GetBattle()
@@ -93,6 +118,146 @@ func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
 	return rogue.RogueArea[areaId]
 }
 
+func (g *GamePlayer) GetRogueBuffNum() uint32 {
+	db := g.GetCurRogue()
+	if db == nil {
+		return 0
+	}
+	return db.BuffNum
+}
+
+func (g *GamePlayer) AddRogueBuffNum() {
+	db := g.GetCurRogue()
+	if db != nil {
+		db.BuffNum++
+	}
+}
+
+func (g *GamePlayer) GetRogueBuffList() map[uint32]*spb.RogueBuff {
+	db := g.GetCurRogue()
+	if db.BuffList == nil {
+		db.BuffList = make(map[uint32]*spb.RogueBuff)
+	}
+	return db.BuffList
+}
+
+/**************************************************Buff获取概率计算*******************************************/
+
+func (g *GamePlayer) GetRogueInfoOnline() *RogueInfoOnline {
+	db := g.GetCurBattle()
+	if db.RogueInfoOnline == nil {
+		db.RogueInfoOnline = &RogueInfoOnline{}
+	}
+	return db.RogueInfoOnline
+}
+
+func (g *GamePlayer) NewGetRogueBuffByType() {
+	db := g.GetRogueInfoOnline()
+	db.RogueBuffRarityOne = RogueBuffRarityOne
+	db.RogueBuffRarityTwo = RogueBuffRarityTwo
+	rogueBuffByTypeList := make(map[uint32]*RogueBuffByType, 0)
+	conf := gdconf.GetRogueBuffByType()
+	if conf != nil {
+		for typeId, rogueBuffByType := range conf {
+			if typeId == 100 { // 过滤基础
+				continue
+			}
+			rogueBuffRarityList := make(map[uint32]*RogueBuffRarity)
+			for rarityId, buffListConf := range rogueBuffByType {
+				buffList := make([]uint32, 0)
+				for _, buff := range buffListConf {
+					// 此处加个判断特殊祝福就行了
+					buffList = append(buffList, buff)
+				}
+				rogueBuffRarityList[rarityId] = &RogueBuffRarity{
+					Rarity:   rarityId,
+					BuffList: buffList,
+				}
+			}
+			rogueBuffByTypeList[typeId] = &RogueBuffByType{
+				Weight:          RogueBuffType,
+				RogueBuffRarity: rogueBuffRarityList,
+			}
+		}
+	}
+
+	db.RogueBuffByType = rogueBuffByTypeList
+}
+
+func (g *GamePlayer) GetRogueBuffByType() map[uint32]*RogueBuffByType {
+	db := g.GetRogueInfoOnline()
+	if db.RogueBuffByType == nil {
+		g.NewGetRogueBuffByType()
+	}
+	return db.RogueBuffByType
+}
+
+func (g *GamePlayer) GetRogueBuff() uint32 {
+	db := g.GetRogueInfoOnline()
+	rogueBuffByTypeList := db.RogueBuffByType
+	var totalWeight int32 = 0
+	for id, rogueBuffByType := range rogueBuffByTypeList {
+		if rogueBuffByType.RogueBuffRarity == nil || len(rogueBuffByType.RogueBuffRarity) == 0 {
+			continue
+		}
+		if id == 0 {
+			rogueBuffByType.Weight += AddRogueBuffType
+		}
+		totalWeight += rogueBuffByType.Weight
+	}
+	if totalWeight == 0 {
+		return 600000
+	}
+	randomWeight := rand.Int31n(totalWeight)
+	for _, rogueBuffByType := range rogueBuffByTypeList {
+		if rogueBuffByType.RogueBuffRarity == nil || len(rogueBuffByType.RogueBuffRarity) == 0 {
+			continue
+		}
+		if randomWeight <= rogueBuffByType.Weight {
+			// 已选定命途属性
+			var rarityTotalWeight int32 = 0
+			for _, rogueBuffRarity := range rogueBuffByType.RogueBuffRarity {
+				var weight int32 = 0
+				switch rogueBuffRarity.Rarity {
+				case 1:
+					weight = db.RogueBuffRarityOne
+				case 2:
+					weight = db.RogueBuffRarityTwo
+				default:
+					continue
+				}
+				rarityTotalWeight += weight
+			}
+			if rarityTotalWeight == 0 {
+				return 600000
+			}
+			rarityRandomWeight := rand.Int31n(rarityTotalWeight)
+			for _, rogueBuffRarity := range rogueBuffByType.RogueBuffRarity {
+				if rogueBuffRarity.BuffList == nil || len(rogueBuffRarity.BuffList) == 0 {
+					continue
+				}
+				var weight int32 = 0
+				switch rogueBuffRarity.Rarity {
+				case 1:
+					weight = db.RogueBuffRarityOne
+				case 2:
+					weight = db.RogueBuffRarityTwo
+				default:
+					continue
+				}
+				if rarityRandomWeight <= weight {
+					// 已选定稀有属性
+					idIndex := rand.Intn(len(rogueBuffRarity.BuffList))
+					return rogueBuffRarity.BuffList[idIndex]
+				}
+				randomWeight -= weight
+			}
+		}
+		randomWeight -= rogueBuffByType.Weight
+	}
+	return 600000
+}
+
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
@@ -112,15 +277,15 @@ func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 	info := &proto.RogueCurrentInfo{
 		RogueAeonInfo:    g.GetGameAeonInfo(),
-		GameMiracleInfo:  nil,
-		RogueLineupInfo:  nil,
-		Status:           0,
+		GameMiracleInfo:  g.GetGameMiracleInfo(),
+		RogueLineupInfo:  g.GetRogueLineupInfo(),
+		Status:           proto.RogueStatus_ROGUE_STATUS_DOING,
 		MapInfo:          g.GetRogueMap(),
-		PendingAction:    nil,
+		PendingAction:    g.GetRogueCommonPendingAction(),
 		IsWin:            false,
-		ModuleInfo:       nil,
-		RogueVirtualItem: nil,
-		RogueBuffInfo:    nil,
+		ModuleInfo:       &proto.RogueModuleInfo{ModuleIdList: make([]uint32, 0)},
+		RogueVirtualItem: g.GetRogueVirtualItem(),
+		RogueBuffInfo:    g.GetRogueBuffInfo(),
 	}
 
 	return info
@@ -226,6 +391,60 @@ func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
 	return roomMap
 }
 
+func (g *GamePlayer) GetRogueLineupInfo() *proto.RogueLineupInfo {
+	info := &proto.RogueLineupInfo{
+		BaseAvatarIdList: make([]uint32, 0),
+		ReviveInfo:       nil,
+	}
+
+	lineup := g.GetBattleLineUpById(Rogue)
+	if lineup.AvatarIdList != nil {
+		for _, avatar := range lineup.AvatarIdList {
+			if avatar.AvatarId == 0 {
+				continue
+			}
+			info.BaseAvatarIdList = append(info.BaseAvatarIdList, avatar.AvatarId)
+		}
+	}
+
+	return info
+}
+
+func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
+	info := &proto.RogueBuffInfo{
+		MazeBuffList: make([]*proto.RogueBuff, 0),
+	}
+	return info
+}
+
+func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
+	info := &proto.RogueVirtualItem{
+		Sus:        0,
+		RogueMoney: g.GetMaterialById(Cf),
+	}
+
+	return info
+}
+
+func (g *GamePlayer) GetGameMiracleInfo() *proto.GameMiracleInfo {
+	info := &proto.GameMiracleInfo{
+		GameMiracleInfo: &proto.RogueMiracleInfo{
+			MiracleList: make([]*proto.RogueMiracle, 0),
+		},
+	}
+
+	return info
+}
+
+func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingAction {
+	info := &proto.RogueCommonPendingAction{
+		QueuePosition: 0,
+		RogueAction:   &proto.RogueAction{},
+	}
+
+	return info
+}
+
 func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 	rogueRoom := gdconf.GetRogueRoomById(roomId)
 	if rogueRoom == nil {
@@ -270,7 +489,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 		}
 		break
 	}
-	lineUp := g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+	lineUp := g.GetBattleLineUpById(Rogue)
 
 	// 添加队伍角色进实体列表，并设置坐标
 	g.GetSceneAvatarByLineUP(entityGroupList, lineUp, leaderEntityId, pos, rot)

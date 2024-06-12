@@ -230,7 +230,7 @@ func (g *GamePlayer) GetBattleLineUp() *spb.Line {
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		return g.GetChallengeLineUp()
 	case spb.BattleType_Battle_ROGUE:
-		return g.GetBattleLineUpById(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
+		return g.GetBattleLineUpById(Rogue)
 	case spb.BattleType_Battle_TrialActivity:
 	default:
 		return g.GetCurLineUp()
@@ -332,6 +332,8 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE
 	case Challenge_2:
 		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
+	case Rogue:
+		lineUpType = proto.ExtraLineupType_LINEUP_ROGUE
 	}
 	var wtmLeaderSlot = false
 	if db.AvatarIdList[db.LeaderSlot] == nil {

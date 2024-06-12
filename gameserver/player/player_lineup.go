@@ -134,6 +134,10 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 		index = Challenge_2
 		db = g.GetBattleLineUpById(index)
 		isBattleLine = true
+	case proto.ExtraLineupType_LINEUP_ROGUE:
+		index = Rogue
+		db = g.GetBattleLineUpById(index)
+		isBattleLine = true
 	}
 	db.LeaderSlot = 0
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)

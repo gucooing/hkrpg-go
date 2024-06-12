@@ -56,6 +56,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MPid, g.GetBattleLineUp())
 	// 记录战斗
 	battleBackup.monsterEntity = mpem.EntityId
+	battleBackup.AttackedByEntityId = req.AttackedByEntityId
 	g.AddBattleBackup(battleBackup)
 	// 回复
 	rsp.BattleInfo = battleInfo
@@ -99,7 +100,8 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		if battleBin.EventId != 0 {
 			g.UpBattleSubMission(req.BattleId)
 		}
-		if battleBin.CocoonId != 0 {
+		if battleBin.CocoonId != 0 { // 副本处理
+			g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)
 			g.FinishCocoon(battleBin.CocoonId)
 		}
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
@@ -115,6 +117,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.ChallengePVEBattleResultCsReq(req)
 	case spb.BattleType_Battle_ROGUE:
 		teleportToAnchor = false
+		g.RoguePVEBattleResultCsReq(req)
 	}
 
 	// 是否传送到最近锚点
@@ -123,8 +126,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
 	}
 
-	// 副本处理
-	g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)
 	g.DelBattleBackupById(req.BattleId)
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
 }

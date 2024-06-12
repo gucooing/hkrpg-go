@@ -276,6 +276,8 @@ re:
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		g.AddChallengeDeadAvatar(deadAatarNum)
 	}
+
+	g.SyncLineupNotifyByLineBin(g.GetBattleLineUp())
 }
 
 func (g *GamePlayer) SetAvatarEquipRelic(avatarId, slot, relicId uint32) {

@@ -125,6 +125,7 @@ message Line {
   map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
   uint32 index = 3; // 第几个队伍
   uint32 leader_slot = 4; // 当前角色是第几个
+  // ExtraLineupType line_type = 5;// 队伍类型
 }
 
 message LineAvatarList {
@@ -191,19 +192,25 @@ message RogueArea {
   RogueAreaStatus rogue_area_status = 2;
 }
 
-message CurRogue { // 当前正在进行的模拟宇宙
+message CurRogue {// 当前正在进行的模拟宇宙
   uint32 cur_area_id = 1; // 当前关卡
   uint32 cur_siteId = 2; // 当前房间
   map<uint32, RogueRoom> rogue_room_map = 3; // 房间列表
   uint32 rogue_map_id = 4; // mapid
-  uint32 cosmic_fragment = 5; // 宇宙碎片数
+  uint32 buff_num = 5; // buff// 计数器
   uint32 aeon_id = 6; // 命途
+  map<uint32,RogueBuff> buff_list = 7;// 模拟宇宙已获得祝福列表
 }
 
 message RogueRoom {
   uint32 room_id = 1;
   RoomStatus room_status = 2;
   repeated uint32 next_site_id_list = 3;
+}
+
+message RogueBuff {
+  uint32 buff_id = 1;
+  uint32 buff_level = 2;
 }
 
 message RogueHistory{

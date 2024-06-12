@@ -141,6 +141,7 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	return true
 }
 
+// 处理客户端完成的任务
 func (g *GamePlayer) TalkStrSubMission(talkStr string) {
 	for id := range g.GetSubMainMissionList() {
 		conf := gdconf.GetSubMainMissionById(id)

@@ -15,16 +15,18 @@ import (
 var BattleBackupLock sync.Mutex // 战斗列表互斥锁
 
 type CurBattle struct {
-	BattleBackup map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
+	BattleBackup    map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
+	RogueInfoOnline *RogueInfoOnline         // 模拟宇宙临时数据
 }
 
 type BattleBackup struct {
-	BattleId         uint32                   // 战斗id
-	BattleAvatarList map[uint32]*BattleAvatar // 参加战斗的角色
-	monsterEntity    []uint32                 // 参战怪物实体id
-	CocoonId         uint32                   // 关卡id
-	WorldLevel       uint32                   // 关卡等级
-	EventId          uint32                   // 任务用的
+	BattleId           uint32                   // 战斗id
+	BattleAvatarList   map[uint32]*BattleAvatar // 参加战斗的角色
+	monsterEntity      []uint32                 // 参战怪物实体id
+	CocoonId           uint32                   // 关卡id
+	WorldLevel         uint32                   // 关卡等级
+	EventId            uint32                   // 任务用的
+	AttackedByEntityId uint32                   // 发起攻击的实体id
 	// 奖励
 }
 
