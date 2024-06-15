@@ -125,11 +125,12 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	g.SetMaterialById(Cf, 100) // 将宇宙碎片重置成100个
 	db := g.GetDbRogue()
 	db.CurRogue = &spb.CurRogue{
-		CurAreaId:    req.AreaId,
-		AeonId:       req.AeonId,
-		CurSiteId:    rogueMap.StartId,
-		RogueRoomMap: rogueRoomMap,
-		RogueMapId:   mapId,
+		CurAreaId:             req.AreaId,
+		AeonId:                req.AeonId,
+		CurSiteId:             rogueMap.StartId,
+		RogueRoomMap:          rogueRoomMap,
+		RogueMapId:            mapId,
+		RogueActivityModuleID: QuestRogue,
 	}
 	// 设置状态
 	g.SetBattleStatus(spb.BattleType_Battle_ROGUE)
@@ -215,16 +216,17 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 			RogueAction: &proto.RogueAction{
 				Action: &proto.RogueAction_BuffSelectInfo{
 					BuffSelectInfo: &proto.RogueCommonBuffSelectInfo{
-						CanRoll:           true,
-						FirstBuffTypeList: firstBuffTypeList,
+						CanRoll:           true,                // 是否可以刷新
+						RollBuffCount:     0,                   // 已刷新次数
+						RollBuffMaxCount:  1,                   // 刷新最大次数
+						RollBuffFreeCount: 1,                   // 免费刷新次数
+						FirstBuffTypeList: firstBuffTypeList,   // buff属性列表
 						SelectBuffList:    rogueCommonBuffList, // buff信息列表
-						SourceCurCount:    1,
-						SourceHintId:      1,
-						RollBuffCount:     1,
-						SourceTotalCount:  1,
-						RollBuffMaxCount:  1,
+						SourceCurCount:    1,                   // 提示
+						SourceHintId:      1,                   // 提示文本
+						SourceTotalCount:  1,                   // Source To Count
 
-						RollBuffCostData: &proto.ItemCostData{ItemList: []*proto.ItemCost{
+						RollBuffCostData: &proto.ItemCostData{ItemList: []*proto.ItemCost{ // 刷新需要的东西
 							{
 								ItemOneofCase: &proto.ItemCost_PileItem{
 									PileItem: &proto.PileItem{
@@ -234,7 +236,6 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 								},
 							},
 						}},
-						RollBuffFreeCount:        0,
 						SourceType:               0,
 						HandbookUnlockBuffIdList: buffIdList,
 					},
@@ -283,11 +284,7 @@ func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 
 func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueHandbookDataScRsp{
-		HandbookInfo: &proto.RogueHandbook{
-			// MiracleList: make([]*proto.RogueHandbookMiracle, 0),
-			// RogueEvent:  make([]*proto.RogueHandbookEvent, 0),
-			// BuffList:    make([]*proto.RogueHandbookBuff, 0),
-		},
+		HandbookInfo: &proto.RogueHandbook{},
 	}
 
 	// 解锁全部祝福

@@ -12,17 +12,18 @@ import (
 )
 
 type LevelGroup struct {
-	GroupId         uint32
-	GroupName       string           `json:"GroupName"`
-	LoadSide        string           `json:"LoadSide"`        // 负载端
-	Category        string           `json:"Category"`        // 类别
-	LoadCondition   *LoadCondition   `json:"LoadCondition"`   // 加载条件
-	UnloadCondition *UnloadCondition `json:"UnloadCondition"` // 卸载条件
-	LoadOnInitial   bool             `json:"LoadOnInitial"`   // 是否默认加载
-	PropList        []*PropList      `json:"PropList"`        // 实体列表
-	MonsterList     []*MonsterList   `json:"MonsterList"`     // 怪物列表
-	NPCList         []*NPCList       `json:"NPCList"`         // NPC列表
-	AnchorList      []*AnchorList    `json:"AnchorList"`      // 锚点列表
+	GroupId              uint32
+	GroupName            string                `json:"GroupName"`
+	LoadSide             string                `json:"LoadSide"`             // 负载端
+	Category             string                `json:"Category"`             // 类别
+	LoadCondition        *LoadCondition        `json:"LoadCondition"`        // 加载条件
+	UnloadCondition      *UnloadCondition      `json:"UnloadCondition"`      // 卸载条件
+	ForceUnloadCondition *ForceUnloadCondition `json:"ForceUnloadCondition"` // 强制卸载条件
+	LoadOnInitial        bool                  `json:"LoadOnInitial"`        // 是否默认加载
+	PropList             []*PropList           `json:"PropList"`             // 实体列表
+	MonsterList          []*MonsterList        `json:"MonsterList"`          // 怪物列表
+	NPCList              []*NPCList            `json:"NPCList"`              // NPC列表
+	AnchorList           []*AnchorList         `json:"AnchorList"`           // 锚点列表
 }
 type LoadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
@@ -30,6 +31,10 @@ type LoadCondition struct {
 	DelayToLevelReload bool          `json:"DelayToLevelReload"`
 }
 type UnloadCondition struct {
+	Conditions         []*Conditions `json:"Conditions"`
+	DelayToLevelReload bool          `json:"DelayToLevelReload"`
+}
+type ForceUnloadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
 	DelayToLevelReload bool          `json:"DelayToLevelReload"`
 }

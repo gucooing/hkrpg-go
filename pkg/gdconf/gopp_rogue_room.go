@@ -40,6 +40,9 @@ func (g *GameDataConfig) goppRogueRoom() {
 	}
 
 	for _, v := range g.RogueRoomMap.RogueRoomJson {
+		if v.MapEntrance == 8131101 { // 过滤旋转屋地图
+			continue
+		}
 		if g.RogueRoomMap.RogueRoomByType == nil {
 			g.RogueRoomMap.RogueRoomByType = make(map[uint32][]*RogueRoom)
 		}

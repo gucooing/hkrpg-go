@@ -313,10 +313,11 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
 	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
 	finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
-	isLoaded := false
+	isLoaded := true
 	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil && levelGroup.Category != "Mission" {
 		return true
 	}
+	// 检查强制卸载条件
 	// 检查加载条件
 	if levelGroup.LoadCondition != nil {
 		for _, conditions := range levelGroup.LoadCondition.Conditions {

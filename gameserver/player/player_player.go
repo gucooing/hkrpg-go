@@ -7,6 +7,14 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+type AllPlayerSync struct {
+	IsBasic       bool     // 基本信息
+	AvatarList    []uint32 // 角色列表
+	MaterialList  []uint32 // 物品id列表
+	EquipmentList []uint32 // 光锥列表
+	RelicList     []uint32 // 圣遗物列表
+}
+
 // 角色状态改变时需要发送通知
 func (g *GamePlayer) PlayerPlayerSyncScNotify() {
 	db := g.GetMaterialMap()
@@ -61,4 +69,45 @@ func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
 	}
 	g.PlayerPlayerSyncScNotify() // 角色信息通知
 	g.Send(cmd.SetPlayerInfoScRsp, rsp)
+}
+
+func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
+	if allSync == nil {
+		return
+	}
+	notify := &proto.PlayerSyncScNotify{
+		AvatarSync:   &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
+		MaterialList: make([]*proto.Material, 0),
+	}
+	db := g.GetMaterialMap()
+	// 添加账户基本信息
+	if allSync.IsBasic {
+		notify.BasicInfo = &proto.PlayerBasicInfo{
+			Nickname:   g.GetNickname(),
+			Level:      g.GetLevel(),
+			Exp:        db[Exp],
+			Hcoin:      db[Hcoin],
+			Scoin:      db[Scoin],
+			Mcoin:      db[Mcoin],
+			Stamina:    db[Stamina],
+			WorldLevel: g.GetWorldLevel(),
+		}
+	}
+	// 添加角色
+	if allSync.AvatarList != nil {
+		for _, avatarId := range allSync.AvatarList {
+			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(avatarId))
+		}
+	}
+	// 添加物品
+	if allSync.MaterialList != nil {
+		for _, materialId := range allSync.MaterialList {
+			notify.MaterialList = append(notify.MaterialList, &proto.Material{
+				Tid: materialId,
+				Num: db[materialId],
+			})
+		}
+	}
+
+	g.Send(cmd.PlayerSyncScNotify, notify)
 }

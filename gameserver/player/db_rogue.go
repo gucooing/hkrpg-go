@@ -9,6 +9,12 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+const (
+	QuestRogue = 0       // 模拟宇宙
+	RogueDlc   = 6000302 // 模拟宇宙：寰宇蝗灾
+	RogueNous  = 6000901 // 模拟宇宙：黄金与机械
+)
+
 // Default Probability
 const (
 	RogueBuffType      = 900  // 各属性
@@ -156,9 +162,9 @@ func (g *GamePlayer) NewGetRogueBuffByType() {
 	db.RogueBuffRarityOne = RogueBuffRarityOne
 	db.RogueBuffRarityTwo = RogueBuffRarityTwo
 	rogueBuffByTypeList := make(map[uint32]*RogueBuffByType, 0)
-	conf := gdconf.GetRogueBuffByType()
-	if conf != nil {
-		for typeId, rogueBuffByType := range conf {
+	buffTypeList := gdconf.GetRogueBuffByType()
+	if buffTypeList != nil {
+		for typeId, rogueBuffByType := range buffTypeList {
 			if typeId == 100 { // 过滤基础
 				continue
 			}
@@ -167,6 +173,10 @@ func (g *GamePlayer) NewGetRogueBuffByType() {
 				buffList := make([]uint32, 0)
 				for _, buff := range buffListConf {
 					// 此处加个判断特殊祝福就行了
+					conf := gdconf.GetBuffById(buff, 1)
+					if conf.ActivityModuleID != 0 && conf.ActivityModuleID != g.GetCurRogue().RogueActivityModuleID {
+						continue
+					}
 					buffList = append(buffList, buff)
 				}
 				rogueBuffRarityList[rarityId] = &RogueBuffRarity{

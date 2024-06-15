@@ -90,6 +90,13 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	var aPileItem []*Material
 	var delScoin uint32 // 扣除的信用点
 	var addExp uint32   // 增加的经验
+	allSync := &AllPlayerSync{
+		IsBasic:       true,
+		AvatarList:    make([]uint32, 0),
+		MaterialList:  make([]uint32, 0),
+		EquipmentList: make([]uint32, 0),
+		RelicList:     make([]uint32, 0),
+	}
 
 	// 从背包获取需要升级的角色
 	dbAvatar := g.GetAvatar().AvatarList[req.BaseAvatarId]
@@ -146,8 +153,6 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 		g.DelMaterial(pileItem)
 	}
 
-	// 通知角色还有多少信用点
-	g.PlayerPlayerSyncScNotify()
 	// 返还升级材料
 	rsp.ReturnItemList = make([]*proto.PileItem, 0)
 	if newExp >= 1000 {
@@ -173,7 +178,10 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 		g.AddMaterial(aPileItem)
 	}
 	// 通知升级后角色消息
-	g.AvatarPlayerSyncScNotify(req.BaseAvatarId)
+	allSync.MaterialList = append(allSync.MaterialList, 2)
+	allSync.MaterialList = append(allSync.MaterialList, 211)
+	allSync.AvatarList = append(allSync.AvatarList, req.BaseAvatarId)
+	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.AvatarExpUpScRsp, rsp)
 }
 

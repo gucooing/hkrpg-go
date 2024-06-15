@@ -62,6 +62,7 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		cmd.StartCocoonStageCsReq: g.StartCocoonStageCsReq, // 副本/周本等
 		cmd.SceneEnterStageCsReq:  g.SceneEnterStageCsReq,  // 场景直接发起战斗
 		// 模拟宇宙
+		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙状态
 		cmd.GetRogueInitialScoreCsReq:           g.GetRogueInitialScoreCsReq,           // 查询模拟宇宙当前分数
 		cmd.GetRogueTalentInfoCsReq:             g.GetRogueTalentInfoCsReq,             // 获取天赋信息
@@ -141,7 +142,6 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集
-		cmd.GetRogueHandbookDataCsReq:  g.GetRogueHandbookDataCsReq,  // 图鉴
 		cmd.GetQuestDataCsReq:          g.GetQuestDataCsReq,          // 获取成就信息
 		// NPC
 		cmd.GetFirstTalkNpcCsReq:              g.GetFirstTalkNpcCsReq,

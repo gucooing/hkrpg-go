@@ -99,7 +99,9 @@ func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg []byte) {
-	g.Send(cmd.ExchangeRogueRewardKeyScRsp, nil)
+	msg := g.DecodePayloadToProto(cmd.ExchangeRogueRewardKeyCsReq, payloadMsg)
+	req := msg.(*proto.ExchangeRogueRewardKeyCsReq)
+	g.Send(cmd.ExchangeRogueRewardKeyScRsp, &proto.ExchangeRogueRewardKeyCsReq{Count: req.Count})
 }
 
 func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
