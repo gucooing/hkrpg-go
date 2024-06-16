@@ -75,7 +75,11 @@ func GetAllBuff() []uint32 {
 	return CONF.RogueBuffMap.StartId
 }
 
-func GetBuffById(id, level uint32) *RogueBuff {
+func GetBuffById(id uint32) map[uint32]*RogueBuff {
+	return CONF.RogueBuffMap.SiteList[id]
+}
+
+func GetBuffByIdAndLevel(id, level uint32) *RogueBuff {
 	if CONF.RogueBuffMap.SiteList[id] == nil {
 		return nil
 	}

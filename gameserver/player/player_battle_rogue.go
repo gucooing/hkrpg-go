@@ -170,6 +170,32 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) 
 	// 刷新门
 }
 
+func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.HandleRogueCommonPendingActionCsReq, payloadMsg)
+	req := msg.(*proto.HandleRogueCommonPendingActionCsReq)
+	// 添加buff
+	action := req.Action
+	if action != nil {
+		switch action.(type) {
+		case *proto.HandleRogueCommonPendingActionCsReq_BuffSelectResult: // 添加buff
+			buffId := action.(*proto.HandleRogueCommonPendingActionCsReq_BuffSelectResult).BuffSelectResult.BuffId
+			g.AddRogueBuff(buffId)
+			g.SyncRogueCommonActionResultScNotify(buffId)
+		}
+	}
+
+	// 模拟宇宙图鉴更新通知？ SyncRogueHandbookDataUpdateScNotify
+	// 模拟宇宙常见操作结果通知 SyncRogueCommonActionResultScNotify // add buff, buff状态
+	rsp := &proto.HandleRogueCommonPendingActionScRsp{
+		QueuePosition: g.GetRogueBuffNum(),
+		Retcode:       0,
+		QueueLocation: g.GetRogueBuffNum(),
+		Action:        nil,
+	}
+
+	g.Send(cmd.HandleRogueCommonPendingActionScRsp, rsp)
+}
+
 // 区域通知
 func (g *GamePlayer) SyncRogueMapRoomScNotify() {
 	rogue := g.GetDbRogue()
@@ -205,7 +231,7 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 			BuffLevel: 1,
 			BuffId:    buffId,
 		})
-		conf := gdconf.GetBuffById(buffId, 1)
+		conf := gdconf.GetBuffByIdAndLevel(buffId, 1)
 		if conf != nil {
 			firstBuffTypeList = append(firstBuffTypeList, conf.RogueBuffType)
 		}
@@ -225,7 +251,6 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 						SourceCurCount:    1,                   // 提示
 						SourceHintId:      1,                   // 提示文本
 						SourceTotalCount:  1,                   // Source To Count
-
 						RollBuffCostData: &proto.ItemCostData{ItemList: []*proto.ItemCost{ // 刷新需要的东西
 							{
 								ItemOneofCase: &proto.ItemCost_PileItem{
@@ -260,26 +285,27 @@ func (g *GamePlayer) SyncEntityBuffChangeListScNotify(entityId uint32) {
 }
 
 func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
-	// rogue := g.GetRogue()
-	// if rogue.BuffList[buffId] == nil {
-	// 	return
-	// }
-	// notify := &proto.SyncRogueCommonActionResultScNotify{
-	// 	/*
-	// 		Action: &proto.RogueActionResult{
-	// 			ActionData: &proto.RogueActionResultData{
-	// 				AddBuffList: &proto.RogueBuffData{
-	// 					Level:  rogue.BuffList[buffId].Level,
-	// 					BuffId: buffId,
-	// 				},
-	// 			},
-	// 			Source: proto.RogueBuffSource_ROGUE_BUFF_SOURCE_TYPE_SELECT,
-	// 		},
-	// 	*/
-	// 	RogueVersionId: g.GetDbRogue().CurRogue.RogueMapID,
-	// }
-	//
-	// g.Send(cmd.SyncRogueCommonActionResultScNotify, notify)
+	db := g.GetRogueBuffById(buffId)
+	if db == nil {
+		return
+	}
+	notify := &proto.SyncRogueCommonActionResultScNotify{
+		ActionResult:   make([]*proto.RogueCommonActionResult, 0),
+		RogueVersionId: 101,
+	}
+	notify.ActionResult = append(notify.ActionResult, &proto.RogueCommonActionResult{
+		Source: 0,
+		RogueAction: &proto.RogueCommonActionResultData{
+			ResultData: &proto.RogueCommonActionResultData_GetBuffList{
+				GetBuffList: &proto.RogueCommonBuff{
+					BuffId:    buffId,
+					BuffLevel: db.BuffLevel,
+				},
+			},
+		},
+	})
+
+	g.Send(cmd.SyncRogueCommonActionResultScNotify, notify)
 }
 
 func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
@@ -356,24 +382,6 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.LeaveRogueScRsp, rsp)
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)
-}
-
-func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
-	// msg := g.DecodePayloadToProto(cmd.HandleRogueCommonPendingActionCsReq, payloadMsg)
-	// req := msg.(*proto.HandleRogueCommonPendingActionCsReq)
-
-	// 添加后通知启动
-	// g.SyncRogueCommonActionResultScNotify(buffSelectResult.BuffId)
-	// 模拟宇宙图鉴更新通知？ SyncRogueHandbookDataUpdateScNotify
-	// 模拟宇宙常见操作结果通知 SyncRogueCommonActionResultScNotify // add buff, buff状态
-	rsp := &proto.HandleRogueCommonPendingActionScRsp{
-		QueuePosition: g.GetRogueBuffNum(),
-		Retcode:       0,
-		QueueLocation: g.GetRogueBuffNum(),
-		Action:        nil,
-	}
-
-	g.Send(cmd.HandleRogueCommonPendingActionScRsp, rsp)
 }
 
 func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {

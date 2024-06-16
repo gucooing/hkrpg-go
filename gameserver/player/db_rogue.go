@@ -147,6 +147,27 @@ func (g *GamePlayer) GetRogueBuffList() map[uint32]*spb.RogueBuff {
 	return db.BuffList
 }
 
+func (g *GamePlayer) GetRogueBuffById(id uint32) *spb.RogueBuff {
+	db := g.GetRogueBuffList()
+	return db[id]
+}
+
+func (g *GamePlayer) AddRogueBuff(id uint32) {
+	db := g.GetRogueBuffList()
+	conf := gdconf.GetBuffById(id)
+	if db[id] != nil {
+		newLevel := db[id].BuffLevel
+		if conf[newLevel+1] != nil {
+			db[id].BuffLevel++
+		}
+	} else {
+		db[id] = &spb.RogueBuff{
+			BuffId:    id,
+			BuffLevel: 1,
+		}
+	}
+}
+
 /**************************************************Buff获取概率计算*******************************************/
 
 func (g *GamePlayer) GetRogueInfoOnline() *RogueInfoOnline {
@@ -173,7 +194,7 @@ func (g *GamePlayer) NewGetRogueBuffByType() {
 				buffList := make([]uint32, 0)
 				for _, buff := range buffListConf {
 					// 此处加个判断特殊祝福就行了
-					conf := gdconf.GetBuffById(buff, 1)
+					conf := gdconf.GetBuffByIdAndLevel(buff, 1)
 					if conf.ActivityModuleID != 0 && conf.ActivityModuleID != g.GetCurRogue().RogueActivityModuleID {
 						continue
 					}
@@ -453,6 +474,23 @@ func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingActi
 	}
 
 	return info
+}
+
+func (g *GamePlayer) GetCurRogueBuff() []*proto.BattleBuff {
+	buffList := make([]*proto.BattleBuff, 0)
+	db := g.GetRogueBuffList()
+	for _, buff := range db {
+		buffList = append(buffList, &proto.BattleBuff{
+			Id:              buff.BuffId,
+			Level:           buff.BuffLevel,
+			OwnerIndex:      4294967295,
+			WaveFlag:        4294967295,
+			TargetIndexList: make([]uint32, 0),
+			DynamicValues:   make(map[string]float32),
+		})
+	}
+
+	return buffList
 }
 
 func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {

@@ -107,6 +107,10 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 	}
 	// 先扣球再抽卡
 	upBanners := gdconf.GetBannersMap()[req.GachaId]
+	if upBanners == nil {
+		g.Send(cmd.DoGachaScRsp, rsp)
+		return
+	}
 	switch upBanners.GachaType {
 	case "Normal":
 		dPileItem = append(dPileItem, &Material{

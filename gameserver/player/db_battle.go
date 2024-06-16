@@ -449,11 +449,12 @@ type MPEM struct {
 	MPid     []uint32 // 怪物/物品对应id
 }
 
-func (g *GamePlayer) GetMem(isMem []uint32) *MPEM {
-	mpem := &MPEM{
-		IsBattle: false,
-		EntityId: make([]uint32, 0),
-		MPid:     make([]uint32, 0),
+func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
+	if mpem.EntityId == nil {
+		mpem.EntityId = make([]uint32, 0)
+	}
+	if mpem.MPid == nil {
+		mpem.MPid = make([]uint32, 0)
 	}
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
@@ -474,7 +475,6 @@ func (g *GamePlayer) GetMem(isMem []uint32) *MPEM {
 			logger.Debug("[EntityId:%v]没有找到相关实体信息", id)
 		}
 	}
-	return mpem
 }
 
 // 关卡结束，开始结算
@@ -693,6 +693,8 @@ func (g *GamePlayer) GetBattleBuff() []*proto.BattleBuff {
 		buffList = append(buffList, g.GetCurChallengeBuff()...)
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		buffList = append(buffList, g.GetCurChallengeBuff()...)
+	case spb.BattleType_Battle_ROGUE:
+		buffList = append(buffList, g.GetCurRogueBuff()...)
 	}
 	return buffList
 }
