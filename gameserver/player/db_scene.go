@@ -482,6 +482,13 @@ func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32
 	}
 }
 
+func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
+	switch prop.StageObjectCapture.BlockAlias {
+	case "RogueLobby_01": // 模拟宇宙入口直接开放
+		g.UpPropState(db, groupId, prop.ID, 1)
+	}
+}
+
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetPosPb() *proto.Vector {
@@ -554,9 +561,9 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
-		// if strings.Contains(propList.Name, "Door") { // 门直接设置成开启
-		// 	g.UpPropState(db, sceneGroup.GroupId, propList.ID, 1)
-		// }
+		if propList.StageObjectCapture != nil { // 特殊处理
+			g.StageObjectCapture(propList, sceneGroup.GroupId, db)
+		}
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
 			Y: int32(propList.PosY * 1000),
@@ -869,6 +876,9 @@ func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList ma
 func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, prop := range propList {
+		if prop.StageObjectCapture != nil { // 特殊处理
+			g.StageObjectCapture(prop, mazeGroupID, db)
+		}
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
 			X: int32(prop.PosX * 1000),
