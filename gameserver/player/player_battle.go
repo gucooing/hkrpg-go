@@ -34,6 +34,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	// 根据各种情况进行处理
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
+		g.AddOnLineAvatarBuff(req.AttackedByEntityId, req.SkillIndex)
 	}
 	if len(req.HitTargetEntityIdList) == 0 {
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
@@ -180,4 +181,14 @@ func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
 
 		}
 	}
+}
+
+func (g *GamePlayer) SyncEntityBuffChangeListScNotify(entityId uint32) {
+	notify := &proto.SyncEntityBuffChangeListScNotify{
+		EntityBuffChangeList: make([]*proto.EntityBuffChange, 0),
+	}
+	notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, &proto.EntityBuffChange{
+		EntityId: entityId,
+	})
+	g.Send(cmd.SyncEntityBuffChangeListScNotify, notify)
 }

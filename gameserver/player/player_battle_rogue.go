@@ -274,16 +274,6 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 	g.Send(cmd.SyncRogueCommonPendingActionScNotify, notify)
 }
 
-func (g *GamePlayer) SyncEntityBuffChangeListScNotify(entityId uint32) {
-	notify := &proto.SyncEntityBuffChangeListScNotify{
-		EntityBuffChangeList: make([]*proto.EntityBuffChange, 0),
-	}
-	notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, &proto.EntityBuffChange{
-		EntityId: entityId,
-	})
-	g.Send(cmd.SyncEntityBuffChangeListScNotify, notify)
-}
-
 func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 	db := g.GetRogueBuffById(buffId)
 	if db == nil {

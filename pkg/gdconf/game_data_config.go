@@ -78,6 +78,8 @@ type GameDataConfig struct {
 	MessageGroupConfig          *MessageGroupConfig                             // 消息配置
 	TutorialDataMap             map[uint32]*TutorialData                        // 教程
 	TutorialGuideGroupMap       map[uint32]*TutorialGuideGroup                  // 图鉴教程
+	AdventurePlayerMap          map[uint32]*AdventurePlayer                     // 角色场景技能列表
+	AvatarMazeBuffMap           map[uint32]map[uint32]*AvatarMazeBuff           // 角色场景技能效果
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -193,6 +195,8 @@ func (g *GameDataConfig) load() {
 	g.loadMessageGroupConfig()       // 消息配置
 	g.loadTutorialData()             // 教程
 	g.loadTutorialGuideGroup()       // 图鉴教程
+	g.loadAdventurePlayer()          // 角色场景技能列表
+	g.loadAvatarMazeBuff()           // 角色场景技能效果
 	// 下面是预处理
 	g.goppServerGroup() // 预处理服务器场景
 	g.goppTeleports()   // 预处理传送锚点

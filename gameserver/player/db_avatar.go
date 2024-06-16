@@ -351,8 +351,9 @@ type BattleAvatar struct {
 	AssistUid  uint32             // 助战uid
 }
 
-func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*proto.BattleAvatar {
+func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*proto.BattleAvatar, []*proto.BattleBuff) {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
+	buffList := make([]*proto.BattleBuff, 0)
 	for id, bA := range bAList {
 		if bA.AvatarId == 0 {
 			continue
@@ -464,6 +465,19 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 			continue
 		}
 		battleAvatarList = append(battleAvatarList, battleAvatar)
+		// 添加该角色的buff
+		info := g.GetOnLineAvatarBuffById(bA.AvatarId)
+		if info != nil {
+			buffList = append(buffList, &proto.BattleBuff{
+				Id:              info.BuffId,
+				Level:           1,
+				OwnerIndex:      id,
+				WaveFlag:        4294967295,
+				TargetIndexList: []uint32{1},
+				DynamicValues:   make(map[string]float32),
+			})
+			g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)
+		}
 	}
-	return battleAvatarList
+	return battleAvatarList, buffList
 }

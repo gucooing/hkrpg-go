@@ -222,6 +222,18 @@ func (g *GamePlayer) GetPropEntity(groupId, instId uint32) *PropEntity {
 	return nil
 }
 
+func (g *GamePlayer) GetAvatarEntity(id uint32) *AvatarEntity {
+	db := g.GetEntityById(id)
+	if db == nil {
+		return nil
+	}
+	switch db.(type) {
+	case *AvatarEntity:
+		return db.(*AvatarEntity)
+	}
+	return nil
+}
+
 func (g *GamePlayer) GetAllPropEntity() []*PropEntity {
 	peList := make([]*PropEntity, 0)
 	db := g.GetLoadedGroup()

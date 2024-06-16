@@ -4,6 +4,7 @@ package player
 
 import (
 	"sync"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
@@ -15,8 +16,9 @@ import (
 var BattleBackupLock sync.Mutex // 战斗列表互斥锁
 
 type CurBattle struct {
-	BattleBackup    map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
-	RogueInfoOnline *RogueInfoOnline         // 模拟宇宙临时数据
+	BattleBackup    map[uint32]*BattleBackup     // 正在进行的战斗[战斗id]战斗细节
+	RogueInfoOnline *RogueInfoOnline             // 模拟宇宙临时数据
+	AvatarBuff      map[uint32]*OnLineAvatarBuff // 角色在线buff
 }
 
 type BattleBackup struct {
@@ -75,6 +77,67 @@ func (g *GamePlayer) DelBattleBackupById(battleId uint32) {
 		}
 	}
 	delete(g.GetBattleBackup(), battleId)
+}
+
+type OnLineAvatarBuff struct {
+	AvatarId uint32 // 角色
+	BuffId   uint32 // buffid
+	Count    uint32 // 使用次数
+	AddTime  uint64 // 添加时间
+	LifeTime uint32 // 有效时间
+}
+
+func (g *GamePlayer) NewOnLineAvatarBuff() {
+	db := g.GetCurBattle()
+	db.AvatarBuff = make(map[uint32]*OnLineAvatarBuff)
+}
+
+func (g *GamePlayer) GetOnLineAvatarBuff() map[uint32]*OnLineAvatarBuff {
+	db := g.GetCurBattle()
+	if db.AvatarBuff == nil {
+		db.AvatarBuff = make(map[uint32]*OnLineAvatarBuff)
+	}
+	return db.AvatarBuff
+}
+
+func (g *GamePlayer) GetOnLineAvatarBuffById(id uint32) *OnLineAvatarBuff {
+	db := g.GetOnLineAvatarBuff()
+	return db[id]
+}
+
+func (g *GamePlayer) HandleAvatarSkill(entityId, skillIndex uint32) {
+	avatar := g.GetAvatarEntity(entityId)
+	if avatar == nil {
+		return
+	}
+	confAvatar := gdconf.GetAdventurePlayerByAvatarId(avatar.AvatarId)
+	if confAvatar == nil || uint32(len(confAvatar.MazeSkillIdList)) < skillIndex {
+		return
+	}
+	confBuff := gdconf.GetAvatarMazeBuffById(confAvatar.MazeSkillIdList[skillIndex], 1)
+	if confBuff == nil {
+		return
+	}
+	switch confBuff.UseType {
+	case "AddBattleBuff":
+		g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
+	}
+}
+
+func (g *GamePlayer) AddOnLineAvatarBuff(avatarID, buffId uint32) {
+	db := g.GetOnLineAvatarBuff()
+	db[avatarID] = &OnLineAvatarBuff{
+		AvatarId: avatarID,
+		BuffId:   buffId,
+		Count:    1,
+		AddTime:  uint64(time.Now().Unix()),
+		LifeTime: 15,
+	}
+}
+
+func (g *GamePlayer) DelOnLineAvatarBuff(avatarID, buffId uint32) {
+	db := g.GetOnLineAvatarBuff()
+	delete(db, avatarID)
 }
 
 type BattleState struct {
@@ -560,17 +623,18 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 	}
 	battleId := g.GetBattleIdGuid()
 	monsterWaveList, stageId := g.GetSceneMonsterWave(mem)
+	battleAvatarList, buffList := g.GetProtoBattleAvatar(bAList)
 	battleInfo := &proto.SceneBattleInfo{
 		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
 		WorldLevel:       g.GetWorldLevel(),                       // 世界等级
 		BattleId:         battleId,                                // 战斗Id
-		BattleAvatarList: g.GetProtoBattleAvatar(bAList),          // 战斗角色列表
+		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		StageId:          stageId,                                 // 起始战斗
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
 		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
 		RoundsLimit:      g.GetRoundsLimit(),                      // 回合限制
-		BuffList:         g.GetBattleBuff(),                       // Buff列表
+		BuffList:         g.GetBattleBuff(buffList),               // Buff列表
 	}
 	// 记录此次战斗
 	battleBackup := &BattleBackup{
@@ -614,17 +678,18 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 		monsterWaveList = append(monsterWaveList, bin...)
 	}
 	battleId := g.GetBattleIdGuid()
+	battleAvatarList, buffList := g.GetProtoBattleAvatar(bAList)
 	battleInfo := &proto.SceneBattleInfo{
 		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
 		WorldLevel:       req.GetWorldLevel(),                     // 关卡等级
 		BattleId:         battleId,                                // 战斗Id
 		StageId:          stageID,                                 // 起始战斗
-		BattleAvatarList: g.GetProtoBattleAvatar(bAList),          // 战斗角色列表
+		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
 		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
 		RoundsLimit:      g.GetRoundsLimit(),                      // 回合限制
-		BuffList:         g.GetBattleBuff(),                       // Buff列表
+		BuffList:         g.GetBattleBuff(buffList),               // Buff列表
 	}
 	// 记录此次战斗
 	battleBackup := &BattleBackup{
@@ -685,8 +750,10 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) []*proto.Scene
 }
 
 // 根据战斗情况添加buff
-func (g *GamePlayer) GetBattleBuff() []*proto.BattleBuff {
-	buffList := make([]*proto.BattleBuff, 0)
+func (g *GamePlayer) GetBattleBuff(buffList []*proto.BattleBuff) []*proto.BattleBuff {
+	if buffList == nil {
+		buffList = make([]*proto.BattleBuff, 0)
+	}
 	status := g.GetBattleStatus()
 	switch status {
 	case spb.BattleType_Battle_CHALLENGE:
