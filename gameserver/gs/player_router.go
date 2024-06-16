@@ -1,7 +1,10 @@
 package gs
 
 import (
+	"encoding/base64"
+
 	"github.com/gucooing/hkrpg-go/gameserver/player"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
 
@@ -161,6 +164,17 @@ func NewRouteManager(g *player.GamePlayer) (r *RouteManager) {
 }
 
 func RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/, g *GamePlayer) {
+	// panic捕获
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			logger.Error("uid: %v", g.p.Uid)
+			logger.Error("NAME: %s KcpMsg: \n%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), base64.StdEncoding.EncodeToString(payloadMsg))
+			return
+		}
+	}()
 	// 异步打印需要的数据包
 	go player.LogMsgRecv(cmdId, payloadMsg)
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
