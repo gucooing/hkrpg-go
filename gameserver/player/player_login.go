@@ -1,7 +1,7 @@
 package player
 
 import (
-	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -106,12 +106,14 @@ func (g *GamePlayer) ServerAnnounceNotify() {
 
 // wind
 func (g *GamePlayer) ClientDownloadDataScNotify() {
-	luac, _ := base64.StdEncoding.DecodeString("wind")
-	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{
+	content, _ := os.ReadFile("./data/t.lua")
+	// luac := base64.StdEncoding.EncodeToString(content)
+	// luac, _ := base64.StdEncoding.DecodeString("wind")
+	g.Send(NewM, &proto.ClientDownloadDataScNotify{
 		DownloadData: &proto.ClientDownloadData{
 			Version: 1,
-			Time:    1735664461,
-			Data:    luac,
+			Time:    1935664461,
+			Data:    content,
 		},
 	},
 	)

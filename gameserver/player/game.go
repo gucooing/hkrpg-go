@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
@@ -149,6 +150,20 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 	rspMsg.PayloadMessage = playerMsg
 	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
 	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
+
+	// NewM
+	if cmdId == cmd.GetTutorialGuideScRsp {
+		newMsg := alg.EncodePayloadToBin(&alg.PackMsg{CmdId: NewM, ProtoData: gunet.GetGunetTcpConn()}, nil)
+		gtgMsg := &spb.GameToGateMsgNotify{
+			Uid: g.Uid,
+			Msg: newMsg,
+		}
+		g.SendChan <- Msg{
+			AppId:     g.GateAppId,
+			CmdId:     cmd.GameToGateMsgNotify,
+			PlayerMsg: gtgMsg,
+		}
+	}
 	gtgMsg := &spb.GameToGateMsgNotify{
 		Uid: g.Uid,
 		Msg: binMsg,
@@ -159,7 +174,6 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 		CmdId:     cmd.GameToGateMsgNotify,
 		PlayerMsg: gtgMsg,
 	}
-
 }
 
 func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {

@@ -28,6 +28,13 @@ func (s *Store) GetDbConf() {
 	mailMap := s.GetAllMail()
 	for _, mail := range mailMap {
 		dbConf.MailMap[mail.Id] = mail
+		itemList := make([]*database.Item, 0)
+		err := hjson.Unmarshal([]byte(mail.Item), &itemList)
+		if err != nil {
+			// 如果你是在登录的时候看到了这个报错，并且你的配置没有问题，那就是这玩意空的没填报错了
+			logger.Error("mail item error: %v", err)
+		}
+		dbConf.MailMap[mail.Id].ItemList = itemList
 	}
 
 	rogueMap := s.GetAllRogue()
@@ -45,13 +52,6 @@ func GetAllMail() map[uint32]*database.Mail {
 	DBCONF.mailMapLock.Lock()
 	for id, mail := range DBCONF.MailMap {
 		mailMap[id] = mail
-		itemList := make([]*database.Item, 0)
-		err := hjson.Unmarshal([]byte(mail.Item), &itemList)
-		if err != nil {
-			// 如果你是在登录的时候看到了这个报错，并且你的配置没有问题，那就是这玩意空的没填报错了
-			logger.Error("mail item error: %v", err)
-		}
-		mailMap[id].ItemList = itemList
 	}
 	DBCONF.mailMapLock.Unlock()
 	return mailMap

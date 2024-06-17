@@ -19,6 +19,7 @@ const (
 	RStamina uint32 = 12 // 后备体力
 	Exp      uint32 = 22 // 经验
 	Cf       uint32 = 31 // 宇宙碎片
+	NewM            = 92 // 新道具
 )
 
 type Material struct {
