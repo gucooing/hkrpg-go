@@ -37,12 +37,6 @@ message ServiceAll{
   string port = 5;
 }
 
-message GetAllServiceGameReq {// 获取全部gs服务请求
-  ServerType service_type = 1;
-  int64 gate_time = 2;
-  int64 player_num = 3;
-}
-
 message GateToNodePingReq {// gate to node ping包请求
   ServerType service_type = 1;
   int64 gate_time = 2;
@@ -50,13 +44,10 @@ message GateToNodePingReq {// gate to node ping包请求
 }
 
 message GateToNodePingRsp {// gate to node ping包回复
-
-}
-
-message GetAllServiceGameRsp {// 获取全部gs服务回复
-  repeated ServiceAll game_service_list = 1;
-  int64 gate_time = 2;
-  int64 node_time = 3;
+  ServiceAll multi_service = 1;
+  repeated ServiceAll game_service_list = 2;
+  int64 gate_time = 3;
+  int64 node_time = 4;
 }
 
 message GameToNodePingReq{// game to node ping包请求
@@ -172,4 +163,23 @@ message MuipToNodePingRsp {// node回复muip的ping包
 
 message MuipServiceAll {
   repeated ServiceAll service_list = 1;
+}
+
+message PlayerMsgGateToNodeNotify{// 将玩家操作通知到node
+  PlayerMsgType msg_type = 1; // 类型
+  uint32 apply_uid = 2; // 发起玩家
+  uint32 send_uid = 3; // 接收玩家
+  bool is_accept_friend = 4;// 是否接受好友
+}
+
+message PlayerMsgNodeToGameNotify{// node将处理后的玩家操作转发给game
+  PlayerMsgType msg_type = 1; // 类型
+  uint32 apply_uid = 2; // 发起玩家
+  uint32 send_uid = 3; // 接收玩家
+  bool is_accept_friend = 4;// 是否接受好友
+  ChatMsg chat_msg = 5;// 消息内容
+}
+
+message ChatMsg {
+  repeated uint32 msg_to_uid_list = 2;// 消息发送目标列表
 }

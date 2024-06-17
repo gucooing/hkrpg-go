@@ -1,9 +1,7 @@
 package player
 
 import (
-	"strconv"
-
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -12,51 +10,38 @@ import (
 func (g *GamePlayer) DressAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
-
-	g.DressAvatarPlayerSyncScNotify(req.BaseAvatarId, req.EquipmentUniqueId)
-
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.DressAvatarScRsp, rsp)
+	g.DressAvatarPlayerSyncScNotify(req.GetDressAvatarId(), req.GetEquipmentUniqueId())
+	g.Send(cmd.DressAvatarScRsp, nil)
 }
 
-// 光锥交换通知
-func (g *GamePlayer) DressAvatarPlayerSyncScNotify(avatarId, equipmentUniqueId uint32) {
+// 光锥装备通知
+func (g *GamePlayer) DressAvatarPlayerSyncScNotify(equipAvatarId, equipmentUniqueId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync:    &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		EquipmentList: make([]*proto.Equipment, 0),
 	}
 
-	avatardb := g.PlayerPb.Avatar.Avatar[avatarId]
-	equipmentdb := g.GetItem().EquipmentMap[equipmentUniqueId]
-
-	// 目标光锥是否已被装备
-	if equipmentdb.BaseAvatarId != 0 {
-		avatardbs := g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId]
-		avatardbs.EquipmentUniqueId = avatardb.EquipmentUniqueId
-		// 获取要装备的角色光锥,与目标光锥角色交换
-		avatar := g.GetProtoAvatarById(avatardbs.AvatarId)
-		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-		// 交换光锥
-		g.PlayerPb.Avatar.Avatar[equipmentdb.BaseAvatarId].EquipmentUniqueId = avatardb.EquipmentUniqueId
-		if avatardb.EquipmentUniqueId == 0 {
-		} else {
-			equipmentLists := g.GetEquipment(avatardb.EquipmentUniqueId)
-			notify.EquipmentList = append(notify.EquipmentList, equipmentLists)
-			g.GetItem().EquipmentMap[avatardb.EquipmentUniqueId].BaseAvatarId = avatardbs.AvatarId
-		}
+	equipAvatarDb := g.GetAvatarBinById(equipAvatarId)
+	equipmentDb := g.GetEquipmentById(equipmentUniqueId)
+	if equipAvatarDb == nil || equipmentDb == nil {
+		return
 	}
+	baseAvatarDb := g.GetAvatarBinById(equipmentDb.BaseAvatarId)
+	oldEquiDb := g.GetEquipmentById(equipAvatarDb.EquipmentUniqueId)
 
-	equipmentdb.BaseAvatarId = avatarId
-	g.PlayerPb.Avatar.Avatar[avatarId].EquipmentUniqueId = equipmentUniqueId
+	equipAvatarDb.EquipmentUniqueId = equipmentUniqueId
+	equipmentDb.BaseAvatarId = equipAvatarId
+	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(equipAvatarId))
+	notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(equipmentUniqueId))
 
-	avatar := g.GetProtoAvatarById(avatarId)
-
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-
-	equipmentList := g.GetEquipment(equipmentUniqueId)
-
-	notify.EquipmentList = append(notify.EquipmentList, equipmentList)
+	if baseAvatarDb != nil {
+		baseAvatarDb.EquipmentUniqueId = 0
+		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(baseAvatarDb.AvatarId))
+	}
+	if oldEquiDb != nil {
+		oldEquiDb.BaseAvatarId = 0
+		notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(oldEquiDb.UniqueId))
+	}
 
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
@@ -83,7 +68,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 	// 获取需要升级光锥的配置信息
-	equConf := gdconf.GetEquipmentConfigById(strconv.Itoa(int(dbEquipment.Tid)))
+	equConf := gdconf.GetEquipmentConfigById(dbEquipment.Tid)
 	if equConf == nil {
 		rsp := &proto.ExpUpEquipmentScRsp{}
 		g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -91,7 +76,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue
@@ -102,7 +87,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 
 		pileItem = append(pileItem, pile)
 		// 获取材料配置
-		pileconf := gdconf.GetEquipmentConfigById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		pileconf := gdconf.GetEquipmentConfigById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
 			g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -115,14 +100,14 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的光锥
-	for _, equipment := range req.ItemCostList.ItemList {
+	for _, equipment := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if equipment.GetEquipmentUniqueId() == 0 {
 			continue
 		}
 		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
 		// 获取光锥配置
-		equipmentconfig := gdconf.GetEquipmentConfigById(strconv.Itoa(int(g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)))
+		equipmentconfig := gdconf.GetEquipmentConfigById(g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)
 		if equipmentconfig == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
 			g.Send(cmd.ExpUpEquipmentScRsp, rsp)
@@ -170,15 +155,6 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 }
 
-func (g *GamePlayer) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
-	for _, equipment := range equipmentList {
-		delete(g.GetItem().EquipmentMap, equipment)
-	}
-
-	notify := &proto.PlayerSyncScNotify{DelEquipmentList: equipmentList}
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
 func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpEquipmentCsReq, payloadMsg)
 	req := msg.(*proto.RankUpEquipmentCsReq)
@@ -194,10 +170,10 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 
-	gdconfEquipment := gdconf.GetEquipmentConfigById(strconv.Itoa(int(dbEquipment.Tid)))
+	gdconfEquipment := gdconf.GetEquipmentConfigById(dbEquipment.Tid)
 
 	// 遍历用来叠影的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue
@@ -229,7 +205,7 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来叠影的光锥
-	for _, equipment := range req.ItemCostList.ItemList {
+	for _, equipment := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if equipment.GetEquipmentUniqueId() == 0 {
 			continue
@@ -273,7 +249,7 @@ func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 	// 遍历用来突破的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue

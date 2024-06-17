@@ -10,7 +10,6 @@ type Config struct {
 	LogLevel   string               `json:"LogLevel"`
 	MaxPlayer  int32                `json:"MaxPlayer"`
 	AutoCreate bool                 `json:"AutoCreate"`
-	OuterIp    string               `json:"OuterIp"`
 	AppList    map[string]AppList   `json:"AppList"`
 	NetConf    map[string]string    `json:"NetConf"`
 	MysqlConf  map[string]MysqlConf `json:"MysqlConf"`
@@ -20,7 +19,9 @@ type AppList struct {
 	App map[string]App `json:"app"`
 }
 type App struct {
-	Port string `json:"port"`
+	Port      string `json:"port"`
+	InnerAddr string `json:"inner_addr"`
+	OuterAddr string `json:"outer_addr"`
 }
 type MysqlConf struct {
 	Dsn string `json:"dsn"`
@@ -67,12 +68,13 @@ var DefaultConfig = &Config{
 	LogLevel:   "Info",
 	MaxPlayer:  -1,
 	AutoCreate: true,
-	OuterIp:    "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
 			App: map[string]App{
 				"port_player": {
-					Port: "20041",
+					Port:      "20041",
+					InnerAddr: "0.0.0.0",
+					OuterAddr: "127.0.0.1",
 				},
 			},
 		},

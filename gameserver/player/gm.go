@@ -1,19 +1,28 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
+// 添加物品
 func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GmGive)
 	if req.PlayerUid == 0 {
 		return
 	}
 	itemConf := gdconf.GetItemConfigMap()
+
+	switch req.ItemId {
+	case 999999999:
+		for _, relic := range itemConf.Relic {
+			g.AddBtRelic(relic.ID)
+		}
+		return
+	}
+
 	if req.GiveAll {
 		var pileItem []*Material
 		// add avatar
@@ -22,7 +31,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 			if avatar.ID/1000 != 1 {
 				continue
 			}
-			g.AddAvatar(avatar.ID)
+			g.AddAvatar(avatar.ID, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 		}
 		// add playerIcon
 		var playerIconList []uint32
@@ -55,90 +64,127 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		g.AddMaterial(pileItem)
 		// g.ScenePlaneEventScNotify(pileItem)
 	} else {
-		var pileItem []*Material
-		for _, item := range itemConf.Item {
-			if item.ID == req.ItemId {
-				pileItem = append(pileItem, &Material{
-					Tid: item.ID,
-					Num: req.ItemCount,
-				})
-				g.AddMaterial(pileItem)
-				return
-			}
-		}
-		for _, avatar := range itemConf.Avatar {
-			if avatar.ID == req.ItemId {
-				g.AddAvatar(avatar.ID)
-				return
-			}
-		}
-		for _, avatar := range itemConf.AvatarRank {
-			if avatar.ID == req.ItemId {
-				pileItem = append(pileItem, &Material{
-					Tid: avatar.ID,
-					Num: req.ItemCount,
-				})
-				g.AddMaterial(pileItem)
-				return
-			}
-		}
-		for _, avatar := range itemConf.AvatarPlayerIcon {
-			if avatar.ID == req.ItemId {
-				g.AddHeadIcon(avatar.ID)
-				return
-			}
-		}
-		for _, equipment := range itemConf.Equipment {
-			if equipment.ID == req.ItemId {
-				g.AddEquipment(equipment.ID)
-				return
-			}
-		}
-		for _, relic := range itemConf.Relic {
-			if relic.ID == req.ItemId {
-				g.AddRelic(relic.ID)
-				return
-			}
-		}
+		g.AddItem([]*Material{{
+			Tid: req.ItemId,
+			Num: req.ItemCount,
+		}})
 	}
 }
 
-func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
-	relicItme := g.GetProtoRelicById(uniqueId)
-	// 通知客户端增加了物品
-	notify := &proto.ScenePlaneEventScNotify{
-		GetItemList: &proto.ItemList{
-			ItemList: make([]*proto.Item, 0),
-		},
-	}
-	item := &proto.Item{
-		ItemId:      relicItme.Tid,
-		Level:       relicItme.Level,
-		Num:         1,
-		MainAffixId: relicItme.MainAffixId,
-		Rank:        0,
-		Promotion:   0,
-		UniqueId:    relicItme.UniqueId,
-	}
-	notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
-	g.Send(cmd.ScenePlaneEventScNotify, notify)
-}
-
+// 设置世界等级
 func (g *GamePlayer) GmWorldLevel(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GmWorldLevel)
-
-	g.PlayerPb.WorldLevel = req.WorldLevel
-
+	g.SetWorldLevel(req.WorldLevel)
 	// 账号状态通知
 	g.PlayerPlayerSyncScNotify()
 }
 
+// 清空背包
 func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
-	g.PlayerPb.Item = &spb.Item{
+	g.BasicBin.Item = &spb.Item{
 		RelicMap:     make(map[uint32]*spb.Relic),
 		EquipmentMap: make(map[uint32]*spb.Equipment),
 		MaterialMap:  make(map[uint32]uint32),
 		HeadIcon:     make([]uint32, 0),
 	}
-	g.PlayerPb.Item.MaterialMap[11] = 240
+	g.BasicBin.Item.MaterialMap[11] = 240
+}
+
+// 角色一键满级
+func (g *GamePlayer) GmMaxCurAvatar(payloadMsg pb.Message) {
+	req := payloadMsg.(*spb.MaxCurAvatar)
+	if req.All {
+		bin := g.GetAvatar()
+		if bin == nil {
+			return
+		}
+		for _, db := range bin.AvatarList {
+			g.SetAvatarMaxByDb(db)
+		}
+	} else {
+		var db *spb.AvatarBin
+		db = g.GetAvatarBinById(req.AvatarId)
+		if db == nil {
+			db = g.GetCurAvatar()
+		}
+		g.SetAvatarMaxByDb(db)
+	}
+}
+
+func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
+	if db == nil {
+		return
+	}
+	db.Level = 80                              // 80级
+	db.PromoteLevel = 6                        // 突破等级
+	db.Rank = 6                                // 六命
+	db.Hp = 10000                              // 满血
+	db.SpBar.CurSp = 10000                     // 满能量
+	g.SetAvatarMakSkillByAvatarId(db.AvatarId) // 技能满级
+	// 通知角色信息
+	g.AvatarPlayerSyncScNotify(db.AvatarId)
+}
+
+func (g *GamePlayer) RecoverLine() {
+	db := g.GetCurLineUp()
+	for _, a := range db.AvatarIdList {
+		bin := g.GetAvatarById(a.AvatarId)
+		if bin != nil {
+			bin.Hp = 10000
+			bin.SpBar.CurSp = 10000
+			// 通知角色信息
+			g.AvatarPlayerSyncScNotify(a.AvatarId)
+		}
+	}
+}
+
+func (g *GamePlayer) GmMission(req *spb.GmMission) {
+	if req.FinishAll {
+		g.FinishAllMission()
+		g.FinishAllTutorial()
+		return
+	}
+}
+
+func (g *GamePlayer) FinishAllMission() {
+	db := g.GetMainMission()
+	db.SubMissionList = make(map[uint32]*spb.MissionInfo)
+	db.MainMissionList = make(map[uint32]*spb.MissionInfo)
+	for id, info := range gdconf.GetSubMainMission() {
+		if db.FinishSubMissionList == nil {
+			db.FinishSubMissionList = make(map[uint32]*spb.MissionInfo)
+		}
+		db.FinishSubMissionList[id] = &spb.MissionInfo{
+			MissionId: id,
+			Progress:  info.Progress,
+			Status:    spb.MissionStatus_MISSION_FINISH,
+		}
+	}
+	for id := range gdconf.GetGoppMainMission() {
+		if db.FinishMainMissionList == nil {
+			db.FinishMainMissionList = make(map[uint32]*spb.MissionInfo)
+		}
+		db.FinishMainMissionList[id] = &spb.MissionInfo{
+			MissionId: id,
+			Progress:  1,
+			Status:    spb.MissionStatus_MISSION_FINISH,
+		}
+	}
+}
+
+func (g *GamePlayer) FinishAllTutorial() {
+	tDb := g.GetTutorial()
+	for id := range gdconf.GetTutorialData() {
+		tDb[id] = &spb.TutorialInfo{
+			Id:     id,
+			Status: spb.TutorialStatus_TUTORIAL_FINISH,
+		}
+	}
+	gDb := g.GetTutorialGuide()
+	for id := range gdconf.GetTutorialGuideGroup() {
+		gDb[id] = &spb.TutorialInfo{
+			Id:     id,
+			Status: spb.TutorialStatus_TUTORIAL_FINISH,
+		}
+	}
 }

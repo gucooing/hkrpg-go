@@ -10,7 +10,6 @@ type Config struct {
 	LogLevel   string               `json:"LogLevel"`
 	AutoCreate bool                 `json:"AutoCreate"`
 	Dispatch   []Dispatch           `json:"Dispatch"`
-	OuterIp    string               `json:"OuterIp"`
 	AppList    map[string]AppList   `json:"AppList"`
 	NetConf    map[string]string    `json:"NetConf"`
 	Email      *email               `json:"Email"`
@@ -37,7 +36,9 @@ type AppList struct {
 	App map[string]App `json:"app"`
 }
 type App struct {
-	Port string `json:"port"`
+	Port      string `json:"port"`
+	InnerAddr string `json:"inner_addr"`
+	OuterAddr string `json:"outer_addr"`
 }
 type MysqlConf struct {
 	Dsn string `json:"dsn"`
@@ -93,7 +94,6 @@ var DefaultConfig = &Config{
 			DispatchUrl: "/query_gateway_capture",
 		},
 	},
-	OuterIp: "127.0.0.1",
 	AppList: map[string]AppList{
 		"9001.1.1.1": {
 			App: map[string]App{
@@ -119,7 +119,9 @@ var DefaultConfig = &Config{
 		"9001.4.1.1": {
 			App: map[string]App{
 				"port_http": {
-					Port: "8080",
+					Port:      "8080",
+					InnerAddr: "127.0.0.1",
+					OuterAddr: "http://127.0.0.1:8080",
 				},
 			},
 		},

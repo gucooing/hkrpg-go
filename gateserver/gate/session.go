@@ -13,13 +13,14 @@ import (
 
 type PlayerGame struct {
 	gs             *gameServer
+	ga             *GateServer
 	Status         spb.PlayerStatus
 	Uid            uint32 // uid
 	AccountId      uint32
 	Seed           uint64
 	XorKey         []byte // 密钥
 	KcpConn        *kcp.UDPSession
-	LastActiveTime int64 // 最近一次的活跃时间
+	LastActiveTime uint64 // 最近一次的活跃时间
 	RouteManager   *RouteManager
 	ticker         *time.Timer
 	stop           chan struct{}
@@ -42,6 +43,10 @@ func (r *RouteManager) initRoute(p *PlayerGame) {
 		cmd.PlayerHeartBeatCsReq: p.HandlePlayerHeartBeatCsReq,
 		cmd.PlayerLogoutCsReq:    p.PlayerLogoutCsReq,
 		cmd.GetAuthkeyCsReq:      p.nilProto,
+		// 好友
+		cmd.ApplyFriendCsReq:  p.ApplyFriendCsReq,  // 发送好友申请
+		cmd.HandleFriendCsReq: p.HandleFriendCsReq, // 处理好友申请
+		cmd.SendMsgCsReq:      p.SendMsgCsReq,      // 发送聊天信息
 	}
 }
 
@@ -55,7 +60,9 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	return
 }
 
-func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {}
+func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {
+	logger.Info("", tcpMsg.ProtoData)
+}
 
 // 将玩家消息转发到game
 func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
@@ -149,7 +156,7 @@ func (s *GateServer) AutoDelPlayer() {
 	for {
 		<-ticker.C
 		for _, play := range s.getAllPlayer() {
-			if time.Now().Unix()-play.LastActiveTime > 30 {
+			if getCurTime()-play.LastActiveTime > 300000 {
 				switch play.Status {
 				case spb.PlayerStatus_PlayerStatus_PostLogin:
 					s.ttiPlayerKill(play, spb.Retcode_RET_PLAYER_TIMEOUT)

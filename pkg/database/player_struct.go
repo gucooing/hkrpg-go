@@ -8,3 +8,10 @@ type PlayerData struct {
 	DataVersion uint32
 	BinData     []byte
 }
+
+type BlockData struct { // 地图db
+	Uid         uint32 `gorm:"primaryKey"`
+	EntryId     uint32 `gorm:"primaryKey"`
+	DataVersion uint32
+	BinData     []byte
+}

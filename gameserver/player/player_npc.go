@@ -3,12 +3,11 @@ package player
 import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.GetFirstTalkNpcScRsp, rsp)
+	g.Send(cmd.GetFirstTalkNpcScRsp, nil)
 }
 
 func (g *GamePlayer) GetNpcTakenRewardCsReq(payloadMsg []byte) {
@@ -24,11 +23,108 @@ func (g *GamePlayer) GetFirstTalkByPerformanceNpcCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetFirstTalkByPerformanceNpcCsReq, payloadMsg)
 	req := msg.(*proto.GetFirstTalkByPerformanceNpcCsReq)
 	rsp := &proto.GetFirstTalkByPerformanceNpcScRsp{
-		NpcTalkInfoList: make([]*proto.NpcTalkInfo, 0),
+		NpcMeetStatusList: make([]*proto.NpcMeetStatusInfo, 0),
 	}
-	for _, getNpcList := range req.NpcTalkList {
-		npcTalkInfo := &proto.NpcTalkInfo{NpcTalkId: getNpcList}
-		rsp.NpcTalkInfoList = append(rsp.NpcTalkInfoList, npcTalkInfo)
+	for _, getNpcList := range req.FirstTalkIdList {
+		npcTalkInfo := &proto.NpcMeetStatusInfo{MeetId: getNpcList}
+		rsp.NpcMeetStatusList = append(rsp.NpcMeetStatusList, npcTalkInfo)
 	}
 	g.Send(cmd.GetFirstTalkByPerformanceNpcScRsp, rsp)
+}
+
+func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetNpcMessageGroupCsReq, payloadMsg)
+	req := msg.(*proto.GetNpcMessageGroupCsReq)
+	rsp := &proto.GetNpcMessageGroupScRsp{
+		MessageGroupList: make([]*proto.MessageGroup, 0),
+		Retcode:          0,
+	}
+
+	for _, contactId := range req.ContactIdList {
+		db := g.GetMessageGroupByContactId(contactId)
+		if db != nil {
+			messageGroup := &proto.MessageGroup{
+				Id:                 db.Id,
+				RefreshTime:        db.RefreshTime,
+				Status:             proto.MessageGroupStatus(db.Status),
+				MessageSectionList: make([]*proto.MessageSection, 0),
+				MessageSectionId:   0,
+			}
+			for _, msgSection := range db.MessageSectionList {
+				messageGroup.MessageSectionList = append(messageGroup.MessageSectionList, &proto.MessageSection{
+					Status:         proto.MessageSectionStatus(msgSection.Status),
+					Id:             msgSection.Id,
+					ToChooseItemId: make([]uint32, 0),
+					MessageItemId:  0,
+					ItemList:       make([]*proto.MessageItem, 0),
+				})
+			}
+			rsp.MessageGroupList = append(rsp.MessageGroupList, messageGroup)
+		}
+	}
+
+	g.Send(cmd.GetNpcMessageGroupScRsp, rsp)
+}
+
+func (g *GamePlayer) FinishPerformSectionIdCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.FinishPerformSectionIdCsReq, payloadMsg)
+	req := msg.(*proto.FinishPerformSectionIdCsReq)
+
+	g.FinishMessageGroup(req.SectionId)
+
+	rsp := &proto.FinishPerformSectionIdScRsp{
+		Reward:    &proto.ItemList{},
+		Retcode:   0,
+		SectionId: req.SectionId,
+		ItemList:  make([]*proto.MessageItem, 0),
+	}
+	g.Send(cmd.FinishPerformSectionIdScRsp, rsp)
+}
+
+func (g *GamePlayer) MessageGroupPlayerSyncScNotify(contactId uint32) {
+	db := g.GetMessageGroupByContactId(contactId)
+	if db == nil {
+		return
+	}
+	notify := &proto.PlayerSyncScNotify{
+		MessageGroupStatus: make([]*proto.GroupStatus, 0),
+		SectionStatus:      make([]*proto.SectionStatus, 0),
+	}
+
+	notify.MessageGroupStatus = append(notify.MessageGroupStatus, &proto.GroupStatus{
+		RefreshTime: db.RefreshTime,
+		GroupId:     db.Id,
+		GroupStatus: proto.MessageGroupStatus(db.Status),
+	})
+
+	for _, msgSection := range db.MessageSectionList {
+		notify.SectionStatus = append(notify.SectionStatus, &proto.SectionStatus{
+			SectionId:     msgSection.Id,
+			SectionStatus: proto.MessageSectionStatus(msgSection.Status),
+		})
+	}
+
+	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
+func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg []byte) {
+	rsp := &proto.GetNpcStatusScRsp{
+		NpcStatusList: make([]*proto.NpcStatus, 0),
+		Retcode:       0,
+	}
+	db := g.GetMessageGroup()
+	if db != nil {
+		for _, info := range db {
+			isFinish := false
+			if info.Status == spb.MessageGroupStatus_MESSAGE_GROUP_FINISH {
+				isFinish = true
+			}
+			rsp.NpcStatusList = append(rsp.NpcStatusList, &proto.NpcStatus{
+				IsFinish: isFinish,
+				NpcId:    info.ContactId,
+			})
+		}
+	}
+
+	g.Send(cmd.GetNpcStatusScRsp, rsp)
 }

@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/player"
-	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -20,81 +19,36 @@ import (
 5.删除玩家内存
 */
 type GamePlayer struct {
-	gate           *gateServer
-	game           *GameServer
-	p              *player.GamePlayer
-	RouteManager   *RouteManager
-	LastActiveTime int64 // 最近一次的保存时间
+	gate           *gateServer        // 玩家所属gate
+	game           *GameServer        // 玩家所属game
+	p              *player.GamePlayer // 玩家内存
+	LastActiveTime int64              // 最近一次的保存时间
 }
 
 // 这个kill玩家不会通知给gate
 func (s *GameServer) killPlayer(p *GamePlayer) {
-	s.upDataPlayer(p.p)
+	p.p.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
 	s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.p.AccountId)))
 	s.delPlayerMap(p.p.Uid)
 	logger.Info("[UID:%v]玩家下线成功", p.p.Uid)
 }
 
-// 玩家数据唯一修改方法
-func (s *GameServer) upDataPlayer(p *player.GamePlayer) {
-	redisDb, ok := s.Store.GetPlayerStatus(strconv.Itoa(int(p.AccountId)))
-	if !ok {
-		return
-	}
-	statu := new(spb.PlayerStatusRedisData)
-	err := pb.Unmarshal(redisDb, statu)
-	if err != nil {
-		logger.Error("PlayerStatusRedisData Unmarshal error")
-		s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.AccountId)))
-		return
-	}
-	if statu.GameserverId != s.AppId && statu.DataVersion != p.GetDataVersion() {
-		// 脏数据
-		logger.Info("[UID:%v]数据过期，已丢弃", p.Uid)
-		return
-	}
-	//  确认写入，更新数据版本
-	p.AddDataVersion()
-	dbDate := new(database.PlayerData)
-	dbDate.Uid = p.Uid
-	dbDate.Level = p.GetLevel()
-	dbDate.Exp = p.PlayerPb.Exp
-	dbDate.Nickname = p.GetNickname()
-	dbDate.BinData, err = pb.Marshal(p.PlayerPb)
-	dbDate.DataVersion = p.GetDataVersion()
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return
-	}
-
-	if err = s.Store.UpdatePlayer(dbDate); err != nil {
-		logger.Error("Update Player error")
-		return
-	}
-	if !s.SetPlayerPlayerBasicBriefData(p) {
-		logger.Error("[UID:%v]玩家简要信息保存失败", p.Uid)
-	}
-	return
-}
-
 /************************************接口*********************************/
 
 func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServer) (*GamePlayer, bool) {
+	g.RouteManager = player.NewRouteManager(g)
 	gamePlayer := &GamePlayer{
-		gate:         ge,
-		game:         s,
-		p:            g,
-		RouteManager: NewRouteManager(g),
+		gate: ge,
+		game: s,
+		p:    g,
 	}
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
 
-	if gamePlayer.p.Player == nil {
-		gamePlayer.p.Player = &player.PlayerData{
-			Battle: make(map[uint32]*player.Battle),
-			BattleState: &player.BattleState{
-				ChallengeState: &player.ChallengeState{},
-			},
+	if gamePlayer.p.OnlineData == nil {
+		gamePlayer.p.OnlineData = &player.OnlineData{
+			Battle:      make(map[uint32]*player.Battle),
+			BattleState: &player.BattleState{},
 		}
 	}
 	if s.playerMap[uid] == nil {
@@ -151,25 +105,4 @@ func (s *GameServer) AddPlayerStatus(g *GamePlayer) error {
 		logger.Info("玩家状态锁加锁失败")
 	}
 	return err
-}
-
-func (s *GameServer) SetPlayerPlayerBasicBriefData(g *player.GamePlayer) bool {
-	playerBasicBrief := &spb.PlayerBasicBriefData{
-		Nickname:          g.GetNickname(),
-		Level:             g.GetLevel(),
-		WorldLevel:        g.GetWorldLevel(),
-		LastLoginTime:     time.Now().Unix(),
-		HeadImageAvatarId: g.GetHeadIcon(),
-		Exp:               g.GetPlayerPb().Exp,
-		PlatformType:      0,
-		Uid:               g.Uid,
-	}
-
-	bin, err := pb.Marshal(playerBasicBrief)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return false
-	}
-
-	return s.Store.SetPlayerPlayerBasicBriefData(g.Uid, bin)
 }

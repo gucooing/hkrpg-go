@@ -4,13 +4,13 @@ package proto;
 
 option go_package = "./;proto";
 
-enum Gender {
+enum Gender {// 主角性别
   GenderNone = 0;
   GenderMan = 1;
   GenderWoman = 2;
 }
 
-enum HeroBasicType {
+enum HeroBasicType {// 主角类型
   None = 0;
   BoyWarrior = 8001;
   GirlWarrior = 8002;
@@ -28,7 +28,7 @@ enum HeroBasicType {
   GirlPriest = 8014;
 }
 
-enum AvatarType {
+enum AvatarType {// 角色状态
   AVATAR_TYPE_NONE = 0;
   AVATAR_TRIAL_TYPE = 1;
   AVATAR_LIMIT_TYPE = 2;
@@ -36,7 +36,7 @@ enum AvatarType {
   AVATAR_ASSIST_TYPE = 4;
 }
 
-enum ExtraLineupType {
+enum ExtraLineupType {// 队伍类型
   LINEUP_NONE = 0;
   LINEUP_CHALLENGE = 1;
   LINEUP_ROGUE = 2;
@@ -52,15 +52,16 @@ enum ExtraLineupType {
   LINEUP_HELIOBUS = 13;
 }
 
-enum BattleType{
-  Battle_NONE = 0;
-  Battle_CHALLENGE = 1;
-  Battle_CHALLENGE_Story = 2;
-  Battle_ROGUE = 3;
-  Battle_TrialActivity = 4;
+enum BattleType{// 战斗状态
+  Battle_NONE = 0; // 普通状态
+  Battle_CHALLENGE = 1; // 忘却之庭
+  Battle_CHALLENGE_Story = 2; // 忘却之庭活动
+  //  Battle_CHALLENGE_Story_2 = 3; // 忘却之庭活动2
+  Battle_ROGUE = 4;// 模拟宇宙
+  Battle_TrialActivity = 5;
 }
 
-enum LanguageType {
+enum LanguageType {// 语言
   LANGUAGE_NONE = 0;
   LANGUAGE_SC = 1;
   LANGUAGE_TC = 2;
@@ -77,7 +78,7 @@ enum LanguageType {
   LANGUAGE_ID = 13;
 }
 
-enum PlatformType {
+enum PlatformType {// 设备类型
   EDITOR = 0;
   IOS = 1;
   ANDROID = 2;
@@ -100,7 +101,7 @@ enum PlatformType {
   CLOUD_WEB_KEYBOARD = 25;
 }
 
-enum ServerType {
+enum ServerType {// 服务分类
   SERVICE_NONE = 0;
   SERVICE_NODE = 1;
   SERVICE_GAME = 2;
@@ -110,7 +111,7 @@ enum ServerType {
   SERVICE_MUIP = 6;
 }
 
-enum PlayerStatus {
+enum PlayerStatus {// 玩家状态
   PlayerStatus_PreLogin = 0; // 登录前
   PlayerStatus_LoggingIn = 1;// 登录中
   PlayerStatus_PostLogin = 2;// 登录完成
@@ -118,10 +119,63 @@ enum PlayerStatus {
   PlayerStatus_Logout = 4;//离线等待中
 }
 
-enum PlayerOfflineReason {
+enum PlayerOfflineReason {// 玩家离线原因
   OFFLINE_NONE = 0; // 正常离线
   OFFLINE_GAME_ERROR = 1; // gs异常
   OFFLINE_REPEAT_LOGIN = 2; // 重复登录
+}
+
+enum ChallengeStatus {// 正在进行的忘却之庭关卡状态
+  CHALLENGE_UNKNOWN = 0;
+  CHALLENGE_DOING = 1;
+  CHALLENGE_FINISH = 2;
+  CHALLENGE_FAILED = 3;
+}
+
+enum MsgType {// 消息类型
+  MSG_TYPE_NONE = 0; // 空
+  MSG_TYPE_CUSTOM_TEXT = 1; // 文本
+  MSG_TYPE_EMOJI = 2; // 表情
+}
+
+enum PlayerMsgType{
+  PMT_NONE = 0;//无
+  PMT_APPLYFRIEND = 1;  //申请好友
+  PMT_CHAT = 2; // 聊天消息
+  PMT_ACCEPTFRIEND = 3; // 同意/拒绝好友申请
+}
+
+enum MissionStatus{//任务状态
+  MISSION_NONE = 0;
+  MISSION_DOING = 1;
+  MISSION_FINISH = 2;
+  MISSION_PREPARED = 3;
+}
+
+enum TutorialStatus {// 教程状态
+  TUTORIAL_NONE = 0;
+  TUTORIAL_UNLOCK = 1;
+  TUTORIAL_FINISH = 2;
+}
+
+enum MessageGroupStatus {
+    MESSAGE_GROUP_NONE = 0;
+    MESSAGE_GROUP_DOING = 1;
+    MESSAGE_GROUP_FINISH = 2;
+    MESSAGE_GROUP_FROZEN = 3;
+}
+
+enum MessageSectionStatus{
+    MESSAGE_SECTION_NONE = 0;
+    MESSAGE_SECTION_DOING = 1;
+    MESSAGE_SECTION_FINISH = 2;
+    MESSAGE_SECTION_FROZEN = 3;
+}
+
+enum LineAvatarType {// 队伍角色属性
+  LineAvatarType_MI = 0;
+  LineAvatarType_TRIAL = 1;// 试用
+  LineAvatarType_ASSIST = 2;// 援助
 }
 
 enum RogueAreaStatus {

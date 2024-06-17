@@ -3,7 +3,7 @@ package player
 import (
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -99,9 +99,9 @@ func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg []byte) {
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.ExchangeRogueRewardKeyScRsp, rsp)
+	msg := g.DecodePayloadToProto(cmd.ExchangeRogueRewardKeyCsReq, payloadMsg)
+	req := msg.(*proto.ExchangeRogueRewardKeyCsReq)
+	g.Send(cmd.ExchangeRogueRewardKeyScRsp, &proto.ExchangeRogueRewardKeyCsReq{Count: req.Count})
 }
 
 func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {

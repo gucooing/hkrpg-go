@@ -33,7 +33,12 @@ func (g *GamePlayer) ScenePlaneEventScNotify(pileItem []*Material) {
 func (g *GamePlayer) HandleGetBagCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBagScRsp)
 	// 获取背包材料
-	for id, materia := range g.GetItem().MaterialMap {
+	db := g.GetMaterialMap()
+	for id, materia := range db {
+		if materia == 0 {
+			delete(db, id)
+			continue
+		}
 		materialList := &proto.Material{
 			Tid: id,
 			Num: materia,
@@ -52,4 +57,40 @@ func (g *GamePlayer) HandleGetBagCsReq(payloadMsg []byte) {
 	}
 
 	g.Send(cmd.GetBagScRsp, rsp)
+}
+
+func (g *GamePlayer) DestroyItemCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.DestroyItemCsReq, payloadMsg)
+	req := msg.(*proto.DestroyItemCsReq)
+	db := g.GetMaterialById(req.ItemId)
+	if db == req.CurItemCount {
+		g.DelMaterial([]*Material{{Tid: req.ItemId, Num: req.ItemCount}})
+	}
+	g.Send(cmd.DestroyItemScRsp, nil)
+}
+
+func (g *GamePlayer) SellItemCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SellItemCsReq, payloadMsg)
+	req := msg.(*proto.SellItemCsReq)
+	var material []*Material
+	rsp := &proto.SellItemScRsp{
+		ReturnItemList: &proto.ItemList{
+			ItemList: make([]*proto.Item, 0),
+		},
+		Retcode: 0,
+	}
+	itemCost := req.GetCostData()
+	for _, item := range itemCost.GetItemList() {
+		// pileItem := item.GetPileItem()
+		equipmentUniqueId := item.GetEquipmentUniqueId()
+		relicUniqueId := item.GetRelicUniqueId()
+		material = append(material, g.DelEquipment(equipmentUniqueId)...)
+		material = append(material, g.DelRelic(relicUniqueId)...)
+	}
+
+	for _, item := range material {
+		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{ItemId: item.Tid, Num: item.Num})
+	}
+	g.AddMaterial(material)
+	g.Send(cmd.SellItemScRsp, rsp)
 }

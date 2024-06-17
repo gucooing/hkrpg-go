@@ -36,7 +36,7 @@ func (s *GameServer) newNode() {
 	// 向node注册
 	n.ServiceConnectionReq()
 	// 开启node定时器
-	n.nodeTicler(tickerCtx)
+	go n.nodeTicler(tickerCtx)
 }
 
 func (n *NodeService) nodeKill() {
@@ -63,7 +63,7 @@ func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_GAME,
 		AppId:      n.game.AppId,
-		Addr:       n.game.Config.OuterIp,
+		Addr:       n.game.OuterAddr,
 		Port:       n.game.Port,
 	}
 
@@ -101,6 +101,10 @@ func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		n.game.GmWorldLevel(serviceMsg) // 设置世界等级
 	case cmd.DelItem:
 		n.game.DelItem(serviceMsg) // 清空背包
+	case cmd.MaxCurAvatar:
+		n.game.GmMaxCurAvatar(serviceMsg)
+	case cmd.GmMission:
+		n.game.GmMission(serviceMsg)
 	default:
 		logger.Info("node -> game error cmdid:%v", cmdId)
 	}
@@ -119,6 +123,7 @@ func (n *NodeService) sendNode(cmdId uint16, playerMsg pb.Message) {
 	_, err := n.nodeConn.Write(binMsg)
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
+		n.nodeKill()
 		return
 	}
 }
@@ -141,6 +146,5 @@ func (n *NodeService) GameToNodePingReq() {
 }
 
 func (n *NodeService) GameToNodePingRsp(serviceMsg pb.Message) {
-	req := serviceMsg.(*spb.GameToNodePingRsp)
-	logger.Debug(req.String())
+	// req := serviceMsg.(*spb.GameToNodePingRsp)
 }

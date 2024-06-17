@@ -1,9 +1,7 @@
 package player
 
 import (
-	"strconv"
-
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -11,64 +9,42 @@ import (
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressRelicAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressRelicAvatarCsReq)
-
-	g.DressRelicAvatarPlayerSyncScNotify(req.BaseAvatarId, req.ParamList)
-	rsp := new(proto.GetChallengeScRsp)
-	// TODO 是的，没错，还是同样的原因
-	g.Send(cmd.DressAvatarScRsp, rsp)
+	g.DressRelicAvatarPlayerSyncScNotify(req.GetDressAvatarId(), req.GetSwitchList())
+	g.Send(cmd.DressRelicAvatarScRsp, nil)
 }
 
-func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(avatarId uint32, paramList []*proto.RelicParam) {
+func (g *GamePlayer) DressRelicAvatarPlayerSyncScNotify(equipAvatarId uint32, paramList []*proto.DressRelicParam) {
+	if paramList == nil {
+		return
+	}
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		RelicList:  make([]*proto.Relic, 0),
 	}
-	avatardb := g.PlayerPb.Avatar.Avatar[avatarId]
-	// 是否已被装备
+
+	equipAvatarDb := g.GetAvatarBinById(equipAvatarId)
 	for _, relic := range paramList {
-		relicdb := g.GetItem().RelicMap[relic.RelicUniqueId]
-		if relicdb == nil {
-			return
+		relicDb := g.GetRelicById(relic.RelicUniqueId)
+		if relicDb == nil {
+			continue
 		}
-		if relicdb.BaseAvatarId != 0 {
-			// 进入交换
-			avatarDbs := g.PlayerPb.Avatar.Avatar[relicdb.BaseAvatarId]
-			if avatardb.EquipRelic[relic.Slot] == 0 {
-				delete(avatarDbs.EquipRelic, relic.Slot)
-			} else {
-				avatarDbs.EquipRelic[relic.Slot] = avatardb.EquipRelic[relic.Slot]
-				g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]].BaseAvatarId = avatarDbs.AvatarId
-
-				relicList := g.GetProtoRelicById(avatardb.EquipRelic[relic.Slot])
-				notify.RelicList = append(notify.RelicList, relicList)
+		baseAvatarDb := g.GetAvatarBinById(relicDb.BaseAvatarId)
+		relicDb.BaseAvatarId = equipAvatarId
+		if equipAvatarDb != nil {
+			oldRelicDb := g.GetAvatarEquipRelic(equipAvatarId, relic.RelicType)
+			if oldRelicDb != nil {
+				oldRelicDb.BaseAvatarId = 0
+				notify.RelicList = append(notify.RelicList, g.GetProtoRelicById(oldRelicDb.UniqueId))
 			}
-			avatar := g.GetProtoAvatarById(avatarDbs.AvatarId)
-			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
+			g.SetAvatarEquipRelic(equipAvatarId, relic.RelicType, relic.RelicUniqueId)
+			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(equipAvatarId))
 		}
-
-		if avatardb.EquipRelic[relic.Slot] != 0 {
-			oldEquipRelic := g.GetItem().RelicMap[avatardb.EquipRelic[relic.Slot]]
-			if oldEquipRelic != nil {
-				if oldEquipRelic.BaseAvatarId == avatarId {
-					oldEquipRelic.BaseAvatarId = 0
-					relicList := g.GetProtoRelicById(avatardb.EquipRelic[relic.Slot])
-					notify.RelicList = append(notify.RelicList, relicList)
-				}
-			}
+		if baseAvatarDb != nil {
+			g.SetAvatarEquipRelic(baseAvatarDb.AvatarId, relic.RelicType, 0)
+			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(baseAvatarDb.AvatarId))
 		}
-		relicdb.BaseAvatarId = avatarId
-		if avatardb.EquipRelic == nil {
-			avatardb.EquipRelic = make(map[uint32]uint32)
-		}
-		avatardb.EquipRelic[relic.Slot] = relic.RelicUniqueId
-
-		relicList := g.GetProtoRelicById(relic.RelicUniqueId)
-		notify.RelicList = append(notify.RelicList, relicList)
+		notify.RelicList = append(notify.RelicList, g.GetProtoRelicById(relic.RelicUniqueId))
 	}
-
-	avatar := g.GetProtoAvatarById(avatarId)
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
@@ -88,7 +64,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	var oldLevel uint32      // 升级前等级
 
 	// 从背包获取需要升级的圣遗物
-	dbRelic := g.getRelicDbById(req.RelicUniqueId)
+	dbRelic := g.GetRelicById(req.RelicUniqueId)
 	if dbRelic == nil {
 		rsp := &proto.ExpUpRelicScRsp{}
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -96,7 +72,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	}
 	oldLevel = dbRelic.Level
 	// 获取需要升级圣遗物的配置信息
-	relicConf := gdconf.GetRelicById(strconv.Itoa(int(dbRelic.Tid)))
+	relicConf := gdconf.GetRelicById(dbRelic.Tid)
 	if relicConf == nil {
 		rsp := &proto.ExpUpRelicScRsp{}
 		g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -104,18 +80,17 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的材料
-	for _, pileList := range req.ItemCostList.ItemList {
+	for _, pileList := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if pileList.GetPileItem() == nil {
 			continue
 		}
-		pile := new(Material)
-		pile.Tid = pileList.GetPileItem().ItemId
-		pile.Num = pileList.GetPileItem().ItemNum
-
-		pileItem = append(pileItem, pile)
+		pileItem = append(pileItem, &Material{
+			Tid: pileList.GetPileItem().ItemId,
+			Num: pileList.GetPileItem().ItemNum,
+		})
 		// 获取材料配置
-		pileconf := gdconf.GetRelicById(strconv.Itoa(int(pileList.GetPileItem().ItemId)))
+		pileconf := gdconf.GetRelicById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
 			rsp := &proto.ExpUpRelicScRsp{}
 			g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -128,14 +103,14 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	}
 
 	// 遍历用来升级的光锥
-	for _, relic := range req.ItemCostList.ItemList {
+	for _, relic := range req.GetCostData().ItemList {
 		// 如果没有则退出
 		if relic.GetRelicUniqueId() == 0 {
 			continue
 		}
 		relicList = append(relicList, relic.GetRelicUniqueId())
 		// 获取光锥配置
-		relicconfig := gdconf.GetRelicById(strconv.Itoa(int(g.GetProtoRelicById(relic.GetRelicUniqueId()).Tid)))
+		relicconfig := gdconf.GetRelicById(g.GetProtoRelicById(relic.GetRelicUniqueId()).Tid)
 		if relicconfig == nil {
 			rsp := &proto.ExpUpRelicScRsp{}
 			g.Send(cmd.ExpUpRelicScRsp, rsp)
@@ -197,13 +172,4 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 	g.RelicPlayerSyncScNotify(req.RelicUniqueId)
 	rsp := &proto.ExpUpRelicScRsp{}
 	g.Send(cmd.ExpUpRelicScRsp, rsp)
-}
-
-func (g *GamePlayer) DelRelicPlayerSyncScNotify(relicList []uint32) {
-	for _, relic := range relicList {
-		delete(g.GetItem().RelicMap, relic)
-	}
-
-	notify := &proto.PlayerSyncScNotify{DelRelicList: relicList}
-	g.Send(cmd.PlayerSyncScNotify, notify)
 }

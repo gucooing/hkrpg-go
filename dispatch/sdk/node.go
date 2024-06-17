@@ -47,7 +47,7 @@ func (s *Server) newNode() {
 	// 向node注册
 	n.ServiceConnectionReq()
 	// 开启node定时器
-	n.nodeTicler(tickerCtx)
+	go n.nodeTicler(tickerCtx)
 }
 
 func (n *NodeService) nodeKill() {
@@ -121,7 +121,7 @@ func (n *NodeService) ServiceConnectionReq() {
 	req := &spb.ServiceConnectionReq{
 		ServerType: spb.ServerType_SERVICE_DISPATCH,
 		AppId:      n.s.AppId,
-		Addr:       n.s.Config.OuterIp,
+		Addr:       n.s.OuterAddr,
 		Port:       n.s.Port,
 	}
 	n.sendNode(cmd.ServiceConnectionReq, req)

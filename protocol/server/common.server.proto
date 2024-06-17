@@ -17,3 +17,15 @@ message GmWorldLevel {
 message DelItem {
   uint32 player_uid = 1;
 }
+
+message MaxCurAvatar{
+  uint32 player_uid = 1;
+  uint32 avatar_id = 2;
+  bool all = 3;
+}
+
+message GmMission {
+  uint32 player_uid = 1;
+  bool finish_all = 2;
+  uint32 mission_id = 3;
+}

@@ -4,36 +4,56 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
+
+func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetFarmStageGachaInfoCsReq, payloadMsg)
+	req := msg.(*proto.GetFarmStageGachaInfoCsReq)
+
+	rsp := &proto.GetFarmStageGachaInfoScRsp{
+		FarmStageGachaInfoList: make([]*proto.FarmStageGachaInfo, 0),
+	}
+
+	for _, farmStageGachaId := range req.FarmStageGachaIdList {
+		farmStageGachaInfo := &proto.FarmStageGachaInfo{
+			BeginTime: 1664308800,
+			GachaId:   farmStageGachaId,
+			EndTime:   4294967295,
+		}
+		rsp.FarmStageGachaInfoList = append(rsp.FarmStageGachaInfoList, farmStageGachaInfo)
+	}
+
+	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
+}
 
 func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetGachaInfoScRsp)
 	rsp.GachaInfoList = make([]*proto.GachaInfo, 0)
 
 	for _, bannerslist := range gdconf.GetBannersMap() {
-		gacha := g.GetDbGacha(bannerslist.Id)
+		// gacha := g.GetDbGacha(bannerslist.Id)
 		gachaInfoList := &proto.GachaInfo{
-			HistoryUrl: "http://127.0.0.1:8080/api/gacha/history", // 历史记录
-			DetailUrl:  "http://127.0.0.1:8080",                   // 卡池详情
-			Featured:   bannerslist.RateUpItems5,                  // 五星up
-			UpInfo:     bannerslist.RateUpItems4,                  // 四星up
-			GachaId:    bannerslist.Id,
+			DropHistoryWebview: "http://127.0.0.1:8080/api/gacha/history", // 历史记录
+			DetailWebview:      "http://127.0.0.1:8080",                   // 卡池详情
+			ItemDetailList:     bannerslist.RateUpItems5,                  // 五星up
+			PrizeItemList:      bannerslist.RateUpItems4,                  // 四星up
+			GachaId:            bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {
-			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
-				IsClaimed:  false,
+			gachaInfoList.GachaInfoList = &proto.GachaCeiling{
+				// IsClaimed:  false, // 是否已领取自选
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-				CeilingNum: gacha.CeilingNum,
+				// CeilingNum: gacha.CeilingNum,
 			}
 			for _, id := range bannerslist.RateUpItems5 {
 				avatarlist := &proto.GachaCeilingAvatar{
 					RepeatedCnt: 0,
 					AvatarId:    id,
 				}
-				gachaInfoList.GachaCeiling.AvatarList = append(gachaInfoList.GachaCeiling.AvatarList, avatarlist)
+				gachaInfoList.GachaInfoList.AvatarList = append(gachaInfoList.GachaInfoList.AvatarList, avatarlist)
 			}
 		} else {
 			gachaInfoList.BeginTime = bannerslist.BeginTime // 开始时间
@@ -47,24 +67,24 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
-	req := msg.(*proto.GetGachaCeilingCsReq)
+	// msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
+	// req := msg.(*proto.GetGachaCeilingCsReq)
 
 	rsp := &proto.GetGachaCeilingScRsp{
-		GachaType: req.GachaType,
+		// GachaType: req.GachaType,
 	}
 	list := []uint32{1003, 1101, 1211}
-	rsp.GachaCeiling = &proto.GachaCeiling{
-		IsClaimed:  false,
+	rsp.GachaInfoList = &proto.GachaCeiling{
+		// IsClaimed:  false,
 		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-		CeilingNum: g.GetDbGacha(1001).CeilingNum,
+		// CeilingNum: g.GetDbGacha(1001).CeilingNum,
 	}
 	for _, id := range list {
 		avatarlist := &proto.GachaCeilingAvatar{
 			RepeatedCnt: 0,
 			AvatarId:    id,
 		}
-		rsp.GachaCeiling.AvatarList = append(rsp.GachaCeiling.AvatarList, avatarlist)
+		rsp.GachaInfoList.AvatarList = append(rsp.GachaInfoList.AvatarList, avatarlist)
 	}
 
 	g.Send(cmd.GetGachaCeilingScRsp, rsp)
@@ -73,6 +93,12 @@ func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DoGachaCsReq, payloadMsg)
 	req := msg.(*proto.DoGachaCsReq)
+	rsp := &proto.DoGachaScRsp{
+		GachaId:       req.GachaId,
+		CeilingNum:    0,
+		GachaItemList: make([]*proto.GachaItem, 0),
+		GachaNum:      req.GachaNum,
+	}
 	var dPileItem []*Material
 	var pileItem []*Material
 
@@ -81,25 +107,37 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 	}
 	// 先扣球再抽卡
 	upBanners := gdconf.GetBannersMap()[req.GachaId]
-	if upBanners.GachaType == "Normal" {
+	if upBanners == nil {
+		g.Send(cmd.DoGachaScRsp, rsp)
+		return
+	}
+	switch upBanners.GachaType {
+	case "Normal":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 101,
 			Num: req.GachaNum,
 		})
-	} else {
+	case "NewPlayer":
+		dPileItem = append(dPileItem, &Material{
+			Tid: 101,
+			Num: 8,
+		})
+	case "AvatarUp":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 102,
 			Num: req.GachaNum,
 		})
+	case "WeaponUp":
+		dPileItem = append(dPileItem, &Material{
+			Tid: 102,
+			Num: req.GachaNum,
+		})
+	default:
+		g.Send(cmd.DoGachaScRsp, rsp)
+		return
 	}
 	g.DelMaterial(dPileItem)
 
-	rsp := &proto.DoGachaScRsp{
-		GachaId:       req.GachaId,
-		CeilingNum:    0,
-		GachaItemList: make([]*proto.GachaItem, 0),
-		GachaNum:      req.GachaNum,
-	}
 	for i := 0; i < int(req.GachaNum); i++ {
 		id := g.GachaRandom(req.GachaId)
 		isAvatar, isNew := g.AddGachaItem(id)

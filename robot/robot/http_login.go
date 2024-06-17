@@ -141,7 +141,7 @@ func (r *RoBot) getQueryDispatch() string {
 
 	datamsg, _ := base64.StdEncoding.DecodeString(resp.String())
 
-	dispatch := new(proto.DispatchRegionData)
+	dispatch := new(proto.Dispatch)
 
 	err = pb.Unmarshal(datamsg, dispatch)
 	if err != nil {
@@ -166,7 +166,7 @@ func (r *RoBot) getGateserver(url string) {
 
 	datamsg, _ := base64.StdEncoding.DecodeString(resp.String())
 
-	dispatch := new(proto.Gateserver)
+	dispatch := new(proto.GateServer)
 
 	err = pb.Unmarshal(datamsg, dispatch)
 	if err != nil {

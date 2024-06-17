@@ -15,7 +15,7 @@ func (s *Service) muipRecvHandle() {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Error("!!! DISPATCH SERVICE MAIN LOOP PANIC !!!")
+			logger.Error("!!! MUIP SERVICE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			s.n.killService(s)
@@ -48,6 +48,10 @@ func (s *Service) muipRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 		s.GmWorldLevel(serviceMsg)
 	case cmd.DelItem:
 		s.DelItem(serviceMsg)
+	case cmd.MaxCurAvatar:
+		s.MaxCurAvatar(serviceMsg)
+	case cmd.GmMission:
+		s.GmMission(serviceMsg)
 	default:
 		logger.Info("muip -> node error cmdid:%v", cmdId)
 	}
@@ -83,34 +87,35 @@ func (s *Service) MuipToNodePingReq(serviceMsg pb.Message) {
 func (s *Service) GmGive(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmGive)
 	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
-		notify := &spb.GmGive{
-			PlayerUid: req.PlayerUid,
-			ItemId:    req.ItemId,
-			ItemCount: req.ItemCount,
-			GiveAll:   req.GiveAll,
-		}
-		gs.sendHandle(cmd.GmGive, notify)
+		gs.sendHandle(cmd.GmGive, req)
 	}
 }
 
 func (s *Service) GmWorldLevel(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.GmWorldLevel)
 	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
-		notify := &spb.GmWorldLevel{
-			PlayerUid:  req.PlayerUid,
-			WorldLevel: req.WorldLevel,
-		}
-		gs.sendHandle(cmd.GmWorldLevel, notify)
+		gs.sendHandle(cmd.GmWorldLevel, req)
 	}
 }
 
 func (s *Service) DelItem(serviceMsg pb.Message) {
 	req := serviceMsg.(*spb.DelItem)
 	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
-		notify := &spb.DelItem{
-			PlayerUid: req.PlayerUid,
-		}
-		gs.sendHandle(cmd.DelItem, notify)
+		gs.sendHandle(cmd.DelItem, req)
+	}
+}
+
+func (s *Service) MaxCurAvatar(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.MaxCurAvatar)
+	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
+		gs.sendHandle(cmd.MaxCurAvatar, req)
+	}
+}
+
+func (s *Service) GmMission(serviceMsg pb.Message) {
+	req := serviceMsg.(*spb.GmMission)
+	if gs, _, ok := s.getPlayerStatusRedis(req.PlayerUid); ok {
+		gs.sendHandle(cmd.GmMission, req)
 	}
 }
 

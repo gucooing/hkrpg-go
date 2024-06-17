@@ -6,1286 +6,1347 @@ import (
 )
 
 const (
-	NONE                                               = 0
-	SpringRecoverCsReq                                 = 1443
-	TakeTrainVisitorUntakenBehaviorRewardScRsp         = 3770
-	FinishEmotionDialoguePerformanceScRsp              = 6326
-	SelectChatBubbleScRsp                              = 5145
-	GetEnhanceCommonRogueBuffInfoCsReq                 = 5637
-	SubmitMonsterResearchActivityMaterialCsReq         = 2691
-	EnterAetherDivideSceneCsReq                        = 4810
-	HeliobusActivityDataCsReq                          = 5810
-	CommonRogueQueryScRsp                              = 5622
-	GetRogueShopMiracleInfoCsReq                       = 5645
-	ApplyFriendCsReq                                   = 2977
-	GetHeartDialInfoScRsp                              = 6333
-	ComposeLimitNumUpdateNotify                        = 567
-	GetCurAssistCsReq                                  = 2932
-	TakeRollShopRewardCsReq                            = 6911
-	RelicRecommendScRsp                                = 523
-	ChangeLineupLeaderCsReq                            = 795
-	TrialActivityDataChangeScNotify                    = 2668
-	DrinkMakerChallengeCsReq                           = 6988
-	GetMbtiReportCsReq                                 = 7046
-	AlleyGuaranteedFundsCsReq                          = 4732
-	UpdateFeatureSwitchScNotify                        = 31
-	FinishQuestCsReq                                   = 970
-	ChessRogueRollDiceScRsp                            = 5444
-	GetAuthkeyScRsp                                    = 99
-	ActivateFarmElementCsReq                           = 1423
-	SetAetherDivideLineUpCsReq                         = 4858
-	StartAetherDivideChallengeBattleScRsp              = 4826
-	StartRogueScRsp                                    = 1845
-	UnlockAvatarSkinScNotify                           = 365
-	SellItemCsReq                                      = 591
-	SwapLineupScRsp                                    = 770
-	TakeAllApRewardCsReq                               = 3360
-	GetChallengeGroupStatisticsCsReq                   = 1799
-	RetcodeNotify                                      = 22
-	FinishPerformSectionIdScRsp                        = 2770
-	AetherDivideFinishChallengeScNotify                = 4885
-	SyncLineupNotify                                   = 703
-	UseItemScRsp                                       = 526
-	GetFarmStageGachaInfoCsReq                         = 1342
-	UseTreasureDungeonItemScRsp                        = 4494
-	AcceptMainMissionCsReq                             = 1238
-	GetWolfBroGameDataCsReq                            = 6600
-	JoinLineupCsReq                                    = 716
-	DelSaveRaidScNotify                                = 2291
-	InteractPropScRsp                                  = 1445
-	DeleteSocialEventServerCacheScRsp                  = 7079
-	EnableRogueTalentCsReq                             = 1815
-	CurTrialActivityScNotify                           = 2628
-	UnlockPhoneThemeScNotify                           = 5126
-	SubmitEmotionItemScRsp                             = 6360
-	UpdateRogueAdventureRoomScoreScRsp                 = 5629
-	NewAssistHistoryNotify                             = 2987
-	AlleyShipUsedCountScNotify                         = 4712
-	RecoverAllLineupCsReq                              = 1432
-	HeliobusSnsPostScRsp                               = 5860
-	SetNicknameCsReq                                   = 66
-	SharePunkLordMonsterCsReq                          = 3216
-	GetChessRogueBuffEnhanceInfoScRsp                  = 5418
-	AlleyPlacingGameCsReq                              = 4758
-	TakeRogueEventHandbookRewardCsReq                  = 5649
-	GetPlayerReturnMultiDropInfoScRsp                  = 4616
-	MuseumTakeCollectRewardCsReq                       = 4385
-	MonopolyGameCreateScNotify                         = 7018
-	MonopolyGetRafflePoolInfoScRsp                     = 7088
-	DailyFirstEnterMonopolyActivityCsReq               = 7058
-	GetActivityScheduleConfigCsReq                     = 2616
-	DeleteSummonUnitCsReq                              = 1441
-	RefreshAlleyOrderScRsp                             = 4776
-	FinishChessRogueSubStoryScRsp                      = 5478
-	GetCurSceneInfoScRsp                               = 1426
-	GetFightActivityDataScRsp                          = 3633
-	QuitBattleCsReq                                    = 142
-	FinishFirstTalkNpcScRsp                            = 2126
-	StartCocoonStageScRsp                              = 1487
-	BattleLogReportScRsp                               = 103
-	TreasureDungeonFinishScNotify                      = 4433
-	ChessRogueEnterScRsp                               = 5582
-	SetMissionEventProgressCsReq                       = 1208
-	TreasureDungeonDataScNotify                        = 4410
-	StrongChallengeActivityBattleEndScNotify           = 6616
-	StartAlleyEventCsReq                               = 4777
-	ChessRogueCellUpdateNotify                         = 5477
-	QuestRecordScNotify                                = 1000
-	MonopolyCheatDiceCsReq                             = 7069
-	BuyRogueShopMiracleCsReq                           = 5626
-	EnterRogueEndlessActivityStageScRsp                = 6045
-	StartAetherDivideStageBattleCsReq                  = 4837
-	GetLoginActivityCsReq                              = 2610
-	UpdateServerPrefsDataCsReq                         = 6116
-	StartBoxingClubBattleScRsp                         = 4260
-	GetFeverTimeActivityDataScRsp                      = 7151
-	GetStoryLineInfoCsReq                              = 6210
-	ChessRogueUpdateReviveInfoScNotify                 = 5554
-	GetWaypointCsReq                                   = 410
-	ReturnLastTownScRsp                                = 1494
-	SubmitOfferingItemCsReq                            = 6921
-	LeaveRogueScRsp                                    = 1826
-	FinishTutorialGuideCsReq                           = 1603
-	SpaceZooExchangeItemScRsp                          = 6758
-	MonopolyAcceptQuizCsReq                            = 7087
-	MonopolySocialEventEffectScNotify                  = 7025
-	SetSpringRecoverConfigScRsp                        = 1448
-	TravelBrochureSetPageDescStatusScRsp               = 6476
-	GetAlleyInfoCsReq                                  = 4710
-	GetAllSaveRaidScRsp                                = 2276
-	FightTreasureDungeonMonsterScRsp                   = 4476
-	FinishCosumeItemMissionCsReq                       = 1258
-	WolfBroGamePickupBulletScRsp                       = 6536
-	ExchangeStaminaScRsp                               = 36
-	ChessRogueNousDiceSurfaceUnlockNotify              = 5590
-	FinishChapterScNotify                              = 4942
-	GetPunkLordBattleRecordScRsp                       = 3232
-	GetShopListScRsp                                   = 1533
-	LogisticsScoreRewardSyncInfoScNotify               = 4718
-	GetStageLineupScRsp                                = 733
-	GetTelevisionActivityDataCsReq                     = 6979
-	LockRelicCsReq                                     = 599
-	EnterSceneCsReq                                    = 1419
-	SetClientPausedCsReq                               = 1497
-	PlayerLogoutCsReq                                  = 42
-	SpaceZooMutateCsReq                                = 6716
-	BattlePassInfoNotify                               = 3010
-	MonopolyMoveCsReq                                  = 7026
-	ReserveStaminaExchangeScRsp                        = 20
-	MarkItemCsReq                                      = 501
-	StartFinishMainMissionScNotify                     = 1267
-	FinishAeonDialogueGroupCsReq                       = 1864
-	HeliobusSnsUpdateScNotify                          = 5803
-	MonopolyGameRaiseRatioCsReq                        = 7067
-	MonopolyRollDiceScRsp                              = 7077
-	UpdateFloorSavedValueNotify                        = 1488
-	WolfBroGameActivateBulletScRsp                     = 6599
-	TrainVisitorBehaviorFinishScRsp                    = 3733
-	LockEquipmentCsReq                                 = 516
-	AetherDivideTainerInfoScNotify                     = 4883
-	TextJoinBatchSaveCsReq                             = 3816
-	ExpUpRelicScRsp                                    = 502
-	AlleyShipUnlockScNotify                            = 4706
-	DeactivateFarmElementScRsp                         = 1444
-	ChessRogueEnterNextLayerScRsp                      = 5437
-	SyncRogueFinishScNotify                            = 1836
-	HeliobusSnsReadCsReq                               = 5842
-	ChessRogueNousEditDiceCsReq                        = 5450
-	LeaveTrialActivityScRsp                            = 2625
-	SetGameplayBirthdayScRsp                           = 43
-	GroupStateChangeScNotify                           = 1417
-	MonopolyTakePhaseRewardScRsp                       = 7052
-	SetSignatureCsReq                                  = 2870
-	EquipAetherDividePassiveSkillCsReq                 = 4836
-	SetLanguageScRsp                                   = 83
-	GetLevelRewardTakenListCsReq                       = 94
-	InteractTreasureDungeonGridScRsp                   = 4466
-	GetRndOptionCsReq                                  = 3410
-	ChessRogueNousDiceUpdateNotify                     = 5465
-	TakeQuestRewardCsReq                               = 942
-	TravelBrochureSelectMessageCsReq                   = 6416
-	ChessRoguePickAvatarScRsp                          = 5595
-	LeaveAetherDivideSceneScRsp                        = 4845
-	MuseumRandomEventStartScNotify                     = 4391
-	UpdateTrackMainMissionIdCsReq                      = 1287
-	RemoveStuffFromAreaScRsp                           = 4326
-	SetGenderScRsp                                     = 18
-	MonopolyScrachRaffleTicketCsReq                    = 7034
-	BoxingClubChallengeUpdateScNotify                  = 4270
-	SyncRogueCommonVirtualItemInfoScNotify             = 5624
-	GetBasicInfoScRsp                                  = 24
-	AetherDivideSpiritExpUpCsReq                       = 4896
-	GetFirstTalkByPerformanceNpcScRsp                  = 2111
-	TrainRefreshTimeNotify                             = 3716
-	ChooseBoxingClubStageOptionalBuffScRsp             = 4202
-	TakeCityShopRewardScRsp                            = 1560
-	ChessRogueUpdateUnlockLevelScNotify                = 5572
-	ReviveRogueAvatarCsReq                             = 1891
-	SetTurnFoodSwitchScRsp                             = 597
-	SceneEntityMoveScNotify                            = 1403
-	LeaveMapRotationRegionCsReq                        = 6900
-	TakeTrialActivityRewardScRsp                       = 2646
-	ClientObjDownloadDataScNotify                      = 63
-	ExchangeHcoinScRsp                                 = 596
-	DressAvatarSkinCsReq                               = 394
-	QueryProductInfoCsReq                              = 39
-	TakeChallengeRaidRewardScRsp                       = 2300
-	GetReplayTokenCsReq                                = 3510
-	DoGachaInRollShopCsReq                             = 6901
-	ChessRogueNousEnableRogueTalentScRsp               = 5562
-	EnhanceCommonRogueBuffCsReq                        = 5696
-	EnterStrongChallengeActivityStageScRsp             = 6645
-	WolfBroGameUseBulletCsReq                          = 6511
-	GetMapRotationDataCsReq                            = 6803
-	PromoteEquipmentScRsp                              = 545
-	RaidCollectionDataScNotify                         = 6941
-	RankUpAvatarScRsp                                  = 336
-	GetMovieRacingDataScRsp                            = 4194
-	SceneEntityMoveScRsp                               = 1433
-	AlleyEventEffectNotify                             = 4770
-	GetCurBattleInfoScRsp                              = 160
-	ChangeStoryLineCsReq                               = 6245
-	TriggerVoiceCsReq                                  = 4158
-	GameplayCounterUpdateScNotify                      = 1404
-	ChessRogueUpdateDicePassiveAccumulateValueScNotify = 5570
-	GiveUpBoxingClubChallengeScRsp                     = 4226
-	AcceptedPamMissionExpireScRsp                      = 4033
-	RegionStopScNotify                                 = 76
-	TakeRogueEndlessActivityPointRewardScRsp           = 6077
-	GetChessRogueStoryAeonTalkInfoCsReq                = 5524
-	DailyTaskDataScNotify                              = 1226
-	GetMonopolyFriendRankingListScRsp                  = 7068
-	GetMonopolyDailyReportScRsp                        = 7040
-	BuyNpcStuffScRsp                                   = 4345
-	GetMissionDataCsReq                                = 1210
-	GetFriendApplyListInfoCsReq                        = 2916
-	GetUnlockTeleportCsReq                             = 1420
-	ChessRogueFinishCurRoomNotify                      = 5402
-	TextJoinQueryCsReq                                 = 3842
-	RotateMapScRsp                                     = 6826
-	LeaveChallengeScRsp                                = 1760
-	TakeRogueAeonLevelRewardCsReq                      = 1834
-	MonopolyGuessDrawScNotify                          = 7044
-	MonopolyGameGachaCsReq                             = 7032
-	SummonPunkLordMonsterScRsp                         = 3226
-	LeaveMapRotationRegionScNotify                     = 6836
-	SetGroupCustomSaveDataScRsp                        = 1480
-	SwitchLineupIndexCsReq                             = 702
-	FinishItemIdCsReq                                  = 2716
-	MuseumRandomEventSelectCsReq                       = 4394
-	PlayerGetTokenScRsp                                = 60
-	RefreshTriggerByClientCsReq                        = 1461
-	EnterTreasureDungeonScRsp                          = 4495
-	GetQuestRecordScRsp                                = 926
-	RogueModifierUpdateNotify                          = 5326
-	RestoreWolfBroGameArchiveCsReq                     = 6516
-	CommonRogueUpdateScNotify                          = 5646
-	MissionGroupWarnScNotify                           = 1211
-	GetEnteredSceneScRsp                               = 1464
-	ArchiveWolfBroGameScRsp                            = 6545
-	SyncTaskScRsp                                      = 1277
-	PlayerReturnTakeRewardScRsp                        = 4526
-	PickRogueAvatarScRsp                               = 1899
-	ComposeItemCsReq                                   = 558
-	SetFriendMarkCsReq                                 = 2929
-	SyncRogueRewardInfoScNotify                        = 1882
-	UnlockHeadIconScNotify                             = 2900
-	SyncHandleFriendScNotify                           = 2911
-	GetGachaInfoCsReq                                  = 1910
-	RogueModifierSelectCellScRsp                       = 5316
-	HeliobusUpgradeLevelScRsp                          = 5895
-	TakeMultipleExpeditionRewardScRsp                  = 2591
-	TakeLoginActivityRewardScRsp                       = 2645
-	PVEBattleResultCsReq                               = 110
-	MonopolyGuessChooseScRsp                           = 7047
-	QuitBattleScNotify                                 = 200
-	MonopolyGiveUpCurContentScRsp                      = 7065
-	TakeOffRelicCsReq                                  = 376
-	StartRaidScRsp                                     = 2233
-	RogueModifierStageStartNotify                      = 5370
-	MonopolyGetRegionProgressCsReq                     = 7020
-	SetHeroBasicTypeCsReq                              = 38
-	ComposeSelectedRelicCsReq                          = 508
-	GetTutorialGuideScRsp                              = 1645
-	SceneCastSkillCostMpScRsp                          = 1436
-	GetFriendAssistListScRsp                           = 2948
-	GetTreasureDungeonActivityDataScRsp                = 4411
-	InteractChargerCsReq                               = 6842
-	GetPlayerBoardDataScRsp                            = 2833
-	EntityBindPropScRsp                                = 1418
-	GetExpeditionDataCsReq                             = 2510
-	MonopolyConfirmRandomScRsp                         = 7066
-	GetMonopolyDailyReportCsReq                        = 7050
-	AlleyTakeEventRewardScRsp                          = 4707
-	TakeMailAttachmentScRsp                            = 826
-	SetDisplayAvatarCsReq                              = 2816
-	ChessRogueQueryAeonDimensionsScRsp                 = 5404
-	HeliobusSnsLikeCsReq                               = 5877
-	TravelBrochureSetCustomValueScRsp                  = 6402
-	ScenePlaneEventScNotify                            = 1471
-	MatchBoxingClubOpponentScRsp                       = 4245
-	CurAssistChangedNotify                             = 2997
-	ArchiveWolfBroGameCsReq                            = 6542
-	PlayerReturnTakePointRewardCsReq                   = 4516
-	ChessRogueSelectBpCsReq                            = 5443
-	DeployRotaterCsReq                                 = 6816
-	AceAntiCheaterScRsp                                = 84
-	GetAllLineupDataCsReq                              = 766
-	TakeFightActivityRewardCsReq                       = 3660
-	GetMonopolyMbtiReportRewardScRsp                   = 7014
-	MultipleDropInfoNotify                             = 4660
-	GetPunkLordDataCsReq                               = 3202
-	UnlockTutorialGuideScRsp                           = 1626
-	WaypointShowNewCsNotify                            = 477
-	AlleyShopLevelScNotify                             = 4708
-	EnterSceneByServerScNotify                         = 1459
-	GeneralVirtualItemDataNotify                       = 547
-	DeleteFriendScRsp                                  = 2995
-	GetTutorialScRsp                                   = 1633
-	PlayerGetTokenCsReq                                = 16
-	TravelBrochureGetDataScRsp                         = 6433
-	GiveUpBoxingClubChallengeCsReq                     = 4277
-	SwitchAetherDivideLineUpSlotScRsp                  = 4866
-	HeliobusEnterBattleCsReq                           = 5866
-	FinishCurTurnCsReq                                 = 4303
-	TakeRogueScoreRewardScRsp                          = 1894
-	GetFriendRecommendListInfoScRsp                    = 2966
-	PlayerReturnSignCsReq                              = 4533
-	EnterFeverTimeActivityStageScRsp                   = 7158
-	GetFriendLoginInfoCsReq                            = 2939
-	GetFriendListInfoScRsp                             = 2933
-	BoxingClubRewardScNotify                           = 4300
-	RemoveRotaterCsReq                                 = 6876
-	GetQuestDataCsReq                                  = 910
-	PlayerReturnInfoQueryScRsp                         = 4570
-	PlayerReturnStartScNotify                          = 4510
-	ChallengeLineupNotify                              = 1711
-	ExchangeRogueBuffWithMiracleScRsp                  = 5666
-	UpdateMechanismBarScNotify                         = 1446
-	UpdatePlayerSettingCsReq                           = 98
-	UpdateTrackMainMissionIdScRsp                      = 1286
-	GetAssistHistoryScRsp                              = 2907
-	PlayBackGroundMusicCsReq                           = 3142
-	SyncRogueExploreWinScNotify                        = 1801
-	MonopolyGameBingoFlipCardCsReq                     = 7001
-	GetMonopolyFriendRankingListCsReq                  = 7043
-	StartBattleCollegeScRsp                            = 5716
-	ChangeScriptEmotionScRsp                           = 6345
-	LeaveAetherDivideSceneCsReq                        = 4842
-	SyncRogueCommonPendingActionScNotify               = 5623
-	MarkReadMailScRsp                                  = 845
-	GetRogueDialogueEventDataScRsp                     = 1843
-	MarkChatEmojiScRsp                                 = 3911
-	GetServerPrefsDataCsReq                            = 6142
-	GetSecretKeyInfoCsReq                              = 54
-	ChessRogueSelectCellScRsp                          = 5475
-	GetTrainVisitorBehaviorScRsp                       = 3745
-	SelectInclinationTextScRsp                         = 2170
-	SetIsDisplayAvatarInfoScRsp                        = 2826
-	GetRogueInitialScoreCsReq                          = 1847
-	LeaveChallengeCsReq                                = 1716
-	BuyBpLevelScRsp                                    = 3077
-	AcceptMissionEventScRsp                            = 1291
-	GetMonopolyInfoCsReq                               = 7010
-	GetQuestRecordCsReq                                = 977
-	StartTimedCocoonStageCsReq                         = 1490
-	EnterRogueScRsp                                    = 1860
-	LastSpringRefreshTimeNotify                        = 1466
-	LogisticsDetonateStarSkiffScRsp                    = 4786
-	DrinkMakerDayEndScNotify                           = 6996
-	TakeOffEquipmentCsReq                              = 303
-	GetRogueBuffEnhanceInfoScRsp                       = 1808
-	EnhanceChessRogueBuffCsReq                         = 5545
-	CancelCacheNotifyScRsp                             = 4170
-	SendMsgCsReq                                       = 3910
-	SwitchLineupIndexScRsp                             = 799
-	MonopolyMoveScRsp                                  = 7100
-	StoryLineInfoScNotify                              = 6242
-	ChessRogueUpdateBoardScNotify                      = 5523
-	GetQuestDataScRsp                                  = 933
-	BuyNpcStuffCsReq                                   = 4342
-	TakeRogueScoreRewardCsReq                          = 1837
-	CancelActivityExpeditionCsReq                      = 2511
-	HeliobusEnterBattleScRsp                           = 5837
-	GetLevelRewardTakenListScRsp                       = 96
-	SetHeadIconScRsp                                   = 2845
-	AcceptExpeditionCsReq                              = 2542
-	HandleRogueCommonPendingActionCsReq                = 5668
-	LogisticsInfoScNotify                              = 4785
-	DailyFirstMeetPamScRsp                             = 3445
-	ChessRogueQuestFinishNotify                        = 5598
-	RechargeSuccNotify                                 = 537
-	MonopolyLikeScNotify                               = 7022
-	SyncRogueMapRoomScNotify                           = 1839
-	SetCurWaypointCsReq                                = 442
-	ChessRogueUpdateAllowedSelectCellScNotify          = 5494
-	SceneEntityTeleportCsReq                           = 1456
-	TravelBrochureUpdatePasterPosScRsp                 = 6411
-	ChessRogueCheatRollScRsp                           = 5529
-	UnlockTutorialScRsp                                = 1660
-	UnlockTeleportNotify                               = 1482
-	SetFriendRemarkNameScRsp                           = 2994
-	GetFriendListInfoCsReq                             = 2910
-	MonopolyTakeRaffleTicketRewardScRsp                = 7005
-	HeartDialScriptChangeScNotify                      = 6400
-	ExchangeHcoinCsReq                                 = 594
-	HeliobusLineupUpdateScNotify                       = 5806
-	ChessRogueQueryBpCsReq                             = 5482
-	TakeChapterRewardCsReq                             = 426
-	SelectPhoneThemeScRsp                              = 5177
-	SyncRoguePickAvatarInfoScNotify                    = 1853
-	TakeRogueMiracleHandbookRewardScRsp                = 5647
-	DoGachaInRollShopScRsp                             = 6907
-	GetSaveLogisticsMapCsReq                           = 4767
-	EnterFeverTimeActivityStageCsReq                   = 7155
-	StartChallengeScRsp                                = 1745
-	PVEBattleResultScRsp                               = 133
-	UpdateRedDotDataCsReq                              = 5942
-	FinishPlotCsReq                                    = 1110
-	BuyGoodsScRsp                                      = 1545
-	BuyRogueShopBuffCsReq                              = 5670
-	SubmitOrigamiItemCsReq                             = 4136
-	UpdateMovieRacingDataScRsp                         = 4108
-	MonopolyGameBingoFlipCardScRsp                     = 7007
-	ExpeditionDataChangeScNotify                       = 2600
-	GetTelevisionActivityDataScRsp                     = 6977
-	FinishTutorialCsReq                                = 1700
-	WolfBroGameDataChangeScNotify                      = 6503
-	GroupStateChangeScRsp                              = 1440
-	SyncRogueReviveInfoScNotify                        = 1838
-	HeliobusUpgradeLevelCsReq                          = 5858
-	HeliobusSelectSkillCsReq                           = 5802
-	PlayerKickOutScNotify                              = 100
-	FinishFirstTalkByPerformanceNpcScRsp               = 2195
-	SyncClientResVersionCsReq                          = 177
-	SceneUpdatePositionVersionNotify                   = 1411
-	EnterTelevisionActivityStageScRsp                  = 6971
-	TrainVisitorRewardSendNotify                       = 3760
-	EndDrinkMakerSequenceScRsp                         = 7000
-	GetMarkItemListCsReq                               = 532
-	AetherDivideRefreshEndlessScRsp                    = 4872
-	ServerSimulateBattleFinishScNotify                 = 111
-	EnterTrialActivityStageScRsp                       = 2689
-	ChessRogueSkipTeachingLevelScRsp                   = 5540
-	EntityBindPropCsReq                                = 1486
-	GetMultipleDropInfoCsReq                           = 4610
-	GetDailyActiveInfoCsReq                            = 3342
-	GetPhoneDataCsReq                                  = 5110
-	SpaceZooExchangeItemCsReq                          = 6711
-	ChessRogueReRollDiceCsReq                          = 5435
-	PlayerHeartBeatScRsp                               = 73
-	SecurityReportScRsp                                = 4111
-	RaidCollectionDataScRsp                            = 6957
-	GetDrinkMakerDataScRsp                             = 6997
-	ExtraLineupDestroyNotify                           = 706
-	MonopolyGetRegionProgressScRsp                     = 7081
-	GetPrivateChatHistoryCsReq                         = 3916
-	PlayerReturnTakeRewardCsReq                        = 4577
-	GetSingleRedDotParamGroupScRsp                     = 5960
-	RankUpAvatarCsReq                                  = 395
-	GameplayCounterCountDownScRsp                      = 1452
-	GetRogueHandbookDataCsReq                          = 5687
-	SceneCastSkillScRsp                                = 1460
-	ChessRogueGoAheadScRsp                             = 5539
-	MonopolyReRollRandomScRsp                          = 7076
-	ChessRogueChangeyAeonDimensionNotify               = 5492
-	ChessRogueNousGetRogueTalentInfoCsReq              = 5537
-	GetTutorialCsReq                                   = 1610
-	GetArchiveDataScRsp                                = 2333
-	SyncAddBlacklistScNotify                           = 2976
-	AlleyTakeEventRewardCsReq                          = 4701
-	ExchangeRogueRewardKeyCsReq                        = 1846
-	ChessRogueGiveUpCsReq                              = 5485
-	ChessRogueQuitCsReq                                = 5569
-	QueryProductInfoScRsp                              = 44
-	StartTimedFarmElementScRsp                         = 1451
-	ReplaceLineupCsReq                                 = 796
-	GetTrainVisitorRegisterCsReq                       = 3777
-	SetBoxingClubResonanceLineupCsReq                  = 4258
-	GetAllRedDotDataCsReq                              = 5910
-	UseItemCsReq                                       = 577
-	ShareScRsp                                         = 4133
-	StartTrialActivityCsReq                            = 2673
-	GetStrongChallengeActivityDataCsReq                = 6610
-	TakeAllApRewardScRsp                               = 3377
-	GetTrialActivityDataScRsp                          = 2643
-	GetChessRogueBuffEnhanceInfoCsReq                  = 5411
-	MonopolyGetRaffleTicketScRsp                       = 7059
-	GetFriendApplyListInfoScRsp                        = 2960
-	GetPlayerBoardDataCsReq                            = 2810
-	UnlockSkilltreeCsReq                               = 316
-	TakeAllRewardCsReq                                 = 3026
-	ChessRogueQueryAeonDimensionsCsReq                 = 5424
-	PunkLordMonsterInfoScNotify                        = 3236
-	NewMailScNotify                                    = 900
-	ChessRogueStartScRsp                               = 5567
-	GetRogueInfoScRsp                                  = 1833
-	RogueModifierSelectCellCsReq                       = 5345
-	LogisticsGameScRsp                                 = 4745
-	TakePromotionRewardCsReq                           = 366
-	ShowNewSupplementVisitorCsReq                      = 3703
-	GetAssistListCsReq                                 = 2983
-	EnterAdventureCsReq                                = 1310
-	TravelBrochureSelectMessageScRsp                   = 6460
-	GetAetherDivideInfoScRsp                           = 4811
-	GetCurAssistScRsp                                  = 2972
-	GetNpcStatusScRsp                                  = 2745
-	GetEnhanceCommonRogueBuffInfoScRsp                 = 5694
-	RogueNpcDisappearScRsp                             = 5658
-	RankUpEquipmentScRsp                               = 570
-	GetMonsterResearchActivityDataScRsp                = 2676
-	SellItemScRsp                                      = 566
-	FinishChessRogueNousSubStoryScRsp                  = 5438
-	GetPlatformPlayerInfoScRsp                         = 2949
-	SpaceZooTakeCsReq                                  = 6795
-	AddAvatarScNotify                                  = 358
-	SelectChessRogueSubStoryScRsp                      = 5446
-	FinishQuestScRsp                                   = 903
-	SyncChessRogueNousValueScNotify                    = 5486
-	RelicRecommendCsReq                                = 544
-	ChangeLineupLeaderScRsp                            = 736
-	TakePictureCsReq                                   = 4116
-	GetBagScRsp                                        = 533
-	GetHeroBasicTypeInfoCsReq                          = 32
-	GetChatFriendHistoryCsReq                          = 3977
-	GetPunkLordMonsterDataScRsp                        = 3233
-	WolfBroGameActivateBulletCsReq                     = 6502
-	SavePointsInfoNotify                               = 1401
-	DeleteBlacklistCsReq                               = 2906
-	PrivateMsgOfflineUsersScNotify                     = 3945
-	TakeActivityExpeditionRewardCsReq                  = 2595
-	SubmitEmotionItemCsReq                             = 6316
-	StartWolfBroGameScRsp                              = 6533
-	UnlockBackGroundMusicCsReq                         = 3116
-	GetPlayerReplayInfoScRsp                           = 3545
-	ClientObjUploadCsReq                               = 52
-	GetChallengeRaidInfoScRsp                          = 2277
-	GetSocialEventServerCacheCsReq                     = 7028
-	GetRogueScoreRewardInfoScRsp                       = 1852
-	GetLoginChatInfoCsReq                              = 3936
-	QuitLineupCsReq                                    = 777
-	GetFirstTalkNpcCsReq                               = 2116
-	GetAvatarDataCsReq                                 = 310
-	GetBoxingClubInfoScRsp                             = 4233
-	StartAetherDivideSceneBattleCsReq                  = 4816
-	TakeChallengeRewardScRsp                           = 1702
-	DressRelicAvatarCsReq                              = 302
-	MonopolyEventLoadUpdateScNotify                    = 7004
-	FightTreasureDungeonMonsterCsReq                   = 4499
-	GetFantasticStoryActivityDataScRsp                 = 4933
-	ChooseBoxingClubResonanceScRsp                     = 4211
-	GetAetherDivideChallengeInfoCsReq                  = 4865
-	GetRogueEndlessActivityDataScRsp                   = 6033
-	GetMissionEventDataCsReq                           = 1236
-	StopRogueAdventureRoomScRsp                        = 5665
-	TravelBrochureRemovePasterScRsp                    = 6470
-	GetBattleCollegeDataScRsp                          = 5733
-	SyncRogueAdventureRoomInfoScNotify                 = 5610
-	TakePrestigeRewardScRsp                            = 4711
-	LockEquipmentScRsp                                 = 560
-	SetLineupNameScRsp                                 = 791
-	HeliobusStartRaidScRsp                             = 5896
-	HeliobusChallengeUpdateScNotify                    = 5808
-	ResetMapRotationRegionScRsp                        = 6895
-	HeliobusActivityDataScRsp                          = 5833
-	GetShareDataScRsp                                  = 4145
-	SpringRefreshScRsp                                 = 1491
-	GetCurLineupDataScRsp                              = 745
-	HeliobusSnsCommentCsReq                            = 5900
-	PrestigeLevelUpCsReq                               = 4737
-	TelevisionActivityBattleEndScNotify                = 6980
-	SetStuffToAreaCsReq                                = 4316
-	SubmitOfferingItemScRsp                            = 6927
-	GetCurChallengeCsReq                               = 1770
-	SetMissionEventProgressScRsp                       = 1206
-	SubMissionRewardScNotify                           = 1265
-	TravelBrochureApplyPasterScRsp                     = 6426
-	MakeMissionDrinkCsReq                              = 6989
-	StartFinishSubMissionScNotify                      = 1283
-	TakeOfferingRewardCsReq                            = 6931
-	TakeTalkRewardCsReq                                = 2142
-	ChessRogueUpdateMoneyInfoScNotify                  = 5592
-	TakeBpRewardScRsp                                  = 3016
-	GetRaidInfoScRsp                                   = 2211
-	MonopolyAcceptQuizScRsp                            = 7086
-	TravelBrochurePageUnlockScNotify                   = 6442
-	CityShopInfoScNotify                               = 1577
-	SpaceZooDataScRsp                                  = 6733
-	PromoteAvatarScRsp                                 = 326
-	ChessRogueGiveUpRollScRsp                          = 5504
-	MonopolyLikeScRsp                                  = 7089
-	GetStoryLineInfoScRsp                              = 6233
-	HeartDialTraceScriptCsReq                          = 6370
-	SetLanguageCsReq                                   = 85
-	DeactivateFarmElementCsReq                         = 1439
-	ReportPlayerCsReq                                  = 2996
-	SyncAcceptedPamMissionNotify                       = 4042
-	DressAvatarCsReq                                   = 400
-	TakeExpeditionRewardCsReq                          = 2577
-	TrainVisitorBehaviorFinishCsReq                    = 3710
-	TakeMonsterResearchActivityRewardCsReq             = 2637
-	SpaceZooDeleteCatScRsp                             = 6770
-	OpenTreasureDungeonGridScRsp                       = 4402
-	GetRogueAeonInfoScRsp                              = 1855
-	QuitTreasureDungeonScRsp                           = 4408
-	EnterFightActivityStageScRsp                       = 3616
-	MonopolyGetDailyInitItemScRsp                      = 7030
-	MonopolyClickCellScRsp                             = 7055
-	RogueModifierDelNotify                             = 5400
-	RaidInfoNotify                                     = 2216
-	UpgradeAreaScRsp                                   = 4395
-	GetRollShopInfoCsReq                               = 6919
-	ChessRogueQueryScRsp                               = 5593
-	BatchGetQuestDataCsReq                             = 936
-	MuseumRandomEventQueryScRsp                        = 4337
-	SearchPlayerScRsp                                  = 2985
-	TeleportToMissionResetPointScRsp                   = 1285
-	GmTalkScRsp                                        = 3
-	GetCurSceneInfoCsReq                               = 1477
-	CancelExpeditionCsReq                              = 2516
-	SyncApplyFriendScNotify                            = 3000
-	EnteredSceneChangeScNotify                         = 1430
-	GetAllServerPrefsDataCsReq                         = 6110
-	TravelBrochurePageResetCsReq                       = 6491
-	SyncRogueVirtualItemInfoScNotify                   = 1809
-	MonopolySttUpdateScNotify                          = 7075
-	EnhanceRogueBuffScRsp                              = 1865
-	SpaceZooCatUpdateNotify                            = 6703
-	GetRogueTalentInfoScRsp                            = 1821
-	QuitWolfBroGameScRsp                               = 6526
-	GetWolfBroGameDataScRsp                            = 6570
-	HeliobusSnsPostCsReq                               = 5816
-	RogueModifierAddNotify                             = 5342
-	AcceptActivityExpeditionScRsp                      = 2503
-	PunkLordDataChangeNotify                           = 3238
-	SetClientRaidTargetCountScRsp                      = 2295
-	ChessRogueUpdateDiceInfoScNotify                   = 5530
-	MonopolyRollRandomCsReq                            = 7036
-	ChangeStoryLineFinishScNotify                      = 6260
-	StartPunkLordRaidCsReq                             = 3242
-	GetChallengeGroupStatisticsScRsp                   = 1776
-	ChessRogueEnterCellCsReq                           = 5551
-	GetSaveRaidCsReq                                   = 2236
-	ChallengeSettleNotify                              = 1777
-	RecoverAllLineupScRsp                              = 1472
-	DoGachaScRsp                                       = 1945
-	RefreshTriggerByClientScNotify                     = 1415
-	ChessRogueLeaveScRsp                               = 5432
-	ReviveRogueAvatarScRsp                             = 1866
-	RemoveStuffFromAreaCsReq                           = 4377
-	GetFirstTalkByPerformanceNpcCsReq                  = 2103
-	TravelBrochureApplyPasterListCsReq                 = 6437
-	SetAssistCsReq                                     = 2938
-	GetOfferingInfoCsReq                               = 6939
-	LeaveMapRotationRegionScRsp                        = 6870
-	SyncRogueHandbookDataUpdateScNotify                = 5618
-	SpaceZooOpCatteryScRsp                             = 6726
-	SetPlayerInfoCsReq                                 = 97
-	StoryLineTrialAvatarChangeScNotify                 = 6277
-	WolfBroGameUseBulletScRsp                          = 6558
-	GetAssistHistoryCsReq                              = 2901
-	ShowNewSupplementVisitorScRsp                      = 3711
-	ChessRogueConfirmRollCsReq                         = 5519
-	PickRogueAvatarCsReq                               = 1802
-	GetRogueInfoCsReq                                  = 1810
-	RestoreWolfBroGameArchiveScRsp                     = 6560
-	ChooseBoxingClubStageOptionalBuffCsReq             = 4236
-	TakeRogueAeonLevelRewardScRsp                      = 1878
-	SetGroupCustomSaveDataCsReq                        = 1473
-	GetUpdatedArchiveDataScRsp                         = 2345
-	AetherDivideSpiritExpUpScRsp                       = 4808
-	MonopolyTakePhaseRewardCsReq                       = 7063
-	MissionEventRewardScNotify                         = 1299
-	HeliobusInfoChangedScNotify                        = 5811
-	UpdateMapRotationDataScNotify                      = 6899
-	MonopolyReRollRandomCsReq                          = 7099
-	FantasticStoryActivityBattleEndScNotify            = 4960
-	GetStuffScNotify                                   = 4400
-	TakePromotionRewardScRsp                           = 337
-	GetFirstTalkNpcScRsp                               = 2160
-	GetRogueTalentInfoCsReq                            = 1861
-	SceneEntityUpdateScNotify                          = 1500
-	MonopolyScrachRaffleTicketScRsp                    = 7078
-	MonopolyGuessBuyInformationScRsp                   = 7039
-	GameplayCounterRecoverCsReq                        = 1427
-	StartWolfBroGameCsReq                              = 6510
-	PromoteEquipmentCsReq                              = 542
-	ChangeScriptEmotionCsReq                           = 6342
-	GetRogueAdventureRoomInfoCsReq                     = 5695
-	EnterSectionScRsp                                  = 1485
-	TakeAssistRewardCsReq                              = 2986
-	GetLineupAvatarDataCsReq                           = 711
-	GetChessRogueStoryInfoCsReq                        = 5463
-	MonopolyGetDailyInitItemCsReq                      = 7064
-	HeliobusUnlockSkillScNotify                        = 5836
-	TakeTrialActivityRewardCsReq                       = 2622
-	GetHeroBasicTypeInfoScRsp                          = 72
-	TakeRogueEndlessActivityPointRewardCsReq           = 6060
-	QuitRogueScRsp                                     = 1832
-	SwitchAetherDivideLineUpSlotCsReq                  = 4891
-	GateServerScNotify                                 = 80
-	UnlockTutorialGuideCsReq                           = 1677
-	MonopolyContentUpdateScNotify                      = 7083
-	MuseumTargetRewardNotify                           = 4369
-	PlayerLoginFinishCsReq                             = 79
-	StartRaidCsReq                                     = 2210
-	GetPunkLordMonsterDataCsReq                        = 3210
-	EnterSceneScRsp                                    = 1474
-	ChessRogueEnterNextLayerCsReq                      = 5490
-	BatchMarkChatEmojiCsReq                            = 3958
-	SceneGroupRefreshScNotify                          = 1475
-	GetBasicInfoCsReq                                  = 29
-	TakeCityShopRewardCsReq                            = 1516
-	EnterFantasticStoryActivityStageScRsp              = 4916
-	FinishCurTurnScRsp                                 = 4311
-	SceneEnterStageScRsp                               = 1408
-	RogueEndlessActivityBattleEndScNotify              = 6016
-	GetFeverTimeActivityDataCsReq                      = 7153
-	MonopolyGiveUpCurContentCsReq                      = 7006
-	SceneCastSkillCostMpCsReq                          = 1495
-	TakeOffAvatarSkinScRsp                             = 306
-	AlleyShipmentEventEffectsScNotify                  = 4783
-	GetChallengeScRsp                                  = 1733
-	MuseumDispatchFinishedScNotify                     = 4308
-	GetGachaInfoScRsp                                  = 1933
-	GetExpeditionDataScRsp                             = 2533
-	TextJoinSaveScRsp                                  = 3833
-	SelectChessRogueNousSubStoryScRsp                  = 5511
-	InteractChargerScRsp                               = 6845
-	ChessRogueEnterCsReq                               = 5469
-	ExchangeRogueBuffWithMiracleCsReq                  = 5691
-	HeliobusSnsCommentScRsp                            = 5870
-	UpdateMovieRacingDataCsReq                         = 4196
-	MonthCardRewardNotify                              = 89
-	SelectPhoneThemeCsReq                              = 5160
-	FinishTutorialGuideScRsp                           = 1611
-	MonopolyTakeRaffleTicketRewardCsReq                = 7071
-	SetCurInteractEntityScRsp                          = 1412
-	PunkLordMonsterKilledNotify                        = 3285
-	TakeOffRelicScRsp                                  = 391
-	MakeDrinkScRsp                                     = 6987
-	GetMultipleDropInfoScRsp                           = 4633
-	TakeApRewardCsReq                                  = 3310
-	GetUnlockTeleportScRsp                             = 1481
-	MonopolyCellUpdateNotify                           = 7045
-	GetMissionDataScRsp                                = 1233
-	StartAetherDivideSceneBattleScRsp                  = 4860
-	ChessRogueReviveAvatarCsReq                        = 5412
-	SceneEntityDisappearScNotify                       = 1470
-	QuitWolfBroGameCsReq                               = 6577
-	AcceptMultipleExpeditionCsReq                      = 2502
-	GetMainMissionCustomValueScRsp                     = 1272
-	TextJoinQueryScRsp                                 = 3845
-	DressRelicAvatarScRsp                              = 399
-	LeaveRaidCsReq                                     = 2242
-	HeliobusStartRaidCsReq                             = 5894
-	SpringRecoverSingleAvatarScRsp                     = 1422
-	DailyFirstMeetPamCsReq                             = 3442
-	TakeMonsterResearchActivityRewardScRsp             = 2694
-	SetFriendMarkScRsp                                 = 2924
-	BatchGetQuestDataScRsp                             = 902
-	FeverTimeActivityBattleEndScNotify                 = 7159
-	MonopolyConditionUpdateScNotify                    = 7061
-	FinishRogueDialogueGroupCsReq                      = 1868
-	SyncEntityBuffChangeListScNotify                   = 1458
-	SetFriendRemarkNameCsReq                           = 2937
-	FinishFirstTalkNpcCsReq                            = 2177
-	DeleteSocialEventServerCacheCsReq                  = 7056
-	HeliobusSnsLikeScRsp                               = 5826
-	EnterRogueMapRoomCsReq                             = 1818
-	MatchBoxingClubOpponentCsReq                       = 4242
-	EnterTreasureDungeonCsReq                          = 4458
-	GetFantasticStoryActivityDataCsReq                 = 4910
-	SpaceZooDataCsReq                                  = 6710
-	TriggerVoiceScRsp                                  = 4195
-	PrepareRogueAdventureRoomCsReq                     = 5633
-	TravelBrochureGetPasterScNotify                    = 6458
-	AceAntiCheaterCsReq                                = 68
-	GetRogueShopBuffInfoCsReq                          = 5660
-	SetForbidOtherApplyFriendScRsp                     = 2931
-	ExpUpEquipmentScRsp                                = 511
-	SetDisplayAvatarScRsp                              = 2860
-	RotateMapCsReq                                     = 6877
-	MonopolyEventSelectFriendCsReq                     = 7080
-	HeartDialTraceScriptScRsp                          = 6303
-	ChessRogueRollDiceCsReq                            = 5415
-	GetTutorialGuideCsReq                              = 1642
-	MultipleDropInfoScNotify                           = 4642
-	TakeMultipleExpeditionRewardCsReq                  = 2576
-	ChessRogueMoveCellNotify                           = 5422
-	DelMailCsReq                                       = 816
-	ChessRogueUpdateAeonModifierValueScNotify          = 5497
-	GetServerPrefsDataScRsp                            = 6145
-	MonopolyBuyGoodsCsReq                              = 7037
-	GetChatEmojiListScRsp                              = 3970
-	SetAssistAvatarScRsp                               = 2858
-	GetRogueDialogueEventDataCsReq                     = 1848
-	TakePunkLordPointRewardCsReq                       = 3258
-	FinishEmotionDialoguePerformanceCsReq              = 6377
-	QuitBattleScRsp                                    = 145
-	EnterMapRotationRegionCsReq                        = 6810
-	TakeTrainVisitorUntakenBehaviorRewardCsReq         = 3800
-	SelectChatBubbleCsReq                              = 5142
-	MissionRewardScNotify                              = 1216
-	SyncRogueSeasonFinishScNotify                      = 1807
-	MuseumTakeCollectRewardScRsp                       = 4383
-	UnlockedAreaMapScNotify                            = 1413
-	CancelCacheNotifyCsReq                             = 4200
-	GetMuseumInfoScRsp                                 = 4333
-	PlayerLoginCsReq                                   = 10
-	ChessRogueUpdateLevelBaseInfoScNotify              = 5451
-	GetFriendLoginInfoScRsp                            = 2944
-	GetChapterCsReq                                    = 416
-	GetSaveLogisticsMapScRsp                           = 4738
-	GetTrialActivityDataCsReq                          = 2648
-	GetTrainVisitorBehaviorCsReq                       = 3742
-	GetSpringRecoverDataCsReq                          = 1429
-	SharePunkLordMonsterScRsp                          = 3260
-	GetActivityScheduleConfigScRsp                     = 2660
-	GetFriendRecommendListInfoCsReq                    = 2991
-	GetHeartDialInfoCsReq                              = 6310
-	GetRogueHandbookDataScRsp                          = 5686
-	HandleRogueCommonPendingActionScRsp                = 5684
-	ChessRogueNousGetRogueTalentInfoScRsp              = 5558
-	DiscardRelicScRsp                                  = 539
-	GetSceneMapInfoScRsp                               = 1434
-	UpdatePlayerSettingScRsp                           = 88
-	GetMailCsReq                                       = 810
-	FeatureSwitchClosedScNotify                        = 62
-	TakeQuestRewardScRsp                               = 945
-	TakeKilledPunkLordMonsterScoreCsReq                = 3283
-	AetherDivideSpiritInfoScNotify                     = 4806
-	SaveLogisticsCsReq                                 = 4765
-	GetRndOptionScRsp                                  = 3433
-	SpaceZooBornScRsp                                  = 6745
-	HandleFriendCsReq                                  = 2970
-	GetPlayerDetailInfoScRsp                           = 2945
-	RevcMsgScNotify                                    = 3942
-	InterruptMissionEventCsReq                         = 1294
-	TakeQuestOptionalRewardScRsp                       = 958
-	LeaveTrialActivityCsReq                            = 2662
-	WolfBroGamePickupBulletCsReq                       = 6595
-	StaminaInfoScNotify                                = 81
-	GetMissionStatusScRsp                              = 1237
-	SetAetherDivideLineUpScRsp                         = 4895
-	ClearAetherDividePassiveSkillCsReq                 = 4899
-	FinishTalkMissionScRsp                             = 1245
-	GetPunkLordBattleRecordCsReq                       = 3212
-	SetClientPausedScRsp                               = 1447
-	AetherDivideTakeChallengeRewardCsReq               = 4807
-	ChessRogueQuitScRsp                                = 5473
-	FinishSectionIdCsReq                               = 2777
-	TravelBrochureGetDataCsReq                         = 6410
-	FinishPerformSectionIdCsReq                        = 2800
-	VirtualLineupDestroyNotify                         = 794
-	TakeRollShopRewardScRsp                            = 6920
-	MonopolyRollDiceCsReq                              = 7060
-	GetSingleRedDotParamGroupCsReq                     = 5916
-	MarkItemScRsp                                      = 507
-	PlayerReturnSignScRsp                              = 4542
-	ActivateFarmElementScRsp                           = 1431
-	ReturnLastTownCsReq                                = 1437
-	StartAlleyEventScRsp                               = 4726
-	FinishTutorialScRsp                                = 1670
-	PlayerLogoutScRsp                                  = 45
-	GetEnteredSceneCsReq                               = 1455
-	MonopolyUpgradeAssetCsReq                          = 7096
-	SelectRogueDialogueEventCsReq                      = 1879
-	StartChallengeCsReq                                = 1742
-	GetMarkItemListScRsp                               = 572
-	SetSpringRecoverConfigCsReq                        = 1493
-	GetAllLineupDataScRsp                              = 737
-	CancelMarkItemNotify                               = 587
-	SetGameplayBirthdayCsReq                           = 48
-	SyncRogueAreaUnlockScNotify                        = 1871
-	DestroyItemCsReq                                   = 538
-	GetChessRogueNousStoryInfoScRsp                    = 5505
-	GetPunkLordDataScRsp                               = 3299
-	GetDrinkMakerDataCsReq                             = 6999
-	TakeFightActivityRewardScRsp                       = 3677
-	SummonPunkLordMonsterCsReq                         = 3277
-	StartAetherDivideStageBattleScRsp                  = 4894
-	GetMonopolyMbtiReportRewardCsReq                   = 7027
-	GetRecyleTimeScRsp                                 = 585
-	GetNpcTakenRewardCsReq                             = 2110
-	ExchangeGachaCeilingScRsp                          = 1926
-	GetGachaCeilingScRsp                               = 1960
-	FinishChessRogueSubStoryCsReq                      = 5591
-	TrialBackGroundMusicCsReq                          = 3177
-	GetRecyleTimeCsReq                                 = 569
-	DailyFirstEnterMonopolyActivityScRsp               = 7095
-	AddEquipmentScNotify                               = 565
-	ChessRogueSelectBpScRsp                            = 5474
-	GetNpcMessageGroupScRsp                            = 2733
-	MonopolySelectOptionCsReq                          = 7070
-	GetKilledPunkLordMonsterDataCsReq                  = 3208
-	OpenRogueChestScRsp                                = 1822
-	GetVideoVersionKeyCsReq                            = 74
-	GetPlayerReturnMultiDropInfoCsReq                  = 4645
-	GetAlleyInfoScRsp                                  = 4733
-	AddBlacklistScRsp                                  = 2999
-	MonopolyCheatDiceScRsp                             = 7085
-	TextJoinBatchSaveScRsp                             = 3860
-	ClearAetherDividePassiveSkillScRsp                 = 4876
-	EndDrinkMakerSequenceCsReq                         = 6991
-	TakeLoginActivityRewardCsReq                       = 2642
-	GetStrongChallengeActivityDataScRsp                = 6633
-	DestroyItemScRsp                                   = 512
-	GetJukeboxDataCsReq                                = 3110
-	SyncRogueAeonLevelUpRewardScNotify                 = 1888
-	TakeRogueEndlessActivityAllBonusRewardScRsp        = 6100
-	SyncTaskCsReq                                      = 1260
-	SyncChessRogueNousMainStoryScNotify                = 5542
-	UpdateRogueAdventureRoomScoreCsReq                 = 5631
-	FinishItemIdScRsp                                  = 2760
-	MuseumRandomEventSelectScRsp                       = 4396
-	ExpUpRelicCsReq                                    = 536
-	GetSceneMapInfoCsReq                               = 1405
-	SpaceZooMutateScRsp                                = 6760
-	ComposeItemScRsp                                   = 595
-	EnterChessRogueAeonRoomScRsp                       = 5426
-	PlayerLoginScRsp                                   = 33
-	MonopolyGameGachaScRsp                             = 7072
-	GetMapRotationDataScRsp                            = 6811
-	GameplayCounterCountDownCsReq                      = 1463
-	ChessRogueLayerAccountInfoNotify                   = 5597
-	DrinkMakerUpdateTipsNotify                         = 6982
-	GetStageLineupCsReq                                = 710
-	AlleyFundsScNotify                                 = 4796
-	EnterStrongChallengeActivityStageCsReq             = 6642
-	GetChapterScRsp                                    = 460
-	MuseumFundsChangedScNotify                         = 4376
-	EnhanceCommonRogueBuffScRsp                        = 5608
-	ReEnterLastElementStageCsReq                       = 1428
-	TakeRogueEventHandbookRewardScRsp                  = 5639
-	ChessRogueUpdateActionPointScNotify                = 5414
-	UpgradeAreaStatScRsp                               = 4302
-	UnlockTutorialCsReq                                = 1616
-	GetLevelRewardScRsp                                = 6
-	AvatarExpUpScRsp                                   = 345
-	MuseumTargetStartNotify                            = 4306
-	AlleyEventChangeNotify                             = 4800
-	TakeQuestOptionalRewardCsReq                       = 911
-	GetWaypointScRsp                                   = 433
-	GetMailScRsp                                       = 833
-	GetReplayTokenScRsp                                = 3533
-	StartBoxingClubBattleCsReq                         = 4216
-	UpdateServerPrefsDataScRsp                         = 6160
-	TakeChallengeRaidRewardCsReq                       = 2226
-	SceneEntityMoveCsReq                               = 1410
-	GetChatFriendHistoryScRsp                          = 3926
-	TakePunkLordPointRewardScRsp                       = 3295
-	MonopolyBuyGoodsScRsp                              = 7094
-	GetMuseumInfoCsReq                                 = 4310
-	SetTurnFoodSwitchCsReq                             = 518
-	BattleCollegeDataChangeScNotify                    = 5742
-	SetAssistAvatarCsReq                               = 2811
-	GetMonsterResearchActivityDataCsReq                = 2699
-	SyncRogueDialogueEventDataScNotify                 = 1874
-	SetGenderCsReq                                     = 86
-	EnterAdventureScRsp                                = 1333
-	LogisticsGameCsReq                                 = 4742
-	GetChatEmojiListCsReq                              = 4000
-	DressAvatarSkinScRsp                               = 396
-	GetAssistListScRsp                                 = 2967
-	AetherDivideTakeChallengeRewardScRsp               = 4887
-	SetClientRaidTargetCountCsReq                      = 2258
-	EnterMapRotationRegionScRsp                        = 6833
-	GetMissionStatusCsReq                              = 1266
-	RogueNpcDisappearCsReq                             = 5611
-	GetMovieRacingDataCsReq                            = 4137
-	GetNpcStatusCsReq                                  = 2742
-	GetTrainVisitorRegisterScRsp                       = 3726
-	ChessRoguePickAvatarCsReq                          = 5461
-	ChessRogueNousEnableRogueTalentCsReq               = 5518
-	GetBattleCollegeDataCsReq                          = 5710
-	InteractTreasureDungeonGridCsReq                   = 4491
-	SetSignatureScRsp                                  = 2803
-	SyncServerSceneChangeNotify                        = 1478
-	EquipAetherDividePassiveSkillScRsp                 = 4802
-	SelectChessRogueSubStoryCsReq                      = 5436
-	GetChallengeRaidInfoCsReq                          = 2260
-	UnlockChatBubbleScNotify                           = 5116
-	HealPoolInfoNotify                                 = 1484
-	SetForbidOtherApplyFriendCsReq                     = 2923
-	ReEnterLastElementStageScRsp                       = 1454
-	InterruptMissionEventScRsp                         = 1296
-	GetPlatformPlayerInfoCsReq                         = 2947
-	GetAetherDivideInfoCsReq                           = 4803
-	RefreshTriggerByClientScRsp                        = 1421
-	RemoveRotaterScRsp                                 = 6891
-	ClientObjUploadScRsp                               = 4
-	AvatarExpUpCsReq                                   = 342
-	GetArchiveDataCsReq                                = 2310
-	GetPlayerDetailInfoCsReq                           = 2942
-	GetShopListCsReq                                   = 1510
-	CancelExpeditionScRsp                              = 2560
-	LockRelicScRsp                                     = 576
-	FinishRogueDialogueGroupScRsp                      = 1884
-	GetPrivateChatHistoryScRsp                         = 3960
-	MonopolyEventSelectFriendScRsp                     = 7062
-	StartPunkLordRaidScRsp                             = 3245
-	SceneCastSkillCsReq                                = 1416
-	ChessRogueStartCsReq                               = 5423
-	EnterRogueMapRoomScRsp                             = 1897
-	SaveLogisticsScRsp                                 = 4769
-	SyncRogueCommonActionResultScNotify                = 5644
-	DiscardRelicCsReq                                  = 549
-	AcceptedPamMissionExpireCsReq                      = 4010
-	GetNpcMessageGroupCsReq                            = 2710
-	HeliobusSnsReadScRsp                               = 5845
-	SpringRecoverSingleAvatarCsReq                     = 1489
-	MuseumTargetMissionFinishNotify                    = 4365
-	QuitTreasureDungeonCsReq                           = 4496
-	GetBagCsReq                                        = 510
-	TakePictureScRsp                                   = 4160
-	ChangeStoryLineScRsp                               = 6216
-	SetRedPointStatusScNotify                          = 71
-	FinishChessRogueNousSubStoryCsReq                  = 5587
-	GetLoginActivityScRsp                              = 2633
-	RaidCollectionDataCsReq                            = 6959
-	DressAvatarScRsp                                   = 370
-	ChessRogueQueryCsReq                               = 5466
-	TeleportToMissionResetPointCsReq                   = 1269
-	UpgradeAreaCsReq                                   = 4358
-	ChessRogueNousEditDiceScRsp                        = 5416
-	DailyActiveInfoNotify                              = 3316
-	ExchangeGachaCeilingCsReq                          = 1977
-	SceneCastSkillMpUpdateScNotify                     = 1402
-	GetRollShopInfoScRsp                               = 6917
-	AetherDivideSkillItemScNotify                      = 4867
-	RaidKickByServerScNotify                           = 2266
-	GetFriendAssistListCsReq                           = 2993
-	TravelBrochureSetCustomValueCsReq                  = 6436
-	DelMailScRsp                                       = 860
-	MonopolyUpgradeAssetScRsp                          = 7008
-	ChessRogueSkipTeachingLevelCsReq                   = 5448
-	SubmitOrigamiItemScRsp                             = 4102
-	GetGachaCeilingCsReq                               = 1916
-	SyncClientResVersionScRsp                          = 126
-	FinishFirstTalkByPerformanceNpcCsReq               = 2158
-	StartCocoonStageCsReq                              = 1407
-	DeleteFriendCsReq                                  = 2958
-	PlayBackGroundMusicScRsp                           = 3145
-	ResetMapRotationRegionCsReq                        = 6858
-	ChessRogueEnterCellScRsp                           = 5533
-	MuseumInfoChangedScNotify                          = 4399
-	MakeDrinkCsReq                                     = 6981
-	StartBattleCollegeCsReq                            = 5745
-	GetCurChallengeScRsp                               = 1703
-	TravelBrochureApplyPasterCsReq                     = 6477
-	GetTreasureDungeonActivityDataCsReq                = 4403
-	MonopolyGuessChooseCsReq                           = 7097
-	AcceptMultipleExpeditionScRsp                      = 2599
-	GetMainMissionCustomValueCsReq                     = 1232
-	FinishCosumeItemMissionScRsp                       = 1295
-	MonopolySelectOptionScRsp                          = 7003
-	PlayerReturnInfoQueryCsReq                         = 4600
-	GetPhoneDataScRsp                                  = 5133
-	GetLevelRewardCsReq                                = 8
-	GetChessRogueStoryAeonTalkInfoScRsp                = 5513
-	UpgradeAreaStatCsReq                               = 4336
-	EnhanceRogueBuffCsReq                              = 1806
-	TakeApRewardScRsp                                  = 3333
-	ChessRogueQueryBpScRsp                             = 5599
-	GetNpcTakenRewardScRsp                             = 2133
-	GetShareDataCsReq                                  = 4142
-	TakeMailAttachmentCsReq                            = 877
-	EnterTelevisionActivityStageCsReq                  = 6967
-	MonopolyGameSettleScNotify                         = 7012
-	HandleFriendScRsp                                  = 2903
-	AetherDivideRefreshEndlessScNotify                 = 4801
-	SearchPlayerCsReq                                  = 2969
-	MonopolyActionResultScNotify                       = 7042
-	HeliobusSelectSkillScRsp                           = 5899
-	MonopolyGuessBuyInformationCsReq                   = 7049
-	SelectRogueDialogueEventScRsp                      = 1819
-	EnterSectionCsReq                                  = 1469
-	EnterChessRogueAeonRoomCsReq                       = 5401
-	QuitLineupScRsp                                    = 726
-	DeleteBlacklistScRsp                               = 2965
-	EnterFightActivityStageCsReq                       = 3645
-	TakeKilledPunkLordMonsterScoreScRsp                = 3267
-	ComposeLimitNumCompleteNotify                      = 583
-	SpaceZooBornCsReq                                  = 6742
-	GetJukeboxDataScRsp                                = 3133
-	SetNicknameScRsp                                   = 37
-	TakeRogueMiracleHandbookRewardCsReq                = 5697
-	GameplayCounterRecoverScRsp                        = 1414
-	GetSpringRecoverDataScRsp                          = 1424
-	TakeExpeditionRewardScRsp                          = 2526
-	GetVideoVersionKeyScRsp                            = 59
-	TakeRogueEndlessActivityAllBonusRewardCsReq        = 6026
-	SyncTurnFoodNotify                                 = 586
-	FinishTalkMissionCsReq                             = 1242
-	RefreshAlleyOrderCsReq                             = 4799
-	PlayerReturnTakePointRewardScRsp                   = 4560
-	FinishSectionIdScRsp                               = 2726
-	SpaceZooDeleteCatCsReq                             = 6800
-	GetFarmStageGachaInfoScRsp                         = 1345
-	JoinLineupScRsp                                    = 760
-	GetCurBattleInfoCsReq                              = 116
-	DeployRotaterScRsp                                 = 6860
-	ChooseBoxingClubResonanceCsReq                     = 4203
-	SetHeroBasicTypeScRsp                              = 12
-	GetKilledPunkLordMonsterDataScRsp                  = 3206
-	ChallengeRaidNotify                                = 2270
-	AddBlacklistCsReq                                  = 2902
-	GetRogueAeonInfoCsReq                              = 1817
-	AcceptExpeditionScRsp                              = 2545
-	FightActivityDataChangeScNotify                    = 3642
-	TrialBackGroundMusicScRsp                          = 3126
-	OpenRogueChestCsReq                                = 1889
-	QuitRogueCsReq                                     = 1812
-	ComposeSelectedRelicScRsp                          = 506
-	GetLineupAvatarDataScRsp                           = 758
-	MonopolyConfirmRandomCsReq                         = 7091
-	ChessRogueSelectCellCsReq                          = 5534
-	AcceptMissionEventCsReq                            = 1276
-	PunkLordRaidTimeOutScNotify                        = 3291
-	EnableRogueTalentScRsp                             = 1841
-	TakeAssistRewardScRsp                              = 2918
-	GetSocialEventServerCacheScRsp                     = 7054
-	GetChessRogueNousStoryInfoCsReq                    = 5455
-	DrinkMakerChallengeScRsp                           = 6998
-	SpaceZooOpCatteryCsReq                             = 6777
-	AlleyGuaranteedFundsScRsp                          = 4772
-	MarkReadMailCsReq                                  = 842
-	GetRogueShopMiracleInfoScRsp                       = 5616
-	GetRogueBuffEnhanceInfoCsReq                       = 1896
-	SelectInclinationTextCsReq                         = 2200
-	GetOfferingInfoScRsp                               = 6937
-	PunkLordBattleResultScNotify                       = 3296
-	BuyBpLevelCsReq                                    = 3060
-	SetAssistScRsp                                     = 2912
-	PlayerReturnPointChangeScNotify                    = 4545
-	UpdateEnergyScNotify                               = 6802
-	TravelBrochureApplyPasterListScRsp                 = 6494
-	SetPlayerInfoScRsp                                 = 47
-	SetIsDisplayAvatarInfoCsReq                        = 2877
-	EnterAetherDivideSceneScRsp                        = 4833
-	CommonRogueQueryCsReq                              = 5689
-	SwapLineupCsReq                                    = 800
-	ChessRogueLeaveCsReq                               = 5493
-	PlayerReturnForceFinishScNotify                    = 4503
-	DoGachaCsReq                                       = 1942
-	SpringRecoverScRsp                                 = 1468
-	ChessRogueConfirmRollScRsp                         = 5532
-	ReplaceLineupScRsp                                 = 708
-	SubmitMonsterResearchActivityMaterialScRsp         = 2666
-	BatchMarkChatEmojiScRsp                            = 3995
-	TravelBrochurePageResetScRsp                       = 6466
-	LogisticsDetonateStarSkiffCsReq                    = 4787
-	DeleteSummonUnitScRsp                              = 1435
-	GetSaveRaidScRsp                                   = 2202
-	GetFightActivityDataCsReq                          = 3610
-	MonopolyGetRaffleTicketCsReq                       = 7074
-	MuseumRandomEventQueryCsReq                        = 4366
-	SyncChessRogueNousSubStoryScNotify                 = 5568
-	PlayerLoginFinishScRsp                             = 19
-	MonopolyGameRaiseRatioScRsp                        = 7038
-	EnterRogueCsReq                                    = 1816
-	AetherDivideLineupScNotify                         = 4812
-	SyncChessRogueMainStoryFinishScNotify              = 5496
-	AcceptActivityExpeditionCsReq                      = 2570
-	GetAuthkeyCsReq                                    = 2
-	ExpUpEquipmentCsReq                                = 503
-	MonopolyRollRandomScRsp                            = 7002
-	TravelBrochureUpdatePasterPosCsReq                 = 6403
-	ChessRogueCheatRollCsReq                           = 5413
-	GetRogueInitialScoreScRsp                          = 1849
-	GetSecretKeyInfoScRsp                              = 56
-	MarkChatEmojiCsReq                                 = 3903
-	ShareCsReq                                         = 4110
-	SyncRogueGetItemScNotify                           = 1805
-	MonopolyClickCellCsReq                             = 7017
-	OpenTreasureDungeonGridCsReq                       = 4436
-	MissionAcceptScNotify                              = 1201
-	ChessRogueGoAheadCsReq                             = 5549
-	SceneEntityTeleportScRsp                           = 1479
-	GetChessRogueStoryInfoScRsp                        = 5441
-	GmTalkCsReq                                        = 70
-	HeroBasicTypeChangedNotify                         = 49
-	UnlockSkilltreeScRsp                               = 360
-	MonopolyLikeCsReq                                  = 7084
-	PlayerSyncScNotify                                 = 610
-	SetBoxingClubResonanceLineupScRsp                  = 4295
-	GetAllRedDotDataScRsp                              = 5933
-	InteractPropCsReq                                  = 1442
-	SetHeadIconCsReq                                   = 2842
-	ChessRogueGiveUpRollCsReq                          = 5428
-	EnhanceChessRogueBuffScRsp                         = 5525
-	ChessRogueGiveUpScRsp                              = 5453
-	SendMsgScRsp                                       = 3933
-	StartTrialActivityScRsp                            = 2680
-	PromoteAvatarCsReq                                 = 377
-	ReportPlayerScRsp                                  = 2908
-	MonopolyQuizDurationChangeScNotify                 = 7023
-	TakeTalkRewardScRsp                                = 2145
-	EnterTrialActivityStageCsReq                       = 2684
-	GetAllServerPrefsDataScRsp                         = 6133
-	GetMbtiReportScRsp                                 = 7073
-	SyncRogueStatusScNotify                            = 1851
-	ApplyFriendScRsp                                   = 2926
-	GetMonopolyInfoScRsp                               = 7033
-	StartTimedCocoonStageScRsp                         = 1457
-	GetDailyActiveInfoScRsp                            = 3345
-	StartRogueCsReq                                    = 1842
-	TakeAllRewardScRsp                                 = 3100
-	TravelBrochureSetPageDescStatusCsReq               = 6499
-	GetAllSaveRaidCsReq                                = 2299
-	EnterRogueEndlessActivityStageCsReq                = 6042
-	GetChallengeCsReq                                  = 1710
-	TakeOfferingRewardScRsp                            = 6940
-	SyncDeleteFriendScNotify                           = 2936
-	GetCurLineupDataCsReq                              = 742
-	ExchangeStaminaCsReq                               = 95
-	BattleLogReportCsReq                               = 170
-	MonopolyDailySettleScNotify                        = 7048
-	BuyGoodsCsReq                                      = 1542
-	FinishPlotScRsp                                    = 1133
-	BuyRogueShopBuffScRsp                              = 5603
-	PrestigeLevelUpScRsp                               = 4794
-	ChessRogueReviveAvatarScRsp                        = 5476
-	StopRogueAdventureRoomCsReq                        = 5606
-	GetRaidInfoCsReq                                   = 2203
-	SyncRogueAeonScNotify                              = 1859
-	SetStuffToAreaScRsp                                = 4360
-	TakeOffAvatarSkinCsReq                             = 308
-	MonopolyGetRafflePoolInfoCsReq                     = 7098
-	GetRogueScoreRewardInfoCsReq                       = 1863
-	AlleyOrderChangedScNotify                          = 4791
-	SceneEnterStageCsReq                               = 1496
-	TakePrestigeRewardCsReq                            = 4703
-	PrepareRogueAdventureRoomScRsp                     = 5642
-	TakeBpRewardCsReq                                  = 3045
-	AlleyPlacingGameScRsp                              = 4795
-	TakeChallengeRewardCsReq                           = 1736
-	StartTimedFarmElementCsReq                         = 1409
-	GetExhibitScNotify                                 = 4370
-	UpdateRedDotDataScRsp                              = 5945
-	GetAetherDivideChallengeInfoScRsp                  = 4869
-	GetRogueShopBuffInfoScRsp                          = 5677
-	TelevisionActivityDataChangeScNotify               = 6961
-	GetLoginChatInfoScRsp                              = 3902
-	MakeMissionDrinkScRsp                              = 6990
-	GroupStateChangeCsReq                              = 1450
-	GetPlayerReplayInfoCsReq                           = 3542
-	UnlockBackGroundMusicScRsp                         = 3160
-	ExchangeRogueRewardKeyScRsp                        = 1873
-	GetRogueAdventureRoomInfoScRsp                     = 5636
-	TakeActivityExpeditionRewardScRsp                  = 2536
-	GetBoxingClubInfoCsReq                             = 4210
-	GetUpdatedArchiveDataCsReq                         = 2342
-	ReserveStaminaExchangeCsReq                        = 78
-	AcceptMainMissionScRsp                             = 1212
-	FinishAeonDialogueGroupScRsp                       = 1830
-	SceneEntityDieScNotify                             = 1449
-	TakeOffEquipmentScRsp                              = 311
-	CancelActivityExpeditionScRsp                      = 2558
-	TakeChapterRewardScRsp                             = 500
-	SetLineupNameCsReq                                 = 776
-	LeaveRaidScRsp                                     = 2245
-	SpringRefreshCsReq                                 = 1476
-	SetCurWaypointScRsp                                = 445
-	EnterFantasticStoryActivityStageCsReq              = 4945
-	GetMissionEventDataScRsp                           = 1202
-	DailyRefreshNotify                                 = 93
-	TravelBrochureRemovePasterCsReq                    = 6500
-	GmTalkScNotify                                     = 26
-	UseTreasureDungeonItemCsReq                        = 4437
-	SelectChessRogueNousSubStoryCsReq                  = 5498
-	LeaveRogueCsReq                                    = 1877
-	PlayerHeartBeatCsReq                               = 46
-	GetRogueEndlessActivityDataCsReq                   = 6010
-	AetherDivideRefreshEndlessCsReq                    = 4832
-	SetCurInteractEntityCsReq                          = 1438
-	SpaceZooTakeScRsp                                  = 6736
-	ChessRogueReRollDiceScRsp                          = 5430
-	SecurityReportCsReq                                = 4103
-	BuyRogueShopMiracleScRsp                           = 5700
-	GetAvatarDataScRsp                                 = 333
-	RankUpEquipmentCsReq                               = 600
-	AntiAddictScNotify                                 = 91
-	StartAetherDivideChallengeBattleCsReq              = 4877
-	TextJoinSaveCsReq                                  = 3810
+	PlayerTypeNone                                     = 0
+	PlayerGetTokenCsReq                                = 2
+	GateServerScNotify                                 = 3
+	AceAntiCheaterCsReq                                = 4
+	ExchangeStaminaCsReq                               = 6
+	UpdatePlayerSettingCsReq                           = 7
+	PlayerGetTokenScRsp                                = 9
+	GetVideoVersionKeyScRsp                            = 10
+	GetSecretKeyInfoScRsp                              = 12
+	GetVideoVersionKeyCsReq                            = 13
+	ReserveStaminaExchangeCsReq                        = 14
+	PlayerLoginFinishCsReq                             = 15
+	SetNicknameScRsp                                   = 16
+	ServerAnnounceNotify                               = 18
+	UpdatePlayerSettingScRsp                           = 20
+	GetSecretKeyInfoCsReq                              = 22
+	GetHeroBasicTypeInfoCsReq                          = 24
+	SetGenderScRsp                                     = 25
+	SetLanguageCsReq                                   = 28
+	GmTalkCsReq                                        = 29
+	GetLevelRewardTakenListCsReq                       = 30
+	ExchangeStaminaScRsp                               = 33
+	PlayerLoginCsReq                                   = 34
+	SetGameplayBirthdayCsReq                           = 35
+	AntiAddictScNotify                                 = 37
+	SetNicknameCsReq                                   = 39
+	ReserveStaminaExchangeScRsp                        = 40
+	RegionStopScNotify                                 = 42
+	GmTalkScNotify                                     = 43
+	SetGameplayBirthdayScRsp                           = 44
+	GmTalkScRsp                                        = 45
+	PlayerLoginScRsp                                   = 48
+	PlayerHeartBeatScRsp                               = 49
+	DailyRefreshNotify                                 = 51
+	UpdateFeatureSwitchScNotify                        = 55
+	GetLevelRewardCsReq                                = 56
+	ClientObjDownloadDataScNotify                      = 58
+	GetAuthkeyCsReq                                    = 59
+	SetLanguageScRsp                                   = 61
+	PlayerLogoutCsReq                                  = 62
+	GetLevelRewardScRsp                                = 63
+	ClientObjUploadCsReq                               = 64
+	SetPlayerInfoScRsp                                 = 65
+	GetBasicInfoCsReq                                  = 66
+	QueryProductInfoScRsp                              = 67
+	StaminaInfoScNotify                                = 69
+	PlayerHeartBeatCsReq                               = 71
+	PlayerLoginFinishScRsp                             = 72
+	GetBasicInfoScRsp                                  = 73
+	AceAntiCheaterScRsp                                = 75
+	ClientObjUploadScRsp                               = 78
+	SetGenderCsReq                                     = 79
+	GetHeroBasicTypeInfoScRsp                          = 82
+	SetRedPointStatusScNotify                          = 84
+	GetLevelRewardTakenListScRsp                       = 85
+	PlayerKickOutScNotify                              = 86
+	PlayerLogoutScRsp                                  = 88
+	HeroBasicTypeChangedNotify                         = 89
+	QueryProductInfoCsReq                              = 90
+	SetHeroBasicTypeCsReq                              = 91
+	ClientDownloadDataScNotify                         = 92
+	MonthCardRewardNotify                              = 93
+	FeatureSwitchClosedScNotify                        = 94
+	GetAuthkeyScRsp                                    = 95
+	SetHeroBasicTypeScRsp                              = 97
+	RetcodeNotify                                      = 98
+	SetPlayerInfoCsReq                                 = 100
+	GetCurBattleInfoCsReq                              = 102
+	GetCurBattleInfoScRsp                              = 109
+	SyncClientResVersionCsReq                          = 119
+	BattleLogReportCsReq                               = 129
+	PVEBattleResultCsReq                               = 134
+	SyncClientResVersionScRsp                          = 143
+	BattleLogReportScRsp                               = 145
+	PVEBattleResultScRsp                               = 148
+	QuitBattleCsReq                                    = 162
+	ServerSimulateBattleFinishScNotify                 = 168
+	QuitBattleScNotify                                 = 186
+	QuitBattleScRsp                                    = 188
+	ReBattleAfterBattleLoseCsNotify                    = 196
+	UnlockAvatarSkinScNotify                           = 301
+	UnlockSkilltreeCsReq                               = 302
+	RankUpAvatarCsReq                                  = 306
+	UnlockSkilltreeScRsp                               = 309
+	TakePromotionRewardScRsp                           = 316
+	PromoteAvatarCsReq                                 = 319
+	MarkAvatarScRsp                                    = 328
+	DressAvatarScRsp                                   = 329
+	DressAvatarSkinCsReq                               = 330
+	RankUpAvatarScRsp                                  = 333
+	GetAvatarDataCsReq                                 = 334
+	TakeOffRelicScRsp                                  = 337
+	TakePromotionRewardCsReq                           = 339
+	MarkAvatarCsReq                                    = 341
+	TakeOffRelicCsReq                                  = 342
+	PromoteAvatarScRsp                                 = 343
+	TakeOffEquipmentCsReq                              = 345
+	GetAvatarDataScRsp                                 = 348
+	TakeOffAvatarSkinCsReq                             = 356
+	DressRelicAvatarCsReq                              = 359
+	AvatarExpUpCsReq                                   = 362
+	TakeOffAvatarSkinScRsp                             = 363
+	TakeOffEquipmentScRsp                              = 368
+	DressAvatarSkinScRsp                               = 385
+	DressAvatarCsReq                                   = 386
+	AvatarExpUpScRsp                                   = 388
+	DressRelicAvatarScRsp                              = 395
+	AddAvatarScNotify                                  = 396
+	GetChapterCsReq                                    = 402
+	GetChapterScRsp                                    = 409
+	WaypointShowNewCsNotify                            = 419
+	GetWaypointCsReq                                   = 434
+	TakeChapterRewardCsReq                             = 443
+	GetWaypointScRsp                                   = 448
+	SetCurWaypointCsReq                                = 462
+	TakeChapterRewardScRsp                             = 486
+	SetCurWaypointScRsp                                = 488
+	AddEquipmentScNotify                               = 501
+	LockEquipmentCsReq                                 = 502
+	ComposeItemScRsp                                   = 506
+	MarkItemScRsp                                      = 508
+	LockEquipmentScRsp                                 = 509
+	MarkItemCsReq                                      = 511
+	RechargeSuccNotify                                 = 516
+	ComposeLimitNumUpdateNotify                        = 518
+	UseItemCsReq                                       = 519
+	GetMarkItemListCsReq                               = 524
+	SetTurnFoodSwitchCsReq                             = 525
+	GetRecyleTimeScRsp                                 = 528
+	RankUpEquipmentScRsp                               = 529
+	ExchangeHcoinCsReq                                 = 530
+	ExpUpRelicCsReq                                    = 533
+	GetBagCsReq                                        = 534
+	SellItemCsReq                                      = 537
+	SellItemScRsp                                      = 539
+	GetRecyleTimeCsReq                                 = 541
+	LockRelicScRsp                                     = 542
+	UseItemScRsp                                       = 543
+	ExpUpEquipmentCsReq                                = 545
+	GetBagScRsp                                        = 548
+	CancelMarkItemNotify                               = 554
+	ComposeSelectedRelicCsReq                          = 556
+	ExpUpRelicScRsp                                    = 559
+	ComposeLimitNumCompleteNotify                      = 561
+	PromoteEquipmentCsReq                              = 562
+	ComposeSelectedRelicScRsp                          = 563
+	GeneralVirtualItemDataNotify                       = 565
+	RelicRecommendCsReq                                = 567
+	ExpUpEquipmentScRsp                                = 568
+	SyncTurnFoodNotify                                 = 579
+	GetMarkItemListScRsp                               = 582
+	ExchangeHcoinScRsp                                 = 585
+	RankUpEquipmentCsReq                               = 586
+	PromoteEquipmentScRsp                              = 588
+	DiscardRelicCsReq                                  = 589
+	DiscardRelicScRsp                                  = 590
+	DestroyItemCsReq                                   = 591
+	RelicRecommendScRsp                                = 592
+	LockRelicCsReq                                     = 595
+	ComposeItemCsReq                                   = 596
+	DestroyItemScRsp                                   = 597
+	SetTurnFoodSwitchScRsp                             = 600
+	PlayerSyncScNotify                                 = 634
+	JoinLineupCsReq                                    = 702
+	ChangeLineupLeaderCsReq                            = 706
+	JoinLineupScRsp                                    = 709
+	GetAllLineupDataScRsp                              = 716
+	QuitLineupCsReq                                    = 719
+	SwapLineupScRsp                                    = 729
+	VirtualLineupDestroyNotify                         = 730
+	ChangeLineupLeaderScRsp                            = 733
+	GetStageLineupCsReq                                = 734
+	SetLineupNameScRsp                                 = 737
+	GetAllLineupDataCsReq                              = 739
+	SetLineupNameCsReq                                 = 742
+	QuitLineupScRsp                                    = 743
+	SyncLineupNotify                                   = 745
+	GetStageLineupScRsp                                = 748
+	ReplaceLineupScRsp                                 = 756
+	SwitchLineupIndexCsReq                             = 759
+	GetCurLineupDataCsReq                              = 762
+	ExtraLineupDestroyNotify                           = 763
+	GetLineupAvatarDataCsReq                           = 768
+	ReplaceLineupCsReq                                 = 785
+	SwapLineupCsReq                                    = 786
+	GetCurLineupDataScRsp                              = 788
+	SwitchLineupIndexScRsp                             = 795
+	GetLineupAvatarDataScRsp                           = 796
+	DelMailCsReq                                       = 802
+	DelMailScRsp                                       = 809
+	TakeMailAttachmentCsReq                            = 819
+	GetMailCsReq                                       = 834
+	TakeMailAttachmentScRsp                            = 843
+	GetMailScRsp                                       = 848
+	MarkReadMailCsReq                                  = 862
+	NewMailScNotify                                    = 886
+	MarkReadMailScRsp                                  = 888
+	GetQuestRecordCsReq                                = 919
+	FinishQuestCsReq                                   = 929
+	BatchGetQuestDataCsReq                             = 933
+	GetQuestDataCsReq                                  = 934
+	GetQuestRecordScRsp                                = 943
+	FinishQuestScRsp                                   = 945
+	GetQuestDataScRsp                                  = 948
+	BatchGetQuestDataScRsp                             = 959
+	TakeQuestRewardCsReq                               = 962
+	TakeQuestOptionalRewardCsReq                       = 968
+	QuestRecordScNotify                                = 986
+	TakeQuestRewardScRsp                               = 988
+	TakeQuestOptionalRewardScRsp                       = 996
+	FinishPlotCsReq                                    = 1134
+	FinishPlotScRsp                                    = 1148
+	SubMissionRewardScNotify                           = 1201
+	MissionRewardScNotify                              = 1202
+	FinishCosumeItemMissionScRsp                       = 1206
+	SyncTaskCsReq                                      = 1209
+	MissionAcceptScNotify                              = 1211
+	GetMissionStatusScRsp                              = 1216
+	StartFinishMainMissionScNotify                     = 1218
+	SyncTaskScRsp                                      = 1219
+	GetMainMissionCustomValueCsReq                     = 1224
+	TeleportToMissionResetPointScRsp                   = 1228
+	InterruptMissionEventCsReq                         = 1230
+	GetMissionEventDataCsReq                           = 1233
+	GetMissionDataCsReq                                = 1234
+	AcceptMissionEventScRsp                            = 1237
+	GetMissionStatusCsReq                              = 1239
+	TeleportToMissionResetPointCsReq                   = 1241
+	AcceptMissionEventCsReq                            = 1242
+	DailyTaskDataScNotify                              = 1243
+	GetMissionDataScRsp                                = 1248
+	UpdateTrackMainMissionIdCsReq                      = 1254
+	SetMissionEventProgressCsReq                       = 1256
+	GetMissionEventDataScRsp                           = 1259
+	StartFinishSubMissionScNotify                      = 1261
+	FinishTalkMissionCsReq                             = 1262
+	SetMissionEventProgressScRsp                       = 1263
+	MissionGroupWarnScNotify                           = 1268
+	UpdateTrackMainMissionIdScRsp                      = 1279
+	GetMainMissionCustomValueScRsp                     = 1282
+	InterruptMissionEventScRsp                         = 1285
+	FinishTalkMissionScRsp                             = 1288
+	AcceptMainMissionCsReq                             = 1291
+	MissionEventRewardScNotify                         = 1295
+	FinishCosumeItemMissionCsReq                       = 1296
+	AcceptMainMissionScRsp                             = 1297
+	EnterAdventureCsReq                                = 1334
+	EnterAdventureScRsp                                = 1348
+	GetFarmStageGachaInfoCsReq                         = 1362
+	GetFarmStageGachaInfoScRsp                         = 1388
+	SceneCastSkillCsReq                                = 1402
+	SetGroupCustomSaveDataScRsp                        = 1403
+	SpringRecoverScRsp                                 = 1404
+	ReEnterLastElementStageCsReq                       = 1405
+	SceneCastSkillCostMpCsReq                          = 1406
+	StartCocoonStageCsReq                              = 1408
+	SceneCastSkillScRsp                                = 1409
+	EnterSceneByServerScNotify                         = 1410
+	SavePointsInfoNotify                               = 1411
+	SceneEntityTeleportCsReq                           = 1412
+	EnterSceneScRsp                                    = 1413
+	SyncServerSceneChangeNotify                        = 1414
+	SceneEntityTeleportScRsp                           = 1415
+	ReturnLastTownCsReq                                = 1416
+	DeleteSummonUnitCsReq                              = 1417
+	GetCurSceneInfoCsReq                               = 1419
+	UpdateFloorSavedValueNotify                        = 1420
+	GroupStateChangeScRsp                              = 1421
+	ReEnterLastElementStageScRsp                       = 1422
+	StartTimedCocoonStageScRsp                         = 1423
+	RecoverAllLineupCsReq                              = 1424
+	EntityBindPropScRsp                                = 1425
+	StartTimedCocoonStageCsReq                         = 1426
+	GetEnteredSceneCsReq                               = 1427
+	EnterSectionScRsp                                  = 1428
+	ReturnLastTownScRsp                                = 1430
+	GetEnteredSceneScRsp                               = 1431
+	RefreshTriggerByClientCsReq                        = 1432
+	SceneCastSkillCostMpScRsp                          = 1433
+	SceneEntityMoveCsReq                               = 1434
+	SetSpringRecoverConfigScRsp                        = 1435
+	StartTimedFarmElementCsReq                         = 1436
+	SpringRefreshScRsp                                 = 1437
+	RefreshTriggerByClientScRsp                        = 1438
+	LastSpringRefreshTimeNotify                        = 1439
+	GetUnlockTeleportCsReq                             = 1440
+	EnterSectionCsReq                                  = 1441
+	SpringRefreshCsReq                                 = 1442
+	GetCurSceneInfoScRsp                               = 1443
+	SpringRecoverCsReq                                 = 1444
+	SceneEntityMoveScNotify                            = 1445
+	GroupStateChangeScNotify                           = 1447
+	SceneEntityMoveScRsp                               = 1448
+	SetGroupCustomSaveDataCsReq                        = 1449
+	EnteredSceneChangeScNotify                         = 1450
+	SetSpringRecoverConfigCsReq                        = 1451
+	GameplayCounterRecoverCsReq                        = 1452
+	StartCocoonStageScRsp                              = 1454
+	ActivateFarmElementScRsp                           = 1455
+	SceneEnterStageScRsp                               = 1456
+	UnlockedAreaMapScNotify                            = 1457
+	GameplayCounterCountDownCsReq                      = 1458
+	SceneCastSkillMpUpdateScNotify                     = 1459
+	StartTimedFarmElementScRsp                         = 1460
+	InteractPropCsReq                                  = 1462
+	GameplayCounterCountDownScRsp                      = 1464
+	SetClientPausedScRsp                               = 1465
+	GetSpringRecoverDataCsReq                          = 1466
+	DeactivateFarmElementScRsp                         = 1467
+	SceneUpdatePositionVersionNotify                   = 1468
+	GetUnlockTeleportScRsp                             = 1469
+	GetSceneMapInfoCsReq                               = 1470
+	UpdateMechanismBarScNotify                         = 1471
+	EnterSceneCsReq                                    = 1472
+	GetSpringRecoverDataScRsp                          = 1473
+	RefreshTriggerByClientScNotify                     = 1474
+	HealPoolInfoNotify                                 = 1475
+	GroupStateChangeCsReq                              = 1476
+	SceneGroupRefreshScNotify                          = 1477
+	GameplayCounterUpdateScNotify                      = 1478
+	EntityBindPropCsReq                                = 1479
+	GameplayCounterRecoverScRsp                        = 1481
+	RecoverAllLineupScRsp                              = 1482
+	UnlockTeleportNotify                               = 1483
+	ScenePlaneEventScNotify                            = 1484
+	SceneEnterStageCsReq                               = 1485
+	DeleteSummonUnitScRsp                              = 1487
+	InteractPropScRsp                                  = 1488
+	DeactivateFarmElementCsReq                         = 1490
+	SetCurInteractEntityCsReq                          = 1491
+	ActivateFarmElementCsReq                           = 1492
+	SpringRecoverSingleAvatarCsReq                     = 1493
+	SyncEntityBuffChangeListScNotify                   = 1496
+	SetCurInteractEntityScRsp                          = 1497
+	SpringRecoverSingleAvatarScRsp                     = 1498
+	GetSceneMapInfoScRsp                               = 1499
+	SetClientPausedCsReq                               = 1500
+	TakeCityShopRewardCsReq                            = 1502
+	TakeCityShopRewardScRsp                            = 1509
+	CityShopInfoScNotify                               = 1519
+	GetShopListCsReq                                   = 1534
+	GetShopListScRsp                                   = 1548
+	BuyGoodsCsReq                                      = 1562
+	BuyGoodsScRsp                                      = 1588
+	UnlockTutorialCsReq                                = 1602
+	UnlockTutorialScRsp                                = 1609
+	UnlockTutorialGuideCsReq                           = 1619
+	FinishTutorialScRsp                                = 1629
+	GetTutorialCsReq                                   = 1634
+	UnlockTutorialGuideScRsp                           = 1643
+	FinishTutorialGuideCsReq                           = 1645
+	GetTutorialScRsp                                   = 1648
+	GetTutorialGuideCsReq                              = 1662
+	FinishTutorialGuideScRsp                           = 1668
+	FinishTutorialCsReq                                = 1686
+	GetTutorialGuideScRsp                              = 1688
+	LeaveChallengeCsReq                                = 1702
+	LeaveChallengeScRsp                                = 1709
+	ChallengeSettleNotify                              = 1719
+	GetCurChallengeCsReq                               = 1729
+	TakeChallengeRewardCsReq                           = 1733
+	GetChallengeCsReq                                  = 1734
+	GetChallengeGroupStatisticsScRsp                   = 1742
+	GetCurChallengeScRsp                               = 1745
+	GetChallengeScRsp                                  = 1748
+	TakeChallengeRewardScRsp                           = 1759
+	StartChallengeCsReq                                = 1762
+	ChallengeLineupNotify                              = 1768
+	StartChallengeScRsp                                = 1788
+	GetChallengeGroupStatisticsCsReq                   = 1795
+	EnhanceRogueBuffScRsp                              = 1801
+	EnterRogueCsReq                                    = 1802
+	FinishRogueDialogueGroupCsReq                      = 1804
+	SyncRogueSeasonFinishScNotify                      = 1808
+	EnterRogueScRsp                                    = 1809
+	SyncRogueAeonScNotify                              = 1810
+	SyncRogueExploreWinScNotify                        = 1811
+	SyncRogueDialogueEventDataScNotify                 = 1813
+	TakeRogueAeonLevelRewardScRsp                      = 1814
+	SelectRogueDialogueEventCsReq                      = 1815
+	TakeRogueScoreRewardCsReq                          = 1816
+	EnableRogueTalentScRsp                             = 1817
+	LeaveRogueCsReq                                    = 1819
+	SyncRogueAeonLevelUpRewardScNotify                 = 1820
+	QuitRogueScRsp                                     = 1824
+	EnterRogueMapRoomCsReq                             = 1825
+	GetRogueAeonInfoScRsp                              = 1827
+	TakeRogueScoreRewardScRsp                          = 1830
+	FinishAeonDialogueGroupCsReq                       = 1831
+	GetRogueTalentInfoCsReq                            = 1832
+	SyncRogueFinishScNotify                            = 1833
+	GetRogueInfoCsReq                                  = 1834
+	GetRogueDialogueEventDataCsReq                     = 1835
+	SyncRogueVirtualItemInfoScNotify                   = 1836
+	ReviveRogueAvatarCsReq                             = 1837
+	GetRogueTalentInfoScRsp                            = 1838
+	ReviveRogueAvatarScRsp                             = 1839
+	LeaveRogueScRsp                                    = 1843
+	GetRogueDialogueEventDataScRsp                     = 1844
+	GetRogueAeonInfoCsReq                              = 1847
+	GetRogueInfoScRsp                                  = 1848
+	ExchangeRogueRewardKeyScRsp                        = 1849
+	FinishAeonDialogueGroupScRsp                       = 1850
+	GetRogueBuffEnhanceInfoScRsp                       = 1856
+	GetRogueScoreRewardInfoCsReq                       = 1858
+	PickRogueAvatarCsReq                               = 1859
+	SyncRogueStatusScNotify                            = 1860
+	StartRogueCsReq                                    = 1862
+	EnhanceRogueBuffCsReq                              = 1863
+	GetRogueScoreRewardInfoScRsp                       = 1864
+	GetRogueInitialScoreCsReq                          = 1865
+	SyncRogueGetItemScNotify                           = 1870
+	ExchangeRogueRewardKeyCsReq                        = 1871
+	SelectRogueDialogueEventScRsp                      = 1872
+	EnableRogueTalentCsReq                             = 1874
+	FinishRogueDialogueGroupScRsp                      = 1875
+	SyncRoguePickAvatarInfoScNotify                    = 1880
+	SyncRogueRewardInfoScNotify                        = 1883
+	SyncRogueAreaUnlockScNotify                        = 1884
+	GetRogueBuffEnhanceInfoCsReq                       = 1885
+	StartRogueScRsp                                    = 1888
+	GetRogueInitialScoreScRsp                          = 1889
+	SyncRogueMapRoomScNotify                           = 1890
+	SyncRogueReviveInfoScNotify                        = 1891
+	OpenRogueChestCsReq                                = 1893
+	PickRogueAvatarScRsp                               = 1895
+	QuitRogueCsReq                                     = 1897
+	OpenRogueChestScRsp                                = 1898
+	TakeRogueAeonLevelRewardCsReq                      = 1899
+	EnterRogueMapRoomScRsp                             = 1900
+	GetGachaCeilingCsReq                               = 1902
+	GetGachaCeilingScRsp                               = 1909
+	ExchangeGachaCeilingCsReq                          = 1919
+	GetGachaInfoCsReq                                  = 1934
+	ExchangeGachaCeilingScRsp                          = 1943
+	GetGachaInfoScRsp                                  = 1948
+	DoGachaCsReq                                       = 1962
+	DoGachaScRsp                                       = 1988
+	GetFirstTalkNpcCsReq                               = 2102
+	FinishFirstTalkByPerformanceNpcScRsp               = 2106
+	GetFirstTalkNpcScRsp                               = 2109
+	FinishFirstTalkNpcCsReq                            = 2119
+	SelectInclinationTextScRsp                         = 2129
+	GetNpcTakenRewardCsReq                             = 2134
+	FinishFirstTalkNpcScRsp                            = 2143
+	GetFirstTalkByPerformanceNpcCsReq                  = 2145
+	GetNpcTakenRewardScRsp                             = 2148
+	TakeTalkRewardCsReq                                = 2162
+	GetFirstTalkByPerformanceNpcScRsp                  = 2168
+	SelectInclinationTextCsReq                         = 2186
+	TakeTalkRewardScRsp                                = 2188
+	FinishFirstTalkByPerformanceNpcCsReq               = 2196
+	RaidInfoNotify                                     = 2202
+	SetClientRaidTargetCountScRsp                      = 2206
+	GetChallengeRaidInfoCsReq                          = 2209
+	GetChallengeRaidInfoScRsp                          = 2219
+	ChallengeRaidNotify                                = 2229
+	GetSaveRaidCsReq                                   = 2233
+	StartRaidCsReq                                     = 2234
+	DelSaveRaidScNotify                                = 2237
+	RaidKickByServerScNotify                           = 2239
+	GetAllSaveRaidScRsp                                = 2242
+	TakeChallengeRaidRewardCsReq                       = 2243
+	GetRaidInfoCsReq                                   = 2245
+	StartRaidScRsp                                     = 2248
+	GetSaveRaidScRsp                                   = 2259
+	LeaveRaidCsReq                                     = 2262
+	GetRaidInfoScRsp                                   = 2268
+	TakeChallengeRaidRewardScRsp                       = 2286
+	LeaveRaidScRsp                                     = 2288
+	GetAllSaveRaidCsReq                                = 2295
+	SetClientRaidTargetCountCsReq                      = 2296
+	GetArchiveDataCsReq                                = 2334
+	GetArchiveDataScRsp                                = 2348
+	GetUpdatedArchiveDataCsReq                         = 2362
+	GetUpdatedArchiveDataScRsp                         = 2388
+	CancelExpeditionCsReq                              = 2502
+	TakeActivityExpeditionRewardCsReq                  = 2506
+	CancelExpeditionScRsp                              = 2509
+	TakeExpeditionRewardCsReq                          = 2519
+	AcceptActivityExpeditionCsReq                      = 2529
+	TakeActivityExpeditionRewardScRsp                  = 2533
+	GetExpeditionDataCsReq                             = 2534
+	TakeMultipleExpeditionRewardScRsp                  = 2537
+	TakeMultipleExpeditionRewardCsReq                  = 2542
+	TakeExpeditionRewardScRsp                          = 2543
+	AcceptActivityExpeditionScRsp                      = 2545
+	GetExpeditionDataScRsp                             = 2548
+	AcceptMultipleExpeditionCsReq                      = 2559
+	AcceptExpeditionCsReq                              = 2562
+	CancelActivityExpeditionCsReq                      = 2568
+	ExpeditionDataChangeScNotify                       = 2586
+	AcceptExpeditionScRsp                              = 2588
+	AcceptMultipleExpeditionScRsp                      = 2595
+	CancelActivityExpeditionScRsp                      = 2596
+	GetActivityScheduleConfigCsReq                     = 2602
+	StartTrialActivityScRsp                            = 2603
+	TrialActivityDataChangeScNotify                    = 2604
+	CurTrialActivityScNotify                           = 2605
+	GetActivityScheduleConfigScRsp                     = 2609
+	TakeMonsterResearchActivityRewardCsReq             = 2616
+	TakeMonsterResearchActivityRewardScRsp             = 2630
+	GetLoginActivityCsReq                              = 2634
+	GetTrialActivityDataCsReq                          = 2635
+	SubmitMonsterResearchActivityMaterialCsReq         = 2637
+	SubmitMonsterResearchActivityMaterialScRsp         = 2639
+	GetMonsterResearchActivityDataScRsp                = 2642
+	GetTrialActivityDataScRsp                          = 2644
+	LeaveTrialActivityScRsp                            = 2646
+	GetLoginActivityScRsp                              = 2648
+	StartTrialActivityCsReq                            = 2649
+	TakeLoginActivityRewardCsReq                       = 2662
+	TakeTrialActivityRewardScRsp                       = 2671
+	EnterTrialActivityStageCsReq                       = 2675
+	TakeLoginActivityRewardScRsp                       = 2688
+	EnterTrialActivityStageScRsp                       = 2693
+	LeaveTrialActivityCsReq                            = 2694
+	GetMonsterResearchActivityDataCsReq                = 2695
+	TakeTrialActivityRewardCsReq                       = 2698
+	FinishItemIdCsReq                                  = 2702
+	FinishItemIdScRsp                                  = 2709
+	FinishSectionIdCsReq                               = 2719
+	FinishPerformSectionIdScRsp                        = 2729
+	GetNpcMessageGroupCsReq                            = 2734
+	FinishSectionIdScRsp                               = 2743
+	GetNpcMessageGroupScRsp                            = 2748
+	GetNpcStatusCsReq                                  = 2762
+	FinishPerformSectionIdCsReq                        = 2786
+	GetNpcStatusScRsp                                  = 2788
+	SetDisplayAvatarCsReq                              = 2802
+	SetDisplayAvatarScRsp                              = 2809
+	SetIsDisplayAvatarInfoCsReq                        = 2819
+	SetSignatureCsReq                                  = 2829
+	GetPlayerBoardDataCsReq                            = 2834
+	SetIsDisplayAvatarInfoScRsp                        = 2843
+	SetSignatureScRsp                                  = 2845
+	GetPlayerBoardDataScRsp                            = 2848
+	SetHeadIconCsReq                                   = 2862
+	SetAssistAvatarCsReq                               = 2868
+	UnlockHeadIconScNotify                             = 2886
+	SetHeadIconScRsp                                   = 2888
+	SetAssistAvatarScRsp                               = 2896
+	DeleteBlacklistScRsp                               = 2901
+	GetFriendApplyListInfoCsReq                        = 2902
+	GetFriendDevelopmentInfoScRsp                      = 2903
+	GetFriendChallengeLineupScRsp                      = 2904
+	DeleteFriendScRsp                                  = 2906
+	GetAssistHistoryScRsp                              = 2908
+	GetFriendApplyListInfoScRsp                        = 2909
+	GetAssistHistoryCsReq                              = 2911
+	SetFriendRemarkNameCsReq                           = 2916
+	GetAssistListScRsp                                 = 2918
+	ApplyFriendCsReq                                   = 2919
+	GetCurAssistCsReq                                  = 2924
+	TakeAssistRewardScRsp                              = 2925
+	SearchPlayerScRsp                                  = 2928
+	HandleFriendCsReq                                  = 2929
+	SetFriendRemarkNameScRsp                           = 2930
+	SyncDeleteFriendScNotify                           = 2933
+	GetFriendListInfoCsReq                             = 2934
+	GetFriendAssistListScRsp                           = 2935
+	GetFriendRecommendListInfoCsReq                    = 2937
+	GetFriendRecommendListInfoScRsp                    = 2939
+	SearchPlayerCsReq                                  = 2941
+	SyncAddBlacklistScNotify                           = 2942
+	ApplyFriendScRsp                                   = 2943
+	GetFriendChallengeLineupCsReq                      = 2944
+	HandleFriendScRsp                                  = 2945
+	GetFriendListInfoScRsp                             = 2948
+	GetFriendDevelopmentInfoCsReq                      = 2949
+	GetFriendAssistListCsReq                           = 2951
+	NewAssistHistoryNotify                             = 2954
+	SetForbidOtherApplyFriendScRsp                     = 2955
+	ReportPlayerScRsp                                  = 2956
+	AddBlacklistCsReq                                  = 2959
+	GetAssistListCsReq                                 = 2961
+	GetPlayerDetailInfoCsReq                           = 2962
+	DeleteBlacklistCsReq                               = 2963
+	GetPlatformPlayerInfoCsReq                         = 2965
+	SetFriendMarkCsReq                                 = 2966
+	GetFriendLoginInfoScRsp                            = 2967
+	SyncHandleFriendScNotify                           = 2968
+	GetFriendBattleRecordDetailScRsp                   = 2971
+	SetFriendMarkScRsp                                 = 2973
+	GetFriendChallengeDetailCsReq                      = 2975
+	TakeAssistRewardCsReq                              = 2979
+	GetCurAssistScRsp                                  = 2982
+	ReportPlayerCsReq                                  = 2985
+	SyncApplyFriendScNotify                            = 2986
+	GetPlayerDetailInfoScRsp                           = 2988
+	GetPlatformPlayerInfoScRsp                         = 2989
+	GetFriendLoginInfoCsReq                            = 2990
+	SetAssistCsReq                                     = 2991
+	SetForbidOtherApplyFriendCsReq                     = 2992
+	GetFriendChallengeDetailScRsp                      = 2993
+	AddBlacklistScRsp                                  = 2995
+	DeleteFriendCsReq                                  = 2996
+	SetAssistScRsp                                     = 2997
+	GetFriendBattleRecordDetailCsReq                   = 2998
+	CurAssistChangedNotify                             = 3000
+	TakeBpRewardScRsp                                  = 3002
+	BuyBpLevelCsReq                                    = 3009
+	BuyBpLevelScRsp                                    = 3019
+	BattlePassInfoNotify                               = 3034
+	TakeAllRewardCsReq                                 = 3043
+	TakeAllRewardScRsp                                 = 3086
+	TakeBpRewardCsReq                                  = 3088
+	UnlockBackGroundMusicCsReq                         = 3102
+	UnlockBackGroundMusicScRsp                         = 3109
+	TrialBackGroundMusicCsReq                          = 3119
+	GetJukeboxDataCsReq                                = 3134
+	TrialBackGroundMusicScRsp                          = 3143
+	GetJukeboxDataScRsp                                = 3148
+	PlayBackGroundMusicCsReq                           = 3162
+	PlayBackGroundMusicScRsp                           = 3188
+	SharePunkLordMonsterCsReq                          = 3202
+	TakePunkLordPointRewardScRsp                       = 3206
+	SharePunkLordMonsterScRsp                          = 3209
+	TakeKilledPunkLordMonsterScoreScRsp                = 3218
+	SummonPunkLordMonsterCsReq                         = 3219
+	GetPunkLordBattleRecordScRsp                       = 3224
+	PunkLordMonsterKilledNotify                        = 3228
+	PunkLordMonsterInfoScNotify                        = 3233
+	GetPunkLordMonsterDataCsReq                        = 3234
+	PunkLordRaidTimeOutScNotify                        = 3237
+	SummonPunkLordMonsterScRsp                         = 3243
+	GetPunkLordMonsterDataScRsp                        = 3248
+	GetKilledPunkLordMonsterDataCsReq                  = 3256
+	GetPunkLordDataCsReq                               = 3259
+	TakeKilledPunkLordMonsterScoreCsReq                = 3261
+	StartPunkLordRaidCsReq                             = 3262
+	GetKilledPunkLordMonsterDataScRsp                  = 3263
+	PunkLordBattleResultScNotify                       = 3285
+	StartPunkLordRaidScRsp                             = 3288
+	PunkLordDataChangeNotify                           = 3291
+	GetPunkLordDataScRsp                               = 3295
+	TakePunkLordPointRewardCsReq                       = 3296
+	GetPunkLordBattleRecordCsReq                       = 3297
+	DailyActiveInfoNotify                              = 3302
+	TakeAllApRewardCsReq                               = 3309
+	TakeAllApRewardScRsp                               = 3319
+	TakeApRewardCsReq                                  = 3334
+	TakeApRewardScRsp                                  = 3348
+	GetDailyActiveInfoCsReq                            = 3362
+	GetDailyActiveInfoScRsp                            = 3388
+	GetRndOptionCsReq                                  = 3434
+	GetRndOptionScRsp                                  = 3448
+	DailyFirstMeetPamCsReq                             = 3462
+	DailyFirstMeetPamScRsp                             = 3488
+	GetReplayTokenCsReq                                = 3534
+	GetReplayTokenScRsp                                = 3548
+	GetPlayerReplayInfoCsReq                           = 3562
+	GetPlayerReplayInfoScRsp                           = 3588
+	EnterFightActivityStageScRsp                       = 3602
+	TakeFightActivityRewardCsReq                       = 3609
+	TakeFightActivityRewardScRsp                       = 3619
+	GetFightActivityDataCsReq                          = 3634
+	GetFightActivityDataScRsp                          = 3648
+	FightActivityDataChangeScNotify                    = 3662
+	EnterFightActivityStageCsReq                       = 3688
+	TrainRefreshTimeNotify                             = 3702
+	TrainVisitorRewardSendNotify                       = 3709
+	GetTrainVisitorRegisterCsReq                       = 3719
+	TakeTrainVisitorUntakenBehaviorRewardScRsp         = 3729
+	TrainVisitorBehaviorFinishCsReq                    = 3734
+	GetTrainVisitorRegisterScRsp                       = 3743
+	ShowNewSupplementVisitorCsReq                      = 3745
+	TrainVisitorBehaviorFinishScRsp                    = 3748
+	GetTrainVisitorBehaviorCsReq                       = 3762
+	ShowNewSupplementVisitorScRsp                      = 3768
+	TakeTrainVisitorUntakenBehaviorRewardCsReq         = 3786
+	GetTrainVisitorBehaviorScRsp                       = 3788
+	TextJoinBatchSaveCsReq                             = 3802
+	TextJoinBatchSaveScRsp                             = 3809
+	TextJoinSaveCsReq                                  = 3834
+	TextJoinSaveScRsp                                  = 3848
+	TextJoinQueryCsReq                                 = 3862
+	TextJoinQueryScRsp                                 = 3888
+	GetPrivateChatHistoryCsReq                         = 3902
+	BatchMarkChatEmojiScRsp                            = 3906
+	GetPrivateChatHistoryScRsp                         = 3909
+	GetChatFriendHistoryCsReq                          = 3919
+	GetChatEmojiListScRsp                              = 3929
+	GetLoginChatInfoCsReq                              = 3933
+	SendMsgCsReq                                       = 3934
+	GetChatFriendHistoryScRsp                          = 3943
+	MarkChatEmojiCsReq                                 = 3945
+	SendMsgScRsp                                       = 3948
+	GetLoginChatInfoScRsp                              = 3959
+	RevcMsgScNotify                                    = 3962
+	MarkChatEmojiScRsp                                 = 3968
+	GetChatEmojiListCsReq                              = 3986
+	PrivateMsgOfflineUsersScNotify                     = 3988
+	BatchMarkChatEmojiCsReq                            = 3996
+	AcceptedPamMissionExpireCsReq                      = 4034
+	AcceptedPamMissionExpireScRsp                      = 4048
+	SyncAcceptedPamMissionNotify                       = 4062
+	GetGunPlayDataScRsp                                = 4101
+	TakePictureCsReq                                   = 4102
+	TriggerVoiceScRsp                                  = 4106
+	TakePictureScRsp                                   = 4109
+	GetMovieRacingDataCsReq                            = 4116
+	UpdateGunPlayDataScRsp                             = 4128
+	CancelCacheNotifyScRsp                             = 4129
+	GetMovieRacingDataScRsp                            = 4130
+	SubmitOrigamiItemCsReq                             = 4133
+	ShareCsReq                                         = 4134
+	UpdateGunPlayDataCsReq                             = 4141
+	SecurityReportCsReq                                = 4145
+	ShareScRsp                                         = 4148
+	UpdateMovieRacingDataScRsp                         = 4156
+	SubmitOrigamiItemScRsp                             = 4159
+	GetShareDataCsReq                                  = 4162
+	GetGunPlayDataCsReq                                = 4163
+	SecurityReportScRsp                                = 4168
+	UpdateMovieRacingDataCsReq                         = 4185
+	CancelCacheNotifyCsReq                             = 4186
+	GetShareDataScRsp                                  = 4188
+	TriggerVoiceCsReq                                  = 4196
+	StartBoxingClubBattleCsReq                         = 4202
+	SetBoxingClubResonanceLineupScRsp                  = 4206
+	StartBoxingClubBattleScRsp                         = 4209
+	GiveUpBoxingClubChallengeCsReq                     = 4219
+	BoxingClubChallengeUpdateScNotify                  = 4229
+	ChooseBoxingClubStageOptionalBuffCsReq             = 4233
+	GetBoxingClubInfoCsReq                             = 4234
+	GiveUpBoxingClubChallengeScRsp                     = 4243
+	ChooseBoxingClubResonanceCsReq                     = 4245
+	GetBoxingClubInfoScRsp                             = 4248
+	ChooseBoxingClubStageOptionalBuffScRsp             = 4259
+	MatchBoxingClubOpponentCsReq                       = 4262
+	ChooseBoxingClubResonanceScRsp                     = 4268
+	BoxingClubRewardScNotify                           = 4286
+	MatchBoxingClubOpponentScRsp                       = 4288
+	SetBoxingClubResonanceLineupCsReq                  = 4296
+	MuseumTargetMissionFinishNotify                    = 4301
+	SetStuffToAreaCsReq                                = 4302
+	UpgradeAreaScRsp                                   = 4306
+	SetStuffToAreaScRsp                                = 4309
+	MuseumRandomEventQueryScRsp                        = 4316
+	RemoveStuffFromAreaCsReq                           = 4319
+	MuseumTakeCollectRewardCsReq                       = 4328
+	GetExhibitScNotify                                 = 4329
+	MuseumRandomEventSelectCsReq                       = 4330
+	UpgradeAreaStatCsReq                               = 4333
+	GetMuseumInfoCsReq                                 = 4334
+	MuseumRandomEventStartScNotify                     = 4337
+	MuseumRandomEventQueryCsReq                        = 4339
+	MuseumTargetRewardNotify                           = 4341
+	MuseumFundsChangedScNotify                         = 4342
+	RemoveStuffFromAreaScRsp                           = 4343
+	FinishCurTurnCsReq                                 = 4345
+	GetMuseumInfoScRsp                                 = 4348
+	MuseumDispatchFinishedScNotify                     = 4356
+	UpgradeAreaStatScRsp                               = 4359
+	MuseumTakeCollectRewardScRsp                       = 4361
+	BuyNpcStuffCsReq                                   = 4362
+	MuseumTargetStartNotify                            = 4363
+	FinishCurTurnScRsp                                 = 4368
+	MuseumRandomEventSelectScRsp                       = 4385
+	GetStuffScNotify                                   = 4386
+	BuyNpcStuffScRsp                                   = 4388
+	MuseumInfoChangedScNotify                          = 4395
+	UpgradeAreaCsReq                                   = 4396
+	EnterTreasureDungeonScRsp                          = 4406
+	UseTreasureDungeonItemCsReq                        = 4416
+	UseTreasureDungeonItemScRsp                        = 4430
+	OpenTreasureDungeonGridCsReq                       = 4433
+	TreasureDungeonDataScNotify                        = 4434
+	InteractTreasureDungeonGridCsReq                   = 4437
+	InteractTreasureDungeonGridScRsp                   = 4439
+	FightTreasureDungeonMonsterScRsp                   = 4442
+	GetTreasureDungeonActivityDataCsReq                = 4445
+	TreasureDungeonFinishScNotify                      = 4448
+	QuitTreasureDungeonScRsp                           = 4456
+	OpenTreasureDungeonGridScRsp                       = 4459
+	GetTreasureDungeonActivityDataScRsp                = 4468
+	QuitTreasureDungeonCsReq                           = 4485
+	FightTreasureDungeonMonsterCsReq                   = 4495
+	EnterTreasureDungeonCsReq                          = 4496
+	PlayerReturnTakePointRewardCsReq                   = 4502
+	PlayerReturnTakePointRewardScRsp                   = 4509
+	PlayerReturnTakeRewardCsReq                        = 4519
+	PlayerReturnInfoQueryScRsp                         = 4529
+	PlayerReturnStartScNotify                          = 4534
+	PlayerReturnTakeRewardScRsp                        = 4543
+	PlayerReturnForceFinishScNotify                    = 4545
+	PlayerReturnSignCsReq                              = 4548
+	PlayerReturnSignScRsp                              = 4562
+	PlayerReturnInfoQueryCsReq                         = 4586
+	PlayerReturnPointChangeScNotify                    = 4588
+	GetPlayerReturnMultiDropInfoScRsp                  = 4602
+	MultipleDropInfoNotify                             = 4609
+	GetMultipleDropInfoCsReq                           = 4634
+	GetMultipleDropInfoScRsp                           = 4648
+	MultipleDropInfoScNotify                           = 4662
+	GetPlayerReturnMultiDropInfoCsReq                  = 4688
+	SaveLogisticsCsReq                                 = 4701
+	AlleyPlacingGameScRsp                              = 4706
+	AlleyTakeEventRewardScRsp                          = 4708
+	AlleyTakeEventRewardCsReq                          = 4711
+	PrestigeLevelUpCsReq                               = 4716
+	GetSaveLogisticsMapCsReq                           = 4718
+	StartAlleyEventCsReq                               = 4719
+	AlleyGuaranteedFundsCsReq                          = 4724
+	LogisticsScoreRewardSyncInfoScNotify               = 4725
+	LogisticsInfoScNotify                              = 4728
+	AlleyEventEffectNotify                             = 4729
+	PrestigeLevelUpScRsp                               = 4730
+	GetAlleyInfoCsReq                                  = 4734
+	AlleyOrderChangedScNotify                          = 4737
+	SaveLogisticsScRsp                                 = 4741
+	RefreshAlleyOrderScRsp                             = 4742
+	StartAlleyEventScRsp                               = 4743
+	TakePrestigeRewardCsReq                            = 4745
+	GetAlleyInfoScRsp                                  = 4748
+	LogisticsDetonateStarSkiffCsReq                    = 4754
+	AlleyShopLevelScNotify                             = 4756
+	AlleyShipmentEventEffectsScNotify                  = 4761
+	LogisticsGameCsReq                                 = 4762
+	AlleyShipUnlockScNotify                            = 4763
+	TakePrestigeRewardScRsp                            = 4768
+	LogisticsDetonateStarSkiffScRsp                    = 4779
+	AlleyGuaranteedFundsScRsp                          = 4782
+	AlleyFundsScNotify                                 = 4785
+	AlleyEventChangeNotify                             = 4786
+	LogisticsGameScRsp                                 = 4788
+	GetSaveLogisticsMapScRsp                           = 4791
+	RefreshAlleyOrderCsReq                             = 4795
+	AlleyPlacingGameCsReq                              = 4796
+	AlleyShipUsedCountScNotify                         = 4797
+	GetAetherDivideChallengeInfoCsReq                  = 4801
+	StartAetherDivideSceneBattleCsReq                  = 4802
+	SetAetherDivideLineUpScRsp                         = 4806
+	AetherDivideTakeChallengeRewardCsReq               = 4808
+	StartAetherDivideSceneBattleScRsp                  = 4809
+	AetherDivideRefreshEndlessScNotify                 = 4811
+	StartAetherDivideStageBattleCsReq                  = 4816
+	AetherDivideSkillItemScNotify                      = 4818
+	StartAetherDivideChallengeBattleCsReq              = 4819
+	AetherDivideRefreshEndlessCsReq                    = 4824
+	AetherDivideFinishChallengeScNotify                = 4828
+	StartAetherDivideStageBattleScRsp                  = 4830
+	EquipAetherDividePassiveSkillCsReq                 = 4833
+	EnterAetherDivideSceneCsReq                        = 4834
+	SwitchAetherDivideLineUpSlotCsReq                  = 4837
+	SwitchAetherDivideLineUpSlotScRsp                  = 4839
+	GetAetherDivideChallengeInfoScRsp                  = 4841
+	ClearAetherDividePassiveSkillScRsp                 = 4842
+	StartAetherDivideChallengeBattleScRsp              = 4843
+	GetAetherDivideInfoCsReq                           = 4845
+	EnterAetherDivideSceneScRsp                        = 4848
+	AetherDivideTakeChallengeRewardScRsp               = 4854
+	AetherDivideSpiritExpUpScRsp                       = 4856
+	EquipAetherDividePassiveSkillScRsp                 = 4859
+	AetherDivideTainerInfoScNotify                     = 4861
+	LeaveAetherDivideSceneCsReq                        = 4862
+	AetherDivideSpiritInfoScNotify                     = 4863
+	GetAetherDivideInfoScRsp                           = 4868
+	AetherDivideRefreshEndlessScRsp                    = 4882
+	AetherDivideSpiritExpUpCsReq                       = 4885
+	LeaveAetherDivideSceneScRsp                        = 4888
+	ClearAetherDividePassiveSkillCsReq                 = 4895
+	SetAetherDivideLineUpCsReq                         = 4896
+	AetherDivideLineupScNotify                         = 4897
+	EnterFantasticStoryActivityStageScRsp              = 4902
+	FantasticStoryActivityBattleEndScNotify            = 4909
+	GetFantasticStoryActivityDataCsReq                 = 4934
+	GetFantasticStoryActivityDataScRsp                 = 4948
+	FinishChapterScNotify                              = 4962
+	EnterFantasticStoryActivityStageCsReq              = 4988
+	UnlockChatBubbleScNotify                           = 5102
+	SelectPhoneThemeCsReq                              = 5109
+	SelectPhoneThemeScRsp                              = 5119
+	GetPhoneDataCsReq                                  = 5134
+	UnlockPhoneThemeScNotify                           = 5143
+	GetPhoneDataScRsp                                  = 5148
+	SelectChatBubbleCsReq                              = 5162
+	SelectChatBubbleScRsp                              = 5188
+	RogueModifierSelectCellScRsp                       = 5302
+	RogueModifierStageStartNotify                      = 5329
+	RogueModifierUpdateNotify                          = 5343
+	RogueModifierAddNotify                             = 5362
+	RogueModifierDelNotify                             = 5386
+	RogueModifierSelectCellCsReq                       = 5388
+	FinishChessRogueSubStoryCsReq                      = 5405
+	FinishChessRogueNousSubStoryCsReq                  = 5411
+	ChessRogueQuitScRsp                                = 5412
+	ChessRogueNousDiceSurfaceUnlockNotify              = 5413
+	GetChessRogueNousStoryInfoCsReq                    = 5415
+	ChessRogueSelectBpScRsp                            = 5416
+	ChessRogueUpdateReviveInfoScNotify                 = 5419
+	SyncChessRogueNousSubStoryScNotify                 = 5420
+	ChessRogueFinishCurRoomNotify                      = 5422
+	ChessRogueConfirmRollCsReq                         = 5424
+	ChessRogueNousEnableRogueTalentScRsp               = 5425
+	GetChessRogueBuffEnhanceInfoScRsp                  = 5426
+	ChessRogueNousGetRogueTalentInfoScRsp              = 5429
+	ChessRogueGoAheadScRsp                             = 5431
+	ChessRogueUpdateLevelBaseInfoScNotify              = 5432
+	ChessRogueSelectCellCsReq                          = 5434
+	ChessRogueEnterNextLayerScRsp                      = 5436
+	FinishChessRogueSubStoryScRsp                      = 5437
+	ChessRogueNousGetRogueTalentInfoCsReq              = 5448
+	ChessRoguePickAvatarScRsp                          = 5449
+	ChessRogueSelectCellScRsp                          = 5450
+	ChessRogueNousDiceUpdateNotify                     = 5452
+	SelectChessRogueNousSubStoryScRsp                  = 5454
+	ChessRogueEnterCsReq                               = 5456
+	ChessRogueGoAheadCsReq                             = 5458
+	ChessRogueQueryCsReq                               = 5459
+	ChessRogueGiveUpCsReq                              = 5463
+	ChessRogueSkipTeachingLevelCsReq                   = 5465
+	ChessRogueQueryAeonDimensionsScRsp                 = 5466
+	EnhanceChessRogueBuffScRsp                         = 5468
+	ChessRogueUpdateActionPointScNotify                = 5469
+	ChessRogueReviveAvatarScRsp                        = 5470
+	ChessRogueStartScRsp                               = 5471
+	ChessRogueLeaveCsReq                               = 5473
+	ChessRogueSkipTeachingLevelScRsp                   = 5474
+	GetChessRogueStoryAeonTalkInfoCsReq                = 5477
+	ChessRogueUpdateMoneyInfoScNotify                  = 5480
+	ChessRogueNousEditDiceScRsp                        = 5482
+	SelectChessRogueNousSubStoryCsReq                  = 5484
+	SyncChessRogueNousMainStoryScNotify                = 5487
+	ChessRogueReRollDiceCsReq                          = 5490
+	ChessRogueQueryBpCsReq                             = 5495
+	EnterChessRogueAeonRoomScRsp                       = 5496
+	ChessRogueUpdateAeonModifierValueScNotify          = 5498
+	ChessRogueReRollDiceScRsp                          = 5500
+	FinishChessRogueNousSubStoryScRsp                  = 5501
+	ChessRogueUpdateBoardScNotify                      = 5502
+	ChessRogueLayerAccountInfoNotify                   = 5507
+	ChessRogueCellUpdateNotify                         = 5508
+	ChessRogueGiveUpScRsp                              = 5511
+	ChessRoguePickAvatarCsReq                          = 5517
+	ChessRogueEnterCellCsReq                           = 5518
+	GetChessRogueBuffEnhanceInfoCsReq                  = 5522
+	ChessRogueConfirmRollScRsp                         = 5523
+	ChessRogueUpdateDiceInfoScNotify                   = 5526
+	GetChessRogueStoryInfoScRsp                        = 5527
+	ChessRogueQueryAeonDimensionsCsReq                 = 5529
+	ChessRogueLeaveScRsp                               = 5531
+	GetChessRogueStoryInfoCsReq                        = 5532
+	ChessRogueRollDiceCsReq                            = 5535
+	SelectChessRogueSubStoryScRsp                      = 5536
+	SyncChessRogueNousValueScNotify                    = 5537
+	ChessRogueReviveAvatarCsReq                        = 5539
+	ChessRogueEnterCellScRsp                           = 5540
+	ChessRogueUpdateDicePassiveAccumulateValueScNotify = 5542
+	ChessRogueEnterNextLayerCsReq                      = 5543
+	ChessRogueCheatRollCsReq                           = 5544
+	ChessRogueRollDiceScRsp                            = 5546
+	ChessRogueSelectBpCsReq                            = 5549
+	ChessRogueNousEditDiceCsReq                        = 5550
+	ChessRogueChangeyAeonDimensionNotify               = 5557
+	ChessRogueGiveUpRollCsReq                          = 5558
+	ChessRogueEnterScRsp                               = 5559
+	GetChessRogueNousStoryInfoScRsp                    = 5561
+	ChessRogueQuestFinishNotify                        = 5565
+	ChessRogueNousEnableRogueTalentCsReq               = 5570
+	SyncChessRogueMainStoryFinishScNotify              = 5573
+	ChessRogueQuitCsReq                                = 5575
+	ChessRogueGiveUpRollScRsp                          = 5576
+	ChessRogueUpdateAllowedSelectCellScNotify          = 5577
+	GetChessRogueStoryAeonTalkInfoScRsp                = 5580
+	ChessRogueUpdateUnlockLevelScNotify                = 5582
+	ChessRogueMoveCellNotify                           = 5586
+	EnterChessRogueAeonRoomCsReq                       = 5589
+	EnhanceChessRogueBuffCsReq                         = 5592
+	ChessRogueStartCsReq                               = 5596
+	ChessRogueQueryScRsp                               = 5597
+	ChessRogueQueryBpScRsp                             = 5598
+	ChessRogueCheatRollScRsp                           = 5599
+	SelectChessRogueSubStoryCsReq                      = 5600
+	StopRogueAdventureRoomScRsp                        = 5601
+	GetRogueShopMiracleInfoScRsp                       = 5602
+	HandleRogueCommonPendingActionCsReq                = 5604
+	GetRogueAdventureRoomInfoCsReq                     = 5606
+	GetRogueShopBuffInfoCsReq                          = 5609
+	GetEnhanceCommonRogueBuffInfoCsReq                 = 5616
+	GetRogueShopBuffInfoScRsp                          = 5619
+	SyncRogueHandbookDataUpdateScNotify                = 5625
+	BuyRogueShopBuffCsReq                              = 5629
+	GetEnhanceCommonRogueBuffInfoScRsp                 = 5630
+	GetRogueAdventureRoomInfoScRsp                     = 5633
+	SyncRogueAdventureRoomInfoScNotify                 = 5634
+	ExchangeRogueBuffWithMiracleCsReq                  = 5637
+	ExchangeRogueBuffWithMiracleScRsp                  = 5639
+	BuyRogueShopMiracleCsReq                           = 5643
+	BuyRogueShopBuffScRsp                              = 5645
+	PrepareRogueAdventureRoomCsReq                     = 5648
+	GetRogueHandbookDataCsReq                          = 5654
+	UpdateRogueAdventureRoomScoreCsReq                 = 5655
+	EnhanceCommonRogueBuffScRsp                        = 5656
+	PrepareRogueAdventureRoomScRsp                     = 5662
+	StopRogueAdventureRoomCsReq                        = 5663
+	TakeRogueMiracleHandbookRewardScRsp                = 5665
+	UpdateRogueAdventureRoomScoreScRsp                 = 5666
+	SyncRogueCommonActionResultScNotify                = 5667
+	RogueNpcDisappearCsReq                             = 5668
+	CommonRogueUpdateScNotify                          = 5671
+	SyncRogueCommonVirtualItemInfoScNotify             = 5673
+	HandleRogueCommonPendingActionScRsp                = 5675
+	GetRogueHandbookDataScRsp                          = 5679
+	EnhanceCommonRogueBuffCsReq                        = 5685
+	BuyRogueShopMiracleScRsp                           = 5686
+	GetRogueShopMiracleInfoCsReq                       = 5688
+	TakeRogueEventHandbookRewardCsReq                  = 5689
+	TakeRogueEventHandbookRewardScRsp                  = 5690
+	SyncRogueCommonPendingActionScNotify               = 5692
+	CommonRogueQueryCsReq                              = 5693
+	RogueNpcDisappearScRsp                             = 5696
+	CommonRogueQueryScRsp                              = 5698
+	TakeRogueMiracleHandbookRewardCsReq                = 5700
+	StartBattleCollegeScRsp                            = 5702
+	GetBattleCollegeDataCsReq                          = 5734
+	GetBattleCollegeDataScRsp                          = 5748
+	BattleCollegeDataChangeScNotify                    = 5762
+	StartBattleCollegeCsReq                            = 5788
+	HeliobusSnsPostCsReq                               = 5802
+	HeliobusUpgradeLevelScRsp                          = 5806
+	HeliobusSnsPostScRsp                               = 5809
+	HeliobusEnterBattleScRsp                           = 5816
+	HeliobusSnsLikeCsReq                               = 5819
+	HeliobusSnsCommentScRsp                            = 5829
+	HeliobusStartRaidCsReq                             = 5830
+	HeliobusUnlockSkillScNotify                        = 5833
+	HeliobusActivityDataCsReq                          = 5834
+	HeliobusEnterBattleCsReq                           = 5839
+	HeliobusSnsLikeScRsp                               = 5843
+	HeliobusSnsUpdateScNotify                          = 5845
+	HeliobusActivityDataScRsp                          = 5848
+	HeliobusChallengeUpdateScNotify                    = 5856
+	HeliobusSelectSkillCsReq                           = 5859
+	HeliobusSnsReadCsReq                               = 5862
+	HeliobusLineupUpdateScNotify                       = 5863
+	HeliobusInfoChangedScNotify                        = 5868
+	HeliobusStartRaidScRsp                             = 5885
+	HeliobusSnsCommentCsReq                            = 5886
+	HeliobusSnsReadScRsp                               = 5888
+	HeliobusSelectSkillScRsp                           = 5895
+	HeliobusUpgradeLevelCsReq                          = 5896
+	GetSingleRedDotParamGroupCsReq                     = 5902
+	GetSingleRedDotParamGroupScRsp                     = 5909
+	GetAllRedDotDataCsReq                              = 5934
+	GetAllRedDotDataScRsp                              = 5948
+	UpdateRedDotDataCsReq                              = 5962
+	UpdateRedDotDataScRsp                              = 5988
+	RogueEndlessActivityBattleEndScNotify              = 6002
+	TakeRogueEndlessActivityPointRewardCsReq           = 6009
+	TakeRogueEndlessActivityPointRewardScRsp           = 6019
+	GetRogueEndlessActivityDataCsReq                   = 6034
+	TakeRogueEndlessActivityAllBonusRewardCsReq        = 6043
+	GetRogueEndlessActivityDataScRsp                   = 6048
+	EnterRogueEndlessActivityStageCsReq                = 6062
+	TakeRogueEndlessActivityAllBonusRewardScRsp        = 6086
+	EnterRogueEndlessActivityStageScRsp                = 6088
+	UpdateServerPrefsDataCsReq                         = 6102
+	UpdateServerPrefsDataScRsp                         = 6109
+	GetAllServerPrefsDataCsReq                         = 6134
+	GetAllServerPrefsDataScRsp                         = 6148
+	GetServerPrefsDataCsReq                            = 6162
+	GetServerPrefsDataScRsp                            = 6188
+	ChangeStoryLineScRsp                               = 6202
+	ChangeStoryLineFinishScNotify                      = 6209
+	StoryLineTrialAvatarChangeScNotify                 = 6219
+	GetStoryLineInfoCsReq                              = 6234
+	GetStoryLineInfoScRsp                              = 6248
+	StoryLineInfoScNotify                              = 6262
+	ChangeStoryLineCsReq                               = 6288
+	SubmitEmotionItemCsReq                             = 6302
+	SubmitEmotionItemScRsp                             = 6309
+	FinishEmotionDialoguePerformanceCsReq              = 6319
+	HeartDialTraceScriptCsReq                          = 6329
+	GetHeartDialInfoCsReq                              = 6334
+	FinishEmotionDialoguePerformanceScRsp              = 6343
+	HeartDialTraceScriptScRsp                          = 6345
+	GetHeartDialInfoScRsp                              = 6348
+	ChangeScriptEmotionCsReq                           = 6362
+	HeartDialScriptChangeScNotify                      = 6386
+	ChangeScriptEmotionScRsp                           = 6388
+	TravelBrochureSelectMessageCsReq                   = 6402
+	TravelBrochureSelectMessageScRsp                   = 6409
+	TravelBrochureApplyPasterListCsReq                 = 6416
+	TravelBrochureApplyPasterCsReq                     = 6419
+	TravelBrochureRemovePasterScRsp                    = 6429
+	TravelBrochureApplyPasterListScRsp                 = 6430
+	TravelBrochureSetCustomValueCsReq                  = 6433
+	TravelBrochureGetDataCsReq                         = 6434
+	TravelBrochurePageResetCsReq                       = 6437
+	TravelBrochurePageResetScRsp                       = 6439
+	TravelBrochureSetPageDescStatusScRsp               = 6442
+	TravelBrochureApplyPasterScRsp                     = 6443
+	TravelBrochureUpdatePasterPosCsReq                 = 6445
+	TravelBrochureGetDataScRsp                         = 6448
+	TravelBrochureSetCustomValueScRsp                  = 6459
+	TravelBrochurePageUnlockScNotify                   = 6462
+	TravelBrochureUpdatePasterPosScRsp                 = 6468
+	TravelBrochureRemovePasterCsReq                    = 6486
+	TravelBrochureSetPageDescStatusCsReq               = 6495
+	TravelBrochureGetPasterScNotify                    = 6496
+	RestoreWolfBroGameArchiveCsReq                     = 6502
+	WolfBroGamePickupBulletCsReq                       = 6506
+	RestoreWolfBroGameArchiveScRsp                     = 6509
+	QuitWolfBroGameCsReq                               = 6519
+	GetWolfBroGameDataScRsp                            = 6529
+	WolfBroGamePickupBulletScRsp                       = 6533
+	StartWolfBroGameCsReq                              = 6534
+	WolfBroGameExplodeMonsterScRsp                     = 6537
+	WolfBroGameExplodeMonsterCsReq                     = 6542
+	QuitWolfBroGameScRsp                               = 6543
+	WolfBroGameDataChangeScNotify                      = 6545
+	StartWolfBroGameScRsp                              = 6548
+	WolfBroGameActivateBulletCsReq                     = 6559
+	ArchiveWolfBroGameCsReq                            = 6562
+	WolfBroGameUseBulletCsReq                          = 6568
+	GetWolfBroGameDataCsReq                            = 6586
+	ArchiveWolfBroGameScRsp                            = 6588
+	WolfBroGameActivateBulletScRsp                     = 6595
+	WolfBroGameUseBulletScRsp                          = 6596
+	StrongChallengeActivityBattleEndScNotify           = 6602
+	GetStrongChallengeActivityDataCsReq                = 6634
+	GetStrongChallengeActivityDataScRsp                = 6648
+	EnterStrongChallengeActivityStageCsReq             = 6662
+	EnterStrongChallengeActivityStageScRsp             = 6688
+	SpaceZooMutateCsReq                                = 6702
+	SpaceZooTakeCsReq                                  = 6706
+	SpaceZooMutateScRsp                                = 6709
+	SpaceZooOpCatteryCsReq                             = 6719
+	SpaceZooDeleteCatScRsp                             = 6729
+	SpaceZooTakeScRsp                                  = 6733
+	SpaceZooDataCsReq                                  = 6734
+	SpaceZooOpCatteryScRsp                             = 6743
+	SpaceZooCatUpdateNotify                            = 6745
+	SpaceZooDataScRsp                                  = 6748
+	SpaceZooBornCsReq                                  = 6762
+	SpaceZooExchangeItemCsReq                          = 6768
+	SpaceZooDeleteCatCsReq                             = 6786
+	SpaceZooBornScRsp                                  = 6788
+	SpaceZooExchangeItemScRsp                          = 6796
+	DeployRotaterCsReq                                 = 6802
+	ResetMapRotationRegionScRsp                        = 6806
+	DeployRotaterScRsp                                 = 6809
+	RotateMapCsReq                                     = 6819
+	LeaveMapRotationRegionScRsp                        = 6829
+	LeaveMapRotationRegionScNotify                     = 6833
+	EnterMapRotationRegionCsReq                        = 6834
+	RemoveRotaterScRsp                                 = 6837
+	UpdateRotaterScNotify                              = 6839
+	RemoveRotaterCsReq                                 = 6842
+	RotateMapScRsp                                     = 6843
+	GetMapRotationDataCsReq                            = 6845
+	EnterMapRotationRegionScRsp                        = 6848
+	UpdateEnergyScNotify                               = 6859
+	InteractChargerCsReq                               = 6862
+	GetMapRotationDataScRsp                            = 6868
+	LeaveMapRotationRegionCsReq                        = 6886
+	InteractChargerScRsp                               = 6888
+	UpdateMapRotationDataScNotify                      = 6895
+	ResetMapRotationRegionCsReq                        = 6896
+	GetRollShopInfoCsReq                               = 6901
+	DoGachaInRollShopCsReq                             = 6913
+	DoGachaInRollShopScRsp                             = 6917
+	GetRollShopInfoScRsp                               = 6918
+	TakeRollShopRewardScRsp                            = 6919
+	TakeRollShopRewardCsReq                            = 6920
+	GetOfferingInfoCsReq                               = 6921
+	SubmitOfferingItemCsReq                            = 6933
+	SubmitOfferingItemScRsp                            = 6937
+	GetOfferingInfoScRsp                               = 6938
+	TakeOfferingRewardScRsp                            = 6939
+	TakeOfferingRewardCsReq                            = 6940
+	RaidCollectionDataCsReq                            = 6941
+	RaidCollectionDataScNotify                         = 6953
+	RaidCollectionDataScRsp                            = 6958
+	GetTelevisionActivityDataCsReq                     = 6961
+	TelevisionActivityDataChangeScNotify               = 6973
+	EnterTelevisionActivityStageCsReq                  = 6977
+	GetTelevisionActivityDataScRsp                     = 6978
+	TelevisionActivityBattleEndScNotify                = 6979
+	EnterTelevisionActivityStageScRsp                  = 6980
+	GetDrinkMakerDataCsReq                             = 6981
+	MakeMissionDrinkCsReq                              = 6982
+	DrinkMakerUpdateTipsNotify                         = 6983
+	DrinkMakerDayEndScNotify                           = 6984
+	DrinkMakerChallengeCsReq                           = 6985
+	DrinkMakerChallengeScRsp                           = 6990
+	MakeDrinkCsReq                                     = 6993
+	MakeMissionDrinkScRsp                              = 6996
+	MakeDrinkScRsp                                     = 6997
+	GetDrinkMakerDataScRsp                             = 6998
+	EndDrinkMakerSequenceScRsp                         = 6999
+	EndDrinkMakerSequenceCsReq                         = 7000
+	MonopolyGiveUpCurContentScRsp                      = 7001
+	MonopolyEventSelectFriendCsReq                     = 7003
+	GetMonopolyFriendRankingListScRsp                  = 7004
+	GetSocialEventServerCacheCsReq                     = 7005
+	DailyFirstEnterMonopolyActivityScRsp               = 7006
+	MonopolyGetRafflePoolInfoCsReq                     = 7007
+	MonopolyGameBingoFlipCardScRsp                     = 7008
+	MonopolyRollDiceCsReq                              = 7009
+	MonopolyGetRaffleTicketScRsp                       = 7010
+	MonopolyGameBingoFlipCardCsReq                     = 7011
+	DeleteSocialEventServerCacheCsReq                  = 7012
+	MonopolyGetRaffleTicketCsReq                       = 7013
+	MonopolyScrachRaffleTicketScRsp                    = 7014
+	DeleteSocialEventServerCacheScRsp                  = 7015
+	MonopolyBuyGoodsCsReq                              = 7016
+	MonopolyGameRaiseRatioCsReq                        = 7018
+	MonopolyRollDiceScRsp                              = 7019
+	MonopolyGetRafflePoolInfoScRsp                     = 7020
+	GetMonopolyDailyReportScRsp                        = 7021
+	GetSocialEventServerCacheScRsp                     = 7022
+	MonopolyGameGachaCsReq                             = 7024
+	MonopolyGameCreateScNotify                         = 7025
+	MonopolyClickCellScRsp                             = 7027
+	MonopolyCheatDiceScRsp                             = 7028
+	MonopolySelectOptionCsReq                          = 7029
+	MonopolyBuyGoodsScRsp                              = 7030
+	MonopolyGetDailyInitItemCsReq                      = 7031
+	MonopolyConditionUpdateScNotify                    = 7032
+	MonopolyRollRandomCsReq                            = 7033
+	GetMonopolyInfoCsReq                               = 7034
+	MonopolyDailySettleScNotify                        = 7035
+	MonopolyConfirmRandomCsReq                         = 7037
+	MonopolyClickMbtiReportCsReq                       = 7038
+	MonopolyConfirmRandomScRsp                         = 7039
+	MonopolyGetRegionProgressCsReq                     = 7040
+	MonopolyCheatDiceCsReq                             = 7041
+	MonopolyReRollRandomScRsp                          = 7042
+	MonopolyMoveCsReq                                  = 7043
+	GetMonopolyFriendRankingListCsReq                  = 7044
+	MonopolySelectOptionScRsp                          = 7045
+	MonopolySocialEventEffectScNotify                  = 7046
+	MonopolyClickCellCsReq                             = 7047
+	GetMonopolyInfoScRsp                               = 7048
+	GetMbtiReportScRsp                                 = 7049
+	MonopolyGetDailyInitItemScRsp                      = 7050
+	GetMonopolyMbtiReportRewardCsReq                   = 7052
+	MonopolyAcceptQuizCsReq                            = 7054
+	MonopolyUpgradeAssetScRsp                          = 7056
+	MonopolyTakePhaseRewardCsReq                       = 7058
+	MonopolyRollRandomScRsp                            = 7059
+	MonopolyContentUpdateScNotify                      = 7061
+	MonopolyActionResultScNotify                       = 7062
+	MonopolyGiveUpCurContentCsReq                      = 7063
+	MonopolyTakePhaseRewardScRsp                       = 7064
+	MonopolyGuessChooseScRsp                           = 7065
+	MonopolyGuessDrawScNotify                          = 7067
+	MonopolyGetRegionProgressScRsp                     = 7069
+	MonopolyTakeRaffleTicketRewardScRsp                = 7070
+	GetMbtiReportCsReq                                 = 7071
+	MonopolyClickMbtiReportScRsp                       = 7074
+	MonopolyLikeCsReq                                  = 7075
+	GetMonopolyDailyReportCsReq                        = 7076
+	MonopolySttUpdateScNotify                          = 7077
+	MonopolyEventLoadUpdateScNotify                    = 7078
+	MonopolyAcceptQuizScRsp                            = 7079
+	GetMonopolyMbtiReportRewardScRsp                   = 7081
+	MonopolyGameGachaScRsp                             = 7082
+	MonopolyTakeRaffleTicketRewardCsReq                = 7084
+	MonopolyUpgradeAssetCsReq                          = 7085
+	MonopolyMoveScRsp                                  = 7086
+	MonopolyCellUpdateNotify                           = 7088
+	MonopolyGuessBuyInformationCsReq                   = 7089
+	MonopolyGuessBuyInformationScRsp                   = 7090
+	MonopolyGameRaiseRatioScRsp                        = 7091
+	MonopolyQuizDurationChangeScNotify                 = 7092
+	MonopolyLikeScRsp                                  = 7093
+	MonopolyEventSelectFriendScRsp                     = 7094
+	MonopolyReRollRandomCsReq                          = 7095
+	DailyFirstEnterMonopolyActivityCsReq               = 7096
+	MonopolyGameSettleScNotify                         = 7097
+	MonopolyLikeScNotify                               = 7098
+	MonopolyScrachRaffleTicketCsReq                    = 7099
+	MonopolyGuessChooseCsReq                           = 7100
+	EvolveBuildLeaveScRsp                              = 7101
+	EvolveBuildShopAbilityDownCsReq                    = 7103
+	EvolveBuildCoinNotify                              = 7104
+	EvolveBuildReRandomStageScRsp                      = 7106
+	EvolveBuildFinishScNotify                          = 7107
+	EvolveBuildQueryInfoCsReq                          = 7108
+	EvolveBuildUnlockInfoNotify                        = 7110
+	EvolveBuildLeaveCsReq                              = 7117
+	EvolveBuildShopAbilityResetScRsp                   = 7120
+	EvolveBuildTakeExpRewardScRsp                      = 7121
+	EvolveBuildTakeExpRewardCsReq                      = 7122
+	EvolveBuildReRandomStageCsReq                      = 7131
+	EvolveBuildShopAbilityUpCsReq                      = 7133
+	EvolveBuildGiveupCsReq                             = 7134
+	EvolveBuildShopAbilityUpScRsp                      = 7135
+	EvolveBuildStartStageScRsp                         = 7136
+	EvolveBuildStartStageCsReq                         = 7141
+	EvolveBuildShopAbilityResetCsReq                   = 7144
+	EvolveBuildShopAbilityDownScRsp                    = 7145
+	EvolveBuildStartLevelScRsp                         = 7147
+	EvolveBuildStartLevelCsReq                         = 7148
+	EvolveBuildQueryInfoScRsp                          = 7149
+	EvolveBuildGiveupScRsp                             = 7150
+	EnterFeverTimeActivityStageCsReq                   = 7151
+	FeverTimeActivityBattleEndScNotify                 = 7153
+	GetFeverTimeActivityDataScRsp                      = 7154
+	GetFeverTimeActivityDataCsReq                      = 7156
+	EnterFeverTimeActivityStageScRsp                   = 7159
+	ClockParkUnlockTalentCsReq                         = 7202
+	ClockParkQuitScriptScRsp                           = 7206
+	ClockParkUnlockTalentScRsp                         = 7209
+	ClockParkFinishScriptScNotify                      = 7216
+	ClockParkStartScriptCsReq                          = 7219
+	ClockParkGetOngoingScriptInfoScRsp                 = 7229
+	ClockParkSyncVirtualItemScNotify                   = 7230
+	ClockParkGetInfoCsReq                              = 7234
+	ClockParkUseBuffCsReq                              = 7237
+	ClockParkUseBuffScRsp                              = 7239
+	ClockParkStartScriptScRsp                          = 7243
+	ClockParkHandleWaitOperationCsReq                  = 7245
+	ClockParkGetInfoScRsp                              = 7248
+	ClockParkUnlockScriptCsReq                         = 7262
+	ClockParkHandleWaitOperationScRsp                  = 7268
+	ClockParkGetOngoingScriptInfoCsReq                 = 7286
+	ClockParkUnlockScriptScRsp                         = 7288
+	ClockParkBattleEndScNotify                         = 7295
+	ClockParkQuitScriptCsReq                           = 7296
 )
 
 const (
-	ServiceConnectionReq     = 10000
-	ServiceConnectionRsp     = 10100
-	GateLoginGameRsp         = 10001
-	GateLoginGameReq         = 10101
-	GateToGameMsgNotify      = 10002
-	GameToGateMsgNotify      = 10102
-	GetAllServiceGateReq     = 10003
-	GetAllServiceGateRsp     = 10103
-	MultiToNodePingReq       = 10004
-	MultiToNodePingRsp       = 10104
-	MuipToNodePingReq        = 10005
-	MuipToNodePingRsp        = 10105
-	GetAllServiceGameReq     = 10006
-	GetAllServiceGameRsp     = 10106
+	ServiceConnectionReq = 10000
+	ServiceConnectionRsp = 10100
+	GateLoginGameRsp     = 10001
+	GateLoginGameReq     = 10101
+	GateToGameMsgNotify  = 10002
+	GameToGateMsgNotify  = 10102
+	GetAllServiceGateReq = 10003
+	GetAllServiceGateRsp = 10103
+	MultiToNodePingReq   = 10004
+	MultiToNodePingRsp   = 10104
+	MuipToNodePingReq    = 10005
+	MuipToNodePingRsp    = 10105
+	// GetAllServiceGameReq     = 10006
+	// GetAllServiceGameRsp     = 10106
 	GameToNodePingReq        = 10007
 	GameToNodePingRsp        = 10107
 	GateGamePingReq          = 10008
@@ -1296,9 +1357,11 @@ const (
 	GetToGamePlayerLogoutRsp = 10110
 	GateLoginMultiReq        = 10011
 	GateLoginMultiRsp        = 10111
+	GateToNodePingReq        = 10012
+	GateToNodePingRsp        = 10112
 
 	GateToGamePlayerLogoutNotify = 11000
-	// SyncPlayerOnlineDataNotify   = 11001
+	PlayerMsgGateToNodeNotify    = 11001
 	// PlayerLoginNotify            = 11002
 	// NodeToGsPlayerLogoutNotify   = 11003
 	GameToGatePlayerLogoutNotify = 11004
@@ -1306,286 +1369,1184 @@ const (
 	GmGive       = 12001
 	GmWorldLevel = 12002
 	DelItem      = 12003
+	MaxCurAvatar = 12004
+	GmMission    = 12005
 )
 
 func (c *CmdProtoMap) registerAllMessage() {
-	c.regMsg(SelectChatBubbleScRsp, func() any { return new(proto.SelectChatBubbleScRsp) })
-	c.regMsg(CommonRogueQueryScRsp, func() any { return new(proto.CommonRogueQueryScRsp) })
-	c.regMsg(ApplyFriendCsReq, func() any { return new(proto.ApplyFriendCsReq) })
-	c.regMsg(ChangeLineupLeaderCsReq, func() any { return new(proto.ChangeLineupLeaderCsReq) })
-	c.regMsg(TrialActivityDataChangeScNotify, func() any { return new(proto.TrialActivityDataChangeScNotify) })
-	c.regMsg(ChessRogueRollDiceScRsp, func() any { return new(proto.ChessRogueRollDiceScRsp) })
-	c.regMsg(ActivateFarmElementCsReq, func() any { return new(proto.ActivateFarmElementCsReq) })
-	c.regMsg(StartRogueScRsp, func() any { return new(proto.StartRogueScRsp) })
-	c.regMsg(SellItemCsReq, func() any { return new(proto.SellItemCsReq) })
-	c.regMsg(SyncLineupNotify, func() any { return new(proto.SyncLineupNotify) })
-	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
-	c.regMsg(GetFarmStageGachaInfoCsReq, func() any { return new(proto.GetFarmStageGachaInfoCsReq) })
-	c.regMsg(JoinLineupCsReq, func() any { return new(proto.JoinLineupCsReq) })
-	c.regMsg(InteractPropScRsp, func() any { return new(proto.InteractPropScRsp) })
-	c.regMsg(EnableRogueTalentCsReq, func() any { return new(proto.EnableRogueTalentCsReq) })
-	c.regMsg(CurTrialActivityScNotify, func() any { return new(proto.CurTrialActivityScNotify) })
-	c.regMsg(UnlockPhoneThemeScNotify, func() any { return new(proto.UnlockPhoneThemeScNotify) })
-	c.regMsg(SetNicknameCsReq, func() any { return new(proto.SetNicknameCsReq) })
-	c.regMsg(GetCurSceneInfoScRsp, func() any { return new(proto.GetCurSceneInfoScRsp) })
-	c.regMsg(StartCocoonStageScRsp, func() any { return new(proto.StartCocoonStageScRsp) })
-	c.regMsg(ChessRogueCellUpdateNotify, func() any { return new(proto.ChessRogueCellUpdateNotify) })
-	c.regMsg(GetLoginActivityCsReq, func() any { return new(proto.GetLoginActivityCsReq) })
-	c.regMsg(UpdateServerPrefsDataCsReq, func() any { return new(proto.UpdateServerPrefsDataCsReq) })
-	c.regMsg(LeaveRogueScRsp, func() any { return new(proto.LeaveRogueScRsp) })
-	c.regMsg(GetShopListScRsp, func() any { return new(proto.GetShopListScRsp) })
-	c.regMsg(LockRelicCsReq, func() any { return new(proto.LockRelicCsReq) })
-	c.regMsg(EnterSceneCsReq, func() any { return new(proto.EnterSceneCsReq) })
-	c.regMsg(SetClientPausedCsReq, func() any { return new(proto.SetClientPausedCsReq) })
-	c.regMsg(BattlePassInfoNotify, func() any { return new(proto.BattlePassInfoNotify) })
-	c.regMsg(ReserveStaminaExchangeScRsp, func() any { return new(proto.ReserveStaminaExchangeScRsp) })
-	c.regMsg(LockEquipmentCsReq, func() any { return new(proto.LockEquipmentCsReq) })
-	c.regMsg(ExpUpRelicScRsp, func() any { return new(proto.ExpUpRelicScRsp) })
-	c.regMsg(DeactivateFarmElementScRsp, func() any { return new(proto.DeactivateFarmElementScRsp) })
-	c.regMsg(SyncRogueFinishScNotify, func() any { return new(proto.SyncRogueFinishScNotify) })
-	c.regMsg(ChessRogueNousEditDiceCsReq, func() any { return new(proto.ChessRogueNousEditDiceCsReq) })
-	c.regMsg(SetGameplayBirthdayScRsp, func() any { return new(proto.SetGameplayBirthdayScRsp) })
+	c.regMsg(EnhanceCommonRogueBuffCsReq, func() any { return new(proto.EnhanceCommonRogueBuffCsReq) })
 	c.regMsg(GroupStateChangeScNotify, func() any { return new(proto.GroupStateChangeScNotify) })
-	c.regMsg(SetSignatureCsReq, func() any { return new(proto.SetSignatureCsReq) })
-	c.regMsg(GetBasicInfoScRsp, func() any { return new(proto.GetBasicInfoScRsp) })
-	c.regMsg(GetFirstTalkByPerformanceNpcScRsp, func() any { return new(proto.GetFirstTalkByPerformanceNpcScRsp) })
-	c.regMsg(SceneEntityMoveScNotify, func() any { return new(proto.SceneEntityMoveScNotify) })
-	c.regMsg(TakeTrialActivityRewardScRsp, func() any { return new(proto.TakeTrialActivityRewardScRsp) })
-	c.regMsg(ExchangeHcoinScRsp, func() any { return new(proto.ExchangeHcoinScRsp) })
-	c.regMsg(DoGachaInRollShopCsReq, func() any { return new(proto.DoGachaInRollShopCsReq) })
-	c.regMsg(ChessRogueUpdateDicePassiveAccumulateValueScNotify, func() any { return new(proto.ChessRogueUpdateDicePassiveAccumulateValueScNotify) })
-	c.regMsg(GetUnlockTeleportCsReq, func() any { return new(proto.GetUnlockTeleportCsReq) })
-	c.regMsg(TextJoinQueryCsReq, func() any { return new(proto.TextJoinQueryCsReq) })
-	c.regMsg(RotateMapScRsp, func() any { return new(proto.RotateMapScRsp) })
-	c.regMsg(SwitchLineupIndexCsReq, func() any { return new(proto.SwitchLineupIndexCsReq) })
-	c.regMsg(PlayerGetTokenScRsp, func() any { return new(proto.PlayerGetTokenScRsp) })
-	c.regMsg(RefreshTriggerByClientCsReq, func() any { return new(proto.RefreshTriggerByClientCsReq) })
-	c.regMsg(CommonRogueUpdateScNotify, func() any { return new(proto.CommonRogueUpdateScNotify) })
-	c.regMsg(GetEnteredSceneScRsp, func() any { return new(proto.GetEnteredSceneScRsp) })
-	c.regMsg(PickRogueAvatarScRsp, func() any { return new(proto.PickRogueAvatarScRsp) })
-	c.regMsg(ComposeItemCsReq, func() any { return new(proto.ComposeItemCsReq) })
-	c.regMsg(SetFriendMarkCsReq, func() any { return new(proto.SetFriendMarkCsReq) })
-	c.regMsg(SyncHandleFriendScNotify, func() any { return new(proto.SyncHandleFriendScNotify) })
-	c.regMsg(TakeLoginActivityRewardScRsp, func() any { return new(proto.TakeLoginActivityRewardScRsp) })
-	c.regMsg(PVEBattleResultCsReq, func() any { return new(proto.PVEBattleResultCsReq) })
-	c.regMsg(TakeOffRelicCsReq, func() any { return new(proto.TakeOffRelicCsReq) })
-	c.regMsg(SetHeroBasicTypeCsReq, func() any { return new(proto.SetHeroBasicTypeCsReq) })
-	c.regMsg(ComposeSelectedRelicCsReq, func() any { return new(proto.ComposeSelectedRelicCsReq) })
-	c.regMsg(InteractChargerCsReq, func() any { return new(proto.InteractChargerCsReq) })
-	c.regMsg(GetPlayerBoardDataScRsp, func() any { return new(proto.GetPlayerBoardDataScRsp) })
-	c.regMsg(TakeMailAttachmentScRsp, func() any { return new(proto.TakeMailAttachmentScRsp) })
-	c.regMsg(ScenePlaneEventScNotify, func() any { return new(proto.ScenePlaneEventScNotify) })
-	c.regMsg(DeployRotaterCsReq, func() any { return new(proto.DeployRotaterCsReq) })
-	c.regMsg(EnterSceneByServerScNotify, func() any { return new(proto.EnterSceneByServerScNotify) })
-	c.regMsg(PlayerGetTokenCsReq, func() any { return new(proto.PlayerGetTokenCsReq) })
-	c.regMsg(GetFriendRecommendListInfoScRsp, func() any { return new(proto.GetFriendRecommendListInfoScRsp) })
-	c.regMsg(GetFriendListInfoScRsp, func() any { return new(proto.GetFriendListInfoScRsp) })
-	c.regMsg(GetQuestDataCsReq, func() any { return new(proto.GetQuestDataCsReq) })
-	c.regMsg(ChallengeLineupNotify, func() any { return new(proto.ChallengeLineupNotify) })
-	c.regMsg(PlayBackGroundMusicCsReq, func() any { return new(proto.PlayBackGroundMusicCsReq) })
-	c.regMsg(SyncRogueCommonPendingActionScNotify, func() any { return new(proto.SyncRogueCommonPendingActionScNotify) })
-	c.regMsg(MarkReadMailScRsp, func() any { return new(proto.MarkReadMailScRsp) })
-	c.regMsg(ChessRogueSelectCellScRsp, func() any { return new(proto.ChessRogueSelectCellScRsp) })
-	c.regMsg(TakeOffEquipmentCsReq, func() any { return new(proto.TakeOffEquipmentCsReq) })
-	c.regMsg(GetRogueBuffEnhanceInfoScRsp, func() any { return new(proto.GetRogueBuffEnhanceInfoScRsp) })
-	c.regMsg(SendMsgCsReq, func() any { return new(proto.SendMsgCsReq) })
-	c.regMsg(SwitchLineupIndexScRsp, func() any { return new(proto.SwitchLineupIndexScRsp) })
-	c.regMsg(GetQuestDataScRsp, func() any { return new(proto.GetQuestDataScRsp) })
-	c.regMsg(SetHeadIconScRsp, func() any { return new(proto.SetHeadIconScRsp) })
-	c.regMsg(PlayerHeartBeatCsReq, func() any { return new(proto.PlayerHeartbeatCsReq) })
-	c.regMsg(PlayerHeartBeatScRsp, func() any { return new(proto.PlayerHeartbeatScRsp) })
-	c.regMsg(HandleRogueCommonPendingActionCsReq, func() any { return new(proto.HandleRogueCommonPendingActionCsReq) })
-	c.regMsg(SyncRogueMapRoomScNotify, func() any { return new(proto.SyncRogueMapRoomScNotify) })
-	c.regMsg(ChessRogueUpdateAllowedSelectCellScNotify, func() any { return new(proto.ChessRogueUpdateAllowedSelectCellScNotify) })
-	c.regMsg(SceneEntityTeleportCsReq, func() any { return new(proto.SceneEntityTeleportCsReq) })
-	c.regMsg(ExchangeHcoinCsReq, func() any { return new(proto.ExchangeHcoinCsReq) })
-	c.regMsg(SelectPhoneThemeScRsp, func() any { return new(proto.SelectPhoneThemeScRsp) })
-	c.regMsg(DoGachaInRollShopScRsp, func() any { return new(proto.DoGachaInRollShopScRsp) })
-	c.regMsg(StartChallengeScRsp, func() any { return new(proto.StartChallengeScRsp) })
-	c.regMsg(PVEBattleResultScRsp, func() any { return new(proto.PVEBattleResultScRsp) })
-	c.regMsg(BuyGoodsScRsp, func() any { return new(proto.BuyGoodsScRsp) })
-	c.regMsg(GroupStateChangeScRsp, func() any { return new(proto.GroupStateChangeScRsp) })
-	c.regMsg(SyncClientResVersionCsReq, func() any { return new(proto.SyncClientResVersionCsReq) })
-	c.regMsg(GetDailyActiveInfoCsReq, func() any { return new(proto.GetDailyActiveInfoCsReq) })
-	c.regMsg(GetPhoneDataCsReq, func() any { return new(proto.GetPhoneDataCsReq) })
-	c.regMsg(ChessRogueReRollDiceCsReq, func() any { return new(proto.ChessRogueReRollDiceCsReq) })
-	c.regMsg(GetPrivateChatHistoryCsReq, func() any { return new(proto.GetPrivateChatHistoryCsReq) })
-	c.regMsg(RankUpAvatarCsReq, func() any { return new(proto.RankUpAvatarCsReq) })
-	c.regMsg(SceneCastSkillScRsp, func() any { return new(proto.SceneCastSkillScRsp) })
-	c.regMsg(GetArchiveDataScRsp, func() any { return new(proto.GetArchiveDataScRsp) })
-	c.regMsg(ReplaceLineupCsReq, func() any { return new(proto.ReplaceLineupCsReq) })
-	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
-	c.regMsg(StartTrialActivityCsReq, func() any { return new(proto.StartTrialActivityCsReq) })
-	c.regMsg(GetTrialActivityDataScRsp, func() any { return new(proto.GetTrialActivityDataScRsp) })
-	c.regMsg(GetFriendApplyListInfoScRsp, func() any { return new(proto.GetFriendApplyListInfoScRsp) })
-	c.regMsg(UnlockSkilltreeCsReq, func() any { return new(proto.UnlockSkilltreeCsReq) })
-	c.regMsg(NewMailScNotify, func() any { return new(proto.NewMailScNotify) })
-	c.regMsg(ChessRogueStartScRsp, func() any { return new(proto.ChessRogueStartScRsp) })
-	c.regMsg(GetRogueInfoScRsp, func() any { return new(proto.GetRogueInfoScRsp) })
-	c.regMsg(TakePromotionRewardCsReq, func() any { return new(proto.TakePromotionRewardCsReq) })
-	c.regMsg(SellItemScRsp, func() any { return new(proto.SellItemScRsp) })
-	c.regMsg(SyncChessRogueNousValueScNotify, func() any { return new(proto.SyncChessRogueNousValueScNotify) })
-	c.regMsg(ChangeLineupLeaderScRsp, func() any { return new(proto.ChangeLineupLeaderScRsp) })
-	c.regMsg(GetBagScRsp, func() any { return new(proto.GetBagScRsp) })
-	c.regMsg(UnlockBackGroundMusicCsReq, func() any { return new(proto.UnlockBackGroundMusicCsReq) })
-	c.regMsg(GetRogueScoreRewardInfoScRsp, func() any { return new(proto.GetRogueScoreRewardInfoScRsp) })
-	c.regMsg(QuitLineupCsReq, func() any { return new(proto.QuitLineupCsReq) })
-	c.regMsg(GetFirstTalkNpcCsReq, func() any { return new(proto.GetFirstTalkNpcCsReq) })
-	c.regMsg(GetAvatarDataCsReq, func() any { return new(proto.GetAvatarDataCsReq) })
-	c.regMsg(TakeChallengeRewardScRsp, func() any { return new(proto.TakeChallengeRewardScRsp) })
-	c.regMsg(DressRelicAvatarCsReq, func() any { return new(proto.DressRelicAvatarCsReq) })
-	c.regMsg(LockEquipmentScRsp, func() any { return new(proto.LockEquipmentScRsp) })
-	c.regMsg(SetLineupNameScRsp, func() any { return new(proto.SetLineupNameScRsp) })
-	c.regMsg(GetCurLineupDataScRsp, func() any { return new(proto.GetCurLineupDataScRsp) })
-	c.regMsg(ChessRogueUpdateMoneyInfoScNotify, func() any { return new(proto.ChessRogueUpdateMoneyInfoScNotify) })
-	c.regMsg(DeactivateFarmElementCsReq, func() any { return new(proto.DeactivateFarmElementCsReq) })
-	c.regMsg(DressAvatarCsReq, func() any { return new(proto.DressAvatarCsReq) })
-	c.regMsg(GetRollShopInfoCsReq, func() any { return new(proto.GetRollShopInfoCsReq) })
-	c.regMsg(SearchPlayerScRsp, func() any { return new(proto.SearchPlayerScRsp) })
-	c.regMsg(SyncApplyFriendScNotify, func() any { return new(proto.SyncApplyFriendScNotify) })
-	c.regMsg(SyncRogueVirtualItemInfoScNotify, func() any { return new(proto.SyncRogueVirtualItemInfoScNotify) })
-	c.regMsg(EnhanceRogueBuffScRsp, func() any { return new(proto.EnhanceRogueBuffScRsp) })
-	c.regMsg(GetRogueTalentInfoScRsp, func() any { return new(proto.GetRogueTalentInfoScRsp) })
-	c.regMsg(ChessRogueUpdateDiceInfoScNotify, func() any { return new(proto.ChessRogueUpdateDiceInfoScNotify) })
-	c.regMsg(ChallengeSettleNotify, func() any { return new(proto.ChallengeSettleNotify) })
-	c.regMsg(DoGachaScRsp, func() any { return new(proto.DoGachaScRsp) })
-	c.regMsg(RefreshTriggerByClientScNotify, func() any { return new(proto.RefreshTriggerByClientScNotify) })
-	c.regMsg(GetFirstTalkByPerformanceNpcCsReq, func() any { return new(proto.GetFirstTalkByPerformanceNpcCsReq) })
-	c.regMsg(PickRogueAvatarCsReq, func() any { return new(proto.PickRogueAvatarCsReq) })
-	c.regMsg(TakePromotionRewardScRsp, func() any { return new(proto.TakePromotionRewardScRsp) })
-	c.regMsg(GetFirstTalkNpcScRsp, func() any { return new(proto.GetFirstTalkNpcScRsp) })
-	c.regMsg(PromoteEquipmentCsReq, func() any { return new(proto.PromoteEquipmentCsReq) })
-	c.regMsg(TakeTrialActivityRewardCsReq, func() any { return new(proto.TakeTrialActivityRewardCsReq) })
-	c.regMsg(GetHeroBasicTypeInfoScRsp, func() any { return new(proto.GetHeroBasicTypeInfoScRsp) })
-	c.regMsg(SceneGroupRefreshScNotify, func() any { return new(proto.SceneGroupRefreshScNotify) })
-	c.regMsg(SceneEnterStageScRsp, func() any { return new(proto.SceneEnterStageScRsp) })
-	c.regMsg(GetChallengeScRsp, func() any { return new(proto.GetChallengeScRsp) })
-	c.regMsg(GetGachaInfoScRsp, func() any { return new(proto.GetGachaInfoScRsp) })
-	c.regMsg(InteractChargerScRsp, func() any { return new(proto.InteractChargerScRsp) })
-	c.regMsg(SelectPhoneThemeCsReq, func() any { return new(proto.SelectPhoneThemeCsReq) })
-	c.regMsg(GetUnlockTeleportScRsp, func() any { return new(proto.GetUnlockTeleportScRsp) })
-	c.regMsg(TextJoinQueryScRsp, func() any { return new(proto.TextJoinQueryScRsp) })
-	c.regMsg(SetFriendMarkScRsp, func() any { return new(proto.SetFriendMarkScRsp) })
-	c.regMsg(FinishRogueDialogueGroupCsReq, func() any { return new(proto.FinishRogueDialogueGroupCsReq) })
-	c.regMsg(SyncEntityBuffChangeListScNotify, func() any { return new(proto.SyncEntityBuffChangeListScNotify) })
-	c.regMsg(EnterRogueMapRoomCsReq, func() any { return new(proto.EnterRogueMapRoomCsReq) })
-	c.regMsg(ExpUpEquipmentScRsp, func() any { return new(proto.ExpUpEquipmentScRsp) })
-	c.regMsg(RotateMapCsReq, func() any { return new(proto.RotateMapCsReq) })
-	c.regMsg(ChessRogueRollDiceCsReq, func() any { return new(proto.ChessRogueRollDiceCsReq) })
-	c.regMsg(DelMailCsReq, func() any { return new(proto.DelMailCsReq) })
-	c.regMsg(EnterMapRotationRegionCsReq, func() any { return new(proto.EnterMapRotationRegionCsReq) })
-	c.regMsg(SelectChatBubbleCsReq, func() any { return new(proto.SelectChatBubbleCsReq) })
-	c.regMsg(PlayerLoginCsReq, func() any { return new(proto.PlayerLoginCsReq) })
-	c.regMsg(GetFriendLoginInfoScRsp, func() any { return new(proto.GetFriendLoginInfoScRsp) })
-	c.regMsg(GetTrialActivityDataCsReq, func() any { return new(proto.GetTrialActivityDataCsReq) })
-	c.regMsg(GetActivityScheduleConfigScRsp, func() any { return new(proto.GetActivityScheduleConfigScRsp) })
-	c.regMsg(GetRogueHandbookDataScRsp, func() any { return new(proto.GetRogueHandbookDataScRsp) })
-	c.regMsg(HandleRogueCommonPendingActionScRsp, func() any { return new(proto.HandleRogueCommonPendingActionScRsp) })
-	c.regMsg(GetSceneMapInfoScRsp, func() any { return new(proto.GetSceneMapInfoScRsp) })
-	c.regMsg(HandleFriendCsReq, func() any { return new(proto.HandleFriendCsReq) })
-	c.regMsg(GetPlayerDetailInfoScRsp, func() any { return new(proto.GetPlayerDetailInfoScRsp) })
-	c.regMsg(RevcMsgScNotify, func() any { return new(proto.RevcMsgScNotify) })
-	c.regMsg(StaminaInfoScNotify, func() any { return new(proto.StaminaInfoScNotify) })
-	c.regMsg(GetMissionStatusScRsp, func() any { return new(proto.GetMissionStatusScRsp) })
-	c.regMsg(SetClientPausedScRsp, func() any { return new(proto.SetClientPausedScRsp) })
-	c.regMsg(ActivateFarmElementScRsp, func() any { return new(proto.ActivateFarmElementScRsp) })
-	c.regMsg(SelectRogueDialogueEventCsReq, func() any { return new(proto.SelectRogueDialogueEventCsReq) })
-	c.regMsg(StartChallengeCsReq, func() any { return new(proto.StartChallengeCsReq) })
-	c.regMsg(GetAllLineupDataScRsp, func() any { return new(proto.GetAllLineupDataScRsp) })
+	c.regMsg(ArchiveWolfBroGameScRsp, func() any { return new(proto.ArchiveWolfBroGameScRsp) })
+	c.regMsg(SpringRecoverSingleAvatarScRsp, func() any { return new(proto.SpringRecoverSingleAvatarScRsp) })
+	c.regMsg(ChessRogueCheatRollCsReq, func() any { return new(proto.ChessRogueCheatRollCsReq) })
+	c.regMsg(AddBlacklistScRsp, func() any { return new(proto.AddBlacklistScRsp) })
+	c.regMsg(SetClientPausedCsReq, func() any { return new(proto.SetClientPausedCsReq) })
+	c.regMsg(TeleportToMissionResetPointCsReq, func() any { return new(proto.TeleportToMissionResetPointCsReq) })
+	c.regMsg(TravelBrochureApplyPasterScRsp, func() any { return new(proto.TravelBrochureApplyPasterScRsp) })
+	c.regMsg(StopRogueAdventureRoomScRsp, func() any { return new(proto.StopRogueAdventureRoomScRsp) })
+	c.regMsg(StartFinishMainMissionScNotify, func() any { return new(proto.StartFinishMainMissionScNotify) })
+	c.regMsg(EnterTelevisionActivityStageCsReq, func() any { return new(proto.EnterTelevisionActivityStageCsReq) })
+	c.regMsg(BatchGetQuestDataScRsp, func() any { return new(proto.BatchGetQuestDataScRsp) })
 	c.regMsg(SetGameplayBirthdayCsReq, func() any { return new(proto.SetGameplayBirthdayCsReq) })
-	c.regMsg(GetChessRogueNousStoryInfoScRsp, func() any { return new(proto.GetChessRogueNousStoryInfoScRsp) })
-	c.regMsg(GetNpcTakenRewardCsReq, func() any { return new(proto.GetNpcTakenRewardCsReq) })
-	c.regMsg(ExchangeGachaCeilingScRsp, func() any { return new(proto.ExchangeGachaCeilingScRsp) })
-	c.regMsg(GetGachaCeilingScRsp, func() any { return new(proto.GetGachaCeilingScRsp) })
-	c.regMsg(TakeLoginActivityRewardCsReq, func() any { return new(proto.TakeLoginActivityRewardCsReq) })
-	c.regMsg(GetJukeboxDataCsReq, func() any { return new(proto.GetJukeboxDataCsReq) })
-	c.regMsg(ExpUpRelicCsReq, func() any { return new(proto.ExpUpRelicCsReq) })
-	c.regMsg(GetSceneMapInfoCsReq, func() any { return new(proto.GetSceneMapInfoCsReq) })
-	c.regMsg(ComposeItemScRsp, func() any { return new(proto.ComposeItemScRsp) })
-	c.regMsg(PlayerLoginScRsp, func() any { return new(proto.PlayerLoginScRsp) })
-	c.regMsg(ReEnterLastElementStageCsReq, func() any { return new(proto.ReEnterLastElementStageCsReq) })
-	c.regMsg(ChessRogueUpdateActionPointScNotify, func() any { return new(proto.ChessRogueUpdateActionPointScNotify) })
-	c.regMsg(AvatarExpUpScRsp, func() any { return new(proto.AvatarExpUpScRsp) })
-	c.regMsg(GetMailScRsp, func() any { return new(proto.GetMailScRsp) })
-	c.regMsg(UpdateServerPrefsDataScRsp, func() any { return new(proto.UpdateServerPrefsDataScRsp) })
-	c.regMsg(SceneEntityMoveCsReq, func() any { return new(proto.SceneEntityMoveCsReq) })
-	c.regMsg(SyncRogueDialogueEventDataScNotify, func() any { return new(proto.SyncRogueDialogueEventDataScNotify) })
-	c.regMsg(EnterMapRotationRegionScRsp, func() any { return new(proto.EnterMapRotationRegionScRsp) })
-	c.regMsg(GetMissionStatusCsReq, func() any { return new(proto.GetMissionStatusCsReq) })
-	c.regMsg(RogueNpcDisappearCsReq, func() any { return new(proto.RogueNpcDisappearCsReq) })
-	c.regMsg(SetSignatureScRsp, func() any { return new(proto.SetSignatureScRsp) })
-	c.regMsg(UnlockChatBubbleScNotify, func() any { return new(proto.UnlockChatBubbleScNotify) })
-	c.regMsg(ReEnterLastElementStageScRsp, func() any { return new(proto.ReEnterLastElementStageScRsp) })
-	c.regMsg(RefreshTriggerByClientScRsp, func() any { return new(proto.RefreshTriggerByClientScRsp) })
-	c.regMsg(AvatarExpUpCsReq, func() any { return new(proto.AvatarExpUpCsReq) })
-	c.regMsg(GetPlayerDetailInfoCsReq, func() any { return new(proto.GetPlayerDetailInfoCsReq) })
-	c.regMsg(GetShopListCsReq, func() any { return new(proto.GetShopListCsReq) })
-	c.regMsg(LockRelicScRsp, func() any { return new(proto.LockRelicScRsp) })
-	c.regMsg(GetPrivateChatHistoryScRsp, func() any { return new(proto.GetPrivateChatHistoryScRsp) })
-	c.regMsg(SceneCastSkillCsReq, func() any { return new(proto.SceneCastSkillCsReq) })
-	c.regMsg(ChessRogueStartCsReq, func() any { return new(proto.ChessRogueStartCsReq) })
-	c.regMsg(EnterRogueMapRoomScRsp, func() any { return new(proto.EnterRogueMapRoomScRsp) })
-	c.regMsg(SyncRogueCommonActionResultScNotify, func() any { return new(proto.SyncRogueCommonActionResultScNotify) })
-	c.regMsg(DiscardRelicCsReq, func() any { return new(proto.DiscardRelicCsReq) })
-	c.regMsg(GetLoginActivityScRsp, func() any { return new(proto.GetLoginActivityScRsp) })
-	c.regMsg(ChessRogueNousEditDiceScRsp, func() any { return new(proto.ChessRogueNousEditDiceScRsp) })
+	c.regMsg(GetMainMissionCustomValueCsReq, func() any { return new(proto.GetMainMissionCustomValueCsReq) })
+	c.regMsg(SubmitEmotionItemCsReq, func() any { return new(proto.SubmitEmotionItemCsReq) })
+	c.regMsg(SyncRogueHandbookDataUpdateScNotify, func() any { return new(proto.SyncRogueHandbookDataUpdateScNotify) })
+	c.regMsg(TakeRogueAeonLevelRewardCsReq, func() any { return new(proto.TakeRogueAeonLevelRewardCsReq) })
 	c.regMsg(DailyActiveInfoNotify, func() any { return new(proto.DailyActiveInfoNotify) })
-	c.regMsg(ExchangeGachaCeilingCsReq, func() any { return new(proto.ExchangeGachaCeilingCsReq) })
-	c.regMsg(SceneCastSkillMpUpdateScNotify, func() any { return new(proto.SceneCastSkillMpUpdateScNotify) })
-	c.regMsg(GetRollShopInfoScRsp, func() any { return new(proto.GetRollShopInfoScRsp) })
-	c.regMsg(DelMailScRsp, func() any { return new(proto.DelMailScRsp) })
-	c.regMsg(GetGachaCeilingCsReq, func() any { return new(proto.GetGachaCeilingCsReq) })
-	c.regMsg(SyncClientResVersionScRsp, func() any { return new(proto.SyncClientResVersionScRsp) })
-	c.regMsg(StartCocoonStageCsReq, func() any { return new(proto.StartCocoonStageCsReq) })
-	c.regMsg(DeleteFriendCsReq, func() any { return new(proto.DeleteFriendCsReq) })
-	c.regMsg(PlayBackGroundMusicScRsp, func() any { return new(proto.PlayBackGroundMusicScRsp) })
-	c.regMsg(GetCurChallengeScRsp, func() any { return new(proto.GetCurChallengeScRsp) })
-	c.regMsg(GetPhoneDataScRsp, func() any { return new(proto.GetPhoneDataScRsp) })
-	c.regMsg(EnhanceRogueBuffCsReq, func() any { return new(proto.EnhanceRogueBuffCsReq) })
+	c.regMsg(MonopolyGetRaffleTicketCsReq, func() any { return new(proto.MonopolyGetRaffleTicketCsReq) })
+	c.regMsg(StartRaidCsReq, func() any { return new(proto.StartRaidCsReq) })
+	c.regMsg(TakeBpRewardScRsp, func() any { return new(proto.TakeBpRewardScRsp) })
+	c.regMsg(MonopolyConfirmRandomScRsp, func() any { return new(proto.MonopolyConfirmRandomScRsp) })
+	c.regMsg(EquipAetherDividePassiveSkillCsReq, func() any { return new(proto.EquipAetherDividePassiveSkillCsReq) })
+	c.regMsg(CancelExpeditionCsReq, func() any { return new(proto.CancelExpeditionCsReq) })
+	c.regMsg(CancelActivityExpeditionCsReq, func() any { return new(proto.CancelActivityExpeditionCsReq) })
+	c.regMsg(TakePictureScRsp, func() any { return new(proto.TakePictureScRsp) })
+	c.regMsg(ClearAetherDividePassiveSkillScRsp, func() any { return new(proto.ClearAetherDividePassiveSkillScRsp) })
+	c.regMsg(SecurityReportScRsp, func() any { return new(proto.SecurityReportScRsp) })
+	c.regMsg(PrepareRogueAdventureRoomCsReq, func() any { return new(proto.PrepareRogueAdventureRoomCsReq) })
+	c.regMsg(SyncRogueAreaUnlockScNotify, func() any { return new(proto.SyncRogueAreaUnlockScNotify) })
+	c.regMsg(ChessRogueEnterScRsp, func() any { return new(proto.ChessRogueEnterScRsp) })
+	c.regMsg(HeliobusUpgradeLevelCsReq, func() any { return new(proto.HeliobusUpgradeLevelCsReq) })
+	c.regMsg(LeaveAetherDivideSceneCsReq, func() any { return new(proto.LeaveAetherDivideSceneCsReq) })
+	c.regMsg(ExchangeHcoinScRsp, func() any { return new(proto.ExchangeHcoinScRsp) })
+	c.regMsg(HeliobusSnsCommentCsReq, func() any { return new(proto.HeliobusSnsCommentCsReq) })
 	c.regMsg(GetNpcTakenRewardScRsp, func() any { return new(proto.GetNpcTakenRewardScRsp) })
-	c.regMsg(TakeMailAttachmentCsReq, func() any { return new(proto.TakeMailAttachmentCsReq) })
-	c.regMsg(HandleFriendScRsp, func() any { return new(proto.HandleFriendScRsp) })
-	c.regMsg(SearchPlayerCsReq, func() any { return new(proto.SearchPlayerCsReq) })
-	c.regMsg(SelectRogueDialogueEventScRsp, func() any { return new(proto.SelectRogueDialogueEventScRsp) })
-	c.regMsg(GetJukeboxDataScRsp, func() any { return new(proto.GetJukeboxDataScRsp) })
-	c.regMsg(GetFarmStageGachaInfoScRsp, func() any { return new(proto.GetFarmStageGachaInfoScRsp) })
-	c.regMsg(DeployRotaterScRsp, func() any { return new(proto.DeployRotaterScRsp) })
-	c.regMsg(SetHeroBasicTypeScRsp, func() any { return new(proto.SetHeroBasicTypeScRsp) })
-	c.regMsg(ComposeSelectedRelicScRsp, func() any { return new(proto.ComposeSelectedRelicScRsp) })
-	c.regMsg(ChessRogueSelectCellCsReq, func() any { return new(proto.ChessRogueSelectCellCsReq) })
-	c.regMsg(EnableRogueTalentScRsp, func() any { return new(proto.EnableRogueTalentScRsp) })
-	c.regMsg(MarkReadMailCsReq, func() any { return new(proto.MarkReadMailCsReq) })
-	c.regMsg(UpdateEnergyScNotify, func() any { return new(proto.UpdateEnergyScNotify) })
-	c.regMsg(SwapLineupCsReq, func() any { return new(proto.SwapLineupCsReq) })
-	c.regMsg(DoGachaCsReq, func() any { return new(proto.DoGachaCsReq) })
-	c.regMsg(ChessRogueConfirmRollScRsp, func() any { return new(proto.ChessRogueConfirmRollScRsp) })
+	c.regMsg(HeliobusEnterBattleCsReq, func() any { return new(proto.HeliobusEnterBattleCsReq) })
+	c.regMsg(GetHeroBasicTypeInfoCsReq, func() any { return new(proto.GetHeroBasicTypeInfoCsReq) })
+	c.regMsg(FinishChapterScNotify, func() any { return new(proto.FinishChapterScNotify) })
+	c.regMsg(GetMovieRacingDataScRsp, func() any { return new(proto.GetMovieRacingDataScRsp) })
+	c.regMsg(FinishQuestScRsp, func() any { return new(proto.FinishQuestScRsp) })
+	c.regMsg(GetOfferingInfoScRsp, func() any { return new(proto.GetOfferingInfoScRsp) })
+	c.regMsg(GetMonopolyMbtiReportRewardScRsp, func() any { return new(proto.GetMonopolyMbtiReportRewardScRsp) })
+	c.regMsg(StartChallengeScRsp, func() any { return new(proto.StartChallengeScRsp) })
+	c.regMsg(EnteredSceneChangeScNotify, func() any { return new(proto.EnteredSceneChangeScNotify) })
+	c.regMsg(SyncRogueReviveInfoScNotify, func() any { return new(proto.SyncRogueReviveInfoScNotify) })
+	c.regMsg(TravelBrochureApplyPasterListCsReq, func() any { return new(proto.TravelBrochureApplyPasterListCsReq) })
+	c.regMsg(MatchBoxingClubOpponentCsReq, func() any { return new(proto.MatchBoxingClubOpponentCsReq) })
+	c.regMsg(QueryProductInfoCsReq, func() any { return new(proto.QueryProductInfoCsReq) })
+	c.regMsg(ComposeLimitNumUpdateNotify, func() any { return new(proto.ComposeLimitNumUpdateNotify) })
+	c.regMsg(SetIsDisplayAvatarInfoScRsp, func() any { return new(proto.SetIsDisplayAvatarInfoScRsp) })
+	c.regMsg(AetherDivideSpiritInfoScNotify, func() any { return new(proto.AetherDivideSpiritInfoScNotify) })
+	c.regMsg(GetRogueEndlessActivityDataScRsp, func() any { return new(proto.GetRogueEndlessActivityDataScRsp) })
+	c.regMsg(ChessRogueGoAheadScRsp, func() any { return new(proto.ChessRogueGoAheadScRsp) })
+	c.regMsg(UpgradeAreaCsReq, func() any { return new(proto.UpgradeAreaCsReq) })
+	c.regMsg(SellItemCsReq, func() any { return new(proto.SellItemCsReq) })
+	c.regMsg(GetRogueHandbookDataScRsp, func() any { return new(proto.GetRogueHandbookDataScRsp) })
+	c.regMsg(ChessRogueQueryCsReq, func() any { return new(proto.ChessRogueQueryCsReq) })
+	c.regMsg(LeaveRaidCsReq, func() any { return new(proto.LeaveRaidCsReq) })
 	c.regMsg(ExpUpEquipmentCsReq, func() any { return new(proto.ExpUpEquipmentCsReq) })
-	c.regMsg(GetRogueInitialScoreScRsp, func() any { return new(proto.GetRogueInitialScoreScRsp) })
-	c.regMsg(SceneEntityTeleportScRsp, func() any { return new(proto.SceneEntityTeleportScRsp) })
-	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
-	c.regMsg(PlayerSyncScNotify, func() any { return new(proto.PlayerSyncScNotify) })
-	c.regMsg(InteractPropCsReq, func() any { return new(proto.InteractPropCsReq) })
-	c.regMsg(SetHeadIconCsReq, func() any { return new(proto.SetHeadIconCsReq) })
-	c.regMsg(StartTrialActivityScRsp, func() any { return new(proto.StartTrialActivityScRsp) })
-	c.regMsg(PromoteAvatarCsReq, func() any { return new(proto.PromoteAvatarCsReq) })
+	c.regMsg(TrialBackGroundMusicCsReq, func() any { return new(proto.TrialBackGroundMusicCsReq) })
+	c.regMsg(GetHeartDialInfoCsReq, func() any { return new(proto.GetHeartDialInfoCsReq) })
+	c.regMsg(GetBagScRsp, func() any { return new(proto.GetBagScRsp) })
+	c.regMsg(SubmitOfferingItemScRsp, func() any { return new(proto.SubmitOfferingItemScRsp) })
+	c.regMsg(GetChessRogueBuffEnhanceInfoCsReq, func() any { return new(proto.GetChessRogueBuffEnhanceInfoCsReq) })
+	c.regMsg(EquipAetherDividePassiveSkillScRsp, func() any { return new(proto.EquipAetherDividePassiveSkillScRsp) })
+	c.regMsg(EnterTelevisionActivityStageScRsp, func() any { return new(proto.EnterTelevisionActivityStageScRsp) })
+	c.regMsg(AcceptMainMissionScRsp, func() any { return new(proto.AcceptMainMissionScRsp) })
+	c.regMsg(GetChallengeCsReq, func() any { return new(proto.GetChallengeCsReq) })
+	c.regMsg(UpdateRogueAdventureRoomScoreCsReq, func() any { return new(proto.UpdateRogueAdventureRoomScoreCsReq) })
+	c.regMsg(PromoteAvatarScRsp, func() any { return new(proto.PromoteAvatarScRsp) })
+	c.regMsg(SceneUpdatePositionVersionNotify, func() any { return new(proto.SceneUpdatePositionVersionNotify) })
+	c.regMsg(RemoveStuffFromAreaCsReq, func() any { return new(proto.RemoveStuffFromAreaCsReq) })
+	c.regMsg(FightTreasureDungeonMonsterCsReq, func() any { return new(proto.FightTreasureDungeonMonsterCsReq) })
+	c.regMsg(SyncApplyFriendScNotify, func() any { return new(proto.SyncApplyFriendScNotify) })
+	c.regMsg(GetPlayerBoardDataCsReq, func() any { return new(proto.GetPlayerBoardDataCsReq) })
+	c.regMsg(MarkChatEmojiScRsp, func() any { return new(proto.MarkChatEmojiScRsp) })
+	c.regMsg(SceneEntityMoveScNotify, func() any { return new(proto.SceneEntityMoveScNotify) })
+	c.regMsg(ExchangeStaminaScRsp, func() any { return new(proto.ExchangeStaminaScRsp) })
+	c.regMsg(DailyFirstMeetPamCsReq, func() any { return new(proto.DailyFirstMeetPamCsReq) })
+	c.regMsg(GetEnteredSceneScRsp, func() any { return new(proto.GetEnteredSceneScRsp) })
+	c.regMsg(TextJoinSaveScRsp, func() any { return new(proto.TextJoinSaveScRsp) })
+	c.regMsg(TakePunkLordPointRewardScRsp, func() any { return new(proto.TakePunkLordPointRewardScRsp) })
+	c.regMsg(GetChapterScRsp, func() any { return new(proto.GetChapterScRsp) })
+	c.regMsg(MonopolyEventSelectFriendScRsp, func() any { return new(proto.MonopolyEventSelectFriendScRsp) })
 	c.regMsg(SyncRogueStatusScNotify, func() any { return new(proto.SyncRogueStatusScNotify) })
-	c.regMsg(GetDailyActiveInfoScRsp, func() any { return new(proto.GetDailyActiveInfoScRsp) })
+	c.regMsg(GetRogueHandbookDataCsReq, func() any { return new(proto.GetRogueHandbookDataCsReq) })
+	c.regMsg(QuitLineupScRsp, func() any { return new(proto.QuitLineupScRsp) })
+	c.regMsg(GetFriendLoginInfoScRsp, func() any { return new(proto.GetFriendLoginInfoScRsp) })
+	c.regMsg(GetMarkItemListCsReq, func() any { return new(proto.GetMarkItemListCsReq) })
+	c.regMsg(GetQuestDataScRsp, func() any { return new(proto.GetQuestDataScRsp) })
+	c.regMsg(PlayerReturnInfoQueryCsReq, func() any { return new(proto.PlayerReturnInfoQueryCsReq) })
+	c.regMsg(BoxingClubChallengeUpdateScNotify, func() any { return new(proto.BoxingClubChallengeUpdateScNotify) })
+	c.regMsg(GetPlayerReturnMultiDropInfoScRsp, func() any { return new(proto.GetPlayerReturnMultiDropInfoScRsp) })
+	c.regMsg(SceneEnterStageScRsp, func() any { return new(proto.SceneEnterStageScRsp) })
+	c.regMsg(MonopolyReRollRandomCsReq, func() any { return new(proto.MonopolyReRollRandomCsReq) })
+	c.regMsg(FinishPlotScRsp, func() any { return new(proto.FinishPlotScRsp) })
+	c.regMsg(GetMonopolyDailyReportCsReq, func() any { return new(proto.GetMonopolyDailyReportCsReq) })
+	c.regMsg(DeleteBlacklistScRsp, func() any { return new(proto.DeleteBlacklistScRsp) })
+	c.regMsg(TextJoinBatchSaveScRsp, func() any { return new(proto.TextJoinBatchSaveScRsp) })
+	c.regMsg(StopRogueAdventureRoomCsReq, func() any { return new(proto.StopRogueAdventureRoomCsReq) })
+	c.regMsg(InterruptMissionEventScRsp, func() any { return new(proto.InterruptMissionEventScRsp) })
+	c.regMsg(RefreshTriggerByClientScRsp, func() any { return new(proto.RefreshTriggerByClientScRsp) })
+	c.regMsg(ChooseBoxingClubResonanceScRsp, func() any { return new(proto.ChooseBoxingClubResonanceScRsp) })
+	c.regMsg(SyncRogueCommonVirtualItemInfoScNotify, func() any { return new(proto.SyncRogueCommonVirtualItemInfoScNotify) })
+	c.regMsg(HandleFriendScRsp, func() any { return new(proto.HandleFriendScRsp) })
+	c.regMsg(MonopolyContentUpdateScNotify, func() any { return new(proto.MonopolyContentUpdateScNotify) })
+	c.regMsg(ChessRogueUpdateMoneyInfoScNotify, func() any { return new(proto.ChessRogueUpdateMoneyInfoScNotify) })
+	c.regMsg(MonopolyClickCellCsReq, func() any { return new(proto.MonopolyClickCellCsReq) })
+	c.regMsg(WolfBroGameUseBulletScRsp, func() any { return new(proto.WolfBroGameUseBulletScRsp) })
+	c.regMsg(HeroBasicTypeChangedNotify, func() any { return new(proto.HeroBasicTypeChangedNotify) })
+	c.regMsg(GetRaidInfoScRsp, func() any { return new(proto.GetRaidInfoScRsp) })
+	c.regMsg(SetAssistAvatarScRsp, func() any { return new(proto.SetAssistAvatarScRsp) })
+	c.regMsg(ExchangeRogueRewardKeyScRsp, func() any { return new(proto.ExchangeRogueRewardKeyScRsp) })
+	c.regMsg(SelectInclinationTextScRsp, func() any { return new(proto.SelectInclinationTextScRsp) })
+	c.regMsg(TravelBrochureUpdatePasterPosScRsp, func() any { return new(proto.TravelBrochureUpdatePasterPosScRsp) })
+	c.regMsg(GetCurBattleInfoCsReq, func() any { return new(proto.GetCurBattleInfoCsReq) })
+	c.regMsg(SpaceZooExchangeItemCsReq, func() any { return new(proto.SpaceZooExchangeItemCsReq) })
+	c.regMsg(SelectRogueDialogueEventCsReq, func() any { return new(proto.SelectRogueDialogueEventCsReq) })
+	c.regMsg(ChessRogueUpdateActionPointScNotify, func() any { return new(proto.ChessRogueUpdateActionPointScNotify) })
+	c.regMsg(EnterStrongChallengeActivityStageCsReq, func() any { return new(proto.EnterStrongChallengeActivityStageCsReq) })
+	c.regMsg(GetFeverTimeActivityDataScRsp, func() any { return new(proto.GetFeverTimeActivityDataScRsp) })
+	c.regMsg(MonopolyBuyGoodsScRsp, func() any { return new(proto.MonopolyBuyGoodsScRsp) })
+	c.regMsg(HeliobusSelectSkillCsReq, func() any { return new(proto.HeliobusSelectSkillCsReq) })
+	c.regMsg(FinishCosumeItemMissionScRsp, func() any { return new(proto.FinishCosumeItemMissionScRsp) })
+	c.regMsg(MakeDrinkCsReq, func() any { return new(proto.MakeDrinkCsReq) })
+	c.regMsg(PlayerHeartBeatCsReq, func() any { return new(proto.PlayerHeartBeatCsReq) })
+	c.regMsg(SwitchLineupIndexCsReq, func() any { return new(proto.SwitchLineupIndexCsReq) })
+	c.regMsg(RemoveStuffFromAreaScRsp, func() any { return new(proto.RemoveStuffFromAreaScRsp) })
+	c.regMsg(SelectChessRogueNousSubStoryScRsp, func() any { return new(proto.SelectChessRogueNousSubStoryScRsp) })
+	c.regMsg(GetShareDataScRsp, func() any { return new(proto.GetShareDataScRsp) })
+	c.regMsg(MuseumTargetRewardNotify, func() any { return new(proto.MuseumTargetRewardNotify) })
+	c.regMsg(ChallengeSettleNotify, func() any { return new(proto.ChallengeSettleNotify) })
+	c.regMsg(EnterAetherDivideSceneScRsp, func() any { return new(proto.EnterAetherDivideSceneScRsp) })
+	c.regMsg(GetPrivateChatHistoryCsReq, func() any { return new(proto.GetPrivateChatHistoryCsReq) })
 	c.regMsg(StartRogueCsReq, func() any { return new(proto.StartRogueCsReq) })
-	c.regMsg(SyncDeleteFriendScNotify, func() any { return new(proto.SyncDeleteFriendScNotify) })
-	c.regMsg(BuyGoodsCsReq, func() any { return new(proto.BuyGoodsCsReq) })
-	c.regMsg(SceneEnterStageCsReq, func() any { return new(proto.SceneEnterStageCsReq) })
-	c.regMsg(TakeChallengeRewardCsReq, func() any { return new(proto.TakeChallengeRewardCsReq) })
-	c.regMsg(GroupStateChangeCsReq, func() any { return new(proto.GroupStateChangeCsReq) })
-	c.regMsg(UnlockBackGroundMusicScRsp, func() any { return new(proto.UnlockBackGroundMusicScRsp) })
-	c.regMsg(ReserveStaminaExchangeCsReq, func() any { return new(proto.ReserveStaminaExchangeCsReq) })
-	c.regMsg(SetLineupNameCsReq, func() any { return new(proto.SetLineupNameCsReq) })
+	c.regMsg(AetherDivideFinishChallengeScNotify, func() any { return new(proto.AetherDivideFinishChallengeScNotify) })
+	c.regMsg(GetFantasticStoryActivityDataScRsp, func() any { return new(proto.GetFantasticStoryActivityDataScRsp) })
+	c.regMsg(AlleyTakeEventRewardScRsp, func() any { return new(proto.AlleyTakeEventRewardScRsp) })
+	c.regMsg(SpaceZooTakeCsReq, func() any { return new(proto.SpaceZooTakeCsReq) })
+	c.regMsg(MakeMissionDrinkScRsp, func() any { return new(proto.MakeMissionDrinkScRsp) })
+	c.regMsg(DoGachaCsReq, func() any { return new(proto.DoGachaCsReq) })
+	c.regMsg(GetPlayerReturnMultiDropInfoCsReq, func() any { return new(proto.GetPlayerReturnMultiDropInfoCsReq) })
+	c.regMsg(GetMbtiReportScRsp, func() any { return new(proto.GetMbtiReportScRsp) })
+	c.regMsg(SetMissionEventProgressScRsp, func() any { return new(proto.SetMissionEventProgressScRsp) })
+	c.regMsg(ChessRogueReviveAvatarScRsp, func() any { return new(proto.ChessRogueReviveAvatarScRsp) })
+	c.regMsg(GetAllSaveRaidCsReq, func() any { return new(proto.GetAllSaveRaidCsReq) })
+	c.regMsg(UnlockPhoneThemeScNotify, func() any { return new(proto.UnlockPhoneThemeScNotify) })
+	c.regMsg(MonopolyMoveScRsp, func() any { return new(proto.MonopolyMoveScRsp) })
+	c.regMsg(FinishTutorialScRsp, func() any { return new(proto.FinishTutorialScRsp) })
+	c.regMsg(EnterTrialActivityStageScRsp, func() any { return new(proto.EnterTrialActivityStageScRsp) })
+	c.regMsg(ChessRogueCellUpdateNotify, func() any { return new(proto.ChessRogueCellUpdateNotify) })
+	c.regMsg(GetPlayerReplayInfoScRsp, func() any { return new(proto.GetPlayerReplayInfoScRsp) })
+	c.regMsg(FinishTutorialGuideCsReq, func() any { return new(proto.FinishTutorialGuideCsReq) })
+	c.regMsg(FantasticStoryActivityBattleEndScNotify, func() any { return new(proto.FantasticStoryActivityBattleEndScNotify) })
+	c.regMsg(UpdateMechanismBarScNotify, func() any { return new(proto.UpdateMechanismBarScNotify) })
+	c.regMsg(TravelBrochureGetDataScRsp, func() any { return new(proto.TravelBrochureGetDataScRsp) })
+	c.regMsg(ApplyFriendCsReq, func() any { return new(proto.ApplyFriendCsReq) })
+	c.regMsg(BuyNpcStuffScRsp, func() any { return new(proto.BuyNpcStuffScRsp) })
+	c.regMsg(UnlockTeleportNotify, func() any { return new(proto.UnlockTeleportNotify) })
+	c.regMsg(GetAllLineupDataScRsp, func() any { return new(proto.GetAllLineupDataScRsp) })
+	c.regMsg(UnlockSkilltreeCsReq, func() any { return new(proto.UnlockSkilltreeCsReq) })
+	c.regMsg(AddBlacklistCsReq, func() any { return new(proto.AddBlacklistCsReq) })
+	c.regMsg(UpdateRogueAdventureRoomScoreScRsp, func() any { return new(proto.UpdateRogueAdventureRoomScoreScRsp) })
+	c.regMsg(ClientObjDownloadDataScNotify, func() any { return new(proto.ClientObjDownloadDataScNotify) })
+	c.regMsg(UseTreasureDungeonItemCsReq, func() any { return new(proto.UseTreasureDungeonItemCsReq) })
+	c.regMsg(GetLineupAvatarDataScRsp, func() any { return new(proto.GetLineupAvatarDataScRsp) })
+	c.regMsg(GmTalkScNotify, func() any { return new(proto.GmTalkScNotify) })
+	c.regMsg(FinishChessRogueSubStoryScRsp, func() any { return new(proto.FinishChessRogueSubStoryScRsp) })
+	c.regMsg(HandleRogueCommonPendingActionCsReq, func() any { return new(proto.HandleRogueCommonPendingActionCsReq) })
+	c.regMsg(SearchPlayerScRsp, func() any { return new(proto.SearchPlayerScRsp) })
+	c.regMsg(MonopolyActionResultScNotify, func() any { return new(proto.MonopolyActionResultScNotify) })
+	c.regMsg(UpdateRedDotDataCsReq, func() any { return new(proto.UpdateRedDotDataCsReq) })
+	c.regMsg(AvatarExpUpCsReq, func() any { return new(proto.AvatarExpUpCsReq) })
+	c.regMsg(ChessRogueEnterNextLayerCsReq, func() any { return new(proto.ChessRogueEnterNextLayerCsReq) })
+	c.regMsg(GetFriendApplyListInfoCsReq, func() any { return new(proto.GetFriendApplyListInfoCsReq) })
+	c.regMsg(OpenRogueChestScRsp, func() any { return new(proto.OpenRogueChestScRsp) })
+	c.regMsg(TravelBrochureRemovePasterCsReq, func() any { return new(proto.TravelBrochureRemovePasterCsReq) })
+	c.regMsg(BattlePassInfoNotify, func() any { return new(proto.BattlePassInfoNotify) })
+	c.regMsg(MonopolyRollDiceScRsp, func() any { return new(proto.MonopolyRollDiceScRsp) })
+	c.regMsg(TakeAssistRewardCsReq, func() any { return new(proto.TakeAssistRewardCsReq) })
+	c.regMsg(FinishPerformSectionIdCsReq, func() any { return new(proto.FinishPerformSectionIdCsReq) })
+	c.regMsg(AlleyPlacingGameScRsp, func() any { return new(proto.AlleyPlacingGameScRsp) })
+	c.regMsg(MonopolyGameRaiseRatioCsReq, func() any { return new(proto.MonopolyGameRaiseRatioCsReq) })
+	c.regMsg(TriggerVoiceScRsp, func() any { return new(proto.TriggerVoiceScRsp) })
+	c.regMsg(PVEBattleResultScRsp, func() any { return new(proto.PVEBattleResultScRsp) })
+	c.regMsg(ComposeLimitNumCompleteNotify, func() any { return new(proto.ComposeLimitNumCompleteNotify) })
+	c.regMsg(StartAetherDivideStageBattleCsReq, func() any { return new(proto.StartAetherDivideStageBattleCsReq) })
+	c.regMsg(SendMsgScRsp, func() any { return new(proto.SendMsgScRsp) })
+	c.regMsg(ChessRogueConfirmRollCsReq, func() any { return new(proto.ChessRogueConfirmRollCsReq) })
+	c.regMsg(WolfBroGameExplodeMonsterScRsp, func() any { return new(proto.WolfBroGameExplodeMonsterScRsp) })
 	c.regMsg(GetAvatarDataScRsp, func() any { return new(proto.GetAvatarDataScRsp) })
-	c.regMsg(RankUpEquipmentCsReq, func() any { return new(proto.RankUpEquipmentCsReq) })
+	c.regMsg(GetPlayerDetailInfoScRsp, func() any { return new(proto.GetPlayerDetailInfoScRsp) })
+	c.regMsg(GetShareDataCsReq, func() any { return new(proto.GetShareDataCsReq) })
+	c.regMsg(SetCurWaypointCsReq, func() any { return new(proto.SetCurWaypointCsReq) })
+	c.regMsg(ActivateFarmElementCsReq, func() any { return new(proto.ActivateFarmElementCsReq) })
+	c.regMsg(GetLevelRewardTakenListScRsp, func() any { return new(proto.GetLevelRewardTakenListScRsp) })
+	c.regMsg(LogisticsGameScRsp, func() any { return new(proto.LogisticsGameScRsp) })
+	c.regMsg(LogisticsDetonateStarSkiffCsReq, func() any { return new(proto.LogisticsDetonateStarSkiffCsReq) })
+	c.regMsg(EntityBindPropCsReq, func() any { return new(proto.EntityBindPropCsReq) })
+	c.regMsg(GetSocialEventServerCacheCsReq, func() any { return new(proto.GetSocialEventServerCacheCsReq) })
+	c.regMsg(SharePunkLordMonsterScRsp, func() any { return new(proto.SharePunkLordMonsterScRsp) })
+	c.regMsg(ChessRogueUpdateDicePassiveAccumulateValueScNotify, func() any { return new(proto.ChessRogueUpdateDicePassiveAccumulateValueScNotify) })
+	c.regMsg(EnterChessRogueAeonRoomScRsp, func() any { return new(proto.EnterChessRogueAeonRoomScRsp) })
+	c.regMsg(ChessRogueGiveUpScRsp, func() any { return new(proto.ChessRogueGiveUpScRsp) })
+	c.regMsg(RankUpAvatarScRsp, func() any { return new(proto.RankUpAvatarScRsp) })
+	c.regMsg(ComposeItemScRsp, func() any { return new(proto.ComposeItemScRsp) })
+	c.regMsg(SetClientRaidTargetCountScRsp, func() any { return new(proto.SetClientRaidTargetCountScRsp) })
+	c.regMsg(EnterTreasureDungeonCsReq, func() any { return new(proto.EnterTreasureDungeonCsReq) })
+	c.regMsg(GetQuestDataCsReq, func() any { return new(proto.GetQuestDataCsReq) })
+	c.regMsg(SyncAcceptedPamMissionNotify, func() any { return new(proto.SyncAcceptedPamMissionNotify) })
+	c.regMsg(TakeAllRewardScRsp, func() any { return new(proto.TakeAllRewardScRsp) })
+	c.regMsg(RotateMapCsReq, func() any { return new(proto.RotateMapCsReq) })
+	c.regMsg(TakeRogueScoreRewardScRsp, func() any { return new(proto.TakeRogueScoreRewardScRsp) })
+	c.regMsg(GetBoxingClubInfoScRsp, func() any { return new(proto.GetBoxingClubInfoScRsp) })
+	c.regMsg(ReEnterLastElementStageCsReq, func() any { return new(proto.ReEnterLastElementStageCsReq) })
+	c.regMsg(TakePrestigeRewardScRsp, func() any { return new(proto.TakePrestigeRewardScRsp) })
+	c.regMsg(PrestigeLevelUpScRsp, func() any { return new(proto.PrestigeLevelUpScRsp) })
+	c.regMsg(SetStuffToAreaCsReq, func() any { return new(proto.SetStuffToAreaCsReq) })
+	c.regMsg(ChessRogueUpdateReviveInfoScNotify, func() any { return new(proto.ChessRogueUpdateReviveInfoScNotify) })
+	c.regMsg(RemoveRotaterCsReq, func() any { return new(proto.RemoveRotaterCsReq) })
+	c.regMsg(QuitTreasureDungeonCsReq, func() any { return new(proto.QuitTreasureDungeonCsReq) })
+	c.regMsg(AlleyEventEffectNotify, func() any { return new(proto.AlleyEventEffectNotify) })
+	c.regMsg(ExpUpRelicScRsp, func() any { return new(proto.ExpUpRelicScRsp) })
+	c.regMsg(HandleFriendCsReq, func() any { return new(proto.HandleFriendCsReq) })
+	c.regMsg(MuseumFundsChangedScNotify, func() any { return new(proto.MuseumFundsChangedScNotify) })
+	c.regMsg(TelevisionActivityDataChangeScNotify, func() any { return new(proto.TelevisionActivityDataChangeScNotify) })
+	c.regMsg(GetSceneMapInfoScRsp, func() any { return new(proto.GetSceneMapInfoScRsp) })
+	c.regMsg(GetMissionEventDataScRsp, func() any { return new(proto.GetMissionEventDataScRsp) })
+	c.regMsg(TakeMultipleExpeditionRewardCsReq, func() any { return new(proto.TakeMultipleExpeditionRewardCsReq) })
+	c.regMsg(GetNpcTakenRewardCsReq, func() any { return new(proto.GetNpcTakenRewardCsReq) })
+	c.regMsg(RecoverAllLineupScRsp, func() any { return new(proto.RecoverAllLineupScRsp) })
+	c.regMsg(MuseumTargetStartNotify, func() any { return new(proto.MuseumTargetStartNotify) })
+	c.regMsg(GetMovieRacingDataCsReq, func() any { return new(proto.GetMovieRacingDataCsReq) })
+	c.regMsg(SyncRogueAdventureRoomInfoScNotify, func() any { return new(proto.SyncRogueAdventureRoomInfoScNotify) })
+	c.regMsg(MatchBoxingClubOpponentScRsp, func() any { return new(proto.MatchBoxingClubOpponentScRsp) })
+	c.regMsg(StartBattleCollegeScRsp, func() any { return new(proto.StartBattleCollegeScRsp) })
+	c.regMsg(GetLoginActivityCsReq, func() any { return new(proto.GetLoginActivityCsReq) })
+	c.regMsg(ChessRogueStartCsReq, func() any { return new(proto.ChessRogueStartCsReq) })
+	c.regMsg(EnterTrialActivityStageCsReq, func() any { return new(proto.EnterTrialActivityStageCsReq) })
+	c.regMsg(UnlockedAreaMapScNotify, func() any { return new(proto.UnlockedAreaMapScNotify) })
+	c.regMsg(SetGroupCustomSaveDataCsReq, func() any { return new(proto.SetGroupCustomSaveDataCsReq) })
+	c.regMsg(ChessRogueSkipTeachingLevelCsReq, func() any { return new(proto.ChessRogueSkipTeachingLevelCsReq) })
+	c.regMsg(GetFarmStageGachaInfoScRsp, func() any { return new(proto.GetFarmStageGachaInfoScRsp) })
+	c.regMsg(PlayerLoginScRsp, func() any { return new(proto.PlayerLoginScRsp) })
+	c.regMsg(RestoreWolfBroGameArchiveScRsp, func() any { return new(proto.RestoreWolfBroGameArchiveScRsp) })
+	c.regMsg(LeaveMapRotationRegionScRsp, func() any { return new(proto.LeaveMapRotationRegionScRsp) })
+	c.regMsg(SyncChessRogueMainStoryFinishScNotify, func() any { return new(proto.SyncChessRogueMainStoryFinishScNotify) })
+	c.regMsg(StartTimedCocoonStageCsReq, func() any { return new(proto.StartTimedCocoonStageCsReq) })
+	c.regMsg(GiveUpBoxingClubChallengeScRsp, func() any { return new(proto.GiveUpBoxingClubChallengeScRsp) })
+	c.regMsg(ExchangeGachaCeilingCsReq, func() any { return new(proto.ExchangeGachaCeilingCsReq) })
+	c.regMsg(VirtualLineupDestroyNotify, func() any { return new(proto.VirtualLineupDestroyNotify) })
+	c.regMsg(HeartDialScriptChangeScNotify, func() any { return new(proto.HeartDialScriptChangeScNotify) })
+	c.regMsg(SetHeadIconCsReq, func() any { return new(proto.SetHeadIconCsReq) })
+	c.regMsg(SyncLineupNotify, func() any { return new(proto.SyncLineupNotify) })
+	c.regMsg(GetSocialEventServerCacheScRsp, func() any { return new(proto.GetSocialEventServerCacheScRsp) })
+	c.regMsg(AcceptActivityExpeditionScRsp, func() any { return new(proto.AcceptActivityExpeditionScRsp) })
+	c.regMsg(PrivateMsgOfflineUsersScNotify, func() any { return new(proto.PrivateMsgOfflineUsersScNotify) })
+	c.regMsg(BuyGoodsCsReq, func() any { return new(proto.BuyGoodsCsReq) })
+	c.regMsg(GetMonopolyInfoCsReq, func() any { return new(proto.GetMonopolyInfoCsReq) })
+	c.regMsg(StartCocoonStageScRsp, func() any { return new(proto.StartCocoonStageScRsp) })
+	c.regMsg(StartBattleCollegeCsReq, func() any { return new(proto.StartBattleCollegeCsReq) })
+	c.regMsg(EnterAdventureCsReq, func() any { return new(proto.EnterAdventureCsReq) })
+	c.regMsg(ReplaceLineupCsReq, func() any { return new(proto.ReplaceLineupCsReq) })
+	c.regMsg(MonopolyRollRandomCsReq, func() any { return new(proto.MonopolyRollRandomCsReq) })
+	c.regMsg(MonopolyUpgradeAssetScRsp, func() any { return new(proto.MonopolyUpgradeAssetScRsp) })
+	c.regMsg(GetBoxingClubInfoCsReq, func() any { return new(proto.GetBoxingClubInfoCsReq) })
+	c.regMsg(TakeAllRewardCsReq, func() any { return new(proto.TakeAllRewardCsReq) })
+	c.regMsg(EnterRogueCsReq, func() any { return new(proto.EnterRogueCsReq) })
+	c.regMsg(TakeRogueEndlessActivityAllBonusRewardCsReq, func() any { return new(proto.TakeRogueEndlessActivityAllBonusRewardCsReq) })
+	c.regMsg(LogisticsDetonateStarSkiffScRsp, func() any { return new(proto.LogisticsDetonateStarSkiffScRsp) })
+	c.regMsg(WaypointShowNewCsNotify, func() any { return new(proto.WaypointShowNewCsNotify) })
+	c.regMsg(DeactivateFarmElementCsReq, func() any { return new(proto.DeactivateFarmElementCsReq) })
+	c.regMsg(TakeLoginActivityRewardScRsp, func() any { return new(proto.TakeLoginActivityRewardScRsp) })
+	c.regMsg(SpaceZooDeleteCatCsReq, func() any { return new(proto.SpaceZooDeleteCatCsReq) })
+	c.regMsg(RogueModifierSelectCellScRsp, func() any { return new(proto.RogueModifierSelectCellScRsp) })
+	c.regMsg(ExchangeRogueRewardKeyCsReq, func() any { return new(proto.ExchangeRogueRewardKeyCsReq) })
+	c.regMsg(HeliobusSnsPostScRsp, func() any { return new(proto.HeliobusSnsPostScRsp) })
+	c.regMsg(StartRogueScRsp, func() any { return new(proto.StartRogueScRsp) })
+	c.regMsg(AetherDivideSkillItemScNotify, func() any { return new(proto.AetherDivideSkillItemScNotify) })
+	c.regMsg(SetClientRaidTargetCountCsReq, func() any { return new(proto.SetClientRaidTargetCountCsReq) })
+	c.regMsg(SpringRecoverScRsp, func() any { return new(proto.SpringRecoverScRsp) })
+	c.regMsg(PlayerHeartBeatScRsp, func() any { return new(proto.PlayerHeartBeatScRsp) })
+	c.regMsg(GetMissionStatusScRsp, func() any { return new(proto.GetMissionStatusScRsp) })
+	c.regMsg(SetFriendRemarkNameCsReq, func() any { return new(proto.SetFriendRemarkNameCsReq) })
+	c.regMsg(EnterAdventureScRsp, func() any { return new(proto.EnterAdventureScRsp) })
+	c.regMsg(InteractChargerScRsp, func() any { return new(proto.InteractChargerScRsp) })
+	c.regMsg(MonopolyTakePhaseRewardScRsp, func() any { return new(proto.MonopolyTakePhaseRewardScRsp) })
+	c.regMsg(MonopolySocialEventEffectScNotify, func() any { return new(proto.MonopolySocialEventEffectScNotify) })
+	c.regMsg(TakeExpeditionRewardCsReq, func() any { return new(proto.TakeExpeditionRewardCsReq) })
+	c.regMsg(StaminaInfoScNotify, func() any { return new(proto.StaminaInfoScNotify) })
+	c.regMsg(MarkItemScRsp, func() any { return new(proto.MarkItemScRsp) })
+	c.regMsg(GetDrinkMakerDataScRsp, func() any { return new(proto.GetDrinkMakerDataScRsp) })
+	c.regMsg(TakeTalkRewardCsReq, func() any { return new(proto.TakeTalkRewardCsReq) })
+	c.regMsg(UnlockBackGroundMusicScRsp, func() any { return new(proto.UnlockBackGroundMusicScRsp) })
+	c.regMsg(GetSpringRecoverDataScRsp, func() any { return new(proto.GetSpringRecoverDataScRsp) })
+	c.regMsg(TakeRogueEndlessActivityPointRewardCsReq, func() any { return new(proto.TakeRogueEndlessActivityPointRewardCsReq) })
+	c.regMsg(EndDrinkMakerSequenceCsReq, func() any { return new(proto.EndDrinkMakerSequenceCsReq) })
+	c.regMsg(HandleRogueCommonPendingActionScRsp, func() any { return new(proto.HandleRogueCommonPendingActionScRsp) })
+	c.regMsg(SetAssistAvatarCsReq, func() any { return new(proto.SetAssistAvatarCsReq) })
+	c.regMsg(DeleteSocialEventServerCacheScRsp, func() any { return new(proto.DeleteSocialEventServerCacheScRsp) })
+	c.regMsg(EnhanceRogueBuffCsReq, func() any { return new(proto.EnhanceRogueBuffCsReq) })
+	c.regMsg(UnlockBackGroundMusicCsReq, func() any { return new(proto.UnlockBackGroundMusicCsReq) })
+	c.regMsg(MuseumRandomEventSelectScRsp, func() any { return new(proto.MuseumRandomEventSelectScRsp) })
+	c.regMsg(BatchMarkChatEmojiScRsp, func() any { return new(proto.BatchMarkChatEmojiScRsp) })
+	c.regMsg(GetTutorialScRsp, func() any { return new(proto.GetTutorialScRsp) })
+	c.regMsg(FeverTimeActivityBattleEndScNotify, func() any { return new(proto.FeverTimeActivityBattleEndScNotify) })
+	c.regMsg(MonopolyCheatDiceCsReq, func() any { return new(proto.MonopolyCheatDiceCsReq) })
+	c.regMsg(GmTalkCsReq, func() any { return new(proto.GmTalkCsReq) })
+	c.regMsg(RechargeSuccNotify, func() any { return new(proto.RechargeSuccNotify) })
+	c.regMsg(GetRogueAeonInfoCsReq, func() any { return new(proto.GetRogueAeonInfoCsReq) })
+	c.regMsg(EnterSceneScRsp, func() any { return new(proto.EnterSceneScRsp) })
+	c.regMsg(GetCurAssistCsReq, func() any { return new(proto.GetCurAssistCsReq) })
+	c.regMsg(GetOfferingInfoCsReq, func() any { return new(proto.GetOfferingInfoCsReq) })
+	c.regMsg(FinishPerformSectionIdScRsp, func() any { return new(proto.FinishPerformSectionIdScRsp) })
+	c.regMsg(RecoverAllLineupCsReq, func() any { return new(proto.RecoverAllLineupCsReq) })
+	c.regMsg(RetcodeNotify, func() any { return new(proto.RetcodeNotify) })
+	c.regMsg(GetMbtiReportCsReq, func() any { return new(proto.GetMbtiReportCsReq) })
+	c.regMsg(TakeRollShopRewardScRsp, func() any { return new(proto.TakeRollShopRewardScRsp) })
+	c.regMsg(FinishEmotionDialoguePerformanceScRsp, func() any { return new(proto.FinishEmotionDialoguePerformanceScRsp) })
+	c.regMsg(GetPlayerBoardDataScRsp, func() any { return new(proto.GetPlayerBoardDataScRsp) })
+	c.regMsg(SyncHandleFriendScNotify, func() any { return new(proto.SyncHandleFriendScNotify) })
+	c.regMsg(GetRogueEndlessActivityDataCsReq, func() any { return new(proto.GetRogueEndlessActivityDataCsReq) })
+	c.regMsg(GetTelevisionActivityDataScRsp, func() any { return new(proto.GetTelevisionActivityDataScRsp) })
+	c.regMsg(WolfBroGameUseBulletCsReq, func() any { return new(proto.WolfBroGameUseBulletCsReq) })
+	c.regMsg(GetLineupAvatarDataCsReq, func() any { return new(proto.GetLineupAvatarDataCsReq) })
+	c.regMsg(ChessRogueGiveUpCsReq, func() any { return new(proto.ChessRogueGiveUpCsReq) })
+	c.regMsg(SelectInclinationTextCsReq, func() any { return new(proto.SelectInclinationTextCsReq) })
+	c.regMsg(SelectChatBubbleScRsp, func() any { return new(proto.SelectChatBubbleScRsp) })
+	c.regMsg(RotateMapScRsp, func() any { return new(proto.RotateMapScRsp) })
+	c.regMsg(GetPhoneDataScRsp, func() any { return new(proto.GetPhoneDataScRsp) })
+	c.regMsg(DailyTaskDataScNotify, func() any { return new(proto.DailyTaskDataScNotify) })
+	c.regMsg(RogueModifierUpdateNotify, func() any { return new(proto.RogueModifierUpdateNotify) })
+	c.regMsg(SelectChatBubbleCsReq, func() any { return new(proto.SelectChatBubbleCsReq) })
+	c.regMsg(EndDrinkMakerSequenceScRsp, func() any { return new(proto.EndDrinkMakerSequenceScRsp) })
+	c.regMsg(CancelMarkItemNotify, func() any { return new(proto.CancelMarkItemNotify) })
+	c.regMsg(PlayerReturnSignCsReq, func() any { return new(proto.PlayerReturnSignCsReq) })
+	c.regMsg(GameplayCounterCountDownScRsp, func() any { return new(proto.GameplayCounterCountDownScRsp) })
+	c.regMsg(MuseumTakeCollectRewardScRsp, func() any { return new(proto.MuseumTakeCollectRewardScRsp) })
+	c.regMsg(GmTalkScRsp, func() any { return new(proto.GmTalkScRsp) })
+	c.regMsg(MarkReadMailScRsp, func() any { return new(proto.MarkReadMailScRsp) })
+	c.regMsg(StartRaidScRsp, func() any { return new(proto.StartRaidScRsp) })
+	c.regMsg(ChessRogueUpdateUnlockLevelScNotify, func() any { return new(proto.ChessRogueUpdateUnlockLevelScNotify) })
+	c.regMsg(StartChallengeCsReq, func() any { return new(proto.StartChallengeCsReq) })
+	c.regMsg(ScenePlaneEventScNotify, func() any { return new(proto.ScenePlaneEventScNotify) })
+	c.regMsg(SetSignatureScRsp, func() any { return new(proto.SetSignatureScRsp) })
+	c.regMsg(ChessRogueGiveUpRollCsReq, func() any { return new(proto.ChessRogueGiveUpRollCsReq) })
+	c.regMsg(GetWolfBroGameDataScRsp, func() any { return new(proto.GetWolfBroGameDataScRsp) })
+	c.regMsg(MonopolyGetRegionProgressCsReq, func() any { return new(proto.MonopolyGetRegionProgressCsReq) })
+	c.regMsg(GetCurBattleInfoScRsp, func() any { return new(proto.GetCurBattleInfoScRsp) })
+	c.regMsg(GetChessRogueStoryInfoCsReq, func() any { return new(proto.GetChessRogueStoryInfoCsReq) })
+	c.regMsg(GetRollShopInfoCsReq, func() any { return new(proto.GetRollShopInfoCsReq) })
+	c.regMsg(SyncRogueSeasonFinishScNotify, func() any { return new(proto.SyncRogueSeasonFinishScNotify) })
+	c.regMsg(TakeTrainVisitorUntakenBehaviorRewardScRsp, func() any { return new(proto.TakeTrainVisitorUntakenBehaviorRewardScRsp) })
+	c.regMsg(MuseumTakeCollectRewardCsReq, func() any { return new(proto.MuseumTakeCollectRewardCsReq) })
+	c.regMsg(TakeQuestRewardCsReq, func() any { return new(proto.TakeQuestRewardCsReq) })
+	c.regMsg(GetMailScRsp, func() any { return new(proto.GetMailScRsp) })
+	c.regMsg(GetFriendApplyListInfoScRsp, func() any { return new(proto.GetFriendApplyListInfoScRsp) })
+	c.regMsg(LeaveRogueScRsp, func() any { return new(proto.LeaveRogueScRsp) })
+	c.regMsg(ChessRogueQuitScRsp, func() any { return new(proto.ChessRogueQuitScRsp) })
+	c.regMsg(RaidInfoNotify, func() any { return new(proto.RaidInfoNotify) })
+	c.regMsg(InteractPropCsReq, func() any { return new(proto.InteractPropCsReq) })
+	c.regMsg(EnhanceCommonRogueBuffScRsp, func() any { return new(proto.EnhanceCommonRogueBuffScRsp) })
+	c.regMsg(GetChessRogueStoryInfoScRsp, func() any { return new(proto.GetChessRogueStoryInfoScRsp) })
+	c.regMsg(QuestRecordScNotify, func() any { return new(proto.QuestRecordScNotify) })
+	c.regMsg(GetAllServerPrefsDataScRsp, func() any { return new(proto.GetAllServerPrefsDataScRsp) })
+	c.regMsg(LeaveRogueCsReq, func() any { return new(proto.LeaveRogueCsReq) })
+	c.regMsg(LockRelicScRsp, func() any { return new(proto.LockRelicScRsp) })
+	c.regMsg(ChessRogueRollDiceCsReq, func() any { return new(proto.ChessRogueRollDiceCsReq) })
+	c.regMsg(GetMonsterResearchActivityDataScRsp, func() any { return new(proto.GetMonsterResearchActivityDataScRsp) })
+	c.regMsg(ChessRogueNousEditDiceCsReq, func() any { return new(proto.ChessRogueNousEditDiceCsReq) })
+	c.regMsg(ServerAnnounceNotify, func() any { return new(proto.ServerAnnounceNotify) })
+	c.regMsg(GetChessRogueNousStoryInfoCsReq, func() any { return new(proto.GetChessRogueNousStoryInfoCsReq) })
+	c.regMsg(AlleyEventChangeNotify, func() any { return new(proto.AlleyEventChangeNotify) })
+	c.regMsg(GetFriendListInfoCsReq, func() any { return new(proto.GetFriendListInfoCsReq) })
+	c.regMsg(GetCurChallengeScRsp, func() any { return new(proto.GetCurChallengeScRsp) })
+	c.regMsg(UpdateServerPrefsDataCsReq, func() any { return new(proto.UpdateServerPrefsDataCsReq) })
+	c.regMsg(GetTrainVisitorRegisterScRsp, func() any { return new(proto.GetTrainVisitorRegisterScRsp) })
+	c.regMsg(PlayerReturnTakePointRewardScRsp, func() any { return new(proto.PlayerReturnTakePointRewardScRsp) })
+	c.regMsg(GetTutorialGuideScRsp, func() any { return new(proto.GetTutorialGuideScRsp) })
+	c.regMsg(ChessRogueEnterCsReq, func() any { return new(proto.ChessRogueEnterCsReq) })
+	c.regMsg(AetherDivideRefreshEndlessScNotify, func() any { return new(proto.AetherDivideRefreshEndlessScNotify) })
+	c.regMsg(SyncRogueDialogueEventDataScNotify, func() any { return new(proto.SyncRogueDialogueEventDataScNotify) })
+	c.regMsg(GetKilledPunkLordMonsterDataScRsp, func() any { return new(proto.GetKilledPunkLordMonsterDataScRsp) })
+	c.regMsg(ChessRogueEnterCellScRsp, func() any { return new(proto.ChessRogueEnterCellScRsp) })
+	c.regMsg(GetGachaInfoScRsp, func() any { return new(proto.GetGachaInfoScRsp) })
+	c.regMsg(GetRogueBuffEnhanceInfoScRsp, func() any { return new(proto.GetRogueBuffEnhanceInfoScRsp) })
+	c.regMsg(GetAetherDivideInfoScRsp, func() any { return new(proto.GetAetherDivideInfoScRsp) })
+	c.regMsg(BuyBpLevelCsReq, func() any { return new(proto.BuyBpLevelCsReq) })
+	c.regMsg(GetAssistHistoryScRsp, func() any { return new(proto.GetAssistHistoryScRsp) })
+	c.regMsg(GetSaveLogisticsMapScRsp, func() any { return new(proto.GetSaveLogisticsMapScRsp) })
+	c.regMsg(FinishItemIdScRsp, func() any { return new(proto.FinishItemIdScRsp) })
+	c.regMsg(TakePromotionRewardScRsp, func() any { return new(proto.TakePromotionRewardScRsp) })
+	c.regMsg(TakeRogueEndlessActivityAllBonusRewardScRsp, func() any { return new(proto.TakeRogueEndlessActivityAllBonusRewardScRsp) })
+	c.regMsg(HeartDialTraceScriptCsReq, func() any { return new(proto.HeartDialTraceScriptCsReq) })
+	c.regMsg(SceneCastSkillCsReq, func() any { return new(proto.SceneCastSkillCsReq) })
+	c.regMsg(GetGachaCeilingCsReq, func() any { return new(proto.GetGachaCeilingCsReq) })
+	c.regMsg(GetMuseumInfoCsReq, func() any { return new(proto.GetMuseumInfoCsReq) })
+	c.regMsg(SyncClientResVersionCsReq, func() any { return new(proto.SyncClientResVersionCsReq) })
+	c.regMsg(MakeDrinkScRsp, func() any { return new(proto.MakeDrinkScRsp) })
+	c.regMsg(DeleteSummonUnitScRsp, func() any { return new(proto.DeleteSummonUnitScRsp) })
+	c.regMsg(UpdateEnergyScNotify, func() any { return new(proto.UpdateEnergyScNotify) })
+	c.regMsg(HeliobusSnsCommentScRsp, func() any { return new(proto.HeliobusSnsCommentScRsp) })
+	c.regMsg(GetChallengeRaidInfoScRsp, func() any { return new(proto.GetChallengeRaidInfoScRsp) })
+	c.regMsg(GetNpcStatusScRsp, func() any { return new(proto.GetNpcStatusScRsp) })
+	c.regMsg(SceneCastSkillCostMpScRsp, func() any { return new(proto.SceneCastSkillCostMpScRsp) })
+	c.regMsg(ChessRogueUpdateBoardScNotify, func() any { return new(proto.ChessRogueUpdateBoardScNotify) })
+	c.regMsg(EnterMapRotationRegionCsReq, func() any { return new(proto.EnterMapRotationRegionCsReq) })
+	c.regMsg(GetAssistListScRsp, func() any { return new(proto.GetAssistListScRsp) })
+	c.regMsg(TakeRogueEndlessActivityPointRewardScRsp, func() any { return new(proto.TakeRogueEndlessActivityPointRewardScRsp) })
+	c.regMsg(SetAetherDivideLineUpScRsp, func() any { return new(proto.SetAetherDivideLineUpScRsp) })
+	c.regMsg(RogueModifierAddNotify, func() any { return new(proto.RogueModifierAddNotify) })
+	c.regMsg(GetWaypointCsReq, func() any { return new(proto.GetWaypointCsReq) })
+	c.regMsg(StartTimedCocoonStageScRsp, func() any { return new(proto.StartTimedCocoonStageScRsp) })
+	c.regMsg(GroupStateChangeScRsp, func() any { return new(proto.GroupStateChangeScRsp) })
+	c.regMsg(PunkLordMonsterInfoScNotify, func() any { return new(proto.PunkLordMonsterInfoScNotify) })
+	c.regMsg(GetFeverTimeActivityDataCsReq, func() any { return new(proto.GetFeverTimeActivityDataCsReq) })
+	c.regMsg(FinishCurTurnCsReq, func() any { return new(proto.FinishCurTurnCsReq) })
+	c.regMsg(GetCurAssistScRsp, func() any { return new(proto.GetCurAssistScRsp) })
+	c.regMsg(SetSpringRecoverConfigCsReq, func() any { return new(proto.SetSpringRecoverConfigCsReq) })
+	c.regMsg(TravelBrochureSetCustomValueScRsp, func() any { return new(proto.TravelBrochureSetCustomValueScRsp) })
+	c.regMsg(GetArchiveDataScRsp, func() any { return new(proto.GetArchiveDataScRsp) })
+	c.regMsg(SetFriendRemarkNameScRsp, func() any { return new(proto.SetFriendRemarkNameScRsp) })
+	c.regMsg(LeaveChallengeScRsp, func() any { return new(proto.LeaveChallengeScRsp) })
+	c.regMsg(TakeOfferingRewardScRsp, func() any { return new(proto.TakeOfferingRewardScRsp) })
+	c.regMsg(PrepareRogueAdventureRoomScRsp, func() any { return new(proto.PrepareRogueAdventureRoomScRsp) })
+	c.regMsg(HeliobusSnsReadCsReq, func() any { return new(proto.HeliobusSnsReadCsReq) })
+	c.regMsg(EnterFantasticStoryActivityStageScRsp, func() any { return new(proto.EnterFantasticStoryActivityStageScRsp) })
+	c.regMsg(TakeTalkRewardScRsp, func() any { return new(proto.TakeTalkRewardScRsp) })
+	c.regMsg(AlleyPlacingGameCsReq, func() any { return new(proto.AlleyPlacingGameCsReq) })
+	c.regMsg(UseItemScRsp, func() any { return new(proto.UseItemScRsp) })
+	c.regMsg(GetReplayTokenCsReq, func() any { return new(proto.GetReplayTokenCsReq) })
+	c.regMsg(DelMailScRsp, func() any { return new(proto.DelMailScRsp) })
+	c.regMsg(StartFinishSubMissionScNotify, func() any { return new(proto.StartFinishSubMissionScNotify) })
+	c.regMsg(TakeRogueAeonLevelRewardScRsp, func() any { return new(proto.TakeRogueAeonLevelRewardScRsp) })
+	c.regMsg(AetherDivideRefreshEndlessCsReq, func() any { return new(proto.AetherDivideRefreshEndlessCsReq) })
+	c.regMsg(GetRaidInfoCsReq, func() any { return new(proto.GetRaidInfoCsReq) })
+	c.regMsg(MarkItemCsReq, func() any { return new(proto.MarkItemCsReq) })
+	c.regMsg(HeliobusSnsPostCsReq, func() any { return new(proto.HeliobusSnsPostCsReq) })
+	c.regMsg(MuseumRandomEventQueryCsReq, func() any { return new(proto.MuseumRandomEventQueryCsReq) })
+	c.regMsg(MonopolyBuyGoodsCsReq, func() any { return new(proto.MonopolyBuyGoodsCsReq) })
+	c.regMsg(MonopolyGetRegionProgressScRsp, func() any { return new(proto.MonopolyGetRegionProgressScRsp) })
+	c.regMsg(SyncRogueCommonPendingActionScNotify, func() any { return new(proto.SyncRogueCommonPendingActionScNotify) })
+	c.regMsg(SyncRogueCommonActionResultScNotify, func() any { return new(proto.SyncRogueCommonActionResultScNotify) })
+	c.regMsg(SetLanguageScRsp, func() any { return new(proto.SetLanguageScRsp) })
+	c.regMsg(GetFriendLoginInfoCsReq, func() any { return new(proto.GetFriendLoginInfoCsReq) })
+	c.regMsg(GetSceneMapInfoCsReq, func() any { return new(proto.GetSceneMapInfoCsReq) })
+	c.regMsg(StartTimedFarmElementScRsp, func() any { return new(proto.StartTimedFarmElementScRsp) })
+	c.regMsg(FinishChessRogueNousSubStoryScRsp, func() any { return new(proto.FinishChessRogueNousSubStoryScRsp) })
+	c.regMsg(SyncChessRogueNousSubStoryScNotify, func() any { return new(proto.SyncChessRogueNousSubStoryScNotify) })
+	c.regMsg(StartAlleyEventCsReq, func() any { return new(proto.StartAlleyEventCsReq) })
+	c.regMsg(StartAetherDivideStageBattleScRsp, func() any { return new(proto.StartAetherDivideStageBattleScRsp) })
+	c.regMsg(RaidKickByServerScNotify, func() any { return new(proto.RaidKickByServerScNotify) })
+	c.regMsg(GetChessRogueBuffEnhanceInfoScRsp, func() any { return new(proto.GetChessRogueBuffEnhanceInfoScRsp) })
+	c.regMsg(SyncRogueRewardInfoScNotify, func() any { return new(proto.SyncRogueRewardInfoScNotify) })
+	c.regMsg(JoinLineupCsReq, func() any { return new(proto.JoinLineupCsReq) })
+	c.regMsg(TakeQuestOptionalRewardCsReq, func() any { return new(proto.TakeQuestOptionalRewardCsReq) })
+	c.regMsg(ChessRoguePickAvatarScRsp, func() any { return new(proto.ChessRoguePickAvatarScRsp) })
+	c.regMsg(ChessRogueCheatRollScRsp, func() any { return new(proto.ChessRogueCheatRollScRsp) })
+	c.regMsg(MuseumRandomEventQueryScRsp, func() any { return new(proto.MuseumRandomEventQueryScRsp) })
+	c.regMsg(BoxingClubRewardScNotify, func() any { return new(proto.BoxingClubRewardScNotify) })
+	c.regMsg(GetHeartDialInfoScRsp, func() any { return new(proto.GetHeartDialInfoScRsp) })
+	c.regMsg(ChessRogueNousDiceSurfaceUnlockNotify, func() any { return new(proto.ChessRogueNousDiceSurfaceUnlockNotify) })
+	c.regMsg(GetMonopolyFriendRankingListCsReq, func() any { return new(proto.GetMonopolyFriendRankingListCsReq) })
+	c.regMsg(SellItemScRsp, func() any { return new(proto.SellItemScRsp) })
+	c.regMsg(HeliobusEnterBattleScRsp, func() any { return new(proto.HeliobusEnterBattleScRsp) })
+	c.regMsg(TakeApRewardCsReq, func() any { return new(proto.TakeApRewardCsReq) })
+	c.regMsg(MonopolySttUpdateScNotify, func() any { return new(proto.MonopolySttUpdateScNotify) })
+	c.regMsg(SceneEntityMoveCsReq, func() any { return new(proto.SceneEntityMoveCsReq) })
+	c.regMsg(UpdateMapRotationDataScNotify, func() any { return new(proto.UpdateMapRotationDataScNotify) })
+	c.regMsg(ReportPlayerScRsp, func() any { return new(proto.ReportPlayerScRsp) })
+	c.regMsg(GetShopListCsReq, func() any { return new(proto.GetShopListCsReq) })
+	c.regMsg(GetPunkLordBattleRecordScRsp, func() any { return new(proto.GetPunkLordBattleRecordScRsp) })
+	c.regMsg(SyncRogueGetItemScNotify, func() any { return new(proto.SyncRogueGetItemScNotify) })
+	c.regMsg(QueryProductInfoScRsp, func() any { return new(proto.QueryProductInfoScRsp) })
+	c.regMsg(GetRogueTalentInfoScRsp, func() any { return new(proto.GetRogueTalentInfoScRsp) })
+	c.regMsg(MonthCardRewardNotify, func() any { return new(proto.MonthCardRewardNotify) })
+	c.regMsg(CancelCacheNotifyScRsp, func() any { return new(proto.CancelCacheNotifyScRsp) })
+	c.regMsg(GameplayCounterCountDownCsReq, func() any { return new(proto.GameplayCounterCountDownCsReq) })
+	c.regMsg(GetAlleyInfoCsReq, func() any { return new(proto.GetAlleyInfoCsReq) })
+	c.regMsg(MarkReadMailCsReq, func() any { return new(proto.MarkReadMailCsReq) })
+	c.regMsg(SpaceZooBornScRsp, func() any { return new(proto.SpaceZooBornScRsp) })
+	c.regMsg(AetherDivideLineupScNotify, func() any { return new(proto.AetherDivideLineupScNotify) })
+	c.regMsg(DressAvatarSkinScRsp, func() any { return new(proto.DressAvatarSkinScRsp) })
+	c.regMsg(ExchangeStaminaCsReq, func() any { return new(proto.ExchangeStaminaCsReq) })
+	c.regMsg(PVEBattleResultCsReq, func() any { return new(proto.PVEBattleResultCsReq) })
+	c.regMsg(SpaceZooDataScRsp, func() any { return new(proto.SpaceZooDataScRsp) })
+	c.regMsg(LockEquipmentCsReq, func() any { return new(proto.LockEquipmentCsReq) })
+	c.regMsg(SubmitEmotionItemScRsp, func() any { return new(proto.SubmitEmotionItemScRsp) })
+	c.regMsg(BuyRogueShopBuffScRsp, func() any { return new(proto.BuyRogueShopBuffScRsp) })
+	c.regMsg(PlayerReturnTakeRewardCsReq, func() any { return new(proto.PlayerReturnTakeRewardCsReq) })
+	c.regMsg(GetAetherDivideChallengeInfoScRsp, func() any { return new(proto.GetAetherDivideChallengeInfoScRsp) })
+	c.regMsg(EnterSceneByServerScNotify, func() any { return new(proto.EnterSceneByServerScNotify) })
+	c.regMsg(SetHeroBasicTypeScRsp, func() any { return new(proto.SetHeroBasicTypeScRsp) })
+	c.regMsg(AcceptMultipleExpeditionScRsp, func() any { return new(proto.AcceptMultipleExpeditionScRsp) })
+	c.regMsg(GetPunkLordBattleRecordCsReq, func() any { return new(proto.GetPunkLordBattleRecordCsReq) })
+	c.regMsg(DressAvatarScRsp, func() any { return new(proto.DressAvatarScRsp) })
+	c.regMsg(FinishTutorialCsReq, func() any { return new(proto.FinishTutorialCsReq) })
+	c.regMsg(StartAetherDivideSceneBattleCsReq, func() any { return new(proto.StartAetherDivideSceneBattleCsReq) })
+	c.regMsg(SetPlayerInfoScRsp, func() any { return new(proto.SetPlayerInfoScRsp) })
+	c.regMsg(TakeCityShopRewardScRsp, func() any { return new(proto.TakeCityShopRewardScRsp) })
+	c.regMsg(EnterAetherDivideSceneCsReq, func() any { return new(proto.EnterAetherDivideSceneCsReq) })
+	c.regMsg(SummonPunkLordMonsterScRsp, func() any { return new(proto.SummonPunkLordMonsterScRsp) })
+	c.regMsg(HeliobusSnsUpdateScNotify, func() any { return new(proto.HeliobusSnsUpdateScNotify) })
+	c.regMsg(ChessRogueLeaveScRsp, func() any { return new(proto.ChessRogueLeaveScRsp) })
+	c.regMsg(HeliobusActivityDataScRsp, func() any { return new(proto.HeliobusActivityDataScRsp) })
+	c.regMsg(AcceptedPamMissionExpireCsReq, func() any { return new(proto.AcceptedPamMissionExpireCsReq) })
+	c.regMsg(ChessRogueFinishCurRoomNotify, func() any { return new(proto.ChessRogueFinishCurRoomNotify) })
+	c.regMsg(GetRogueBuffEnhanceInfoCsReq, func() any { return new(proto.GetRogueBuffEnhanceInfoCsReq) })
+	c.regMsg(UpdatePlayerSettingScRsp, func() any { return new(proto.UpdatePlayerSettingScRsp) })
+	c.regMsg(GameplayCounterRecoverScRsp, func() any { return new(proto.GameplayCounterRecoverScRsp) })
+	c.regMsg(MonopolyLikeScNotify, func() any { return new(proto.MonopolyLikeScNotify) })
+	c.regMsg(MarkChatEmojiCsReq, func() any { return new(proto.MarkChatEmojiCsReq) })
+	c.regMsg(SetHeadIconScRsp, func() any { return new(proto.SetHeadIconScRsp) })
+	c.regMsg(MonopolyGameGachaScRsp, func() any { return new(proto.MonopolyGameGachaScRsp) })
+	c.regMsg(AntiAddictScNotify, func() any { return new(proto.AntiAddictScNotify) })
+	c.regMsg(ChessRogueQueryAeonDimensionsCsReq, func() any { return new(proto.ChessRogueQueryAeonDimensionsCsReq) })
+	c.regMsg(AceAntiCheaterScRsp, func() any { return new(proto.AceAntiCheaterScRsp) })
+	c.regMsg(GetCurSceneInfoScRsp, func() any { return new(proto.GetCurSceneInfoScRsp) })
+	c.regMsg(ChallengeRaidNotify, func() any { return new(proto.ChallengeRaidNotify) })
+	c.regMsg(FinishQuestCsReq, func() any { return new(proto.FinishQuestCsReq) })
+	c.regMsg(WolfBroGamePickupBulletScRsp, func() any { return new(proto.WolfBroGamePickupBulletScRsp) })
+	c.regMsg(UnlockTutorialScRsp, func() any { return new(proto.UnlockTutorialScRsp) })
+	c.regMsg(EnterFeverTimeActivityStageCsReq, func() any { return new(proto.EnterFeverTimeActivityStageCsReq) })
+	c.regMsg(StrongChallengeActivityBattleEndScNotify, func() any { return new(proto.StrongChallengeActivityBattleEndScNotify) })
+	c.regMsg(ChessRogueNousEditDiceScRsp, func() any { return new(proto.ChessRogueNousEditDiceScRsp) })
+	c.regMsg(MonopolyRollDiceCsReq, func() any { return new(proto.MonopolyRollDiceCsReq) })
+	c.regMsg(ReturnLastTownCsReq, func() any { return new(proto.ReturnLastTownCsReq) })
+	c.regMsg(FinishCurTurnScRsp, func() any { return new(proto.FinishCurTurnScRsp) })
+	c.regMsg(GetTrainVisitorBehaviorScRsp, func() any { return new(proto.GetTrainVisitorBehaviorScRsp) })
+	c.regMsg(TreasureDungeonDataScNotify, func() any { return new(proto.TreasureDungeonDataScNotify) })
+	c.regMsg(GetChatFriendHistoryScRsp, func() any { return new(proto.GetChatFriendHistoryScRsp) })
+	c.regMsg(GetCurLineupDataCsReq, func() any { return new(proto.GetCurLineupDataCsReq) })
+	c.regMsg(GetAetherDivideInfoCsReq, func() any { return new(proto.GetAetherDivideInfoCsReq) })
+	c.regMsg(GetUpdatedArchiveDataCsReq, func() any { return new(proto.GetUpdatedArchiveDataCsReq) })
+	c.regMsg(SetSpringRecoverConfigScRsp, func() any { return new(proto.SetSpringRecoverConfigScRsp) })
+	c.regMsg(SetForbidOtherApplyFriendScRsp, func() any { return new(proto.SetForbidOtherApplyFriendScRsp) })
+	c.regMsg(GetRollShopInfoScRsp, func() any { return new(proto.GetRollShopInfoScRsp) })
+	c.regMsg(GetCurSceneInfoCsReq, func() any { return new(proto.GetCurSceneInfoCsReq) })
+	c.regMsg(MuseumDispatchFinishedScNotify, func() any { return new(proto.MuseumDispatchFinishedScNotify) })
+	c.regMsg(GetRogueInitialScoreScRsp, func() any { return new(proto.GetRogueInitialScoreScRsp) })
+	c.regMsg(AetherDivideRefreshEndlessScRsp, func() any { return new(proto.AetherDivideRefreshEndlessScRsp) })
+	c.regMsg(PrestigeLevelUpCsReq, func() any { return new(proto.PrestigeLevelUpCsReq) })
+	c.regMsg(GetChallengeRaidInfoCsReq, func() any { return new(proto.GetChallengeRaidInfoCsReq) })
+	c.regMsg(QuitRogueScRsp, func() any { return new(proto.QuitRogueScRsp) })
+	c.regMsg(EnterChessRogueAeonRoomCsReq, func() any { return new(proto.EnterChessRogueAeonRoomCsReq) })
+	c.regMsg(UnlockChatBubbleScNotify, func() any { return new(proto.UnlockChatBubbleScNotify) })
+	c.regMsg(CancelCacheNotifyCsReq, func() any { return new(proto.CancelCacheNotifyCsReq) })
+	c.regMsg(GetMailCsReq, func() any { return new(proto.GetMailCsReq) })
+	c.regMsg(HeliobusUnlockSkillScNotify, func() any { return new(proto.HeliobusUnlockSkillScNotify) })
+	c.regMsg(SubmitMonsterResearchActivityMaterialScRsp, func() any { return new(proto.SubmitMonsterResearchActivityMaterialScRsp) })
+	c.regMsg(ChessRogueRollDiceScRsp, func() any { return new(proto.ChessRogueRollDiceScRsp) })
+	c.regMsg(GetJukeboxDataScRsp, func() any { return new(proto.GetJukeboxDataScRsp) })
+	c.regMsg(ArchiveWolfBroGameCsReq, func() any { return new(proto.ArchiveWolfBroGameCsReq) })
+	c.regMsg(ChangeScriptEmotionCsReq, func() any { return new(proto.ChangeScriptEmotionCsReq) })
+	c.regMsg(SubMissionRewardScNotify, func() any { return new(proto.SubMissionRewardScNotify) })
+	c.regMsg(SwitchLineupIndexScRsp, func() any { return new(proto.SwitchLineupIndexScRsp) })
+	c.regMsg(ChessRogueStartScRsp, func() any { return new(proto.ChessRogueStartScRsp) })
+	c.regMsg(EnterMapRotationRegionScRsp, func() any { return new(proto.EnterMapRotationRegionScRsp) })
+	c.regMsg(EnterRogueEndlessActivityStageScRsp, func() any { return new(proto.EnterRogueEndlessActivityStageScRsp) })
+	c.regMsg(TravelBrochureSetPageDescStatusScRsp, func() any { return new(proto.TravelBrochureSetPageDescStatusScRsp) })
+	c.regMsg(WolfBroGameExplodeMonsterCsReq, func() any { return new(proto.WolfBroGameExplodeMonsterCsReq) })
+	c.regMsg(ChooseBoxingClubStageOptionalBuffScRsp, func() any { return new(proto.ChooseBoxingClubStageOptionalBuffScRsp) })
+	c.regMsg(MonopolyTakePhaseRewardCsReq, func() any { return new(proto.MonopolyTakePhaseRewardCsReq) })
+	c.regMsg(SubmitMonsterResearchActivityMaterialCsReq, func() any { return new(proto.SubmitMonsterResearchActivityMaterialCsReq) })
+	c.regMsg(TakePunkLordPointRewardCsReq, func() any { return new(proto.TakePunkLordPointRewardCsReq) })
+	c.regMsg(SetCurInteractEntityScRsp, func() any { return new(proto.SetCurInteractEntityScRsp) })
+	c.regMsg(SaveLogisticsCsReq, func() any { return new(proto.SaveLogisticsCsReq) })
+	c.regMsg(SwapLineupScRsp, func() any { return new(proto.SwapLineupScRsp) })
+	c.regMsg(FinishTalkMissionScRsp, func() any { return new(proto.FinishTalkMissionScRsp) })
+	c.regMsg(MonopolyTakeRaffleTicketRewardScRsp, func() any { return new(proto.MonopolyTakeRaffleTicketRewardScRsp) })
+	c.regMsg(LogisticsInfoScNotify, func() any { return new(proto.LogisticsInfoScNotify) })
+	c.regMsg(TakeLoginActivityRewardCsReq, func() any { return new(proto.TakeLoginActivityRewardCsReq) })
+	c.regMsg(ReviveRogueAvatarCsReq, func() any { return new(proto.ReviveRogueAvatarCsReq) })
+	c.regMsg(GetChallengeScRsp, func() any { return new(proto.GetChallengeScRsp) })
+	c.regMsg(GetReplayTokenScRsp, func() any { return new(proto.GetReplayTokenScRsp) })
+	c.regMsg(GetLoginActivityScRsp, func() any { return new(proto.GetLoginActivityScRsp) })
+	c.regMsg(GetWaypointScRsp, func() any { return new(proto.GetWaypointScRsp) })
+	c.regMsg(FinishAeonDialogueGroupCsReq, func() any { return new(proto.FinishAeonDialogueGroupCsReq) })
+	c.regMsg(AvatarExpUpScRsp, func() any { return new(proto.AvatarExpUpScRsp) })
+	c.regMsg(GetTrialActivityDataCsReq, func() any { return new(proto.GetTrialActivityDataCsReq) })
+	c.regMsg(ReserveStaminaExchangeScRsp, func() any { return new(proto.ReserveStaminaExchangeScRsp) })
+	c.regMsg(SavePointsInfoNotify, func() any { return new(proto.SavePointsInfoNotify) })
+	c.regMsg(ChangeLineupLeaderScRsp, func() any { return new(proto.ChangeLineupLeaderScRsp) })
+	c.regMsg(GroupStateChangeCsReq, func() any { return new(proto.GroupStateChangeCsReq) })
+	c.regMsg(SpaceZooExchangeItemScRsp, func() any { return new(proto.SpaceZooExchangeItemScRsp) })
+	c.regMsg(TextJoinQueryCsReq, func() any { return new(proto.TextJoinQueryCsReq) })
+	c.regMsg(OpenRogueChestCsReq, func() any { return new(proto.OpenRogueChestCsReq) })
+	c.regMsg(ChessRogueReRollDiceScRsp, func() any { return new(proto.ChessRogueReRollDiceScRsp) })
+	c.regMsg(UnlockTutorialGuideCsReq, func() any { return new(proto.UnlockTutorialGuideCsReq) })
+	c.regMsg(TrainVisitorRewardSendNotify, func() any { return new(proto.TrainVisitorRewardSendNotify) })
+	c.regMsg(MonopolySelectOptionCsReq, func() any { return new(proto.MonopolySelectOptionCsReq) })
+	c.regMsg(MonopolyCheatDiceScRsp, func() any { return new(proto.MonopolyCheatDiceScRsp) })
+	c.regMsg(HeliobusSnsReadScRsp, func() any { return new(proto.HeliobusSnsReadScRsp) })
+	c.regMsg(PlayerReturnSignScRsp, func() any { return new(proto.PlayerReturnSignScRsp) })
+	c.regMsg(EnterRogueEndlessActivityStageCsReq, func() any { return new(proto.EnterRogueEndlessActivityStageCsReq) })
+	c.regMsg(GetAllRedDotDataScRsp, func() any { return new(proto.GetAllRedDotDataScRsp) })
+	c.regMsg(RaidCollectionDataCsReq, func() any { return new(proto.RaidCollectionDataCsReq) })
+	c.regMsg(AcceptExpeditionScRsp, func() any { return new(proto.AcceptExpeditionScRsp) })
+	c.regMsg(SetLanguageCsReq, func() any { return new(proto.SetLanguageCsReq) })
+	c.regMsg(SyncDeleteFriendScNotify, func() any { return new(proto.SyncDeleteFriendScNotify) })
+	c.regMsg(SelectPhoneThemeScRsp, func() any { return new(proto.SelectPhoneThemeScRsp) })
+	c.regMsg(InteractChargerCsReq, func() any { return new(proto.InteractChargerCsReq) })
+	c.regMsg(ChessRogueUpdateLevelBaseInfoScNotify, func() any { return new(proto.ChessRogueUpdateLevelBaseInfoScNotify) })
+	c.regMsg(SceneEntityTeleportCsReq, func() any { return new(proto.SceneEntityTeleportCsReq) })
+	c.regMsg(TakeOffAvatarSkinScRsp, func() any { return new(proto.TakeOffAvatarSkinScRsp) })
+	c.regMsg(InteractTreasureDungeonGridScRsp, func() any { return new(proto.InteractTreasureDungeonGridScRsp) })
+	c.regMsg(ChangeLineupLeaderCsReq, func() any { return new(proto.ChangeLineupLeaderCsReq) })
+	c.regMsg(HeliobusChallengeUpdateScNotify, func() any { return new(proto.HeliobusChallengeUpdateScNotify) })
+	c.regMsg(ChessRogueConfirmRollScRsp, func() any { return new(proto.ChessRogueConfirmRollScRsp) })
+	c.regMsg(SetLineupNameCsReq, func() any { return new(proto.SetLineupNameCsReq) })
+	c.regMsg(GetStrongChallengeActivityDataCsReq, func() any { return new(proto.GetStrongChallengeActivityDataCsReq) })
+	c.regMsg(HealPoolInfoNotify, func() any { return new(proto.HealPoolInfoNotify) })
+	c.regMsg(UseItemCsReq, func() any { return new(proto.UseItemCsReq) })
+	c.regMsg(GetFightActivityDataScRsp, func() any { return new(proto.GetFightActivityDataScRsp) })
+	c.regMsg(SyncRogueAeonScNotify, func() any { return new(proto.SyncRogueAeonScNotify) })
+	c.regMsg(DestroyItemCsReq, func() any { return new(proto.DestroyItemCsReq) })
+	c.regMsg(SwitchAetherDivideLineUpSlotScRsp, func() any { return new(proto.SwitchAetherDivideLineUpSlotScRsp) })
+	c.regMsg(ChessRogueChangeyAeonDimensionNotify, func() any { return new(proto.ChessRogueChangeyAeonDimensionNotify) })
+	c.regMsg(LogisticsScoreRewardSyncInfoScNotify, func() any { return new(proto.LogisticsScoreRewardSyncInfoScNotify) })
+	c.regMsg(UnlockTutorialCsReq, func() any { return new(proto.UnlockTutorialCsReq) })
+	c.regMsg(MissionGroupWarnScNotify, func() any { return new(proto.MissionGroupWarnScNotify) })
+	c.regMsg(ChessRogueGiveUpRollScRsp, func() any { return new(proto.ChessRogueGiveUpRollScRsp) })
+	c.regMsg(PlayerLogoutCsReq, func() any { return new(proto.PlayerLogoutCsReq) })
+	c.regMsg(EnterStrongChallengeActivityStageScRsp, func() any { return new(proto.EnterStrongChallengeActivityStageScRsp) })
+	c.regMsg(RogueModifierSelectCellCsReq, func() any { return new(proto.RogueModifierSelectCellCsReq) })
+	c.regMsg(GetSingleRedDotParamGroupCsReq, func() any { return new(proto.GetSingleRedDotParamGroupCsReq) })
+	c.regMsg(LeaveTrialActivityCsReq, func() any { return new(proto.LeaveTrialActivityCsReq) })
+	c.regMsg(RogueNpcDisappearScRsp, func() any { return new(proto.RogueNpcDisappearScRsp) })
+	c.regMsg(AlleyShipUnlockScNotify, func() any { return new(proto.AlleyShipUnlockScNotify) })
+	c.regMsg(GetExhibitScNotify, func() any { return new(proto.GetExhibitScNotify) })
+	c.regMsg(ExchangeRogueBuffWithMiracleScRsp, func() any { return new(proto.ExchangeRogueBuffWithMiracleScRsp) })
+	c.regMsg(UpgradeAreaScRsp, func() any { return new(proto.UpgradeAreaScRsp) })
+	c.regMsg(EnableRogueTalentScRsp, func() any { return new(proto.EnableRogueTalentScRsp) })
+	c.regMsg(TakeCityShopRewardCsReq, func() any { return new(proto.TakeCityShopRewardCsReq) })
+	c.regMsg(MuseumInfoChangedScNotify, func() any { return new(proto.MuseumInfoChangedScNotify) })
+	c.regMsg(PlayerReturnStartScNotify, func() any { return new(proto.PlayerReturnStartScNotify) })
+	c.regMsg(GetRogueScoreRewardInfoScRsp, func() any { return new(proto.GetRogueScoreRewardInfoScRsp) })
+	c.regMsg(TravelBrochureApplyPasterCsReq, func() any { return new(proto.TravelBrochureApplyPasterCsReq) })
+	c.regMsg(TakeAllApRewardScRsp, func() any { return new(proto.TakeAllApRewardScRsp) })
+	c.regMsg(GetSecretKeyInfoScRsp, func() any { return new(proto.GetSecretKeyInfoScRsp) })
+	c.regMsg(TakeRogueEventHandbookRewardCsReq, func() any { return new(proto.TakeRogueEventHandbookRewardCsReq) })
+	c.regMsg(FinishTalkMissionCsReq, func() any { return new(proto.FinishTalkMissionCsReq) })
+	c.regMsg(GetMultipleDropInfoScRsp, func() any { return new(proto.GetMultipleDropInfoScRsp) })
+	c.regMsg(GetRogueTalentInfoCsReq, func() any { return new(proto.GetRogueTalentInfoCsReq) })
+	c.regMsg(NewAssistHistoryNotify, func() any { return new(proto.NewAssistHistoryNotify) })
+	c.regMsg(SetNicknameScRsp, func() any { return new(proto.SetNicknameScRsp) })
+	c.regMsg(PickRogueAvatarScRsp, func() any { return new(proto.PickRogueAvatarScRsp) })
+	c.regMsg(SceneCastSkillMpUpdateScNotify, func() any { return new(proto.SceneCastSkillMpUpdateScNotify) })
+	c.regMsg(GetUnlockTeleportCsReq, func() any { return new(proto.GetUnlockTeleportCsReq) })
+	c.regMsg(SyncRogueExploreWinScNotify, func() any { return new(proto.SyncRogueExploreWinScNotify) })
+	c.regMsg(GetStageLineupScRsp, func() any { return new(proto.GetStageLineupScRsp) })
+	c.regMsg(SyncRoguePickAvatarInfoScNotify, func() any { return new(proto.SyncRoguePickAvatarInfoScNotify) })
+	c.regMsg(TakeMailAttachmentCsReq, func() any { return new(proto.TakeMailAttachmentCsReq) })
+	c.regMsg(ApplyFriendScRsp, func() any { return new(proto.ApplyFriendScRsp) })
+	c.regMsg(GetPlayerReplayInfoCsReq, func() any { return new(proto.GetPlayerReplayInfoCsReq) })
+	c.regMsg(MonopolySelectOptionScRsp, func() any { return new(proto.MonopolySelectOptionScRsp) })
+	c.regMsg(BuyGoodsScRsp, func() any { return new(proto.BuyGoodsScRsp) })
+	c.regMsg(ChessRogueEnterCellCsReq, func() any { return new(proto.ChessRogueEnterCellCsReq) })
+	c.regMsg(GetPunkLordMonsterDataCsReq, func() any { return new(proto.GetPunkLordMonsterDataCsReq) })
+	c.regMsg(SelectChessRogueNousSubStoryCsReq, func() any { return new(proto.SelectChessRogueNousSubStoryCsReq) })
+	c.regMsg(GetMonopolyDailyReportScRsp, func() any { return new(proto.GetMonopolyDailyReportScRsp) })
+	c.regMsg(ChessRogueQuitCsReq, func() any { return new(proto.ChessRogueQuitCsReq) })
+	c.regMsg(GetRecyleTimeCsReq, func() any { return new(proto.GetRecyleTimeCsReq) })
+	c.regMsg(TakeOffEquipmentCsReq, func() any { return new(proto.TakeOffEquipmentCsReq) })
+	c.regMsg(GetFriendRecommendListInfoCsReq, func() any { return new(proto.GetFriendRecommendListInfoCsReq) })
+	c.regMsg(ClientObjUploadCsReq, func() any { return new(proto.ClientObjUploadCsReq) })
+	c.regMsg(SetPlayerInfoCsReq, func() any { return new(proto.SetPlayerInfoCsReq) })
+	c.regMsg(RogueEndlessActivityBattleEndScNotify, func() any { return new(proto.RogueEndlessActivityBattleEndScNotify) })
+	c.regMsg(GetSaveRaidScRsp, func() any { return new(proto.GetSaveRaidScRsp) })
+	c.regMsg(MonopolyLikeCsReq, func() any { return new(proto.MonopolyLikeCsReq) })
+	c.regMsg(PickRogueAvatarCsReq, func() any { return new(proto.PickRogueAvatarCsReq) })
+	c.regMsg(SummonPunkLordMonsterCsReq, func() any { return new(proto.SummonPunkLordMonsterCsReq) })
+	c.regMsg(PlayBackGroundMusicScRsp, func() any { return new(proto.PlayBackGroundMusicScRsp) })
+	c.regMsg(TravelBrochureSelectMessageScRsp, func() any { return new(proto.TravelBrochureSelectMessageScRsp) })
+	c.regMsg(TakeRogueScoreRewardCsReq, func() any { return new(proto.TakeRogueScoreRewardCsReq) })
+	c.regMsg(GetTrainVisitorRegisterCsReq, func() any { return new(proto.GetTrainVisitorRegisterCsReq) })
+	c.regMsg(RevcMsgScNotify, func() any { return new(proto.RevcMsgScNotify) })
+	c.regMsg(GetAllSaveRaidScRsp, func() any { return new(proto.GetAllSaveRaidScRsp) })
+	c.regMsg(StartTrialActivityCsReq, func() any { return new(proto.StartTrialActivityCsReq) })
+	c.regMsg(GetUpdatedArchiveDataScRsp, func() any { return new(proto.GetUpdatedArchiveDataScRsp) })
+	c.regMsg(LeaveTrialActivityScRsp, func() any { return new(proto.LeaveTrialActivityScRsp) })
+	c.regMsg(RestoreWolfBroGameArchiveCsReq, func() any { return new(proto.RestoreWolfBroGameArchiveCsReq) })
+	c.regMsg(StartWolfBroGameCsReq, func() any { return new(proto.StartWolfBroGameCsReq) })
+	c.regMsg(ChessRogueSelectCellScRsp, func() any { return new(proto.ChessRogueSelectCellScRsp) })
+	c.regMsg(FightActivityDataChangeScNotify, func() any { return new(proto.FightActivityDataChangeScNotify) })
+	c.regMsg(GetExpeditionDataCsReq, func() any { return new(proto.GetExpeditionDataCsReq) })
+	c.regMsg(SwitchAetherDivideLineUpSlotCsReq, func() any { return new(proto.SwitchAetherDivideLineUpSlotCsReq) })
+	c.regMsg(AlleyTakeEventRewardCsReq, func() any { return new(proto.AlleyTakeEventRewardCsReq) })
+	c.regMsg(SpaceZooOpCatteryScRsp, func() any { return new(proto.SpaceZooOpCatteryScRsp) })
+	c.regMsg(TravelBrochurePageResetCsReq, func() any { return new(proto.TravelBrochurePageResetCsReq) })
+	c.regMsg(AcceptMultipleExpeditionCsReq, func() any { return new(proto.AcceptMultipleExpeditionCsReq) })
+	c.regMsg(DoGachaInRollShopScRsp, func() any { return new(proto.DoGachaInRollShopScRsp) })
+	c.regMsg(TrainRefreshTimeNotify, func() any { return new(proto.TrainRefreshTimeNotify) })
+	c.regMsg(SyncAddBlacklistScNotify, func() any { return new(proto.SyncAddBlacklistScNotify) })
+	c.regMsg(UnlockAvatarSkinScNotify, func() any { return new(proto.UnlockAvatarSkinScNotify) })
+	c.regMsg(AetherDivideTakeChallengeRewardCsReq, func() any { return new(proto.AetherDivideTakeChallengeRewardCsReq) })
+	c.regMsg(TakeTrialActivityRewardCsReq, func() any { return new(proto.TakeTrialActivityRewardCsReq) })
+	c.regMsg(TakeActivityExpeditionRewardCsReq, func() any { return new(proto.TakeActivityExpeditionRewardCsReq) })
+	c.regMsg(TakeRogueMiracleHandbookRewardScRsp, func() any { return new(proto.TakeRogueMiracleHandbookRewardScRsp) })
+	c.regMsg(GetEnhanceCommonRogueBuffInfoScRsp, func() any { return new(proto.GetEnhanceCommonRogueBuffInfoScRsp) })
+	c.regMsg(SetAetherDivideLineUpCsReq, func() any { return new(proto.SetAetherDivideLineUpCsReq) })
+	c.regMsg(TakeKilledPunkLordMonsterScoreScRsp, func() any { return new(proto.TakeKilledPunkLordMonsterScoreScRsp) })
+	c.regMsg(GetFirstTalkByPerformanceNpcCsReq, func() any { return new(proto.GetFirstTalkByPerformanceNpcCsReq) })
+	c.regMsg(ComposeSelectedRelicCsReq, func() any { return new(proto.ComposeSelectedRelicCsReq) })
+	c.regMsg(DeleteSocialEventServerCacheCsReq, func() any { return new(proto.DeleteSocialEventServerCacheCsReq) })
+	c.regMsg(UpdateFloorSavedValueNotify, func() any { return new(proto.UpdateFloorSavedValueNotify) })
+	c.regMsg(ChangeScriptEmotionScRsp, func() any { return new(proto.ChangeScriptEmotionScRsp) })
+	c.regMsg(StartBoxingClubBattleCsReq, func() any { return new(proto.StartBoxingClubBattleCsReq) })
+	c.regMsg(TakeActivityExpeditionRewardScRsp, func() any { return new(proto.TakeActivityExpeditionRewardScRsp) })
+	c.regMsg(GetChatFriendHistoryCsReq, func() any { return new(proto.GetChatFriendHistoryCsReq) })
+	c.regMsg(CancelActivityExpeditionScRsp, func() any { return new(proto.CancelActivityExpeditionScRsp) })
+	c.regMsg(GetCurChallengeCsReq, func() any { return new(proto.GetCurChallengeCsReq) })
+	c.regMsg(InteractTreasureDungeonGridCsReq, func() any { return new(proto.InteractTreasureDungeonGridCsReq) })
+	c.regMsg(AcceptedPamMissionExpireScRsp, func() any { return new(proto.AcceptedPamMissionExpireScRsp) })
+	c.regMsg(ChessRogueNousDiceUpdateNotify, func() any { return new(proto.ChessRogueNousDiceUpdateNotify) })
+	c.regMsg(GetMissionStatusCsReq, func() any { return new(proto.GetMissionStatusCsReq) })
+	c.regMsg(SetBoxingClubResonanceLineupCsReq, func() any { return new(proto.SetBoxingClubResonanceLineupCsReq) })
+	c.regMsg(FinishCosumeItemMissionCsReq, func() any { return new(proto.FinishCosumeItemMissionCsReq) })
+	c.regMsg(RaidCollectionDataScNotify, func() any { return new(proto.RaidCollectionDataScNotify) })
+	c.regMsg(MonopolyGetRaffleTicketScRsp, func() any { return new(proto.MonopolyGetRaffleTicketScRsp) })
+	c.regMsg(TakeTrialActivityRewardScRsp, func() any { return new(proto.TakeTrialActivityRewardScRsp) })
+	c.regMsg(TakeMonsterResearchActivityRewardCsReq, func() any { return new(proto.TakeMonsterResearchActivityRewardCsReq) })
+	c.regMsg(SceneEntityMoveScRsp, func() any { return new(proto.SceneEntityMoveScRsp) })
+	c.regMsg(StartBoxingClubBattleScRsp, func() any { return new(proto.StartBoxingClubBattleScRsp) })
+	c.regMsg(GetNpcMessageGroupScRsp, func() any { return new(proto.GetNpcMessageGroupScRsp) })
+	c.regMsg(RogueModifierStageStartNotify, func() any { return new(proto.RogueModifierStageStartNotify) })
+	c.regMsg(GetRogueInfoCsReq, func() any { return new(proto.GetRogueInfoCsReq) })
+	c.regMsg(TakeChallengeRaidRewardScRsp, func() any { return new(proto.TakeChallengeRaidRewardScRsp) })
+	c.regMsg(CurAssistChangedNotify, func() any { return new(proto.CurAssistChangedNotify) })
+	c.regMsg(GetFirstTalkNpcScRsp, func() any { return new(proto.GetFirstTalkNpcScRsp) })
+	c.regMsg(GetMonopolyFriendRankingListScRsp, func() any { return new(proto.GetMonopolyFriendRankingListScRsp) })
+	c.regMsg(DiscardRelicCsReq, func() any { return new(proto.DiscardRelicCsReq) })
+	c.regMsg(AlleyGuaranteedFundsScRsp, func() any { return new(proto.AlleyGuaranteedFundsScRsp) })
+	c.regMsg(PunkLordMonsterKilledNotify, func() any { return new(proto.PunkLordMonsterKilledNotify) })
+	c.regMsg(GetChatEmojiListCsReq, func() any { return new(proto.GetChatEmojiListCsReq) })
+	c.regMsg(UpgradeAreaStatCsReq, func() any { return new(proto.UpgradeAreaStatCsReq) })
+	c.regMsg(TravelBrochureUpdatePasterPosCsReq, func() any { return new(proto.TravelBrochureUpdatePasterPosCsReq) })
+	c.regMsg(DiscardRelicScRsp, func() any { return new(proto.DiscardRelicScRsp) })
+	c.regMsg(RogueNpcDisappearCsReq, func() any { return new(proto.RogueNpcDisappearCsReq) })
+	c.regMsg(HeliobusInfoChangedScNotify, func() any { return new(proto.HeliobusInfoChangedScNotify) })
+	c.regMsg(ChessRogueUpdateAeonModifierValueScNotify, func() any { return new(proto.ChessRogueUpdateAeonModifierValueScNotify) })
+	c.regMsg(DressAvatarCsReq, func() any { return new(proto.DressAvatarCsReq) })
+	c.regMsg(GetActivityScheduleConfigScRsp, func() any { return new(proto.GetActivityScheduleConfigScRsp) })
+	c.regMsg(SpaceZooMutateScRsp, func() any { return new(proto.SpaceZooMutateScRsp) })
+	c.regMsg(RelicRecommendScRsp, func() any { return new(proto.RelicRecommendScRsp) })
+	c.regMsg(GetGachaInfoCsReq, func() any { return new(proto.GetGachaInfoCsReq) })
+	c.regMsg(GetTreasureDungeonActivityDataCsReq, func() any { return new(proto.GetTreasureDungeonActivityDataCsReq) })
+	c.regMsg(GetPrivateChatHistoryScRsp, func() any { return new(proto.GetPrivateChatHistoryScRsp) })
+	c.regMsg(ChessRogueReviveAvatarCsReq, func() any { return new(proto.ChessRogueReviveAvatarCsReq) })
+	c.regMsg(BuyNpcStuffCsReq, func() any { return new(proto.BuyNpcStuffCsReq) })
+	c.regMsg(TakeOffRelicCsReq, func() any { return new(proto.TakeOffRelicCsReq) })
+	c.regMsg(PlayerLoginFinishScRsp, func() any { return new(proto.PlayerLoginFinishScRsp) })
+	c.regMsg(LockRelicCsReq, func() any { return new(proto.LockRelicCsReq) })
+	c.regMsg(StartWolfBroGameScRsp, func() any { return new(proto.StartWolfBroGameScRsp) })
+	c.regMsg(GetBattleCollegeDataScRsp, func() any { return new(proto.GetBattleCollegeDataScRsp) })
+	c.regMsg(EnterRogueScRsp, func() any { return new(proto.EnterRogueScRsp) })
+	c.regMsg(FinishSectionIdScRsp, func() any { return new(proto.FinishSectionIdScRsp) })
+	c.regMsg(GetRogueAeonInfoScRsp, func() any { return new(proto.GetRogueAeonInfoScRsp) })
+	c.regMsg(RemoveRotaterScRsp, func() any { return new(proto.RemoveRotaterScRsp) })
+	c.regMsg(PlayerLoginFinishCsReq, func() any { return new(proto.PlayerLoginFinishCsReq) })
+	c.regMsg(GetBattleCollegeDataCsReq, func() any { return new(proto.GetBattleCollegeDataCsReq) })
+	c.regMsg(GetAetherDivideChallengeInfoCsReq, func() any { return new(proto.GetAetherDivideChallengeInfoCsReq) })
+	c.regMsg(MonopolyMoveCsReq, func() any { return new(proto.MonopolyMoveCsReq) })
+	c.regMsg(BuyRogueShopMiracleScRsp, func() any { return new(proto.BuyRogueShopMiracleScRsp) })
+	c.regMsg(SetAssistCsReq, func() any { return new(proto.SetAssistCsReq) })
+	c.regMsg(GetDrinkMakerDataCsReq, func() any { return new(proto.GetDrinkMakerDataCsReq) })
+	c.regMsg(TeleportToMissionResetPointScRsp, func() any { return new(proto.TeleportToMissionResetPointScRsp) })
+	c.regMsg(ClientDownloadDataScNotify, func() any { return new(proto.ClientDownloadDataScNotify) })
+	c.regMsg(SceneEnterStageCsReq, func() any { return new(proto.SceneEnterStageCsReq) })
+	c.regMsg(ShowNewSupplementVisitorScRsp, func() any { return new(proto.ShowNewSupplementVisitorScRsp) })
+	c.regMsg(GetQuestRecordCsReq, func() any { return new(proto.GetQuestRecordCsReq) })
+	c.regMsg(PlayerGetTokenCsReq, func() any { return new(proto.PlayerGetTokenCsReq) })
+	c.regMsg(SetIsDisplayAvatarInfoCsReq, func() any { return new(proto.SetIsDisplayAvatarInfoCsReq) })
+	c.regMsg(ChessRogueQueryAeonDimensionsScRsp, func() any { return new(proto.ChessRogueQueryAeonDimensionsScRsp) })
+	c.regMsg(EnterFightActivityStageCsReq, func() any { return new(proto.EnterFightActivityStageCsReq) })
+	c.regMsg(TakeChallengeRewardScRsp, func() any { return new(proto.TakeChallengeRewardScRsp) })
+	c.regMsg(HeliobusSnsLikeCsReq, func() any { return new(proto.HeliobusSnsLikeCsReq) })
+	c.regMsg(GetPlatformPlayerInfoScRsp, func() any { return new(proto.GetPlatformPlayerInfoScRsp) })
+	c.regMsg(StartAetherDivideSceneBattleScRsp, func() any { return new(proto.StartAetherDivideSceneBattleScRsp) })
+	c.regMsg(AetherDivideSpiritExpUpCsReq, func() any { return new(proto.AetherDivideSpiritExpUpCsReq) })
+	c.regMsg(QuitWolfBroGameCsReq, func() any { return new(proto.QuitWolfBroGameCsReq) })
+	c.regMsg(ExchangeGachaCeilingScRsp, func() any { return new(proto.ExchangeGachaCeilingScRsp) })
+	c.regMsg(GetActivityScheduleConfigCsReq, func() any { return new(proto.GetActivityScheduleConfigCsReq) })
+	c.regMsg(TravelBrochureSetPageDescStatusCsReq, func() any { return new(proto.TravelBrochureSetPageDescStatusCsReq) })
+	c.regMsg(ChessRogueReRollDiceCsReq, func() any { return new(proto.ChessRogueReRollDiceCsReq) })
+	c.regMsg(TakePrestigeRewardCsReq, func() any { return new(proto.TakePrestigeRewardCsReq) })
+	c.regMsg(MissionAcceptScNotify, func() any { return new(proto.MissionAcceptScNotify) })
+	c.regMsg(LeaveMapRotationRegionScNotify, func() any { return new(proto.LeaveMapRotationRegionScNotify) })
+	c.regMsg(MonopolyUpgradeAssetCsReq, func() any { return new(proto.MonopolyUpgradeAssetCsReq) })
+	c.regMsg(AlleyGuaranteedFundsCsReq, func() any { return new(proto.AlleyGuaranteedFundsCsReq) })
+	c.regMsg(WolfBroGameDataChangeScNotify, func() any { return new(proto.WolfBroGameDataChangeScNotify) })
+	c.regMsg(ReplaceLineupScRsp, func() any { return new(proto.ReplaceLineupScRsp) })
+	c.regMsg(EnterFantasticStoryActivityStageCsReq, func() any { return new(proto.EnterFantasticStoryActivityStageCsReq) })
+	c.regMsg(FinishFirstTalkNpcScRsp, func() any { return new(proto.FinishFirstTalkNpcScRsp) })
+	c.regMsg(ChessRogueSelectCellCsReq, func() any { return new(proto.ChessRogueSelectCellCsReq) })
+	c.regMsg(ShareScRsp, func() any { return new(proto.ShareScRsp) })
+	c.regMsg(UpdateFeatureSwitchScNotify, func() any { return new(proto.UpdateFeatureSwitchScNotify) })
+	c.regMsg(DressRelicAvatarCsReq, func() any { return new(proto.DressRelicAvatarCsReq) })
+	c.regMsg(GetKilledPunkLordMonsterDataCsReq, func() any { return new(proto.GetKilledPunkLordMonsterDataCsReq) })
+	c.regMsg(GetPlatformPlayerInfoCsReq, func() any { return new(proto.GetPlatformPlayerInfoCsReq) })
+	c.regMsg(MonopolyScrachRaffleTicketScRsp, func() any { return new(proto.MonopolyScrachRaffleTicketScRsp) })
+	c.regMsg(SyncChessRogueNousMainStoryScNotify, func() any { return new(proto.SyncChessRogueNousMainStoryScNotify) })
+	c.regMsg(GetAssistHistoryCsReq, func() any { return new(proto.GetAssistHistoryCsReq) })
+	c.regMsg(GetVideoVersionKeyScRsp, func() any { return new(proto.GetVideoVersionKeyScRsp) })
+	c.regMsg(ChessRogueLayerAccountInfoNotify, func() any { return new(proto.ChessRogueLayerAccountInfoNotify) })
+	c.regMsg(MonopolyReRollRandomScRsp, func() any { return new(proto.MonopolyReRollRandomScRsp) })
+	c.regMsg(GetFightActivityDataCsReq, func() any { return new(proto.GetFightActivityDataCsReq) })
+	c.regMsg(ChessRogueSelectBpCsReq, func() any { return new(proto.ChessRogueSelectBpCsReq) })
+	c.regMsg(DressAvatarSkinCsReq, func() any { return new(proto.DressAvatarSkinCsReq) })
+	c.regMsg(SyncRogueVirtualItemInfoScNotify, func() any { return new(proto.SyncRogueVirtualItemInfoScNotify) })
+	c.regMsg(GameplayCounterRecoverCsReq, func() any { return new(proto.GameplayCounterRecoverCsReq) })
+	c.regMsg(GetChapterCsReq, func() any { return new(proto.GetChapterCsReq) })
+	c.regMsg(FinishChessRogueSubStoryCsReq, func() any { return new(proto.FinishChessRogueSubStoryCsReq) })
+	c.regMsg(UnlockSkilltreeScRsp, func() any { return new(proto.UnlockSkilltreeScRsp) })
+	c.regMsg(TakeOffRelicScRsp, func() any { return new(proto.TakeOffRelicScRsp) })
+	c.regMsg(RelicRecommendCsReq, func() any { return new(proto.RelicRecommendCsReq) })
+	c.regMsg(AlleyShipUsedCountScNotify, func() any { return new(proto.AlleyShipUsedCountScNotify) })
+	c.regMsg(SpaceZooOpCatteryCsReq, func() any { return new(proto.SpaceZooOpCatteryCsReq) })
+	c.regMsg(FinishAeonDialogueGroupScRsp, func() any { return new(proto.FinishAeonDialogueGroupScRsp) })
+	c.regMsg(StartCocoonStageCsReq, func() any { return new(proto.StartCocoonStageCsReq) })
+	c.regMsg(GetRogueInfoScRsp, func() any { return new(proto.GetRogueInfoScRsp) })
+	c.regMsg(AlleyOrderChangedScNotify, func() any { return new(proto.AlleyOrderChangedScNotify) })
+	c.regMsg(DeleteSummonUnitCsReq, func() any { return new(proto.DeleteSummonUnitCsReq) })
+	c.regMsg(LeaveChallengeCsReq, func() any { return new(proto.LeaveChallengeCsReq) })
+	c.regMsg(RankUpAvatarCsReq, func() any { return new(proto.RankUpAvatarCsReq) })
+	c.regMsg(GetMuseumInfoScRsp, func() any { return new(proto.GetMuseumInfoScRsp) })
+	c.regMsg(GetShopListScRsp, func() any { return new(proto.GetShopListScRsp) })
+	c.regMsg(TravelBrochurePageUnlockScNotify, func() any { return new(proto.TravelBrochurePageUnlockScNotify) })
+	c.regMsg(GetLoginChatInfoCsReq, func() any { return new(proto.GetLoginChatInfoCsReq) })
+	c.regMsg(SelectPhoneThemeCsReq, func() any { return new(proto.SelectPhoneThemeCsReq) })
+	c.regMsg(GetFarmStageGachaInfoCsReq, func() any { return new(proto.GetFarmStageGachaInfoCsReq) })
+	c.regMsg(TravelBrochureSelectMessageCsReq, func() any { return new(proto.TravelBrochureSelectMessageCsReq) })
+	c.regMsg(GetDailyActiveInfoScRsp, func() any { return new(proto.GetDailyActiveInfoScRsp) })
+	c.regMsg(ChessRogueQueryScRsp, func() any { return new(proto.ChessRogueQueryScRsp) })
+	c.regMsg(MonopolyCellUpdateNotify, func() any { return new(proto.MonopolyCellUpdateNotify) })
+	c.regMsg(UpdateTrackMainMissionIdScRsp, func() any { return new(proto.UpdateTrackMainMissionIdScRsp) })
+	c.regMsg(TakeApRewardScRsp, func() any { return new(proto.TakeApRewardScRsp) })
+	c.regMsg(SetNicknameCsReq, func() any { return new(proto.SetNicknameCsReq) })
+	c.regMsg(LeaveAetherDivideSceneScRsp, func() any { return new(proto.LeaveAetherDivideSceneScRsp) })
+	c.regMsg(TakeBpRewardCsReq, func() any { return new(proto.TakeBpRewardCsReq) })
+	c.regMsg(GetTreasureDungeonActivityDataScRsp, func() any { return new(proto.GetTreasureDungeonActivityDataScRsp) })
+	c.regMsg(DeactivateFarmElementScRsp, func() any { return new(proto.DeactivateFarmElementScRsp) })
+	c.regMsg(EnhanceChessRogueBuffScRsp, func() any { return new(proto.EnhanceChessRogueBuffScRsp) })
+	c.regMsg(SpringRecoverSingleAvatarCsReq, func() any { return new(proto.SpringRecoverSingleAvatarCsReq) })
+	c.regMsg(WolfBroGameActivateBulletScRsp, func() any { return new(proto.WolfBroGameActivateBulletScRsp) })
+	c.regMsg(SceneEntityTeleportScRsp, func() any { return new(proto.SceneEntityTeleportScRsp) })
+	c.regMsg(TakePromotionRewardCsReq, func() any { return new(proto.TakePromotionRewardCsReq) })
+	c.regMsg(MonopolyRollRandomScRsp, func() any { return new(proto.MonopolyRollRandomScRsp) })
+	c.regMsg(QuitWolfBroGameScRsp, func() any { return new(proto.QuitWolfBroGameScRsp) })
+	c.regMsg(GetUnlockTeleportScRsp, func() any { return new(proto.GetUnlockTeleportScRsp) })
+	c.regMsg(SpaceZooMutateCsReq, func() any { return new(proto.SpaceZooMutateCsReq) })
+	c.regMsg(MonopolyConfirmRandomCsReq, func() any { return new(proto.MonopolyConfirmRandomCsReq) })
+	c.regMsg(GetMainMissionCustomValueScRsp, func() any { return new(proto.GetMainMissionCustomValueScRsp) })
+	c.regMsg(PlayerSyncScNotify, func() any { return new(proto.PlayerSyncScNotify) })
+	c.regMsg(TakeMultipleExpeditionRewardScRsp, func() any { return new(proto.TakeMultipleExpeditionRewardScRsp) })
+	c.regMsg(ClearAetherDividePassiveSkillCsReq, func() any { return new(proto.ClearAetherDividePassiveSkillCsReq) })
+	c.regMsg(ChessRogueEnterNextLayerScRsp, func() any { return new(proto.ChessRogueEnterNextLayerScRsp) })
+	c.regMsg(AcceptActivityExpeditionCsReq, func() any { return new(proto.AcceptActivityExpeditionCsReq) })
+	c.regMsg(GetFriendRecommendListInfoScRsp, func() any { return new(proto.GetFriendRecommendListInfoScRsp) })
+	c.regMsg(SpaceZooDataCsReq, func() any { return new(proto.SpaceZooDataCsReq) })
+	c.regMsg(MuseumRandomEventSelectCsReq, func() any { return new(proto.MuseumRandomEventSelectCsReq) })
+	c.regMsg(MonopolyEventSelectFriendCsReq, func() any { return new(proto.MonopolyEventSelectFriendCsReq) })
+	c.regMsg(SpaceZooDeleteCatScRsp, func() any { return new(proto.SpaceZooDeleteCatScRsp) })
+	c.regMsg(FinishPlotCsReq, func() any { return new(proto.FinishPlotCsReq) })
+	c.regMsg(LockEquipmentScRsp, func() any { return new(proto.LockEquipmentScRsp) })
+	c.regMsg(TextJoinSaveCsReq, func() any { return new(proto.TextJoinSaveCsReq) })
+	c.regMsg(SceneCastSkillScRsp, func() any { return new(proto.SceneCastSkillScRsp) })
+	c.regMsg(MultipleDropInfoNotify, func() any { return new(proto.MultipleDropInfoNotify) })
+	c.regMsg(SceneGroupRefreshScNotify, func() any { return new(proto.SceneGroupRefreshScNotify) })
+	c.regMsg(MuseumRandomEventStartScNotify, func() any { return new(proto.MuseumRandomEventStartScNotify) })
+	c.regMsg(SetSignatureCsReq, func() any { return new(proto.SetSignatureCsReq) })
+	c.regMsg(SetTurnFoodSwitchScRsp, func() any { return new(proto.SetTurnFoodSwitchScRsp) })
+	c.regMsg(AetherDivideTakeChallengeRewardScRsp, func() any { return new(proto.AetherDivideTakeChallengeRewardScRsp) })
+	c.regMsg(TelevisionActivityBattleEndScNotify, func() any { return new(proto.TelevisionActivityBattleEndScNotify) })
+	c.regMsg(SetGenderCsReq, func() any { return new(proto.SetGenderCsReq) })
+	c.regMsg(ResetMapRotationRegionScRsp, func() any { return new(proto.ResetMapRotationRegionScRsp) })
+	c.regMsg(GetRogueScoreRewardInfoCsReq, func() any { return new(proto.GetRogueScoreRewardInfoCsReq) })
+	c.regMsg(SyncRogueFinishScNotify, func() any { return new(proto.SyncRogueFinishScNotify) })
+	c.regMsg(FinishChessRogueNousSubStoryCsReq, func() any { return new(proto.FinishChessRogueNousSubStoryCsReq) })
+	c.regMsg(UpdateTrackMainMissionIdCsReq, func() any { return new(proto.UpdateTrackMainMissionIdCsReq) })
 	c.regMsg(ExtraLineupDestroyNotify, func() any { return new(proto.ExtraLineupDestroyNotify) })
+	c.regMsg(TakeOfferingRewardCsReq, func() any { return new(proto.TakeOfferingRewardCsReq) })
+	c.regMsg(TravelBrochureGetPasterScNotify, func() any { return new(proto.TravelBrochureGetPasterScNotify) })
+	c.regMsg(GetMonopolyInfoScRsp, func() any { return new(proto.GetMonopolyInfoScRsp) })
+	c.regMsg(TreasureDungeonFinishScNotify, func() any { return new(proto.TreasureDungeonFinishScNotify) })
+	c.regMsg(SetCurInteractEntityCsReq, func() any { return new(proto.SetCurInteractEntityCsReq) })
+	c.regMsg(SetGroupCustomSaveDataScRsp, func() any { return new(proto.SetGroupCustomSaveDataScRsp) })
+	c.regMsg(GetRogueShopMiracleInfoScRsp, func() any { return new(proto.GetRogueShopMiracleInfoScRsp) })
+	c.regMsg(GetPlayerDetailInfoCsReq, func() any { return new(proto.GetPlayerDetailInfoCsReq) })
+	c.regMsg(GetPunkLordDataScRsp, func() any { return new(proto.GetPunkLordDataScRsp) })
+	c.regMsg(GetMissionDataScRsp, func() any { return new(proto.GetMissionDataScRsp) })
+	c.regMsg(SyncRogueAeonLevelUpRewardScNotify, func() any { return new(proto.SyncRogueAeonLevelUpRewardScNotify) })
+	c.regMsg(GetSecretKeyInfoCsReq, func() any { return new(proto.GetSecretKeyInfoCsReq) })
+	c.regMsg(GetPunkLordMonsterDataScRsp, func() any { return new(proto.GetPunkLordMonsterDataScRsp) })
+	c.regMsg(DeployRotaterScRsp, func() any { return new(proto.DeployRotaterScRsp) })
+	c.regMsg(SetForbidOtherApplyFriendCsReq, func() any { return new(proto.SetForbidOtherApplyFriendCsReq) })
+	c.regMsg(SetGameplayBirthdayScRsp, func() any { return new(proto.SetGameplayBirthdayScRsp) })
+	c.regMsg(SetLineupNameScRsp, func() any { return new(proto.SetLineupNameScRsp) })
+	c.regMsg(GetArchiveDataCsReq, func() any { return new(proto.GetArchiveDataCsReq) })
+	c.regMsg(GetTutorialGuideCsReq, func() any { return new(proto.GetTutorialGuideCsReq) })
+	c.regMsg(SpaceZooCatUpdateNotify, func() any { return new(proto.SpaceZooCatUpdateNotify) })
+	c.regMsg(UpdatePlayerSettingCsReq, func() any { return new(proto.UpdatePlayerSettingCsReq) })
+	c.regMsg(QuitRogueCsReq, func() any { return new(proto.QuitRogueCsReq) })
+	c.regMsg(GetTelevisionActivityDataCsReq, func() any { return new(proto.GetTelevisionActivityDataCsReq) })
+	c.regMsg(ChessRoguePickAvatarCsReq, func() any { return new(proto.ChessRoguePickAvatarCsReq) })
+	c.regMsg(ReEnterLastElementStageScRsp, func() any { return new(proto.ReEnterLastElementStageScRsp) })
+	c.regMsg(GetServerPrefsDataCsReq, func() any { return new(proto.GetServerPrefsDataCsReq) })
+	c.regMsg(ClientObjUploadScRsp, func() any { return new(proto.ClientObjUploadScRsp) })
+	c.regMsg(HeliobusSelectSkillScRsp, func() any { return new(proto.HeliobusSelectSkillScRsp) })
+	c.regMsg(FinishFirstTalkByPerformanceNpcCsReq, func() any { return new(proto.FinishFirstTalkByPerformanceNpcCsReq) })
+	c.regMsg(DoGachaScRsp, func() any { return new(proto.DoGachaScRsp) })
+	c.regMsg(TravelBrochureSetCustomValueCsReq, func() any { return new(proto.TravelBrochureSetCustomValueCsReq) })
+	c.regMsg(TrialBackGroundMusicScRsp, func() any { return new(proto.TrialBackGroundMusicScRsp) })
+	c.regMsg(ChooseBoxingClubResonanceCsReq, func() any { return new(proto.ChooseBoxingClubResonanceCsReq) })
+	c.regMsg(AlleyFundsScNotify, func() any { return new(proto.AlleyFundsScNotify) })
+	c.regMsg(TakeKilledPunkLordMonsterScoreCsReq, func() any { return new(proto.TakeKilledPunkLordMonsterScoreCsReq) })
+	c.regMsg(AddAvatarScNotify, func() any { return new(proto.AddAvatarScNotify) })
+	c.regMsg(RefreshTriggerByClientScNotify, func() any { return new(proto.RefreshTriggerByClientScNotify) })
+	c.regMsg(MonopolyDailySettleScNotify, func() any { return new(proto.MonopolyDailySettleScNotify) })
+	c.regMsg(MakeMissionDrinkCsReq, func() any { return new(proto.MakeMissionDrinkCsReq) })
+	c.regMsg(GetGachaCeilingScRsp, func() any { return new(proto.GetGachaCeilingScRsp) })
+	c.regMsg(MissionEventRewardScNotify, func() any { return new(proto.MissionEventRewardScNotify) })
+	c.regMsg(MonopolyLikeScRsp, func() any { return new(proto.MonopolyLikeScRsp) })
+	c.regMsg(GetRndOptionCsReq, func() any { return new(proto.GetRndOptionCsReq) })
+	c.regMsg(PlayerReturnInfoQueryScRsp, func() any { return new(proto.PlayerReturnInfoQueryScRsp) })
+	c.regMsg(PromoteEquipmentCsReq, func() any { return new(proto.PromoteEquipmentCsReq) })
+	c.regMsg(ExpUpEquipmentScRsp, func() any { return new(proto.ExpUpEquipmentScRsp) })
+	c.regMsg(UseTreasureDungeonItemScRsp, func() any { return new(proto.UseTreasureDungeonItemScRsp) })
+	c.regMsg(SecurityReportCsReq, func() any { return new(proto.SecurityReportCsReq) })
+	c.regMsg(GetMissionEventDataCsReq, func() any { return new(proto.GetMissionEventDataCsReq) })
+	c.regMsg(QuitBattleScRsp, func() any { return new(proto.QuitBattleScRsp) })
+	c.regMsg(InteractPropScRsp, func() any { return new(proto.InteractPropScRsp) })
+	c.regMsg(GetMarkItemListScRsp, func() any { return new(proto.GetMarkItemListScRsp) })
+	c.regMsg(GetLevelRewardCsReq, func() any { return new(proto.GetLevelRewardCsReq) })
+	c.regMsg(AetherDivideTainerInfoScNotify, func() any { return new(proto.AetherDivideTainerInfoScNotify) })
+	c.regMsg(OpenTreasureDungeonGridScRsp, func() any { return new(proto.OpenTreasureDungeonGridScRsp) })
+	c.regMsg(GetPhoneDataCsReq, func() any { return new(proto.GetPhoneDataCsReq) })
+	c.regMsg(GetRogueAdventureRoomInfoScRsp, func() any { return new(proto.GetRogueAdventureRoomInfoScRsp) })
+	c.regMsg(MonopolyTakeRaffleTicketRewardCsReq, func() any { return new(proto.MonopolyTakeRaffleTicketRewardCsReq) })
+	c.regMsg(GetMapRotationDataScRsp, func() any { return new(proto.GetMapRotationDataScRsp) })
+	c.regMsg(SetTurnFoodSwitchCsReq, func() any { return new(proto.SetTurnFoodSwitchCsReq) })
+	c.regMsg(EnterTreasureDungeonScRsp, func() any { return new(proto.EnterTreasureDungeonScRsp) })
+	c.regMsg(PlayerReturnPointChangeScNotify, func() any { return new(proto.PlayerReturnPointChangeScNotify) })
+	c.regMsg(TakeExpeditionRewardScRsp, func() any { return new(proto.TakeExpeditionRewardScRsp) })
+	c.regMsg(SetClientPausedScRsp, func() any { return new(proto.SetClientPausedScRsp) })
+	c.regMsg(ShowNewSupplementVisitorCsReq, func() any { return new(proto.ShowNewSupplementVisitorCsReq) })
+	c.regMsg(ShareCsReq, func() any { return new(proto.ShareCsReq) })
+	c.regMsg(TravelBrochureApplyPasterListScRsp, func() any { return new(proto.TravelBrochureApplyPasterListScRsp) })
+	c.regMsg(LeaveRaidScRsp, func() any { return new(proto.LeaveRaidScRsp) })
+	c.regMsg(MissionRewardScNotify, func() any { return new(proto.MissionRewardScNotify) })
+	c.regMsg(ChessRogueSkipTeachingLevelScRsp, func() any { return new(proto.ChessRogueSkipTeachingLevelScRsp) })
+	c.regMsg(HeliobusSnsLikeScRsp, func() any { return new(proto.HeliobusSnsLikeScRsp) })
+	c.regMsg(GetRndOptionScRsp, func() any { return new(proto.GetRndOptionScRsp) })
+	c.regMsg(GetAvatarDataCsReq, func() any { return new(proto.GetAvatarDataCsReq) })
+	c.regMsg(ComposeItemCsReq, func() any { return new(proto.ComposeItemCsReq) })
+	c.regMsg(SpringRecoverCsReq, func() any { return new(proto.SpringRecoverCsReq) })
+	c.regMsg(GetCurLineupDataScRsp, func() any { return new(proto.GetCurLineupDataScRsp) })
+	c.regMsg(TextJoinQueryScRsp, func() any { return new(proto.TextJoinQueryScRsp) })
+	c.regMsg(FinishRogueDialogueGroupScRsp, func() any { return new(proto.FinishRogueDialogueGroupScRsp) })
+	c.regMsg(GeneralVirtualItemDataNotify, func() any { return new(proto.GeneralVirtualItemDataNotify) })
+	c.regMsg(SyncEntityBuffChangeListScNotify, func() any { return new(proto.SyncEntityBuffChangeListScNotify) })
+	c.regMsg(DestroyItemScRsp, func() any { return new(proto.DestroyItemScRsp) })
+	c.regMsg(NewMailScNotify, func() any { return new(proto.NewMailScNotify) })
+	c.regMsg(EnterSectionCsReq, func() any { return new(proto.EnterSectionCsReq) })
+	c.regMsg(BatchGetQuestDataCsReq, func() any { return new(proto.BatchGetQuestDataCsReq) })
+	c.regMsg(WolfBroGamePickupBulletCsReq, func() any { return new(proto.WolfBroGamePickupBulletCsReq) })
+	c.regMsg(SyncTurnFoodNotify, func() any { return new(proto.SyncTurnFoodNotify) })
+	c.regMsg(StartTrialActivityScRsp, func() any { return new(proto.StartTrialActivityScRsp) })
+	c.regMsg(TriggerVoiceCsReq, func() any { return new(proto.TriggerVoiceCsReq) })
+	c.regMsg(PromoteAvatarCsReq, func() any { return new(proto.PromoteAvatarCsReq) })
+	c.regMsg(GetFirstTalkNpcCsReq, func() any { return new(proto.GetFirstTalkNpcCsReq) })
+	c.regMsg(SetBoxingClubResonanceLineupScRsp, func() any { return new(proto.SetBoxingClubResonanceLineupScRsp) })
+	c.regMsg(ChessRogueQueryBpScRsp, func() any { return new(proto.ChessRogueQueryBpScRsp) })
+	c.regMsg(RogueModifierDelNotify, func() any { return new(proto.RogueModifierDelNotify) })
+	c.regMsg(QuitLineupCsReq, func() any { return new(proto.QuitLineupCsReq) })
+	c.regMsg(OpenTreasureDungeonGridCsReq, func() any { return new(proto.OpenTreasureDungeonGridCsReq) })
+	c.regMsg(AcceptExpeditionCsReq, func() any { return new(proto.AcceptExpeditionCsReq) })
+	c.regMsg(GetExpeditionDataScRsp, func() any { return new(proto.GetExpeditionDataScRsp) })
+	c.regMsg(SetCurWaypointScRsp, func() any { return new(proto.SetCurWaypointScRsp) })
+	c.regMsg(SetDisplayAvatarCsReq, func() any { return new(proto.SetDisplayAvatarCsReq) })
+	c.regMsg(GetRecyleTimeScRsp, func() any { return new(proto.GetRecyleTimeScRsp) })
+	c.regMsg(EnhanceRogueBuffScRsp, func() any { return new(proto.EnhanceRogueBuffScRsp) })
+	c.regMsg(UpdateServerPrefsDataScRsp, func() any { return new(proto.UpdateServerPrefsDataScRsp) })
+	c.regMsg(GetTutorialCsReq, func() any { return new(proto.GetTutorialCsReq) })
+	c.regMsg(TravelBrochureGetDataCsReq, func() any { return new(proto.TravelBrochureGetDataCsReq) })
+	c.regMsg(AcceptMainMissionCsReq, func() any { return new(proto.AcceptMainMissionCsReq) })
+	c.regMsg(DailyRefreshNotify, func() any { return new(proto.DailyRefreshNotify) })
+	c.regMsg(TakeChapterRewardCsReq, func() any { return new(proto.TakeChapterRewardCsReq) })
+	c.regMsg(TravelBrochureRemovePasterScRsp, func() any { return new(proto.TravelBrochureRemovePasterScRsp) })
+	c.regMsg(GetAllServerPrefsDataCsReq, func() any { return new(proto.GetAllServerPrefsDataCsReq) })
+	c.regMsg(GetSaveLogisticsMapCsReq, func() any { return new(proto.GetSaveLogisticsMapCsReq) })
+	c.regMsg(GetVideoVersionKeyCsReq, func() any { return new(proto.GetVideoVersionKeyCsReq) })
+	c.regMsg(GetChatEmojiListScRsp, func() any { return new(proto.GetChatEmojiListScRsp) })
+	c.regMsg(TrialActivityDataChangeScNotify, func() any { return new(proto.TrialActivityDataChangeScNotify) })
+	c.regMsg(MonopolyGetRafflePoolInfoScRsp, func() any { return new(proto.MonopolyGetRafflePoolInfoScRsp) })
+	c.regMsg(DelMailCsReq, func() any { return new(proto.DelMailCsReq) })
+	c.regMsg(MuseumTargetMissionFinishNotify, func() any { return new(proto.MuseumTargetMissionFinishNotify) })
+	c.regMsg(GetAssistListCsReq, func() any { return new(proto.GetAssistListCsReq) })
+	c.regMsg(FinishItemIdCsReq, func() any { return new(proto.FinishItemIdCsReq) })
+	c.regMsg(GetTrialActivityDataScRsp, func() any { return new(proto.GetTrialActivityDataScRsp) })
+	c.regMsg(SelectChessRogueSubStoryScRsp, func() any { return new(proto.SelectChessRogueSubStoryScRsp) })
+	c.regMsg(PlayerGetTokenScRsp, func() any { return new(proto.PlayerGetTokenScRsp) })
+	c.regMsg(QuitTreasureDungeonScRsp, func() any { return new(proto.QuitTreasureDungeonScRsp) })
+	c.regMsg(UpgradeAreaStatScRsp, func() any { return new(proto.UpgradeAreaStatScRsp) })
+	c.regMsg(SendMsgCsReq, func() any { return new(proto.SendMsgCsReq) })
+	c.regMsg(PlayBackGroundMusicCsReq, func() any { return new(proto.PlayBackGroundMusicCsReq) })
+	c.regMsg(GetAlleyInfoScRsp, func() any { return new(proto.GetAlleyInfoScRsp) })
+	c.regMsg(StartPunkLordRaidCsReq, func() any { return new(proto.StartPunkLordRaidCsReq) })
+	c.regMsg(GateServerScNotify, func() any { return new(proto.GateServerScNotify) })
+	c.regMsg(GetFirstTalkByPerformanceNpcScRsp, func() any { return new(proto.GetFirstTalkByPerformanceNpcScRsp) })
+	c.regMsg(GetLevelRewardTakenListCsReq, func() any { return new(proto.GetLevelRewardTakenListCsReq) })
+	c.regMsg(JoinLineupScRsp, func() any { return new(proto.JoinLineupScRsp) })
+	c.regMsg(SetHeroBasicTypeCsReq, func() any { return new(proto.SetHeroBasicTypeCsReq) })
+	c.regMsg(StartAetherDivideChallengeBattleScRsp, func() any { return new(proto.StartAetherDivideChallengeBattleScRsp) })
+	c.regMsg(TakeQuestOptionalRewardScRsp, func() any { return new(proto.TakeQuestOptionalRewardScRsp) })
+	c.regMsg(SceneCastSkillCostMpCsReq, func() any { return new(proto.SceneCastSkillCostMpCsReq) })
+	c.regMsg(ChessRogueGoAheadCsReq, func() any { return new(proto.ChessRogueGoAheadCsReq) })
+	c.regMsg(GetJukeboxDataCsReq, func() any { return new(proto.GetJukeboxDataCsReq) })
+	c.regMsg(DoGachaInRollShopCsReq, func() any { return new(proto.DoGachaInRollShopCsReq) })
+	c.regMsg(MonopolyConditionUpdateScNotify, func() any { return new(proto.MonopolyConditionUpdateScNotify) })
+	c.regMsg(ChessRogueUpdateDiceInfoScNotify, func() any { return new(proto.ChessRogueUpdateDiceInfoScNotify) })
+	c.regMsg(EnableRogueTalentCsReq, func() any { return new(proto.EnableRogueTalentCsReq) })
+	c.regMsg(ExchangeHcoinCsReq, func() any { return new(proto.ExchangeHcoinCsReq) })
+	c.regMsg(UpdateRedDotDataScRsp, func() any { return new(proto.UpdateRedDotDataScRsp) })
+	c.regMsg(SetDisplayAvatarScRsp, func() any { return new(proto.SetDisplayAvatarScRsp) })
+	c.regMsg(FinishFirstTalkNpcCsReq, func() any { return new(proto.FinishFirstTalkNpcCsReq) })
+	c.regMsg(ExpeditionDataChangeScNotify, func() any { return new(proto.ExpeditionDataChangeScNotify) })
+	c.regMsg(ChessRogueSelectBpScRsp, func() any { return new(proto.ChessRogueSelectBpScRsp) })
+	c.regMsg(DeployRotaterCsReq, func() any { return new(proto.DeployRotaterCsReq) })
+	c.regMsg(GetBasicInfoCsReq, func() any { return new(proto.GetBasicInfoCsReq) })
+	c.regMsg(TakeChapterRewardScRsp, func() any { return new(proto.TakeChapterRewardScRsp) })
+	c.regMsg(PlayerReturnTakeRewardScRsp, func() any { return new(proto.PlayerReturnTakeRewardScRsp) })
+	c.regMsg(GetChessRogueStoryAeonTalkInfoScRsp, func() any { return new(proto.GetChessRogueStoryAeonTalkInfoScRsp) })
+	c.regMsg(FinishFirstTalkByPerformanceNpcScRsp, func() any { return new(proto.FinishFirstTalkByPerformanceNpcScRsp) })
+	c.regMsg(TakeRogueMiracleHandbookRewardCsReq, func() any { return new(proto.TakeRogueMiracleHandbookRewardCsReq) })
+	c.regMsg(GetPunkLordDataCsReq, func() any { return new(proto.GetPunkLordDataCsReq) })
+	c.regMsg(ChooseBoxingClubStageOptionalBuffCsReq, func() any { return new(proto.ChooseBoxingClubStageOptionalBuffCsReq) })
+	c.regMsg(TakeChallengeRewardCsReq, func() any { return new(proto.TakeChallengeRewardCsReq) })
+	c.regMsg(RankUpEquipmentCsReq, func() any { return new(proto.RankUpEquipmentCsReq) })
+	c.regMsg(ChessRogueMoveCellNotify, func() any { return new(proto.ChessRogueMoveCellNotify) })
+	c.regMsg(GetQuestRecordScRsp, func() any { return new(proto.GetQuestRecordScRsp) })
+	c.regMsg(GetFriendListInfoScRsp, func() any { return new(proto.GetFriendListInfoScRsp) })
+	c.regMsg(SyncChessRogueNousValueScNotify, func() any { return new(proto.SyncChessRogueNousValueScNotify) })
+	c.regMsg(HeliobusUpgradeLevelScRsp, func() any { return new(proto.HeliobusUpgradeLevelScRsp) })
+	c.regMsg(PlayerLoginCsReq, func() any { return new(proto.PlayerLoginCsReq) })
+	c.regMsg(TravelBrochurePageResetScRsp, func() any { return new(proto.TravelBrochurePageResetScRsp) })
+	c.regMsg(BuyBpLevelScRsp, func() any { return new(proto.BuyBpLevelScRsp) })
+	c.regMsg(SharePunkLordMonsterCsReq, func() any { return new(proto.SharePunkLordMonsterCsReq) })
+	c.regMsg(GetServerPrefsDataScRsp, func() any { return new(proto.GetServerPrefsDataScRsp) })
+	c.regMsg(FightTreasureDungeonMonsterScRsp, func() any { return new(proto.FightTreasureDungeonMonsterScRsp) })
+	c.regMsg(ExchangeRogueBuffWithMiracleCsReq, func() any { return new(proto.ExchangeRogueBuffWithMiracleCsReq) })
+	c.regMsg(MonopolyScrachRaffleTicketCsReq, func() any { return new(proto.MonopolyScrachRaffleTicketCsReq) })
+	c.regMsg(SetMissionEventProgressCsReq, func() any { return new(proto.SetMissionEventProgressCsReq) })
+	c.regMsg(TakeMonsterResearchActivityRewardScRsp, func() any { return new(proto.TakeMonsterResearchActivityRewardScRsp) })
+	c.regMsg(FeatureSwitchClosedScNotify, func() any { return new(proto.FeatureSwitchClosedScNotify) })
+	c.regMsg(SetGenderScRsp, func() any { return new(proto.SetGenderScRsp) })
+	c.regMsg(BattleCollegeDataChangeScNotify, func() any { return new(proto.BattleCollegeDataChangeScNotify) })
+	c.regMsg(PunkLordRaidTimeOutScNotify, func() any { return new(proto.PunkLordRaidTimeOutScNotify) })
+	c.regMsg(ActivateFarmElementScRsp, func() any { return new(proto.ActivateFarmElementScRsp) })
+	c.regMsg(GetMultipleDropInfoCsReq, func() any { return new(proto.GetMultipleDropInfoCsReq) })
+	c.regMsg(GetSaveRaidCsReq, func() any { return new(proto.GetSaveRaidCsReq) })
+	c.regMsg(GetMapRotationDataCsReq, func() any { return new(proto.GetMapRotationDataCsReq) })
+	c.regMsg(GetRogueInitialScoreCsReq, func() any { return new(proto.GetRogueInitialScoreCsReq) })
+	c.regMsg(SetAssistScRsp, func() any { return new(proto.SetAssistScRsp) })
+	c.regMsg(CurTrialActivityScNotify, func() any { return new(proto.CurTrialActivityScNotify) })
+	c.regMsg(GetStuffScNotify, func() any { return new(proto.GetStuffScNotify) })
+	c.regMsg(GetLoginChatInfoScRsp, func() any { return new(proto.GetLoginChatInfoScRsp) })
+	c.regMsg(GameplayCounterUpdateScNotify, func() any { return new(proto.GameplayCounterUpdateScNotify) })
+	c.regMsg(ChallengeLineupNotify, func() any { return new(proto.ChallengeLineupNotify) })
+	c.regMsg(SwapLineupCsReq, func() any { return new(proto.SwapLineupCsReq) })
+	c.regMsg(PromoteEquipmentScRsp, func() any { return new(proto.PromoteEquipmentScRsp) })
+	c.regMsg(ReviveRogueAvatarScRsp, func() any { return new(proto.ReviveRogueAvatarScRsp) })
+	c.regMsg(FinishSectionIdCsReq, func() any { return new(proto.FinishSectionIdCsReq) })
+	c.regMsg(HeliobusActivityDataCsReq, func() any { return new(proto.HeliobusActivityDataCsReq) })
+	c.regMsg(GetNpcMessageGroupCsReq, func() any { return new(proto.GetNpcMessageGroupCsReq) })
+	c.regMsg(DelSaveRaidScNotify, func() any { return new(proto.DelSaveRaidScNotify) })
+	c.regMsg(ReturnLastTownScRsp, func() any { return new(proto.ReturnLastTownScRsp) })
+	c.regMsg(GetAllLineupDataCsReq, func() any { return new(proto.GetAllLineupDataCsReq) })
+	c.regMsg(AetherDivideSpiritExpUpScRsp, func() any { return new(proto.AetherDivideSpiritExpUpScRsp) })
+	c.regMsg(TakeTrainVisitorUntakenBehaviorRewardCsReq, func() any { return new(proto.TakeTrainVisitorUntakenBehaviorRewardCsReq) })
+	c.regMsg(TakePictureCsReq, func() any { return new(proto.TakePictureCsReq) })
+	c.regMsg(GetBasicInfoScRsp, func() any { return new(proto.GetBasicInfoScRsp) })
+	c.regMsg(MonopolyGameRaiseRatioScRsp, func() any { return new(proto.MonopolyGameRaiseRatioScRsp) })
+	c.regMsg(StartAetherDivideChallengeBattleCsReq, func() any { return new(proto.StartAetherDivideChallengeBattleCsReq) })
+	c.regMsg(TakeOffAvatarSkinCsReq, func() any { return new(proto.TakeOffAvatarSkinCsReq) })
+	c.regMsg(MonopolyClickCellScRsp, func() any { return new(proto.MonopolyClickCellScRsp) })
+	c.regMsg(SaveLogisticsScRsp, func() any { return new(proto.SaveLogisticsScRsp) })
+	c.regMsg(CityShopInfoScNotify, func() any { return new(proto.CityShopInfoScNotify) })
+	c.regMsg(ResetMapRotationRegionCsReq, func() any { return new(proto.ResetMapRotationRegionCsReq) })
+	c.regMsg(ChessRogueQuestFinishNotify, func() any { return new(proto.ChessRogueQuestFinishNotify) })
+	c.regMsg(FinishTutorialGuideScRsp, func() any { return new(proto.FinishTutorialGuideScRsp) })
+	c.regMsg(TakeQuestRewardScRsp, func() any { return new(proto.TakeQuestRewardScRsp) })
+	c.regMsg(BatchMarkChatEmojiCsReq, func() any { return new(proto.BatchMarkChatEmojiCsReq) })
+	c.regMsg(SyncRogueMapRoomScNotify, func() any { return new(proto.SyncRogueMapRoomScNotify) })
+	c.regMsg(ChessRogueQueryBpCsReq, func() any { return new(proto.ChessRogueQueryBpCsReq) })
+	c.regMsg(AcceptMissionEventCsReq, func() any { return new(proto.AcceptMissionEventCsReq) })
+	c.regMsg(ReportPlayerCsReq, func() any { return new(proto.ReportPlayerCsReq) })
+	c.regMsg(PunkLordDataChangeNotify, func() any { return new(proto.PunkLordDataChangeNotify) })
+	c.regMsg(SearchPlayerCsReq, func() any { return new(proto.SearchPlayerCsReq) })
+	c.regMsg(SetStuffToAreaScRsp, func() any { return new(proto.SetStuffToAreaScRsp) })
+	c.regMsg(ComposeSelectedRelicScRsp, func() any { return new(proto.ComposeSelectedRelicScRsp) })
+	c.regMsg(GiveUpBoxingClubChallengeCsReq, func() any { return new(proto.GiveUpBoxingClubChallengeCsReq) })
+	c.regMsg(InterruptMissionEventCsReq, func() any { return new(proto.InterruptMissionEventCsReq) })
+	c.regMsg(FinishEmotionDialoguePerformanceCsReq, func() any { return new(proto.FinishEmotionDialoguePerformanceCsReq) })
+	c.regMsg(StartAlleyEventScRsp, func() any { return new(proto.StartAlleyEventScRsp) })
+	c.regMsg(PunkLordBattleResultScNotify, func() any { return new(proto.PunkLordBattleResultScNotify) })
+	c.regMsg(GetChessRogueNousStoryInfoScRsp, func() any { return new(proto.GetChessRogueNousStoryInfoScRsp) })
+	c.regMsg(SpaceZooBornCsReq, func() any { return new(proto.SpaceZooBornCsReq) })
+	c.regMsg(LeaveMapRotationRegionCsReq, func() any { return new(proto.LeaveMapRotationRegionCsReq) })
+	c.regMsg(EnterSceneCsReq, func() any { return new(proto.EnterSceneCsReq) })
+	c.regMsg(HeartDialTraceScriptScRsp, func() any { return new(proto.HeartDialTraceScriptScRsp) })
+	c.regMsg(GetMonsterResearchActivityDataCsReq, func() any { return new(proto.GetMonsterResearchActivityDataCsReq) })
+	c.regMsg(GetSingleRedDotParamGroupScRsp, func() any { return new(proto.GetSingleRedDotParamGroupScRsp) })
+	c.regMsg(DeleteBlacklistCsReq, func() any { return new(proto.DeleteBlacklistCsReq) })
+	c.regMsg(ExpUpRelicCsReq, func() any { return new(proto.ExpUpRelicCsReq) })
+	c.regMsg(UnlockTutorialGuideScRsp, func() any { return new(proto.UnlockTutorialGuideScRsp) })
+	c.regMsg(GetEnteredSceneCsReq, func() any { return new(proto.GetEnteredSceneCsReq) })
+	c.regMsg(RaidCollectionDataScRsp, func() any { return new(proto.RaidCollectionDataScRsp) })
+	c.regMsg(SyncServerSceneChangeNotify, func() any { return new(proto.SyncServerSceneChangeNotify) })
+	c.regMsg(StartPunkLordRaidScRsp, func() any { return new(proto.StartPunkLordRaidScRsp) })
+	c.regMsg(DailyFirstMeetPamScRsp, func() any { return new(proto.DailyFirstMeetPamScRsp) })
+	c.regMsg(EnterRogueMapRoomCsReq, func() any { return new(proto.EnterRogueMapRoomCsReq) })
+	c.regMsg(EnterRogueMapRoomScRsp, func() any { return new(proto.EnterRogueMapRoomScRsp) })
+	c.regMsg(EnterFeverTimeActivityStageScRsp, func() any { return new(proto.EnterFeverTimeActivityStageScRsp) })
+	c.regMsg(SyncTaskScRsp, func() any { return new(proto.SyncTaskScRsp) })
+	c.regMsg(ChessRogueLeaveCsReq, func() any { return new(proto.ChessRogueLeaveCsReq) })
+	c.regMsg(PlayerReturnTakePointRewardCsReq, func() any { return new(proto.PlayerReturnTakePointRewardCsReq) })
+	c.regMsg(GetSpringRecoverDataCsReq, func() any { return new(proto.GetSpringRecoverDataCsReq) })
+	c.regMsg(SyncTaskCsReq, func() any { return new(proto.SyncTaskCsReq) })
+	c.regMsg(TextJoinBatchSaveCsReq, func() any { return new(proto.TextJoinBatchSaveCsReq) })
+	c.regMsg(SubmitOfferingItemCsReq, func() any { return new(proto.SubmitOfferingItemCsReq) })
+	c.regMsg(GetBagCsReq, func() any { return new(proto.GetBagCsReq) })
+	c.regMsg(GetStrongChallengeActivityDataScRsp, func() any { return new(proto.GetStrongChallengeActivityDataScRsp) })
+	c.regMsg(GetNpcStatusCsReq, func() any { return new(proto.GetNpcStatusCsReq) })
+	c.regMsg(AlleyShipmentEventEffectsScNotify, func() any { return new(proto.AlleyShipmentEventEffectsScNotify) })
+	c.regMsg(FinishRogueDialogueGroupCsReq, func() any { return new(proto.FinishRogueDialogueGroupCsReq) })
+	c.regMsg(AcceptMissionEventScRsp, func() any { return new(proto.AcceptMissionEventScRsp) })
+	c.regMsg(GetDailyActiveInfoCsReq, func() any { return new(proto.GetDailyActiveInfoCsReq) })
+	c.regMsg(PlayerKickOutScNotify, func() any { return new(proto.PlayerKickOutScNotify) })
+	c.regMsg(RefreshTriggerByClientCsReq, func() any { return new(proto.RefreshTriggerByClientCsReq) })
+	c.regMsg(PlayerReturnForceFinishScNotify, func() any { return new(proto.PlayerReturnForceFinishScNotify) })
+	c.regMsg(GetMonopolyMbtiReportRewardCsReq, func() any { return new(proto.GetMonopolyMbtiReportRewardCsReq) })
+	c.regMsg(TakeChallengeRaidRewardCsReq, func() any { return new(proto.TakeChallengeRaidRewardCsReq) })
+	c.regMsg(MonopolyGetRafflePoolInfoCsReq, func() any { return new(proto.MonopolyGetRafflePoolInfoCsReq) })
+	c.regMsg(EntityBindPropScRsp, func() any { return new(proto.EntityBindPropScRsp) })
+	c.regMsg(GetMissionDataCsReq, func() any { return new(proto.GetMissionDataCsReq) })
+	c.regMsg(DressRelicAvatarScRsp, func() any { return new(proto.DressRelicAvatarScRsp) })
+	c.regMsg(SelectRogueDialogueEventScRsp, func() any { return new(proto.SelectRogueDialogueEventScRsp) })
+	c.regMsg(TakeMailAttachmentScRsp, func() any { return new(proto.TakeMailAttachmentScRsp) })
+	c.regMsg(SelectChessRogueSubStoryCsReq, func() any { return new(proto.SelectChessRogueSubStoryCsReq) })
+	c.regMsg(TakeAssistRewardScRsp, func() any { return new(proto.TakeAssistRewardScRsp) })
+	c.regMsg(EnhanceChessRogueBuffCsReq, func() any { return new(proto.EnhanceChessRogueBuffCsReq) })
+	c.regMsg(RankUpEquipmentScRsp, func() any { return new(proto.RankUpEquipmentScRsp) })
+	c.regMsg(WolfBroGameActivateBulletCsReq, func() any { return new(proto.WolfBroGameActivateBulletCsReq) })
+	c.regMsg(TrainVisitorBehaviorFinishScRsp, func() any { return new(proto.TrainVisitorBehaviorFinishScRsp) })
+	c.regMsg(EnterSectionScRsp, func() any { return new(proto.EnterSectionScRsp) })
+	c.regMsg(GetRogueShopBuffInfoScRsp, func() any { return new(proto.GetRogueShopBuffInfoScRsp) })
+	c.regMsg(ChessRogueUpdateAllowedSelectCellScNotify, func() any { return new(proto.ChessRogueUpdateAllowedSelectCellScNotify) })
+	c.regMsg(SyncClientResVersionScRsp, func() any { return new(proto.SyncClientResVersionScRsp) })
+	c.regMsg(GetFantasticStoryActivityDataCsReq, func() any { return new(proto.GetFantasticStoryActivityDataCsReq) })
+	c.regMsg(GetHeroBasicTypeInfoScRsp, func() any { return new(proto.GetHeroBasicTypeInfoScRsp) })
+	c.regMsg(GetChessRogueStoryAeonTalkInfoCsReq, func() any { return new(proto.GetChessRogueStoryAeonTalkInfoCsReq) })
+	c.regMsg(TakeAllApRewardCsReq, func() any { return new(proto.TakeAllApRewardCsReq) })
+	c.regMsg(GetWolfBroGameDataCsReq, func() any { return new(proto.GetWolfBroGameDataCsReq) })
+	c.regMsg(TakeOffEquipmentScRsp, func() any { return new(proto.TakeOffEquipmentScRsp) })
+	c.regMsg(GetRogueAdventureRoomInfoCsReq, func() any { return new(proto.GetRogueAdventureRoomInfoCsReq) })
 	// server
 	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
 	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
 	c.regMsg(DelItem, func() any { return new(spb.DelItem) })
+	c.regMsg(MaxCurAvatar, func() any { return new(spb.MaxCurAvatar) })
 	c.regMsg(ServiceConnectionReq, func() any { return new(spb.ServiceConnectionReq) })
 	c.regMsg(ServiceConnectionRsp, func() any { return new(spb.ServiceConnectionRsp) })
 	c.regMsg(GateLoginGameRsp, func() any { return new(spb.GateLoginGameRsp) })
@@ -1598,8 +2559,6 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(MultiToNodePingRsp, func() any { return new(spb.MultiToNodePingRsp) })
 	c.regMsg(MuipToNodePingReq, func() any { return new(spb.MuipToNodePingReq) })
 	c.regMsg(MuipToNodePingRsp, func() any { return new(spb.MuipToNodePingRsp) })
-	c.regMsg(GetAllServiceGameReq, func() any { return new(spb.GetAllServiceGameReq) })
-	c.regMsg(GetAllServiceGameRsp, func() any { return new(spb.GetAllServiceGameRsp) })
 	c.regMsg(GateGamePingReq, func() any { return new(spb.GateGamePingReq) })
 	c.regMsg(GateGamePingRsp, func() any { return new(spb.GateGamePingRsp) })
 	c.regMsg(GateGamePlayerLoginReq, func() any { return new(spb.GateGamePlayerLoginReq) })
@@ -1610,10 +2569,10 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(GateLoginMultiRsp, func() any { return new(spb.GateLoginMultiRsp) })
 	c.regMsg(GameToGatePlayerLogoutNotify, func() any { return new(spb.GameToGatePlayerLogoutNotify) })
 	c.regMsg(GateToGamePlayerLogoutNotify, func() any { return new(spb.GateToGamePlayerLogoutNotify) })
-
-	// c.regMsg(PlayerLoginNotify, func() any { return new(spb.PlayerLoginNotify) })
-	// c.regMsg(NodeToGsPlayerLogoutNotify, func() any { return new(spb.NodeToGsPlayerLogoutNotify) })
+	c.regMsg(GmMission, func() any { return new(spb.GmMission) })
+	c.regMsg(PlayerMsgGateToNodeNotify, func() any { return new(spb.PlayerMsgGateToNodeNotify) })
 	c.regMsg(GameToNodePingReq, func() any { return new(spb.GameToNodePingReq) })
 	c.regMsg(GameToNodePingRsp, func() any { return new(spb.GameToNodePingRsp) })
-
+	c.regMsg(GateToNodePingReq, func() any { return new(spb.GateToNodePingReq) })
+	c.regMsg(GateToNodePingRsp, func() any { return new(spb.GateToNodePingRsp) })
 }

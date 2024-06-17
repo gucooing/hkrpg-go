@@ -135,6 +135,11 @@ func (n *Node) ServiceConnectionReq(serviceMsg pb.Message, s *Service) {
 	case spb.ServerType_SERVICE_DISPATCH:
 		go s.dispatchRecvHandle()
 	case spb.ServerType_SERVICE_MULTI:
+		if len(n.GetAllServiceByType(spb.ServerType_SERVICE_MULTI)) >= 1 {
+			logger.Debug("MULTI 重复注册")
+			n.killService(s)
+			return
+		}
 		go s.multiRecvHandle()
 	case spb.ServerType_SERVICE_MUIP:
 		go s.muipRecvHandle()

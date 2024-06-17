@@ -3,13 +3,16 @@
 ### LogLevel：日志等级
 ### MaxPlayer：本gameserver最大玩家数
 ### AutoCreate：是否自动注册
-### OuterIp：本服务启动地址
 ### AppList：
     格式：appid[配置]
     port_player：用于gateserver，代表对外连接端口，即kcp端口
     port_gt：用于gameserver，代表与gateserver构成连接所使用的端口
     port_service：代表本服务接受其他服务连接的端口
     port_http：在这个端口上启动一个http服务器
+### App:
+    Port:监听端口
+    InnerAddr:外部地址
+    OuterAddr:监听地址
 ### NetConf：
     格式：服务[地址]
     Node：表示nodeserver的连接地址

@@ -21,9 +21,9 @@ type Vector struct {
 
 func (r *RoBot) PlayerGetTokenCsReq() {
 	req := &proto.PlayerGetTokenCsReq{
-		AccountUid:   r.AccountUid,
-		PlatformType: 3,
-		Token:        r.Token,
+		AccountUid: r.AccountUid,
+		Platform:   3,
+		Token:      r.Token,
 	}
 
 	r.send(cmd.PlayerGetTokenCsReq, req)
@@ -32,7 +32,7 @@ func (r *RoBot) PlayerGetTokenCsReq() {
 func (r *RoBot) PlayerLoginCsReq() {
 	req := &proto.PlayerLoginCsReq{
 		Signature:     "",
-		SystemVersion: "Windows 12 专业版",
+		ClientVersion: "OSPRODWin9.9.0",
 	}
 
 	r.send(cmd.PlayerLoginCsReq, req)
@@ -63,7 +63,7 @@ func (r *RoBot) PlayerLoginScRsp() {
 	r.send(cmd.ChessRogueQueryCsReq, req)
 	r.send(cmd.GetRogueDialogueEventDataCsReq, req)
 	syncClientResVersionCsReq := &proto.SyncClientResVersionCsReq{
-		ClientResVersion: 6057946,
+		ResVersion: 6057946,
 	}
 	r.send(cmd.SyncClientResVersionCsReq, syncClientResVersionCsReq)
 	r.send(cmd.DailyFirstMeetPamCsReq, req)
@@ -127,8 +127,8 @@ func (r *RoBot) PlayerHeartBeatCsReq() {
 			if r.KcpAddr == "" {
 				return
 			}
-			req := &proto.PlayerHeartbeatCsReq{
-				ClientTimeMs: uint64(time.Now().UnixNano() / 1e6),
+			req := &proto.PlayerHeartBeatCsReq{
+				ClientTimeMs: uint64(time.Now().UnixMilli()),
 			}
 
 			r.send(cmd.PlayerHeartBeatCsReq, req)
@@ -140,7 +140,7 @@ func (r *RoBot) PlayerHeartBeatCsReq() {
 
 func (r *RoBot) PlayerHeartbeatScRsp(payloadMsg []byte) {
 	msg := decodePayloadToProto(cmd.PlayerHeartBeatScRsp, payloadMsg)
-	rsp := msg.(*proto.PlayerHeartbeatScRsp)
+	rsp := msg.(*proto.PlayerHeartBeatScRsp)
 
 	times := rsp.ServerTimeMs - rsp.ClientTimeMs
 
