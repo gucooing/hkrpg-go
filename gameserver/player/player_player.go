@@ -76,8 +76,11 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 		return
 	}
 	notify := &proto.PlayerSyncScNotify{
-		AvatarSync:   &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
-		MaterialList: make([]*proto.Material, 0),
+		AvatarSync:        &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
+		BasicTypeInfoList: make([]*proto.PlayerHeroBasicTypeInfo, 0),
+		MaterialList:      make([]*proto.Material, 0),
+		EquipmentList:     make([]*proto.Equipment, 0),
+		RelicList:         make([]*proto.Relic, 0),
 	}
 	db := g.GetMaterialMap()
 	// 添加账户基本信息
@@ -96,7 +99,11 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 	// 添加角色
 	if allSync.AvatarList != nil {
 		for _, avatarId := range allSync.AvatarList {
+			if avatarId/1000 == 8 {
+				notify.BasicTypeInfoList = g.GetPlayerHeroBasicTypeInfo()
+			}
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(avatarId))
+
 		}
 	}
 	// 添加物品
@@ -109,6 +116,18 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 				Tid: materialId,
 				Num: db[materialId],
 			})
+		}
+	}
+	// 添加光锥
+	if allSync.EquipmentList != nil {
+		for _, uniqueId := range allSync.EquipmentList {
+			notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(uniqueId))
+		}
+	}
+	// 添加圣遗物
+	if allSync.RelicList != nil {
+		for _, uniqueId := range allSync.RelicList {
+			notify.RelicList = append(notify.RelicList, g.GetRelic(uniqueId))
 		}
 	}
 

@@ -79,6 +79,9 @@ func (g *GamePlayer) GetHeroBasicTypeInfo() map[uint32]*spb.HeroBasicTypeInfo {
 
 func (g *GamePlayer) GetHeroBasicTypeInfoBy(basicType spb.HeroBasicType) *spb.HeroBasicTypeInfo {
 	db := g.GetHeroBasicTypeInfo()
+	if db[uint32(basicType)] == nil {
+		g.AddHeroBasicTypeInfo(basicType)
+	}
 	return db[uint32(basicType)]
 }
 
@@ -108,6 +111,9 @@ func (g *GamePlayer) GetBasicTypeSkillTreeList(avatarId uint32) []*spb.AvatarSki
 
 func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 	skilltreeList := make([]*spb.AvatarSkillBin, 0)
+	if avatarId/1000 == 8 {
+		avatarId = 8001
+	}
 	avatarBin := g.GetAvatarBinById(avatarId)
 	if avatarId == 8001 {
 		basicInfo := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
@@ -255,8 +261,11 @@ re:
 		case proto.BattleEndStatus_BATTLE_END_QUIT: // 撤退
 			break re
 		}
-
-		avatarBin := g.GetAvatarById(avatarStt.Id)
+		avatarId := avatarStt.Id
+		if avatarStt.Id/1000 == 8 {
+			avatarId = 8001
+		}
+		avatarBin := g.GetAvatarById(avatarId)
 		if avatarBin == nil {
 			continue
 		}
@@ -305,6 +314,9 @@ func (g *GamePlayer) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
+	if avatarId/1000 == 8 {
+		avatarId = 8001
+	}
 	avatardb := g.GetAvatarBinById(avatarId)
 	if avatardb == nil {
 		return nil
@@ -340,6 +352,11 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 			RelicUniqueId: relic,
 		}
 		avatar.EquipRelicList = append(avatar.EquipRelicList, equipRelic)
+	}
+	if avatarId == 8001 {
+		basic := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
+		avatar.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
+		avatar.Rank = basic.Rank
 	}
 
 	return avatar
@@ -480,4 +497,48 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*p
 		}
 	}
 	return battleAvatarList, buffList
+}
+
+func (g *GamePlayer) GetPlayerHeroBasicTypeInfo() []*proto.PlayerHeroBasicTypeInfo {
+	basicTypeInfoList := make([]*proto.PlayerHeroBasicTypeInfo, 0)
+	avatarDb := g.GetAvatar()
+	avatarBin := g.GetAvatarBinById(8001)
+	for id, heroBasic := range g.GetHeroBasicTypeInfo() {
+		switch avatarDb.Gender {
+		case spb.Gender_GenderMan:
+			if id%2 == 0 {
+				continue
+			}
+		case spb.Gender_GenderWoman:
+			if id%2 != 0 {
+				continue
+			}
+		}
+		basicTypeInfo := &proto.PlayerHeroBasicTypeInfo{
+			SkillTreeList:  make([]*proto.AvatarSkillTree, 0),
+			BasicType:      proto.HeroBasicType(heroBasic.BasicType),
+			EquipRelicList: make([]*proto.EquipRelic, 0),
+			Rank:           heroBasic.Rank,
+		}
+		// 获取装备圣遗物
+		for tp, relic := range avatarBin.EquipRelic {
+			basicTypeInfo.EquipRelicList = append(basicTypeInfo.EquipRelicList, &proto.EquipRelic{
+				Type:          tp,
+				RelicUniqueId: relic,
+			})
+		}
+		// 添加技能
+		for _, skill := range heroBasic.SkillTreeList {
+			if skill.Level == 0 {
+				continue
+			}
+			avatarSkillTree := &proto.AvatarSkillTree{
+				PointId: skill.PointId,
+				Level:   skill.Level,
+			}
+			basicTypeInfo.SkillTreeList = append(basicTypeInfo.SkillTreeList, avatarSkillTree)
+		}
+		basicTypeInfoList = append(basicTypeInfoList, basicTypeInfo)
+	}
+	return basicTypeInfoList
 }

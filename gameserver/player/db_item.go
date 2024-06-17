@@ -157,7 +157,6 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 		}
 	}
 	g.ScenePlaneEventScNotify(pileItem)
-	// g.MaterialPlayerSyncScNotify(pileItem)
 }
 
 func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {
@@ -170,7 +169,6 @@ func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {
 	for _, item := range pileItem {
 		db[item.Tid] -= item.Num
 	}
-	g.MaterialPlayerSyncScNotify(pileItem)
 
 	return true
 }
@@ -244,6 +242,33 @@ func (g *GamePlayer) DelEquipment(uniqueId uint32) []*Material {
 	}
 	g.DelEquipmentPlayerSyncScNotify([]uint32{uniqueId})
 	return material
+}
+
+func (g *GamePlayer) GetRelic(uniqueId uint32) *proto.Relic {
+	relicDb := g.GetRelicById(uniqueId)
+	if relicDb == nil {
+		return nil
+	}
+	relic := &proto.Relic{
+		Tid:           relicDb.Tid,
+		SubAffixList:  make([]*proto.RelicAffix, 0),
+		BaseAvatarId:  relicDb.BaseAvatarId,
+		DressAvatarId: relicDb.BaseAvatarId,
+		UniqueId:      relicDb.UniqueId,
+		Level:         relicDb.Level,
+		IsProtected:   relicDb.IsProtected,
+		MainAffixId:   relicDb.MainAffixId,
+		Exp:           relicDb.Exp,
+	}
+	for _, subAffixList := range relicDb.RelicAffix {
+		relicAffix := &proto.RelicAffix{
+			AffixId: subAffixList.AffixId,
+			Cnt:     subAffixList.Cnt,
+			Step:    subAffixList.Step,
+		}
+		relic.SubAffixList = append(relic.SubAffixList, relicAffix)
+	}
+	return relic
 }
 
 func (g *GamePlayer) AddRelic(tid uint32) {
@@ -440,27 +465,6 @@ func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 }
 
 /*************************************PlayerSyncScNotify大全*******************************/
-// 添加物品通知
-func (g *GamePlayer) RelicScenePlaneEventScNotify(uniqueId uint32) {
-	relicItme := g.GetProtoRelicById(uniqueId)
-	// 通知客户端增加了物品
-	notify := &proto.ScenePlaneEventScNotify{
-		GetItemList: &proto.ItemList{
-			ItemList: make([]*proto.Item, 0),
-		},
-	}
-	item := &proto.Item{
-		ItemId:      relicItme.Tid,
-		Level:       relicItme.Level,
-		Num:         1,
-		MainAffixId: relicItme.MainAffixId,
-		Rank:        0,
-		Promotion:   0,
-		UniqueId:    relicItme.UniqueId,
-	}
-	notify.GetItemList.ItemList = append(notify.GetItemList.ItemList, item)
-	g.Send(cmd.ScenePlaneEventScNotify, notify)
-}
 
 func (g *GamePlayer) EquipmentPlayerSyncScNotify(uniqueId uint32) {
 	notify := &proto.PlayerSyncScNotify{
@@ -470,21 +474,6 @@ func (g *GamePlayer) EquipmentPlayerSyncScNotify(uniqueId uint32) {
 	equipment := g.GetEquipment(uniqueId)
 	notify.EquipmentList = append(notify.EquipmentList, equipment)
 
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
-func (g *GamePlayer) MaterialPlayerSyncScNotify(pileItem []*Material) {
-	notify := &proto.PlayerSyncScNotify{MaterialList: make([]*proto.Material, 0)}
-	for _, item := range pileItem {
-		if item.Tid == Exp {
-			continue
-		}
-		material := &proto.Material{
-			Tid: item.Tid,
-			Num: g.GetMaterialById(item.Tid),
-		}
-		notify.MaterialList = append(notify.MaterialList, material)
-	}
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
