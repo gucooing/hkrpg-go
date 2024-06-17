@@ -102,6 +102,9 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 	// 添加物品
 	if allSync.MaterialList != nil {
 		for _, materialId := range allSync.MaterialList {
+			if materialId == Exp {
+				continue
+			}
 			notify.MaterialList = append(notify.MaterialList, &proto.Material{
 				Tid: materialId,
 				Num: db[materialId],

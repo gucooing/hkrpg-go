@@ -22,10 +22,16 @@ type GamePlayer struct {
 	GameAppId uint32
 	GateAppId uint32
 	// 玩家数据
-	Platform   spb.PlatformType        // 登录设备
-	OnlineData *OnlineData             // 玩家在线数据
-	BasicBin   *spb.PlayerBasicCompBin // 玩家pb数据
-	MsgChan    chan Msg                // 消息通道
+	Platform     spb.PlatformType        // 登录设备
+	OnlineData   *OnlineData             // 玩家在线数据
+	BasicBin     *spb.PlayerBasicCompBin // 玩家pb数据
+	RouteManager *RouteManager           // 路由
+	SendChan     chan Msg                // 发送消息通道
+}
+
+type RecvMsg struct {
+	CmdId     uint16
+	PlayerMsg []byte
 }
 
 type Msg struct {
@@ -148,7 +154,7 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 		Msg: binMsg,
 	}
 
-	g.MsgChan <- Msg{
+	g.SendChan <- Msg{
 		AppId:     g.GateAppId,
 		CmdId:     cmd.GameToGateMsgNotify,
 		PlayerMsg: gtgMsg,
@@ -168,14 +174,6 @@ func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb
 		return nil
 	}
 	return protoObj
-}
-
-func stou32(msg string) uint32 {
-	if msg == "" {
-		return 0
-	}
-	ms, _ := strconv.ParseUint(msg, 10, 32)
-	return uint32(ms)
 }
 
 var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq} // 黑名单

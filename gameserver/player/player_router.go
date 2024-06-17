@@ -1,9 +1,8 @@
-package gs
+package player
 
 import (
 	"encoding/base64"
 
-	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
@@ -14,7 +13,7 @@ type RouteManager struct {
 	handlerFuncRouteMap map[uint16]HandlerFunc
 }
 
-func (r *RouteManager) initRoute(g *player.GamePlayer) {
+func (r *RouteManager) initRoute(g *GamePlayer) {
 	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
 		cmd.GetBasicInfoCsReq:     g.HandleGetBasicInfoCsReq,
 		cmd.GetEnteredSceneCsReq:  g.HandleGetEnteredSceneCsReq,
@@ -157,26 +156,26 @@ func (r *RouteManager) initRoute(g *player.GamePlayer) {
 	}
 }
 
-func NewRouteManager(g *player.GamePlayer) (r *RouteManager) {
+func NewRouteManager(g *GamePlayer) (r *RouteManager) {
 	r = new(RouteManager)
 	r.initRoute(g)
 	return r
 }
 
-func RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/, g *GamePlayer) {
+func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			logger.Error("uid: %v", g.p.Uid)
+			logger.Error("uid: %v", g.Uid)
 			logger.Error("NAME: %s KcpMsg: \n%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), base64.StdEncoding.EncodeToString(payloadMsg))
 			return
 		}
 	}()
 	// 异步打印需要的数据包
-	go player.LogMsgRecv(cmdId, payloadMsg)
+	go LogMsgRecv(cmdId, payloadMsg)
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
 		// logger.Error("C --> S no route for msg, cmdId: %v", cmdId)

@@ -79,7 +79,7 @@ func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32) {
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			go ge.gateRegisterMessage(msg.CmdId, serviceMsg)
+			ge.gateRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
 }
@@ -226,7 +226,7 @@ func (ge *gateServer) NewPlayer(uid, accountId uint32, msg chan player.Msg) *pla
 	g := new(player.GamePlayer)
 	g.Uid = uid
 	g.AccountId = accountId
-	g.MsgChan = msg
+	g.SendChan = msg
 	g.GameAppId = ge.game.AppId
 	g.GateAppId = ge.appid
 
@@ -240,7 +240,7 @@ func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 		msgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(rsp.Msg, &msgList, nil)
 		for _, msg := range msgList {
-			RegisterMessage(msg.CmdId, msg.ProtoData, paler)
+			paler.p.RegisterMessage(msg.CmdId, msg.ProtoData)
 		}
 	}
 }

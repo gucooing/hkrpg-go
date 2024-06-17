@@ -157,7 +157,7 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 		}
 	}
 	g.ScenePlaneEventScNotify(pileItem)
-	g.MaterialPlayerSyncScNotify(pileItem)
+	// g.MaterialPlayerSyncScNotify(pileItem)
 }
 
 func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {

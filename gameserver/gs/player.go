@@ -22,7 +22,6 @@ type GamePlayer struct {
 	gate           *gateServer        // 玩家所属gate
 	game           *GameServer        // 玩家所属game
 	p              *player.GamePlayer // 玩家内存
-	RouteManager   *RouteManager      // 玩家路由
 	LastActiveTime int64              // 最近一次的保存时间
 }
 
@@ -37,11 +36,11 @@ func (s *GameServer) killPlayer(p *GamePlayer) {
 /************************************接口*********************************/
 
 func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServer) (*GamePlayer, bool) {
+	g.RouteManager = player.NewRouteManager(g)
 	gamePlayer := &GamePlayer{
-		gate:         ge,
-		game:         s,
-		p:            g,
-		RouteManager: NewRouteManager(g),
+		gate: ge,
+		game: s,
+		p:    g,
 	}
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
