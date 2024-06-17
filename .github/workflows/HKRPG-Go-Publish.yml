@@ -39,4 +39,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: hkrpg-go
-        path: go/hkrpg/build/
+        files: go/hkrpg/build/*
