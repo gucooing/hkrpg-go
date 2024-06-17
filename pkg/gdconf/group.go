@@ -356,17 +356,17 @@ func getValue(value string) (uint32, uint32, bool) {
 	return groupId, instId, ok
 }
 
-func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) (map[uint32]*NPCList, []*NPCList) {
+func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) map[uint32]*NPCList {
 	npcList := make(map[uint32]*NPCList)
 	if groupList == nil || groupList.NPCList == nil {
-		return nil, nPCList
+		return nil
 	}
 	for _, npc := range groupList.NPCList {
-		if npc.IsDelete || npc.IsClientOnly {
+		if npc.IsDelete || npc.IsClientOnly { // 过滤不需要发送的
 			continue
 		}
 		NPCDataExcel := GetNPCDataId(npc.NPCID)
-		if NPCDataExcel == nil {
+		if NPCDataExcel == nil { // 过滤没有的
 			continue
 		}
 		repeatNpc := false
@@ -376,7 +376,7 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) (map[uint32]*NPCList, []
 				break
 			}
 		}
-		if repeatNpc {
+		if repeatNpc { // 过滤重复的
 			continue
 		}
 
@@ -384,7 +384,7 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) (map[uint32]*NPCList, []
 		npcList[npc.ID] = npc
 	}
 
-	return npcList, nPCList
+	return npcList
 }
 
 func LoadAnchor(groupList *LevelGroup) map[uint32]*AnchorList {

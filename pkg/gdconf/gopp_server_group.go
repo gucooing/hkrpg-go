@@ -1,6 +1,8 @@
 package gdconf
 
 import (
+	"strings"
+
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
@@ -41,7 +43,7 @@ func (g *GameDataConfig) goppServerGroup() {
 				continue
 			}
 			for groupsId, groups := range levelGroup {
-				if groups.LoadSide != "Server" {
+				if groups.LoadSide != "Server" || strings.Contains(groups.GroupName, "PuzzleCompass") {
 					continue
 				}
 				g.ServerGroupMap[planeId][floorId][groupsId] = &GoppLevelGroup{
@@ -59,7 +61,7 @@ func (g *GameDataConfig) goppServerGroup() {
 				}
 				g.ServerGroupMap[planeId][floorId][groupsId].PropList = LoadProp(groups)
 				g.ServerGroupMap[planeId][floorId][groupsId].MonsterList = LoadMonster(groups)
-				g.ServerGroupMap[planeId][floorId][groupsId].NPCList, nPCList = LoadNpc(groups, nPCList)
+				g.ServerGroupMap[planeId][floorId][groupsId].NPCList = LoadNpc(groups, nPCList)
 				g.ServerGroupMap[planeId][floorId][groupsId].AnchorList = LoadAnchor(groups)
 			}
 		}
