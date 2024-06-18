@@ -42,7 +42,7 @@ type Msg struct {
 }
 
 // 拉取账户数据
-func (g *GamePlayer) GetPlayerDateByDb() {
+func (g *GamePlayer) GetPlayerDateByDb(isJumpMission bool) {
 	var err error
 	dbPlayer := db.GetDb().QueryAccountUidByFieldPlayer(g.AccountId)
 	if dbPlayer == nil || dbPlayer.BinData == nil {
@@ -58,6 +58,11 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 		dbPlayer.DataVersion = g.GetDataVersion()
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
+		}
+
+		if !isJumpMission {
+			g.FinishAllMission()
+			g.FinishAllTutorial()
 		}
 
 		err = db.GetDb().AddDatePlayerFieldByFieldName(dbPlayer)

@@ -181,7 +181,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 		PropEntityId: req.PropEntityId,
 	}
 	var propEntityIdList []uint32
-	isUp := false
+	// isUp := false
 
 	pe := g.GetPropEntityById(req.PropEntityId)
 	if pe == nil {
@@ -226,16 +226,16 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 		g.AllPlayerSyncScNotify(&AllPlayerSync{
 			MaterialList: []uint32{Hcoin},
 		})
-		isUp = true
+		// isUp = true
 	}
 	// 更新本体
 
 	rsp.PropState = gdconf.GetStateValue(confInteract.TargetState) // 获取新状态
 
-	if isUp {
-		propEntityIdList = append(propEntityIdList, req.PropEntityId)
-		g.UpPropState(blockBin, pe.GroupId, pe.InstId, rsp.PropState) // 更新地图
-	}
+	// if isUp {
+	propEntityIdList = append(propEntityIdList, req.PropEntityId)
+	g.UpPropState(blockBin, pe.GroupId, pe.InstId, rsp.PropState) // 更新地图
+	// }
 	// 统一通知
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
 	g.UpInteractSubMission(blockBin)                            // 检查交互任务

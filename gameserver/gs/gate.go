@@ -169,7 +169,7 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	}
 	p := ge.NewPlayer(req.Uid, req.AccountId, ge.msgChan)
 	// 拉取账户数据
-	p.GetPlayerDateByDb()
+	p.GetPlayerDateByDb(ge.game.Config.IsJumpMission)
 	g, ok := ge.game.addPlayerMap(req.Uid, p, ge)
 	if !ok {
 		logger.Warn("[UID:%v]超出预期的玩家重复登录", p.Uid)

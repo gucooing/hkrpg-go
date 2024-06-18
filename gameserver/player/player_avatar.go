@@ -335,7 +335,8 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg []byte) {
 
 	rsq := &proto.TakePromotionRewardScRsp{
 		RewardList: &proto.ItemList{ItemList: []*proto.Item{
-			{ItemId: 101,
+			{
+				ItemId:      101,
 				Level:       0,
 				Num:         1,
 				MainAffixId: 0,

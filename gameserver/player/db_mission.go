@@ -91,6 +91,10 @@ func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
 	delete(mainMissionList, mainMissionId)
 	g.Send(cmd.StartFinishMainMissionScNotify, &proto.StartFinishMainMissionScNotify{MainMissionId: mainMissionId})
 
+	allSync := &AllPlayerSync{
+		IsBasic:      true,
+		MaterialList: make([]uint32, 0),
+	}
 	// 发送奖励
 	rewardConf := gdconf.GetRewardDataById(conf.RewardID)
 	if rewardConf != nil {
@@ -100,6 +104,7 @@ func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
 			Num: rewardConf.Hcoin,
 		})
 		for _, data := range rewardConf.Items {
+			allSync.MaterialList = append(allSync.MaterialList, data.ItemID)
 			pileItem = append(pileItem, &Material{
 				Tid: data.ItemID,
 				Num: data.Count,
@@ -107,6 +112,8 @@ func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
 		}
 		g.AddItem(pileItem)
 	}
+
+	g.AllPlayerSyncScNotify(allSync)
 
 	return true
 }
@@ -167,8 +174,12 @@ func (g *GamePlayer) UpBattleSubMission(battleId uint32) {
 		}
 		switch conf.FinishType {
 		case constant.StageWin:
-			if gdconf.IsBattleMission(id, db.EventId) {
+			if db.EventId == conf.ParamInt1 { // 适配dim res ，添加多条件判断
 				g.FinishSubMission(id)
+			} else {
+				if gdconf.IsBattleMission(id, db.EventId) {
+					g.FinishSubMission(id)
+				}
 			}
 		}
 	}
