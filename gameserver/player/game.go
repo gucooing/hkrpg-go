@@ -60,7 +60,7 @@ func (g *GamePlayer) GetPlayerDateByDb(isJumpMission bool) {
 			logger.Error("pb marshal error: %v", err)
 		}
 
-		if !isJumpMission {
+		if isJumpMission {
 			g.FinishAllMission()
 			g.FinishAllTutorial()
 		}
