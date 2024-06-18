@@ -18,10 +18,11 @@ import (
 var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
 
 type GamePlayer struct {
-	Uid       uint32
-	AccountId uint32
-	GameAppId uint32
-	GateAppId uint32
+	Uid           uint32
+	AccountId     uint32
+	GameAppId     uint32
+	GateAppId     uint32
+	IsJumpMission bool // 应该扔进数据库的
 	// 玩家数据
 	Platform     spb.PlatformType        // 登录设备
 	OnlineData   *OnlineData             // 玩家在线数据
@@ -42,7 +43,7 @@ type Msg struct {
 }
 
 // 拉取账户数据
-func (g *GamePlayer) GetPlayerDateByDb(isJumpMission bool) {
+func (g *GamePlayer) GetPlayerDateByDb() {
 	var err error
 	dbPlayer := db.GetDb().QueryAccountUidByFieldPlayer(g.AccountId)
 	if dbPlayer == nil || dbPlayer.BinData == nil {
@@ -60,7 +61,7 @@ func (g *GamePlayer) GetPlayerDateByDb(isJumpMission bool) {
 			logger.Error("pb marshal error: %v", err)
 		}
 
-		if isJumpMission {
+		if g.IsJumpMission {
 			g.FinishAllMission()
 			g.FinishAllTutorial()
 		}

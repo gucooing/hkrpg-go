@@ -489,6 +489,9 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 
 // 当前任务整理完后需要查询当前新任务是否会自动完成/会被自动完成
 func (g *GamePlayer) FinishMissionAuto() {
+	if g.IsJumpMission {
+		return
+	}
 	g.AutoServerMissionFinishAction() // 任务自动行为检查
 	g.AutoServerFinishMission()       // 检查服务端任务动作
 	g.AutoEntryGroup()                // 检查场景上是否有实体需要卸载/加载
@@ -496,6 +499,9 @@ func (g *GamePlayer) FinishMissionAuto() {
 
 // 登录任务检查
 func (g *GamePlayer) LoginReadyMission() {
+	if g.IsJumpMission {
+		return
+	}
 	// g.ReadyMainMission() // 主线检查
 	// g.AllFinishMission() // 检查是否有子任务应该完成但未完成
 	g.ReadyMainMission() // 主线接取检查

@@ -46,6 +46,19 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 	}
 	rsp.FinishedMainMissionIdList = []uint32{}
 	rsp.SubMissionStatusList = make([]*proto.Mission, 0)
+	if g.IsJumpMission {
+		for _, id := range req.MainMissionIdList {
+			rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, id)
+		}
+		for _, id := range req.SubMissionIdList {
+			rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
+				Id:     id,
+				Status: proto.MissionStatus_MISSION_FINISH,
+			})
+		}
+		g.Send(cmd.GetMissionStatusScRsp, rsp)
+		return
+	}
 	finishMainDb := g.GetFinishMainMissionList()
 	finishMainSubDb := g.GetFinishSubMainMissionList()
 	curMainSubDb := g.GetSubMainMissionList()
