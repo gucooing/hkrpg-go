@@ -1,7 +1,7 @@
 package player
 
 import (
-	gadb "github.com/gucooing/hkrpg-go/gameserver/db"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -48,7 +48,7 @@ func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg []byte) {
 		Attachment:     &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
 	for _, id := range req.GetMailIdList() {
-		mail := gadb.GetMailById(id)
+		mail := database.GetMailById(id)
 		rsp.Attachment.ItemList = append(rsp.Attachment.ItemList, g.GetAttachment(mail.ItemList)...)
 		rsp.SuccMailIdList = append(rsp.SuccMailIdList, id)
 		if g.MailReadItem(mail.ItemList) {

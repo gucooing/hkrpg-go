@@ -45,12 +45,6 @@ func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServ
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
 
-	if gamePlayer.p.OnlineData == nil {
-		gamePlayer.p.OnlineData = &player.OnlineData{
-			Battle:      make(map[uint32]*player.Battle),
-			BattleState: &player.BattleState{},
-		}
-	}
 	if s.playerMap[uid] == nil {
 		s.playerMap[uid] = gamePlayer
 		PLAYERNUM++

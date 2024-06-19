@@ -152,7 +152,7 @@ func (n *NodeService) GetAllServiceGateRsp(serviceMsg pb.Message) {
 	for _, service := range rsp.GateServiceList {
 		gate := &Gate{
 			Ip:   service.Addr,
-			Port: stou32(service.Port),
+			Port: alg.S2U32(service.Port),
 			Num:  service.PlayerNum,
 		}
 		gateList[service.AppId] = gate

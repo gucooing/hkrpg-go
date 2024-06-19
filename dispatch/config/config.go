@@ -88,10 +88,16 @@ var DefaultConfig = &Config{
 			DispatchUrl: "/query_gateway",
 		},
 		{
-			Name:        "hkrpg-official",
+			Name:        "hkrpg-official_os",
 			Title:       "os_usa",
 			Type:        "2",
 			DispatchUrl: "/query_gateway_capture",
+		},
+		{
+			Name:        "hkrpg-official_cn",
+			Title:       "os_usa",
+			Type:        "2",
+			DispatchUrl: "/query_gateway_capture_cn",
 		},
 	},
 	AppList: map[string]AppList{

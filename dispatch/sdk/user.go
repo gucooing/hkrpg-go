@@ -28,10 +28,15 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 	loginrsq := new(Login)
 
 	s.AutoCreate.Lock()
-	account := s.Store.QueryAccountByFieldUsername(requestData.Account)
+	var account *database.Account
+	if s.IsPe {
+		account = database.QueryAccountByFieldUsername(s.Store.HkrpgGoPe, requestData.Account)
+	} else {
+		account = database.QueryAccountByFieldUsername(s.Store.AccountMysql, requestData.Account)
+	}
 	if account.Username == "" {
 		logger.Warn("在数据库中没有找到登录的账号")
-		if s.Config.AutoCreate {
+		if s.IsAutoCreate {
 			// 生成新的token
 			token := base64.StdEncoding.EncodeToString(random.GetRandomByte(24))
 			account = &database.Account{
@@ -40,7 +45,12 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 				CreateTime: time.Now().Unix(),
 			}
 
-			accountid, err := s.Store.UpdateAccountFieldByFieldName(account)
+			var accountid uint32
+			if s.IsPe {
+				accountid, err = database.AddAccountFieldByFieldName(s.Store.HkrpgGoPe, account)
+			} else {
+				accountid, err = database.AddAccountFieldByFieldName(s.Store.AccountMysql, account)
+			}
 			if err != nil {
 				logger.Error("自动注册账号添加失败:%s", err)
 				loginrsq.Data = nil
@@ -111,7 +121,12 @@ func (s *Server) VerifyRequestHandler(c *gin.Context) {
 		logger.Error("ParseInt uid error: %v", err)
 		return
 	}
-	account := s.Store.QueryAccountByFieldAccountId(uint(uid))
+	var account *database.Account
+	if s.IsPe {
+		account = database.QueryAccountByFieldAccountId(s.Store.HkrpgGoPe, uint32(uid))
+	} else {
+		account = database.QueryAccountByFieldAccountId(s.Store.AccountMysql, uint32(uid))
+	}
 	if account.Username == "" {
 		logger.Error("查询不到此账户,uid: %s", requestData.Uid)
 		c.Header("Content-type", "application/json")
@@ -140,6 +155,7 @@ func (s *Server) VerifyRequestHandler(c *gin.Context) {
 		RealnameOperation: "None",
 	}
 	loginrsq.Data = repLoginData
+	logger.Info("账号 %s 自动登录成功", account.Username)
 	c.JSON(200, loginrsq)
 }
 
@@ -173,7 +189,12 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 		return
 	}
 	responseData := new(ComboTokenRsp)
-	account := s.Store.QueryAccountByFieldAccountId(uint(uid))
+	var account *database.Account
+	if s.IsPe {
+		account = database.QueryAccountByFieldAccountId(s.Store.HkrpgGoPe, uint32(uid))
+	} else {
+		account = database.QueryAccountByFieldAccountId(s.Store.AccountMysql, uint32(uid))
+	}
 	if account.Username == "" {
 		logger.Warn("查询不到此账户,uid: %s", loginData.Uid)
 		c.Header("Content-type", "application/json")
@@ -181,9 +202,17 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 		return
 	} else {
 		if account.Token == loginData.Token {
-
-			combotoken := s.Store.GetComboTokenByAccountId(loginData.Uid)
-			logger.Info("账号 %s 自动登录成功", account.Username)
+			var combotoken string
+			if s.IsPe {
+				account.ComboToken = random.GetRandomByteHexStr(20)
+				err = database.UpdateAccountFieldByFieldName(s.Store.HkrpgGoPe, account)
+				if err != nil {
+					logger.Warn("Hkrpg-Go-Pe ComboToken更新失败,uid: %s", loginData.Uid)
+				}
+				combotoken = account.ComboToken
+			} else {
+				combotoken = database.GetComboTokenByAccountId(s.Store.LoginRedis, loginData.Uid)
+			}
 
 			responseData.Retcode = 0
 			responseData.Message = "OK"

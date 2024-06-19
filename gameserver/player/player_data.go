@@ -1,6 +1,8 @@
 package player
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -10,6 +12,7 @@ import (
 func (g *GamePlayer) StaminaInfoScNotify() {
 	db := g.GetMaterialMap()
 	notify := &proto.StaminaInfoScNotify{
+		BKGMBHLJGDK:     time.Now().Unix() + 94,
 		NextRecoverTime: 0,
 		Stamina:         db[Stamina],
 		ReserveStamina:  db[RStamina],
@@ -20,7 +23,7 @@ func (g *GamePlayer) StaminaInfoScNotify() {
 func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
-	rsp.NextRecoverTime = 1716449614
+	rsp.NextRecoverTime = time.Now().Unix() + 94
 	rsp.GameplayBirthday = g.BasicBin.Birthday
 	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
 	// rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{

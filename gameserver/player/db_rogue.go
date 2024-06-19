@@ -3,7 +3,7 @@ package player
 import (
 	"math/rand"
 
-	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -323,7 +323,7 @@ func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 }
 
 func (g *GamePlayer) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
-	conf := gsdb.GetCurRogue()
+	conf := database.GetCurRogue()
 	if conf == nil {
 		return nil
 	}
@@ -341,7 +341,7 @@ func (g *GamePlayer) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
 }
 
 func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
-	conf := gsdb.GetCurRogue()
+	conf := database.GetCurRogue()
 	if conf == nil {
 		return nil
 	}
@@ -355,7 +355,7 @@ func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
 
 func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
 	info := &proto.RogueAreaInfo{RogueAreaList: make([]*proto.RogueArea, 0)}
-	conf := gsdb.GetCurRogue()
+	conf := database.GetCurRogue()
 	if conf == nil {
 		return info
 	}

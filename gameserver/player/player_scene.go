@@ -222,9 +222,9 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 			}
 		}
 	case gdconf.PROP_TREASURE_CHEST: // 宝箱
-		g.AddMaterial([]*Material{{Tid: Hcoin, Num: 1000}})
+		g.AddMaterial([]*Material{{Tid: Mcoin, Num: 1000}})
 		g.AllPlayerSyncScNotify(&AllPlayerSync{
-			MaterialList: []uint32{Hcoin},
+			MaterialList: []uint32{Mcoin},
 		})
 		// isUp = true
 	}

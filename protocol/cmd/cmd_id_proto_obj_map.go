@@ -45,7 +45,7 @@ func NewCmdProtoMap() (r *CmdProtoMap) {
 func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
 	_, exist := c.cmdDeDupMap[cmdId]
 	if exist {
-		logger.Error("reg dup msg, cmd id: %v\n", cmdId)
+		logger.Debug("reg dup msg, cmd id: %v\n", cmdId)
 		return
 	} else {
 		c.cmdDeDupMap[cmdId] = true
@@ -75,7 +75,7 @@ func (c *CmdProtoMap) regMsg(cmdId uint16, protoObjNewFunc func() any) {
 func (c *CmdProtoMap) GetProtoObjCacheByCmdId(cmdId uint16) pb.Message {
 	cachePool, exist := c.cmdIdProtoObjCacheMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v\n", cmdId)
+		logger.Debug("unknown cmd id: %v\n", cmdId)
 		return nil
 	}
 	protoObj := cachePool.Get().(pb.Message)
@@ -86,7 +86,7 @@ func (c *CmdProtoMap) GetProtoObjCacheByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) PutProtoObjCache(cmdId uint16, protoObj pb.Message) {
 	cachePool, exist := c.cmdIdProtoObjCacheMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v\n", cmdId)
+		logger.Debug("unknown cmd id: %v\n", cmdId)
 		return
 	}
 	cachePool.Put(protoObj)
@@ -95,7 +95,7 @@ func (c *CmdProtoMap) PutProtoObjCache(cmdId uint16, protoObj pb.Message) {
 func (c *CmdProtoMap) GetProtoObjFastNewByCmdId(cmdId uint16) pb.Message {
 	fn, exist := c.cmdIdProtoObjFastNewMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v\n", cmdId)
+		logger.Debug("unknown cmd id: %v\n", cmdId)
 		return nil
 	}
 	protoObj := fn().(pb.Message)
@@ -107,7 +107,7 @@ func (c *CmdProtoMap) GetProtoObjFastNewByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) GetProtoObjByCmdId(cmdId uint16) pb.Message {
 	refType, exist := c.cmdIdProtoObjMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v\n", cmdId)
+		logger.Debug("unknown cmd id: %v\n", cmdId)
 		return nil
 	}
 	protoObjInst := reflect.New(refType.Elem())
@@ -118,7 +118,7 @@ func (c *CmdProtoMap) GetProtoObjByCmdId(cmdId uint16) pb.Message {
 func (c *CmdProtoMap) GetCmdIdByProtoObj(protoObj pb.Message) uint16 {
 	cmdId, exist := c.protoObjCmdIdMap[reflect.TypeOf(protoObj)]
 	if !exist {
-		logger.Error("unknown proto object: %v\n", protoObj)
+		logger.Debug("unknown proto object: %v\n", protoObj)
 		return 0
 	}
 	return cmdId
@@ -127,7 +127,7 @@ func (c *CmdProtoMap) GetCmdIdByProtoObj(protoObj pb.Message) uint16 {
 func (c *CmdProtoMap) GetCmdNameByCmdId(cmdId uint16) string {
 	cmdName, exist := c.cmdIdCmdNameMap[cmdId]
 	if !exist {
-		logger.Error("unknown cmd id: %v\n", cmdId)
+		logger.Debug("unknown cmd id: %v\n", cmdId)
 		return ""
 	}
 	return cmdName
@@ -136,7 +136,7 @@ func (c *CmdProtoMap) GetCmdNameByCmdId(cmdId uint16) string {
 func (c *CmdProtoMap) GetCmdIdByCmdName(cmdName string) uint16 {
 	cmdId, exist := c.cmdNameCmdIdMap[cmdName]
 	if !exist {
-		logger.Error("unknown cmd name: %v\n", cmdName)
+		logger.Debug("unknown cmd name: %v\n", cmdName)
 		return 0
 	}
 	return cmdId

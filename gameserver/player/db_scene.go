@@ -1,7 +1,6 @@
 package player
 
 import (
-	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -421,7 +420,7 @@ func (g *GamePlayer) AutoEntryGroup() {
 
 // 从db拉取地图数据
 func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
-	bin := gsdb.GetDb().GetBlockData(g.Uid, entryId)
+	bin := database.GetBlockData(g.DB, g.Uid, entryId)
 	block := new(spb.BlockBin)
 	if err := pb.Unmarshal(bin.BinData, block); err != nil {
 		logger.Debug("entryId:%v,block error", entryId)
@@ -442,7 +441,7 @@ func (g *GamePlayer) UpdateBlock(block *spb.BlockBin) {
 		DataVersion: 0, // TODO
 		BinData:     bin,
 	}
-	if err = gsdb.GetDb().UpdateBlockData(blockData); err != nil {
+	if err = database.UpdateBlockData(g.DB, blockData); err != nil {
 		logger.Debug("updata block data error:%s", err.Error())
 	}
 }

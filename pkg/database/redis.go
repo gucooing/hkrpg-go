@@ -3,7 +3,10 @@ package database
 import (
 	"context"
 	"strconv"
+	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -97,4 +100,26 @@ func SetAcceptApplyFriend(rc *redis.Client, uid uint32, value []byte) bool {
 func DelAcceptApplyFriend(rc *redis.Client, uid uint32) {
 	key := "accept_apply_friend:" + strconv.Itoa(int(uid))
 	rc.Del(ctx, key)
+}
+
+// 获取ComboToken
+func GetComboTokenByAccountId(rc *redis.Client, accountId string) string {
+	key := "player_comboToken:" + accountId
+	comboToken, err := rc.Get(ctx, key).Result()
+	if err != nil {
+		comboToken = random.GetRandomByteHexStr(20)
+		SetComboTokenByAccountId(rc, accountId, comboToken)
+	}
+	return comboToken
+}
+
+// 设置ComboToken
+func SetComboTokenByAccountId(rc *redis.Client, accountId, comboToken string) string {
+	key := "player_comboToken:" + accountId
+	err := rc.Set(ctx, key, comboToken, 168*time.Hour).Err()
+	if err != nil {
+		return ""
+	}
+	logger.Debug("[accountId: %s] 生产新的comboToken: %s", accountId, comboToken)
+	return comboToken
 }

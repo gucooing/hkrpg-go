@@ -39,7 +39,7 @@ func (g *GameDataConfig) goppServerGroup() {
 			var nPCList []*NPCList
 			levelGroup := GetGroupById(planeId, floorId)
 			if levelGroup == nil {
-				logger.Debug("goppServerGroup planeId:%v,floorId:%v,error", planeId, floorId)
+				// logger.Debug("goppServerGroup planeId:%v,floorId:%v,error", planeId, floorId)
 				continue
 			}
 			for groupsId, groups := range levelGroup {

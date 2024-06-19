@@ -142,6 +142,8 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.FinishTutorialCsReq:        g.FinishTutorialCsReq,           // 完成教程
 		cmd.FinishTutorialGuideCsReq:   g.FinishTutorialGuideCsReq,      // 完成指南
 		cmd.SetPlayerInfoCsReq:         g.SetPlayerInfoCsReq,            // 新手设置名字
+		cmd.PlayerHeartBeatCsReq:       g.HandlePlayerHeartBeatCsReq,    // 玩家ping包
+		cmd.GetSpringRecoverDataCsReq:  g.GetSpringRecoverDataCsReq,     // 恢复
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集

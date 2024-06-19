@@ -147,7 +147,7 @@ func SendHandle(p *PlayerGame, kcpMsg *alg.PackMsg) {
 }
 
 // kcp统计
-func (s *GateServer) kcpNetInfo() {
+func kcpNetInfo() {
 	ticker := time.NewTicker(time.Second * 60)
 	kcpErrorCount := uint64(0)
 	for {

@@ -53,6 +53,9 @@ func (g *GamePlayer) AddFriend(uid uint32) {
 // 获取好友申请每次都去redis里取
 func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 	friend := new(spb.ApplyFriend)
+	if g.IsPE {
+		return friend.RecvApplyFriend
+	}
 	redisDb, ok := database.GetPlayerFriend(base.Db.PlayerBriefDataRedis, g.Uid)
 	if !ok {
 		return make(map[uint32]*spb.ReceiveApply, 0)
@@ -66,7 +69,7 @@ func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 }
 
 func (g *GamePlayer) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefData {
-	if uid == 0 {
+	if uid == 0 || g.IsPE {
 		return &spb.PlayerBasicBriefData{
 			Nickname:          "hkrpg-go|game_server:" + strconv.Itoa(int(g.GameAppId)),
 			Level:             80,

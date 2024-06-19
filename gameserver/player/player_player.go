@@ -1,6 +1,8 @@
 package player
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -13,6 +15,25 @@ type AllPlayerSync struct {
 	MaterialList  []uint32 // 物品id列表
 	EquipmentList []uint32 // 光锥列表
 	RelicList     []uint32 // 圣遗物列表
+}
+
+// 玩家ping包处理
+func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.PlayerHeartBeatCsReq, payloadMsg)
+	req := msg.(*proto.PlayerHeartBeatCsReq)
+	sTime := getCurTime()
+
+	rsp := new(proto.PlayerHeartBeatScRsp)
+	rsp.ServerTimeMs = sTime
+	rsp.ClientTimeMs = req.ClientTimeMs
+	g.LastActiveTime = time.Now().Unix()
+
+	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
+}
+
+func (g *GamePlayer) GetSpringRecoverDataCsReq(payloadMsg []byte) {
+	rsp := new(proto.GetSpringRecoverDataScRsp)
+	g.Send(cmd.GetSpringRecoverDataScRsp, rsp)
 }
 
 // 角色状态改变时需要发送通知

@@ -1,34 +1,34 @@
-package db
+package database
 
 import (
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
+	"gorm.io/gorm"
 )
 
 var DBCONF *DbConf
 
 type DbConf struct {
-	MailMap      map[uint32]*database.Mail
+	MailMap      map[uint32]*Mail
 	mailMapLock  sync.Mutex
-	RogueMap     map[uint32]*database.RogueConf
+	RogueMap     map[uint32]*RogueConf
 	rogueMapLock sync.Mutex
 }
 
-func (s *Store) GetDbConf() {
+func GetDbConf(db *gorm.DB) {
 	dbConf := &DbConf{
-		MailMap:  make(map[uint32]*database.Mail),
-		RogueMap: make(map[uint32]*database.RogueConf),
+		MailMap:  make(map[uint32]*Mail),
+		RogueMap: make(map[uint32]*RogueConf),
 	}
 	DBCONF = dbConf
-	mailMap := s.GetAllMail()
+	mailMap := GetDbAllMail(db)
 	for _, mail := range mailMap {
 		dbConf.MailMap[mail.Id] = mail
-		itemList := make([]*database.Item, 0)
+		itemList := make([]*Item, 0)
 		err := hjson.Unmarshal([]byte(mail.Item), &itemList)
 		if err != nil {
 			// 如果你是在登录的时候看到了这个报错，并且你的配置没有问题，那就是这玩意空的没填报错了
@@ -37,7 +37,7 @@ func (s *Store) GetDbConf() {
 		dbConf.MailMap[mail.Id].ItemList = itemList
 	}
 
-	rogueMap := s.GetAllRogue()
+	rogueMap := GetAllRogue(db)
 	if IsOverlapping(rogueMap) {
 		logger.Error("Rogue Time Overlapping")
 		panic("Rogue Time Overlapping")
@@ -47,8 +47,8 @@ func (s *Store) GetDbConf() {
 	}
 }
 
-func GetAllMail() map[uint32]*database.Mail {
-	mailMap := make(map[uint32]*database.Mail, 0)
+func GetAllMail() map[uint32]*Mail {
+	mailMap := make(map[uint32]*Mail, 0)
 	DBCONF.mailMapLock.Lock()
 	for id, mail := range DBCONF.MailMap {
 		mailMap[id] = mail
@@ -57,13 +57,13 @@ func GetAllMail() map[uint32]*database.Mail {
 	return mailMap
 }
 
-func GetMailById(id uint32) *database.Mail {
+func GetMailById(id uint32) *Mail {
 	DBCONF.mailMapLock.Lock()
 	defer DBCONF.mailMapLock.Unlock()
 	return DBCONF.MailMap[id]
 }
 
-func GetCurRogue() *database.RogueConf {
+func GetCurRogue() *RogueConf {
 	DBCONF.rogueMapLock.Lock()
 	defer DBCONF.rogueMapLock.Unlock()
 	currentTime := time.Now()
@@ -80,7 +80,7 @@ type TimeInterval struct {
 	end   time.Time
 }
 
-func IsOverlapping(rogueMap []*database.RogueConf) bool {
+func IsOverlapping(rogueMap []*RogueConf) bool {
 	var timeIntervals []TimeInterval
 	for _, rc := range rogueMap {
 		timeIntervals = append(timeIntervals, TimeInterval{start: rc.BeginTime.Time, end: rc.EndTime.Time})

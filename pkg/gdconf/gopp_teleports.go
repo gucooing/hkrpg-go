@@ -35,7 +35,7 @@ func (g *GameDataConfig) goppTeleports() {
 			}
 			groupList := GetGroupById(planeId, floorId)
 			if groupList == nil {
-				logger.Debug("goppTeleports planeId:%v,floorId:%v,error", planeId, floorId)
+				// logger.Debug("goppTeleports planeId:%v,floorId:%v,error", planeId, floorId)
 				continue
 			}
 			teleports := make(map[uint32]*PropList)

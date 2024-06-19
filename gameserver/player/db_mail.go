@@ -1,7 +1,6 @@
 package player
 
 import (
-	gadb "github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -63,12 +62,19 @@ func (g *GamePlayer) DelMail(id uint32) {
 
 // TODO 邮件奖励兑换方法（拓展此处以支持更多奖励物品
 func (g *GamePlayer) MailReadItem(itemList []*database.Item) bool {
+	allSync := &AllPlayerSync{
+		IsBasic:      true,
+		MaterialList: make([]uint32, 0),
+		AvatarList:   make([]uint32, 0),
+	}
 	pileItem := make([]*Material, 0)
 	for _, item := range itemList {
 		switch item.ItemType {
 		case database.MailAvatar:
+			allSync.AvatarList = append(allSync.AvatarList, item.ItemId)
 			g.AddAvatar(item.ItemId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 		case database.MailMaterial:
+			allSync.MaterialList = append(allSync.MaterialList, item.ItemId)
 			pileItem = append(pileItem, &Material{
 				Tid: item.ItemId,
 				Num: item.Num,
@@ -76,12 +82,13 @@ func (g *GamePlayer) MailReadItem(itemList []*database.Item) bool {
 		}
 	}
 	g.AddMaterial(pileItem)
+	g.AllPlayerSyncScNotify(allSync)
 	return true
 }
 
 func (g *GamePlayer) GetAllMail() []*proto.ClientMail {
 	mailList := make([]*proto.ClientMail, 0)
-	mailMap := gadb.GetAllMail()
+	mailMap := database.GetAllMail()
 	for id, mail := range mailMap {
 		db := g.GetMailById(id)
 		if db.IsDel {

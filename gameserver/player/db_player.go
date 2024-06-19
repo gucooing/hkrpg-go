@@ -96,7 +96,7 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 			IsPaused:              false,
 			GameObjectGuidCounter: 0,
 			IsNickName:            false,
-			SceneMap:              g.GetSceneMap(),
+			SceneMap:              NewSceneMap(),
 			CurBattle:             g.NewCurBattle(),
 			BattleId:              10000,
 		}
@@ -106,8 +106,9 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 }
 
 func (g *GamePlayer) GetNextGameObjectGuid() uint32 {
-	g.OnlineData.GameObjectGuidCounter++
-	return 0 + g.OnlineData.GameObjectGuidCounter
+	db := g.GetOnlineData()
+	db.GameObjectGuidCounter++
+	return 0 + db.GameObjectGuidCounter
 }
 
 func (g *GamePlayer) GetBattleIdGuid() uint32 {

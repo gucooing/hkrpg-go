@@ -1,8 +1,6 @@
-package db
+package dispatch
 
 import (
-	"context"
-
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -11,12 +9,11 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
-var ctx = context.Background()
-
 type Store struct {
 	config       *config.Config
 	AccountMysql *gorm.DB
 	LoginRedis   *redis.Client
+	HkrpgGoPe    *gorm.DB
 }
 
 // NewStore 创建一个新的 store。

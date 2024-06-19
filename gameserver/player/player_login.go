@@ -21,7 +21,8 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
 	db := g.GetMaterialMap()
-	rsp.Stamina = db[Stamina]
+	rsp.NPHADKDMHOO = true
+	rsp.Stamina = db[Stamina] // 还有多久恢复下一个体力
 	rsp.ServerTimestampMs = uint64(time.Now().UnixMilli())
 	rsp.CurTimezone = 4 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
@@ -123,6 +124,8 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 2.任务检查
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
-	g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
-	g.LoginReadyMission()                // 任务检查
+	if !g.IsPE {
+		g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
+	}
+	g.LoginReadyMission() // 任务检查
 }
