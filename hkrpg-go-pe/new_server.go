@@ -32,7 +32,9 @@ import (
 
 const (
 	PacketMaxLen            = 343 * 1024 // 最大应用层包长度
+	KcpConnEstNotify        = "KcpConnEstNotify"
 	KcpConnAddrChangeNotify = "KcpConnAddrChangeNotify"
+	KcpConnCloseNotify      = "KcpConnCloseNotify"
 )
 
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
@@ -158,7 +160,7 @@ func (s *HkRpgGoServer) RunGameServer() error {
 			kcpConn.SetWriteDelay(false)
 			kcpConn.SetWindowSize(256, 256)
 			kcpConn.SetMtu(1200)
-			kcpConn.SetIdleTicker(10 * time.Second)
+			kcpConn.SetIdleTicker(120 * time.Second)
 			// 读取密钥相关文件
 			g := s.NewGame(kcpConn)
 			go s.recvHandle(g)
@@ -323,7 +325,7 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		return
 	}
 	// 人数验证
-	if GetConfig().GameServer.MaxPlayer != -1 {
+	if s.config.GameServer.MaxPlayer != -1 {
 		if CLIENT_CONN_NUM >= GetConfig().GameServer.MaxPlayer {
 			rsp.Uid = 0
 			rsp.Retcode = uint32(proto.Retcode_RET_REACH_MAX_PLAYER_NUM)
@@ -354,6 +356,12 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		logger.Info("登录账号:%v,已被封禁,原因:%s", accountUid, uidPlayer.BanMsg)
 		return
 	}
+	// 重复登录验证
+	if old := s.getPlayer(uidPlayer.Uid); old != nil {
+		s.killPlayer(old)
+		logger.Info("[UID:%v]重复登录", uidPlayer.Uid)
+	}
+	p.Uid = uidPlayer.Uid
 	// 拉取玩家数据
 	p.GamePlayer = s.NewPlayer(uidPlayer.Uid, accountUid)
 	recvPlayerCtx, recvPlayerCancel := context.WithCancel(context.Background())
@@ -365,7 +373,6 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	timeRand := random.GetTimeRand()
 	serverSeedUint64 := timeRand.Uint64()
 	p.Seed = serverSeedUint64
-	p.Uid = uidPlayer.Uid
 	rsp.SecretKeySeed = p.Seed
 	rsp.BlackInfo = &proto.BlackInfo{}
 	rsp.Uid = p.Uid
@@ -415,6 +422,12 @@ func (s *HkRpgGoServer) addPlayer(p *PlayerGame) {
 	s.playerMapLock.Unlock()
 }
 
+func (s *HkRpgGoServer) getPlayer(uid uint32) *PlayerGame {
+	s.playerMapLock.Lock()
+	defer s.playerMapLock.Unlock()
+	return s.playerMap[uid]
+}
+
 func (s *HkRpgGoServer) getAllPlayer() map[uint32]*PlayerGame {
 	playerMap := make(map[uint32]*PlayerGame)
 	s.playerMapLock.Lock()
@@ -426,10 +439,19 @@ func (s *HkRpgGoServer) getAllPlayer() map[uint32]*PlayerGame {
 }
 
 func (s *HkRpgGoServer) killPlayer(p *PlayerGame) {
-	p.KcpConn.Close()                                                     // 断开kcp连接
-	p.recvPlayerCancel()                                                  // 断开收包
-	p.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE) // 保存数据
-	delete(s.playerMap, p.Uid)
+	p.KcpConn.SendEnetNotifyToPeer(&kcp.Enet{
+		Addr:      p.KcpConn.RemoteAddr().String(),
+		SessionId: p.KcpConn.GetSessionId(),
+		Conv:      p.KcpConn.GetConv(),
+		ConnType:  kcp.ConnEnetFin,
+		EnetType:  kcp.EnetTimeout,
+	})
+	p.KcpConn.Close() // 断开kcp连接
+	if p.recvPlayerCancel != nil {
+		p.recvPlayerCancel()                                                  // 断开收包
+		p.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE) // 保存数据
+		delete(s.playerMap, p.Uid)
+	}
 }
 
 func (s *HkRpgGoServer) Close() {

@@ -28,7 +28,7 @@ func (s *GateServer) RunKcp() error {
 			kcpConn.SetWriteDelay(false)
 			kcpConn.SetWindowSize(256, 256)
 			kcpConn.SetMtu(1200)
-			kcpConn.SetIdleTicker(10 * time.Second)
+			kcpConn.SetIdleTicker(120 * time.Second)
 			sessionId := kcpConn.GetSessionId()
 			logger.Info("sessionId:%v", sessionId)
 			// 读取密钥相关文件

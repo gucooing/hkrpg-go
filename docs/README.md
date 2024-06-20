@@ -1,5 +1,5 @@
 # 准备环境
-1. golang >= 1.20
+1. golang >= 1.22.1
 2. mysql
 3. redis
 4. bash(使用build.sh时才需要)
