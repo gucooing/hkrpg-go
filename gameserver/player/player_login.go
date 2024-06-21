@@ -21,7 +21,6 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
 	db := g.GetMaterialMap()
-	rsp.NPHADKDMHOO = true
 	rsp.Stamina = db[Stamina] // 还有多久恢复下一个体力
 	rsp.ServerTimestampMs = uint64(time.Now().UnixMilli())
 	rsp.CurTimezone = 4 // 时区
@@ -65,7 +64,7 @@ func (g *GamePlayer) BattlePassInfoNotify() {
 		Level: 70,
 		// CurBpId:                    5,
 		// CurWeekAddExpSum:           8000,
-		BpTier: proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
+		BpTierType: proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
 	}
 	g.Send(cmd.BattlePassInfoNotify, notify)
 }
@@ -92,15 +91,9 @@ func (g *GamePlayer) LoginNotify() {
 func (g *GamePlayer) ServerAnnounceNotify() {
 	notify := &proto.ServerAnnounceNotify{AnnounceDataList: make([]*proto.AnnounceData, 0)}
 	notify.AnnounceDataList = append(notify.AnnounceDataList, &proto.AnnounceData{
-		OEFAEICOAAK: "1",
-		NCPMKFHMCCF: "2",
-		EndTime:     4294967295,
-		BLOAEHJLPFN: 0,
-		OKMBMPIOPDC: false,
-		DFBOGDOGCPP: 0,
-		ConfigId:    0,
-		CHJOJJLOBEI: "通知文本",
-		BeginTime:   1664308800,
+		EndTime:   4294967295,
+		ConfigId:  0,
+		BeginTime: 1664308800,
 	})
 	g.Send(cmd.ServerAnnounceNotify, notify)
 }

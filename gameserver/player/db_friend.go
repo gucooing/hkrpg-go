@@ -125,11 +125,9 @@ func (g *GamePlayer) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
 		return nil
 	}
 	simpleInfo := &proto.PlayerSimpleInfo{
-		AILINANGJNE:    "",
 		ChatBubbleId:   220003,
 		IsBanned:       false,
 		HeadIcon:       friend.HeadImageAvatarId,
-		LDFIOFJHJJA:    "",
 		Signature:      friend.Signature,
 		Platform:       proto.PlatformType(friend.PlatformType),
 		LastActiveTime: friend.LastLoginTime,
@@ -156,32 +154,27 @@ func (g *GamePlayer) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 	}
 	playerDetailInfo := &proto.PlayerDetailInfo{
 		DisplayAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
-		Record: &proto.PlayerBasicBrief{
-			Level:                  friend.Level,
-			UnlockedAvatarNum:      999,
-			UnlockedAchievementNum: 999,
-			UnlockedBookNum:        999,
-			UnlockedMusicNum:       999,
-			FKBLOGEAFJJ:            2000,
+		Record: &proto.PlayerRecordInfo{
+			// Level:                  friend.Level,
+			// UnlockedAvatarNum:      999,
+			// UnlockedAchievementNum: 999,
+			// UnlockedBookNum:        999,
+			// UnlockedMusicNum:       999,
+			// FKBLOGEAFJJ:            2000,
 			CollectionInfo: &proto.PlayerCollectionInfo{
-				DCIOBLHLICO: 2006,
-				KLLEONMNLDI: 60,
+				// DCIOBLHLICO: 2006,
+				// KLLEONMNLDI: 60,
 			},
-			WorldLevel: friend.WorldLevel,
+			// WorldLevel: friend.WorldLevel,
 		},
-		AILINANGJNE:      "",
 		WorldLevel:       friend.WorldLevel,
 		Uid:              friend.Uid,
-		EFNHCOEKDCN:      true,
 		AssistAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
 		Level:            friend.Level,
 		IsBanned:         false,
-		MAPJDADPKOL:      0,
 		HeadIcon:         friend.HeadImageAvatarId,
 		Platform:         proto.PlatformType(friend.PlatformType),
-		AKFPFMGILAO:      0,
 		RecordInfo:       &proto.DisplayRecordInfo{},
-		LDFIOFJHJJA:      "",
 		Signature:        friend.Signature,
 		Nickname:         friend.Nickname,
 	}
@@ -207,7 +200,6 @@ func (g *GamePlayer) GetFriendSimpleInfo(uid uint32) *proto.FriendSimpleInfo {
 		PlayerInfo:  simpleInfo,    // 基本信息
 		RemarkName:  db.RemarkName, // 备注
 		PlayerState: 0,
-		CFMIKLHJMLE: nil,
 		IsMarked:    db.IsMarked, // 是否特别关注
 	}
 	return friendSimpleInfo

@@ -38,7 +38,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
 	req := msg.(*proto.RankUpAvatarCsReq)
 	rsp := &proto.RankUpAvatarScRsp{}
-	db := g.GetAvatarBinById(req.GetBaseAvatarId())
+	db := g.GetAvatarBinById(req.GetDressAvatarId())
 	cost := req.GetCostData()
 	if db == nil || cost == nil {
 		g.Send(cmd.RankUpAvatarScRsp, rsp)
@@ -61,7 +61,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 		g.Send(cmd.RankUpAvatarScRsp, rsp)
 		return
 	}
-	if req.BaseAvatarId/1000 == 8 {
+	if req.GetDressAvatarId()/1000 == 8 {
 		basic := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
 		basic.Rank += 1
 		if basic.Rank > 6 || basic.Rank < 0 {
@@ -71,7 +71,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 		g.AddAvatarRank(1, db)
 	}
 
-	allSync.AvatarList = append(allSync.AvatarList, req.BaseAvatarId)
+	allSync.AvatarList = append(allSync.AvatarList, req.GetDressAvatarId())
 	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.RankUpAvatarScRsp, rsp)
 }
@@ -298,7 +298,7 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 	// 通知升级后角色消息
 	allSync.AvatarList = append(allSync.AvatarList, avatarId)
 	g.AllPlayerSyncScNotify(allSync)
-	rsp.BaseAvatarId = avatarId
+	// rsp.BaseAvatarId = avatarId
 	rsp.PointId = req.PointId
 	rsp.Level = req.Level
 	g.Send(cmd.UnlockSkilltreeScRsp, rsp)

@@ -135,10 +135,10 @@ type StageObjectCapture struct {
 
 func (g *GameDataConfig) loadGroup() {
 	g.GroupMap = make(map[uint32]map[uint32]map[uint32]*LevelGroup)
-	playerElementsFilePath := g.configPrefix + "LevelOutput/Group"
+	playerElementsFilePath := g.configPrefix + "LevelOutput/SharedRuntimeGroup"
 	files, err := scanFiles(playerElementsFilePath)
 	if err != nil {
-		logger.Error("error LevelOutput/Group:", err)
+		logger.Error("error LevelOutput/SharedRuntimeGroup:", err)
 		return
 	}
 

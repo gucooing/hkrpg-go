@@ -102,11 +102,11 @@ func (g *GamePlayer) GetAllMail() []*proto.ClientMail {
 			Attachment: &proto.ItemList{ // 奖励
 				ItemList: g.GetAttachment(mail.ItemList),
 			},
-			Title:    mail.Title,
-			Sender:   mail.Sender,
-			ParaList: nil, // 参数
-			Id:       mail.Id,
-			Content:  mail.Content,
+			Title:       mail.Title,
+			Sender:      mail.Sender,
+			ParaList:    nil, // 参数
+			Id:          mail.Id,
+			MessageText: mail.Content,
 		}
 		mailList = append(mailList, pbMail)
 	}

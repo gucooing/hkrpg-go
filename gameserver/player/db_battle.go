@@ -628,7 +628,7 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
 		WorldLevel:       g.GetWorldLevel(),                       // 世界等级
 		BattleId:         battleId,                                // 战斗Id
-		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
+		AvatarBattleList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		StageId:          stageId,                                 // 起始战斗
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
@@ -684,7 +684,7 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 		WorldLevel:       req.GetWorldLevel(),                     // 关卡等级
 		BattleId:         battleId,                                // 战斗Id
 		StageId:          stageID,                                 // 起始战斗
-		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
+		AvatarBattleList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
 		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
@@ -813,7 +813,7 @@ func (g *GamePlayer) GetChallengeInfo() *proto.CurChallenge {
 		ExtraLineupType: lineUpType,                       // 队伍type
 		PlayerInfo:      g.GetCurChallengeStoryInfo(),     // 挑战buff
 		RoundCount:      db.RoundCount,                    // 已使用回合数
-		ScoreOne:        db.ScoreOne,                      // 第一层得分
+		ScoreId:         db.ScoreOne,                      // 第一层得分
 		ScoreTwo:        db.ScoreTwo,                      // 第二层得分
 	}
 	return challengeInfo
@@ -826,10 +826,8 @@ func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
 		return nil
 	}
 	challengeStoryInfo := &proto.ChallengeStoryInfo{
-		StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuff{
-			CurStoryBuff: &proto.ChallengeStoryBuffInfo{
-				BuffList: []uint32{db.BuffOne, db.BuffTwo},
-			},
+		CurStoryBuff: &proto.ChallengeStoryBuffInfo{
+			BuffList: []uint32{db.BuffOne, db.BuffTwo},
 		},
 	}
 	return challengeStoryInfo

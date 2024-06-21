@@ -198,7 +198,6 @@ func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
 		Exp:           equipmentDb.Exp,
 		Promotion:     equipmentDb.Promotion,
 		Level:         equipmentDb.Level,
-		BaseAvatarId:  equipmentDb.BaseAvatarId,
 		DressAvatarId: equipmentDb.BaseAvatarId,
 		IsProtected:   equipmentDb.IsProtected,
 		Rank:          equipmentDb.Rank,
@@ -253,7 +252,6 @@ func (g *GamePlayer) GetRelic(uniqueId uint32) *proto.Relic {
 	relic := &proto.Relic{
 		Tid:           relicDb.Tid,
 		SubAffixList:  make([]*proto.RelicAffix, 0),
-		BaseAvatarId:  relicDb.BaseAvatarId,
 		DressAvatarId: relicDb.BaseAvatarId,
 		UniqueId:      relicDb.UniqueId,
 		Level:         relicDb.Level,
@@ -420,7 +418,6 @@ func (g *GamePlayer) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 		relic := &proto.Relic{
 			Tid:           relicDb.Tid,
 			SubAffixList:  make([]*proto.RelicAffix, 0),
-			BaseAvatarId:  relicDb.BaseAvatarId,
 			DressAvatarId: relicDb.BaseAvatarId,
 			UniqueId:      relicDb.UniqueId,
 			Level:         relicDb.Level,

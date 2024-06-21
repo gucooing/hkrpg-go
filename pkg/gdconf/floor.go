@@ -27,10 +27,10 @@ type GroupList struct {
 
 func (g *GameDataConfig) loadFloor() {
 	g.FloorMap = make(map[uint32]map[uint32]*LevelFloor)
-	playerElementsFilePath := g.configPrefix + "LevelOutput/Floor"
+	playerElementsFilePath := g.configPrefix + "LevelOutput/RuntimeFloor"
 	files, err := scanFiles(playerElementsFilePath)
 	if err != nil {
-		logger.Error("error LevelOutput/Floor:", err)
+		logger.Error("error LevelOutput/RuntimeFloor:", err)
 		return
 	}
 

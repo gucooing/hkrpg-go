@@ -255,7 +255,7 @@ func (g *GamePlayer) TrialActivitySceneCastSkillScRsp(rsp *proto.SceneCastSkillS
 	// var targetIndex uint32 = 0
 	// trialActivityState := g.GetTrialActivityState()
 	// 添加角色
-	rsp.BattleInfo.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
+	rsp.BattleInfo.AvatarBattleList = g.TrialActivityGetBattleAvatarList()
 	// 添加角色buff
 	/*
 		for _, buffId := range trialActivityState.AvatarBuffList {
@@ -337,27 +337,27 @@ func (g *GamePlayer) TrialActivityGetSkillTreeList(avatarId uint32) []*spb.Avata
 }
 
 func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResultScRsp) {
-	rsp.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
-	if rsp.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
-		// 传送回原来的场景
-		g.SceneByServerScNotify(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb())
-		// 储存通关状态
-		g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, g.GetTrialActivityState().AvatarDemoId)
-		// 发送通关通知
-		scNotify := &proto.TrialActivityDataChangeScNotify{
-			TrialActivityInfo: &proto.TrialActivityInfo{
-				StageId:     g.GetTrialActivityState().AvatarDemoId,
-				TakenReward: false,
-			},
-		}
-		g.Send(cmd.TrialActivityDataChangeScNotify, scNotify)
-		notify := &proto.CurTrialActivityScNotify{
-			// TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
-			Status: proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
-		}
-		g.Send(cmd.CurTrialActivityScNotify, notify)
-		// 恢复战斗状态为空
-		g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
-	}
+	// rsp.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
+	// if rsp.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+	// 	// 传送回原来的场景
+	// 	g.SceneByServerScNotify(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb())
+	// 	// 储存通关状态
+	// 	g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, g.GetTrialActivityState().AvatarDemoId)
+	// 	// 发送通关通知
+	// 	scNotify := &proto.TrialActivityDataChangeScNotify{
+	// 		TrialActivityInfo: &proto.TrialActivityInfo{
+	// 			StageId:     g.GetTrialActivityState().AvatarDemoId,
+	// 			TakenReward: false,
+	// 		},
+	// 	}
+	// 	g.Send(cmd.TrialActivityDataChangeScNotify, scNotify)
+	// 	notify := &proto.CurTrialActivityScNotify{
+	// 		// TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
+	// 		Status: proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
+	// 	}
+	// 	g.Send(cmd.CurTrialActivityScNotify, notify)
+	// 	// 恢复战斗状态为空
+	// 	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
+	// }
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
 }

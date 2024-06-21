@@ -67,7 +67,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	rsp := &proto.StartChallengeScRsp{
 		CurChallenge: g.GetChallengeInfo(),
 		Scene:        g.GetChallengeScene(),
-		Lineup:       g.GetBattleLineUpPb(lineUpId),
+		LineupList:   []*proto.LineupInfo{g.GetBattleLineUpPb(lineUpId)},
 	}
 
 	g.Send(cmd.StartChallengeScRsp, rsp)
