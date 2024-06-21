@@ -10,19 +10,14 @@ import (
 // 添加物品
 func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.GmGive)
-	if req.PlayerUid == 0 {
-		return
+	allSync := &AllPlayerSync{
+		IsBasic:       true,
+		AvatarList:    make([]uint32, 0),
+		MaterialList:  make([]uint32, 0),
+		EquipmentList: make([]uint32, 0),
+		RelicList:     make([]uint32, 0),
 	}
 	itemConf := gdconf.GetItemConfigMap()
-
-	switch req.ItemId {
-	case 999999999:
-		for _, relic := range itemConf.Relic {
-			g.AddBtRelic(relic.ID)
-		}
-		return
-	}
-
 	if req.GiveAll {
 		var pileItem []*Material
 		// add avatar
@@ -31,7 +26,8 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 			if avatar.ID/1000 != 1 {
 				continue
 			}
-			g.AddAvatar(avatar.ID, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
+			allSync.AvatarList = append(allSync.AvatarList, avatar.ID)
+			g.AddAvatar(avatar.ID, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
 		}
 		// add playerIcon
 		var playerIconList []uint32
@@ -41,6 +37,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		g.GetItem().HeadIcon = playerIconList
 		// add rank
 		for _, rank := range itemConf.AvatarRank {
+			allSync.MaterialList = append(allSync.MaterialList, rank.ID)
 			pileItem = append(pileItem, &Material{
 				Tid: rank.ID,
 				Num: 6,
@@ -52,6 +49,7 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		}
 		// add item
 		for _, item := range itemConf.Item {
+			allSync.MaterialList = append(allSync.MaterialList, item.ID)
 			pileItem = append(pileItem, &Material{
 				Tid: item.ID,
 				Num: 99999,
@@ -61,14 +59,21 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		for _, relic := range itemConf.Relic {
 			g.AddRelic(relic.ID)
 		}
+		// add bt relic
+		for _, relic := range itemConf.Relic {
+			g.AddBtRelic(relic.ID)
+		}
 		g.AddMaterial(pileItem)
 		// g.ScenePlaneEventScNotify(pileItem)
 	} else {
+		allSync.MaterialList = append(allSync.MaterialList, req.ItemId)
 		g.AddItem([]*Material{{
 			Tid: req.ItemId,
 			Num: req.ItemCount,
 		}})
 	}
+	// 同步通知
+	g.AllPlayerSyncScNotify(allSync)
 }
 
 // 设置世界等级
@@ -81,13 +86,14 @@ func (g *GamePlayer) GmWorldLevel(payloadMsg pb.Message) {
 
 // 清空背包
 func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
-	g.BasicBin.Item = &spb.Item{
+	db := g.GetItem()
+	db = &spb.Item{
 		RelicMap:     make(map[uint32]*spb.Relic),
 		EquipmentMap: make(map[uint32]*spb.Equipment),
 		MaterialMap:  make(map[uint32]uint32),
 		HeadIcon:     make([]uint32, 0),
 	}
-	g.BasicBin.Item.MaterialMap[11] = 240
+	db.MaterialMap[11] = 240
 }
 
 // 角色一键满级

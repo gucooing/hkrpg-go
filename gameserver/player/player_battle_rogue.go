@@ -198,15 +198,16 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 
 // 区域通知
 func (g *GamePlayer) SyncRogueMapRoomScNotify() {
-	rogue := g.GetDbRogue()
+	curRogue := g.GetCurRogue()
+	curRoom := g.GetCurRogueRoom()
 
 	notify := &proto.SyncRogueMapRoomScNotify{
-		// CurRoom: &proto.RogueRoom{
-		// 	CurStatus: proto.RogueRoomStatus(rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomStatus),
-		// 	SiteId:    rogue.CurRogue.CurSiteId,
-		// 	RoomId:    rogue.CurRogue.RogueSceneMap[rogue.CurRogue.CurSiteId].RoomId,
-		// },
-		MapId: rogue.CurRogue.RogueMapId,
+		CurRoom: &proto.RogueRoom{
+			CurStatus: proto.RogueRoomStatus(curRoom.RoomStatus),
+			SiteId:    curRogue.CurSiteId,
+			RoomId:    curRoom.RoomId,
+		},
+		MapId: curRogue.RogueMapId,
 	}
 	g.Send(cmd.SyncRogueMapRoomScNotify, notify)
 }
@@ -315,47 +316,6 @@ func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetRogueHandbookDataScRsp, rsp)
 }
 
-// 模拟宇宙攻击事件
-func (g *GamePlayer) RogueSceneCastSkillCsReq(rsp *proto.SceneCastSkillScRsp) {
-	rsp.BattleInfo.BattleTargetInfo = make(map[uint32]*proto.BattleTargetList)
-	rsp.BattleInfo.BattleTargetInfo[2] = &proto.BattleTargetList{
-		BattleTargetList: make([]*proto.BattleTarget, 0),
-	}
-	battleTargetList := make([]*proto.BattleTarget, 0)
-	bTL := []uint32{50008, 50007, 50006, 50005, 50004, 50003, 50001, 30072, 30071, 30070, 30069, 30068, 30067, 30066, 30065, 30064, 30063, 30062, 30061, 30060, 30059, 30058, 30057, 30056, 30055, 30054, 30053, 30046, 30045, 30044, 30043, 30042, 30041, 30040, 30039, 30037, 30034, 30024, 30021, 30016, 30012, 30008, 30006, 30004, 30002, 20074, 20069, 20068, 20067, 20066, 20064, 20060, 20058, 20052, 20050, 20049, 20047, 20046, 20045, 20044, 20043, 20040, 20039, 20034, 20033, 20032, 20031, 20024, 20021, 20019, 20018, 20017, 20016, 20015, 20013, 20010, 20009, 20008, 20002}
-	for _, id := range bTL {
-		battleTarget := &proto.BattleTarget{
-			Id: id,
-		}
-		battleTargetList = append(battleTargetList, battleTarget)
-	}
-	rsp.BattleInfo.BattleTargetInfo[2].BattleTargetList = battleTargetList
-	// 添加角色
-	// rsp.BattleInfo.BattleAvatarList = g.GetBattleAvatarList(uint32(proto.ExtraLineupType_LINEUP_ROGUE))
-	// 添加buff
-	rsp.BattleInfo.BuffList = make([]*proto.BattleBuff, 0)
-	// for id, buff := range g.GetRogueBuff() {
-	// 	battleBuff := &proto.BattleBuff{
-	// 		Id:         id,
-	// 		Level:      buff.Level,
-	// 		OwnerIndex: 4294967295,
-	// 		WaveFlag:   4294967295,
-	// 	}
-	// 	rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, battleBuff)
-	// }
-	// 路途buff！！！
-	rsp.BattleInfo.BuffList = append(rsp.BattleInfo.BuffList, &proto.BattleBuff{
-		Id:       1000111,
-		Level:    1,
-		WaveFlag: 4294967295,
-		DynamicValues: map[string]float32{
-			"SkillIndex": 1,
-		},
-		TargetIndexList: []uint32{1},
-	})
-	g.Send(cmd.SceneCastSkillScRsp, rsp)
-}
-
 func (g *GamePlayer) QuitRogueCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.QuitRogueScRsp, nil)
@@ -377,30 +337,34 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.EnterRogueMapRoomCsReq, payloadMsg)
 	req := msg.(*proto.EnterRogueMapRoomCsReq)
-	// curRogue := g.GetCurDbRogue()
-	// if curRogue.RogueSceneMap[req.SiteId] == nil && curRogue.RogueSceneMap[req.SiteId].RoomId != req.RoomId {
-	// 	return
-	// }
-	// curRogue.RogueSceneMap[curRogue.CurSiteId].RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_FINISH
-	// curRogue.RogueSceneMap[req.SiteId].RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_PLAY
-	// curRogue.CurSiteId = req.SiteId
+	g.UpCurRogueRoom(req.SiteId)
 	// 更新通知
 	g.SyncRogueMapRoomScNotify()
-	scene := g.GetRogueScene(req.RoomId)
-	if scene == nil {
-		rsp := &proto.StartRogueScRsp{
-			Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN),
-		}
-		g.Send(cmd.StartRogueScRsp, rsp)
-		return
-	}
-
 	rsp := &proto.EnterRogueMapRoomScRsp{
-		Lineup:    g.GetBattleLineUpPb(Rogue),
-		CurSiteId: req.SiteId,
-		Retcode:   0,
-		Scene:     scene,
+		RotateInfo: g.GetRogueMapRotateInfo(),
+		Lineup:     g.GetBattleLineUpPb(Rogue),
+		CurSiteId:  req.SiteId,
+		Retcode:    0,
+		Scene:      g.GetRogueScene(req.RoomId),
 	}
 
 	g.Send(cmd.EnterRogueMapRoomScRsp, rsp)
+}
+
+func (g *GamePlayer) GetRogueBuffEnhanceInfoCsReq(payloadMsg []byte) {
+	rsp := &proto.GetRogueBuffEnhanceInfoScRsp{
+		BuffEnhanceInfo: &proto.RogueBuffEnhanceInfo{
+			EnhanceInfo: make([]*proto.RogueBuffEnhance, 0),
+		},
+	}
+	db := g.GetRogueBuffList()
+	for _, info := range db {
+		rsp.BuffEnhanceInfo.EnhanceInfo = append(rsp.BuffEnhanceInfo.EnhanceInfo, &proto.RogueBuffEnhance{
+			CostData: &proto.ItemCostData{
+				ItemList: make([]*proto.ItemCost, 0),
+			},
+			BuffId: info.BuffId,
+		})
+	}
+	g.Send(cmd.GetRogueBuffEnhanceInfoScRsp, rsp)
 }

@@ -52,6 +52,7 @@ type HkRpgGoServer struct {
 	// 下面是定时器
 	everyDay4        *time.Ticker
 	autoUpDataPlayer *time.Ticker
+	CmdRouteManager  *CmdRouteManager
 }
 
 // 初始化数据库步骤
@@ -100,6 +101,8 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	go kcpNetInfo()
 	go s.kcpEnetHandle(kcpListener)
 	s.playerMap = make(map[uint32]*PlayerGame)
+	s.CmdRouteManager = NewCmdRouteManager()
+	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	// 开启game定时器
 	s.autoUpDataPlayer = time.NewTicker(gs.AutoUpDataPlayerTicker * time.Second)
 	everyDay4 := alg.GetEveryDay4()
@@ -357,7 +360,8 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 		return
 	}
 	// 重复登录验证
-	if old := s.getPlayer(uidPlayer.Uid); old != nil {
+	if old := s.GetPlayer(uidPlayer.Uid); old != nil {
+		old.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_BLACK})
 		s.killPlayer(old)
 		logger.Info("[UID:%v]重复登录", uidPlayer.Uid)
 	}
@@ -422,7 +426,7 @@ func (s *HkRpgGoServer) addPlayer(p *PlayerGame) {
 	s.playerMapLock.Unlock()
 }
 
-func (s *HkRpgGoServer) getPlayer(uid uint32) *PlayerGame {
+func (s *HkRpgGoServer) GetPlayer(uid uint32) *PlayerGame {
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
 	return s.playerMap[uid]
@@ -466,7 +470,7 @@ func (s *HkRpgGoServer) killAutoUpDataPlayer() {
 		if g.Uid == 0 {
 			continue
 		}
-		g.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_ACE_ANTI_CHEATER})
+		g.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_SQUEEZED})
 		s.killPlayer(g)
 		num++
 	}

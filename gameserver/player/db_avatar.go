@@ -265,7 +265,13 @@ re:
 		if avatarStt.Id/1000 == 8 {
 			avatarId = 8001
 		}
-		avatarBin := g.GetAvatarById(avatarId)
+		var avatarBin *spb.AvatarBin
+		switch g.GetBattleStatus() {
+		case spb.BattleType_Battle_NONE:
+			avatarBin = g.GetAvatarById(avatarId)
+		default:
+			avatarBin = g.GetBattleAvatarBinById(avatarId)
+		}
 		if avatarBin == nil {
 			continue
 		}

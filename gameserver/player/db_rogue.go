@@ -110,6 +110,14 @@ func (g *GamePlayer) GetRoomBySiteId(siteId uint32) *spb.RogueRoom {
 	return db.RogueRoomMap[siteId]
 }
 
+func (g *GamePlayer) UpCurRogueRoom(siteId uint32) {
+	db := g.GetCurRogue()
+	curRogue := g.GetCurRogueRoom()
+	curRogue.RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_FINISH
+	db.RogueRoomMap[siteId].RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_PLAY
+	db.CurSiteId = siteId
+}
+
 func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
 	rogue := g.GetDbRogue()
 	if rogue.RogueArea == nil {
@@ -476,6 +484,16 @@ func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingActi
 	return info
 }
 
+func (g *GamePlayer) GetRogueMapRotateInfo() *proto.RogueMapRotateInfo {
+	info := &proto.RogueMapRotateInfo{
+		MapInfo:    nil,
+		Rotation:   0,
+		IsRotate:   false,
+		EnergyInfo: nil,
+	}
+	return info
+}
+
 func (g *GamePlayer) GetCurRogueBuff() []*proto.BattleBuff {
 	buffList := make([]*proto.BattleBuff, 0)
 	db := g.GetRogueBuffList()
@@ -641,44 +659,44 @@ func (g *GamePlayer) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInf
 				PropState: gdconf.GetStateValue(propList.State),
 			},
 		}
-		// if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
-		// 	index := 0
-		// 	if propList.Name == "Door2" {
-		// 		index = 1
-		// 	}
-		// 	room := g.GetCurDbRoom()
-		// 	if propList.Name == "Door1" && len(room.NextSiteIdList) == 1 {
-		// 		continue
-		// 	}
-		// 	if len(room.NextSiteIdList) == 1 {
-		// 		index = 0
-		// 	}
-		// 	if len(room.NextSiteIdList) > 0 {
-		// 		siteId := room.NextSiteIdList[index]
-		// 		nextRoom := g.GetDbRoomBySiteId(siteId)
-		// 		exceRoom := gdconf.GetRogueRoomById(nextRoom.RoomId)
-		//
-		// 		switch exceRoom.RogueRoomType {
-		// 		case 3, 8:
-		// 			entityList.Prop.PropId = 1022
-		// 		case 5:
-		// 			entityList.Prop.PropId = 1023
-		// 		default:
-		// 			entityList.Prop.PropId = 1021
-		// 		}
-		// 		entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
-		// 			InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
-		// 				RogueInfo: &proto.PropRogueInfo{
-		// 					RoomId: nextRoom.RoomId,
-		// 					SiteId: siteId,
-		// 				},
-		// 			},
-		// 		}
-		// 	} else {
-		// 		entityList.Prop.PropId = 1000
-		// 	}
-		// 	entityList.Prop.PropState = 1
-		// }
+		if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
+			index := 0
+			if propList.Name == "Door2" {
+				index = 1
+			}
+			room := g.GetCurRogueRoom()
+			if propList.Name == "Door1" && len(room.NextSiteIdList) == 1 {
+				continue
+			}
+			if len(room.NextSiteIdList) == 1 {
+				index = 0
+			}
+			if len(room.NextSiteIdList) > 0 {
+				siteId := room.NextSiteIdList[index]
+				nextRoom := g.GetRoomBySiteId(siteId)
+				exceRoom := gdconf.GetRogueRoomById(nextRoom.RoomId)
+
+				switch exceRoom.RogueRoomType {
+				case 3, 8:
+					entityList.Prop.PropId = 1022
+				case 5:
+					entityList.Prop.PropId = 1023
+				default:
+					entityList.Prop.PropId = 1021
+				}
+				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
+					InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
+						RogueInfo: &proto.PropRogueInfo{
+							RoomId: nextRoom.RoomId,
+							SiteId: siteId,
+						},
+					},
+				}
+			} else {
+				entityList.Prop.PropId = 1000
+			}
+			entityList.Prop.PropState = 1
+		}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 }
