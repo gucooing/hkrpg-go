@@ -325,7 +325,17 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
 	finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
 	isLoaded := true
-	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil && levelGroup.Category != "Mission" {
+	if levelGroup.Category != "Mission" {
+		return true
+	}
+	if levelGroup.OwnerMainMissionID != 0 {
+		if mainMissionList[levelGroup.OwnerMainMissionID] != nil {
+			return true
+		} else {
+			return false
+		}
+	}
+	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil {
 		return true
 	}
 	// 检查强制卸载条件
@@ -494,9 +504,15 @@ func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32
 }
 
 func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
-	switch prop.StageObjectCapture.BlockAlias {
-	case "RogueLobby_01": // 模拟宇宙入口直接开放
+	if prop.MappingInfoID != 0 && prop.State == "" {
 		g.UpPropState(db, groupId, prop.ID, 1)
+		return
+	}
+	if prop.StageObjectCapture != nil { // 特殊处理
+		switch prop.StageObjectCapture.BlockAlias {
+		case "RogueLobby_01": // 模拟宇宙入口直接开放
+			g.UpPropState(db, groupId, prop.ID, 1)
+		}
 	}
 }
 
@@ -572,9 +588,8 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
-		if propList.StageObjectCapture != nil { // 特殊处理
-			g.StageObjectCapture(propList, sceneGroup.GroupId, db)
-		}
+
+		g.StageObjectCapture(propList, sceneGroup.GroupId, db)
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
 			Y: int32(propList.PosY * 1000),
@@ -887,9 +902,7 @@ func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList ma
 func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, prop := range propList {
-		if prop.StageObjectCapture != nil { // 特殊处理
-			g.StageObjectCapture(prop, mazeGroupID, db)
-		}
+		g.StageObjectCapture(prop, mazeGroupID, db)
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
 			X: int32(prop.PosX * 1000),

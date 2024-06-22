@@ -224,7 +224,7 @@ func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb
 	return protoObj
 }
 
-var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq} // 黑名单
+var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatScRsp, cmd.PlayerHeartBeatCsReq} // 黑名单
 func IsValid(cmdid uint16) bool {
 	for _, value := range blacklist {
 		if cmdid == value {

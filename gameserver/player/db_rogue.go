@@ -315,7 +315,7 @@ func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 
 func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 	info := &proto.RogueCurrentInfo{
-		// RogueAeonInfo:    g.GetGameAeonInfo(),
+		// RogueAeonInfo: g.GetGameAeonInfo(),
 		// GameMiracleInfo:  g.GetGameMiracleInfo(),
 		// RogueLineupInfo:  g.GetRogueLineupInfo(),
 		Status: proto.RogueStatus_ROGUE_STATUS_DOING,
@@ -357,46 +357,46 @@ func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
 	info := &proto.RogueSeasonInfo{
 		EndTime:   conf.EndTime.Time.Unix(),
 		BeginTime: conf.EndTime.Time.Unix(),
-		// Season:    conf.SeasonId,
+		Season:    conf.SeasonId,
 	}
 	return info
 }
 
 func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
 	info := &proto.RogueAreaInfo{
-		// RogueAreaList: make([]*proto.RogueArea, 0),
+		RogueAreaList: make([]*proto.RogueArea, 0),
 	}
-	// conf := database.GetCurRogue()
-	// if conf == nil {
-	// 	return info
-	// }
-	// cfRogueManager := gdconf.GetRogueManagerById(conf.SeasonId)
-	// if cfRogueManager == nil {
-	// 	return info
-	// }
-	// for _, rogueArea := range cfRogueManager.RogueAreaIDList {
-	// 	dbRogueArea := g.GetDbRogueArea(rogueArea)
-	// 	RogueArea := &proto.RogueArea{
-	// 		AreaId:     dbRogueArea.AreaId,
-	// 		AreaStatus: proto.RogueAreaStatus(dbRogueArea.RogueAreaStatus),
-	//
-	// 		MapId:           0,
-	// 		HasTakenReward:  false,
-	// 		RogueStatus:     0,
-	// 		CurReachRoomNum: 0,
-	// 	}
-	// 	info.RogueAreaList = append(info.RogueAreaList, RogueArea)
-	// }
+	conf := database.GetCurRogue()
+	if conf == nil {
+		return info
+	}
+	cfRogueManager := gdconf.GetRogueManagerById(conf.SeasonId)
+	if cfRogueManager == nil {
+		return info
+	}
+	for _, rogueArea := range cfRogueManager.RogueAreaIDList {
+		dbRogueArea := g.GetDbRogueArea(rogueArea)
+		RogueArea := &proto.RogueArea{
+			AreaId:     dbRogueArea.AreaId,
+			AreaStatus: proto.RogueAreaStatus(dbRogueArea.RogueAreaStatus),
+
+			// MapId:           0,
+			HasTakenReward: false,
+			RogueStatus:    0,
+			// CurReachRoomNum: 0,
+		}
+		info.RogueAreaList = append(info.RogueAreaList, RogueArea)
+	}
 
 	return info
 }
 
 func (g *GamePlayer) GetRogueAeonInfo() *proto.RogueAeonInfo {
 	info := &proto.RogueAeonInfo{
-		// IsUnlocked:             true,
-		// UnlockedAeonEnhanceNum: 3,
-		// AeonIdList:             []uint32{1, 2, 3, 4, 5, 6, 7},
-		// UnlockedAeonNum:        9,
+		IsUnlocked:             true,
+		UnlockedAeonEnhanceNum: 3,
+		AeonIdList:             []uint32{1, 2, 3, 4, 5, 6, 7},
+		UnlockedAeonNum:        9,
 	}
 
 	return info

@@ -78,8 +78,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetRogueBuffEnhanceInfoCsReq:        g.GetRogueBuffEnhanceInfoCsReq,        // 获取模拟宇宙buff信息
 		// cmd.EnhanceRogueBuffCsReq:g.EnhanceRogueBuffCsReq,// 强化buff
 		// 差分宇宙
-		// cmd.RogueTournQueryCsReq // 获取差分宇宙信息
-		// cmd.RogueTournGetPermanentTalentInfoCsReq // 获取差分宇宙灵感回路
+		cmd.RogueTournQueryCsReq:                  g.RogueTournQueryCsReq,                  // 获取差分宇宙信息
+		cmd.RogueTournGetPermanentTalentInfoCsReq: g.RogueTournGetPermanentTalentInfoCsReq, // 获取差分宇宙灵感回路
+		cmd.RogueTournStartCsReq:                  g.RogueTournStartCsReq,                  // 差分宇宙.启动!
 		// 忘却之庭
 		cmd.GetChallengeCsReq:    g.HandleGetChallengeCsReq, // 获取忘却之庭挑战完成信息
 		cmd.StartChallengeCsReq:  g.StartChallengeCsReq,     // 忘却之庭,启动!

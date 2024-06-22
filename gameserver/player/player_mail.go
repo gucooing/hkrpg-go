@@ -32,7 +32,7 @@ func (g *GamePlayer) DelMailCsReq(payloadMsg []byte) {
 	rsp := &proto.DelMailScRsp{
 		IdList: make([]uint32, 0),
 	}
-	for _, id := range req.GetDelIdList() {
+	for _, id := range req.GetIdList() {
 		g.DelMail(id)
 		rsp.IdList = append(rsp.IdList, id)
 	}

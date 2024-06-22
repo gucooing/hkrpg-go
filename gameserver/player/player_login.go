@@ -103,7 +103,7 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 	content, _ := os.ReadFile("./data/t.lua")
 	// luac := base64.StdEncoding.EncodeToString(content)
 	// luac, _ := base64.StdEncoding.DecodeString("wind")
-	g.Send(NewM, &proto.ClientDownloadDataScNotify{
+	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{
 		DownloadData: &proto.ClientDownloadData{
 			Version: 1,
 			Time:    1935664461,

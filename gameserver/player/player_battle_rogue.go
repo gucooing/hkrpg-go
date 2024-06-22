@@ -228,30 +228,30 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 	// notify := &proto.SyncRogueCommonPendingActionScNotify{
 	// 	Action: &proto.RogueCommonPendingAction{
 	// 		RogueAction: &proto.RogueAction{
-	// 			Action: &proto.RogueAction_BuffSelectInfo{
-	// 				BuffSelectInfo: &proto.RogueCommonBuffSelectInfo{
-	// 					CanRoll:           true,                // 是否可以刷新
-	// 					RollBuffCount:     0,                   // 已刷新次数
-	// 					RollBuffMaxCount:  1,                   // 刷新最大次数
-	// 					RollBuffFreeCount: 1,                   // 免费刷新次数
-	// 					FirstBuffTypeList: firstBuffTypeList,   // buff属性列表
-	// 					SelectBuffList:    rogueCommonBuffList, // buff信息列表
-	// 					SourceCurCount:    1,                   // 提示
-	// 					SourceHintId:      1,                   // 提示文本
-	// 					SourceTotalCount:  1,                   // Source To Count
-	// 					RollBuffCostData: &proto.ItemCostData{ItemList: []*proto.ItemCost{ // 刷新需要的东西
-	// 						{
-	// 							ItemOneofCase: &proto.ItemCost_PileItem{
-	// 								PileItem: &proto.PileItem{
-	// 									ItemId:  Cf,
-	// 									ItemNum: 30,
-	// 								},
+	// 			// Action: &proto.RogueAction_BuffSelectInfo{
+	// 			BuffSelectInfo: &proto.RogueCommonBuffSelectInfo{
+	// 				CanRoll:           true,                // 是否可以刷新
+	// 				RollBuffCount:     0,                   // 已刷新次数
+	// 				RollBuffMaxCount:  1,                   // 刷新最大次数
+	// 				RollBuffFreeCount: 1,                   // 免费刷新次数
+	// 				FirstBuffTypeList: firstBuffTypeList,   // buff属性列表
+	// 				SelectBuffList:    rogueCommonBuffList, // buff信息列表
+	// 				SourceCurCount:    1,                   // 提示
+	// 				SourceHintId:      1,                   // 提示文本
+	// 				SourceTotalCount:  1,                   // Source To Count
+	// 				RollBuffCostData: &proto.ItemCostData{ItemList: []*proto.ItemCost{ // 刷新需要的东西
+	// 					{
+	// 						ItemOneofCase: &proto.ItemCost_PileItem{
+	// 							PileItem: &proto.PileItem{
+	// 								ItemId:  Cf,
+	// 								ItemNum: 30,
 	// 							},
 	// 						},
-	// 					}},
-	// 					SourceType:               0,
-	// 					HandbookUnlockBuffIdList: buffIdList,
-	// 				},
+	// 					},
+	// 				}},
+	// 				SourceType:               0,
+	// 				HandbookUnlockBuffIdList: buffIdList,
+	// 				// },
 	// 			},
 	// 		},
 	// 		QueuePosition: g.GetRogueBuffNum(),
