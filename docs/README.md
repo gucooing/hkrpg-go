@@ -22,7 +22,7 @@ data resources，data使用仓库的data即可，但资源文件夹需要给予�
 resources的准备:
 1. 下载[StarRailData](https://github.com/Dimbreath/StarRailData)
 2. 下载补充文件（任务文件）[StarRailData-missioninfo](https://github.com/oureveryday/StarRailData-missioninfo)
-3. 先将StarRailData解压到resources中，然后用StarRailData-missioninfo覆盖一次
+3. 先将StarRailData解压到resources中，然后用StarRailData-missioninfo覆盖一次(只覆盖更新Config即可，不要覆盖ExcelOutput不兼容)
 ### 2.运行，
 运行时需要携带启动参数 -i appid ， 其中appid格式为ipv4格式，如：9001.1.1.1 其中含义：
 ```bash
