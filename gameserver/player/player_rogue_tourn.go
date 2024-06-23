@@ -8,18 +8,17 @@ import (
 
 func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg []byte) {
 	rsp := &proto.RogueTournQueryScRsp{
-		Retcode:           0,
-		RogueTournCurInfo: g.GetRogueTournCurInfo(),
+		Retcode: 0,
+		// RogueTournCurInfo: g.GetRogueTournCurInfo(),
 		RogueTournInfo: &proto.RogueTournInfo{
-			ALMBEOJOPLO: make([]*proto.GBIKLBJGMPL, 0),
-			HMODACNOIPP: nil,
-
-			RogueTournDifficultyInfo: g.GetRogueTournDifficultyInfo(),
+			RogueTournSaveList:       make([]*proto.RogueTournSaveList, 0),
 			RogueTournAreaInfo:       g.GetRogueTournAreaInfo(),
 			InspirationCircuit:       g.GetInspirationCircuitInfo(),
 			RogueTournSeasonInfo:     g.GetRogueTournSeasonInfo(),
 			ExtraScoreInfo:           g.GetExtraScoreInfo(),
-			SynchronicityLevelInfo:   g.GetSynchronicityLevelInfo(),
+			RogueTournExpInfo:        g.GetRogueTournExpInfo(),
+			RogueTournCollectionInfo: g.GetRogueTournCollectionInfo(),
+			RogueTournDifficultyInfo: g.GetRogueTournDifficultyInfo(),
 		},
 	}
 	g.Send(cmd.RogueTournQueryScRsp, rsp)

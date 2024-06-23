@@ -379,7 +379,6 @@ func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
 		RogueArea := &proto.RogueArea{
 			AreaId:     dbRogueArea.AreaId,
 			AreaStatus: proto.RogueAreaStatus(dbRogueArea.RogueAreaStatus),
-
 			// MapId:           0,
 			HasTakenReward: false,
 			RogueStatus:    0,

@@ -179,6 +179,12 @@ enum LineAvatarType {// 队伍角色属性
   LineAvatarType_ASSIST = 2;// 援助
 }
 
+enum RogueTalentStatus { // 灵感回路信息
+  ROGUE_TALENT_STATUS_LOCK = 0;
+  ROGUE_TALENT_STATUS_UNLOCK = 1;
+  ROGUE_TALENT_STATUS_ENABLE = 2;
+}
+
 enum RogueAreaStatus {
   RogueAreaStatus_ROGUE_AREA_STATUS_LOCK = 0;
   RogueAreaStatus_ROGUE_AREA_STATUS_UNLOCK = 1;

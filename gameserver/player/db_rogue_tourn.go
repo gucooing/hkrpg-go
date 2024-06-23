@@ -3,7 +3,39 @@ package player
 import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
+
+func newRogueTourn() *spb.RogueTourn {
+	db := &spb.RogueTourn{
+		Exp:                    0,
+		TakenLevelRewards:      make([]uint32, 0),
+		InspirationCircuitInfo: make(map[uint32]*spb.InspirationCircuitInfo),
+		UnlockDifficultyInfo:   make([]uint32, 0),
+	}
+	db.InspirationCircuitInfo[100] = &spb.InspirationCircuitInfo{
+		InspirationCircuitId: 100,
+		Status:               spb.RogueTalentStatus_ROGUE_TALENT_STATUS_UNLOCK,
+	}
+	for v := range gdconf.GetRogueTournDifficultyCompMap() {
+		db.UnlockDifficultyInfo = append(db.UnlockDifficultyInfo, v)
+	}
+	return db
+}
+
+func (g *GamePlayer) GetRogueTourn() *spb.RogueTourn {
+	db := g.GetBattle()
+	if db.RogueTourn == nil {
+		db.RogueTourn = newRogueTourn()
+	}
+	return db.RogueTourn
+}
+
+func (g *GamePlayer) Get() {
+
+}
+
+/****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
 	info := &proto.RogueTournSeasonInfo{
@@ -42,12 +74,24 @@ func (g *GamePlayer) GetExtraScoreInfo() *proto.ExtraScoreInfo {
 	return info
 }
 
-func (g *GamePlayer) GetSynchronicityLevelInfo() *proto.SynchronicityLevelInfo {
-	info := &proto.SynchronicityLevelInfo{
-		ReceivedLevelRewards: make([]uint32, 0),
-		Exp:                  0,
+func (g *GamePlayer) GetRogueTournExpInfo() *proto.RogueTournExpInfo {
+	info := &proto.RogueTournExpInfo{
+		TakenLevelRewards: make([]uint32, 0),
+		Exp:               800,
 	}
 
+	return info
+}
+
+func (g *GamePlayer) GetRogueTournCollectionInfo() *proto.RogueTournCollectionInfo {
+	info := &proto.RogueTournCollectionInfo{
+		OBFNIDGAFMN: make([]uint32, 0),
+		KJHPDANECOM: make([]uint32, 0),
+		EOJECMKIABF: 1,
+		MFMLAPAONCM: make([]uint32, 0),
+		PHNBGLOFFJM: make([]uint32, 0),
+		JOAHOHIPAAG: make([]uint32, 0),
+	}
 	return info
 }
 
@@ -79,8 +123,51 @@ func (g *GamePlayer) GetRogueTournAreaInfo() []*proto.RogueTournAreaInfo {
 
 func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 	info := &proto.RogueTournCurInfo{
-		IHELIGMBGIL: nil,
-		LDKKBIIEKGK: nil,
+		RogueTournCurAreaInfo: &proto.RogueTournCurAreaInfo{
+			FMCJCLEJCEJ: 84,
+			PNKJCLDGFFP: 3,
+			RogueCommonPendingAction: &proto.RogueCommonPendingAction{
+				QueuePosition: 5,
+				RogueAction: &proto.RogueAction{
+					RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
+						SelectFormulaIdListFieldNumber: make([]uint32, 0), // []uint32{130906, 130809, 130408},
+					},
+				},
+			},
+			RogueVersionId: 301,
+			AreaId:         201,
+		},
+		RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
+			GBELALCGPGL: &proto.FGJACOICGFE{
+				CPBMAEOEDMD: 201,
+			},
+			RogueTournMiracleInfo: nil,
+			CPMNJLHFGJH:           nil,
+			BECNCOBNNCP: &proto.GKMKNAAHPNO{
+				DJGHAOOKEBD: map[uint32]uint32{31: 100},
+			},
+			DLCLNIJBHBD:         nil,
+			ENGCMKFPKLH:         nil,
+			RogueTournLayerInfo: nil,
+			Lineup: &proto.ONJOOIHJHMG{
+				GMEDFPEGNBA: &proto.ItemCostData{ItemList: []*proto.ItemCost{
+					{
+						PileItem: &proto.PileItem{
+							ItemId:  Cf,
+							ItemNum: g.GetMaterialById(Cf),
+						},
+					},
+				},
+				},
+			},
+			KPOCDJAAPOF: nil,
+			KeywordUnlockInfo: &proto.KeywordUnlockInfo{KeywordUnlockMap: map[uint32]bool{
+				1615010: true,
+				1615110: false,
+				1615210: false,
+				1615310: false,
+			}},
+		},
 	}
 	return info
 }
