@@ -1,6 +1,8 @@
 package player
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -1058,12 +1060,33 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		EntryId:            challengeMazeConfig.MapEntranceID,
 		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
-		LightenSectionList: nil,
-		EntityList:         nil,
-		GroupStateList:     nil,
+		SyncBuffInfo:       make([]*proto.BuffInfo, 0),
+		GroupIdList:        make([]uint32, 0),
+		GroupStateList:     make([]*proto.SceneGroupState, 0),
+		LightenSectionList: []uint32{0},
+		EntityList:         make([]*proto.SceneEntityInfo, 0),
 	}
 
+	// 添加场景buff
+	if curChallenge.MazeBuffId != 0 {
+		scene.SyncBuffInfo = append(scene.SyncBuffInfo, &proto.BuffInfo{
+			Count:     4294967295,
+			LifeTime:  -1,
+			BuffId:    curChallenge.MazeBuffId,
+			AddTimeMs: uint64(time.Now().UnixMilli()),
+			Level:     1,
+		})
+	}
+	// 添加自选buff
+	if g.GetCurChallengeBuffId() != 0 {
+		scene.SyncBuffInfo = append(scene.SyncBuffInfo, &proto.BuffInfo{
+			Count:     4294967295,
+			LifeTime:  -1,
+			BuffId:    g.GetCurChallengeBuffId(),
+			AddTimeMs: uint64(time.Now().UnixMilli()),
+			Level:     1,
+		})
+	}
 	// 将进入场景的角色添加到实体列表里
 	entityGroup := &proto.SceneEntityGroupInfo{
 		GroupId:    0,

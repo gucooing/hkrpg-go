@@ -163,7 +163,6 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) 
 func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 	// msg := g.DecodePayloadToProto(cmd.HandleRogueCommonPendingActionCsReq, payloadMsg)
 	// req := msg.(*proto.HandleRogueCommonPendingActionCsReq)
-	// // 添加buff
 	// action := req.Action
 	// if action != nil {
 	// 	switch action.(type) {

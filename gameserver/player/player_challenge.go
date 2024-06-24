@@ -38,6 +38,7 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
 	rsp := &proto.GetCurChallengeScRsp{
 		CurChallenge: g.GetChallengeInfo(),
+		LineupList:   []*proto.LineupInfo{g.GetBattleLineUpPb(Challenge_1), g.GetBattleLineUpPb(Challenge_2)},
 	}
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
 }
@@ -55,19 +56,22 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 		g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE_Story)
 	}
 
-	var lineUpId uint32
-	// 设置当前战斗的忘却之庭
-	curChallenge := g.SetCurChallenge(req.ChallengeId, storyInfo)
-	switch curChallenge.CurStage {
-	case 1:
-		lineUpId = Challenge_1
-	case 2:
-		lineUpId = Challenge_2
+	// 设置队伍
+	if req.TeamOne == nil {
+		g.Send(cmd.StartChallengeScRsp, &proto.StartChallengeScRsp{})
+		return
 	}
+	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
+	g.SetBattleLineUp(Challenge_1, req.TeamOne)
+	if req.TeamTwo != nil {
+		g.SetBattleLineUp(Challenge_2, req.TeamTwo)
+	}
+	// 设置当前战斗的忘却之庭
+	g.SetCurChallenge(req.ChallengeId, storyInfo)
 	rsp := &proto.StartChallengeScRsp{
 		CurChallenge: g.GetChallengeInfo(),
 		Scene:        g.GetChallengeScene(),
-		LineupList:   []*proto.LineupInfo{g.GetBattleLineUpPb(lineUpId)},
+		LineupList:   []*proto.LineupInfo{g.GetBattleLineUpPb(Challenge_1), g.GetBattleLineUpPb(Challenge_2)},
 	}
 
 	g.Send(cmd.StartChallengeScRsp, rsp)

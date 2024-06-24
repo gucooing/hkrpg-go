@@ -286,6 +286,7 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartC
 		RoundCount:  0,
 		BuffOne:     buffOne,
 		BuffTwo:     buffTwe,
+		MazeBuffId:  conf.MazeBuffID,
 	}
 	return db.CurChallenge
 }
@@ -770,10 +771,9 @@ func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
 	db := g.GetCurChallenge()
 	buffList := make([]*proto.BattleBuff, 0)
 	// 关卡buff
-	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
-	if conf.MazeBuffID != 0 {
+	if db.MazeBuffId != 0 {
 		buffList = append(buffList, &proto.BattleBuff{
-			Id:         conf.MazeBuffID,
+			Id:         db.MazeBuffId,
 			Level:      1,
 			OwnerIndex: 4294967295,
 			WaveFlag:   4294967295,
@@ -826,7 +826,7 @@ func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
 		return nil
 	}
 	challengeStoryInfo := &proto.ChallengeStoryInfo{
-		CurStoryBuff: &proto.ChallengeStoryBuffInfo{
+		CurBossBuff: &proto.ChallengeBossBuffInfo{
 			BuffList: []uint32{db.BuffOne, db.BuffTwo},
 		},
 	}

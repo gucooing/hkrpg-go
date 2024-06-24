@@ -261,6 +261,20 @@ func (g *GamePlayer) AddLineUpMp(mp uint32) {
 	g.SyncLineupNotify(db.MainLineUp, false)
 }
 
+func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
+	db := g.GetBattleLineUpById(index)
+	db.LeaderSlot = 0
+	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
+	for id, avatarId := range avatarList {
+		db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}
+	}
+	for _, avatar := range avatarList {
+		avatarBin := g.GetAvatarBinById(avatar)
+		g.CopyBattleAvatar(avatarBin)
+	}
+	g.SyncLineupNotify(index, true)
+}
+
 /*****************************************功能方法****************************/
 
 func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
@@ -339,12 +353,12 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		lineUpType = proto.ExtraLineupType_LINEUP_TOURN_ROGUE
 	}
 	var wtmLeaderSlot = false
-	if db.AvatarIdList[db.LeaderSlot] == nil {
+	if db.AvatarIdList[db.LeaderSlot] == nil || db.AvatarIdList[db.LeaderSlot].AvatarId == 0 {
 		wtmLeaderSlot = true
 	}
 	avatarList := make([]*proto.LineupAvatar, 0)
 	for slot, lineAvatar := range db.AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
+		if lineAvatar.AvatarId == 0 {
 			continue
 		}
 		if wtmLeaderSlot {

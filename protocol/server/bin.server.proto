@@ -246,16 +246,17 @@ message CurChallenge {// 正在进行的忘却之庭信息
   uint32 buff_one = 11; // 第一关buff
   uint32 buff_two = 12; // 第二关buff
   uint32 kill_monster = 13; // 当前关卡已杀死怪物数量
+  uint32 maze_buff_id = 14;//地图buff
 }
 
-message RogueTourn { // 差分宇宙
+message RogueTourn {// 差分宇宙
   uint32 exp = 1; // 经验
   repeated uint32 taken_level_rewards = 2;// 已领取的等级奖励
   map<uint32, InspirationCircuitInfo> inspiration_circuit_info = 3; // 灵感回路信息
   repeated uint32 unlock_difficulty_info = 4;// 已解锁难度
 }
 
-message InspirationCircuitInfo { // 灵感回路
+message InspirationCircuitInfo {// 灵感回路
   uint32 inspiration_circuit_id = 1;
   RogueTalentStatus status = 2;
 }
