@@ -41,6 +41,18 @@ func (g *GameDataConfig) loadChallengeTargetConfig() {
 		panic(info)
 	}
 
+	playerElementsFilePathBoss := g.excelPrefix + "ChallengeBossTargetConfig.json"
+	playerElementsFileBoss, err := os.ReadFile(playerElementsFilePathBoss)
+	if err != nil {
+		info := fmt.Sprintf("open file error: %v", err)
+		panic(info)
+	}
+	err = hjson.Unmarshal(playerElementsFileBoss, &g.ChallengeTargetConfigMap)
+	if err != nil {
+		info := fmt.Sprintf("parse file error: %v", err)
+		panic(info)
+	}
+
 	logger.Info("load %v ChallengeTargetConfig", len(g.ChallengeTargetConfigMap))
 }
 

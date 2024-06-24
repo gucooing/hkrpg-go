@@ -273,9 +273,16 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartC
 	db := g.GetChallenge()
 	var buffOne uint32 = 0
 	var buffTwe uint32 = 0
+	var isBoos = false
 	if storyInfo != nil {
-		buffOne = storyInfo.GetStoryBuffInfo().GetStoryBuffOne()
-		buffTwe = storyInfo.GetStoryBuffInfo().GetStoryBuffTwo()
+		if storyInfo.StoryBuffInfo == nil {
+			isBoos = true
+			buffOne = storyInfo.GetBossBuffInfo().GetStoryBuffOne()
+			buffTwe = storyInfo.GetBossBuffInfo().GetStoryBuffTwo()
+		} else {
+			buffOne = storyInfo.GetStoryBuffInfo().GetStoryBuffOne()
+			buffTwe = storyInfo.GetStoryBuffInfo().GetStoryBuffTwo()
+		}
 	}
 	conf := gdconf.GetChallengeMazeConfigById(challengeId)
 	db.CurChallenge = &spb.CurChallenge{
@@ -287,6 +294,7 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartC
 		BuffOne:     buffOne,
 		BuffTwo:     buffTwe,
 		MazeBuffId:  conf.MazeBuffID,
+		IsBoos:      isBoos,
 	}
 	return db.CurChallenge
 }
@@ -573,6 +581,9 @@ func (g *GamePlayer) ChallengeSettle() {
 	if db.ScoreOne+db.ScoreTwo >= 30000 {
 		db.Stars++
 	}
+	if db.IsBoos {
+		db.Stars++
+	}
 }
 
 // 忘却之庭战斗失败处理
@@ -825,12 +836,20 @@ func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
 	if db == nil {
 		return nil
 	}
-	challengeStoryInfo := &proto.ChallengeStoryInfo{
-		CurBossBuff: &proto.ChallengeBossBuffInfo{
-			BuffList: []uint32{db.BuffOne, db.BuffTwo},
-		},
+	if db.IsBoos {
+		return &proto.ChallengeStoryInfo{
+			CurBossBuff: &proto.ChallengeBossBuffInfo{
+				ChallengeBossConst: 1, // 这玩意不是1就不能进下一节点
+				BuffList:           []uint32{db.BuffOne, db.BuffTwo},
+			},
+		}
+	} else {
+		return &proto.ChallengeStoryInfo{
+			CurStoryBuff: &proto.ChallengeStoryBuffInfo{
+				BuffList: []uint32{db.BuffOne, db.BuffTwo},
+			},
+		}
 	}
-	return challengeStoryInfo
 }
 
 // 获取回合限制
@@ -868,25 +887,35 @@ func (g *GamePlayer) GetBattleTargetInfo() map[uint32]*proto.BattleTargetList {
 	if g.GetBattleStatus() != spb.BattleType_Battle_CHALLENGE_Story {
 		return battleTargetInfoList
 	}
-	conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
-	if conf == nil {
-		return battleTargetInfoList
+	battleTargetList1 := make([]*proto.BattleTarget, 0)
+	if db.IsBoos {
+		for _, id := range []uint32{90004, 90005} {
+			battleTargetList1 = append(battleTargetList1, &proto.BattleTarget{
+				Id: id,
+			})
+		}
+	} else {
+		conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+		if conf == nil {
+			return battleTargetInfoList
+		}
+		battleTargetList1 = append(battleTargetList1, &proto.BattleTarget{
+			Id: 10001,
+		})
+		battleTargetList5 := make([]*proto.BattleTarget, 0)
+		for _, id := range conf.BattleTargetID {
+			battleTarget := &proto.BattleTarget{
+				Id:       id,
+				Progress: 0,
+			}
+			battleTargetList5 = append(battleTargetList5, battleTarget)
+		}
+		battleTargetInfoList[5] = &proto.BattleTargetList{
+			BattleTargetList: battleTargetList5,
+		}
 	}
 	battleTargetInfoList[1] = &proto.BattleTargetList{
-		BattleTargetList: []*proto.BattleTarget{{
-			Id: 10001,
-		}},
-	}
-	battleTargetList := make([]*proto.BattleTarget, 0)
-	for _, id := range conf.BattleTargetID {
-		battleTarget := &proto.BattleTarget{
-			Id:       id,
-			Progress: 0,
-		}
-		battleTargetList = append(battleTargetList, battleTarget)
-	}
-	battleTargetInfoList[5] = &proto.BattleTargetList{
-		BattleTargetList: battleTargetList,
+		BattleTargetList: battleTargetList1,
 	}
 	return battleTargetInfoList
 }

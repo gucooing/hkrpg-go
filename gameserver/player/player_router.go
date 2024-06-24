@@ -86,6 +86,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartChallengeCsReq:  g.StartChallengeCsReq,     // 忘却之庭,启动!
 		cmd.GetCurChallengeCsReq: g.GetCurChallengeCsReq,    // 获取忘却之庭状态
 		cmd.LeaveChallengeCsReq:  g.LeaveChallengeCsReq,     // 退出忘却之庭
+		// 末日之影
+		cmd.StartPartialChallengeCsReq:   g.StartPartialChallengeCsReq,   // 末日之影,启动!
+		cmd.EnterChallengeNextPhaseCsReq: g.EnterChallengeNextPhaseCsReq, // 前往下一节点
 		// 背包
 		cmd.GetBagCsReq:      g.HandleGetBagCsReq, // 获取背包物品
 		cmd.DestroyItemCsReq: g.DestroyItemCsReq,  // 销毁物品
@@ -116,6 +119,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
 		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
 		// 任务
+		// cmd.GetMainMissionCustomValueCsReq:g.GetMainMissionCustomValueCsReq,
 		cmd.GetMissionEventDataCsReq: g.GetMissionEventDataCsReq, // 获取任务状态
 		cmd.GetMissionStatusCsReq:    g.HandleGetMissionStatusCsReq,
 		cmd.GetMissionDataCsReq:      g.GetMissionDataCsReq,     // 获取任务数据

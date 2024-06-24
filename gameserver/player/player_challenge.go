@@ -58,6 +58,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 
 	// 设置队伍
 	if req.TeamOne == nil {
+		g.SetBattleStatus(spb.BattleType_Battle_NONE)
 		g.Send(cmd.StartChallengeScRsp, &proto.StartChallengeScRsp{})
 		return
 	}
@@ -87,6 +88,7 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 	if curChallenge.Status == spb.ChallengeStatus_CHALLENGE_DOING {
 		g.Send(cmd.QuitBattleScNotify, nil) // 战斗没结束就退出是主动退出
 	}
+	g.ChallengeSettleNotify()
 	g.Send(cmd.LeaveChallengeScRsp, nil)
 
 	g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
@@ -125,21 +127,28 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	}
 	// 更新状态
 	g.SetCurChallengeKillMonster(0) // 切换关卡，标记为0
+	if db.IsBoos {
+		g.ChallengeBossPhaseSettleNotify(req.Stt.GetBattleTargetInfo())
+	}
 	// 回合处理
 	if g.IsNextChallenge() {
 		// 还没结束
 		g.AddChallengeCurStage(1)
 		// 添加怪物
 		g.ChallengeAddSceneGroupRefreshScNotify()
-		// 添加角色
-		g.ChallengeAddAvatarSceneGroupRefreshScNotify()
-		// 更新新的队伍
-		g.SyncLineupNotify(Challenge_2, true)
+		if !db.IsBoos {
+			// 添加角色
+			g.ChallengeAddAvatarSceneGroupRefreshScNotify()
+			// 更新新的队伍
+			g.SyncLineupNotify(Challenge_2, true)
+		}
 	} else {
 		// 结算
 		g.ChallengeSettle()
 		// 发送战斗胜利通知
-		g.ChallengeSettleNotify()
+		if !db.IsBoos {
+			g.ChallengeSettleNotify()
+		}
 		// 将战斗结果储存到数据库
 		g.UpdateChallengeList(db)
 		// 更改状态
@@ -158,6 +167,21 @@ func (g *GamePlayer) ChallengeSettleNotify() {
 		ChallengeScore: db.ScoreOne,            // 一层挑战得分
 	}
 	g.Send(cmd.ChallengeSettleNotify, notify)
+}
+
+func (g *GamePlayer) ChallengeBossPhaseSettleNotify(targeList map[uint32]*proto.BattleTargetList) {
+	db := g.GetCurChallenge()
+	notify := &proto.ChallengeBossPhaseSettleNotify{
+		IsRemainingAction: true,
+		Star:              7,
+		Phase:             db.CurStage,
+		ChallengeScore:    db.ScoreOne,
+		ScoreTwo:          db.ScoreTwo,
+		IsWin:             true,
+		BattleTargetList:  targeList[1].BattleTargetList,
+		ChallengeId:       db.ChallengeId,
+	}
+	g.Send(cmd.ChallengeBossPhaseSettleNotify, notify)
 }
 
 func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
@@ -282,4 +306,20 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 		}
 	}
 	return sceneEntityRefreshInfo
+}
+
+func (g *GamePlayer) StartPartialChallengeCsReq(payloadMsg []byte) {
+	// msg := g.DecodePayloadToProto(cmd.StartPartialChallengeCsReq, payloadMsg)
+	// req := msg.(*proto.StartPartialChallengeCsReq)
+	// g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE_Story_2)
+	// // 设置当前战斗的忘却之庭
+	// g.SetCurChallenge(req.ChallengeId, storyInfo)
+}
+
+func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg []byte) {
+	rsp := &proto.EnterChallengeNextPhaseScRsp{
+		Scene: g.GetChallengeScene(),
+	}
+
+	g.Send(cmd.EnterChallengeNextPhaseScRsp, rsp)
 }

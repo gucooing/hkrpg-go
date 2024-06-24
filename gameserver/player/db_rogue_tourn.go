@@ -134,8 +134,8 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 					},
 				},
 			},
-			RogueVersionId: 301,
-			AreaId:         201,
+			RogueSubMode: 301,
+			AreaId:       201,
 		},
 		RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
 			GBELALCGPGL: &proto.FGJACOICGFE{

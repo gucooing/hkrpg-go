@@ -56,9 +56,9 @@ enum BattleType{// 战斗状态
   Battle_NONE = 0; // 普通状态
   Battle_CHALLENGE = 1; // 忘却之庭
   Battle_CHALLENGE_Story = 2; // 忘却之庭活动
-  //  Battle_CHALLENGE_Story_2 = 3; // 忘却之庭活动2
+  Battle_CHALLENGE_Story_2 = 3; // 末日之影
   Battle_ROGUE = 4;// 模拟宇宙
-  Battle_TrialActivity = 5;
+  Battle_TrialActivity = 5; // 角色试用
   Battle_ROGUE_TOURN = 6; // 差分宇宙
 }
 

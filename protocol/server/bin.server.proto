@@ -247,6 +247,7 @@ message CurChallenge {// 正在进行的忘却之庭信息
   uint32 buff_two = 12; // 第二关buff
   uint32 kill_monster = 13; // 当前关卡已杀死怪物数量
   uint32 maze_buff_id = 14;//地图buff
+  bool is_boos = 15;// 是否末日之影
 }
 
 message RogueTourn {// 差分宇宙
