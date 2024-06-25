@@ -202,6 +202,8 @@ message CurRogue {// 当前正在进行的模拟宇宙
   uint32 aeon_id = 6; // 命途
   map<uint32, RogueBuff> buff_list = 7;// 模拟宇宙已获得祝福列表
   uint32 RogueActivityModuleID = 8;//模拟宇宙类型
+  bool is_win = 9;// 是否胜利
+  RogueStatus status = 10 ;// 状态
 }
 
 message RogueRoom {

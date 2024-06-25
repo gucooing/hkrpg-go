@@ -185,6 +185,15 @@ enum RogueTalentStatus { // 灵感回路信息
   ROGUE_TALENT_STATUS_ENABLE = 2;
 }
 
+enum RogueStatus { // 模拟宇宙状态
+  ROGUE_STATUS_NONE = 0;
+  ROGUE_STATUS_DOING = 1;
+  ROGUE_STATUS_PENDING = 2;
+  ROGUE_STATUS_ENDLESS = 3;
+  ROGUE_STATUS_FINISH = 4;
+}
+
+
 enum RogueAreaStatus {
   RogueAreaStatus_ROGUE_AREA_STATUS_LOCK = 0;
   RogueAreaStatus_ROGUE_AREA_STATUS_UNLOCK = 1;

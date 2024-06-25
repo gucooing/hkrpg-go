@@ -36,39 +36,36 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		// 这里的情况是角色释放技能
 		g.AddOnLineAvatarBuff(req.AttackedByEntityId, req.SkillIndex)
 	}
-	if len(req.HitTargetEntityIdList) == 0 {
-		g.Send(cmd.SceneCastSkillScRsp, rsp)
-		return
-	}
 	mpem := &MPEM{
-		IsBattle: false,
-		EntityId: make([]uint32, 0),
-		MPid:     make([]uint32, 0),
+		IsAvatar:        false,
+		MonsterEntityId: make([]uint32, 0),
+		MonsterId:       make([]uint32, 0),
+		PropEntityId:    make([]uint32, 0),
+		PropId:          make([]uint32, 0),
 	}
-	// 添加协助怪物
+	// 添加参与此次攻击的实体
+	g.GetMem([]uint32{req.AttackedByEntityId, req.CastEntityId}, mpem)
 	if req.AssistMonsterEntityInfo != nil {
 		for _, info := range req.AssistMonsterEntityInfo {
 			g.GetMem(info.EntityIdList, mpem)
 		}
-	} else {
-		g.GetMem(req.HitTargetEntityIdList, mpem) // 被攻击者
 	}
-	if len(mpem.EntityId) == 0 { // 这里的情况是，是怪物主动攻击发生的战斗
-		g.GetMem([]uint32{req.AttackedByEntityId}, mpem) // 发起攻击者
+	if req.AssistMonsterEntityIdList != nil {
+		g.GetMem(req.AssistMonsterEntityIdList, mpem)
 	}
-
-	if len(mpem.EntityId) == 0 { // 这里的情况是角色普通攻击并没有命中怪物
-		g.Send(cmd.SceneCastSkillScRsp, rsp)
-		return
+	if req.HitTargetEntityIdList != nil {
+		g.GetMem(req.HitTargetEntityIdList, mpem)
 	}
-	if !mpem.IsBattle { // 不是战斗就要去处理物品效果了
+	if mpem.PropId != nil { // 物品效果
 		g.SceneCastSkillProp(mpem)
+	}
+	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
-	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MPid, g.GetBattleLineUp())
+	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MonsterId, g.GetBattleLineUp())
 	// 记录战斗
-	battleBackup.monsterEntity = mpem.EntityId
+	battleBackup.monsterEntity = mpem.MonsterEntityId
 	battleBackup.AttackedByEntityId = req.AttackedByEntityId
 	g.AddBattleBackup(battleBackup)
 	// 回复
@@ -169,7 +166,7 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 /***********************************物品破坏处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
-	for _, propId := range pem.MPid {
+	for _, propId := range pem.PropId {
 		conf := gdconf.GetMazePropId(propId)
 		if conf == nil {
 			continue

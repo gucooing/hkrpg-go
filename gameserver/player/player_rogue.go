@@ -131,6 +131,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 		RogueRoomMap:          rogueRoomMap,
 		RogueMapId:            mapId,
 		RogueActivityModuleID: QuestRogue,
+		Status:                spb.RogueStatus_ROGUE_STATUS_DOING,
 	}
 	// 设置状态
 	g.SetBattleStatus(spb.BattleType_Battle_ROGUE)
@@ -150,14 +151,21 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) 
 	battleDb := g.GetBattleBackupById(req.BattleId)
 	g.SyncEntityBuffChangeListScNotify(battleDb.AttackedByEntityId)
 
-	// 祝福选择页通知 SyncRogueCommonPendingActionScNotify
-	buffIdList := make([]uint32, 0)
-	for i := 0; i < 3; i++ {
-		// buffIdList = append(buffIdList, g.GetRogueBuff())
-		buffIdList = append(buffIdList, gdconf.GetRogueBuff())
+	curRoom := g.GetCurRogueRoom()
+	if len(curRoom.NextSiteIdList) == 0 {
+		// 没有关卡了,结算!
+		g.FinishRogueRoom(g.GetCurRogue().CurSiteId)
+		g.Send(cmd.SyncRogueExploreWinScNotify, &proto.SyncRogueExploreWinScNotify{IsWin: true})
+	} else {
+		// 祝福选择页通知 SyncRogueCommonPendingActionScNotify
+		buffIdList := make([]uint32, 0)
+		for i := 0; i < 3; i++ {
+			// buffIdList = append(buffIdList, g.GetRogueBuff())
+			buffIdList = append(buffIdList, gdconf.GetRogueBuff())
+		}
+		g.SyncRogueCommonPendingActionScNotify(buffIdList)
+		// 刷新门
 	}
-	g.SyncRogueCommonPendingActionScNotify(buffIdList)
-	// 刷新门
 }
 
 func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
@@ -173,8 +181,6 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 		}
 	}
 
-	// 模拟宇宙图鉴更新通知？ SyncRogueHandbookDataUpdateScNotify
-	// 模拟宇宙常见操作结果通知 SyncRogueCommonActionResultScNotify // add buff, buff状态
 	rsp := &proto.HandleRogueCommonPendingActionScRsp{
 		QueuePosition: g.GetRogueBuffNum(),
 		Retcode:       0,
@@ -186,19 +192,22 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 }
 
 // 区域通知
-func (g *GamePlayer) SyncRogueMapRoomScNotify() {
-	// curRogue := g.GetCurRogue()
-	// curRoom := g.GetCurRogueRoom()
-	//
-	// notify := &proto.SyncRogueMapRoomScNotify{
-	// 	CurRoom: &proto.RogueRoom{
-	// 		CurStatus: proto.RogueRoomStatus(curRoom.RoomStatus),
-	// 		SiteId:    curRogue.CurSiteId,
-	// 		RoomId:    curRoom.RoomId,
-	// 	},
-	// 	MapId: curRogue.RogueMapId,
-	// }
-	// g.Send(cmd.SyncRogueMapRoomScNotify, notify)
+func (g *GamePlayer) SyncRogueMapRoomScNotify(siteId uint32) {
+	curRogue := g.GetCurRogue()
+	db := g.GetRogueRoom()[siteId]
+	if db == nil {
+		return
+	}
+
+	notify := &proto.SyncRogueMapRoomScNotify{
+		CurRoom: &proto.RogueRoom{
+			CurStatus: proto.RogueRoomStatus(db.RoomStatus),
+			SiteId:    siteId,
+			RoomId:    db.RoomId,
+		},
+		MapId: curRogue.RogueMapId,
+	}
+	g.Send(cmd.SyncRogueMapRoomScNotify, notify)
 }
 
 func (g *GamePlayer) SyncRogueVirtualItemInfoScNotify() {
@@ -292,13 +301,21 @@ func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) QuitRogueCsReq(payloadMsg []byte) {
-
-	g.Send(cmd.QuitRogueScRsp, nil)
+	db := g.GetCurRogue()
+	db.Status = spb.RogueStatus_ROGUE_STATUS_FINISH
+	db.IsWin = true
+	g.Send(cmd.SyncRogueStatusScNotify, &proto.SyncRogueStatusScNotify{Status: proto.RogueStatus(db.Status)})
+	rsp := &proto.QuitRogueScRsp{
+		RogueInfo: g.GetRogueInfo(),
+	}
+	g.Send(cmd.QuitRogueScRsp, rsp)
+	g.NewCurRogue()
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)
 }
 
 func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 	curLine := g.GetCurLineUp()
+	// SyncRogueFinishScNotify
 	rsp := &proto.LeaveRogueScRsp{
 		RogueInfo: g.GetRogueInfo(),
 		Lineup:    g.GetLineUpPb(curLine),
@@ -312,9 +329,8 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.EnterRogueMapRoomCsReq, payloadMsg)
 	req := msg.(*proto.EnterRogueMapRoomCsReq)
+	g.FinishRogueRoom(g.GetCurRogue().CurSiteId)
 	g.UpCurRogueRoom(req.SiteId)
-	// 更新通知
-	g.SyncRogueMapRoomScNotify()
 	rsp := &proto.EnterRogueMapRoomScRsp{
 		RotateInfo: g.GetRogueMapRotateInfo(),
 		Lineup:     g.GetBattleLineUpPb(Rogue),

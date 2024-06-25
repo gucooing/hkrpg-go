@@ -516,18 +516,15 @@ func (g *GamePlayer) AddChallengeDeadAvatar(deadNum uint32) {
 }
 
 type MPEM struct {
-	IsBattle bool     // 是否战斗
-	EntityId []uint32 // 实体id
-	MPid     []uint32 // 怪物/物品对应id
+	IsAvatar        bool     // 是否有玩家参与
+	MonsterEntityId []uint32 // 怪物实体id
+	MonsterId       []uint32 // 怪物id
+	PropEntityId    []uint32 // 物品实体id
+	PropId          []uint32 // 怪物id
+
 }
 
 func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
-	if mpem.EntityId == nil {
-		mpem.EntityId = make([]uint32, 0)
-	}
-	if mpem.MPid == nil {
-		mpem.MPid = make([]uint32, 0)
-	}
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
 		if entity == nil {
@@ -535,13 +532,25 @@ func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
 		}
 		switch entity.(type) {
 		case *AvatarEntity:
+			mpem.IsAvatar = true
 		case *MonsterEntity:
-			mpem.EntityId = append(mpem.EntityId, id)
-			mpem.MPid = append(mpem.MPid, entity.(*MonsterEntity).EventID)
-			mpem.IsBattle = true
+			if mpem.MonsterEntityId == nil {
+				mpem.MonsterEntityId = make([]uint32, 0)
+			}
+			if mpem.MonsterId == nil {
+				mpem.MonsterId = make([]uint32, 0)
+			}
+			mpem.MonsterEntityId = append(mpem.MonsterEntityId, id)
+			mpem.MonsterId = append(mpem.MonsterId, entity.(*MonsterEntity).EventID)
 		case *PropEntity:
-			mpem.EntityId = append(mpem.EntityId, id)
-			mpem.MPid = append(mpem.MPid, entity.(*PropEntity).PropId)
+			if mpem.PropEntityId == nil {
+				mpem.PropEntityId = make([]uint32, 0)
+			}
+			if mpem.PropId == nil {
+				mpem.PropId = make([]uint32, 0)
+			}
+			mpem.PropEntityId = append(mpem.PropEntityId, id)
+			mpem.PropId = append(mpem.PropId, entity.(*PropEntity).PropId)
 		case *NpcEntity:
 		default:
 			logger.Debug("[EntityId:%v]没有找到相关实体信息", id)

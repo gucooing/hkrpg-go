@@ -2623,6 +2623,8 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(EnterChallengeNextPhaseScRsp, func() any { return new(proto.EnterChallengeNextPhaseScRsp) })
 	c.regMsg(EnterRogueMapRoomCsReq, func() any { return new(proto.EnterRogueMapRoomCsReq) })
 	c.regMsg(EnterRogueMapRoomScRsp, func() any { return new(proto.EnterRogueMapRoomScRsp) })
+	c.regMsg(SyncRogueMapRoomScNotify, func() any { return new(proto.SyncRogueMapRoomScNotify) })
+	c.regMsg(OpenRogueChestCsReq, func() any { return new(proto.OpenRogueChestCsReq) })
 	// server
 	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
 	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
