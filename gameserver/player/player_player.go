@@ -85,7 +85,6 @@ func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
 	rsp := &proto.SetPlayerInfoScRsp{
 		Retcode:      0,
 		CurBasicType: proto.HeroBasicType(g.GetAvatar().CurMainAvatar),
-		EGCIPLNFHGD:  0,
 		IsModify:     req.IsModify,
 	}
 	g.PlayerPlayerSyncScNotify() // 角色信息通知

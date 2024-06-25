@@ -16,9 +16,10 @@ type CmdRouteManager struct {
 
 func (r *CmdRouteManager) initRoute() {
 	r.cmdHandlerFuncRouteMap = map[string]CmdHandlerFunc{
-		"help":  help,
-		"give":  give,
-		"state": state,
+		"help":       help,
+		"give":       give,
+		"state":      state,
+		"worldLevel": worldLevel,
 	}
 }
 
@@ -61,8 +62,27 @@ func give(parameter []string, s *HkRpgGoServer) {
 		p.GamePlayer.GmGive(&spb.GmGive{GiveAll: true})
 	case "maxavatar":
 		p.GamePlayer.GmMaxCurAvatar(&spb.MaxCurAvatar{All: true})
+	default:
+		if index >= 4 {
+			p.GamePlayer.GmGive(&spb.GmGive{
+				ItemId:    alg.S2U32(parameter[2]),
+				ItemCount: alg.S2U32(parameter[3]),
+			})
+		}
 	}
 }
 
 func state(parameter []string, s *HkRpgGoServer) {
+}
+
+func worldLevel(parameter []string, s *HkRpgGoServer) {
+	index := len(parameter)
+	if index < 3 {
+		return
+	}
+	p := s.GetPlayer(alg.S2U32(parameter[1]))
+	if p == nil {
+		return
+	}
+	p.GamePlayer.GmWorldLevel(&spb.GmWorldLevel{WorldLevel: alg.S2U32(parameter[2])})
 }

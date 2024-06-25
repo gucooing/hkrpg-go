@@ -100,9 +100,8 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg []byte) {
 	// add main
 	for _, main := range mainMissionList {
 		rsp.MissionDataList = append(rsp.MissionDataList, &proto.MissionData{
-			Status:          proto.MissionStatus(main.Status),
-			CustomValueList: make([]*proto.AHJMIKLBOEK, 0),
-			Id:              main.MissionId,
+			Status: proto.MissionStatus(main.Status),
+			Id:     main.MissionId,
 		})
 	}
 	// add sub mission

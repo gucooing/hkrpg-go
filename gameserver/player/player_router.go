@@ -77,11 +77,18 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.EnterRogueMapRoomCsReq:              g.EnterRogueMapRoomCsReq,              // 模拟宇宙进入下一场景
 		cmd.GetRogueBuffEnhanceInfoCsReq:        g.GetRogueBuffEnhanceInfoCsReq,        // 获取模拟宇宙buff信息
 		// cmd.EnhanceRogueBuffCsReq:g.EnhanceRogueBuffCsReq,// 强化buff
+		// 差分宇宙
+		cmd.RogueTournQueryCsReq:                  g.RogueTournQueryCsReq,                  // 获取差分宇宙信息
+		cmd.RogueTournGetPermanentTalentInfoCsReq: g.RogueTournGetPermanentTalentInfoCsReq, // 获取差分宇宙灵感回路
+		cmd.RogueTournStartCsReq:                  g.RogueTournStartCsReq,                  // 差分宇宙.启动!
 		// 忘却之庭
 		cmd.GetChallengeCsReq:    g.HandleGetChallengeCsReq, // 获取忘却之庭挑战完成信息
 		cmd.StartChallengeCsReq:  g.StartChallengeCsReq,     // 忘却之庭,启动!
 		cmd.GetCurChallengeCsReq: g.GetCurChallengeCsReq,    // 获取忘却之庭状态
 		cmd.LeaveChallengeCsReq:  g.LeaveChallengeCsReq,     // 退出忘却之庭
+		// 末日之影
+		cmd.StartPartialChallengeCsReq:   g.StartPartialChallengeCsReq,   // 末日幻影,二次启动!
+		cmd.EnterChallengeNextPhaseCsReq: g.EnterChallengeNextPhaseCsReq, // 前往下一节点
 		// 背包
 		cmd.GetBagCsReq:      g.HandleGetBagCsReq, // 获取背包物品
 		cmd.DestroyItemCsReq: g.DestroyItemCsReq,  // 销毁物品
@@ -112,6 +119,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
 		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
 		// 任务
+		// cmd.GetMainMissionCustomValueCsReq:g.GetMainMissionCustomValueCsReq,
 		cmd.GetMissionEventDataCsReq: g.GetMissionEventDataCsReq, // 获取任务状态
 		cmd.GetMissionStatusCsReq:    g.HandleGetMissionStatusCsReq,
 		cmd.GetMissionDataCsReq:      g.GetMissionDataCsReq,     // 获取任务数据
@@ -157,6 +165,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetNpcMessageGroupCsReq:           g.GetNpcMessageGroupCsReq,           // 获取npc聊天信息
 		cmd.FinishPerformSectionIdCsReq:       g.FinishPerformSectionIdCsReq,       // 完成npc聊天
 		cmd.GetNpcStatusCsReq:                 g.GetNpcStatusCsReq,                 // 获取npc聊天状态
+		// 乱七八糟
 	}
 }
 

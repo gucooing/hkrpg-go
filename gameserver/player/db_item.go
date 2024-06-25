@@ -12,14 +12,15 @@ import (
 )
 
 const (
-	Hcoin    uint32 = 1  // 星琼
-	Scoin    uint32 = 2  // 金钱
-	Mcoin    uint32 = 3  // 梦华
-	Stamina  uint32 = 11 // 体力
-	RStamina uint32 = 12 // 后备体力
-	Exp      uint32 = 22 // 经验
-	Cf       uint32 = 31 // 宇宙碎片
-	NewM            = 92 // 新道具
+	Hcoin       uint32 = 1      // 星琼
+	Scoin       uint32 = 2      // 金钱
+	Mcoin       uint32 = 3      // 梦华
+	Stamina     uint32 = 11     // 体力
+	RStamina    uint32 = 12     // 后备体力
+	Exp         uint32 = 22     // 经验
+	Cf          uint32 = 31     // 宇宙碎片
+	NewM               = 5      // 新道具
+	Inspiration uint32 = 281018 // 灵感
 )
 
 type Material struct {
@@ -198,7 +199,6 @@ func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
 		Exp:           equipmentDb.Exp,
 		Promotion:     equipmentDb.Promotion,
 		Level:         equipmentDb.Level,
-		BaseAvatarId:  equipmentDb.BaseAvatarId,
 		DressAvatarId: equipmentDb.BaseAvatarId,
 		IsProtected:   equipmentDb.IsProtected,
 		Rank:          equipmentDb.Rank,
@@ -253,7 +253,6 @@ func (g *GamePlayer) GetRelic(uniqueId uint32) *proto.Relic {
 	relic := &proto.Relic{
 		Tid:           relicDb.Tid,
 		SubAffixList:  make([]*proto.RelicAffix, 0),
-		BaseAvatarId:  relicDb.BaseAvatarId,
 		DressAvatarId: relicDb.BaseAvatarId,
 		UniqueId:      relicDb.UniqueId,
 		Level:         relicDb.Level,
@@ -420,7 +419,6 @@ func (g *GamePlayer) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 		relic := &proto.Relic{
 			Tid:           relicDb.Tid,
 			SubAffixList:  make([]*proto.RelicAffix, 0),
-			BaseAvatarId:  relicDb.BaseAvatarId,
 			DressAvatarId: relicDb.BaseAvatarId,
 			UniqueId:      relicDb.UniqueId,
 			Level:         relicDb.Level,

@@ -90,9 +90,18 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_gateway_capture", c.Request.RemoteAddr)
 	gate := s.getGate()
-	if gate == nil {
+	if gate == nil && !s.IsPe {
 		s.ErrorGate(c)
 		return
+	}
+	var ip string
+	var port uint32
+	if s.IsPe {
+		ip = s.KcpIp
+		port = s.KcpPort
+	} else {
+		ip = gate.Ip
+		port = gate.Port
 	}
 	urlPath := c.Request.URL.RawQuery
 
@@ -118,8 +127,8 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 		logger.Error("", err)
 	}
 
-	dispatch.Ip = gate.Ip
-	dispatch.Port = gate.Port
+	dispatch.Ip = ip
+	dispatch.Port = port
 	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)
@@ -132,9 +141,18 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_gateway_capture", c.Request.RemoteAddr)
 	gate := s.getGate()
-	if gate == nil {
+	if gate == nil && !s.IsPe {
 		s.ErrorGate(c)
 		return
+	}
+	var ip string
+	var port uint32
+	if s.IsPe {
+		ip = s.KcpIp
+		port = s.KcpPort
+	} else {
+		ip = gate.Ip
+		port = gate.Port
 	}
 	urlPath := c.Request.URL.RawQuery
 
@@ -160,8 +178,8 @@ func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 		logger.Error("", err)
 	}
 
-	dispatch.Ip = gate.Ip
-	dispatch.Port = gate.Port
+	dispatch.Ip = ip
+	dispatch.Port = port
 	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)

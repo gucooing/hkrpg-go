@@ -12,7 +12,6 @@ import (
 func (g *GamePlayer) StaminaInfoScNotify() {
 	db := g.GetMaterialMap()
 	notify := &proto.StaminaInfoScNotify{
-		BKGMBHLJGDK:     time.Now().Unix() + 94,
 		NextRecoverTime: 0,
 		Stamina:         db[Stamina],
 		ReserveStamina:  db[RStamina],
@@ -137,7 +136,6 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 
 	rsp := &proto.GetPrivateChatHistoryScRsp{
 		ChatMessageList: make([]*proto.ChatMessageData, 0),
-		OLIGKFNJKMA:     0,
 		ContactId:       req.ContactId,
 		Retcode:         0,
 	}
@@ -198,8 +196,7 @@ func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg []byte) {
 				Key:  "2597701279",
 			},
 		},
-		Retcode:     0,
-		JGHFBNMOFDP: nil,
+		Retcode: 0,
 	}
 	g.Send(cmd.GetSecretKeyInfoScRsp, rsp)
 }
@@ -416,4 +413,22 @@ func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, nil)
 	// TODO 主动调用
 	g.HandleGetArchiveDataCsReq(nil)
+	g.ContentPackageSyncDataScNotify()
+}
+
+func (g *GamePlayer) ContentPackageSyncDataScNotify() {
+	notify := &proto.ContentPackageSyncDataScNotify{
+		Data: &proto.ContentPackageData{
+			ContentInfoList: make([]*proto.ContentInfo, 0),
+		},
+	}
+
+	for _, id := range []uint32{200001, 200002} { // TODO ContentPackageConfig.json
+		notify.Data.ContentInfoList = append(notify.Data.ContentInfoList, &proto.ContentInfo{
+			ContentId: id,
+			Status:    proto.ContentPackageStatus_ContentPackageStatus_Finished,
+		})
+	}
+
+	g.Send(cmd.ContentPackageSyncDataScNotify, notify)
 }

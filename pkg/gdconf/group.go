@@ -13,17 +13,20 @@ import (
 
 type LevelGroup struct {
 	GroupId              uint32
-	GroupName            string                `json:"GroupName"`
-	LoadSide             string                `json:"LoadSide"`             // 负载端
-	Category             string                `json:"Category"`             // 类别
-	LoadCondition        *LoadCondition        `json:"LoadCondition"`        // 加载条件
-	UnloadCondition      *UnloadCondition      `json:"UnloadCondition"`      // 卸载条件
-	ForceUnloadCondition *ForceUnloadCondition `json:"ForceUnloadCondition"` // 强制卸载条件
-	LoadOnInitial        bool                  `json:"LoadOnInitial"`        // 是否默认加载
-	PropList             []*PropList           `json:"PropList"`             // 实体列表
-	MonsterList          []*MonsterList        `json:"MonsterList"`          // 怪物列表
-	NPCList              []*NPCList            `json:"NPCList"`              // NPC列表
-	AnchorList           []*AnchorList         `json:"AnchorList"`           // 锚点列表
+	GroupName            string                 `json:"GroupName"`
+	LoadSide             string                 `json:"LoadSide"`             // 负载端
+	Category             string                 `json:"Category"`             // 类别
+	OwnerMainMissionID   uint32                 `json:"OwnerMainMissionID"`   // 主任务id
+	LoadCondition        *LoadCondition         `json:"LoadCondition"`        // 加载条件
+	UnloadCondition      *UnloadCondition       `json:"UnloadCondition"`      // 卸载条件
+	ForceUnloadCondition *ForceUnloadCondition  `json:"ForceUnloadCondition"` // 强制卸载条件
+	LoadOnInitial        bool                   `json:"LoadOnInitial"`        // 是否默认加载
+	PropList             []*PropList            `json:"PropList"`             // 实体列表
+	MonsterList          []*MonsterList         `json:"MonsterList"`          // 怪物列表
+	NPCList              []*NPCList             `json:"NPCList"`              // NPC列表
+	AnchorList           []*AnchorList          `json:"AnchorList"`           // 锚点列表
+	IsDId                bool                   `json:"-"`
+	DLevelGroup          map[uint32]*LevelGroup `json:"-"`
 }
 type LoadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
@@ -135,16 +138,16 @@ type StageObjectCapture struct {
 
 func (g *GameDataConfig) loadGroup() {
 	g.GroupMap = make(map[uint32]map[uint32]map[uint32]*LevelGroup)
-	playerElementsFilePath := g.configPrefix + "LevelOutput/Group"
+	playerElementsFilePath := g.configPrefix + "LevelOutput/SharedRuntimeGroup"
 	files, err := scanFiles(playerElementsFilePath)
 	if err != nil {
-		logger.Error("error LevelOutput/Group:", err)
+		logger.Error("error LevelOutput/SharedRuntimeGroup:", err)
 		return
 	}
 
 	for _, file := range files {
 		levelGroup := new(LevelGroup)
-		planeId, floorId, groupId := extractNumbers(filepath.Base(file))
+		planeId, floorId, groupId, dId := extractNumbers(filepath.Base(file))
 
 		playerElementsFile, err := os.ReadFile(file)
 		if err != nil {
@@ -165,8 +168,15 @@ func (g *GameDataConfig) loadGroup() {
 		if g.GroupMap[planeId][floorId] == nil {
 			g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
 		}
-
-		g.GroupMap[planeId][floorId][groupId] = levelGroup
+		if dId != 0 {
+			g.GroupMap[planeId][floorId][groupId].IsDId = true
+			if g.GroupMap[planeId][floorId][groupId].DLevelGroup == nil {
+				g.GroupMap[planeId][floorId][groupId].DLevelGroup = make(map[uint32]*LevelGroup)
+			}
+			g.GroupMap[planeId][floorId][groupId].DLevelGroup[dId] = levelGroup
+		} else {
+			g.GroupMap[planeId][floorId][groupId] = levelGroup
+		}
 	}
 
 	logger.Info("load %v Groups", len(g.GroupMap))
@@ -204,23 +214,29 @@ func scanFiles(dir string) ([]string, error) {
 	return files, nil
 }
 
-func extractNumbers(filename string) (uint32, uint32, uint32) {
+func extractNumbers(filename string) (uint32, uint32, uint32, uint32) {
 	filename = strings.TrimSuffix(filename, ".json")
 
+	var pValueStr, fValueStr, gValueStr, dValueStr string
 	parts := strings.Split(filename, "_")
-	if len(parts) != 4 {
-		return 0, 0, 0
+	if len(parts) == 4 {
+		pValueStr = strings.TrimLeft(parts[1], "P")
+		fValueStr = strings.TrimLeft(parts[2], "F")
+		gValueStr = strings.TrimLeft(parts[3], "G")
 	}
-
-	pValueStr := strings.TrimLeft(parts[1], "P")
-	fValueStr := strings.TrimLeft(parts[2], "F")
-	gValueStr := strings.TrimLeft(parts[3], "G")
+	if len(parts) == 5 {
+		pValueStr = strings.TrimLeft(parts[1], "P")
+		fValueStr = strings.TrimLeft(parts[2], "F")
+		gValueStr = strings.TrimLeft(parts[3], "G")
+		dValueStr = strings.TrimLeft(parts[4], "D")
+	}
 
 	pValue, _ := strconv.ParseUint(pValueStr, 10, 32)
 	fValue, _ := strconv.ParseUint(fValueStr, 10, 32)
 	gValue, _ := strconv.ParseUint(gValueStr, 10, 32)
+	dValue, _ := strconv.ParseUint(dValueStr, 10, 32)
 
-	return uint32(pValue), uint32(fValue), uint32(gValue)
+	return uint32(pValue), uint32(fValue), uint32(gValue), uint32(dValue)
 }
 
 func GetStateValue(state string) uint32 {

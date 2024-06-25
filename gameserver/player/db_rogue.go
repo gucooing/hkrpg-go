@@ -335,14 +335,15 @@ func (g *GamePlayer) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
 	if conf == nil {
 		return nil
 	}
-	db, poolRefreshed := g.GetRogueHistoryById(conf.SeasonId)
+	// db, poolRefreshed := g.GetRogueHistoryById(conf.SeasonId)
+	db, _ := g.GetRogueHistoryById(conf.SeasonId)
 	info := &proto.RogueScoreRewardInfo{
-		PoolId:                 20 + g.GetWorldLevel(),
-		EndTime:                conf.EndTime.Time.Unix(),
-		BeginTime:              conf.EndTime.Time.Unix(),
-		PoolRefreshed:          poolRefreshed, // 是否刷新
-		HasTakenInitialScore:   false,         // 是否已取得初始分数
-		ExploreScore:           db.Score,      // 本期分数
+		PoolId:    20 + g.GetWorldLevel(),
+		EndTime:   conf.EndTime.Time.Unix(),
+		BeginTime: conf.BeginTime.Time.Unix(),
+		// PoolRefreshed:          poolRefreshed, // 是否刷新
+		// HasTakenInitialScore:   false,         // 是否已取得初始分数
+		ExploreScore:           db.Score, // 本期分数
 		TakenNormalFreeRowList: make([]uint32, 0),
 	}
 	return info
@@ -362,7 +363,9 @@ func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
 }
 
 func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
-	info := &proto.RogueAreaInfo{RogueAreaList: make([]*proto.RogueArea, 0)}
+	info := &proto.RogueAreaInfo{
+		RogueAreaList: make([]*proto.RogueArea, 0),
+	}
 	conf := database.GetCurRogue()
 	if conf == nil {
 		return info
@@ -376,11 +379,10 @@ func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
 		RogueArea := &proto.RogueArea{
 			AreaId:     dbRogueArea.AreaId,
 			AreaStatus: proto.RogueAreaStatus(dbRogueArea.RogueAreaStatus),
-
-			MapId:           0,
-			HasTakenReward:  false,
-			RogueStatus:     0,
-			CurReachRoomNum: 0,
+			// MapId:           0,
+			HasTakenReward: false,
+			RogueStatus:    0,
+			// CurReachRoomNum: 0,
 		}
 		info.RogueAreaList = append(info.RogueAreaList, RogueArea)
 	}
@@ -458,7 +460,7 @@ func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
 
 func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
 	info := &proto.RogueVirtualItem{
-		Sus:        0,
+		// Sus:        0,
 		RogueMoney: g.GetMaterialById(Cf),
 	}
 
@@ -486,8 +488,8 @@ func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingActi
 
 func (g *GamePlayer) GetRogueMapRotateInfo() *proto.RogueMapRotateInfo {
 	info := &proto.RogueMapRotateInfo{
-		MapInfo:    nil,
-		Rotation:   0,
+		MapInfo: nil,
+		// Rotation:   0,
 		IsRotate:   false,
 		EnergyInfo: nil,
 	}

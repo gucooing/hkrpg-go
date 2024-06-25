@@ -13,6 +13,7 @@ const (
 	Challenge_1   = 1  // 第一个忘却之庭队伍
 	Challenge_2   = 2  // 第二个忘却之庭队伍
 	Rogue         = 3  // 第一个模拟宇宙队伍
+	RogueTourn    = 4  // 差分宇宙
 )
 
 func NewLineUp() *spb.LineUp {
@@ -247,7 +248,7 @@ func (g *GamePlayer) GetChallengeLineUp() *spb.Line {
 		return g.GetBattleLineUpById(Challenge_2)
 	default:
 		logger.Debug("[UID:%v]没有此忘却之庭队伍id:%v", g.Uid, challengeStatus.CurStage)
-		return nil
+		return g.GetCurLineUp()
 	}
 }
 
@@ -260,6 +261,20 @@ func (g *GamePlayer) AddLineUpMp(mp uint32) {
 	g.SyncLineupNotify(db.MainLineUp, false)
 }
 
+func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
+	db := g.GetBattleLineUpById(index)
+	db.LeaderSlot = 0
+	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
+	for id, avatarId := range avatarList {
+		db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}
+	}
+	for _, avatar := range avatarList {
+		avatarBin := g.GetAvatarBinById(avatar)
+		g.CopyBattleAvatar(avatarBin)
+	}
+	g.SyncLineupNotify(index, true)
+}
+
 /*****************************************功能方法****************************/
 
 func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
@@ -269,9 +284,6 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 	}
 	avatarList := make([]*proto.LineupAvatar, 0)
 	for slot, lineAvatar := range db.AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
-			continue
-		}
 		if wtmLeaderSlot {
 			db.LeaderSlot = slot
 		}
@@ -280,6 +292,9 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 		case spb.LineAvatarType_LineAvatarType_MI:
 			avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
 			if avatarBin == nil {
+				if slot == db.LeaderSlot {
+					wtmLeaderSlot = true
+				}
 				continue
 			}
 			lineupAvatar = &proto.LineupAvatar{
@@ -334,14 +349,16 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
 	case Rogue:
 		lineUpType = proto.ExtraLineupType_LINEUP_ROGUE
+	case RogueTourn:
+		lineUpType = proto.ExtraLineupType_LINEUP_TOURN_ROGUE
 	}
 	var wtmLeaderSlot = false
-	if db.AvatarIdList[db.LeaderSlot] == nil {
+	if db.AvatarIdList[db.LeaderSlot] == nil || db.AvatarIdList[db.LeaderSlot].AvatarId == 0 {
 		wtmLeaderSlot = true
 	}
 	avatarList := make([]*proto.LineupAvatar, 0)
 	for slot, lineAvatar := range db.AvatarIdList {
-		if lineAvatar == nil || lineAvatar.AvatarId == 0 {
+		if lineAvatar.AvatarId == 0 {
 			continue
 		}
 		if wtmLeaderSlot {

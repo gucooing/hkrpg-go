@@ -87,7 +87,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	}
 	var teleportToAnchor = false
 	rsp := &proto.PVEBattleResultScRsp{
-		BattleAvatarList: make([]*proto.BattleAvatar, 0),
+		AvatarBattleList: make([]*proto.BattleAvatar, 0),
 		BattleId:         req.BattleId,
 		StageId:          req.StageId,
 		EndStatus:        req.EndStatus, // 战斗结算状态

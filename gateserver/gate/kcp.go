@@ -154,12 +154,12 @@ func kcpNetInfo() {
 		<-ticker.C
 		snmp := kcp.DefaultSnmp.Copy()
 		kcpErrorCount += snmp.KCPInErrors
-		logger.Info("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
-		logger.Info("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
-		logger.Info("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
+		logger.Debug("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
+		logger.Debug("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
+		logger.Debug("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
 		clientConnNum := atomic.LoadInt32(&CLIENT_CONN_NUM)
-		logger.Info("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
-		logger.Info("QPS: %v /s", QPS/60)
+		logger.Debug("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
+		logger.Debug("QPS: %v /s", QPS/60)
 		QPS = 0
 		kcp.DefaultSnmp.Reset()
 	}

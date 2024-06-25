@@ -43,7 +43,7 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 			GachaId:            bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {
-			gachaInfoList.GachaInfoList = &proto.GachaCeiling{
+			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
 				// IsClaimed:  false, // 是否已领取自选
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
 				// CeilingNum: gacha.CeilingNum,
@@ -53,7 +53,7 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 					RepeatedCnt: 0,
 					AvatarId:    id,
 				}
-				gachaInfoList.GachaInfoList.AvatarList = append(gachaInfoList.GachaInfoList.AvatarList, avatarlist)
+				gachaInfoList.GachaCeiling.AvatarList = append(gachaInfoList.GachaCeiling.AvatarList, avatarlist)
 			}
 		} else {
 			gachaInfoList.BeginTime = bannerslist.BeginTime // 开始时间
@@ -74,7 +74,7 @@ func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 		// GachaType: req.GachaType,
 	}
 	list := []uint32{1003, 1101, 1211}
-	rsp.GachaInfoList = &proto.GachaCeiling{
+	rsp.GachaCeiling = &proto.GachaCeiling{
 		// IsClaimed:  false,
 		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
 		// CeilingNum: g.GetDbGacha(1001).CeilingNum,
@@ -84,7 +84,7 @@ func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 			RepeatedCnt: 0,
 			AvatarId:    id,
 		}
-		rsp.GachaInfoList.AvatarList = append(rsp.GachaInfoList.AvatarList, avatarlist)
+		rsp.GachaCeiling.AvatarList = append(rsp.GachaCeiling.AvatarList, avatarlist)
 	}
 
 	g.Send(cmd.GetGachaCeilingScRsp, rsp)
