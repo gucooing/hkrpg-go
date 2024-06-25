@@ -35,6 +35,7 @@ type LoadCondition struct {
 }
 type UnloadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
+	Operation          string        `json:"Operation"`
 	DelayToLevelReload bool          `json:"DelayToLevelReload"`
 }
 type ForceUnloadCondition struct {
@@ -248,11 +249,11 @@ func GetStateValue(state string) uint32 {
 		"BridgeState2":      4,
 		"BridgeState3":      5,
 		"BridgeState4":      6,
-		"CheckPointDisable": 8,
+		"CheckPointDisable": 8, // 锚点
 		"CheckPointEnable":  8,
 		"TriggerDisable":    9,
 		"TriggerEnable":     10,
-		"ChestLocked":       11,
+		"ChestLocked":       11, //  宝箱
 		"ChestClosed":       12,
 		"ChestUsed":         13,
 		"Elevator1":         14,

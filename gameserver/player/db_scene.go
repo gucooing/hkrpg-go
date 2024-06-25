@@ -322,23 +322,39 @@ func (g *GamePlayer) SetRot(x, y, z int32) {
 }
 
 func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
+	if levelGroup.GroupName == "TrainVisitorDemo" {
+		return false
+	}
+	switch levelGroup.Category {
+	case "": // 基础
+		return g.IfMissionLoadMap(levelGroup, true)
+	case "System": // 副本/关卡/等入口
+		return g.IfMissionLoadMap(levelGroup, true)
+	case "Atmosphere": // 特殊交互物品
+		return true
+	case "Custom": // 特殊环境场景:模拟宇宙等
+		return false
+	case "Mission": // 任务
+		return g.IfMissionLoadMap(levelGroup, false)
+	default:
+		logger.Warn("未知的地图类型 Category:%s", levelGroup.Category)
+		return false
+	}
+}
+
+func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsLoaded bool) bool {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
 	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
 	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
 	finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
-	isLoaded := true
-	if levelGroup.Category != "Mission" {
-		return true
-	}
+	isLoaded := mainIsLoaded
 	if levelGroup.OwnerMainMissionID != 0 {
-		if mainMissionList[levelGroup.OwnerMainMissionID] != nil {
-			return true
-		} else {
+		if mainMissionList[levelGroup.OwnerMainMissionID] == nil {
 			return false
 		}
 	}
 	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil {
-		return true
+		return isLoaded
 	}
 	// 检查强制卸载条件
 	// 检查加载条件
@@ -363,7 +379,6 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 				} else {
 					isLoaded = false
 				}
-
 			}
 			if conditions.Type == "" && conditions.Phase == "" { // 接取主线任务
 				if mainMissionList[conditions.ID] != nil {
@@ -380,13 +395,31 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 
 	// 检查卸载条件
 	if levelGroup.UnloadCondition != nil {
+		all := true
 		for _, conditions := range levelGroup.UnloadCondition.Conditions {
-			// if conditions.Phase == "Finish" { // 完成了这个任务
-			if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
-				isLoaded = false
-				break
+			if conditions.Phase == "Finish" { // 完成了这个任务
+				if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
+					if levelGroup.UnloadCondition.Operation == "Or" {
+						isLoaded = false
+						break
+					}
+				} else {
+					all = false
+				}
 			}
-			// }
+			if conditions.Phase == "" { // 接取了这个任务
+				if subMainMissionList[conditions.ID] != nil || mainMissionList[conditions.ID] != nil {
+					if levelGroup.UnloadCondition.Operation == "Or" {
+						isLoaded = false
+						break
+					}
+				} else {
+					all = false
+				}
+			}
+		}
+		if all {
+			isLoaded = false
 		}
 	}
 

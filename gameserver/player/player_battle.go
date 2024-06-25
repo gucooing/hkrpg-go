@@ -36,6 +36,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		// 这里的情况是角色释放技能
 		g.AddOnLineAvatarBuff(req.AttackedByEntityId, req.SkillIndex)
 	}
+	// 添加参与此次攻击的实体
 	mpem := &MPEM{
 		IsAvatar:        false,
 		MonsterEntityId: make([]uint32, 0),
@@ -43,18 +44,16 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		PropEntityId:    make([]uint32, 0),
 		PropId:          make([]uint32, 0),
 	}
-	// 添加参与此次攻击的实体
-	g.GetMem([]uint32{req.AttackedByEntityId, req.CastEntityId}, mpem)
+	// 怪物协助列表
+	g.GetMem([]uint32{req.AttackedByEntityId}, mpem)
 	if req.AssistMonsterEntityInfo != nil {
 		for _, info := range req.AssistMonsterEntityInfo {
 			g.GetMem(info.EntityIdList, mpem)
 		}
-	}
-	if req.AssistMonsterEntityIdList != nil {
-		g.GetMem(req.AssistMonsterEntityIdList, mpem)
-	}
-	if req.HitTargetEntityIdList != nil {
-		g.GetMem(req.HitTargetEntityIdList, mpem)
+	} else {
+		if req.AssistMonsterEntityIdList != nil {
+			g.GetMem(req.AssistMonsterEntityIdList, mpem)
+		}
 	}
 	if mpem.PropId != nil { // 物品效果
 		g.SceneCastSkillProp(mpem)

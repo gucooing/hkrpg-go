@@ -36,9 +36,9 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.TOKENHK }}
       with:
-        tag_name: v1.2.3
-        name: Release v1.2.3
-        body: sr 2.2.0最后的更新
+        tag_name: v1.3.0
+        name: Release v1.3.0
+        body: sr 2.3.0
         draft: false
         prerelease: false
         files: go/hkrpg/build/*
