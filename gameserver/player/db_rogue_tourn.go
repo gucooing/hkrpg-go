@@ -126,11 +126,13 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 		RogueTournCurAreaInfo: &proto.RogueTournCurAreaInfo{
 			FMCJCLEJCEJ: 84,
 			PNKJCLDGFFP: 3,
-			RogueCommonPendingAction: &proto.RogueCommonPendingAction{
+			PendingAction: &proto.RogueCommonPendingAction{
 				QueuePosition: 5,
 				RogueAction: &proto.RogueAction{
-					RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
-						SelectFormulaIdListFieldNumber: make([]uint32, 0), // []uint32{130906, 130809, 130408},
+					Action: &proto.RogueAction_RogueFormulaSelectInfo{
+						RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
+							SelectFormulaIdListFieldNumber: make([]uint32, 0), // []uint32{130906, 130809, 130408},
+						},
 					},
 				},
 			},
@@ -152,13 +154,14 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 			Lineup: &proto.ONJOOIHJHMG{
 				GMEDFPEGNBA: &proto.ItemCostData{ItemList: []*proto.ItemCost{
 					{
-						PileItem: &proto.PileItem{
-							ItemId:  Cf,
-							ItemNum: g.GetMaterialById(Cf),
+						ItemOneofCase: &proto.ItemCost_PileItem{
+							PileItem: &proto.PileItem{
+								ItemId:  Cf,
+								ItemNum: g.GetMaterialById(Cf),
+							},
 						},
 					},
-				},
-				},
+				}},
 			},
 			KPOCDJAAPOF: nil,
 			KeywordUnlockInfo: &proto.KeywordUnlockInfo{KeywordUnlockMap: map[uint32]bool{

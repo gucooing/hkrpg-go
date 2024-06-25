@@ -2,6 +2,7 @@ package gdconf
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -88,4 +89,9 @@ func GetBuffByIdAndLevel(id, level uint32) *RogueBuff {
 
 func GetRogueBuffByType() map[uint32]map[uint32][]uint32 {
 	return CONF.RogueBuffMap.RogueBuffByType
+}
+
+func GetRogueBuff() uint32 {
+	idIndex := rand.Intn(len(CONF.RogueBuffMap.StartId))
+	return CONF.RogueBuffMap.StartId[idIndex]
 }

@@ -87,7 +87,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetCurChallengeCsReq: g.GetCurChallengeCsReq,    // 获取忘却之庭状态
 		cmd.LeaveChallengeCsReq:  g.LeaveChallengeCsReq,     // 退出忘却之庭
 		// 末日之影
-		cmd.StartPartialChallengeCsReq:   g.StartPartialChallengeCsReq,   // 末日之影,启动!
+		cmd.StartPartialChallengeCsReq:   g.StartPartialChallengeCsReq,   // 末日幻影,二次启动!
 		cmd.EnterChallengeNextPhaseCsReq: g.EnterChallengeNextPhaseCsReq, // 前往下一节点
 		// 背包
 		cmd.GetBagCsReq:      g.HandleGetBagCsReq, // 获取背包物品
@@ -165,6 +165,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetNpcMessageGroupCsReq:           g.GetNpcMessageGroupCsReq,           // 获取npc聊天信息
 		cmd.FinishPerformSectionIdCsReq:       g.FinishPerformSectionIdCsReq,       // 完成npc聊天
 		cmd.GetNpcStatusCsReq:                 g.GetNpcStatusCsReq,                 // 获取npc聊天状态
+		// 乱七八糟
 	}
 }
 

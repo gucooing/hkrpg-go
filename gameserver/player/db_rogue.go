@@ -315,16 +315,16 @@ func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 
 func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 	info := &proto.RogueCurrentInfo{
-		// RogueAeonInfo: g.GetGameAeonInfo(),
-		// GameMiracleInfo:  g.GetGameMiracleInfo(),
-		// RogueLineupInfo:  g.GetRogueLineupInfo(),
-		Status: proto.RogueStatus_ROGUE_STATUS_DOING,
-		// MapInfo:          g.GetRogueMap(),
-		// PendingAction:    g.GetRogueCommonPendingAction(),
-		// IsWin:            false,
-		// ModuleInfo:       &proto.RogueModuleInfo{ModuleIdList: make([]uint32, 0)},
-		// RogueVirtualItem: g.GetRogueVirtualItem(),
-		// RogueBuffInfo:    g.GetRogueBuffInfo(),
+		RogueAeonInfo:    g.GetGameAeonInfo(),
+		GameMiracleInfo:  g.GetGameMiracleInfo(),
+		RogueLineupInfo:  g.GetRogueLineupInfo(),
+		Status:           proto.RogueStatus_ROGUE_STATUS_DOING,
+		MapInfo:          g.GetRogueMap(),
+		PendingAction:    g.GetRogueCommonPendingAction(),
+		IsWin:            false,
+		ModuleInfo:       &proto.RogueModuleInfo{ModuleIdList: make([]uint32, 0)},
+		RogueVirtualItem: g.GetRogueVirtualItem(),
+		RogueBuffInfo:    g.GetRogueBuffInfo(),
 	}
 
 	return info
@@ -401,41 +401,41 @@ func (g *GamePlayer) GetRogueAeonInfo() *proto.RogueAeonInfo {
 	return info
 }
 
-// func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
-// 	rogue := g.GetCurRogue()
-// 	info := &proto.GameAeonInfo{
-// 		IsUnlocked:             true,
-// 		UnlockedAeonEnhanceNum: 3,
-// 		AeonId:                 rogue.AeonId,
-// 	}
-// 	return info
-// }
+func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
+	rogue := g.GetCurRogue()
+	info := &proto.GameAeonInfo{
+		IsUnlocked:             true,
+		UnlockedAeonEnhanceNum: 3,
+		AeonId:                 rogue.AeonId,
+	}
+	return info
+}
 
-// func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
-// 	rogue := g.GetCurRogue()
-// 	roomMap := &proto.RogueMapInfo{
-// 		MapId:     rogue.RogueMapId,
-// 		AreaId:    rogue.CurAreaId,
-// 		CurSiteId: rogue.CurSiteId, // 当前id
-// 		CurRoomId: g.GetCurRogueRoomId(),
-// 		RoomList:  make([]*proto.RogueRoom, 0),
-// 	}
-// 	for id, rogueScene := range rogue.RogueRoomMap {
-// 		roomList := &proto.RogueRoom{
-// 			SiteId:    id,
-// 			RoomId:    rogueScene.RoomId,
-// 			CurStatus: proto.RogueRoomStatus(rogueScene.RoomStatus),
-// 		}
-// 		roomMap.RoomList = append(roomMap.RoomList, roomList)
-// 	}
-//
-// 	return roomMap
-// }
+func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
+	rogue := g.GetCurRogue()
+	roomMap := &proto.RogueMapInfo{
+		MapId:     rogue.RogueMapId,
+		AreaId:    rogue.CurAreaId,
+		CurSiteId: rogue.CurSiteId, // 当前id
+		CurRoomId: g.GetCurRogueRoomId(),
+		RoomList:  make([]*proto.RogueRoom, 0),
+	}
+	for id, rogueScene := range rogue.RogueRoomMap {
+		roomList := &proto.RogueRoom{
+			SiteId:    id,
+			RoomId:    rogueScene.RoomId,
+			CurStatus: proto.RogueRoomStatus(rogueScene.RoomStatus),
+		}
+		roomMap.RoomList = append(roomMap.RoomList, roomList)
+	}
+
+	return roomMap
+}
 
 func (g *GamePlayer) GetRogueLineupInfo() *proto.RogueLineupInfo {
 	info := &proto.RogueLineupInfo{
 		BaseAvatarIdList: make([]uint32, 0),
-		// ReviveInfo:       nil,
+		ReviveInfo:       nil,
 	}
 
 	lineup := g.GetBattleLineUpById(Rogue)
@@ -453,7 +453,7 @@ func (g *GamePlayer) GetRogueLineupInfo() *proto.RogueLineupInfo {
 
 func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
 	info := &proto.RogueBuffInfo{
-		// MazeBuffList: make([]*proto.RogueBuff, 0),
+		MazeBuffList: make([]*proto.RogueBuff, 0),
 	}
 	return info
 }
@@ -461,7 +461,7 @@ func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
 func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
 	info := &proto.RogueVirtualItem{
 		// Sus:        0,
-		// RogueMoney: g.GetMaterialById(Cf),
+		RogueMoney: g.GetMaterialById(Cf),
 	}
 
 	return info
@@ -469,32 +469,32 @@ func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
 
 func (g *GamePlayer) GetGameMiracleInfo() *proto.GameMiracleInfo {
 	info := &proto.GameMiracleInfo{
-		// GameMiracleInfo: &proto.RogueMiracleInfo{
-		// 	MiracleList: make([]*proto.RogueMiracle, 0),
-		// },
+		GameMiracleInfo: &proto.RogueMiracleInfo{
+			MiracleList: make([]*proto.RogueMiracle, 0),
+		},
 	}
 
 	return info
 }
 
-// func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingAction {
-// 	info := &proto.RogueCommonPendingAction{
-// 		QueuePosition: 0,
-// 		RogueAction:   &proto.RogueAction{},
-// 	}
-//
-// 	return info
-// }
+func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingAction {
+	info := &proto.RogueCommonPendingAction{
+		QueuePosition: 0,
+		RogueAction:   &proto.RogueAction{},
+	}
 
-// func (g *GamePlayer) GetRogueMapRotateInfo() *proto.RogueMapRotateInfo {
-// 	info := &proto.RogueMapRotateInfo{
-// 		MapInfo:    nil,
-// 		Rotation:   0,
-// 		IsRotate:   false,
-// 		EnergyInfo: nil,
-// 	}
-// 	return info
-// }
+	return info
+}
+
+func (g *GamePlayer) GetRogueMapRotateInfo() *proto.RogueMapRotateInfo {
+	info := &proto.RogueMapRotateInfo{
+		MapInfo: nil,
+		// Rotation:   0,
+		IsRotate:   false,
+		EnergyInfo: nil,
+	}
+	return info
+}
 
 func (g *GamePlayer) GetCurRogueBuff() []*proto.BattleBuff {
 	buffList := make([]*proto.BattleBuff, 0)
