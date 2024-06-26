@@ -66,7 +66,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SceneEnterStageCsReq:  g.SceneEnterStageCsReq,  // 场景直接发起战斗
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
-		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙状态
+		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期
 		cmd.GetRogueInitialScoreCsReq:           g.GetRogueInitialScoreCsReq,           // 查询模拟宇宙当前分数
 		cmd.GetRogueTalentInfoCsReq:             g.GetRogueTalentInfoCsReq,             // 获取天赋信息
 		cmd.GetRogueInfoCsReq:                   g.GetRogueInfoCsReq,                   // 获取模拟宇宙
@@ -81,6 +81,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.RogueTournQueryCsReq:                  g.RogueTournQueryCsReq,                  // 获取差分宇宙信息
 		cmd.RogueTournGetPermanentTalentInfoCsReq: g.RogueTournGetPermanentTalentInfoCsReq, // 获取差分宇宙灵感回路
 		cmd.RogueTournStartCsReq:                  g.RogueTournStartCsReq,                  // 差分宇宙.启动!
+		cmd.RogueTournGetMiscRealTimeDataCsReq:    g.RogueTournGetMiscRealTimeDataCsReq,    // 获取差分宇宙实时信息
 		// 忘却之庭
 		cmd.GetChallengeCsReq:    g.HandleGetChallengeCsReq, // 获取忘却之庭挑战完成信息
 		cmd.StartChallengeCsReq:  g.StartChallengeCsReq,     // 忘却之庭,启动!
@@ -127,6 +128,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetVideoVersionKeyCsReq:  g.GetVideoVersionKeyCsReq, // 获取key
 		cmd.GetSecretKeyInfoCsReq:    g.GetSecretKeyInfoCsReq,   // key
 		// 活动
+		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
 		cmd.GetDailyActiveInfoCsReq:        g.GetDailyActiveInfoCsReq,              // 每日任务
 		cmd.GetLoginActivityCsReq:          g.GetLoginActivityCsReq,                // 登录活动完成情况
@@ -135,25 +137,26 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.TakeLoginActivityRewardCsReq:   g.TakeLoginActivityRewardCsReq,         // 领取登录活动奖励
 		cmd.TakeTrialActivityRewardCsReq:   g.TakeTrialActivityRewardCsReq,         // 角色试用奖励领取
 		// 基础
-		cmd.SetClientPausedCsReq:       g.SetClientPausedCsReq,          // 客户端暂停请求
-		cmd.SyncClientResVersionCsReq:  g.SyncClientResVersionCsReq,     // 版本同步
-		cmd.GetAssistHistoryCsReq:      g.HandleGetAssistHistoryCsReq,   // 漫游签证
-		cmd.SetHeadIconCsReq:           g.SetHeadIconCsReq,              // 切换头像
-		cmd.SetHeroBasicTypeCsReq:      g.SetHeroBasicTypeCsReq,         // 切换主角类型
-		cmd.SetNicknameCsReq:           g.SetNicknameCsReq,              // 修改昵称请求
-		cmd.SetGameplayBirthdayCsReq:   g.SetGameplayBirthdayCsReq,      // 修改生日请求
-		cmd.SetSignatureCsReq:          g.SetSignatureCsReq,             // 简介修改请求
-		cmd.GetPlayerBoardDataCsReq:    g.HandleGetPlayerBoardDataCsReq, // 获取角色名片页信息
-		cmd.GetFarmStageGachaInfoCsReq: g.GetFarmStageGachaInfoCsReq,    // 获取怪物刷新情况
-		cmd.GetTutorialCsReq:           g.GetTutorialCsReq,              // 获取新手教程状态
-		cmd.GetTutorialGuideCsReq:      g.GetTutorialGuideCsReq,         // 获取教程指南
-		cmd.UnlockTutorialCsReq:        g.UnlockTutorialCsReq,           // 教程解锁
-		cmd.UnlockTutorialGuideCsReq:   g.UnlockTutorialGuideCsReq,      // 解锁指南
-		cmd.FinishTutorialCsReq:        g.FinishTutorialCsReq,           // 完成教程
-		cmd.FinishTutorialGuideCsReq:   g.FinishTutorialGuideCsReq,      // 完成指南
-		cmd.SetPlayerInfoCsReq:         g.SetPlayerInfoCsReq,            // 新手设置名字
-		cmd.PlayerHeartBeatCsReq:       g.HandlePlayerHeartBeatCsReq,    // 玩家ping包
-		cmd.GetSpringRecoverDataCsReq:  g.GetSpringRecoverDataCsReq,     // 恢复
+		cmd.SetClientPausedCsReq:         g.SetClientPausedCsReq,          // 客户端暂停请求
+		cmd.SyncClientResVersionCsReq:    g.SyncClientResVersionCsReq,     // 版本同步
+		cmd.GetAssistHistoryCsReq:        g.HandleGetAssistHistoryCsReq,   // 漫游签证
+		cmd.SetHeadIconCsReq:             g.SetHeadIconCsReq,              // 切换头像
+		cmd.SetHeroBasicTypeCsReq:        g.SetHeroBasicTypeCsReq,         // 切换主角类型
+		cmd.SetNicknameCsReq:             g.SetNicknameCsReq,              // 修改昵称请求
+		cmd.SetGameplayBirthdayCsReq:     g.SetGameplayBirthdayCsReq,      // 修改生日请求
+		cmd.SetSignatureCsReq:            g.SetSignatureCsReq,             // 简介修改请求
+		cmd.GetPlayerBoardDataCsReq:      g.HandleGetPlayerBoardDataCsReq, // 获取角色名片页信息
+		cmd.GetFarmStageGachaInfoCsReq:   g.GetFarmStageGachaInfoCsReq,    // 获取怪物刷新情况
+		cmd.GetTutorialCsReq:             g.GetTutorialCsReq,              // 获取新手教程状态
+		cmd.GetTutorialGuideCsReq:        g.GetTutorialGuideCsReq,         // 获取教程指南
+		cmd.UnlockTutorialCsReq:          g.UnlockTutorialCsReq,           // 教程解锁
+		cmd.UnlockTutorialGuideCsReq:     g.UnlockTutorialGuideCsReq,      // 解锁指南
+		cmd.FinishTutorialCsReq:          g.FinishTutorialCsReq,           // 完成教程
+		cmd.FinishTutorialGuideCsReq:     g.FinishTutorialGuideCsReq,      // 完成指南
+		cmd.SetPlayerInfoCsReq:           g.SetPlayerInfoCsReq,            // 新手设置名字
+		cmd.PlayerHeartBeatCsReq:         g.HandlePlayerHeartBeatCsReq,    // 玩家ping包
+		cmd.GetSpringRecoverDataCsReq:    g.GetSpringRecoverDataCsReq,     // 恢复
+		cmd.GetLevelRewardTakenListCsReq: g.GetLevelRewardTakenListCsReq,  // 等级奖励领取情况
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集

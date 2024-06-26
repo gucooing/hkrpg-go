@@ -82,6 +82,7 @@ type GameDataConfig struct {
 	AvatarMazeBuffMap            map[uint32]map[uint32]*AvatarMazeBuff           // 角色场景技能效果
 	RogueTournPermanentTalentMap map[uint32]*RogueTournPermanentTalent           // 灵感回路信息
 	RogueTournDifficultyCompMap  map[uint32]*RogueTournDifficultyComp            // 差分宇宙难度
+	RogueTournFormulaMap         map[uint32]*RogueTournFormula                   // 差分宇宙方程
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -201,6 +202,7 @@ func (g *GameDataConfig) load() {
 	g.loadAvatarMazeBuff()            // 角色场景技能效果
 	g.loadRogueTournPermanentTalent() // 灵感回路信息
 	g.loadRogueTournDifficultyComp()  // 差分宇宙难度
+	g.loadRogueTournFormula()         // 差分宇宙方程
 	// 下面是预处理
 	g.goppServerGroup() // 预处理服务器场景
 	g.goppTeleports()   // 预处理传送锚点

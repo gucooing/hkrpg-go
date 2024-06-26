@@ -432,3 +432,10 @@ func (g *GamePlayer) ContentPackageSyncDataScNotify() {
 
 	g.Send(cmd.ContentPackageSyncDataScNotify, notify)
 }
+
+func (g *GamePlayer) GetLevelRewardTakenListCsReq(payloadMsg []byte) {
+	rsp := &proto.GetLevelRewardTakenListScRsp{
+		LevelRewardTakenList: make([]uint32, 0),
+	}
+	g.Send(cmd.GetLevelRewardTakenListScRsp, rsp)
+}

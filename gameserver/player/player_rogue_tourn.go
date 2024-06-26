@@ -32,6 +32,11 @@ func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.RogueTournGetPermanentTalentInfoScRsp, rsp)
 }
 
+func (g *GamePlayer) RogueTournGetMiscRealTimeDataCsReq(payloadMsg []byte) {
+	rsp := &proto.RogueTournGetMiscRealTimeDataScRsp{}
+	g.Send(cmd.RogueTournGetMiscRealTimeDataScRsp, rsp)
+}
+
 func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RogueTournStartCsReq, payloadMsg)
 	req := msg.(*proto.RogueTournStartCsReq)
@@ -64,7 +69,7 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 
 	rsp.RogueTournCurSceneInfo = &proto.RogueTournCurSceneInfo{
 		Lineup: g.GetBattleLineUpPb(RogueTourn),
-		Scene:  g.GetRogueTournScene(8040701),
+		Scene:  g.GetRogueTournScene(8040601),
 		// FFKCPBBDCGL: nil,
 	}
 	rsp.RogueTournCurInfo = g.GetRogueTournCurInfo()

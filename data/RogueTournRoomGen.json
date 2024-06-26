@@ -1,0 +1,762 @@
+{
+  "11011013": {
+    "RogueRoomID": 11011013,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040101,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "181": 0,
+      "189": 0,
+      "190": 0,
+      "74": 0,
+      "75": 0,
+      "76": 0
+    },
+    "NpcMonster": {
+      "181": {},
+      "189": {},
+      "190": {},
+      "74": {},
+      "75": {},
+      "76": {
+        "200001": {
+          "RogueMonsterID": 3004121,
+          "NpcMonsterID": 3003053,
+          "EventID": 83004121
+        }
+      }
+    }
+  },
+  "11012011": {
+    "RogueRoomID": 11012011,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040201,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "10": 0,
+      "11": 0,
+      "70": 0,
+      "9": 0
+    },
+    "NpcMonster": {
+      "10": {},
+      "11": {
+        "200001": {
+          "RogueMonsterID": 3002141,
+          "NpcMonsterID": 2023030,
+          "EventID": 83002141
+        }
+      },
+      "70": {},
+      "9": {}
+    }
+  },
+  "11013012": {
+    "RogueRoomID": 11013012,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "46": 0,
+      "47": 0,
+      "48": 0
+    },
+    "NpcMonster": {
+      "46": {},
+      "47": {},
+      "48": {
+        "200001": {
+          "RogueMonsterID": 3003201,
+          "NpcMonsterID": 3003032,
+          "EventID": 83003201
+        }
+      }
+    }
+  },
+  "11013013": {
+    "RogueRoomID": 11013013,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "46": 0,
+      "47": 0,
+      "48": 0
+    },
+    "NpcMonster": {
+      "46": {},
+      "47": {},
+      "48": {
+        "200001": {
+          "RogueMonsterID": 3004131,
+          "NpcMonsterID": 2024021,
+          "EventID": 83004131
+        }
+      }
+    }
+  },
+  "11014012": {
+    "RogueRoomID": 11014012,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040401,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "76": 0
+    },
+    "NpcMonster": {
+      "14": {},
+      "15": {},
+      "16": {
+        "200001": {
+          "RogueMonsterID": 3003221,
+          "NpcMonsterID": 3003052,
+          "EventID": 83003221
+        }
+      },
+      "76": {}
+    }
+  },
+  "11015011": {
+    "RogueRoomID": 11015011,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040501,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "27": 0,
+      "28": 0,
+      "29": 0,
+      "78": 0,
+      "79": 0
+    },
+    "NpcMonster": {
+      "27": {},
+      "28": {},
+      "29": {
+        "200001": {
+          "RogueMonsterID": 3002221,
+          "NpcMonsterID": 3003050,
+          "EventID": 83002221
+        }
+      },
+      "78": {},
+      "79": {}
+    }
+  },
+  "11015013": {
+    "RogueRoomID": 11015013,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040501,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "27": 0,
+      "28": 0,
+      "29": 0,
+      "78": 0,
+      "79": 0
+    },
+    "NpcMonster": {
+      "27": {},
+      "28": {},
+      "29": {
+        "200001": {
+          "RogueMonsterID": 3004071,
+          "NpcMonsterID": 8024010,
+          "EventID": 83004071
+        }
+      },
+      "78": {},
+      "79": {}
+    }
+  },
+  "11016012": {
+    "RogueRoomID": 11016012,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040601,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "10": 0,
+      "11": 0,
+      "12": 0
+    },
+    "NpcMonster": {
+      "10": {},
+      "11": {},
+      "12": {
+        "200001": {
+          "RogueMonsterID": 3003201,
+          "NpcMonsterID": 3003032,
+          "EventID": 83003201
+        }
+      }
+    }
+  },
+  "11017011": {
+    "RogueRoomID": 11017011,
+    "RogueRoomType": 1,
+    "MapEntrance": 8040701,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "110": 0,
+      "31": 0,
+      "32": 0,
+      "33": 0
+    },
+    "NpcMonster": {
+      "110": {},
+      "31": {},
+      "32": {},
+      "33": {
+        "200001": {
+          "RogueMonsterID": 3002121,
+          "NpcMonsterID": 2023010,
+          "EventID": 83002121
+        }
+      }
+    }
+  },
+  "11034012": {
+    "RogueRoomID": 11034012,
+    "RogueRoomType": 3,
+    "MapEntrance": 8040401,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "37": 0,
+      "38": 0,
+      "43": 0,
+      "44": 0,
+      "45": 0,
+      "76": 0
+    },
+    "NpcMonster": {
+      "37": {},
+      "38": {},
+      "43": {
+        "200001": {
+          "RogueMonsterID": 3000061,
+          "NpcMonsterID": 1012030,
+          "EventID": 83000061
+        }
+      },
+      "44": {
+        "200001": {
+          "RogueMonsterID": 3000095,
+          "NpcMonsterID": 3012040,
+          "EventID": 83000095
+        }
+      },
+      "45": {
+        "200001": {
+          "RogueMonsterID": 3000105,
+          "NpcMonsterID": 3002030,
+          "EventID": 83000105
+        }
+      },
+      "76": {}
+    }
+  },
+  "11037011": {
+    "RogueRoomID": 11037011,
+    "RogueRoomType": 3,
+    "MapEntrance": 8040701,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "110": 0,
+      "45": 0,
+      "46": 0,
+      "51": 0,
+      "52": 0,
+      "53": 0
+    },
+    "NpcMonster": {
+      "110": {},
+      "45": {},
+      "46": {},
+      "51": {
+        "200001": {
+          "RogueMonsterID": 3000014,
+          "NpcMonsterID": 3001010,
+          "EventID": 83000014
+        }
+      },
+      "52": {
+        "200001": {
+          "RogueMonsterID": 3000041,
+          "NpcMonsterID": 1012020,
+          "EventID": 83000041
+        }
+      },
+      "53": {
+        "200001": {
+          "RogueMonsterID": 3000055,
+          "NpcMonsterID": 3002040,
+          "EventID": 83000055
+        }
+      }
+    }
+  },
+  "11046012": {
+    "RogueRoomID": 11046012,
+    "RogueRoomType": 4,
+    "MapEntrance": 8040601,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "22": 0,
+      "23": 0,
+      "25": 0,
+      "26": 0
+    },
+    "NpcMonster": {
+      "22": {},
+      "23": {},
+      "25": {},
+      "26": {}
+    }
+  },
+  "11083013": {
+    "RogueRoomID": 11083013,
+    "RogueRoomType": 8,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "57": 0,
+      "58": 0,
+      "61": 0,
+      "62": 0
+    },
+    "NpcMonster": {
+      "57": {},
+      "58": {},
+      "61": {},
+      "62": {}
+    }
+  },
+  "11098010": {
+    "RogueRoomID": 11098010,
+    "RogueRoomType": 9,
+    "MapEntrance": 8040801,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "17": 0,
+      "26": 0,
+      "4": 0,
+      "5": 0
+    },
+    "NpcMonster": {
+      "17": {},
+      "26": {},
+      "4": {},
+      "5": {}
+    }
+  },
+  "11098060": {
+    "RogueRoomID": 11098060,
+    "RogueRoomType": 9,
+    "MapEntrance": 8040806,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "11": 0,
+      "12": 0,
+      "9": 0
+    },
+    "NpcMonster": {
+      "11": {},
+      "12": {},
+      "9": {}
+    }
+  },
+  "21034012": {
+    "RogueRoomID": 21034012,
+    "RogueRoomType": 3,
+    "MapEntrance": 8040401,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "55": 0,
+      "56": 0,
+      "61": 0,
+      "62": 0,
+      "63": 0,
+      "76": 0
+    },
+    "NpcMonster": {
+      "55": {},
+      "56": {},
+      "61": {
+        "200001": {
+          "RogueMonsterID": 3000072,
+          "NpcMonsterID": 2011020,
+          "EventID": 83000072
+        }
+      },
+      "62": {
+        "200001": {
+          "RogueMonsterID": 3000085,
+          "NpcMonsterID": 3002010,
+          "EventID": 83000085
+        }
+      },
+      "63": {
+        "200001": {
+          "RogueMonsterID": 3000091,
+          "NpcMonsterID": 1002020,
+          "EventID": 83000091
+        }
+      },
+      "76": {}
+    }
+  },
+  "21036012": {
+    "RogueRoomID": 21036012,
+    "RogueRoomType": 3,
+    "MapEntrance": 8040601,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "58": 0,
+      "59": 0,
+      "64": 0,
+      "65": 0,
+      "66": 0
+    },
+    "NpcMonster": {
+      "58": {},
+      "59": {},
+      "64": {
+        "200001": {
+          "RogueMonsterID": 3001011,
+          "NpcMonsterID": 8002060,
+          "EventID": 83001011
+        }
+      },
+      "65": {
+        "200001": {
+          "RogueMonsterID": 3001214,
+          "NpcMonsterID": 8002080,
+          "EventID": 83001214
+        }
+      },
+      "66": {
+        "200001": {
+          "RogueMonsterID": 3001202,
+          "NpcMonsterID": 8002080,
+          "EventID": 83001202
+        }
+      }
+    }
+  },
+  "21037011": {
+    "RogueRoomID": 21037011,
+    "RogueRoomType": 3,
+    "MapEntrance": 8040701,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "110": 0,
+      "63": 0,
+      "64": 0,
+      "69": 0,
+      "70": 0,
+      "71": 0
+    },
+    "NpcMonster": {
+      "110": {},
+      "63": {},
+      "64": {},
+      "69": {
+        "200001": {
+          "RogueMonsterID": 3000021,
+          "NpcMonsterID": 8001010,
+          "EventID": 83000021
+        }
+      },
+      "70": {
+        "200001": {
+          "RogueMonsterID": 3000035,
+          "NpcMonsterID": 3002020,
+          "EventID": 83000035
+        }
+      },
+      "71": {
+        "200001": {
+          "RogueMonsterID": 3000045,
+          "NpcMonsterID": 3001010,
+          "EventID": 83000045
+        }
+      }
+    }
+  },
+  "21052011": {
+    "RogueRoomID": 21052011,
+    "RogueRoomType": 5,
+    "MapEntrance": 8040201,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "47": 0,
+      "48": 0,
+      "51": 0,
+      "52": 0,
+      "70": 0
+    },
+    "NpcMonster": {
+      "47": {},
+      "48": {},
+      "51": {},
+      "52": {},
+      "70": {}
+    }
+  },
+  "21053012": {
+    "RogueRoomID": 21053012,
+    "RogueRoomType": 5,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "67": 0,
+      "68": 0,
+      "71": 0,
+      "72": 0
+    },
+    "NpcMonster": {
+      "67": {},
+      "68": {},
+      "71": {},
+      "72": {}
+    }
+  },
+  "21055011": {
+    "RogueRoomID": 21055011,
+    "RogueRoomType": 5,
+    "MapEntrance": 8040501,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "41": 0,
+      "42": 0,
+      "44": 0,
+      "45": 0,
+      "78": 0,
+      "79": 0
+    },
+    "NpcMonster": {
+      "41": {},
+      "42": {},
+      "44": {},
+      "45": {},
+      "78": {},
+      "79": {}
+    }
+  },
+  "21056012": {
+    "RogueRoomID": 21056012,
+    "RogueRoomType": 5,
+    "MapEntrance": 8040601,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "31": 0,
+      "32": 0,
+      "34": 0,
+      "35": 0
+    },
+    "NpcMonster": {
+      "31": {},
+      "32": {},
+      "34": {},
+      "35": {}
+    }
+  },
+  "21087011": {
+    "RogueRoomID": 21087011,
+    "RogueRoomType": 8,
+    "MapEntrance": 8040701,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "110": 0,
+      "54": 0,
+      "55": 0,
+      "57": 0,
+      "58": 0
+    },
+    "NpcMonster": {
+      "110": {},
+      "54": {},
+      "55": {},
+      "57": {},
+      "58": {}
+    }
+  },
+  "31033012": {
+    "RogueRoomID": 31033012,
+    "RogueRoomType": 3,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "77": 0,
+      "78": 0,
+      "84": 0,
+      "85": 0,
+      "86": 0
+    },
+    "NpcMonster": {
+      "77": {},
+      "78": {},
+      "84": {
+        "200001": {
+          "RogueMonsterID": 3000065,
+          "NpcMonsterID": 3001020,
+          "EventID": 83000065
+        }
+      },
+      "85": {
+        "200001": {
+          "RogueMonsterID": 3000095,
+          "NpcMonsterID": 3012040,
+          "EventID": 83000095
+        }
+      },
+      "86": {
+        "200001": {
+          "RogueMonsterID": 3000102,
+          "NpcMonsterID": 8002010,
+          "EventID": 83000102
+        }
+      }
+    }
+  },
+  "31046012": {
+    "RogueRoomID": 31046012,
+    "RogueRoomType": 4,
+    "MapEntrance": 8040601,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "49": 0,
+      "50": 0,
+      "52": 0,
+      "53": 0
+    },
+    "NpcMonster": {
+      "49": {},
+      "50": {},
+      "52": {},
+      "53": {}
+    }
+  },
+  "41043013": {
+    "RogueRoomID": 41043013,
+    "RogueRoomType": 4,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "87": 0,
+      "88": 0,
+      "91": 0,
+      "92": 0
+    },
+    "NpcMonster": {
+      "87": {},
+      "88": {},
+      "91": {},
+      "92": {}
+    }
+  },
+  "41081013": {
+    "RogueRoomID": 41081013,
+    "RogueRoomType": 8,
+    "MapEntrance": 8040101,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "115": 0,
+      "116": 0,
+      "119": 0,
+      "120": 0,
+      "181": 0,
+      "189": 0,
+      "190": 0
+    },
+    "NpcMonster": {
+      "115": {},
+      "116": {},
+      "119": {},
+      "120": {},
+      "181": {},
+      "189": {},
+      "190": {}
+    }
+  },
+  "41085011": {
+    "RogueRoomID": 41085011,
+    "RogueRoomType": 8,
+    "MapEntrance": 8040501,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "59": 0,
+      "60": 0,
+      "62": 0,
+      "63": 0,
+      "78": 0,
+      "79": 0
+    },
+    "NpcMonster": {
+      "59": {},
+      "60": {},
+      "62": {},
+      "63": {},
+      "78": {},
+      "79": {}
+    }
+  },
+  "51053012": {
+    "RogueRoomID": 51053012,
+    "RogueRoomType": 5,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "113": 0,
+      "114": 0,
+      "115": 0,
+      "116": 0
+    },
+    "NpcMonster": {
+      "113": {},
+      "114": {},
+      "115": {},
+      "116": {}
+    }
+  },
+  "51086012": {
+    "RogueRoomID": 51086012,
+    "RogueRoomType": 8,
+    "MapEntrance": 8040601,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "67": 0,
+      "68": 0,
+      "70": 0,
+      "71": 0
+    },
+    "NpcMonster": {
+      "67": {},
+      "68": {},
+      "70": {},
+      "71": {}
+    }
+  },
+  "61047011": {
+    "RogueRoomID": 61047011,
+    "RogueRoomType": 4,
+    "MapEntrance": 8040701,
+    "GroupID": 0,
+    "GroupWithContent": {
+      "100": 0,
+      "102": 0,
+      "103": 0,
+      "110": 0,
+      "99": 0
+    },
+    "NpcMonster": {
+      "100": {},
+      "102": {},
+      "103": {},
+      "110": {},
+      "99": {}
+    }
+  }
+}

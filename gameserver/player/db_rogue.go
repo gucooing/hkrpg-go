@@ -373,8 +373,8 @@ func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
 		return nil
 	}
 	info := &proto.RogueSeasonInfo{
-		EndTime:   conf.EndTime.Time.Unix(),
-		BeginTime: conf.EndTime.Time.Unix(),
+		EndTime:   4070894399,
+		BeginTime: 1711310400,
 		Season:    conf.SeasonId,
 	}
 	return info
