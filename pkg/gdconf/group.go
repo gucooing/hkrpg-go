@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -146,41 +147,57 @@ func (g *GameDataConfig) loadGroup() {
 		return
 	}
 
+	syncs := sync.Mutex{}
+	wg := sync.WaitGroup{}
+
 	for _, file := range files {
-		levelGroup := new(LevelGroup)
-		planeId, floorId, groupId, dId := extractNumbers(filepath.Base(file))
+		wg.Add(1)
+		go func() {
+			levelGroup := new(LevelGroup)
+			planeId, floorId, groupId, dId := extractNumbers(filepath.Base(file))
 
-		playerElementsFile, err := os.ReadFile(file)
-		if err != nil {
-			info := fmt.Sprintf("open file error: %v", err)
-			panic(info)
-		}
-
-		err = hjson.Unmarshal(playerElementsFile, levelGroup)
-		if err != nil {
-			info := fmt.Sprintf("parse file error: %v", err)
-			panic(info)
-		}
-		levelGroup.GroupId = groupId
-
-		if g.GroupMap[planeId] == nil {
-			g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
-		}
-		if g.GroupMap[planeId][floorId] == nil {
-			g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
-		}
-		if dId != 0 {
-			g.GroupMap[planeId][floorId][groupId].IsDId = true
-			if g.GroupMap[planeId][floorId][groupId].DLevelGroup == nil {
-				g.GroupMap[planeId][floorId][groupId].DLevelGroup = make(map[uint32]*LevelGroup)
+			playerElementsFile, err := os.ReadFile(file)
+			if err != nil {
+				info := fmt.Sprintf("open file error: %v", err)
+				panic(info)
 			}
-			g.GroupMap[planeId][floorId][groupId].DLevelGroup[dId] = levelGroup
-		} else {
-			g.GroupMap[planeId][floorId][groupId] = levelGroup
-		}
+
+			err = hjson.Unmarshal(playerElementsFile, levelGroup)
+			if err != nil {
+				info := fmt.Sprintf("parse file error: %v", err)
+				panic(info)
+			}
+			levelGroup.GroupId = groupId
+
+			syncs.Lock()
+			if g.GroupMap[planeId] == nil {
+				g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
+			}
+			if g.GroupMap[planeId][floorId] == nil {
+				g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
+			}
+			if g.GroupMap[planeId][floorId][groupId] != nil {
+				levelGroup.IsDId = true
+				levelGroup.DLevelGroup = g.GroupMap[planeId][floorId][groupId].DLevelGroup
+			}
+			if dId != 0 {
+				g.GroupMap[planeId][floorId][groupId] = levelGroup
+				g.GroupMap[planeId][floorId][groupId].IsDId = true
+				if g.GroupMap[planeId][floorId][groupId].DLevelGroup == nil {
+					g.GroupMap[planeId][floorId][groupId].DLevelGroup = make(map[uint32]*LevelGroup)
+				}
+				g.GroupMap[planeId][floorId][groupId].DLevelGroup[dId] = levelGroup
+			} else {
+				g.GroupMap[planeId][floorId][groupId] = levelGroup
+			}
+			syncs.Unlock()
+			wg.Done()
+		}()
 	}
 
+	wg.Wait()
 	logger.Info("load %v Groups", len(g.GroupMap))
+	g.wg.Done()
 }
 
 func GetNGroupById(planeId, floorId, groupId uint32) *LevelGroup {

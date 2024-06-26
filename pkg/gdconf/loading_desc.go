@@ -33,6 +33,7 @@ func (g *GameDataConfig) loadLoadingDesc() {
 	}
 
 	logger.Info("load %v LoadingDesc", len(g.LoadingDescMap))
+	g.wg.Done()
 }
 
 func GetLoadingDesc() uint32 {

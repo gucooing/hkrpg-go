@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -107,45 +108,64 @@ func (g *GameDataConfig) goppMainMission() {
 		GoppSubMainMission: make(map[uint32]*SubMission),
 	}
 
-	for id := range GetMainMission() {
-		goppMainMission := new(GoppMainMission)
-		playerElementsFilePath := g.configPrefix + "Level/Mission/" + strconv.Itoa(int(id)) + "/MissionInfo_" + strconv.Itoa(int(id)) + ".json"
-		playerElementsFile, err := os.ReadFile(playerElementsFilePath)
-		if err != nil {
-			logger.Debug("open MainMission error: %v", err)
-			continue
-		}
-		err = hjson.Unmarshal(playerElementsFile, &goppMainMission)
-		if err != nil {
-			info := fmt.Sprintf("parse MainMission error: %v", err)
-			panic(info)
-		}
-		if g.GoppMission.GoppMainMission == nil {
-			g.GoppMission.GoppMainMission = make(map[uint32]*GoppMainMission)
-		}
-		g.GoppMission.GoppMainMission[id] = goppMainMission
+	mainsync := sync.Mutex{}
+	subsync := sync.Mutex{}
+	wg := sync.WaitGroup{}
 
-		for _, subMission := range goppMainMission.SubMissionList {
-			if g.GoppMission.GoppSubMainMission == nil {
-				g.GoppMission.GoppSubMainMission = make(map[uint32]*SubMission)
+	for id := range GetMainMission() {
+		wg.Add(1)
+		go func() {
+			goppMainMission := new(GoppMainMission)
+			playerElementsFilePath := g.configPrefix + "Level/Mission/" + strconv.Itoa(int(id)) + "/MissionInfo_" + strconv.Itoa(int(id)) + ".json"
+			playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+			if err != nil {
+				logger.Debug("open MainMission error: %v", err)
+				wg.Done()
+				return
 			}
-			if g.GoppMission.GoppMissionJson == nil {
-				g.GoppMission.GoppMissionJson = make(map[uint32]*MissionJson)
+			err = hjson.Unmarshal(playerElementsFile, &goppMainMission)
+			if err != nil {
+				info := fmt.Sprintf("parse MainMission error: %v", err)
+				panic(info)
 			}
-			missionJsonPathFilePath := g.resPrefix + subMission.MissionJsonPath
-			missionJsonPathFile, err := os.ReadFile(missionJsonPathFilePath)
-			if err == nil {
-				mj := new(MissionJson)
-				err = hjson.Unmarshal(missionJsonPathFile, &mj)
-				if err != nil {
-					logger.Debug("open MissionJsonPath error:%s", err)
-				} else {
-					g.GoppMission.GoppMissionJson[subMission.ID] = mj
-				}
+			mainsync.Lock()
+			if g.GoppMission.GoppMainMission == nil {
+				g.GoppMission.GoppMainMission = make(map[uint32]*GoppMainMission)
 			}
-			g.GoppMission.GoppSubMainMission[subMission.ID] = subMission
-		}
+			g.GoppMission.GoppMainMission[id] = goppMainMission
+			mainsync.Unlock()
+
+			for _, subMission := range goppMainMission.SubMissionList {
+				wg.Add(1)
+				go func() {
+					subsync.Lock()
+					if g.GoppMission.GoppSubMainMission == nil {
+						g.GoppMission.GoppSubMainMission = make(map[uint32]*SubMission)
+					}
+					if g.GoppMission.GoppMissionJson == nil {
+						g.GoppMission.GoppMissionJson = make(map[uint32]*MissionJson)
+					}
+					missionJsonPathFilePath := g.resPrefix + subMission.MissionJsonPath
+					missionJsonPathFile, err := os.ReadFile(missionJsonPathFilePath)
+					if err == nil {
+						mj := new(MissionJson)
+						err = hjson.Unmarshal(missionJsonPathFile, &mj)
+						if err != nil {
+							logger.Debug("open MissionJsonPath error:%s", err)
+						} else {
+							g.GoppMission.GoppMissionJson[subMission.ID] = mj
+						}
+					}
+					g.GoppMission.GoppSubMainMission[subMission.ID] = subMission
+					subsync.Unlock()
+					wg.Done()
+				}()
+			}
+			wg.Done()
+		}()
 	}
+
+	wg.Wait()
 
 	logger.Info("gopp %v MainMission", len(g.GoppMission.GoppMainMission))
 	logger.Info("gopp %v SubMainMission", len(g.GoppMission.GoppSubMainMission))

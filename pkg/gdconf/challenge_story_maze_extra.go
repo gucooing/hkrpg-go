@@ -31,6 +31,7 @@ func (g *GameDataConfig) loadChallengeStoryMazeExtra() {
 	}
 
 	logger.Info("load %v ChallengeStoryMazeExtra", len(g.ChallengeStoryMazeExtraMap))
+	g.wg.Done()
 }
 
 func GetChallengeStoryMazeExtraById(id uint32) *ChallengeStoryMazeExtra {

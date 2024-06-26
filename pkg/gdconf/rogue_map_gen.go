@@ -23,6 +23,7 @@ func (g *GameDataConfig) loadRogueMapGen() {
 		return
 	}
 	logger.Info("load %v RogueMapGen", len(g.RogueMapGenMap))
+	g.wg.Done()
 }
 
 func GetRogueRoomTypeBySiteID(siteID uint32) uint32 {

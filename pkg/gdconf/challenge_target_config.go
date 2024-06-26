@@ -54,6 +54,7 @@ func (g *GameDataConfig) loadChallengeTargetConfig() {
 	}
 
 	logger.Info("load %v ChallengeTargetConfig", len(g.ChallengeTargetConfigMap))
+	g.wg.Done()
 }
 
 func GetChallengeTargetConfigById(id uint32) *ChallengeTargetConfig {

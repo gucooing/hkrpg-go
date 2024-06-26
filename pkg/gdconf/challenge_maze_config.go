@@ -104,6 +104,7 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 	}
 
 	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeMazeConfigMap))
+	g.wg.Done()
 }
 
 func GetChallengeMazeConfigById(questID uint32) *ChallengeMazeConfig {

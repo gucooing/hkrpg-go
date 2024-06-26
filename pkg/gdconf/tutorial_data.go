@@ -29,6 +29,7 @@ func (g *GameDataConfig) loadTutorialData() {
 		panic(info)
 	}
 	logger.Info("load %v TutorialData", len(g.TutorialDataMap))
+	g.wg.Done()
 }
 
 func GetTutorialData() map[uint32]*TutorialData {

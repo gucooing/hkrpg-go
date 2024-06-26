@@ -40,6 +40,7 @@ func (g *GameDataConfig) loadSpecialAvatar() {
 		panic(info)
 	}
 	logger.Info("load %v SpecialAvatar", len(g.SpecialAvatarMap))
+	g.wg.Done()
 }
 
 func GetSpecialAvatarById(stageID uint32) *SpecialAvatar {

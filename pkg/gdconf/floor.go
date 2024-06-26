@@ -60,7 +60,8 @@ func (g *GameDataConfig) loadFloor() {
 
 	}
 
-	logger.Info("load %v Floor", len(g.GroupMap))
+	logger.Info("load %v Floor", len(g.FloorMap))
+	g.wg.Done()
 }
 
 func GetFloorById(planeId, floorId uint32) *LevelFloor {

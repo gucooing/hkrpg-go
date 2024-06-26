@@ -29,6 +29,7 @@ func (g *GameDataConfig) loadAdventurePlayer() {
 		panic(info)
 	}
 	logger.Info("load %v AdventurePlayer", len(g.AdventurePlayerMap))
+	g.wg.Done()
 }
 
 func GetAdventurePlayerByAvatarId(id uint32) *AdventurePlayer {

@@ -29,6 +29,7 @@ func (g *GameDataConfig) loadEquipmentExpType() {
 		panic(info)
 	}
 	logger.Info("load %v EquipmentExpType", len(g.EquipmentExpTypeMap))
+	g.wg.Done()
 }
 
 func GetEquipmentExpByLevel(equipmentType, exp, level, promotion, equipmentId uint32) (uint32, uint32) {

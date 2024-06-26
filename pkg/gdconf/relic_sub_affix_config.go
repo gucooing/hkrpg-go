@@ -32,6 +32,7 @@ func (g *GameDataConfig) loadRelicSubAffixConfig() {
 	}
 
 	logger.Info("load %v RelicSubAffixConfig", len(g.RelicSubAffixConfigMap))
+	g.wg.Done()
 }
 
 func GetRelicSubAffixConfigById(ID uint32) *RelicSubAffixConfig {

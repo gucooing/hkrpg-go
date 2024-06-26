@@ -30,6 +30,7 @@ func (g *GameDataConfig) loadPlayerLevelConfig() {
 		panic(info)
 	}
 	logger.Info("load %v PlayerLevelConfig", len(g.PlayerLevelConfigMap))
+	g.wg.Done()
 }
 
 func GetPlayerLevelConfigByLevel(exp, level, worldLevel uint32) (uint32, uint32, uint32) {

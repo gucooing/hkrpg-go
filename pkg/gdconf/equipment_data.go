@@ -51,6 +51,7 @@ func (g *GameDataConfig) loadEquipmentConfig() {
 	}
 
 	logger.Info("load %v EquipmentConfig", len(g.EquipmentConfigMap))
+	g.wg.Done()
 }
 
 func GetEquipmentConfigById(ID uint32) *EquipmentConfig {
