@@ -169,14 +169,18 @@ func (g *GamePlayer) GetRogueTournExpInfo() *proto.RogueTournExpInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournCollectionInfo() *proto.RogueTournCollectionInfo {
-	info := &proto.RogueTournCollectionInfo{
-		OBFNIDGAFMN: make([]uint32, 0),
-		KJHPDANECOM: make([]uint32, 0),
-		EOJECMKIABF: 1,
-		MFMLAPAONCM: make([]uint32, 0),
-		PHNBGLOFFJM: make([]uint32, 0),
-		JOAHOHIPAAG: make([]uint32, 0),
+func (g *GamePlayer) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
+	info := &proto.RogueTournHandbookInfo{
+		HandbookFormulaList:    make([]uint32, 0),
+		HandbookBuffList:       make([]uint32, 0),
+		EOJECMKIABF:            0,
+		TakeHandbookRewardList: make([]uint32, 0),
+		HandbookAvatarBaseList: make([]uint32, 0),
+		HandbookMiracleList:    make([]uint32, 0),
+	}
+	// 添加方程
+	for id := range gdconf.GetRogueTournFormulaMap() {
+		info.HandbookFormulaList = append(info.HandbookFormulaList, id)
 	}
 	return info
 }
@@ -312,7 +316,7 @@ func (g *GamePlayer) GetRogueTournLayerInfo() *proto.RogueTournLayerInfo {
 
 func (g *GamePlayer) GetRogueTournBuffInfo() *proto.RogueTournBuffInfo {
 	info := &proto.RogueTournBuffInfo{
-		RogueTournMazeBuffInfo: &proto.RogueTournMazeBuffInfo{
+		RogueTournMazeBuffInfo: &proto.RogueMazeBuffInfo{
 			BuffList: make([]*proto.RogueCommonBuff, 0),
 		},
 	}

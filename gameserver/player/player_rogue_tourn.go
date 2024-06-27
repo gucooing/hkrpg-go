@@ -18,7 +18,7 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg []byte) {
 			RogueTournSeasonInfo:     g.GetRogueTournSeasonInfo(),
 			ExtraScoreInfo:           g.GetExtraScoreInfo(),
 			RogueTournExpInfo:        g.GetRogueTournExpInfo(),
-			RogueTournCollectionInfo: g.GetRogueTournCollectionInfo(),
+			RogueTournHandbook:       g.GetRogueTournHandbookInfo(),
 			RogueTournDifficultyInfo: g.GetRogueTournDifficultyInfo(),
 		},
 	}

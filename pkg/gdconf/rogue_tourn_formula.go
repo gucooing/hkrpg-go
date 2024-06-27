@@ -37,7 +37,10 @@ func (g *GameDataConfig) loadRogueTournFormula() {
 		panic(info)
 	}
 	logger.Info("load %v RogueTournFormula", len(g.RogueTournFormulaMap))
+}
 
+func GetRogueTournFormulaMap() map[uint32]*RogueTournFormula {
+	return CONF.RogueTournFormulaMap
 }
 
 func GetRogueTournFormulaById(id uint32) *RogueTournFormula {
