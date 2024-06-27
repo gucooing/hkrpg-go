@@ -51,7 +51,7 @@ func (g *GameDataConfig) loadMessageGroupConfig() {
 	}
 
 	logger.Info("load %v MessageGroupConfig", len(g.MessageGroupConfig.LoadMessageGroupConfig))
-	g.wg.Done()
+
 }
 
 func GetMessageGroupConfigByID(id uint32) *LoadMessageGroupConfig {

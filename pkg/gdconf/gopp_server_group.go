@@ -31,6 +31,7 @@ func (g *GameDataConfig) goppServerGroup() {
 	floor := CONF.FloorMap
 	if floor == nil {
 		logger.Error("floor error")
+
 		return
 	}
 	for planeId, list := range floor {

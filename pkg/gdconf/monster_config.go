@@ -31,7 +31,7 @@ func (g *GameDataConfig) loadMonsterConfig() {
 		panic(info)
 	}
 	logger.Info("load %v MonsterConfig", len(g.MonsterConfigMap))
-	g.wg.Done()
+
 }
 
 func GetMonsterConfigById(monsterID uint32) *MonsterConfig {

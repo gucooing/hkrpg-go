@@ -27,7 +27,7 @@ func (g *GameDataConfig) loadVideoVersionKey() {
 		return
 	}
 	logger.Info("load %v VideoVersionKey", len(g.VideoVersionKey))
-	g.wg.Done()
+
 }
 
 func GetVideoVersionKey() []*VideoVersionKey {

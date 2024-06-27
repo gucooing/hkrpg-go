@@ -28,7 +28,7 @@ func (g *GameDataConfig) loadAvatarExpItemConfig() {
 		panic(info)
 	}
 	logger.Info("load %v AvatarExpItemConfig", len(g.AvatarExpItemConfigMap))
-	g.wg.Done()
+
 }
 
 func GetAvatarExpItemConfigById(itemID uint32) *AvatarExpItemConfig {

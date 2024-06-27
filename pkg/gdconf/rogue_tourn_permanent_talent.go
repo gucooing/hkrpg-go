@@ -35,7 +35,7 @@ func (g *GameDataConfig) loadRogueTournPermanentTalent() {
 		panic(info)
 	}
 	logger.Info("load %v RogueTournPermanentTalent", len(g.RogueTournPermanentTalentMap))
-	g.wg.Done()
+
 }
 
 func GetRogueTournPermanentTalentMap() map[uint32]*RogueTournPermanentTalent {

@@ -193,6 +193,19 @@ enum RogueStatus { // 模拟宇宙状态
   ROGUE_STATUS_FINISH = 4;
 }
 
+enum RogueTournLayerStatus { // 差分宇宙小关卡状态
+  ROGUE_TOURN_LAYER_STATUS_NONE = 0;
+  ROGUE_TOURN_LAYER_STATUS_PROCESSING = 1;
+  ROGUE_TOURN_LAYER_STATUS_FINISH = 2;
+}
+
+enum RogueTournRoomStatus { // 差分宇宙房间状态
+  ROGUE_TOURN_ROOM_STATUS_NONE = 0;
+  ROGUE_TOURN_ROOM_STATUS_INITED = 1;
+  ROGUE_TOURN_ROOM_STATUS_PROCESSING = 2;
+  ROGUE_TOURN_ROOM_STATUS_FINISH = 3;
+}
+
 
 enum RogueAreaStatus {
   RogueAreaStatus_ROGUE_AREA_STATUS_LOCK = 0;

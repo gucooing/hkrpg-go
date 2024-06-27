@@ -197,7 +197,7 @@ func (g *GameDataConfig) loadGroup() {
 
 	wg.Wait()
 	logger.Info("load %v Groups", len(g.GroupMap))
-	g.wg.Done()
+
 }
 
 func GetNGroupById(planeId, floorId, groupId uint32) *LevelGroup {
@@ -214,7 +214,6 @@ func GetGroupMap() map[uint32]map[uint32]map[uint32]*LevelGroup {
 
 func scanFiles(dir string) ([]string, error) {
 	var files []string
-
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -224,11 +223,9 @@ func scanFiles(dir string) ([]string, error) {
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
-
 	return files, nil
 }
 

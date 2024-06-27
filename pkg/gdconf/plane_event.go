@@ -31,7 +31,7 @@ func (g *GameDataConfig) loadPlaneEvent() {
 		panic(info)
 	}
 	logger.Info("load %v PlaneEvent", len(g.PlaneEventMap))
-	g.wg.Done()
+
 }
 
 func GetPlaneEventById(eventID, worldLevel uint32) *PlaneEvent {

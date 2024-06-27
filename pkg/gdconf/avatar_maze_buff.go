@@ -62,7 +62,7 @@ func (g *GameDataConfig) loadAvatarMazeBuff() {
 		panic(info)
 	}
 	logger.Info("load %v AvatarMazeBuff", len(g.AvatarMazeBuffMap))
-	g.wg.Done()
+
 }
 
 func GetAvatarMazeBuffById(id, level uint32) *AvatarMazeBuff {

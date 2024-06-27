@@ -50,7 +50,7 @@ func (g *GameDataConfig) loadAvatarPromotionConfig() {
 		panic(info)
 	}
 	logger.Info("load %v AvatarPromotionConfig", len(g.AvatarPromotionConfigMap))
-	g.wg.Done()
+
 }
 
 func GetAvatarPromotionConfigByLevel(avatarId, promotion uint32) uint32 {

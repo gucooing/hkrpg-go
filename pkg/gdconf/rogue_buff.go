@@ -70,7 +70,7 @@ func (g *GameDataConfig) loadRogueBuff() {
 	g.RogueBuffMap.RogueBuffByType = RogueBuffByType
 
 	logger.Info("load %v RogueBuff", len(g.RogueBuffMap.SiteList))
-	g.wg.Done()
+
 }
 
 func GetAllBuff() []uint32 {

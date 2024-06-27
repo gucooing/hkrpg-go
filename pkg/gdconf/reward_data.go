@@ -87,7 +87,7 @@ func (g *GameDataConfig) loadRewardData() {
 	}
 
 	logger.Info("load %v RewardData", len(g.RewardDataMap))
-	g.wg.Done()
+
 }
 
 func GetRewardDataById(id uint32) *RewardData {

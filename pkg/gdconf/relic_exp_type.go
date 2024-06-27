@@ -29,7 +29,7 @@ func (g *GameDataConfig) loadRelicExpType() {
 		panic(info)
 	}
 	logger.Info("load %v RelicExpType", len(g.RelicExpTypeMap))
-	g.wg.Done()
+
 }
 
 func GetRelicExpByLevel(relicType, exp, level, relicId uint32) (uint32, uint32) {

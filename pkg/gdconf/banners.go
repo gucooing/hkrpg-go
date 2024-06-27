@@ -35,7 +35,6 @@ func (g *GameDataConfig) loadBanners() {
 		g.BannersMap[banner.Id] = banner
 	}
 	logger.Info("load %v Banners", len(g.BannersMap))
-	g.wg.Done()
 }
 
 func GetBannersMap() map[uint32]*Banners {

@@ -62,7 +62,7 @@ func (g *GameDataConfig) loadRelic() {
 	}
 
 	logger.Info("load %v RelicConfig", len(g.RelicMap))
-	g.wg.Done()
+
 }
 
 func GetRelicById(ID uint32) *Relic {

@@ -139,7 +139,7 @@ func (g *GameDataConfig) loadItemConfig() {
 		Relic:            relicMap,
 	}
 	logger.Info("load %v ItemConfig", len(g.ItemConfigMap.Item))
-	g.wg.Done()
+
 }
 
 func GetItemConfigMap() *ItemList {

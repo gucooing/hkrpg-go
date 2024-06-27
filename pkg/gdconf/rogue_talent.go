@@ -34,7 +34,7 @@ func (g *GameDataConfig) loadRogueTalent() {
 	}
 
 	logger.Info("load %v RogueTalent", len(g.RogueTalentMap))
-	g.wg.Done()
+
 }
 
 func GetRogueTalentById(talentID uint32) *RogueTalent {

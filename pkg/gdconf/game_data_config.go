@@ -17,6 +17,7 @@ type loadFunc func()
 type GameDataConfig struct {
 	loadFunc []loadFunc // 多线程读取方法
 	wg       sync.WaitGroup
+	goppFunc []loadFunc // 多线程读取预处理方法
 	// 配置表路径前缀
 	resPrefix    string
 	excelPrefix  string
@@ -88,6 +89,10 @@ type GameDataConfig struct {
 	RogueTournPermanentTalentMap map[uint32]*RogueTournPermanentTalent           // 灵感回路信息
 	RogueTournDifficultyCompMap  map[uint32]*RogueTournDifficultyComp            // 差分宇宙难度
 	RogueTournFormulaMap         map[uint32]*RogueTournFormula                   // 差分宇宙方程
+	RogueTournAreaMap            map[uint32]*RogueTournArea                      // 差分宇宙关卡配置
+	RogueTournExpScoreMap        map[uint32]*RogueTournExpScore                  // 差分宇宙经验获取配置
+	RogueTournExpRewardMap       map[uint32]map[uint32]*RogueTournExpReward      // 差分宇宙等级奖励配置
+	RogueTournRoom               *RogueTournRoom                                 // 差分宇宙地图配置
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -142,10 +147,22 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.load()
 	g.wg.Add(len(g.loadFunc))
 	for _, fn := range g.loadFunc {
-		go fn()
+		go func() {
+			fn()
+			g.wg.Done()
+		}()
 	}
 	g.wg.Wait()
+
 	g.gopp()
+	g.wg.Add(len(g.goppFunc))
+	for _, fn := range g.goppFunc {
+		go func() {
+			fn()
+			g.wg.Done()
+		}()
+	}
+	g.wg.Wait()
 }
 
 func (g *GameDataConfig) load() {
@@ -177,11 +194,11 @@ func (g *GameDataConfig) load() {
 		g.loadAvatarSkilltree,           // 技能库
 		g.loadMazeBuff,                  // 技能buff库
 		g.loadMazePlane,                 // 场景id
-		g.loadNPCMonsterData,            // NPC怪物表？
+		g.loadNPCMonsterData,            // 怪物表
 		g.loadMazeProp,                  // 实体列表？
 		g.loadNPCData,                   // NPC列表？
 		g.loadGroup,                     // 场景实体
-		g.loadFloor,                     // ?
+		g.loadFloor,                     // 场景
 		g.loadMapEntrance,               // 地图入口
 		g.loadBanners,                   // 卡池信息
 		g.loadActivityPanel,             // 活动
@@ -215,12 +232,18 @@ func (g *GameDataConfig) load() {
 		g.loadRogueTournPermanentTalent, // 灵感回路信息
 		g.loadRogueTournDifficultyComp,  // 差分宇宙难度
 		g.loadRogueTournFormula,         // 差分宇宙方程
+		g.loadRogueTournArea,            // 差分宇宙关卡配置
+		g.loadRogueTournExpScore,        // 差分宇宙经验获取配置
+		g.loadRogueTournExpReward,       // 差分宇宙等级奖励配置
+		g.loadRogueTournRoomGen,         // 差分宇宙地图配置
 	}
 }
 
 func (g *GameDataConfig) gopp() {
-	g.goppServerGroup() // 预处理服务器场景
-	g.goppTeleports()   // 预处理传送锚点
-	g.goppMainMission() // 预处理主线任务
-	g.goppRogueRoom()   // 模拟宇宙地图配置表
+	g.goppFunc = []loadFunc{
+		g.goppServerGroup, // 预处理服务器场景
+		g.goppTeleports,   // 预处理传送锚点
+		g.goppMainMission, // 预处理主线任务
+		g.goppRogueRoom,   // 预处理模拟宇宙地图配置表
+	}
 }

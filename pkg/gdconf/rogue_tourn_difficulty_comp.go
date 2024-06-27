@@ -28,7 +28,7 @@ func (g *GameDataConfig) loadRogueTournDifficultyComp() {
 		panic(info)
 	}
 	logger.Info("load %v RogueTournDifficultyComp", len(g.RogueTournDifficultyCompMap))
-	g.wg.Done()
+
 }
 
 func GetRogueTournDifficultyCompMap() map[uint32]*RogueTournDifficultyComp {

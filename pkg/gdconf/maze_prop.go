@@ -114,7 +114,7 @@ func (g *GameDataConfig) loadMazeProp() {
 		g.MazePropMap[id] = mp
 	}
 	logger.Info("load %v MazeProp", len(g.MazePropMap))
-	g.wg.Done()
+
 }
 
 func GetMazePropId(id uint32) *MazeProp {

@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	QuestRogue = 0       // 模拟宇宙
-	RogueDlc   = 6000302 // 模拟宇宙：寰宇蝗灾
-	RogueNous  = 6000901 // 模拟宇宙：黄金与机械
+	QuestRogue      = 0       // 模拟宇宙
+	RogueDlc        = 6000302 // 模拟宇宙：寰宇蝗灾
+	RogueNous       = 6000901 // 模拟宇宙：黄金与机械
+	QuestRogueTourn = 301     // 差分宇宙
 )
 
 // Default Probability

@@ -43,7 +43,7 @@ func (g *GameDataConfig) loadRogueAreaConfig() {
 		panic(info)
 	}
 	logger.Info("load %v RogueAreaConfig", len(g.RogueAreaConfigMap))
-	g.wg.Done()
+
 }
 
 func GetRogueAreaMap() map[uint32]*RogueAreaConfig {

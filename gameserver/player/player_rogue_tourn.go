@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -8,8 +9,8 @@ import (
 
 func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg []byte) {
 	rsp := &proto.RogueTournQueryScRsp{
-		Retcode: 0,
-		// RogueTournCurInfo: g.GetRogueTournCurInfo(),
+		Retcode:           0,
+		RogueTournCurInfo: g.GetRogueTournCurInfo(),
 		RogueTournInfo: &proto.RogueTournInfo{
 			RogueTournSaveList:       make([]*proto.RogueTournSaveList, 0),
 			RogueTournAreaInfo:       g.GetRogueTournAreaInfo(),
@@ -41,6 +42,11 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RogueTournStartCsReq, payloadMsg)
 	req := msg.(*proto.RogueTournStartCsReq)
 	rsp := new(proto.RogueTournStartScRsp)
+	conf := gdconf.GetRogueTournAreaById(req.AreaId)
+	if conf == nil {
+		g.Send(cmd.RogueTournStartScRsp, rsp)
+		return
+	}
 	// 更新队伍
 	lineUpDb := g.GetBattleLineUpById(RogueTourn)
 	lineUpDb.LeaderSlot = 0
@@ -65,13 +71,30 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 		avatarBin := g.GetAvatarBinById(avatar.AvatarId)
 		g.CopyBattleAvatar(avatarBin)
 	}
+
+	// 更新db
 	g.SetBattleStatus(spb.BattleType_Battle_ROGUE_TOURN)
+	g.SetMaterialById(Cf, 100) // 将宇宙碎片重置成100个
+	g.NewCurRogueTourn(req.AreaId)
+	curRoom := g.GetCurRogueTournRoom()
 
 	rsp.RogueTournCurSceneInfo = &proto.RogueTournCurSceneInfo{
 		Lineup: g.GetBattleLineUpPb(RogueTourn),
-		Scene:  g.GetRogueTournScene(8040601),
-		// FFKCPBBDCGL: nil,
+		Scene:  g.GetRogueTournScene(curRoom.RoomId),
 	}
 	rsp.RogueTournCurInfo = g.GetRogueTournCurInfo()
 	g.Send(cmd.RogueTournStartScRsp, rsp)
+}
+
+func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg []byte) {
+	curRoom := g.GetCurRogueTournRoom()
+	rsp := &proto.RogueTournEnterScRsp{
+		RogueTournCurInfo: g.GetRogueTournCurInfo(),
+		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
+			Lineup: g.GetBattleLineUpPb(RogueTourn),
+			Scene:  g.GetRogueTournScene(curRoom.RoomId),
+		},
+	}
+
+	g.Send(cmd.RogueTournEnterScRsp, rsp)
 }

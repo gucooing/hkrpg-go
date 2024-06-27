@@ -38,7 +38,7 @@ func (g *GameDataConfig) loadAvatarData() {
 		panic(info)
 	}
 	logger.Info("load %v AvatarConfig", len(g.AvatarDataMap))
-	g.wg.Done()
+
 }
 
 func GetAvatarDataById(avatarId uint32) *AvatarData {

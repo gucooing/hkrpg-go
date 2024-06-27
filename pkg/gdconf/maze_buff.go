@@ -44,7 +44,7 @@ func (g *GameDataConfig) loadMazeBuff() {
 	}
 
 	logger.Info("load %v MazeBuff", len(g.MazeBuffMap))
-	g.wg.Done()
+
 }
 
 func GetMazeBuffById(buffId, index uint32) *MazeBuff {
