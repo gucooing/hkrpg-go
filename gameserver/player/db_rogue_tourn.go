@@ -97,6 +97,28 @@ func (g *GamePlayer) GetCurRogueTournRoom() *spb.RogueTournRoomInfo {
 	return db.RogueTournRoomList[db.CurRoomIndex]
 }
 
+func (g *GamePlayer) GetCurRogueTournFormula() []uint32 {
+	db := g.GetCurRogueTourn()
+	if db == nil {
+		return make([]uint32, 0)
+	}
+	if db.FormulaList == nil {
+		db.FormulaList = make([]uint32, 0)
+	}
+	return db.FormulaList
+}
+
+func (g *GamePlayer) AddCurRogueTournFormula(id uint32) {
+	db := g.GetCurRogueTourn()
+	if db == nil {
+		return
+	}
+	if db.FormulaList == nil {
+		db.FormulaList = make([]uint32, 0)
+	}
+	db.FormulaList = append(db.FormulaList, id)
+}
+
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
@@ -191,21 +213,7 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 		return nil
 	}
 	info := &proto.RogueTournCurInfo{
-		RogueTournCurAreaInfo: &proto.RogueTournCurAreaInfo{
-			// PNKJCLDGFFP: 3,
-			PendingAction: &proto.RogueCommonPendingAction{
-				QueuePosition: 5,
-				RogueAction: &proto.RogueAction{
-					Action: &proto.RogueAction_RogueFormulaSelectInfo{
-						RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
-							SelectFormulaIdListFieldNumber: make([]uint32, 0), // []uint32{130906, 130809, 130408},
-						},
-					},
-				},
-			},
-			RogueSubMode: 301,
-			AreaId:       curRogueTourn.AreaId,
-		},
+		RogueTournCurAreaInfo: g.GetRogueTournCurAreaInfo(),
 		RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
 			RogueTournGameAreaInfo: &proto.RogueTournGameAreaInfo{
 				AreaId: curRogueTourn.AreaId,
@@ -229,16 +237,33 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 				}},
 			},
 			RogueTournBuffInfo: g.GetRogueTournBuffInfo(),
-			KeywordUnlockInfo: &proto.KeywordUnlockInfo{KeywordUnlockMap: map[uint32]bool{
-				1615010: false,
-				1615110: false,
-				1615210: false,
-				1615310: false,
-			}},
-			DLCLNIJBHBD: nil,
-			ENGCMKFPKLH: nil,
+			KeywordUnlockInfo:  g.GetKeywordUnlockInfo(),
+			DLCLNIJBHBD:        nil,
+			ENGCMKFPKLH:        nil,
 		},
 	}
+	return info
+}
+
+func (g *GamePlayer) GetRogueTournCurAreaInfo() *proto.RogueTournCurAreaInfo {
+	curRogueTourn := g.GetCurRogueTourn()
+	if curRogueTourn == nil {
+		return nil
+	}
+	info := &proto.RogueTournCurAreaInfo{
+		RogueSubMode: 301,
+		AreaId:       curRogueTourn.AreaId,
+	}
+	return info
+}
+
+func (g *GamePlayer) GetKeywordUnlockInfo() *proto.KeywordUnlockInfo {
+	info := &proto.KeywordUnlockInfo{KeywordUnlockMap: map[uint32]bool{
+		1615010: false,
+		1615110: false,
+		1615210: false,
+		1615310: false,
+	}}
 	return info
 }
 
@@ -295,26 +320,32 @@ func (g *GamePlayer) GetRogueTournBuffInfo() *proto.RogueTournBuffInfo {
 }
 
 func (g *GamePlayer) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
+	db := g.GetCurRogueTournFormula()
 	info := &proto.RogueTournFormulaInfo{
-		GameFormulaInfo: []*proto.FormulaInfo{
-			{
-				IsExpand:  false,
-				FormulaId: 120102,
-				FormulaBuffTypeList: []*proto.FormulaBuffTypeInfo{
-					{
-						Num:        3,
-						BuffTypeId: 120,
-					},
-					{
-						Num:        2,
-						BuffTypeId: 121,
-					},
-				},
-			},
-		},
 		FormulaTypeInfo: &proto.FormulaTypeInfo{
 			FormulaTypeMap: make(map[uint32]int32),
 		},
+	}
+	for _, id := range db {
+		conf := gdconf.GetRogueTournFormulaById(id)
+		if conf == nil {
+			continue
+		}
+		formulaInfo := &proto.FormulaInfo{
+			IsExpand:  false,
+			FormulaId: id,
+			FormulaBuffTypeList: []*proto.FormulaBuffTypeInfo{
+				{
+					Num:        conf.MainBuffNum,
+					BuffTypeId: conf.MainBuffTypeID,
+				},
+				{
+					Num:        conf.SubBuffNum,
+					BuffTypeId: conf.SubBuffTypeID,
+				},
+			},
+		}
+		info.GameFormulaInfo = append(info.GameFormulaInfo, formulaInfo)
 	}
 	return info
 }

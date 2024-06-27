@@ -83,6 +83,21 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 		Scene:  g.GetRogueTournScene(curRoom.RoomId),
 	}
 	rsp.RogueTournCurInfo = g.GetRogueTournCurInfo()
+
+	// 选择三个初始方程
+	g.AddRogueBuffNum()
+	g.FormulaSyncRogueCommonPendingActionScNotify([]uint32{130204, 130408, 130307})
+	rsp.RogueTournCurInfo.RogueTournCurAreaInfo.PendingAction = &proto.RogueCommonPendingAction{
+		QueuePosition: g.GetRogueBuffNum(),
+		RogueAction: &proto.RogueAction{
+			Action: &proto.RogueAction_RogueFormulaSelectInfo{
+				RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
+					SelectFormulaIdListFieldNumber: []uint32{130204, 130408, 130307},
+				},
+			},
+		},
+	}
+
 	g.Send(cmd.RogueTournStartScRsp, rsp)
 }
 
@@ -97,4 +112,74 @@ func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg []byte) {
 	}
 
 	g.Send(cmd.RogueTournEnterScRsp, rsp)
+}
+
+func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg []byte) {
+	curRoom := g.GetCurRogueTournRoom()
+	rsp := &proto.RogueTournSettleScRsp{
+		Retcode: 0,
+		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
+			Lineup: g.GetBattleLineUpPb(RogueTourn),
+			Scene:  g.GetRogueTournScene(curRoom.RoomId),
+		},
+		// IOLFDOIPNKA:            nil,
+	}
+	db := g.GetRogueTourn()
+	db.CurRogueTourn = nil
+	g.Send(cmd.RogueTournSettleScRsp, rsp)
+}
+
+// 方程选择通知
+func (g *GamePlayer) FormulaSyncRogueCommonPendingActionScNotify(formulaList []uint32) {
+	notify := &proto.SyncRogueCommonPendingActionScNotify{
+		RogueSubMode: 301,
+		Action: &proto.RogueCommonPendingAction{
+			QueuePosition: g.GetRogueBuffNum(),
+			RogueAction: &proto.RogueAction{
+				Action: &proto.RogueAction_RogueFormulaSelectInfo{
+					RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
+						SelectFormulaIdListFieldNumber: formulaList,
+					},
+				},
+			},
+		},
+	}
+
+	g.Send(cmd.SyncRogueCommonPendingActionScNotify, notify)
+}
+
+func (g *GamePlayer) FormulaSyncRogueCommonActionResultScNotify(formulaId uint32) {
+	conf := gdconf.GetRogueTournFormulaById(formulaId)
+	if conf == nil {
+		return
+	}
+	notify := &proto.SyncRogueCommonActionResultScNotify{
+		ActionResult: make([]*proto.RogueCommonActionResult, 0),
+		RogueSubMode: 301,
+	}
+	notify.ActionResult = append(notify.ActionResult, &proto.RogueCommonActionResult{
+		Source: 0,
+		RogueAction: &proto.RogueCommonActionResultData{
+			ResultData: &proto.RogueCommonActionResultData_GetFormulaList{
+				GetFormulaList: &proto.RogueCommonFormula{
+					FormulaInfo: &proto.FormulaInfo{
+						IsExpand:  false,
+						FormulaId: formulaId,
+						FormulaBuffTypeList: []*proto.FormulaBuffTypeInfo{
+							{
+								Num:        conf.MainBuffNum,
+								BuffTypeId: conf.MainBuffTypeID,
+							},
+							{
+								Num:        conf.SubBuffNum,
+								BuffTypeId: conf.SubBuffTypeID,
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+
+	g.Send(cmd.SyncRogueCommonActionResultScNotify, notify)
 }

@@ -12,9 +12,9 @@ type RogueTournFormula struct {
 	FormulaID        uint32 `json:"FormulaID"`
 	TournMode        string `json:"TournMode"`
 	MainBuffTypeID   uint32 `json:"MainBuffTypeID"`
-	MainBuffNum      uint32 `json:"MainBuffNum"`
+	MainBuffNum      int32  `json:"MainBuffNum"`
 	SubBuffTypeID    uint32 `json:"SubBuffTypeID"`
-	SubBuffNum       uint32 `json:"SubBuffNum"`
+	SubBuffNum       int32  `json:"SubBuffNum"`
 	FormulaCategory  string `json:"FormulaCategory"`
 	MazeBuffID       uint32 `json:"MazeBuffID"`
 	FormulaDisplayID uint32 `json:"FormulaDisplayID"`
@@ -40,6 +40,6 @@ func (g *GameDataConfig) loadRogueTournFormula() {
 
 }
 
-func GetRogueTournFormula() {
-
+func GetRogueTournFormulaById(id uint32) *RogueTournFormula {
+	return CONF.RogueTournFormulaMap[id]
 }

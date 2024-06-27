@@ -178,6 +178,10 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 			buffId := action.(*proto.HandleRogueCommonPendingActionCsReq_BuffSelectResult).BuffSelectResult.BuffId
 			g.AddRogueBuff(buffId)
 			g.SyncRogueCommonActionResultScNotify(buffId)
+		case *proto.HandleRogueCommonPendingActionCsReq_RogueTournFormulaResult: // 添加方程
+			formulaId := action.(*proto.HandleRogueCommonPendingActionCsReq_RogueTournFormulaResult).RogueTournFormulaResult.FormulaId
+			g.AddCurRogueTournFormula(formulaId)
+			g.FormulaSyncRogueCommonActionResultScNotify(formulaId)
 		}
 	}
 
