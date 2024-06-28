@@ -69,7 +69,7 @@ func (g *GamePlayer) NewCurRogueTourn(areaId uint32) {
 	}
 	// 选择第一关的第一个房间
 	curRoom := g.GetCurRogueTournRoom()
-	curRoom.RoomId = 11036011
+	curRoom.RoomId = gdconf.GetRogueTournRoomGenaByType(3).RogueRoomID
 	curRoom.Status = spb.RogueTournRoomStatus_ROGUE_TOURN_ROOM_STATUS_PROCESSING
 }
 
@@ -117,6 +117,28 @@ func (g *GamePlayer) AddCurRogueTournFormula(id uint32) {
 		db.FormulaList = make([]uint32, 0)
 	}
 	db.FormulaList = append(db.FormulaList, id)
+}
+
+func (g *GamePlayer) UpdateRogueTournEnterRoom(curRoomIndex, nextTypeId uint32) {
+	db := g.GetCurRogueTourn()
+	curLayer := g.GetCurLayerInfo()
+	if db == nil {
+		return
+	}
+	curLayer.RogueTournRoomList[curLayer.CurRoomIndex].Status = spb.RogueTournRoomStatus_ROGUE_TOURN_ROOM_STATUS_FINISH
+	if curLayer.LayerId == 1101 && curRoomIndex == 4 || // 这两个情况是进入下一关
+		curLayer.LayerId == 1201 && curRoomIndex == 5 {
+		curLayer.Status = spb.RogueTournLayerStatus_ROGUE_TOURN_LAYER_STATUS_FINISH
+		db.CurLayerIndex++
+	} else { // 不进入下一关
+		curLayer.CurRoomIndex++
+	}
+	newCurLayer := g.GetCurLayerInfo()
+	newCurLayer.Status = spb.RogueTournLayerStatus_ROGUE_TOURN_LAYER_STATUS_PROCESSING
+	newCurLayer.RogueTournRoomList[newCurLayer.CurRoomIndex].RoomId = gdconf.GetRogueTournRoomGenaByType(nextTypeId).RogueRoomID
+	newCurLayer.RogueTournRoomList[newCurLayer.CurRoomIndex].Status = spb.RogueTournRoomStatus_ROGUE_TOURN_ROOM_STATUS_PROCESSING
+
+	g.RogueTournLevelInfoUpdateScNotify(newCurLayer.LayerIndex, newCurLayer.CurRoomIndex)
 }
 
 /****************************************************功能***************************************************/

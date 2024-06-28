@@ -1,6 +1,7 @@
 package gdconf
 
 import (
+	"math/rand"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -58,4 +59,10 @@ func (g *GameDataConfig) loadRogueTournRoomGen() {
 
 func GetRogueTournRoomGenById(id uint32) *RogueTournRoomGen {
 	return CONF.RogueTournRoom.RogueTournRoomGenMap[id]
+}
+
+func GetRogueTournRoomGenaByType(typeid uint32) *RogueTournRoomGen {
+	list := CONF.RogueTournRoom.RogueTournRoomGenByType[typeid]
+	idIndex := rand.Intn(len(list))
+	return list[idIndex]
 }

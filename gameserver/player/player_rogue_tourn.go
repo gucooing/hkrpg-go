@@ -115,18 +115,57 @@ func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg []byte) {
-	curRoom := g.GetCurRogueTournRoom()
 	rsp := &proto.RogueTournSettleScRsp{
 		Retcode: 0,
-		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
-			Lineup: g.GetBattleLineUpPb(RogueTourn),
-			Scene:  g.GetRogueTournScene(curRoom.RoomId),
-		},
 		// IOLFDOIPNKA:            nil,
 	}
 	db := g.GetRogueTourn()
 	db.CurRogueTourn = nil
+	g.SetBattleStatus(spb.BattleType_Battle_NONE)
 	g.Send(cmd.RogueTournSettleScRsp, rsp)
+}
+
+func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.RogueTournEnterRoomCsReq, payloadMsg)
+	req := msg.(*proto.RogueTournEnterRoomCsReq)
+	g.UpdateRogueTournEnterRoom(req.CurRoomIndex, req.NextRoomType)
+	curRoom := g.GetCurRogueTournRoom()
+	rsp := &proto.RogueTournEnterRoomScRsp{
+		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
+			Lineup: g.GetBattleLineUpPb(RogueTourn),
+			Scene:  g.GetRogueTournScene(curRoom.RoomId),
+		},
+		Retcode: 0,
+	}
+
+	g.Send(cmd.RogueTournEnterRoomScRsp, rsp)
+}
+
+// 房间切换通知
+func (g *GamePlayer) RogueTournLevelInfoUpdateScNotify(layerIndex, roomIndex uint32) {
+	db := g.GetCurRogueTourn()
+	layerInfo := db.CurLayerList[layerIndex]
+	roomInfo := layerInfo.RogueTournRoomList[roomIndex]
+	notify := &proto.RogueTournLevelInfoUpdateScNotify{
+		ReachedLayerCount: layerIndex,
+		Status:            proto.RogueTournLevelStatus(layerInfo.Status),
+		LayerInfoList:     make([]*proto.LayerInfoList, 0),
+	}
+	notify.LayerInfoList = append(notify.LayerInfoList, &proto.LayerInfoList{
+		LayerId:               layerInfo.LayerId,
+		RogueTournLayerStatus: proto.RogueTournLayerStatus(layerInfo.Status),
+		CurRoomIndex:          layerInfo.CurRoomIndex,
+		RogueTournRoomList: []*proto.RogueTournRoomList{
+			{
+				RogueTournRoomStatus: proto.RogueTournRoomStatus(roomInfo.Status),
+				RoomIndex:            roomInfo.RoomIndex,
+				RoomId:               roomInfo.RoomId,
+			},
+		},
+		LayerIndex: layerInfo.LayerIndex,
+	})
+
+	g.Send(cmd.RogueTournLevelInfoUpdateScNotify, notify)
 }
 
 // 方程选择通知
@@ -148,6 +187,7 @@ func (g *GamePlayer) FormulaSyncRogueCommonPendingActionScNotify(formulaList []u
 	g.Send(cmd.SyncRogueCommonPendingActionScNotify, notify)
 }
 
+// 方程选择后通知
 func (g *GamePlayer) FormulaSyncRogueCommonActionResultScNotify(formulaId uint32) {
 	conf := gdconf.GetRogueTournFormulaById(formulaId)
 	if conf == nil {

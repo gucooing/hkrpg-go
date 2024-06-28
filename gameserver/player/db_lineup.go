@@ -14,6 +14,7 @@ const (
 	Challenge_2   = 2  // 第二个忘却之庭队伍
 	Rogue         = 3  // 第一个模拟宇宙队伍
 	RogueTourn    = 4  // 差分宇宙
+	Activity      = 5  // 角色试用队伍
 )
 
 func NewLineUp() *spb.LineUp {
@@ -351,6 +352,8 @@ func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
 		lineUpType = proto.ExtraLineupType_LINEUP_ROGUE
 	case RogueTourn:
 		lineUpType = proto.ExtraLineupType_LINEUP_TOURN_ROGUE
+	case Activity:
+		lineUpType = proto.ExtraLineupType_LINEUP_STAGE_TRIAL
 	}
 	var wtmLeaderSlot = false
 	if db.AvatarIdList[db.LeaderSlot] == nil || db.AvatarIdList[db.LeaderSlot].AvatarId == 0 {

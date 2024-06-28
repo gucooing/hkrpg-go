@@ -16,9 +16,10 @@ import (
 var BattleBackupLock sync.Mutex // 战斗列表互斥锁
 
 type CurBattle struct {
-	BattleBackup    map[uint32]*BattleBackup     // 正在进行的战斗[战斗id]战斗细节
-	RogueInfoOnline *RogueInfoOnline             // 模拟宇宙临时数据
-	AvatarBuff      map[uint32]*OnLineAvatarBuff // 角色在线buff
+	BattleBackup       map[uint32]*BattleBackup     // 正在进行的战斗[战斗id]战斗细节
+	RogueInfoOnline    *RogueInfoOnline             // 模拟宇宙临时数据
+	AvatarBuff         map[uint32]*OnLineAvatarBuff // 角色在线buff
+	ActivityInfoOnline *ActivityInfoOnline          // 角色试用在线数据
 }
 
 type BattleBackup struct {
@@ -139,58 +140,6 @@ func (g *GamePlayer) DelOnLineAvatarBuff(avatarID, buffId uint32) {
 	db := g.GetOnLineAvatarBuff()
 	delete(db, avatarID)
 }
-
-type BattleState struct {
-	BattleType         spb.BattleType
-	TrialActivityState *TrialActivityState
-	BuffList           []uint32 // 进入战斗需要添加的buff
-	AvatarBuffList     []uint32 // 角色buff
-}
-type TrialActivityState struct {
-	AvatarDemoId  uint32
-	NPCMonsterPos *spb.VectorBin
-	NPCMonsterRot *spb.VectorBin
-	PlaneID       uint32
-	FloorID       uint32
-	EntranceID    uint32
-
-	NPCMonsterID uint32
-	EventID      uint32
-	GroupID      uint32
-	ConfigID     uint32
-}
-
-type Battle struct {
-	BattleId         uint32                // 战斗ID
-	Wave             uint32                // 次数
-	EventIDList      []uint32              // 怪物群实体id
-	LogicRandomSeed  uint32                // 逻辑随机种子
-	RoundsLimit      uint32                // 回合限制
-	StaminaCost      uint32                // 扣除体力
-	DisplayItemList  []*Material           // 奖励物品
-	BuffList         []*proto.BattleBuff   // Buff列表
-	BattleAvatarList []*proto.BattleAvatar // 战斗角色列表
-}
-
-func (g *GamePlayer) GetBattleState() *BattleState {
-	if g.OnlineData.BattleState == nil {
-		g.OnlineData.BattleState = &BattleState{
-			BattleType:         0,
-			BuffList:           make([]uint32, 0),
-			TrialActivityState: &TrialActivityState{},
-		}
-	}
-	return g.OnlineData.BattleState
-}
-
-func (g *GamePlayer) GetTrialActivityState() *TrialActivityState {
-	if g.GetBattleState().TrialActivityState == nil {
-		g.GetBattleState().TrialActivityState = &TrialActivityState{}
-	}
-	return g.GetBattleState().TrialActivityState
-}
-
-/************************************区分一下***************************************/
 
 func NewBattle() *spb.Battle {
 	return &spb.Battle{

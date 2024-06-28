@@ -6,16 +6,13 @@ import (
 )
 
 type OnlineData struct {
-	LoginToday            bool               // 是否是今天第一次登录
-	Battle                map[uint32]*Battle // 正在进行的战斗
-	BattleState           *BattleState       // 战斗情况
-	BattleId              uint32             // 战斗id
-	EntityBattleId        uint32             // 攻击实体id
-	IsPaused              bool               // 是否暂停
-	GameObjectGuidCounter uint32             // 游戏对象guid计数器 貌似一个玩家用一个就行了
-	IsNickName            bool               // 是否修改昵称
-	SceneMap              *SceneMap          // 在线场景管理
-	CurBattle             *CurBattle         // 正在进行的战斗
+	LoginToday            bool       // 是否是今天第一次登录
+	BattleId              uint32     // 战斗id
+	IsPaused              bool       // 是否暂停
+	GameObjectGuidCounter uint32     // 游戏对象guid计数器 貌似一个玩家用一个就行了
+	IsNickName            bool       // 是否修改昵称
+	SceneMap              *SceneMap  // 在线场景管理
+	CurBattle             *CurBattle // 正在进行的战斗
 }
 
 func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
@@ -90,9 +87,6 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 	if g.OnlineData == nil {
 		g.OnlineData = &OnlineData{
 			LoginToday:            false,
-			Battle:                nil,
-			BattleState:           nil,
-			EntityBattleId:        0,
 			IsPaused:              false,
 			GameObjectGuidCounter: 0,
 			IsNickName:            false,

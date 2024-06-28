@@ -84,6 +84,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.RogueTournGetMiscRealTimeDataCsReq:    g.RogueTournGetMiscRealTimeDataCsReq,    // 获取差分宇宙实时信息
 		cmd.RogueTournEnterCsReq:                  g.RogueTournEnterCsReq,                  // 继续进度
 		cmd.RogueTournSettleCsReq:                 g.RogueTournSettleCsReq,                 // 结束并结算
+		cmd.RogueTournEnterRoomCsReq:              g.RogueTournEnterRoomCsReq,              // 差分宇宙进入下一场景
 		// 忘却之庭
 		cmd.GetChallengeCsReq:    g.HandleGetChallengeCsReq, // 获取忘却之庭挑战完成信息
 		cmd.StartChallengeCsReq:  g.StartChallengeCsReq,     // 忘却之庭,启动!

@@ -539,6 +539,9 @@ func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32
 }
 
 func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
+	if db == nil {
+		return
+	}
 	if prop.MappingInfoID != 0 && prop.State == "" {
 		g.UpPropState(db, groupId, prop.ID, 1)
 		return
