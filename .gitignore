@@ -190,5 +190,4 @@ rich.go
 config.json
 protocol/hkrpg
 ./muipserver
-hkrpg-go-pe.go
 protocol/proto/StarRail.proto

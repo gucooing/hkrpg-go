@@ -13,6 +13,7 @@ OUT_DIR=./build
 PROJECT_NAME=hkrpg-go
 TARGET_PLATFORMS="linux/amd64 linux/arm64 windows/amd64 windows/arm64"
 
+PE_PATH = ./hkrpg-go-pe.go
 DISPATCH_PATH=./cmd/dispatch/dispatch.go
 GAMESERVER_PATH=./cmd/gameserver/gameserver.go
 GATE_PATH=./cmd/gateserver/gateserver.go
@@ -21,7 +22,7 @@ MULTI_PATH=./cmd/multiserver/multiserver.go
 NODE_PATH=./cmd/nodeserver/nodeserver.go
 ROBOT_PATH=./cmd/robot/robot.go
 
-for file in $MAIN_PATH $DISPATCH_PATH $GAMESERVER_PATH $GATE_PATH $MUIP_PATH $MULTI_PATH $NODE_PATH $ROBOT_PATH; do
+for file in $PE_PATH $MAIN_PATH $DISPATCH_PATH $GAMESERVER_PATH $GATE_PATH $MUIP_PATH $MULTI_PATH $NODE_PATH $ROBOT_PATH; do
   for platform in $TARGET_PLATFORMS; do
     GOOS=$(echo $platform | cut -d'/' -f1)
     GOARCH=$(echo $platform | cut -d'/' -f2)

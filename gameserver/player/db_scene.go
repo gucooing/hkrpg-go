@@ -393,6 +393,10 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 		}
 	}
 
+	if !isLoaded {
+		return isLoaded
+	}
+
 	// 检查卸载条件
 	if levelGroup.UnloadCondition != nil {
 		all := true
