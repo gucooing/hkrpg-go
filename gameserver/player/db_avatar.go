@@ -75,32 +75,6 @@ func (g *GamePlayer) GetCurAvatar() *spb.AvatarBin {
 	return g.GetAvatarBinById(db)
 }
 
-func (g *GamePlayer) GetBasicTypeSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
-	skilltreeList := make([]*spb.AvatarSkillBin, 0)
-	for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
-		avatarSkillBin := &spb.AvatarSkillBin{
-			PointId: id,
-			Level:   level,
-		}
-		skilltreeList = append(skilltreeList, avatarSkillBin)
-	}
-	return skilltreeList
-}
-
-func (g *GamePlayer) SetAvatarMakSkillByAvatarId(avatarId uint32) {
-	db := g.GetSkillTreeList(avatarId)
-	if db == nil {
-		return
-	}
-	for _, avatarSkill := range db {
-		conf := gdconf.GetAvatarSkilltreeBySkillId(avatarSkill.PointId, 1)
-		if conf == nil {
-			continue
-		}
-		avatarSkill.Level = conf.MaxLevel
-	}
-}
-
 // 8001,8002,8003,8004,8005,8006 -> 8001
 // 1001,1224 -> 1001
 func (g *GamePlayer) AddAvatar(avatarId uint32, src proto.AddAvatarSrcState) {

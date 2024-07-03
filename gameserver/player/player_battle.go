@@ -126,7 +126,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.ChallengePVEBattleResultCsReq(req)
 	case spb.BattleType_Battle_ROGUE:
 		teleportToAnchor = false
-		g.RoguePVEBattleResultCsReq(req)
+		g.RoguePVEBattleResultCsReq(req, len(battleBin.monsterEntity))
 	}
 
 	// 是否传送到最近锚点

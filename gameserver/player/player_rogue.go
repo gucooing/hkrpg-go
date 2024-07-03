@@ -124,7 +124,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 }
 
 // 模拟宇宙攻击事件结算
-func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
+func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, monsterNum int) {
 	// // buff同步
 	battleDb := g.GetBattleBackupById(req.BattleId)
 	g.SyncEntityBuffChangeListScNotify(battleDb.AttackedByEntityId)
@@ -136,12 +136,15 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) 
 		g.Send(cmd.SyncRogueExploreWinScNotify, &proto.SyncRogueExploreWinScNotify{IsWin: true})
 	} else {
 		// 祝福选择页通知 SyncRogueCommonPendingActionScNotify
+		// for x := 0; x < monsterNum; x++ {
 		buffIdList := make([]uint32, 0)
 		for i := 0; i < 3; i++ {
 			// buffIdList = append(buffIdList, g.GetRogueBuff())
 			buffIdList = append(buffIdList, gdconf.GetRogueBuff())
 		}
 		g.SyncRogueCommonPendingActionScNotify(buffIdList)
+		// }
+
 		// 刷新门
 	}
 }

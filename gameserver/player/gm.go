@@ -100,6 +100,7 @@ func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
 // 角色一键满级
 func (g *GamePlayer) GmMaxCurAvatar(payloadMsg pb.Message) {
 	req := payloadMsg.(*spb.MaxCurAvatar)
+	allSync := &AllPlayerSync{AvatarList: make([]uint32, 0)}
 	if req.All {
 		bin := g.GetAvatar()
 		if bin == nil {
@@ -107,6 +108,7 @@ func (g *GamePlayer) GmMaxCurAvatar(payloadMsg pb.Message) {
 		}
 		for _, db := range bin.AvatarList {
 			g.SetAvatarMaxByDb(db)
+			allSync.AvatarList = append(allSync.AvatarList, db.AvatarId)
 		}
 	} else {
 		var db *spb.AvatarBin
@@ -114,8 +116,10 @@ func (g *GamePlayer) GmMaxCurAvatar(payloadMsg pb.Message) {
 		if db == nil {
 			db = g.GetCurAvatar()
 		}
+		allSync.AvatarList = append(allSync.AvatarList, db.AvatarId)
 		g.SetAvatarMaxByDb(db)
 	}
+	g.AllPlayerSyncScNotify(allSync)
 }
 
 func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
@@ -127,11 +131,15 @@ func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
 	db.Hp = 10000          // 满血
 	db.SpBar.CurSp = 10000 // 满能量
 	for _, info := range db.MultiPathAvatarInfoList {
-		info.Rank = 6 // 六命
+		info.Rank = 6                              // 六命
+		for _, skill := range info.SkilltreeList { // 技能满级
+			conf := gdconf.GetAvatarSkilltreeBySkillId(skill.PointId, 1)
+			if conf == nil {
+				continue
+			}
+			skill.Level = conf.MaxLevel
+		}
 	}
-	g.SetAvatarMakSkillByAvatarId(db.AvatarId) // 技能满级
-	// 通知角色信息
-	g.AvatarPlayerSyncScNotify(db.AvatarId)
 }
 
 func (g *GamePlayer) RecoverLine() {
