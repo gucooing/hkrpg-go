@@ -234,6 +234,7 @@ func (g *GamePlayer) GetBattleLineUp() *spb.Line {
 	case spb.BattleType_Battle_ROGUE:
 		return g.GetBattleLineUpById(Rogue)
 	case spb.BattleType_Battle_TrialActivity:
+		return g.GetBattleLineUpById(Activity)
 	default:
 		return g.GetCurLineUp()
 	}
