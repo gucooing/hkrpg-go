@@ -27,6 +27,7 @@ type GameDataConfig struct {
 	AvatarDataMap                map[uint32]*AvatarData                          // 角色
 	AvatarExpItemConfigMap       map[uint32]*AvatarExpItemConfig                 // 角色升级经验材料配置
 	AvatarPromotionConfigMap     map[uint32]map[uint32]*AvatarPromotionConfig    // 角色突破配置
+	MultiplePathAvatarConfigMap  map[uint32]*MultiplePathAvatarConfig            // 多命途角色配置
 	ExpTypeMap                   map[uint32]map[uint32]*ExpType                  // 经验配置
 	EquipmentConfigMap           map[uint32]*EquipmentConfig                     // 光锥
 	EquipmentExpTypeMap          map[uint32]map[uint32]*EquipmentExp             // 光锥经验配置
@@ -170,6 +171,7 @@ func (g *GameDataConfig) load() {
 		g.loadAvatarData,                // 角色
 		g.loadAvatarExpItemConfig,       // 角色升级经验材料配置
 		g.loadAvatarPromotionConfig,     // 角色突破配置
+		g.loadMultiplePathAvatarConfig,  // 多命途角色配置
 		g.loadExpType,                   // 经验配置
 		g.loadEquipmentConfig,           // 光锥
 		g.loadEquipmentExpType,          // 光锥经验配置

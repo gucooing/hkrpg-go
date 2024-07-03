@@ -18,16 +18,13 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		RelicList:     make([]uint32, 0),
 	}
 	itemConf := gdconf.GetItemConfigMap()
+	avatarConf := gdconf.GetAvatarDataMap()
 	if req.GiveAll {
 		var pileItem []*Material
 		// add avatar
-		for _, avatar := range itemConf.Avatar {
-			// 过滤非live角色
-			if avatar.ID/1000 != 1 {
-				continue
-			}
-			allSync.AvatarList = append(allSync.AvatarList, avatar.ID)
-			g.AddAvatar(avatar.ID, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
+		for _, avatar := range avatarConf {
+			allSync.AvatarList = append(allSync.AvatarList, avatar.AvatarId)
+			g.AddAvatar(avatar.AvatarId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
 		}
 		// add playerIcon
 		var playerIconList []uint32
@@ -121,11 +118,13 @@ func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
 	if db == nil {
 		return
 	}
-	db.Level = 80                              // 80级
-	db.PromoteLevel = 6                        // 突破等级
-	db.Rank = 6                                // 六命
-	db.Hp = 10000                              // 满血
-	db.SpBar.CurSp = 10000                     // 满能量
+	db.Level = 80          // 80级
+	db.PromoteLevel = 6    // 突破等级
+	db.Hp = 10000          // 满血
+	db.SpBar.CurSp = 10000 // 满能量
+	for _, info := range db.MultiPathAvatarInfoList {
+		info.Rank = 6 // 六命
+	}
 	g.SetAvatarMakSkillByAvatarId(db.AvatarId) // 技能满级
 	// 通知角色信息
 	g.AvatarPlayerSyncScNotify(db.AvatarId)

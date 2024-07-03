@@ -162,6 +162,11 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
 }
 
+func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg []byte) {
+	// msg := g.DecodePayloadToProto(cmd.ActivateFarmElementCsReq, payloadMsg)
+	// req := msg.(*proto.ActivateFarmElementCsReq)
+}
+
 /***********************************物品破坏处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {

@@ -40,7 +40,7 @@ func (s *HkRpgGoServer) EnterCommand(command string) {
 		logger.Error("There is no such command, Command: %s", commandList[0])
 		return
 	}
-	cmdHandlerFunc(commandList, s)
+	go cmdHandlerFunc(commandList, s)
 }
 
 func help(parameter []string, s *HkRpgGoServer) {
@@ -55,6 +55,7 @@ func give(parameter []string, s *HkRpgGoServer) {
 	}
 	p := s.GetPlayer(alg.S2U32(parameter[1]))
 	if p == nil {
+		logger.Warn("Player Not Found")
 		return
 	}
 	switch parameter[2] {

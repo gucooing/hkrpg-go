@@ -60,10 +60,11 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.InteractPropCsReq:      g.InteractPropCsReq,          // 实体交互
 		// cmd.GroupStateChangeCsReq: // 组状态变更
 		// 战斗
-		cmd.SceneCastSkillCsReq:   g.SceneCastSkillCsReq,   // 场景开启战斗
-		cmd.PVEBattleResultCsReq:  g.PVEBattleResultCsReq,  // PVE战斗结算
-		cmd.StartCocoonStageCsReq: g.StartCocoonStageCsReq, // 副本/周本等
-		cmd.SceneEnterStageCsReq:  g.SceneEnterStageCsReq,  // 场景直接发起战斗
+		cmd.SceneCastSkillCsReq:      g.SceneCastSkillCsReq,      // 场景开启战斗
+		cmd.PVEBattleResultCsReq:     g.PVEBattleResultCsReq,     // PVE战斗结算
+		cmd.StartCocoonStageCsReq:    g.StartCocoonStageCsReq,    // 副本/周本等
+		cmd.ActivateFarmElementCsReq: g.ActivateFarmElementCsReq, // 虚影战斗
+		cmd.SceneEnterStageCsReq:     g.SceneEnterStageCsReq,     // 场景直接发起战斗
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期

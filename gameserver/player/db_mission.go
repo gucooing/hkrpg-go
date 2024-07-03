@@ -381,12 +381,18 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			g.FinishMainMission(id)
 		case constant.MessagePerformSectionFinish: // 对话框显示
 			g.AddMessageGroup(conf.ParamInt1)
-		// g.FinishSubMission(id)
+			g.FinishSubMission(id)
 		case constant.MessageSectionFinish: //
 			// g.AddMessageGroup(conf.ParamInt1)
 			g.FinishSubMission(id)
 		case constant.Unknown:
 			g.FinishSubMission(id)
+		case constant.PropState:
+			// eid := alg.S2U32(strings.Replace(strconv.Itoa(int(conf.LevelFloorID)), "00", "0", -1))
+			db := g.GetBlock(g.GetCurEntryId())
+			if g.GetPropState(db, conf.ParamInt1, conf.ParamInt2, "") == conf.ParamInt3 {
+				g.FinishSubMission(id)
+			}
 		}
 	}
 }
@@ -504,6 +510,7 @@ func (g *GamePlayer) LoginReadyMission() {
 	}
 	// g.ReadyMainMission() // 主线检查
 	// g.AllFinishMission() // 检查是否有子任务应该完成但未完成
+	g.CheckJumpMainMission()
 	g.ReadyMainMission() // 主线接取检查
 	g.FinishMissionAuto()
 }
@@ -532,6 +539,7 @@ func (g *GamePlayer) ReadyMainMission() {
 				Progress:  0,
 				Status:    spb.MissionStatus_MISSION_DOING,
 			}
+			g.JumpMainMission(id)
 			// 接取该主线子任务
 			for _, subInfo := range goppConf.SubMissionList {
 				if finishSubMainMissionList[subInfo.ID] != nil {
@@ -585,8 +593,35 @@ is:
 	return isReceive
 }
 
+func (g *GamePlayer) CheckJumpMainMission() {
+	mainMissionList := g.GetMainMissionList()
+	for _, info := range mainMissionList {
+		g.JumpMainMission(info.MissionId)
+	}
+}
+
+func (g *GamePlayer) JumpMainMission(id uint32) {
+	jumpList := []uint32{4030001, 4030002, 8013103}
+	subMainMissionList := g.GetSubMainMissionList() // 已接取的子任务
+	for _, jumpId := range jumpList {
+		if jumpId == id {
+			mainConf := gdconf.GetGoppMainMissionById(jumpId)
+			if mainConf == nil {
+				return
+			}
+			// 该主线需要被完成
+			for _, subInfo := range mainConf.SubMissionList {
+				if subMainMissionList[subInfo.ID] != nil {
+					g.UpSubMainMission(subInfo.ID) // 完成子任务
+				}
+			}
+			g.UpMainMission(jumpId) // 结束主任务
+		}
+	}
+}
+
 // 将已完成的主任务下还没有完成的子任务全部完成
-func (g *GamePlayer) CheckMission() {
+func (g *GamePlayer) CheckMission(id uint32) {
 	subMainMissionList := g.GetSubMainMissionList()
 	for _, main := range g.GetFinishMainMissionList() {
 		conf := gdconf.GetGoppMainMissionById(main.MissionId)

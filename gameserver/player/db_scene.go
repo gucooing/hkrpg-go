@@ -358,6 +358,10 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 	}
 	// 检查强制卸载条件
 	// 检查加载条件
+	// if levelGroup.GroupId == 66 {
+	// 	logger.Info("")
+	// 	return true
+	// }
 	if levelGroup.LoadCondition != nil {
 		for _, conditions := range levelGroup.LoadCondition.Conditions {
 			if conditions.Phase == "Finish" { // 完成了这个任务
@@ -369,6 +373,7 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 				} else {
 					isLoaded = false
 				}
+				continue
 			}
 			if conditions.Type == "SubMission" && conditions.Phase == "" { // 接取了这个子任务
 				if subMainMissionList[conditions.ID] != nil {
@@ -379,6 +384,7 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 				} else {
 					isLoaded = false
 				}
+				continue
 			}
 			if conditions.Type == "" && conditions.Phase == "" { // 接取主线任务
 				if mainMissionList[conditions.ID] != nil {
@@ -389,6 +395,7 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 				} else {
 					isLoaded = false
 				}
+				continue
 			}
 		}
 	}
@@ -399,27 +406,29 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 
 	// 检查卸载条件
 	if levelGroup.UnloadCondition != nil {
-		all := true
+		all := false
 		for _, conditions := range levelGroup.UnloadCondition.Conditions {
 			if conditions.Phase == "Finish" { // 完成了这个任务
 				if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
 					if levelGroup.UnloadCondition.Operation == "Or" {
 						isLoaded = false
 						break
+					} else {
+						all = true
 					}
-				} else {
-					all = false
 				}
+				continue
 			}
 			if conditions.Phase == "" { // 接取了这个任务
 				if subMainMissionList[conditions.ID] != nil || mainMissionList[conditions.ID] != nil {
 					if levelGroup.UnloadCondition.Operation == "Or" {
 						isLoaded = false
 						break
+					} else {
+						all = true
 					}
-				} else {
-					all = false
 				}
+				continue
 			}
 		}
 		if all {
@@ -546,10 +555,10 @@ func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 	if db == nil {
 		return
 	}
-	if prop.MappingInfoID != 0 && prop.State == "" {
-		g.UpPropState(db, groupId, prop.ID, 1)
-		return
-	}
+	// if prop.MappingInfoID != 0 && prop.State == "" {
+	// 	g.UpPropState(db, groupId, prop.ID, 1)
+	// 	return
+	// }
 	if prop.StageObjectCapture != nil { // 特殊处理
 		switch prop.StageObjectCapture.BlockAlias {
 		case "RogueLobby_01": // 模拟宇宙入口直接开放
@@ -630,7 +639,6 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
-
 		g.StageObjectCapture(propList, sceneGroup.GroupId, db)
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),

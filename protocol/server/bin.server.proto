@@ -69,15 +69,7 @@ message Scene {
 message Avatar {
   map<uint32, AvatarBin> avatar_list = 1; // 角色列表
   Gender gender = 2; // 性别
-  HeroBasicType cur_main_avatar = 3; // 主角属性
-  map<uint32, HeroBasicTypeInfo> hero_basic_type_info = 4; // 主角属性列表
   map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
-}
-
-message HeroBasicTypeInfo {
-  uint32 rank = 1;
-  HeroBasicType basic_type = 2;
-  repeated AvatarSkillBin skill_tree_list = 3;
 }
 
 message AvatarBin {
@@ -87,15 +79,22 @@ message AvatarBin {
   uint32 avatar_type = 4; // 状态
   uint64 first_met_time_stamp = 5; // 获取时间
   uint32 promote_level = 6; // 突破等级
-  uint32 rank = 7; // 激活命座数
+  repeated uint32 taken_rewards = 7; // 已领取的突破奖励
   uint32 hp = 8; // 血量
   AvatarSpBarInfo sp_bar = 9; // 能量
-  repeated AvatarSkillBin skilltree_list = 10; // 技能库
-  uint32 equipment_uniqueId = 11; // 装备光锥
-  map<uint32, uint32> equip_relic = 12; // 装备圣遗物
-  repeated uint32 taken_rewards = 13; // 已领取的突破奖励
-  uint32 buff_list = 14; // 开启战斗的buff
+  bool is_multi_path = 10; // 是否多命途
+  uint32 cur_path = 11;//当前命途
+  map<uint32,MultiPathAvatarInfo>multi_path_avatar_info_list = 12;//属性列表
 }
+
+message MultiPathAvatarInfo {
+  uint32 avatar_id = 1; // ID
+  uint32 rank = 2;
+  repeated AvatarSkillBin skilltree_list = 3; // 技能库
+  uint32 equipment_uniqueId = 4; // 装备光锥
+  map<uint32, uint32> equip_relic = 5; // 装备圣遗物
+}
+
 
 message AvatarSpBarInfo {
   uint32 cur_sp = 1; // 当前能量

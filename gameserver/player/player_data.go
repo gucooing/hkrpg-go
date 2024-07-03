@@ -6,7 +6,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) StaminaInfoScNotify() {
@@ -120,7 +119,11 @@ func (g *GamePlayer) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeroBasicTypeCsReq, payloadMsg)
 	req := msg.(*proto.SetHeroBasicTypeCsReq)
 
-	g.BasicBin.Avatar.CurMainAvatar = spb.HeroBasicType(req.BasicType)
+	db := g.GetAvatarById(8001)
+
+	db.CurPath = uint32(req.BasicType)
+
+	g.AllPlayerSyncScNotify(&AllPlayerSync{AvatarList: []uint32{8001}})
 
 	rsp := &proto.SetHeroBasicTypeScRsp{
 		BasicType: req.BasicType,

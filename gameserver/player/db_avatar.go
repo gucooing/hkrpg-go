@@ -11,11 +11,9 @@ import (
 
 func NewAvatar() *spb.Avatar {
 	return &spb.Avatar{
-		AvatarList:        make(map[uint32]*spb.AvatarBin),
-		Gender:            spb.Gender_GenderMan,
-		CurMainAvatar:     spb.HeroBasicType_BoyWarrior,
-		HeroBasicTypeInfo: make(map[uint32]*spb.HeroBasicTypeInfo),
-		BattleAvatarList:  make(map[uint32]*spb.AvatarBin),
+		AvatarList:       make(map[uint32]*spb.AvatarBin),
+		Gender:           spb.Gender_GenderMan,
+		BattleAvatarList: make(map[uint32]*spb.AvatarBin),
 	}
 }
 
@@ -45,6 +43,10 @@ func (g *GamePlayer) GetBattleAvatarList() map[uint32]*spb.AvatarBin {
 
 func (g *GamePlayer) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
 	bin := g.GetAvatarList()
+	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
+	if patchConf != nil {
+		avatarId = patchConf.BaseAvatarID
+	}
 	return bin[avatarId]
 }
 
@@ -61,40 +63,16 @@ func (g *GamePlayer) GetAvatarById(avatarId uint32) *spb.AvatarBin {
 	default:
 		bin = g.GetBattleAvatarList()
 	}
+	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
+	if patchConf != nil {
+		avatarId = patchConf.BaseAvatarID
+	}
 	return bin[avatarId]
 }
 
 func (g *GamePlayer) GetCurAvatar() *spb.AvatarBin {
 	db := g.GetSceneAvatarId()
 	return g.GetAvatarBinById(db)
-}
-
-func (g *GamePlayer) GetHeroBasicTypeInfo() map[uint32]*spb.HeroBasicTypeInfo {
-	db := g.GetAvatar()
-	if db.HeroBasicTypeInfo == nil {
-		db.HeroBasicTypeInfo = make(map[uint32]*spb.HeroBasicTypeInfo)
-	}
-	return db.HeroBasicTypeInfo
-}
-
-func (g *GamePlayer) GetHeroBasicTypeInfoBy(basicType spb.HeroBasicType) *spb.HeroBasicTypeInfo {
-	db := g.GetHeroBasicTypeInfo()
-	if db[uint32(basicType)] == nil {
-		g.AddHeroBasicTypeInfo(basicType)
-	}
-	return db[uint32(basicType)]
-}
-
-func (g *GamePlayer) AddHeroBasicTypeInfo(basicType spb.HeroBasicType) {
-	db := g.GetHeroBasicTypeInfo()
-	if db[uint32(basicType)] != nil {
-		return
-	}
-	db[uint32(basicType)] = &spb.HeroBasicTypeInfo{
-		Rank:          0,
-		BasicType:     basicType,
-		SkillTreeList: g.GetBasicTypeSkillTreeList(uint32(basicType)),
-	}
 }
 
 func (g *GamePlayer) GetBasicTypeSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
@@ -107,53 +85,6 @@ func (g *GamePlayer) GetBasicTypeSkillTreeList(avatarId uint32) []*spb.AvatarSki
 		skilltreeList = append(skilltreeList, avatarSkillBin)
 	}
 	return skilltreeList
-}
-
-func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
-	skilltreeList := make([]*spb.AvatarSkillBin, 0)
-	if avatarId/1000 == 8 {
-		avatarId = 8001
-	}
-	avatarBin := g.GetAvatarBinById(avatarId)
-	if avatarId == 8001 {
-		basicInfo := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
-		if basicInfo == nil {
-			g.AddHeroBasicTypeInfo(g.GetAvatar().CurMainAvatar)
-			basicInfo = g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
-		}
-		for _, info := range basicInfo.SkillTreeList {
-			if info.Level == 0 {
-				continue
-			}
-			avatarSkillBin := &spb.AvatarSkillBin{
-				PointId: info.PointId,
-				Level:   info.Level,
-			}
-			skilltreeList = append(skilltreeList, avatarSkillBin)
-		}
-		return skilltreeList
-	}
-	if avatarBin == nil {
-		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
-			avatarSkillBin := &spb.AvatarSkillBin{
-				PointId: id,
-				Level:   level,
-			}
-			skilltreeList = append(skilltreeList, avatarSkillBin)
-		}
-		return skilltreeList
-	}
-	if avatarBin.SkilltreeList == nil {
-		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
-			avatarSkillBin := &spb.AvatarSkillBin{
-				PointId: id,
-				Level:   level,
-			}
-			skilltreeList = append(skilltreeList, avatarSkillBin)
-		}
-		avatarBin.SkilltreeList = skilltreeList
-	}
-	return avatarBin.SkilltreeList
 }
 
 func (g *GamePlayer) SetAvatarMakSkillByAvatarId(avatarId uint32) {
@@ -170,11 +101,14 @@ func (g *GamePlayer) SetAvatarMakSkillByAvatarId(avatarId uint32) {
 	}
 }
 
+// 8001,8002,8003,8004,8005,8006 -> 8001
+// 1001,1224 -> 1001
 func (g *GamePlayer) AddAvatar(avatarId uint32, src proto.AddAvatarSrcState) {
 	if gdconf.GetAvatarDataById(avatarId) == nil {
 		return // 过滤没有的角色
 	}
 	db := g.GetAvatarList()
+	// 重复角色判断
 	if db[avatarId] != nil {
 		var pileItem []*Material
 		pileItem = append(pileItem, &Material{
@@ -184,6 +118,15 @@ func (g *GamePlayer) AddAvatar(avatarId uint32, src proto.AddAvatarSrcState) {
 		g.AddMaterial(pileItem)
 		return
 	}
+	// 多命途判断
+	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
+	if patchConf != nil && patchConf.BaseAvatarID != patchConf.AvatarID {
+		if db[patchConf.BaseAvatarID] == nil {
+			return
+		}
+		g.AddMultiPathAvatar(avatarId)
+		return
+	}
 	db[avatarId] = &spb.AvatarBin{
 		AvatarId:          avatarId,
 		Exp:               0,
@@ -191,17 +134,23 @@ func (g *GamePlayer) AddAvatar(avatarId uint32, src proto.AddAvatarSrcState) {
 		AvatarType:        uint32(spb.AvatarType_AVATAR_FORMAL_TYPE),
 		FirstMetTimeStamp: uint64(time.Now().Unix()),
 		PromoteLevel:      0,
-		Rank:              0,
+		TakenRewards:      make([]uint32, 0),
 		Hp:                10000,
 		SpBar: &spb.AvatarSpBarInfo{
 			CurSp: 10000,
 			MaxSp: 10000,
 		},
-		SkilltreeList:     g.GetSkillTreeList(avatarId),
-		EquipmentUniqueId: 0,
-		EquipRelic:        make(map[uint32]uint32),
-		TakenRewards:      make([]uint32, 0),
-		BuffList:          0,
+		IsMultiPath: false,
+		CurPath:     avatarId,
+		MultiPathAvatarInfoList: map[uint32]*spb.MultiPathAvatarInfo{
+			avatarId: {
+				AvatarId:          avatarId,
+				Rank:              0,
+				SkilltreeList:     g.newSkillTreeList(avatarId),
+				EquipmentUniqueId: 0,
+				EquipRelic:        make(map[uint32]uint32),
+			},
+		},
 	}
 
 	g.AvatarPlayerSyncScNotify(avatarId)
@@ -211,6 +160,76 @@ func (g *GamePlayer) AddAvatar(avatarId uint32, src proto.AddAvatarSrcState) {
 		Src:          src,
 		IsNew:        true,
 	})
+}
+
+// 添加命途
+func (g *GamePlayer) AddMultiPathAvatar(avatarId uint32) {
+	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
+	if patchConf == nil {
+		return
+	}
+	db := g.GetAvatarById(patchConf.BaseAvatarID)
+	if db == nil {
+		return
+	}
+	db.IsMultiPath = true
+	if db.MultiPathAvatarInfoList[avatarId] == nil {
+		db.MultiPathAvatarInfoList[avatarId] = &spb.MultiPathAvatarInfo{
+			AvatarId:          avatarId,
+			Rank:              0,
+			SkilltreeList:     g.newSkillTreeList(avatarId),
+			EquipmentUniqueId: 0,
+			EquipRelic:        make(map[uint32]uint32),
+		}
+	}
+}
+
+// 获取命途
+func (g *GamePlayer) GetMultiPathAvatar(avatarId uint32) *spb.MultiPathAvatarInfo {
+	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
+	if patchConf == nil {
+		return nil
+	}
+	db := g.GetAvatarById(patchConf.BaseAvatarID)
+	if db == nil {
+		return nil
+	}
+	return db.MultiPathAvatarInfoList[avatarId]
+}
+
+// 添加技能
+func (g *GamePlayer) newSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
+	skilltreeList := make([]*spb.AvatarSkillBin, 0)
+	for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
+		avatarSkillBin := &spb.AvatarSkillBin{
+			PointId: id,
+			Level:   level,
+		}
+		skilltreeList = append(skilltreeList, avatarSkillBin)
+	}
+	return skilltreeList
+}
+
+// 获取技能
+func (g *GamePlayer) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
+	skilltreeList := make([]*spb.AvatarSkillBin, 0)
+	avatarBin := g.GetAvatarBinById(avatarId)
+	if avatarBin == nil {
+		for id, level := range gdconf.GetAvatarSkilltreeListById(avatarId) {
+			avatarSkillBin := &spb.AvatarSkillBin{
+				PointId: id,
+				Level:   level,
+			}
+			skilltreeList = append(skilltreeList, avatarSkillBin)
+		}
+		return skilltreeList
+	}
+	// 根据当前命途获取技能
+	curPath := avatarBin.MultiPathAvatarInfoList[avatarBin.CurPath]
+	if curPath == nil {
+		return skilltreeList
+	}
+	return curPath.SkilltreeList
 }
 
 func (g *GamePlayer) CopyBattleAvatar(avatarBin *spb.AvatarBin) {
@@ -225,17 +244,15 @@ func (g *GamePlayer) CopyBattleAvatar(avatarBin *spb.AvatarBin) {
 		AvatarType:        uint32(spb.AvatarType_AVATAR_FORMAL_TYPE),
 		FirstMetTimeStamp: avatarBin.FirstMetTimeStamp,
 		PromoteLevel:      avatarBin.PromoteLevel,
-		Rank:              avatarBin.Rank,
+		TakenRewards:      avatarBin.TakenRewards,
 		Hp:                12000,
 		SpBar: &spb.AvatarSpBarInfo{
 			CurSp: 6000,
 			MaxSp: 12000,
 		},
-		SkilltreeList:     avatarBin.SkilltreeList,
-		EquipmentUniqueId: avatarBin.EquipmentUniqueId,
-		EquipRelic:        avatarBin.EquipRelic,
-		TakenRewards:      avatarBin.TakenRewards,
-		BuffList:          avatarBin.BuffList,
+		IsMultiPath:             avatarBin.IsMultiPath,
+		CurPath:                 avatarBin.CurPath,
+		MultiPathAvatarInfoList: avatarBin.MultiPathAvatarInfoList,
 	}
 }
 
@@ -243,12 +260,12 @@ func (g *GamePlayer) AddAvatarRank(rank uint32, db *spb.AvatarBin) {
 	if db == nil {
 		return
 	}
-	db.Rank += rank
-	if db.Rank > 6 || db.Rank < 0 {
-		db.Rank = 6
+	if c := db.MultiPathAvatarInfoList[db.CurPath]; c != nil {
+		c.Rank += rank
 	}
 }
 
+// 战斗结束后更新角色状态
 func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus) {
 	var deadAatarNum uint32 = 0
 re:
@@ -300,10 +317,12 @@ func (g *GamePlayer) SetAvatarEquipRelic(avatarId, slot, relicId uint32) {
 	if db == nil {
 		return
 	}
-	if db.EquipRelic == nil {
-		db.EquipRelic = make(map[uint32]uint32)
+	if v := db.MultiPathAvatarInfoList[db.CurPath]; v != nil {
+		if v.EquipRelic == nil {
+			v.EquipRelic = make(map[uint32]uint32)
+		}
+		v.EquipRelic[slot] = relicId
 	}
-	db.EquipRelic[slot] = relicId
 }
 
 func (g *GamePlayer) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
@@ -311,35 +330,39 @@ func (g *GamePlayer) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
 	if db == nil {
 		return nil
 	}
-	if db.EquipRelic == nil {
-		db.EquipRelic = make(map[uint32]uint32)
+	if v := db.MultiPathAvatarInfoList[db.CurPath]; v != nil {
+		if v.EquipRelic == nil {
+			v.EquipRelic = make(map[uint32]uint32)
+		}
+		return g.GetRelicById(v.EquipRelic[slot])
 	}
-	return g.GetRelicById(db.EquipRelic[slot])
+	return nil
 }
 
 /****************************************************功能***************************************************/
 
 func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
-	if avatarId/1000 == 8 {
-		avatarId = 8001
-	}
 	avatardb := g.GetAvatarBinById(avatarId)
 	if avatardb == nil {
+		return nil
+	}
+	patch := avatardb.MultiPathAvatarInfoList[avatardb.CurPath]
+	if patch == nil {
 		return nil
 	}
 	avatar := &proto.Avatar{
 		SkilltreeList:               make([]*proto.AvatarSkillTree, 0),
 		Exp:                         avatardb.Exp,
 		BaseAvatarId:                avatardb.AvatarId,
-		Rank:                        avatardb.Rank,
-		EquipmentUniqueId:           avatardb.EquipmentUniqueId,
 		EquipRelicList:              make([]*proto.EquipRelic, 0),
 		HasTakenPromotionRewardList: avatardb.TakenRewards,
 		FirstMetTimeStamp:           avatardb.FirstMetTimeStamp,
 		Promotion:                   avatardb.PromoteLevel,
 		Level:                       avatardb.Level,
 	}
-	for _, skill := range g.GetSkillTreeList(avatarId) {
+	avatar.Rank = patch.Rank
+	avatar.EquipmentUniqueId = patch.EquipmentUniqueId
+	for _, skill := range patch.SkilltreeList {
 		if skill.Level == 0 {
 			continue
 		}
@@ -349,7 +372,7 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 		}
 		avatar.SkilltreeList = append(avatar.SkilltreeList, avatarSkillTree)
 	}
-	for id, relic := range avatardb.EquipRelic {
+	for id, relic := range patch.EquipRelic {
 		if relic == 0 {
 			continue
 		}
@@ -358,11 +381,6 @@ func (g *GamePlayer) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 			RelicUniqueId: relic,
 		}
 		avatar.EquipRelicList = append(avatar.EquipRelicList, equipRelic)
-	}
-	if avatarId == 8001 {
-		basic := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
-		avatar.SkilltreeList = make([]*proto.AvatarSkillTree, 0)
-		avatar.Rank = basic.Rank
 	}
 
 	return avatar
@@ -374,142 +392,153 @@ type BattleAvatar struct {
 	AssistUid  uint32             // 助战uid
 }
 
+// 添加战斗角色列表
 func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*proto.BattleAvatar, []*proto.BattleBuff) {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
 	buffList := make([]*proto.BattleBuff, 0)
-	for id, bA := range bAList {
+	for index, bA := range bAList {
 		if bA.AvatarId == 0 {
 			continue
 		}
-		battleAvatar := new(proto.BattleAvatar)
 		switch bA.AvatarType {
 		case spb.LineAvatarType_LineAvatarType_MI:
-			avatarBin := g.GetAvatarById(bA.AvatarId)
-			if avatarBin == nil {
-				continue
-			}
-			battleAvatar = &proto.BattleAvatar{
-				AvatarType:    proto.AvatarType(avatarBin.AvatarType),
-				Id:            avatarBin.AvatarId,
-				Level:         avatarBin.Level,
-				Rank:          avatarBin.Rank,
-				Index:         id,
-				SkilltreeList: make([]*proto.AvatarSkillTree, 0),
-				EquipmentList: make([]*proto.BattleEquipment, 0),
-				Hp:            avatarBin.Hp,
-				Promotion:     avatarBin.PromoteLevel,
-				RelicList:     make([]*proto.BattleRelic, 0),
-				WorldLevel:    g.GetWorldLevel(),
-				AssistUid:     bA.AssistUid,
-				SpBar: &proto.SpBarInfo{
-					CurSp: avatarBin.SpBar.CurSp,
-					MaxSp: avatarBin.SpBar.MaxSp,
-				},
-			}
-			if bA.AvatarId == 8001 {
-				battleAvatar.Id = uint32(g.GetAvatar().CurMainAvatar)
-			}
-			// 获取技能
-			for _, skill := range g.GetSkillTreeList(bA.AvatarId) {
-				if skill.Level == 0 {
-					continue
-				}
-				avatarSkillTree := &proto.AvatarSkillTree{
-					PointId: skill.PointId,
-					Level:   skill.Level,
-				}
-				battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
-			}
-			// 获取装备
-			for _, relic := range avatarBin.EquipRelic {
-				equipRelic := g.GetProtoBattleRelicById(relic)
-				if equipRelic == nil {
-					delete(avatarBin.EquipRelic, relic)
-					continue
-				}
-				battleAvatar.RelicList = append(battleAvatar.RelicList, equipRelic)
-			}
-			// 获取角色装备的光锥
-			if avatarBin.EquipmentUniqueId != 0 {
-				equipment := g.GetEquipment(avatarBin.EquipmentUniqueId)
-				equipmentList := &proto.BattleEquipment{
-					Id:        equipment.Tid,
-					Level:     equipment.Level,
-					Promotion: equipment.Promotion,
-					Rank:      equipment.Rank,
-				}
-				battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
-			}
+			battleAvatarList = append(battleAvatarList, g.GetBattleAvatar(bA.AvatarId, index))
 		case spb.LineAvatarType_LineAvatarType_TRIAL:
-			avatarBin := gdconf.GetSpecialAvatarById(bA.AvatarId)
-			if avatarBin == nil {
-				continue
-			}
-			battleAvatar = &proto.BattleAvatar{
-				AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
-				Id:            bA.AvatarId,
-				Level:         avatarBin.Level,
-				Rank:          0,
-				Index:         id,
-				SkilltreeList: make([]*proto.AvatarSkillTree, 0),
-				EquipmentList: make([]*proto.BattleEquipment, 0),
-				Hp:            10000,
-				Promotion:     avatarBin.Promotion,
-				RelicList:     make([]*proto.BattleRelic, 0),
-				WorldLevel:    g.GetWorldLevel(),
-				AssistUid:     bA.AssistUid,
-				SpBar: &proto.SpBarInfo{
-					CurSp: 6000,
-					MaxSp: 10000,
-				},
-			}
-			// 获取技能
-			for _, skill := range g.GetSkillTreeList(avatarBin.PlayerID) {
-				if skill.Level == 0 {
-					continue
-				}
-				avatarSkillTree := &proto.AvatarSkillTree{
-					PointId: skill.PointId,
-					Level:   skill.Level,
-				}
-				battleAvatar.SkilltreeList = append(battleAvatar.SkilltreeList, avatarSkillTree)
-			}
-			// 获取角色装备的光锥
-			if avatarBin.EquipmentID != 0 {
-				equipmentList := &proto.BattleEquipment{
-					Id:        avatarBin.EquipmentID,
-					Level:     avatarBin.EquipmentLevel,
-					Promotion: avatarBin.Promotion,
-					Rank:      avatarBin.EquipmentRank,
-				}
-				battleAvatar.EquipmentList = append(battleAvatar.EquipmentList, equipmentList)
-			}
+			battleAvatarList = append(battleAvatarList, g.GetTrialBattleAvatar(bA.AvatarId, index))
 		default:
 			continue
 		}
-		battleAvatarList = append(battleAvatarList, battleAvatar)
 		// 添加该角色的buff
-		info := g.GetOnLineAvatarBuffById(bA.AvatarId)
-		if info != nil {
-			buffList = append(buffList, &proto.BattleBuff{
-				Id:              info.BuffId,
-				Level:           1,
-				OwnerIndex:      id,
-				WaveFlag:        4294967295,
-				TargetIndexList: []uint32{1},
-				DynamicValues:   make(map[string]float32),
-			})
-			g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)
-		}
+		// info := g.GetOnLineAvatarBuffById(bA.AvatarId)
+		// if info != nil {
+		// 	buffList = append(buffList, &proto.BattleBuff{
+		// 		Id:              info.BuffId,
+		// 		Level:           1,
+		// 		OwnerIndex:      id,
+		// 		WaveFlag:        4294967295,
+		// 		TargetIndexList: []uint32{1},
+		// 		DynamicValues:   make(map[string]float32),
+		// 	})
+		// 	g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)
+		// }
 	}
 	return battleAvatarList, buffList
+}
+
+// 角色
+func (g *GamePlayer) GetBattleAvatar(avatarId, index uint32) *proto.BattleAvatar {
+	db := g.GetAvatarById(avatarId)
+	if db == nil {
+		return nil
+	}
+	pathDb := db.MultiPathAvatarInfoList[db.CurPath]
+	if pathDb == nil {
+		return nil
+	}
+	info := &proto.BattleAvatar{
+		AvatarType:    proto.AvatarType(db.AvatarType),
+		Id:            db.CurPath, // 当前命途
+		Level:         db.Level,
+		Rank:          pathDb.Rank,
+		Index:         index,
+		SkilltreeList: make([]*proto.AvatarSkillTree, 0),
+		EquipmentList: make([]*proto.BattleEquipment, 0),
+		Hp:            db.Hp,
+		Promotion:     db.PromoteLevel,
+		RelicList:     make([]*proto.BattleRelic, 0),
+		WorldLevel:    g.GetWorldLevel(),
+		SpBar: &proto.SpBarInfo{
+			CurSp: db.SpBar.CurSp,
+			MaxSp: db.SpBar.MaxSp,
+		},
+	}
+	// 获取技能
+	for _, skill := range g.GetSkillTreeList(avatarId) {
+		if skill.Level == 0 {
+			continue
+		}
+		avatarSkillTree := &proto.AvatarSkillTree{
+			PointId: skill.PointId,
+			Level:   skill.Level,
+		}
+		info.SkilltreeList = append(info.SkilltreeList, avatarSkillTree)
+	}
+	// 获取装备
+	for _, relic := range pathDb.EquipRelic {
+		equipRelic := g.GetProtoBattleRelicById(relic)
+		if equipRelic == nil {
+			delete(pathDb.EquipRelic, relic)
+			continue
+		}
+		info.RelicList = append(info.RelicList, equipRelic)
+	}
+	// 获取角色装备的光锥
+	if pathDb.EquipmentUniqueId != 0 {
+		equipment := g.GetEquipment(pathDb.EquipmentUniqueId)
+		equipmentList := &proto.BattleEquipment{
+			Id:        equipment.Tid,
+			Level:     equipment.Level,
+			Promotion: equipment.Promotion,
+			Rank:      equipment.Rank,
+		}
+		info.EquipmentList = append(info.EquipmentList, equipmentList)
+	}
+	return info
+}
+
+// 试用角色
+func (g *GamePlayer) GetTrialBattleAvatar(avatarId, index uint32) *proto.BattleAvatar {
+	avatarBin := gdconf.GetSpecialAvatarById(avatarId)
+	if avatarBin == nil {
+		return nil
+	}
+	info := &proto.BattleAvatar{
+		AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
+		Id:            avatarId,
+		Level:         avatarBin.Level,
+		Rank:          0,
+		Index:         index,
+		SkilltreeList: make([]*proto.AvatarSkillTree, 0),
+		EquipmentList: make([]*proto.BattleEquipment, 0),
+		Hp:            10000,
+		Promotion:     avatarBin.Promotion,
+		RelicList:     make([]*proto.BattleRelic, 0),
+		WorldLevel:    g.GetWorldLevel(),
+		SpBar: &proto.SpBarInfo{
+			CurSp: 6000,
+			MaxSp: 10000,
+		},
+	}
+	// 获取技能
+	for _, skill := range g.GetSkillTreeList(avatarBin.PlayerID) {
+		if skill.Level == 0 {
+			continue
+		}
+		avatarSkillTree := &proto.AvatarSkillTree{
+			PointId: skill.PointId,
+			Level:   skill.Level,
+		}
+		info.SkilltreeList = append(info.SkilltreeList, avatarSkillTree)
+	}
+	// 获取角色装备的光锥
+	if avatarBin.EquipmentID != 0 {
+		equipmentList := &proto.BattleEquipment{
+			Id:        avatarBin.EquipmentID,
+			Level:     avatarBin.EquipmentLevel,
+			Promotion: avatarBin.Promotion,
+			Rank:      avatarBin.EquipmentRank,
+		}
+		info.EquipmentList = append(info.EquipmentList, equipmentList)
+	}
+
+	return info
 }
 
 func (g *GamePlayer) GetPlayerHeroBasicTypeInfo() []*proto.PlayerHeroBasicTypeInfo {
 	basicTypeInfoList := make([]*proto.PlayerHeroBasicTypeInfo, 0)
 	avatarDb := g.GetAvatar()
 	avatarBin := g.GetAvatarBinById(8001)
-	for id, heroBasic := range g.GetHeroBasicTypeInfo() {
+	for id, pathInfo := range avatarBin.MultiPathAvatarInfoList {
 		switch avatarDb.Gender {
 		case spb.Gender_GenderMan:
 			if id%2 == 0 {
@@ -522,19 +551,19 @@ func (g *GamePlayer) GetPlayerHeroBasicTypeInfo() []*proto.PlayerHeroBasicTypeIn
 		}
 		basicTypeInfo := &proto.PlayerHeroBasicTypeInfo{
 			SkillTreeList:  make([]*proto.AvatarSkillTree, 0),
-			BasicType:      proto.HeroBasicType(heroBasic.BasicType),
+			BasicType:      proto.HeroBasicType(pathInfo.AvatarId),
 			EquipRelicList: make([]*proto.EquipRelic, 0),
-			Rank:           heroBasic.Rank,
+			Rank:           pathInfo.Rank,
 		}
 		// 获取装备圣遗物
-		for tp, relic := range avatarBin.EquipRelic {
+		for tp, relic := range pathInfo.EquipRelic {
 			basicTypeInfo.EquipRelicList = append(basicTypeInfo.EquipRelicList, &proto.EquipRelic{
 				Type:          tp,
 				RelicUniqueId: relic,
 			})
 		}
 		// 添加技能
-		for _, skill := range heroBasic.SkillTreeList {
+		for _, skill := range pathInfo.SkilltreeList {
 			if skill.Level == 0 {
 				continue
 			}

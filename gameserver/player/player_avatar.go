@@ -8,9 +8,10 @@ import (
 
 func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
 	avatarDb := g.GetAvatar()
+	main := g.GetAvatarById(8001)
 	rsp := &proto.GetHeroBasicTypeInfoScRsp{
 		Gender:            proto.Gender(avatarDb.Gender),
-		CurBasicType:      proto.HeroBasicType(avatarDb.CurMainAvatar),
+		CurBasicType:      proto.HeroBasicType(main.CurPath),
 		IsGenderModified:  false,
 		BasicTypeInfoList: g.GetPlayerHeroBasicTypeInfo(),
 		Retcode:           0,
@@ -61,15 +62,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 		g.Send(cmd.RankUpAvatarScRsp, rsp)
 		return
 	}
-	if req.GetDressAvatarId()/1000 == 8 {
-		basic := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
-		basic.Rank += 1
-		if basic.Rank > 6 || basic.Rank < 0 {
-			basic.Rank = 6
-		}
-	} else {
-		g.AddAvatarRank(1, db)
-	}
+	g.AddAvatarRank(1, db)
 
 	allSync.AvatarList = append(allSync.AvatarList, req.GetDressAvatarId())
 	g.AllPlayerSyncScNotify(allSync)
@@ -281,18 +274,9 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 		return
 	}
 	// 升级
-	if avatarId == 8001 {
-		basicInfo := g.GetHeroBasicTypeInfoBy(g.GetAvatar().CurMainAvatar)
-		for _, skilltree := range basicInfo.SkillTreeList {
-			if skilltree.PointId == req.PointId {
-				skilltree.Level = req.Level
-			}
-		}
-	} else {
-		for _, skilltree := range g.GetSkillTreeList(avatarId) {
-			if skilltree.PointId == req.PointId {
-				skilltree.Level = req.Level
-			}
+	for _, skilltree := range g.GetSkillTreeList(avatarId) {
+		if skilltree.PointId == req.PointId {
+			skilltree.Level = req.Level
 		}
 	}
 	// 通知升级后角色消息

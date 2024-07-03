@@ -32,6 +32,8 @@ type SubMission struct {
 	AudioEmotionState string                    `json:"AudioEmotionState"`
 	TakeType          constant.MissionBeginType `json:"TakeType"`
 	TakeParamIntList  []uint32                  `json:"TakeParamIntList"`
+	MazePlaneID       uint32                    `json:"MazePlaneID"`
+	MazeFloorID       uint32                    `json:"MazeFloorID"`
 	FinishType        constant.QuestFinishType  `json:"FinishType"`
 	ParamType         string                    `json:"ParamType"`
 	ParamInt1         uint32                    `json:"ParamInt1"`
@@ -70,6 +72,7 @@ type MapProp struct {
 
 type MissionJson struct {
 	OnStartSequece []*OnStartSequece `json:"OnStartSequece"`
+	OnInitSequece  []*OnStartSequece `json:"OnInitSequece"`
 	Type           string            `json:"Type"`
 }
 
@@ -80,12 +83,12 @@ type OnStartSequece struct {
 type Task struct {
 	Type string `json:"$type"`
 	// 传送相关
-	EntranceID uint32 `json:"EntranceID"`
+	EntranceID  uint32 `json:"EntranceID"`
+	TaskEnabled bool   `json:"TaskEnabled"`
 	// 战斗相关
 	EventID      *EventID    `json:"EventID"`
 	GroupID      interface{} `json:"GroupID"`
 	BattleAreaID interface{} `json:"BattleAreaID"`
-	TaskEnabled  bool        `json:"TaskEnabled"`
 }
 
 type EventID struct {
@@ -184,6 +187,20 @@ func GetEntryId(id uint32) (uint32, bool) {
 			if CONF.MapEntranceMap[entryId] != nil {
 				isFloor = true
 				break
+			}
+		}
+	}
+	if !isFloor {
+		for _, info := range conf.OnInitSequece {
+			if info.TaskList == nil {
+				continue
+			}
+			for _, task := range info.TaskList {
+				entryId = task.EntranceID
+				if CONF.MapEntranceMap[entryId] != nil {
+					isFloor = true
+					break
+				}
 			}
 		}
 	}

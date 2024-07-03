@@ -5,6 +5,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) ScenePlaneEventScNotify(pileItem []*Material) {
@@ -288,16 +289,30 @@ func (g *GamePlayer) DressAvatarPlayerSyncScNotify(equipAvatarId, equipmentUniqu
 	if equipAvatarDb == nil || equipmentDb == nil {
 		return
 	}
+	curPath := equipAvatarDb.MultiPathAvatarInfoList[equipAvatarDb.CurPath]
+	if curPath == nil {
+		return
+	}
 	baseAvatarDb := g.GetAvatarBinById(equipmentDb.BaseAvatarId)
-	oldEquiDb := g.GetEquipmentById(equipAvatarDb.EquipmentUniqueId)
 
-	equipAvatarDb.EquipmentUniqueId = equipmentUniqueId
+	var baseCurPath *spb.MultiPathAvatarInfo
+	if baseAvatarDb != nil {
+		for _, info := range baseAvatarDb.MultiPathAvatarInfoList {
+			if info.EquipmentUniqueId == curPath.EquipmentUniqueId {
+				baseCurPath = info
+			}
+		}
+	}
+
+	oldEquiDb := g.GetEquipmentById(curPath.EquipmentUniqueId)
+
+	curPath.EquipmentUniqueId = equipmentUniqueId
 	equipmentDb.BaseAvatarId = equipAvatarId
 	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(equipAvatarId))
 	notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(equipmentUniqueId))
 
-	if baseAvatarDb != nil {
-		baseAvatarDb.EquipmentUniqueId = 0
+	if baseCurPath != nil {
+		baseCurPath.EquipmentUniqueId = 0
 		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(baseAvatarDb.AvatarId))
 	}
 	if oldEquiDb != nil {

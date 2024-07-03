@@ -574,6 +574,7 @@ func (g *GamePlayer) CocoonBattle(cocoonId, worldLevel uint32) {
 
 /****************************************************功能***************************************************/
 
+// 场景战斗
 func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.SceneBattleInfo, *BattleBackup) {
 	if mem == nil || lineUp == nil {
 		logger.Debug("[UID:%v]战斗获取失败", g.Uid)
@@ -616,6 +617,7 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 	return battleInfo, battleBackup
 }
 
+// 副本战斗
 func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoonStageCsReq) (*proto.SceneBattleInfo, *BattleBackup) {
 	if lineUp == nil {
 		logger.Debug("[UID:%v]战斗获取失败", g.Uid)

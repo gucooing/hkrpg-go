@@ -71,20 +71,22 @@ func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
 	req := msg.(*proto.SetPlayerInfoCsReq)
 
 	g.SetNickname(req.Nickname)
+	main := g.GetAvatarBinById(8001)
 
 	if req.IsModify {
 		if req.Gender == proto.Gender_GenderWoman {
 			g.Send(cmd.HeroBasicTypeChangedNotify, &proto.HeroBasicTypeChangedNotify{CurBasicType: proto.HeroBasicType_GirlWarrior})
 			db := g.GetAvatar()
 			db.Gender = spb.Gender_GenderWoman
-			db.CurMainAvatar = spb.HeroBasicType_GirlWarrior
+			main.CurPath = uint32(spb.HeroBasicType_GirlWarrior)
+			g.AddMultiPathAvatar(uint32(spb.HeroBasicType_GirlWarrior))
 			g.AvatarPlayerSyncScNotify(8001)
 		}
 		g.CreateCharacterSubMission()
 	}
 	rsp := &proto.SetPlayerInfoScRsp{
 		Retcode:      0,
-		CurBasicType: proto.HeroBasicType(g.GetAvatar().CurMainAvatar),
+		CurBasicType: proto.HeroBasicType(main.CurPath),
 		IsModify:     req.IsModify,
 	}
 	g.PlayerPlayerSyncScNotify() // 角色信息通知
