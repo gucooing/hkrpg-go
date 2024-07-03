@@ -38,7 +38,10 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
 	rsp := &proto.GetCurChallengeScRsp{
 		CurChallenge: g.GetChallengeInfo(),
-		LineupList:   []*proto.LineupInfo{g.GetBattleLineUpPb(Challenge_1), g.GetBattleLineUpPb(Challenge_2)},
+		LineupList: []*proto.LineupInfo{
+			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_1)),
+			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_2)),
+		},
 	}
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
 }
@@ -72,7 +75,10 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	rsp := &proto.StartChallengeScRsp{
 		CurChallenge: g.GetChallengeInfo(),
 		Scene:        g.GetChallengeScene(),
-		LineupList:   []*proto.LineupInfo{g.GetBattleLineUpPb(Challenge_1), g.GetBattleLineUpPb(Challenge_2)},
+		LineupList: []*proto.LineupInfo{
+			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_1)),
+			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_2)),
+		},
 	}
 
 	g.Send(cmd.StartChallengeScRsp, rsp)
@@ -140,7 +146,7 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 			// 添加角色
 			g.ChallengeAddAvatarSceneGroupRefreshScNotify()
 			// 更新新的队伍
-			g.SyncLineupNotify(Challenge_2, true)
+			g.SyncLineupNotify(g.GetBattleLineUpById(Challenge_2))
 		}
 	} else {
 		// 结算

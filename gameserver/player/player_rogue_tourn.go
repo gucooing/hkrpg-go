@@ -48,30 +48,7 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 		return
 	}
 	// 更新队伍
-	lineUpDb := g.GetBattleLineUpById(RogueTourn)
-	lineUpDb.LeaderSlot = 0
-	if req.BaseAvatarIdList != nil {
-		lineUpDb.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-		for id, avatarId := range req.BaseAvatarIdList {
-			lineUpDb.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}
-		}
-	} else {
-		curAvatarList := g.GetCurLineUp()
-		if curAvatarList == nil {
-			rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
-			g.Send(cmd.RogueTournStartScRsp, rsp)
-			return
-		}
-		for id, avatar := range curAvatarList.AvatarIdList {
-			lineUpDb.AvatarIdList[id] = &spb.LineAvatarList{AvatarId: avatar.AvatarId, Slot: id}
-		}
-	}
-	// 将角色属性拷贝出来
-	for _, avatar := range lineUpDb.AvatarIdList {
-		avatarBin := g.GetAvatarBinById(avatar.AvatarId)
-		g.CopyBattleAvatar(avatarBin)
-	}
-
+	g.SetBattleLineUp(RogueTourn, req.BaseAvatarIdList)
 	// 更新db
 	g.SetBattleStatus(spb.BattleType_Battle_ROGUE_TOURN)
 	g.SetMaterialById(Cf, 100) // 将宇宙碎片重置成100个
@@ -79,7 +56,7 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 	curRoom := g.GetCurRogueTournRoom()
 
 	rsp.RogueTournCurSceneInfo = &proto.RogueTournCurSceneInfo{
-		Lineup: g.GetBattleLineUpPb(RogueTourn),
+		Lineup: g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
 		Scene:  g.GetRogueTournScene(curRoom.RoomId),
 	}
 	rsp.RogueTournCurInfo = g.GetRogueTournCurInfo()
@@ -106,7 +83,7 @@ func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg []byte) {
 	rsp := &proto.RogueTournEnterScRsp{
 		RogueTournCurInfo: g.GetRogueTournCurInfo(),
 		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
-			Lineup: g.GetBattleLineUpPb(RogueTourn),
+			Lineup: g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
 			Scene:  g.GetRogueTournScene(curRoom.RoomId),
 		},
 	}
@@ -132,7 +109,7 @@ func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg []byte) {
 	curRoom := g.GetCurRogueTournRoom()
 	rsp := &proto.RogueTournEnterRoomScRsp{
 		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
-			Lineup: g.GetBattleLineUpPb(RogueTourn),
+			Lineup: g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
 			Scene:  g.GetRogueTournScene(curRoom.RoomId),
 		},
 		Retcode: 0,

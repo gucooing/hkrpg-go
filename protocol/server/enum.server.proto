@@ -50,6 +50,8 @@ enum ExtraLineupType {// 队伍类型
   LINEUP_TREASURE_DUNGEON = 11;
   LINEUP_CHESS_ROGUE = 12;
   LINEUP_HELIOBUS = 13;
+  LINEUP_TOURN_ROGUE = 14;
+  LINEUP_RELIC_ROGUE = 15;
 }
 
 enum BattleType{// 战斗状态

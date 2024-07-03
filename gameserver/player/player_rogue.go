@@ -68,29 +68,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 		return
 	}
 	// 更新队伍
-	lineUpDb := g.GetBattleLineUpById(Rogue)
-	lineUpDb.LeaderSlot = 0
-	lineUpDb.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-	if req.BaseAvatarIdList != nil {
-		for id, avatarId := range req.BaseAvatarIdList {
-			lineUpDb.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}
-		}
-	} else {
-		curAvatarList := g.GetCurLineUp()
-		if curAvatarList == nil {
-			rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
-			g.Send(cmd.StartRogueScRsp, rsp)
-			return
-		}
-		for id, avatar := range curAvatarList.AvatarIdList {
-			lineUpDb.AvatarIdList[id] = &spb.LineAvatarList{AvatarId: avatar.AvatarId, Slot: id}
-		}
-	}
-	// 将角色属性拷贝出来
-	for _, avatar := range lineUpDb.AvatarIdList {
-		avatarBin := g.GetAvatarBinById(avatar.AvatarId)
-		g.CopyBattleAvatar(avatarBin)
-	}
+	g.SetBattleLineUp(Rogue, req.BaseAvatarIdList)
 	// 取房间
 	rogueRoomMap := make(map[uint32]*spb.RogueRoom, 0)
 	switch conf.AreaProgress {
@@ -138,7 +116,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
 	// 准备工作就绪,告知客户端
 	g.Send(cmd.SyncRogueStatusScNotify, &proto.SyncRogueStatusScNotify{Status: proto.RogueStatus_ROGUE_STATUS_DOING})
 
-	rsp.Lineup = g.GetBattleLineUpPb(Rogue)
+	rsp.Lineup = g.GetLineUpPb(g.GetBattleLineUpById(Rogue))
 	rsp.Scene = g.GetRogueScene(rogueRoomMap[rogueMap.StartId].RoomId)
 	rsp.RogueInfo = g.GetRogueInfo()
 
@@ -337,7 +315,7 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	g.UpCurRogueRoom(req.SiteId)
 	rsp := &proto.EnterRogueMapRoomScRsp{
 		RotateInfo: g.GetRogueMapRotateInfo(),
-		Lineup:     g.GetBattleLineUpPb(Rogue),
+		Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(Rogue)),
 		CurSiteId:  req.SiteId,
 		Retcode:    0,
 		Scene:      g.GetRogueScene(req.RoomId),

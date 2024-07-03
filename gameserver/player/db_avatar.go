@@ -309,7 +309,7 @@ re:
 		g.AddChallengeDeadAvatar(deadAatarNum)
 	}
 
-	g.SyncLineupNotifyByLineBin(g.GetBattleLineUp())
+	g.SyncLineupNotify(g.GetBattleLineUp())
 }
 
 func (g *GamePlayer) SetAvatarEquipRelic(avatarId, slot, relicId uint32) {

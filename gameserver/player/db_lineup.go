@@ -154,7 +154,7 @@ func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 		}
 	}
 	g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, false, g.GetPosPb(), g.GetRotPb())
-	g.SyncLineupNotifyByLineBin(db)
+	g.SyncLineupNotify(db)
 }
 
 func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
@@ -186,7 +186,7 @@ func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
 		}
 	}
 	// g.GetAddAvatarSceneEntityRefreshInfo(db, g.GetPosPb(), g.GetRotPb())
-	g.SyncLineupNotifyByLineBin(db)
+	g.SyncLineupNotify(db)
 }
 
 func (g *GamePlayer) GetCurLineUp() *spb.Line {
@@ -259,159 +259,111 @@ func (g *GamePlayer) AddLineUpMp(mp uint32) {
 		db.Mp = 5
 	}
 	// 更新通知
-	g.SyncLineupNotify(db.MainLineUp, false)
+	g.SyncLineupNotify(g.GetCurLineUp())
 }
 
 func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
+	if avatarList == nil { // 没有传入角色
+		avatarList = make([]uint32, 0)
+		for _, info := range g.GetCurLineUp().AvatarIdList {
+			avatarList = append(avatarList, info.AvatarId)
+		}
+	}
+	var lineUpType spb.ExtraLineupType
+	var avatarType spb.LineAvatarType
+	switch index {
+	case Challenge_1:
+		lineUpType = spb.ExtraLineupType_LINEUP_CHALLENGE
+	case Challenge_2:
+		lineUpType = spb.ExtraLineupType_LINEUP_CHALLENGE_2
+	case Rogue:
+		lineUpType = spb.ExtraLineupType_LINEUP_ROGUE
+	case RogueTourn:
+		lineUpType = spb.ExtraLineupType_LINEUP_TOURN_ROGUE
+	case Activity:
+		lineUpType = spb.ExtraLineupType_LINEUP_STAGE_TRIAL
+		avatarType = spb.LineAvatarType_LineAvatarType_TRIAL
+	}
 	db := g.GetBattleLineUpById(index)
 	db.LeaderSlot = 0
+	db.LineType = lineUpType
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
 	for id, avatarId := range avatarList {
-		db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id)}
+		db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id), LineAvatarType: avatarType}
 	}
+	// 拷贝角色
 	for _, avatar := range avatarList {
 		avatarBin := g.GetAvatarBinById(avatar)
 		g.CopyBattleAvatar(avatarBin)
 	}
-	g.SyncLineupNotify(index, true)
+	g.SyncLineupNotify(db)
 }
 
 /*****************************************功能方法****************************/
 
 func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
-	var wtmLeaderSlot = false
-	if db.AvatarIdList[db.LeaderSlot] == nil || db.AvatarIdList[db.LeaderSlot].AvatarId == 0 {
-		wtmLeaderSlot = true
+	if db == nil {
+		return nil
 	}
 	avatarList := make([]*proto.LineupAvatar, 0)
+	// if db.AvatarIdList[db.LeaderSlot] == nil {
+	//
+	// }
 	for slot, lineAvatar := range db.AvatarIdList {
-		if wtmLeaderSlot {
-			db.LeaderSlot = slot
-		}
-		lineupAvatar := &proto.LineupAvatar{}
 		switch lineAvatar.LineAvatarType {
 		case spb.LineAvatarType_LineAvatarType_MI:
-			avatarBin := g.GetAvatarBinById(lineAvatar.AvatarId)
-			if avatarBin == nil {
-				if slot == db.LeaderSlot {
-					wtmLeaderSlot = true
-				}
-				continue
-			}
-			lineupAvatar = &proto.LineupAvatar{
-				AvatarType: proto.AvatarType(avatarBin.AvatarType),
-				Slot:       slot,
-				Satiety:    0,
-				Hp:         avatarBin.Hp,
-				Id:         lineAvatar.AvatarId,
-				SpBar: &proto.SpBarInfo{
-					CurSp: avatarBin.SpBar.CurSp,
-					MaxSp: avatarBin.SpBar.MaxSp,
-				},
-			}
+			avatarList = append(avatarList, g.GetLineupAvatar(lineAvatar.AvatarId, slot))
 		case spb.LineAvatarType_LineAvatarType_TRIAL:
-			lineupAvatar = &proto.LineupAvatar{
-				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
-				Slot:       slot,
-				Satiety:    0,
-				Hp:         10000,
-				Id:         lineAvatar.AvatarId,
-				SpBar: &proto.SpBarInfo{
-					CurSp: 6000,
-					MaxSp: 10000,
-				},
-			}
+			avatarList = append(avatarList, g.GetTrialLineupAvatar(lineAvatar.AvatarId, slot))
 		default:
 			continue
 		}
-		avatarList = append(avatarList, lineupAvatar)
 	}
+
 	lineupList := &proto.LineupInfo{
-		IsVirtual:       false,
-		LeaderSlot:      db.LeaderSlot,
 		AvatarList:      avatarList,
-		ExtraLineupType: proto.ExtraLineupType_LINEUP_NONE,
-		Index:           db.Index,
-		MaxMp:           MaxMp,
 		Mp:              g.GetLineUpMp(),
-		Name:            db.Name,
+		IsVirtual:       false,
+		Index:           db.Index,
 		PlaneId:         0,
+		Name:            db.Name,
+		ExtraLineupType: proto.ExtraLineupType(db.LineType),
+		MaxMp:           MaxMp,
+		LeaderSlot:      db.LeaderSlot,
 	}
 	return lineupList
 }
 
-func (g *GamePlayer) GetBattleLineUpPb(id uint32) *proto.LineupInfo {
-	db := g.GetBattleLineUpById(id)
-	var lineUpType proto.ExtraLineupType
-	switch id {
-	case Challenge_1:
-		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE
-	case Challenge_2:
-		lineUpType = proto.ExtraLineupType_LINEUP_CHALLENGE_2
-	case Rogue:
-		lineUpType = proto.ExtraLineupType_LINEUP_ROGUE
-	case RogueTourn:
-		lineUpType = proto.ExtraLineupType_LINEUP_TOURN_ROGUE
-	case Activity:
-		lineUpType = proto.ExtraLineupType_LINEUP_STAGE_TRIAL
+func (g *GamePlayer) GetLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
+	db := g.GetAvatarBinById(avatarId)
+	if db == nil {
+		return nil
 	}
-	var wtmLeaderSlot = false
-	if db.AvatarIdList[db.LeaderSlot] == nil || db.AvatarIdList[db.LeaderSlot].AvatarId == 0 {
-		wtmLeaderSlot = true
+	info := &proto.LineupAvatar{
+		Slot:    index,
+		Satiety: 0,
+		Hp:      db.Hp,
+		SpBar: &proto.SpBarInfo{
+			CurSp: db.SpBar.CurSp,
+			MaxSp: db.SpBar.MaxSp,
+		},
+		Id:         avatarId,
+		AvatarType: proto.AvatarType(db.AvatarType),
 	}
-	avatarList := make([]*proto.LineupAvatar, 0)
-	for slot, lineAvatar := range db.AvatarIdList {
-		if lineAvatar.AvatarId == 0 {
-			continue
-		}
-		if wtmLeaderSlot {
-			db.LeaderSlot = slot
-		}
-		lineupAvatar := &proto.LineupAvatar{}
-		switch lineAvatar.LineAvatarType {
-		case spb.LineAvatarType_LineAvatarType_MI:
-			avatarBin := g.GetBattleAvatarBinById(lineAvatar.AvatarId)
-			if avatarBin == nil {
-				continue
-			}
-			lineupAvatar = &proto.LineupAvatar{
-				AvatarType: proto.AvatarType(avatarBin.AvatarType),
-				Slot:       slot,
-				Satiety:    0,
-				Hp:         avatarBin.Hp,
-				Id:         lineAvatar.AvatarId,
-				SpBar: &proto.SpBarInfo{
-					CurSp: avatarBin.SpBar.CurSp,
-					MaxSp: avatarBin.SpBar.MaxSp,
-				},
-			}
-		case spb.LineAvatarType_LineAvatarType_TRIAL:
-			lineupAvatar = &proto.LineupAvatar{
-				AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
-				Slot:       slot,
-				Satiety:    0,
-				Hp:         10000,
-				Id:         lineAvatar.AvatarId,
-				SpBar: &proto.SpBarInfo{
-					CurSp: 10000,
-					MaxSp: 10000,
-				},
-			}
-		default:
-			continue
-		}
-		avatarList = append(avatarList, lineupAvatar)
+	return info
+}
+
+func (g *GamePlayer) GetTrialLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
+	info := &proto.LineupAvatar{
+		Slot:    index,
+		Satiety: 0,
+		Hp:      12000,
+		SpBar: &proto.SpBarInfo{
+			CurSp: 6000,
+			MaxSp: 12000,
+		},
+		Id:         avatarId,
+		AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
 	}
-	lineupList := &proto.LineupInfo{
-		IsVirtual:       false,
-		LeaderSlot:      db.LeaderSlot,
-		AvatarList:      avatarList,
-		ExtraLineupType: lineUpType,
-		Index:           0,
-		MaxMp:           MaxMp,
-		Mp:              g.GetLineUpMp(),
-		Name:            db.Name,
-		PlaneId:         0,
-	}
-	return lineupList
+	return info
 }

@@ -23,6 +23,10 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		var pileItem []*Material
 		// add avatar
 		for _, avatar := range avatarConf {
+			x := avatar.AvatarId / 1000
+			if x != 1 && x != 8 {
+				continue
+			}
 			allSync.AvatarList = append(allSync.AvatarList, avatar.AvatarId)
 			g.AddAvatar(avatar.AvatarId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
 		}

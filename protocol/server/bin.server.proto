@@ -124,7 +124,7 @@ message Line {
   map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
   uint32 index = 3; // 第几个队伍
   uint32 leader_slot = 4; // 当前角色是第几个
-  // ExtraLineupType line_type = 5;// 队伍类型
+  ExtraLineupType line_type = 5;// 队伍类型
 }
 
 message LineAvatarList {

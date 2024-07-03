@@ -4,7 +4,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 type ActivityInfoOnline struct {
@@ -31,17 +30,7 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	db := g.GetActivityInfoOnline()
 	db.StageId = req.StageId
 	// 更新角色
-	lineup := g.GetBattleLineUpById(Activity)
-	lineup.LeaderSlot = 0
-	lineup.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-	for id, avatarId := range avatarDemo.TrialAvatarList {
-		lineup.AvatarIdList[uint32(id-1)] = &spb.LineAvatarList{
-			Slot:           uint32(id - 1),
-			AvatarId:       avatarId,
-			LineAvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
-		}
-	}
-
+	g.SetBattleLineUp(Activity, avatarDemo.TrialAvatarList)
 	g.StartTrialEnterSceneByServerScNotify()
 
 	rsp := &proto.StartTrialActivityScRsp{StageId: req.StageId}
@@ -51,7 +40,7 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	notify := &proto.EnterSceneByServerScNotify{
 		Scene:  g.GetTrialActivityScene(),
-		Lineup: g.GetBattleLineUpPb(Activity),
+		Lineup: g.GetLineUpPb(g.GetBattleLineUpById(Activity)),
 	}
 	g.Send(cmd.EnterSceneByServerScNotify, notify)
 }

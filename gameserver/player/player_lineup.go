@@ -7,19 +7,11 @@ import (
 )
 
 // 队伍更新通知
-func (g *GamePlayer) SyncLineupNotify(index uint32, isBattleLine bool) {
-	rsq := new(proto.SyncLineupNotify)
-	if isBattleLine {
-		rsq.Lineup = g.GetBattleLineUpPb(index)
-	} else {
-		rsq.Lineup = g.GetLineUpPb(g.GetLineUpById(index))
+func (g *GamePlayer) SyncLineupNotify(db *spb.Line) {
+	rsq := &proto.SyncLineupNotify{
+		ReasonList: nil,
+		Lineup:     g.GetLineUpPb(db),
 	}
-	g.Send(cmd.SyncLineupNotify, rsq)
-}
-
-func (g *GamePlayer) SyncLineupNotifyByLineBin(db *spb.Line) {
-	rsq := new(proto.SyncLineupNotify)
-	rsq.Lineup = g.GetLineUpPb(db)
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
@@ -59,7 +51,7 @@ func (g *GamePlayer) HandleJoinLineupCsReq(payloadMsg []byte) {
 	g.UnDbLineUp(req.Index, req.Slot, req.BaseAvatarId)
 
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index, false)
+	g.SyncLineupNotify(g.GetLineUpById(req.Index))
 	g.SceneGroupRefreshScNotify(req.Index)
 
 	rsp := new(proto.LineupAvatar)
@@ -73,7 +65,7 @@ func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg []byte) {
 	lineUpDb := g.GetLineUp()
 	lineUpDb.MainLineUp = req.Index
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index, false)
+	g.SyncLineupNotify(g.GetCurLineUp())
 	g.SceneGroupRefreshScNotify(req.Index)
 
 	rsp := &proto.SwitchLineupIndexScRsp{Index: req.Index}
@@ -89,7 +81,7 @@ func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg []byte) {
 	g.SwapLineup(req.Index, req.SrcSlot, req.DstSlot)
 
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index, false)
+	g.SyncLineupNotify(g.GetLineUpById(req.Index))
 	g.SceneGroupRefreshScNotify(req.Index)
 
 	rsp := &proto.SwapLineupCsReq{}
@@ -104,7 +96,7 @@ func (g *GamePlayer) SetLineupNameCsReq(payloadMsg []byte) {
 	db.Name = req.Name
 
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index, false)
+	g.SyncLineupNotify(g.GetLineUpById(req.Index))
 	g.SceneGroupRefreshScNotify(req.Index)
 
 	rsp := &proto.SetLineupNameScRsp{
@@ -140,13 +132,14 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 		isBattleLine = true
 	}
 	db.LeaderSlot = 0
+	db.LineType = spb.ExtraLineupType(req.ExtraLineupType)
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
 	for _, avatarList := range req.LineupSlotList {
 		db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{AvatarId: avatarList.Id, Slot: avatarList.Slot}
 	}
 
 	// 队伍更新通知
-	g.SyncLineupNotify(index, isBattleLine)
+	g.SyncLineupNotify(db)
 	if isBattleLine {
 		// 将角色属性拷贝出来
 		for _, avatar := range req.LineupSlotList {
@@ -186,7 +179,7 @@ func (g *GamePlayer) QuitLineupCsReq(payloadMsg []byte) {
 		}
 	}
 	// 队伍更新通知
-	g.SyncLineupNotify(req.Index, false)
+	g.SyncLineupNotify(db)
 	g.SceneGroupRefreshScNotify(req.Index)
 
 	g.Send(cmd.QuitLineupScRsp, nil)
