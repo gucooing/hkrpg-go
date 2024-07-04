@@ -169,7 +169,7 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 	rsp := &proto.HandleRogueCommonPendingActionScRsp{
 		QueuePosition: g.GetRogueBuffNum(),
 		Retcode:       0,
-		QueueLocation: g.GetRogueBuffNum(),
+		QueueLocation: req.QueueLocation,
 		Action:        nil,
 	}
 

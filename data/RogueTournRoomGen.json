@@ -329,6 +329,28 @@
       "26": {}
     }
   },
+  "11075010": {
+    "RogueRoomID": 11075010,
+    "RogueRoomType": 7,
+    "MapEntrance": 8040501,
+    "GroupID": 0,
+    "GroupWithContent": [
+      31,
+      30,
+      32,
+      33,
+      78,
+      79
+    ],
+    "NpcMonster": {
+      "30": {},
+      "31": {},
+      "32": {},
+      "33": {},
+      "78": {},
+      "79": {}
+    }
+  },
   "11083013": {
     "RogueRoomID": 11083013,
     "RogueRoomType": 8,
@@ -361,6 +383,64 @@
       "11": {},
       "12": {},
       "9": {}
+    }
+  },
+  "11101010": {
+    "RogueRoomID": 11101010,
+    "RogueRoomType": 10,
+    "MapEntrance": 8040101,
+    "GroupID": 0,
+    "GroupWithContent": [
+      78,
+      77,
+      180,
+      189,
+      190,
+      181
+    ],
+    "NpcMonster": {
+      "180": {},
+      "181": {},
+      "189": {},
+      "190": {},
+      "77": {},
+      "78": {}
+    }
+  },
+  "11103010": {
+    "RogueRoomID": 11103010,
+    "RogueRoomType": 10,
+    "MapEntrance": 8040301,
+    "GroupID": 0,
+    "GroupWithContent": [
+      134,
+      133,
+      135
+    ],
+    "NpcMonster": {
+      "133": {},
+      "134": {},
+      "135": {}
+    }
+  },
+  "11105010": {
+    "RogueRoomID": 11105010,
+    "RogueRoomType": 10,
+    "MapEntrance": 8040501,
+    "GroupID": 0,
+    "GroupWithContent": [
+      40,
+      39,
+      77,
+      78,
+      79
+    ],
+    "NpcMonster": {
+      "39": {},
+      "40": {},
+      "77": {},
+      "78": {},
+      "79": {}
     }
   },
   "21034012": {

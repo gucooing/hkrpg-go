@@ -4,18 +4,19 @@ import (
 	"math/rand"
 	"os"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
 
 type RogueTournRoom struct {
 	RogueTournRoomGenMap    map[uint32]*RogueTournRoomGen
-	RogueTournRoomGenByType map[uint32][]*RogueTournRoomGen
+	RogueTournRoomGenByType map[constant.RogueTournRoomType][]*RogueTournRoomGen
 }
 
 type RogueTournRoomGen struct {
 	RogueRoomID      uint32                                       `json:"RogueRoomID"`
-	RogueRoomType    uint32                                       `json:"RogueRoomType"`
+	RogueRoomType    constant.RogueTournRoomType                  `json:"RogueRoomType"`
 	MapEntrance      uint32                                       `json:"MapEntrance"`
 	GroupID          uint32                                       `json:"GroupID"`
 	GroupWithContent []uint32                                     `json:"GroupWithContent"`
@@ -30,7 +31,7 @@ type RogueTournMonsterInfo struct {
 func (g *GameDataConfig) loadRogueTournRoomGen() {
 	g.RogueTournRoom = &RogueTournRoom{
 		RogueTournRoomGenMap:    make(map[uint32]*RogueTournRoomGen),
-		RogueTournRoomGenByType: make(map[uint32][]*RogueTournRoomGen),
+		RogueTournRoomGenByType: make(map[constant.RogueTournRoomType][]*RogueTournRoomGen),
 	}
 	rogueTournRoomGen := make(map[uint32]*RogueTournRoomGen)
 	playerElementsFilePath := g.dataPrefix + "RogueTournRoomGen.json"
@@ -62,7 +63,7 @@ func GetRogueTournRoomGenById(id uint32) *RogueTournRoomGen {
 }
 
 func GetRogueTournRoomGenaByType(typeid uint32) *RogueTournRoomGen {
-	list := CONF.RogueTournRoom.RogueTournRoomGenByType[typeid]
+	list := CONF.RogueTournRoom.RogueTournRoomGenByType[constant.RogueTournRoomType(typeid)]
 	idIndex := rand.Intn(len(list))
 	return list[idIndex]
 }

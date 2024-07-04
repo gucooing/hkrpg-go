@@ -1,6 +1,9 @@
 package player
 
 import (
+	"math/rand"
+	"strings"
+
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -139,6 +142,27 @@ func (g *GamePlayer) UpdateRogueTournEnterRoom(curRoomIndex, nextTypeId uint32) 
 	newCurLayer.RogueTournRoomList[newCurLayer.CurRoomIndex].Status = spb.RogueTournRoomStatus_ROGUE_TOURN_ROOM_STATUS_PROCESSING
 
 	g.RogueTournLevelInfoUpdateScNotify(newCurLayer.LayerIndex, newCurLayer.CurRoomIndex)
+}
+
+func (g *GamePlayer) GetNextRogueTournRoomType(curRoomIndex, curTypeId uint32) uint32 {
+	switch curTypeId {
+	case 1101:
+		if curRoomIndex == 3 {
+			return 1
+		}
+	case 1201:
+		if curRoomIndex == 4 {
+			return 1
+		}
+	case 1301:
+		if curRoomIndex == 2 {
+			return 10
+		} else if curRoomIndex == 3 {
+			return 1
+		}
+	}
+	x := []uint32{3, 4, 5, 6, 7, 8, 9}
+	return x[rand.Intn(len(x))]
 }
 
 /****************************************************功能***************************************************/
@@ -392,7 +416,7 @@ func (g *GamePlayer) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		FloorId:            mapEntrance.FloorID,
 		LeaderEntityId:     leaderEntityId,
 		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
-		EntryId:            roomConf.RogueRoomType,
+		EntryId:            roomConf.MapEntrance,
 		GameModeType:       17, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
 		GroupIdList:        nil,
@@ -449,7 +473,7 @@ func (g *GamePlayer) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		}
 		break
 	}
-	lineUp := g.GetBattleLineUpById(Rogue)
+	lineUp := g.GetBattleLineUpById(RogueTourn)
 
 	// 添加队伍角色进实体列表，并设置坐标
 	g.GetSceneAvatarByLineUP(entityGroupList, lineUp, leaderEntityId, pos, rot)
@@ -537,18 +561,17 @@ func (g *GamePlayer) GetRogueTournPropByID(entityGroupList *proto.SceneEntityGro
 			},
 		}
 		// 3:战斗 5:事件 8:奖励
-		switch propList.PropID {
-		case 1033:
-			entityList.Prop.PropId = 1034
+		db := g.GetCurLayerInfo()
+		if strings.Contains(propList.Name, "Door") {
 			entityList.Prop.PropState = 1
+			entityList.Prop.PropId = 1034 // 颜色
 			entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
 				InfoOneofCase: &proto.PropExtraInfo_RogueTournDoorInfo{
 					RogueTournDoorInfo: &proto.RogueTournDoorInfo{
-						RogueTournRoomType: 8,
+						RogueTournRoomType: g.GetNextRogueTournRoomType(db.CurRoomIndex, db.LayerId),
 					},
 				},
 			}
-
 		}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}

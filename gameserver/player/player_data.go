@@ -145,28 +145,8 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetPrivateChatHistoryScRsp, rsp)
 }
 
-// func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
-// 	msg := g.DecodePayloadToProto(cmd.SendMsgCsReq, payloadMsg)
-// 	req := msg.(*proto.SendMsgCsReq)
-// 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.TargetList, req.ExtraId, req.MessageType, req.MessageText, req.ChatType)
-//
-// 	for _, touid := range req.TargetList {
-// 		if touid == 0 {
-//
-// 		}
-// 		notify := &proto.RevcMsgScNotify{
-// 			TargetUid:   touid,
-// 			ExtraId:     req.ExtraId,
-// 			MessageType: req.MessageType,
-// 			SourceUid:   g.Uid,
-// 			MessageText: req.MessageText,
-// 			ChatType:    req.ChatType,
-// 		}
-// 		g.Send(cmd.RevcMsgScNotify, notify)
-// 	}
-//
-// 	g.Send(cmd.SendMsgScRsp, nil)
-// }
+func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
+}
 
 func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg []byte) {
 	conf := gdconf.GetVideoVersionKey()
