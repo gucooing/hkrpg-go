@@ -56,8 +56,9 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 	curRoom := g.GetCurRogueTournRoom()
 
 	rsp.RogueTournCurSceneInfo = &proto.RogueTournCurSceneInfo{
-		Lineup: g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
-		Scene:  g.GetRogueTournScene(curRoom.RoomId),
+		Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
+		RotateInfo: g.GetRogueMapRotateInfo(curRoom.RoomId),
+		Scene:      g.GetRogueTournScene(curRoom.RoomId),
 	}
 	rsp.RogueTournCurInfo = g.GetRogueTournCurInfo()
 
@@ -83,8 +84,9 @@ func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg []byte) {
 	rsp := &proto.RogueTournEnterScRsp{
 		RogueTournCurInfo: g.GetRogueTournCurInfo(),
 		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
-			Lineup: g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
-			Scene:  g.GetRogueTournScene(curRoom.RoomId),
+			Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
+			RotateInfo: g.GetRogueMapRotateInfo(curRoom.RoomId),
+			Scene:      g.GetRogueTournScene(curRoom.RoomId),
 		},
 	}
 
@@ -109,8 +111,9 @@ func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg []byte) {
 	curRoom := g.GetCurRogueTournRoom()
 	rsp := &proto.RogueTournEnterRoomScRsp{
 		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
-			Lineup: g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
-			Scene:  g.GetRogueTournScene(curRoom.RoomId),
+			Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
+			RotateInfo: g.GetRogueMapRotateInfo(curRoom.RoomId),
+			Scene:      g.GetRogueTournScene(curRoom.RoomId),
 		},
 		Retcode: 0,
 	}

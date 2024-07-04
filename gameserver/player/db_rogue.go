@@ -511,16 +511,6 @@ func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingActi
 	return info
 }
 
-func (g *GamePlayer) GetRogueMapRotateInfo() *proto.RogueMapRotateInfo {
-	info := &proto.RogueMapRotateInfo{
-		MapInfo: nil,
-		// Rotation:   0,
-		IsRotate:   false,
-		EnergyInfo: nil,
-	}
-	return info
-}
-
 func (g *GamePlayer) GetCurRogueBuff() []*proto.BattleBuff {
 	buffList := make([]*proto.BattleBuff, 0)
 	db := g.GetRogueBuffList()

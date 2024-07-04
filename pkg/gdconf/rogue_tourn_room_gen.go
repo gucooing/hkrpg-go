@@ -21,11 +21,16 @@ type RogueTournRoomGen struct {
 	GroupID          uint32                                       `json:"GroupID"`
 	GroupWithContent []uint32                                     `json:"GroupWithContent"`
 	NpcMonster       map[uint32]map[uint32]*RogueTournMonsterInfo `json:"NpcMonster"`
+	RotateInfo       *RotateInfo                                  `json:"RotateInfo"`
 }
 type RogueTournMonsterInfo struct {
 	RogueMonsterID uint32 `json:"RogueMonsterID"`
 	NpcMonsterID   uint32 `json:"NpcMonsterID"`
 	EventID        uint32 `json:"EventID"`
+}
+type RotateInfo struct {
+	IsRotate  bool   `json:"IsRotate"`
+	RotateNum uint32 `json:"RotateNum"`
 }
 
 func (g *GameDataConfig) loadRogueTournRoomGen() {

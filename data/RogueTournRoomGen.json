@@ -25,6 +25,10 @@
           "EventID": 83004121
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11013012": {
@@ -47,6 +51,10 @@
           "EventID": 83003201
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11013013": {
@@ -69,6 +77,10 @@
           "EventID": 83004131
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11014012": {
@@ -93,6 +105,10 @@
         }
       },
       "76": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11015011": {
@@ -119,6 +135,10 @@
       },
       "78": {},
       "79": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11015013": {
@@ -145,6 +165,10 @@
       },
       "78": {},
       "79": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11016012": {
@@ -167,6 +191,10 @@
           "EventID": 83003201
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11017011": {
@@ -191,6 +219,10 @@
           "EventID": 83002121
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11034012": {
@@ -231,6 +263,10 @@
         }
       },
       "76": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11036011": {
@@ -269,6 +305,10 @@
           "EventID": 83000041
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11037011": {
@@ -309,6 +349,10 @@
           "EventID": 83000053
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11046012": {
@@ -327,6 +371,10 @@
       "23": {},
       "25": {},
       "26": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11075010": {
@@ -349,6 +397,10 @@
       "33": {},
       "78": {},
       "79": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11083013": {
@@ -367,6 +419,10 @@
       "58": {},
       "61": {},
       "62": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11098060": {
@@ -383,6 +439,10 @@
       "11": {},
       "12": {},
       "9": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11101010": {
@@ -405,6 +465,10 @@
       "190": {},
       "77": {},
       "78": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11103010": {
@@ -421,6 +485,10 @@
       "133": {},
       "134": {},
       "135": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "11105010": {
@@ -441,6 +509,10 @@
       "77": {},
       "78": {},
       "79": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21034012": {
@@ -481,6 +553,10 @@
         }
       },
       "76": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21035011": {
@@ -523,6 +599,10 @@
       },
       "78": {},
       "79": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21036012": {
@@ -561,6 +641,10 @@
           "EventID": 83001202
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21037011": {
@@ -601,6 +685,10 @@
           "EventID": 83000045
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21053012": {
@@ -619,6 +707,10 @@
       "68": {},
       "71": {},
       "72": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21055011": {
@@ -641,6 +733,10 @@
       "45": {},
       "78": {},
       "79": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21056012": {
@@ -659,6 +755,10 @@
       "32": {},
       "34": {},
       "35": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "21087011": {
@@ -679,6 +779,10 @@
       "55": {},
       "57": {},
       "58": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "31033012": {
@@ -717,6 +821,10 @@
           "EventID": 83000102
         }
       }
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "31046012": {
@@ -735,6 +843,10 @@
       "50": {},
       "52": {},
       "53": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "41043013": {
@@ -753,6 +865,10 @@
       "88": {},
       "91": {},
       "92": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "41081013": {
@@ -777,6 +893,10 @@
       "181": {},
       "189": {},
       "190": {}
+    },
+    "RotateInfo": {
+      "IsRotate": true,
+      "RotateNum": 4
     }
   },
   "41085011": {
@@ -799,6 +919,10 @@
       "63": {},
       "78": {},
       "79": {}
+    },
+    "RotateInfo": {
+      "IsRotate": true,
+      "RotateNum": 3
     }
   },
   "51053012": {
@@ -817,6 +941,10 @@
       "114": {},
       "115": {},
       "116": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "51086012": {
@@ -835,6 +963,10 @@
       "68": {},
       "70": {},
       "71": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   },
   "61047011": {
@@ -855,6 +987,10 @@
       "103": {},
       "110": {},
       "99": {}
+    },
+    "RotateInfo": {
+      "IsRotate": false,
+      "RotateNum": 0
     }
   }
 }

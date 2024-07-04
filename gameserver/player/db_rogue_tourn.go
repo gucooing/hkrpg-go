@@ -61,14 +61,14 @@ func (g *GamePlayer) NewCurRogueTourn(areaId uint32) {
 		Status:             0,
 		LayerIndex:         2,
 		RogueTournRoomList: newRogueTournRoomInfoList(5),
-		CurRoomIndex:       0,
+		CurRoomIndex:       1,
 	}
 	curRogueTourn.CurLayerList[3] = &spb.LayerInfo{
 		LayerId:            1301,
 		Status:             0,
 		LayerIndex:         3,
 		RogueTournRoomList: newRogueTournRoomInfoList(4),
-		CurRoomIndex:       0,
+		CurRoomIndex:       1,
 	}
 	// 选择第一关的第一个房间
 	curRoom := g.GetCurRogueTournRoom()
@@ -78,7 +78,7 @@ func (g *GamePlayer) NewCurRogueTourn(areaId uint32) {
 
 func newRogueTournRoomInfoList(num int) map[uint32]*spb.RogueTournRoomInfo {
 	list := make(map[uint32]*spb.RogueTournRoomInfo)
-	for i := 0; i < num; i++ {
+	for i := 1; i < num+1; i++ {
 		list[uint32(i)] = &spb.RogueTournRoomInfo{RoomIndex: uint32(i)}
 	}
 	return list
@@ -159,9 +159,11 @@ func (g *GamePlayer) GetNextRogueTournRoomType(curRoomIndex, curTypeId uint32) u
 			return 10
 		} else if curRoomIndex == 3 {
 			return 1
+		} else if curRoomIndex == 4 {
+			return 0
 		}
 	}
-	x := []uint32{3, 4, 5, 6, 7, 8, 9}
+	x := []uint32{3, 4, 5, 7, 8}
 	return x[rand.Intn(len(x))]
 }
 
@@ -400,6 +402,33 @@ func (g *GamePlayer) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
 	return info
 }
 
+func (g *GamePlayer) GetRogueMapRotateInfo(roomId uint32) *proto.RogueMapRotateInfo {
+	info := &proto.RogueMapRotateInfo{
+		RotaterData: make([]*proto.RotaterData, 0),
+		ChargerInfo: make([]*proto.ChargerInfo, 0),
+		EnergyInfo:  &proto.RotatorEnergyInfo{},
+	}
+	roomConf := gdconf.GetRogueTournRoomGenById(roomId)
+	if roomConf == nil {
+		return info
+	}
+	if roomConf.RotateInfo.IsRotate {
+		info.IsRotate = roomConf.RotateInfo.IsRotate
+		info.RotateNum = roomConf.RotateInfo.RotateNum
+		info.MapInfo = &proto.IJJHKDNFKMD{
+			BIKIIIKJIIG: &proto.Vector{},
+			EFGOCIAIKMN: &proto.AEKLIMBAKCL{
+				Z:           -0.70710677,
+				Y:           0,
+				X:           0,
+				EAGOBFLBPFN: 0.70710677,
+			},
+		}
+	}
+
+	return info
+}
+
 func (g *GamePlayer) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 	roomConf := gdconf.GetRogueTournRoomGenById(roomId)
 	if roomConf == nil {
@@ -563,12 +592,24 @@ func (g *GamePlayer) GetRogueTournPropByID(entityGroupList *proto.SceneEntityGro
 		// 3:战斗 5:事件 8:奖励
 		db := g.GetCurLayerInfo()
 		if strings.Contains(propList.Name, "Door") {
+			roomType := g.GetNextRogueTournRoomType(db.CurRoomIndex, db.LayerId)
+			var propId uint32 = 0
+			switch roomType {
+			case 0:
+				propId = 1033 // 白色
+			case 5:
+				propId = 1035 // 蓝色
+			case 10:
+				propId = 1036 // 绿色
+			default:
+				propId = 1034 // 红色
+			}
 			entityList.Prop.PropState = 1
-			entityList.Prop.PropId = 1034 // 颜色
+			entityList.Prop.PropId = propId // 颜色
 			entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
 				InfoOneofCase: &proto.PropExtraInfo_RogueTournDoorInfo{
 					RogueTournDoorInfo: &proto.RogueTournDoorInfo{
-						RogueTournRoomType: g.GetNextRogueTournRoomType(db.CurRoomIndex, db.LayerId),
+						RogueTournRoomType: roomType,
 					},
 				},
 			}

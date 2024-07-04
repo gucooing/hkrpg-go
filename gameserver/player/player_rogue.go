@@ -317,7 +317,7 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	g.FinishRogueRoom(g.GetCurRogue().CurSiteId)
 	g.UpCurRogueRoom(req.SiteId)
 	rsp := &proto.EnterRogueMapRoomScRsp{
-		RotateInfo: g.GetRogueMapRotateInfo(),
+		RotateInfo: g.GetRogueMapRotateInfo(req.RoomId),
 		Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(Rogue)),
 		CurSiteId:  req.SiteId,
 		Retcode:    0,
@@ -343,4 +343,17 @@ func (g *GamePlayer) GetRogueBuffEnhanceInfoCsReq(payloadMsg []byte) {
 		})
 	}
 	g.Send(cmd.GetRogueBuffEnhanceInfoScRsp, rsp)
+}
+
+func (g *GamePlayer) GetRogueAdventureRoomInfoCsReq(payloadMsg []byte) {
+	rsp := &proto.GetRogueAdventureRoomInfoScRsp{
+		NKIEHEJPKPK: &proto.BDJFNCAHDCP{
+			OLHEOHGEGEP: 16,
+			IMPECOKHIHL: 1,
+			Status:      0,
+			MIBJHFNEHJC: 0,
+			ScoreId:     0,
+		},
+	}
+	g.Send(cmd.GetRogueAdventureRoomInfoScRsp, rsp)
 }
