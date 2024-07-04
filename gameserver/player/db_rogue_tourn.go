@@ -198,6 +198,9 @@ func (g *GamePlayer) GetInspirationCircuitInfo() *proto.InspirationCircuitInfo {
 
 func (g *GamePlayer) GetExtraScoreInfo() *proto.ExtraScoreInfo {
 	conf := database.GetCurRogue()
+	if conf == nil {
+		return nil
+	}
 	info := &proto.ExtraScoreInfo{
 		Week:     2,
 		IsFinish: true,
