@@ -13,7 +13,7 @@ OUT_DIR=./build
 PROJECT_NAME=hkrpg-go
 TARGET_PLATFORMS="linux/amd64 linux/arm64 windows/amd64 windows/arm64"
 
-PE_PATH = ./hkrpg-go-pe.go
+PE_PATH=./hkrpg-go-pe.go
 DISPATCH_PATH=./cmd/dispatch/dispatch.go
 GAMESERVER_PATH=./cmd/gameserver/gameserver.go
 GATE_PATH=./cmd/gateserver/gateserver.go
