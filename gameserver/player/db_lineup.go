@@ -152,16 +152,22 @@ func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 
 func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
 	db := g.GetCurLineUp()
-	for _, id := range db.AvatarIdList {
-		if id.AvatarId == trialAvatarId {
-			id.AvatarId = 0
-			id.LineAvatarType = 0
+	isJh := false
+	for id, info := range db.AvatarIdList {
+		if info.AvatarId == trialAvatarId {
+			if id == db.LeaderSlot {
+				isJh = true
+			}
+			delete(db.AvatarIdList, id)
 		}
 	}
 	isDelTrial := true
-	for _, id := range db.AvatarIdList {
-		if id.AvatarId != 0 {
+	for id, info := range db.AvatarIdList {
+		if info.AvatarId != 0 {
 			isDelTrial = false
+			if isJh {
+				db.LeaderSlot = id
+			}
 		}
 	}
 	if isDelTrial {

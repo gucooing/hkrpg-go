@@ -131,7 +131,7 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 		db = g.GetBattleLineUpById(index)
 		isBattleLine = true
 	}
-	db.LeaderSlot = 0
+	db.LeaderSlot = req.LeaderSlot
 	db.LineType = spb.ExtraLineupType(req.ExtraLineupType)
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
 	for _, avatarList := range req.LineupSlotList {
@@ -150,7 +150,7 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 		g.SceneGroupRefreshScNotify(req.Index)
 	}
 
-	g.Send(cmd.ReplaceLineupScRsp, nil)
+	g.Send(cmd.ReplaceLineupScRsp, &proto.ReplaceLineupScRsp{})
 }
 
 func (g *GamePlayer) ChangeLineupLeaderCsReq(payloadMsg []byte) {
