@@ -56,13 +56,14 @@ func (g *GamePlayer) GetBattleAvatarBinById(avatarId uint32) *spb.AvatarBin {
 }
 
 func (g *GamePlayer) GetAvatarById(avatarId uint32) *spb.AvatarBin {
-	var bin map[uint32]*spb.AvatarBin
-	switch g.GetBattleStatus() {
-	case spb.BattleType_Battle_NONE:
-		bin = g.GetAvatarList()
-	default:
-		bin = g.GetBattleAvatarList()
-	}
+	// var bin map[uint32]*spb.AvatarBin
+	// switch g.GetBattleStatus() {
+	// case spb.BattleType_Battle_NONE:
+	// 	bin = g.GetAvatarList()
+	// default:
+	// 	bin = g.GetBattleAvatarList()
+	// }
+	bin := g.GetAvatarList()
 	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
 	if patchConf != nil {
 		avatarId = patchConf.BaseAvatarID
@@ -253,16 +254,17 @@ re:
 			break re
 		}
 		avatarId := avatarStt.Id
-		if avatarStt.Id/1000 == 8 {
-			avatarId = 8001
-		}
-		var avatarBin *spb.AvatarBin
-		switch g.GetBattleStatus() {
-		case spb.BattleType_Battle_NONE:
-			avatarBin = g.GetAvatarById(avatarId)
-		default:
-			avatarBin = g.GetBattleAvatarBinById(avatarId)
-		}
+		// if avatarStt.Id/1000 == 8 {
+		// 	avatarId = 8001
+		// }
+		// var avatarBin *spb.AvatarBin
+		// switch g.GetBattleStatus() {
+		// case spb.BattleType_Battle_NONE:
+		// 	avatarBin = g.GetAvatarById(avatarId)
+		// default:
+		// 	avatarBin = g.GetBattleAvatarBinById(avatarId)
+		// }
+		avatarBin := g.GetAvatarById(avatarId)
 		if avatarBin == nil {
 			continue
 		}
@@ -383,18 +385,17 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*p
 			continue
 		}
 		// 添加该角色的buff
-		// info := g.GetOnLineAvatarBuffById(bA.AvatarId)
-		// if info != nil {
-		// 	buffList = append(buffList, &proto.BattleBuff{
-		// 		Id:              info.BuffId,
-		// 		Level:           1,
-		// 		OwnerIndex:      id,
-		// 		WaveFlag:        4294967295,
-		// 		TargetIndexList: []uint32{1},
-		// 		DynamicValues:   make(map[string]float32),
-		// 	})
-		// 	g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)
-		// }
+		if info := g.GetOnLineAvatarBuffById(bA.AvatarId); info != nil {
+			buffList = append(buffList, &proto.BattleBuff{
+				Id:              info.BuffId,
+				Level:           1,
+				OwnerIndex:      index,
+				WaveFlag:        4294967295,
+				TargetIndexList: []uint32{1},
+				DynamicValues:   make(map[string]float32),
+			})
+			g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)
+		}
 	}
 	return battleAvatarList, buffList
 }

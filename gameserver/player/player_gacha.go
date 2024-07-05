@@ -99,6 +99,7 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 		GachaItemList: make([]*proto.GachaItem, 0),
 		GachaNum:      req.GachaNum,
 	}
+	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
 	var dPileItem []*Material
 	var pileItem []*Material
 
@@ -117,21 +118,25 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 			Tid: 101,
 			Num: req.GachaNum,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 101)
 	case "NewPlayer":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 101,
 			Num: 8,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 101)
 	case "AvatarUp":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 102,
 			Num: req.GachaNum,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 102)
 	case "WeaponUp":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 102,
 			Num: req.GachaNum,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 102)
 	default:
 		g.Send(cmd.DoGachaScRsp, rsp)
 		return
@@ -180,6 +185,8 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 					Tid: 10000 + id,
 					Num: 1,
 				})
+				allSync.MaterialList = append(allSync.MaterialList, 252)
+				allSync.MaterialList = append(allSync.MaterialList, 10000+id)
 			}
 		} else {
 			tokenItemList := &proto.Item{
@@ -197,8 +204,10 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 		Tid: 251,
 		Num: req.GachaNum * 42,
 	})
+	allSync.MaterialList = append(allSync.MaterialList, 251)
 
 	g.AddMaterial(pileItem)
+	g.AllPlayerSyncScNotify(allSync)
 
 	g.Send(cmd.DoGachaScRsp, rsp)
 }

@@ -138,6 +138,7 @@ message Item  {
   map<uint32, Equipment> equipment_map = 2; // 光锥
   map<uint32, uint32> material_map = 3; // 材料
   repeated uint32 head_icon = 4; // 头像
+  repeated uint32 unlock_formula_list = 5;// 解锁配方
 }
 
 message Relic {

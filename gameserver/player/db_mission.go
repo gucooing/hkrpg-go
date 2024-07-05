@@ -539,18 +539,19 @@ func (g *GamePlayer) ReadyMainMission() {
 				Progress:  0,
 				Status:    spb.MissionStatus_MISSION_DOING,
 			}
-			g.JumpMainMission(id)
-			// 接取该主线子任务
-			for _, subInfo := range goppConf.SubMissionList {
-				if finishSubMainMissionList[subInfo.ID] != nil {
-					continue
-				}
-				if subInfo.TakeType == constant.Auto {
-					nextList = append(nextList, subInfo.ID)
-					subMainMissionList[subInfo.ID] = &spb.MissionInfo{
-						MissionId: subInfo.ID,
-						Progress:  0,
-						Status:    spb.MissionStatus_MISSION_DOING,
+			if !g.JumpMainMission(id) {
+				// 接取该主线子任务
+				for _, subInfo := range goppConf.SubMissionList {
+					if finishSubMainMissionList[subInfo.ID] != nil {
+						continue
+					}
+					if subInfo.TakeType == constant.Auto {
+						nextList = append(nextList, subInfo.ID)
+						subMainMissionList[subInfo.ID] = &spb.MissionInfo{
+							MissionId: subInfo.ID,
+							Progress:  0,
+							Status:    spb.MissionStatus_MISSION_DOING,
+						}
 					}
 				}
 			}
@@ -600,15 +601,17 @@ func (g *GamePlayer) CheckJumpMainMission() {
 	}
 }
 
-func (g *GamePlayer) JumpMainMission(id uint32) {
+func (g *GamePlayer) JumpMainMission(id uint32) bool {
 	jumpList := []uint32{4030001, 4030002, 8013103}
+	isJump := false
 	subMainMissionList := g.GetSubMainMissionList() // 已接取的子任务
 	for _, jumpId := range jumpList {
 		if jumpId == id {
 			mainConf := gdconf.GetGoppMainMissionById(jumpId)
 			if mainConf == nil {
-				return
+				continue
 			}
+			isJump = true
 			// 该主线需要被完成
 			for _, subInfo := range mainConf.SubMissionList {
 				if subMainMissionList[subInfo.ID] != nil {
@@ -618,6 +621,7 @@ func (g *GamePlayer) JumpMainMission(id uint32) {
 			g.UpMainMission(jumpId) // 结束主任务
 		}
 	}
+	return isJump
 }
 
 // 将已完成的主任务下还没有完成的子任务全部完成

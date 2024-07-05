@@ -165,7 +165,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
 						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
 					},
-					// UnlockedTeleportList: make([]uint32, 0),
+					UnlockTeleportList: make([]uint32, 0),
 				}
 
 				mapList.EntryId = entryId

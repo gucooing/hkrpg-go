@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -20,14 +21,14 @@ type ItemList struct {
 }
 
 type ItemConfig struct {
-	ID                  uint32 `json:"ID"`
-	ItemMainType        string `json:"ItemMainType"`
-	ItemSubType         string `json:"ItemSubType"`
-	InventoryDisplayTag uint32 `json:"InventoryDisplayTag"`
-	Rarity              string `json:"Rarity"`
-	PurposeType         uint32 `json:"PurposeType"`
-	IsVisible           bool   `json:"isVisible"`
-	PileLimit           uint32 `json:"PileLimit"`
+	ID                  uint32               `json:"ID"`
+	ItemMainType        string               `json:"ItemMainType"`
+	ItemSubType         constant.ItemSubType `json:"ItemSubType"`
+	InventoryDisplayTag uint32               `json:"InventoryDisplayTag"`
+	Rarity              string               `json:"Rarity"`
+	PurposeType         uint32               `json:"PurposeType"`
+	IsVisible           bool                 `json:"isVisible"`
+	PileLimit           uint32               `json:"PileLimit"`
 }
 
 func (g *GameDataConfig) loadItemConfig() {

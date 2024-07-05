@@ -111,10 +111,12 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 	db := g.GetCurLineUp()
 	var lineAvatarType spb.LineAvatarType
+	isTrial := false
 	if g.GetAvatarById(trialAvatarId) != nil {
 		lineAvatarType = spb.LineAvatarType_LineAvatarType_MI
 	}
 	if gdconf.GetSpecialAvatarById(trialAvatarId) != nil {
+		isTrial = true
 		lineAvatarType = spb.LineAvatarType_LineAvatarType_TRIAL
 	}
 	isUp := false
@@ -146,7 +148,7 @@ func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 			LineAvatarType: lineAvatarType,
 		}
 	}
-	g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, false, g.GetPosPb(), g.GetRotPb())
+	g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, isTrial, g.GetPosPb(), g.GetRotPb())
 	g.SyncLineupNotify(db)
 }
 

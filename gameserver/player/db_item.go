@@ -30,10 +30,11 @@ type Material struct {
 
 func NewItem() *spb.Item {
 	item := &spb.Item{
-		RelicMap:     make(map[uint32]*spb.Relic),
-		EquipmentMap: make(map[uint32]*spb.Equipment),
-		MaterialMap:  make(map[uint32]uint32),
-		HeadIcon:     make([]uint32, 0),
+		RelicMap:          make(map[uint32]*spb.Relic),
+		EquipmentMap:      make(map[uint32]*spb.Equipment),
+		MaterialMap:       make(map[uint32]uint32),
+		HeadIcon:          make([]uint32, 0),
+		UnlockFormulaList: make([]uint32, 0),
 	}
 	item.MaterialMap[Stamina] = 240
 	return item
@@ -89,6 +90,14 @@ func (g *GamePlayer) GetMaterialById(id uint32) uint32 {
 func (g *GamePlayer) SetMaterialById(id, num uint32) {
 	db := g.GetMaterialMap()
 	db[id] = num
+}
+
+func (g *GamePlayer) GetUnlockFormulaList() []uint32 {
+	db := g.GetItem()
+	if db.UnlockFormulaList == nil {
+		db.UnlockFormulaList = make([]uint32, 0)
+	}
+	return db.UnlockFormulaList
 }
 
 func (g *GamePlayer) AddItem(pileItem []*Material) {
@@ -188,6 +197,14 @@ func (g *GamePlayer) AddHeadIcon(headIconId uint32) {
 	db = append(db, headIconId)
 	// TODO
 	// g.ScenePlaneEventScNotify(headIconId, 1)
+}
+
+func (g *GamePlayer) AddUnlockFormulaList(formulaId uint32) {
+	db := g.GetItem()
+	if db.UnlockFormulaList == nil {
+		db.UnlockFormulaList = make([]uint32, 0)
+	}
+	db.UnlockFormulaList = append(db.UnlockFormulaList, formulaId)
 }
 
 func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
@@ -397,6 +414,10 @@ func (g *GamePlayer) DelRelic(uniqueId uint32) []*Material {
 	}
 	g.DelRelicPlayerSyncScNotify([]uint32{uniqueId})
 	return material
+}
+
+func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData) {
+
 }
 
 /*********************************************接口方法******************************************/

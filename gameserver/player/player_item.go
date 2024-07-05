@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -58,6 +59,8 @@ func (g *GamePlayer) HandleGetBagCsReq(payloadMsg []byte) {
 		relicList := g.GetProtoRelicById(uniqueId)
 		rsp.RelicList = append(rsp.RelicList, relicList)
 	}
+	// 添加解锁的配方
+	rsp.UnlockFormulaList = g.GetUnlockFormulaList()
 
 	g.Send(cmd.GetBagScRsp, rsp)
 }
@@ -96,6 +99,35 @@ func (g *GamePlayer) SellItemCsReq(payloadMsg []byte) {
 	}
 	g.AddMaterial(material)
 	g.Send(cmd.SellItemScRsp, rsp)
+}
+
+func (g *GamePlayer) UseItemCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.UseItemCsReq, payloadMsg)
+	req := msg.(*proto.UseItemCsReq)
+
+	rsp := &proto.UseItemScRsp{
+		UseItemId:    req.UseItemId,
+		UseItemCount: req.UseItemCount,
+	}
+
+	conf := gdconf.GetItemConfigById(req.UseItemId)
+	if conf == nil || !g.DelMaterial([]*Material{{Tid: req.UseItemId, Num: req.UseItemCount}}) {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
+		g.Send(cmd.UseItemScRsp, rsp)
+		return
+	}
+	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	switch conf.ItemSubType {
+	case constant.ItemSubTypeFormula: // 配方
+		g.AddUnlockFormulaList(req.UseItemId)
+		rsp.FormulaId = conf.ID
+	case constant.ItemSubTypeFood: // 食物
+		g.useItem(gdconf.GetItemUseBuffDataById(req.UseItemId))
+	}
+	allSync.MaterialList = append(allSync.MaterialList, req.UseItemId)
+	g.AllPlayerSyncScNotify(allSync)
+
+	g.Send(cmd.UseItemScRsp, rsp)
 }
 
 /***************************relic*************************************/
