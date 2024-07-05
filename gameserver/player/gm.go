@@ -149,10 +149,9 @@ func (g *GamePlayer) RecoverLine() {
 		if bin != nil {
 			bin.Hp = 10000
 			bin.SpBar.CurSp = 10000
-			// 通知角色信息
-			g.AvatarPlayerSyncScNotify(a.AvatarId)
 		}
 	}
+	g.SyncLineupNotify(db)
 }
 
 func (g *GamePlayer) GmMission(req *spb.GmMission) {
