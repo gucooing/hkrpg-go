@@ -106,6 +106,7 @@ func (s *GateServer) addPlayer(uid uint32, player *PlayerGame) bool {
 		s.playerMap[uid] = player
 		return true
 	}
+	s.playerMap[uid] = player
 	return false
 }
 
