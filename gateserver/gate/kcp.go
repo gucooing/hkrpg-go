@@ -41,7 +41,6 @@ func (s *GateServer) RunKcp() error {
 // kcp接收
 func (s *GateServer) recvHandle(p *PlayerGame) {
 	payload := make([]byte, PacketMaxLen)
-	kcpMsgList := make([]*alg.PackMsg, 0)
 
 	// panic捕获
 	defer func() {
@@ -64,9 +63,10 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			logger.Debug("exit recv loop, conn read err: %v", err)
 			return
 		}
+		kcpMsgList := make([]*alg.PackMsg, 0)
 		bin = payload[:recvLen]
 		alg.DecodeBinToPayload(bin, &kcpMsgList, p.XorKey)
-		for id, msg := range kcpMsgList {
+		for _, msg := range kcpMsgList {
 			// playerMsg := alg.DecodePayloadToProto(msg)
 			switch p.Status {
 			case spb.PlayerStatus_PlayerStatus_PreLogin:
@@ -80,11 +80,6 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 				continue
 			case spb.PlayerStatus_PlayerStatus_PostLogin:
 				p.PlayerRegisterMessage(msg.CmdId, msg)
-				if len(kcpMsgList) == 1 {
-					kcpMsgList = kcpMsgList[:0]
-				} else {
-					kcpMsgList = append(kcpMsgList[:id], kcpMsgList[id+1:]...)
-				}
 			default:
 				return
 			}

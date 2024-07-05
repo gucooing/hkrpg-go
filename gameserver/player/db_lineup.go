@@ -88,13 +88,6 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 		if slot == 4 {
 			continue
 		}
-		if id == 0 {
-			db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{
-				AvatarId:       id,
-				Slot:           uint32(slot),
-				LineAvatarType: 0,
-			}
-		}
 		if g.GetAvatarById(id) != nil {
 			db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{
 				AvatarId:       id,
@@ -360,10 +353,10 @@ func (g *GamePlayer) GetTrialLineupAvatar(avatarId, index uint32) *proto.LineupA
 	info := &proto.LineupAvatar{
 		Slot:    index,
 		Satiety: 0,
-		Hp:      12000,
+		Hp:      10000,
 		SpBar: &proto.SpBarInfo{
 			CurSp: 6000,
-			MaxSp: 12000,
+			MaxSp: 10000,
 		},
 		Id:         avatarId,
 		AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
