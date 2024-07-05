@@ -1,8 +1,10 @@
 package player
 
 import (
+	"strconv"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -478,6 +480,9 @@ func (g *GamePlayer) AutoEntryGroup() {
 
 // 从db拉取地图数据
 func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
+	if entryId >= 10000000 {
+		entryId = alg.S2U32(strconv.Itoa(int(entryId))[:7])
+	}
 	bin := database.GetBlockData(g.DB, g.Uid, entryId)
 	block := new(spb.BlockBin)
 	if err := pb.Unmarshal(bin.BinData, block); err != nil {
@@ -493,9 +498,13 @@ func (g *GamePlayer) UpdateBlock(block *spb.BlockBin) {
 	if err != nil {
 		return
 	}
+	entryId := block.EntryId
+	if entryId >= 10000000 {
+		entryId = alg.S2U32(strconv.Itoa(int(entryId))[:7])
+	}
 	blockData := &database.BlockData{
 		Uid:         g.Uid,
-		EntryId:     block.EntryId,
+		EntryId:     entryId,
 		DataVersion: 0, // TODO
 		BinData:     bin,
 	}
