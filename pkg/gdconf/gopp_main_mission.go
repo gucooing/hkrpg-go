@@ -173,47 +173,38 @@ func GetSubMainMissionById(id uint32) *SubMission {
 }
 
 func GetEntryId(id uint32) (uint32, bool) {
-	var entryId uint32
-	var isFloor = false
 	conf := GetSubMainMissionById(id)
 	jsonConf := CONF.GoppMission.GoppMissionJson[id]
-	if jsonConf == nil {
-		if conf == nil {
-			return 0, false
-		}
-		str := strconv.Itoa(int(conf.ParamInt2))
-		part1 := str[:6]
-		part2 := str[6:7]
-		newNumStr := part1 + part2
-		return alg.S2U32(newNumStr), true
-	}
-	for _, info := range jsonConf.OnStartSequece {
-		if info.TaskList == nil {
-			continue
-		}
-		for _, task := range info.TaskList {
-			entryId = task.EntranceID
-			if CONF.MapEntranceMap[entryId] != nil {
-				isFloor = true
-				break
+	if jsonConf != nil {
+		for _, info := range jsonConf.OnStartSequece {
+			if info.TaskList == nil {
+				continue
+			}
+			for _, task := range info.TaskList {
+				if CONF.MapEntranceMap[task.EntranceID] != nil {
+					return task.EntranceID, true
+				}
 			}
 		}
-	}
-	if !isFloor {
 		for _, info := range jsonConf.OnInitSequece {
 			if info.TaskList == nil {
 				continue
 			}
 			for _, task := range info.TaskList {
-				entryId = task.EntranceID
-				if CONF.MapEntranceMap[entryId] != nil {
-					isFloor = true
-					break
+				if CONF.MapEntranceMap[task.EntranceID] != nil {
+					return task.EntranceID, true
 				}
 			}
 		}
 	}
-	return entryId, isFloor
+	if conf == nil {
+		return 0, false
+	}
+	str := strconv.Itoa(int(conf.ParamInt2))
+	part1 := str[:6]
+	part2 := str[6:7]
+	newNumStr := part1 + part2
+	return alg.S2U32(newNumStr), true
 }
 
 func IsBattleMission(id, eventId uint32) bool {
