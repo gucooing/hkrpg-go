@@ -305,54 +305,54 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 func (g *GamePlayer) DressAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
-	g.DressAvatarPlayerSyncScNotify(req.GetDressAvatarId(), req.GetEquipmentUniqueId())
+	g.DressAvatar(req.GetDressAvatarId(), req.GetEquipmentUniqueId())
 	g.Send(cmd.DressAvatarScRsp, nil)
 }
 
 // 光锥装备通知
-func (g *GamePlayer) DressAvatarPlayerSyncScNotify(equipAvatarId, equipmentUniqueId uint32) {
-	notify := &proto.PlayerSyncScNotify{
-		AvatarSync:    &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
-		EquipmentList: make([]*proto.Equipment, 0),
+func (g *GamePlayer) DressAvatar(equipAvatarId, equipmentUniqueId uint32) {
+	allSync := &AllPlayerSync{
+		AvatarList:    make([]uint32, 0),
+		EquipmentList: make([]uint32, 0),
 	}
 
-	equipAvatarDb := g.GetAvatarBinById(equipAvatarId)
-	equipmentDb := g.GetEquipmentById(equipmentUniqueId)
+	equipAvatarDb := g.GetAvatarBinById(equipAvatarId)   // 装备角色
+	equipmentDb := g.GetEquipmentById(equipmentUniqueId) // 装备光锥
 	if equipAvatarDb == nil || equipmentDb == nil {
 		return
 	}
-	curPath := equipAvatarDb.MultiPathAvatarInfoList[equipAvatarDb.CurPath]
+	curPath := equipAvatarDb.MultiPathAvatarInfoList[equipAvatarDb.CurPath] // 装备角色命途
 	if curPath == nil {
 		return
 	}
-	baseAvatarDb := g.GetAvatarBinById(equipmentDb.BaseAvatarId)
+	baseAvatarDb := g.GetAvatarBinById(equipmentDb.BaseAvatarId) // 旧角色
 
-	var baseCurPath *spb.MultiPathAvatarInfo
+	var baseCurPath *spb.MultiPathAvatarInfo // 旧角色命途
 	if baseAvatarDb != nil {
 		for _, info := range baseAvatarDb.MultiPathAvatarInfoList {
-			if info.EquipmentUniqueId == curPath.EquipmentUniqueId {
+			if info.EquipmentUniqueId == equipmentUniqueId {
 				baseCurPath = info
 			}
 		}
 	}
 
-	oldEquiDb := g.GetEquipmentById(curPath.EquipmentUniqueId)
+	oldEquiDb := g.GetEquipmentById(curPath.EquipmentUniqueId) // 装备角色旧光锥
 
 	curPath.EquipmentUniqueId = equipmentUniqueId
 	equipmentDb.BaseAvatarId = equipAvatarId
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(equipAvatarId))
-	notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(equipmentUniqueId))
+	allSync.AvatarList = append(allSync.AvatarList, equipAvatarId)
+	allSync.EquipmentList = append(allSync.EquipmentList, equipmentUniqueId)
 
 	if baseCurPath != nil {
 		baseCurPath.EquipmentUniqueId = 0
-		notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(baseAvatarDb.AvatarId))
+		allSync.AvatarList = append(allSync.AvatarList, baseCurPath.AvatarId)
 	}
 	if oldEquiDb != nil {
 		oldEquiDb.BaseAvatarId = 0
-		notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(oldEquiDb.UniqueId))
+		allSync.EquipmentList = append(allSync.EquipmentList, oldEquiDb.UniqueId)
 	}
 
-	g.Send(cmd.PlayerSyncScNotify, notify)
+	g.AllPlayerSyncScNotify(allSync)
 }
 
 func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
