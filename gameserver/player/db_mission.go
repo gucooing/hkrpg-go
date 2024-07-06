@@ -125,8 +125,8 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	conf := gdconf.GetSubMainMissionById(subMissionId)
 	if subMission != nil {
-		g.AutoServerMissionFinishAction(subMissionId)
 		delete(subMainMissionList, subMissionId)
+		g.AutoServerMissionFinishAction(subMissionId)
 	}
 
 	finishSubMainMissionList[subMissionId] = &spb.MissionInfo{

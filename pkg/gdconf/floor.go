@@ -95,15 +95,15 @@ func extractNumbersFloor(filename string) (uint32, uint32) {
 	return uint32(pValue), uint32(fValue)
 }
 
-func GetAnchorByIndex(planeId, floorId, startGroupID, startAnchorID uint32) *AnchorList {
+func GetAnchorByIndex(planeId, floorId uint32) *AnchorList {
 	floor := GetFloorById(planeId, floorId)
 	if floor == nil {
 		return nil
 	}
-	if uint32(len(floor.GroupInstanceList)) < startGroupID {
+	if uint32(len(floor.GroupInstanceList)) < floor.StartGroupID {
 		return nil
 	}
-	groupInstance := floor.GroupInstanceList[startGroupID]
+	groupInstance := floor.GroupInstanceList[floor.StartGroupID]
 	if groupInstance == nil {
 		return nil
 	}
@@ -111,10 +111,10 @@ func GetAnchorByIndex(planeId, floorId, startGroupID, startAnchorID uint32) *Anc
 	if group == nil {
 		return nil
 	}
-	if uint32(len(group.AnchorList)) < startAnchorID {
+	if uint32(len(group.AnchorList)) < floor.StartAnchorID {
 		return nil
 	}
-	return group.AnchorList[startAnchorID]
+	return group.AnchorList[floor.StartAnchorID]
 }
 
 func GetAnchor(planeId, floorId, startGroupID, startAnchorID uint32) *AnchorList {

@@ -37,7 +37,7 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	} else {
 		if teleportId == 0 {
 			if anchorID == 0 || groupID == 0 {
-				anchor = gdconf.GetAnchorByIndex(mapEntrance.PlaneID, mapEntrance.FloorID, groupID, anchorID)
+				anchor = gdconf.GetAnchorByIndex(mapEntrance.PlaneID, mapEntrance.FloorID)
 			} else {
 				anchor = gdconf.GetAnchor(mapEntrance.PlaneID, mapEntrance.FloorID, groupID, anchorID)
 			}
