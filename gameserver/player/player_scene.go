@@ -230,7 +230,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 		return
 	}
 	blockBin := g.GetBlock(pe.EntryId)
-	mapEntrance := gdconf.GetMapEntranceById(pe.EntryId)
+	mapEntrance := gdconf.GetMapEntranceById(blockBin.EntryId)
 	if mapEntrance == nil {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
