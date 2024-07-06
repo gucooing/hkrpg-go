@@ -125,6 +125,7 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	conf := gdconf.GetSubMainMissionById(subMissionId)
 	if subMission != nil {
+		g.AutoServerMissionFinishAction(subMissionId)
 		delete(subMainMissionList, subMissionId)
 	}
 
@@ -145,7 +146,6 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	if triggerID, ok := triggerMissions[subMissionId]; ok && finishSubMainMissionList[triggerID] == nil {
 		g.UpSubMainMission(triggerID)
 	}
-	g.AutoServerMissionFinishAction(subMissionId)
 	return true
 }
 
@@ -349,6 +349,20 @@ func (g *GamePlayer) FinishCocoon(cocoonId uint32) {
 	}
 }
 
+func (g *GamePlayer) EnterMapByEntrance(entryId uint32) {
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		if conf.FinishType == constant.EnterMapByEntrance {
+			if conf.ParamInt1 == entryId {
+				g.FinishSubMission(id)
+			}
+		}
+	}
+}
+
 // 完成由服务端完成的任务
 func (g *GamePlayer) AutoServerFinishMission() {
 	for id := range g.GetSubMainMissionList() {
@@ -415,6 +429,10 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 				},
 			})
 			g.AllPlayerSyncScNotify(&AllPlayerSync{MaterialList: []uint32{finishAction.FinishActionPara[0]}})
+		case constant.DelMission: // 结束任务
+			for _, missionId := range finishAction.FinishActionPara {
+				g.FinishSubMission(missionId)
+			}
 		}
 	}
 }
@@ -475,9 +493,7 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 				}
 			}
 			if isNext {
-				if g.JumpSubMission(subInfo.ID) {
-					finisSub = append(finisSub, subInfo.ID)
-				} else {
+				if !g.JumpSubMission(subInfo.ID) {
 					nextList = append(nextList, subInfo.ID)
 					subMainMissionList[subInfo.ID] = &spb.MissionInfo{
 						MissionId: subInfo.ID,
@@ -656,7 +672,7 @@ func (g *GamePlayer) JumpSubMission(id uint32) bool {
 				continue
 			}
 			isJump = true
-			g.UpSubMainMission(id) // 完成子任务
+			g.FinishSubMission(id) // 完成子任务
 		}
 	}
 	return isJump

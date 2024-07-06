@@ -36,7 +36,11 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		anchor = teleportsMap.TeleportsByGroupId[groupID].AnchorList[anchorID]
 	} else {
 		if teleportId == 0 {
-			anchor = gdconf.GetAnchor(mapEntrance.PlaneID, mapEntrance.FloorID, groupID, anchorID)
+			if anchorID == 0 || groupID == 0 {
+				anchor = gdconf.GetAnchorByIndex(mapEntrance.PlaneID, mapEntrance.FloorID, groupID, anchorID)
+			} else {
+				anchor = gdconf.GetAnchor(mapEntrance.PlaneID, mapEntrance.FloorID, groupID, anchorID)
+			}
 		} else {
 			confMi := gdconf.GetMappingInfoById(teleportId, 0)
 			if confMi != nil {
@@ -67,6 +71,7 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	}
 	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
 	g.SetCurEntryId(entryId)
+	g.EnterMapByEntrance(entryId) // 任务检查
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 	// "2010101"
 }
