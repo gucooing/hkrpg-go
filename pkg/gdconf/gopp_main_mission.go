@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -174,11 +175,19 @@ func GetSubMainMissionById(id uint32) *SubMission {
 func GetEntryId(id uint32) (uint32, bool) {
 	var entryId uint32
 	var isFloor = false
-	conf := CONF.GoppMission.GoppMissionJson[id]
-	if conf == nil {
-		return 0, false
+	conf := GetSubMainMissionById(id)
+	jsonConf := CONF.GoppMission.GoppMissionJson[id]
+	if jsonConf == nil {
+		if conf == nil {
+			return 0, false
+		}
+		str := strconv.Itoa(int(conf.ParamInt2))
+		part1 := str[:6]
+		part2 := str[6:7]
+		newNumStr := part1 + part2
+		return alg.S2U32(newNumStr), true
 	}
-	for _, info := range conf.OnStartSequece {
+	for _, info := range jsonConf.OnStartSequece {
 		if info.TaskList == nil {
 			continue
 		}
@@ -191,7 +200,7 @@ func GetEntryId(id uint32) (uint32, bool) {
 		}
 	}
 	if !isFloor {
-		for _, info := range conf.OnInitSequece {
+		for _, info := range jsonConf.OnInitSequece {
 			if info.TaskList == nil {
 				continue
 			}

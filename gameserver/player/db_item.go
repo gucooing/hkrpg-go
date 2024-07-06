@@ -238,10 +238,11 @@ func (g *GamePlayer) AddEquipment(tid uint32) {
 		IsProtected:  false,
 		Rank:         1,
 	}
-	g.EquipmentPlayerSyncScNotify(uniqueId)
+	// TODO 要删掉
+	g.AllPlayerSyncScNotify(&AllPlayerSync{EquipmentList: []uint32{uniqueId}})
 }
 
-func (g *GamePlayer) DelEquipment(uniqueId uint32) []*Material {
+func (g *GamePlayer) SellDelEquipment(uniqueId uint32) []*Material {
 	var material []*Material
 	db := g.GetEquipmentMap()
 	if db[uniqueId] == nil {
@@ -258,7 +259,7 @@ func (g *GamePlayer) DelEquipment(uniqueId uint32) []*Material {
 			Num: itme.ItemNum,
 		})
 	}
-	g.DelEquipmentPlayerSyncScNotify([]uint32{uniqueId})
+	g.DelEquipment([]uint32{uniqueId})
 	return material
 }
 
@@ -486,17 +487,6 @@ func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 
 /*************************************PlayerSyncScNotify大全*******************************/
 
-func (g *GamePlayer) EquipmentPlayerSyncScNotify(uniqueId uint32) {
-	notify := &proto.PlayerSyncScNotify{
-		EquipmentList: make([]*proto.Equipment, 0),
-	}
-
-	equipment := g.GetEquipment(uniqueId)
-	notify.EquipmentList = append(notify.EquipmentList, equipment)
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
 func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
@@ -507,18 +497,15 @@ func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
-// 删除物品通知
-func (g *GamePlayer) DelEquipmentPlayerSyncScNotify(equipmentList []uint32) {
-	notify := &proto.PlayerSyncScNotify{DelEquipmentList: make([]uint32, 0)}
+// 删除物品
+func (g *GamePlayer) DelEquipment(equipmentList []uint32) {
 	db := g.GetEquipmentMap()
 	for _, equipment := range equipmentList {
 		if db[equipment] == nil {
 			continue
 		}
 		delete(db, equipment)
-		notify.DelEquipmentList = append(notify.DelEquipmentList, equipment)
 	}
-	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
 func (g *GamePlayer) DelRelicPlayerSyncScNotify(relicList []uint32) {

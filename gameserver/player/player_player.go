@@ -10,11 +10,12 @@ import (
 )
 
 type AllPlayerSync struct {
-	IsBasic       bool     // 基本信息
-	AvatarList    []uint32 // 角色列表
-	MaterialList  []uint32 // 物品id列表
-	EquipmentList []uint32 // 光锥列表
-	RelicList     []uint32 // 圣遗物列表
+	IsBasic          bool     // 基本信息
+	AvatarList       []uint32 // 角色列表
+	MaterialList     []uint32 // 物品id列表
+	EquipmentList    []uint32 // 光锥列表
+	DelEquipmentList []uint32 // 删除列表
+	RelicList        []uint32 // 圣遗物列表
 }
 
 // 玩家ping包处理
@@ -102,6 +103,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 		BasicTypeInfoList: make([]*proto.PlayerHeroBasicTypeInfo, 0),
 		MaterialList:      make([]*proto.Material, 0),
 		EquipmentList:     make([]*proto.Equipment, 0),
+		DelEquipmentList:  make([]uint32, 0),
 		RelicList:         make([]*proto.Relic, 0),
 	}
 	db := g.GetMaterialMap()
@@ -146,6 +148,8 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 			notify.EquipmentList = append(notify.EquipmentList, g.GetEquipment(uniqueId))
 		}
 	}
+	// 删除光锥
+	notify.DelEquipmentList = allSync.DelEquipmentList
 	// 添加圣遗物
 	if allSync.RelicList != nil {
 		for _, uniqueId := range allSync.RelicList {

@@ -371,10 +371,10 @@ func (g *GamePlayer) AutoServerFinishMission() {
 		case constant.EnterFloor: // 传送
 			if entryId, ok := gdconf.GetEntryId(id); ok {
 				g.EnterSceneByServerScNotify(entryId, 0)
+				g.FinishSubMission(id)
 			} else {
 				logger.Error("EnterFloor MissionId:%v error", id)
 			}
-			g.FinishSubMission(id)
 		case constant.SubMissionFinishCnt: // 完成列表中的子任务即可
 			g.SubMissionFinishCnt(id)
 		case constant.FinishMission: // 完成列表中的主任务即可

@@ -90,7 +90,7 @@ func (g *GamePlayer) SellItemCsReq(payloadMsg []byte) {
 		// pileItem := item.GetPileItem()
 		equipmentUniqueId := item.GetEquipmentUniqueId()
 		relicUniqueId := item.GetRelicUniqueId()
-		material = append(material, g.DelEquipment(equipmentUniqueId)...)
+		material = append(material, g.SellDelEquipment(equipmentUniqueId)...)
 		material = append(material, g.DelRelic(relicUniqueId)...)
 	}
 
@@ -364,10 +364,14 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		return
 	}
 
-	var equipmentList []uint32 // 需要删除的equipmentList
-	var pileItem []*Material   // 需要删除的升级材料
-	var delScoin uint32        // 扣除的信用点
-	var addExp uint32          // 增加的经验
+	var pileItem []*Material // 需要删除的升级材料
+	var delScoin uint32      // 扣除的信用点
+	var addExp uint32        // 增加的经验
+	allSync := &AllPlayerSync{
+		MaterialList:     make([]uint32, 0),
+		EquipmentList:    make([]uint32, 0),
+		DelEquipmentList: make([]uint32, 0),
+	}
 
 	// 从背包获取需要升级的光锥
 	dbEquipment := g.GetItem().EquipmentMap[req.EquipmentUniqueId]
@@ -390,11 +394,11 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		if pileList.GetPileItem() == nil {
 			continue
 		}
-		pile := new(Material)
-		pile.Tid = pileList.GetPileItem().ItemId
-		pile.Num = pileList.GetPileItem().ItemNum
-
-		pileItem = append(pileItem, pile)
+		allSync.MaterialList = append(allSync.MaterialList, pileList.GetPileItem().ItemId)
+		pileItem = append(pileItem, &Material{
+			Tid: pileList.GetPileItem().ItemId,
+			Num: pileList.GetPileItem().ItemNum,
+		})
 		// 获取材料配置
 		pileconf := gdconf.GetEquipmentConfigById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
@@ -414,7 +418,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 		if equipment.GetEquipmentUniqueId() == 0 {
 			continue
 		}
-		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
+		allSync.DelEquipmentList = append(allSync.DelEquipmentList, equipment.GetEquipmentUniqueId())
 		// 获取光锥配置
 		equipmentconfig := gdconf.GetEquipmentConfigById(g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)
 		if equipmentconfig == nil {
@@ -448,18 +452,15 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 	dbEquipment.Level = level
 	dbEquipment.Exp = exp
 
-	// 删除用来升级的材料
+	// 数据操作
 	if len(pileItem) != 0 {
 		g.DelMaterial(pileItem)
 	}
-	if len(equipmentList) != 0 {
-		// 删除用来升级的光锥
-		g.DelEquipmentPlayerSyncScNotify(equipmentList)
-	}
-	// 通知角色还有多少信用点
-	g.PlayerPlayerSyncScNotify()
-	// 通知升级后光锥消息
-	g.EquipmentPlayerSyncScNotify(req.EquipmentUniqueId)
+	g.DelEquipment(allSync.DelEquipmentList)
+	// 同步操作
+	allSync.IsBasic = true
+	allSync.EquipmentList = append(allSync.EquipmentList, req.EquipmentUniqueId)
+	g.AllPlayerSyncScNotify(allSync)
 	rsp := &proto.ExpUpEquipmentScRsp{}
 	g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 }
@@ -468,8 +469,12 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpEquipmentCsReq, payloadMsg)
 	req := msg.(*proto.RankUpEquipmentCsReq)
 
-	var equipmentList []uint32 // 需要删除的equipmentList
-	var pileItem []*Material   // 需要删除的叠影材料
+	var pileItem []*Material // 需要删除的叠影材料
+	allSync := &AllPlayerSync{
+		MaterialList:     make([]uint32, 0),
+		EquipmentList:    make([]uint32, 0),
+		DelEquipmentList: make([]uint32, 0),
+	}
 
 	// 从背包获取需要叠影的光锥
 	dbEquipment := g.GetItem().EquipmentMap[req.EquipmentUniqueId]
@@ -505,10 +510,11 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 			continue
 		}
 
-		pile := new(Material)
-		pile.Tid = pileList.GetPileItem().ItemId
-		pile.Num = pileList.GetPileItem().ItemNum
-		pileItem = append(pileItem, pile)
+		allSync.MaterialList = append(allSync.MaterialList, pileList.GetPileItem().ItemId)
+		pileItem = append(pileItem, &Material{
+			Tid: pileList.GetPileItem().ItemId,
+			Num: pileList.GetPileItem().ItemNum,
+		})
 
 		dbEquipment.Rank += pileList.GetPileItem().ItemNum
 	}
@@ -524,7 +530,7 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 			g.Send(cmd.RankUpEquipmentScRsp, rsp)
 			return
 		}
-		equipmentList = append(equipmentList, equipment.GetEquipmentUniqueId())
+		allSync.DelEquipmentList = append(allSync.DelEquipmentList, equipment.GetEquipmentUniqueId())
 		dbEquipment.Rank++
 	}
 
@@ -532,13 +538,12 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg []byte) {
 	if len(pileItem) != 0 {
 		g.DelMaterial(pileItem)
 	}
-	if len(equipmentList) != 0 {
-		// 删除用来叠影的光锥
-		g.DelEquipmentPlayerSyncScNotify(equipmentList)
-	}
-	// 通知叠影后光锥消息
-	g.EquipmentPlayerSyncScNotify(req.EquipmentUniqueId)
-
+	// 删除用来叠影的光锥
+	g.DelEquipment(allSync.DelEquipmentList)
+	// 通知
+	allSync.IsBasic = true
+	allSync.EquipmentList = append(allSync.EquipmentList, req.EquipmentUniqueId)
+	g.AllPlayerSyncScNotify(allSync)
 	rsp := new(proto.GetChallengeScRsp)
 	g.Send(cmd.RankUpEquipmentScRsp, rsp)
 }
@@ -549,6 +554,11 @@ func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg []byte) {
 
 	var pileItem []*Material // 需要删除的突破材料
 	var delScoin uint32      // 扣除的信用点
+	allSync := &AllPlayerSync{
+		MaterialList:     make([]uint32, 0),
+		EquipmentList:    make([]uint32, 0),
+		DelEquipmentList: make([]uint32, 0),
+	}
 
 	// 从背包获取需要突破的光锥
 	dbEquipment := g.GetItem().EquipmentMap[req.EquipmentUniqueId]
@@ -563,10 +573,11 @@ func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg []byte) {
 		if pileList.GetPileItem() == nil {
 			continue
 		}
-		pile := new(Material)
-		pile.Tid = pileList.GetPileItem().ItemId
-		pile.Num = pileList.GetPileItem().ItemNum
-		pileItem = append(pileItem, pile)
+		allSync.MaterialList = append(allSync.MaterialList, pileList.GetPileItem().ItemId)
+		pileItem = append(pileItem, &Material{
+			Tid: pileList.GetPileItem().ItemId,
+			Num: pileList.GetPileItem().ItemNum,
+		})
 	}
 
 	// 计算需要扣除的信用点
@@ -583,11 +594,10 @@ func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg []byte) {
 
 	// 增加突破等级
 	dbEquipment.Promotion++
-	// 通知突破后光锥消息
-	g.EquipmentPlayerSyncScNotify(req.EquipmentUniqueId)
-	// 通知角色还有多少信用点
-	g.PlayerPlayerSyncScNotify()
-
+	// 通知
+	allSync.IsBasic = true
+	allSync.EquipmentList = append(allSync.EquipmentList, req.EquipmentUniqueId)
+	g.AllPlayerSyncScNotify(allSync)
 	rsp := new(proto.GetChallengeScRsp)
 	g.Send(cmd.PromoteEquipmentScRsp, rsp)
 }
