@@ -382,10 +382,10 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			g.FinishMainMission(id)
 		case constant.MessagePerformSectionFinish: // 对话框显示
 			g.AddMessageGroup(conf.ParamInt1)
-			g.FinishSubMission(id)
+			// g.FinishSubMission(id)
 		case constant.MessageSectionFinish: //
-			// g.AddMessageGroup(conf.ParamInt1)
-			g.FinishSubMission(id)
+			g.AddMessageGroup(conf.ParamInt1)
+			// g.FinishSubMission(id)
 		case constant.Unknown:
 			g.FinishSubMission(id)
 		case constant.PropState:

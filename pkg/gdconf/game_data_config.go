@@ -84,6 +84,7 @@ type GameDataConfig struct {
 	VideoVersionKey              []*VideoVersionKey                              // 视频key
 	InteractConfigMap            map[uint32]*InteractConfig                      // 互动配置
 	MessageGroupConfig           *MessageGroupConfig                             // 消息配置
+	MessageSectionConfigMap      map[uint32]*MessageSectionConfig                // 消息配置2
 	TutorialDataMap              map[uint32]*TutorialData                        // 教程
 	TutorialGuideGroupMap        map[uint32]*TutorialGuideGroup                  // 图鉴教程
 	AdventurePlayerMap           map[uint32]*AdventurePlayer                     // 角色场景技能列表
@@ -229,6 +230,7 @@ func (g *GameDataConfig) load() {
 		g.loadVideoVersionKey,           // 视频key
 		g.loadInteractConfig,            // 互动配置
 		g.loadMessageGroupConfig,        // 消息配置
+		g.loadMessageSectionConfig,      // 消息配置2
 		g.loadTutorialData,              // 教程
 		g.loadTutorialGuideGroup,        // 图鉴教程
 		g.loadAdventurePlayer,           // 角色场景技能列表
