@@ -80,15 +80,15 @@ func (g *GamePlayer) UpMainMission(mainMissionId uint32) bool {
 	if conf == nil {
 		return false
 	}
-	if subMission == nil {
-		return false
+	if subMission != nil {
+		delete(mainMissionList, mainMissionId)
 	}
 	finishMainMissionList[mainMissionId] = &spb.MissionInfo{
-		MissionId: subMission.MissionId,
-		Progress:  subMission.Progress + 1,
+		MissionId: mainMissionId,
+		Progress:  1,
 		Status:    spb.MissionStatus_MISSION_FINISH,
 	}
-	delete(mainMissionList, mainMissionId)
+
 	g.Send(cmd.StartFinishMainMissionScNotify, &proto.StartFinishMainMissionScNotify{MainMissionId: mainMissionId})
 
 	allSync := &AllPlayerSync{
@@ -123,16 +123,17 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	subMainMissionList := g.GetSubMainMissionList()
 	subMission := subMainMissionList[subMissionId]
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
-	if subMission == nil {
-		return false
+	conf := gdconf.GetSubMainMissionById(subMissionId)
+	if subMission != nil {
+		delete(subMainMissionList, subMissionId)
 	}
 
 	finishSubMainMissionList[subMissionId] = &spb.MissionInfo{
-		MissionId: subMission.MissionId,
-		Progress:  subMission.Progress + 1,
+		MissionId: subMissionId,
+		Progress:  conf.Progress,
 		Status:    spb.MissionStatus_MISSION_FINISH,
 	}
-	delete(subMainMissionList, subMissionId)
+
 	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{SubMissionId: subMissionId})
 
 	triggerMissions := map[uint32]uint32{
@@ -523,6 +524,8 @@ func (g *GamePlayer) ReadyMainMission() {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	conf := gdconf.GetMainMission()
 	var nextList []uint32
+	var finSub []uint32
+	var finishMain []uint32
 	for id, mission := range conf {
 		if g.IsReceiveMission(mission, mainMissionList, finishMainMissionList) {
 			goppConf := gdconf.GetGoppMainMissionById(id)
@@ -534,18 +537,25 @@ func (g *GamePlayer) ReadyMainMission() {
 				g.AddAvatar(1003, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 				g.GetTrialAvatar(1003)
 			}
-			mainMissionList[id] = &spb.MissionInfo{
-				MissionId: id,
-				Progress:  0,
-				Status:    spb.MissionStatus_MISSION_DOING,
+			isJump := g.JumpMainMission(id)
+			if isJump {
+				finishMain = append(finishMain, id)
+			} else {
+				mainMissionList[id] = &spb.MissionInfo{
+					MissionId: id,
+					Progress:  0,
+					Status:    spb.MissionStatus_MISSION_DOING,
+				}
 			}
-			if !g.JumpMainMission(id) {
-				// 接取该主线子任务
-				for _, subInfo := range goppConf.SubMissionList {
-					if finishSubMainMissionList[subInfo.ID] != nil {
-						continue
-					}
-					if subInfo.TakeType == constant.Auto {
+			// 接取该主线子任务
+			for _, subInfo := range goppConf.SubMissionList {
+				if finishSubMainMissionList[subInfo.ID] != nil {
+					continue
+				}
+				if subInfo.TakeType == constant.Auto {
+					if isJump {
+						finSub = append(finSub, subInfo.ID)
+					} else {
 						nextList = append(nextList, subInfo.ID)
 						subMainMissionList[subInfo.ID] = &spb.MissionInfo{
 							MissionId: subInfo.ID,
@@ -558,7 +568,7 @@ func (g *GamePlayer) ReadyMainMission() {
 		}
 	}
 	// 通知状态
-	g.MissionPlayerSyncScNotify(nextList, make([]uint32, 0), make([]uint32, 0)) // 发送通知
+	g.MissionPlayerSyncScNotify(nextList, finSub, finishMain) // 发送通知
 }
 
 func (g *GamePlayer) IsReceiveMission(mission *gdconf.MainMission, mainMissionList, finishMainMissionList map[uint32]*spb.MissionInfo) bool {

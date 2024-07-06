@@ -122,19 +122,19 @@ func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr})
 }
 
-func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finish, curFinishMain []uint32) {
-	if len(nextSub) == 0 && len(finish) == 0 && len(curFinishMain) == 0 {
+func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finSub, finishMain []uint32) {
+	if len(nextSub) == 0 && len(finSub) == 0 && len(finishMain) == 0 {
 		return
 	}
 	notify := &proto.PlayerSyncScNotify{
 		MissionSync: &proto.MissionSync{
 			MissionList:       make([]*proto.Mission, 0),
-			MainMissionIdList: curFinishMain,
+			MainMissionIdList: finishMain,
 		},
 	}
 	finishSubMainMissionList := g.GetFinishSubMainMissionList()
 	subMainMissionList := g.GetSubMainMissionList()
-	for _, sub := range finish {
+	for _, sub := range finSub {
 		db := finishSubMainMissionList[sub]
 		if db == nil {
 			continue
