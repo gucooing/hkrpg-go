@@ -98,5 +98,5 @@ func tp(parameter []string, s *HkRpgGoServer) {
 	if p == nil {
 		return
 	}
-	p.GamePlayer.EnterSceneByServerScNotify(alg.S2U32(parameter[2]), 0)
+	p.GamePlayer.EnterSceneByServerScNotify(alg.S2U32(parameter[2]), 0, 0, 0)
 }

@@ -89,6 +89,7 @@ type Task struct {
 	// 战斗相关
 	EventID      *EventID    `json:"EventID"`
 	GroupID      interface{} `json:"GroupID"`
+	AnchorID     interface{} `json:"AnchorID"`
 	BattleAreaID interface{} `json:"BattleAreaID"`
 }
 
@@ -117,7 +118,6 @@ func (g *GameDataConfig) goppMainMission() {
 		playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 		if err != nil {
 			logger.Debug("open MainMission error: %v", err)
-
 			return
 		}
 		err = hjson.Unmarshal(playerElementsFile, &goppMainMission)
@@ -172,7 +172,7 @@ func GetSubMainMissionById(id uint32) *SubMission {
 	return CONF.GoppMission.GoppSubMainMission[id]
 }
 
-func GetEntryId(id uint32) (uint32, bool) {
+func GetEntryId(id uint32) (uint32, uint32, uint32, bool) {
 	conf := GetSubMainMissionById(id)
 	jsonConf := CONF.GoppMission.GoppMissionJson[id]
 	if jsonConf != nil {
@@ -182,7 +182,7 @@ func GetEntryId(id uint32) (uint32, bool) {
 			}
 			for _, task := range info.TaskList {
 				if CONF.MapEntranceMap[task.EntranceID] != nil {
-					return task.EntranceID, true
+					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
 				}
 			}
 		}
@@ -192,19 +192,19 @@ func GetEntryId(id uint32) (uint32, bool) {
 			}
 			for _, task := range info.TaskList {
 				if CONF.MapEntranceMap[task.EntranceID] != nil {
-					return task.EntranceID, true
+					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
 				}
 			}
 		}
 	}
 	if conf == nil {
-		return 0, false
+		return 0, 0, 0, false
 	}
 	str := strconv.Itoa(int(conf.ParamInt2))
 	part1 := str[:6]
 	part2 := str[6:7]
 	newNumStr := part1 + part2
-	return alg.S2U32(newNumStr), true
+	return alg.S2U32(newNumStr), 0, 0, true
 }
 
 func IsBattleMission(id, eventId uint32) bool {
@@ -226,4 +226,14 @@ func IsBattleMission(id, eventId uint32) bool {
 	}
 
 	return isFinish
+}
+
+func getGroupIDUint32(x interface{}) uint32 {
+	switch x.(type) {
+	case uint32:
+		return x.(uint32)
+	case *GroupID:
+		return x.(GroupID).FixedValue.Value
+	}
+	return 0
 }

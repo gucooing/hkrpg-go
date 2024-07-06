@@ -132,7 +132,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	// 是否传送到最近锚点
 	if teleportToAnchor {
 		// 当前坐标通知(移动到最近锚点)
-		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
+		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0, 0, 0)
 	}
 
 	g.DelBattleBackupById(req.BattleId)

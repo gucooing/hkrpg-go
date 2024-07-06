@@ -60,6 +60,7 @@ type GameDataConfig struct {
 	GroupMap                     map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                     map[uint32]map[uint32]*LevelFloor               // ?
 	MapEntranceMap               map[uint32]*MapEntrance                         // 地图入口
+	SpecialPropMap               map[uint32]*SpecialProp                         // 物品特殊状态
 	BannersMap                   map[uint32]*Banners                             // 卡池信息
 	ActivityPanelMap             map[uint32]*ActivityPanel                       // 活动
 	ActivityLoginConfigMap       map[uint32]*ActivityLoginConfig                 // 登录活动表
@@ -207,6 +208,7 @@ func (g *GameDataConfig) load() {
 		// g.loadGroup,                     // 场景实体
 		g.loadFloor,                     // 场景
 		g.loadMapEntrance,               // 地图入口
+		g.loadSpecialProp,               // 物品特殊状态
 		g.loadBanners,                   // 卡池信息
 		g.loadActivityPanel,             // 活动
 		g.loadAvatarDemoConfig,          // 角色试用信息

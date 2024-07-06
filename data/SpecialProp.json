@@ -1,0 +1,24 @@
+{
+  "2011101": {
+    "EntryId": 2011101,
+    "GroupList": [
+      {
+        "GroupId": 21,
+        "PropState": {
+          "300007": "Closed"
+        }
+      }
+    ]
+  },
+  "2012301": {
+    "EntryId": 2012301,
+    "GroupList": [
+      {
+        "GroupId": 8,
+        "PropState": {
+          "300005": "Closed"
+        }
+      }
+    ]
+  }
+}

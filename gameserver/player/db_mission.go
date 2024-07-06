@@ -378,8 +378,8 @@ func (g *GamePlayer) AutoServerFinishMission() {
 			g.DelTrialAvatar(conf.ParamInt1)
 			g.FinishSubMission(id)
 		case constant.EnterFloor: // 传送
-			if entryId, ok := gdconf.GetEntryId(id); ok {
-				g.EnterSceneByServerScNotify(entryId, 0)
+			if entryId, groupID, anchorID, ok := gdconf.GetEntryId(id); ok {
+				g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
 				g.FinishSubMission(id)
 			} else {
 				logger.Error("EnterFloor MissionId:%v error", id)
@@ -653,7 +653,7 @@ func (g *GamePlayer) JumpMainMission(id uint32) bool {
 }
 
 func (g *GamePlayer) CheckJumpSubMission() {
-	jumpList := []uint32{101050116}
+	jumpList := []uint32{101050116, 101090222}
 	subMissionList := g.GetSubMainMissionList()
 	for _, id := range jumpList {
 		if subMissionList[id] != nil {
@@ -663,7 +663,7 @@ func (g *GamePlayer) CheckJumpSubMission() {
 }
 
 func (g *GamePlayer) JumpSubMission(id uint32) bool {
-	jumpList := []uint32{101050116}
+	jumpList := []uint32{101050116, 101090222}
 	isJump := false
 	for _, jumpId := range jumpList {
 		if jumpId == id {

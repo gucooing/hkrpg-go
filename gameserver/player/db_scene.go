@@ -560,6 +560,26 @@ func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32
 	}
 }
 
+func (g *GamePlayer) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
+	if db.BlockList == nil {
+		db.BlockList = make(map[uint32]*spb.BlockList)
+	}
+	if db.BlockList[groupId] == nil {
+		db.BlockList[groupId] = &spb.BlockList{
+			PropInfo: make(map[uint32]*spb.PropInfo),
+		}
+	}
+	if db.BlockList[groupId].PropInfo == nil {
+		db.BlockList[groupId].PropInfo = make(map[uint32]*spb.PropInfo)
+	}
+	if db.BlockList[groupId].PropInfo[propId] == nil {
+		db.BlockList[groupId].PropInfo[propId] = &spb.PropInfo{
+			InstId:    propId,
+			PropState: state,
+		}
+	}
+}
+
 func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
 	if db == nil {
 		return
@@ -571,7 +591,17 @@ func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 	if prop.StageObjectCapture != nil { // 特殊处理
 		switch prop.StageObjectCapture.BlockAlias {
 		case "RogueLobby_01": // 模拟宇宙入口直接开放
-			g.UpPropState(db, groupId, prop.ID, 1)
+			g.ObjectCaptureUpPropState(db, groupId, prop.ID, 1)
+			break
+		}
+	}
+	if conf := gdconf.GetSpecialProp(db.EntryId); conf != nil {
+		for _, groupInfo := range conf.GroupList {
+			if groupInfo.GroupId == groupId {
+				if state := groupInfo.PropState[prop.ID]; state != "" {
+					g.ObjectCaptureUpPropState(db, groupId, prop.ID, gdconf.GetStateValue(state))
+				}
+			}
 		}
 	}
 }

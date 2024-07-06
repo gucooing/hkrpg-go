@@ -97,7 +97,7 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
 	g.ChallengeSettleNotify()
 	g.Send(cmd.LeaveChallengeScRsp, nil)
 
-	g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
+	g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0, 0, 0)
 	// 设置战斗状态为空
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)
 	// 清空忘却之庭

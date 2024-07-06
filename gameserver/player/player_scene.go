@@ -9,7 +9,7 @@ import (
 )
 
 // 通知客户端进入场景
-func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
+func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, anchorID uint32) {
 	rsp := new(proto.EnterSceneByServerScNotify)
 	mapEntrance := gdconf.GetMapEntranceById(entryId)
 	if mapEntrance == nil {
@@ -20,8 +20,11 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 		return
 	}
 
-	var anchorID = mapEntrance.StartAnchorID
-	var groupID = mapEntrance.StartGroupID
+	if anchorID == 0 || groupID == 0 {
+		anchorID = mapEntrance.StartAnchorID
+		groupID = mapEntrance.StartGroupID
+	}
+
 	var pos *proto.Vector
 	var rot *proto.Vector
 
@@ -211,7 +214,7 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg []byte) {
 	req := msg.(*proto.EnterSceneCsReq)
 	rsp := &proto.GetEnteredSceneScRsp{}
 
-	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId)
+	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId, 0, 0)
 
 	g.Send(cmd.EnterSceneScRsp, rsp)
 	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
