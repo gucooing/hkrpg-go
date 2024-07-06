@@ -332,6 +332,11 @@ func (g *GamePlayer) MessagePerformSectionFinish(sectionId uint32) { // 处理np
 				g.FinishSubMission(id)
 			}
 		}
+		if conf.FinishType == constant.MessageSectionFinish {
+			if conf.ParamInt1 == sectionId {
+				g.FinishSubMission(id)
+			}
+		}
 	}
 }
 
