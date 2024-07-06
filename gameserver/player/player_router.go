@@ -133,6 +133,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.FinishTalkMissionCsReq:   g.FinishTalkMissionCsReq,  // 完成任务
 		cmd.GetVideoVersionKeyCsReq:  g.GetVideoVersionKeyCsReq, // 获取key
 		cmd.GetSecretKeyInfoCsReq:    g.GetSecretKeyInfoCsReq,   // key
+		cmd.FinishItemIdCsReq:        g.FinishItemIdCsReq,       // 对话选项
 		// 活动
 		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
@@ -163,6 +164,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.PlayerHeartBeatCsReq:         g.HandlePlayerHeartBeatCsReq,    // 玩家ping包
 		cmd.GetSpringRecoverDataCsReq:    g.GetSpringRecoverDataCsReq,     // 恢复
 		cmd.GetLevelRewardTakenListCsReq: g.GetLevelRewardTakenListCsReq,  // 等级奖励领取情况
+		cmd.GetLevelRewardCsReq:          g.GetLevelRewardCsReq,           // 领取等级奖励
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集

@@ -422,3 +422,15 @@ func (g *GamePlayer) GetLevelRewardTakenListCsReq(payloadMsg []byte) {
 	}
 	g.Send(cmd.GetLevelRewardTakenListScRsp, rsp)
 }
+
+func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetLevelRewardCsReq, payloadMsg)
+	req := msg.(*proto.GetLevelRewardCsReq)
+
+	rsp := &proto.GetLevelRewardScRsp{
+		Reward:  nil,
+		Retcode: 0,
+		Level:   req.Level,
+	}
+	g.Send(cmd.GetLevelRewardScRsp, rsp)
+}

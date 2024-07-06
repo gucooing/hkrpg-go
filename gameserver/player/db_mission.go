@@ -292,35 +292,6 @@ func (g *GamePlayer) FinishMainMission(id uint32) {
 	}
 }
 
-// 完成列表中的主任务即可
-func (g *GamePlayer) AllFinishMission() {
-	finishMainMissionList := g.GetFinishMainMissionList() // 完成的主线任务
-	subMissionList := make([]uint32, 0)
-	for _, db := range g.GetSubMainMissionList() {
-		conf := gdconf.GetSubMainMissionById(db.MissionId)
-		if conf == nil {
-			return
-		}
-		OldProgress := db.Progress
-		db.Progress = 0
-		for _, paramInt := range conf.ParamIntList {
-			if finishMainMissionList[paramInt] != nil {
-				db.Progress++
-			}
-		}
-		if db.Progress == uint32(len(conf.ParamIntList)) {
-			db.Progress = conf.Progress
-			// 完成任务
-			g.FinishSubMission(db.MissionId)
-		} else {
-			if OldProgress != db.Progress {
-				subMissionList = append(subMissionList, db.MissionId)
-			}
-		}
-	}
-	g.MissionPlayerSyncScNotify(subMissionList, make([]uint32, 0), make([]uint32, 0))
-}
-
 func (g *GamePlayer) MessagePerformSectionFinish(sectionId uint32) { // 处理npc聊天任务
 	for id := range g.GetSubMainMissionList() {
 		conf := gdconf.GetSubMainMissionById(id)

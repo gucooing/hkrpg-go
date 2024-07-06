@@ -39,7 +39,7 @@ func (g *GamePlayer) AddMessageGroup(sectionId uint32) {
 		RefreshTime:        time.Now().Unix(),
 		Status:             spb.MessageGroupStatus_MESSAGE_GROUP_DOING,
 	}
-	for _, confsectionId := range confMs.StartMessageItemIDList {
+	for _, confsectionId := range confMg.MessageSectionIDList {
 		db[contactId].MessageSectionList[confsectionId] = &spb.MessageSection{
 			Id:     confsectionId,
 			Status: spb.MessageSectionStatus_MESSAGE_SECTION_DOING,
