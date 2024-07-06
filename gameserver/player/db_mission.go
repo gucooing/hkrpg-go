@@ -475,11 +475,15 @@ func (g *GamePlayer) FinishSubMission(missionId uint32) {
 				}
 			}
 			if isNext {
-				nextList = append(nextList, subInfo.ID)
-				subMainMissionList[subInfo.ID] = &spb.MissionInfo{
-					MissionId: subInfo.ID,
-					Progress:  0,
-					Status:    spb.MissionStatus_MISSION_DOING,
+				if g.JumpSubMission(subInfo.ID) {
+					finisSub = append(finisSub, subInfo.ID)
+				} else {
+					nextList = append(nextList, subInfo.ID)
+					subMainMissionList[subInfo.ID] = &spb.MissionInfo{
+						MissionId: subInfo.ID,
+						Progress:  0,
+						Status:    spb.MissionStatus_MISSION_DOING,
+					}
 				}
 			}
 		}
@@ -508,8 +512,9 @@ func (g *GamePlayer) LoginReadyMission() {
 	}
 	// g.ReadyMainMission() // 主线检查
 	// g.AllFinishMission() // 检查是否有子任务应该完成但未完成
-	g.CheckJumpMainMission()
-	g.ReadyMainMission() // 主线接取检查
+	g.CheckJumpMainMission() // 检查主任务跳过
+	g.CheckJumpSubMission()  // 检查子任务跳过
+	g.ReadyMainMission()     // 主线接取检查
 	g.FinishMissionAuto()
 }
 
@@ -626,6 +631,32 @@ func (g *GamePlayer) JumpMainMission(id uint32) bool {
 				}
 			}
 			g.UpMainMission(jumpId) // 结束主任务
+		}
+	}
+	return isJump
+}
+
+func (g *GamePlayer) CheckJumpSubMission() {
+	jumpList := []uint32{101050116}
+	subMissionList := g.GetSubMainMissionList()
+	for _, id := range jumpList {
+		if subMissionList[id] != nil {
+			g.FinishSubMission(id) // 完成子任务
+		}
+	}
+}
+
+func (g *GamePlayer) JumpSubMission(id uint32) bool {
+	jumpList := []uint32{101050116}
+	isJump := false
+	for _, jumpId := range jumpList {
+		if jumpId == id {
+			mainConf := gdconf.GetGoppMainMissionById(jumpId)
+			if mainConf == nil {
+				continue
+			}
+			isJump = true
+			g.UpSubMainMission(id) // 完成子任务
 		}
 	}
 	return isJump
