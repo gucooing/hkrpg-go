@@ -941,7 +941,7 @@ func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList ma
 				},
 			},
 		}
-		// 添加怪物实体
+		// 添加Npc实体
 		g.AddEntity(mazeGroupID, &NpcEntity{
 			Entity: Entity{
 				EntityId: entityId,
@@ -957,7 +957,7 @@ func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList ma
 	return sceneEntityRefreshInfo
 }
 
-// 添加实体
+// 添加物品实体
 func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, prop := range propList {
@@ -988,12 +988,12 @@ func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList 
 				},
 			},
 		}
-		// 添加怪物实体
+		// 添加物品实体
 		g.AddEntity(mazeGroupID, &PropEntity{
 			Entity: Entity{
 				EntityId: entityId,
 				InstId:   prop.ID,
-				EntryId:  entityId,
+				EntryId:  db.EntryId,
 				GroupId:  mazeGroupID,
 				Pos:      pos,
 				Rot:      rot,
