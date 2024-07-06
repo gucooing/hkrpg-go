@@ -145,7 +145,7 @@ func (g *GamePlayer) UpSubMainMission(subMissionId uint32) bool {
 	if triggerID, ok := triggerMissions[subMissionId]; ok && finishSubMainMissionList[triggerID] == nil {
 		g.UpSubMainMission(triggerID)
 	}
-
+	g.AutoServerMissionFinishAction(subMissionId)
 	return true
 }
 
@@ -160,6 +160,24 @@ func (g *GamePlayer) TalkStrSubMission(talkStr string) {
 			g.FinishSubMission(id) // 完成子任务
 		}
 	}
+}
+
+func (g *GamePlayer) FinishCosumeItemMission(subMissionId uint32) {
+	conf := gdconf.GetSubMainMissionById(subMissionId)
+	if conf != nil {
+		// 扣道具
+		if conf.FinishType == constant.ConsumeMissionItem {
+			x := make([]*Material, 0)
+			allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+			for _, info := range conf.ParamItemList {
+				allSync.MaterialList = append(allSync.MaterialList, info.ItemID)
+				x = append(x, &Material{Tid: info.ItemID, Num: info.ItemNum})
+			}
+			g.DelMaterial(x)
+			g.AllPlayerSyncScNotify(allSync)
+		}
+	}
+	g.FinishSubMission(subMissionId) // 完成子任务
 }
 
 // 处理战斗任务
@@ -374,25 +392,29 @@ func (g *GamePlayer) AutoServerFinishMission() {
 	}
 }
 
-// 接取任务后完成服务端动作（不结束任务
-func (g *GamePlayer) AutoServerMissionFinishAction() {
-	for id := range g.GetSubMainMissionList() {
-		conf := gdconf.GetSubMainMissionById(id)
-		if conf == nil {
-			continue
-		}
-		if conf.FinishActionList == nil {
-			continue
-		}
-		for _, finishAction := range conf.FinishActionList {
-			switch finishAction.FinishActionType {
-			case constant.ChangeLineup: // 强制更新队伍
-				g.NewTrialLine(finishAction.FinishActionPara) // 设置队伍角色
-			case constant.Recover: // 恢复队伍
-				g.RecoverLine()
-			case constant.AddMissionItem: // 添加任务道具
-
-			}
+// 完成任务后完成服务端动作（不结束任务
+func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
+	conf := gdconf.GetSubMainMissionById(id)
+	if conf == nil {
+		return
+	}
+	if conf.FinishActionList == nil {
+		return
+	}
+	for _, finishAction := range conf.FinishActionList {
+		switch finishAction.FinishActionType {
+		case constant.ChangeLineup: // 强制更新队伍
+			g.NewTrialLine(finishAction.FinishActionPara) // 设置队伍角色
+		case constant.Recover: // 恢复队伍
+			g.RecoverLine()
+		case constant.AddMissionItem: // 添加任务道具
+			g.AddMaterial([]*Material{
+				{
+					Tid: finishAction.FinishActionPara[0],
+					Num: finishAction.FinishActionPara[1],
+				},
+			})
+			g.AllPlayerSyncScNotify(&AllPlayerSync{MaterialList: []uint32{finishAction.FinishActionPara[0]}})
 		}
 	}
 }
@@ -475,9 +497,8 @@ func (g *GamePlayer) FinishMissionAuto() {
 	if g.IsJumpMission {
 		return
 	}
-	g.AutoServerMissionFinishAction() // 任务自动行为检查
-	g.AutoServerFinishMission()       // 检查服务端任务动作
-	g.AutoEntryGroup()                // 检查场景上是否有实体需要卸载/加载
+	g.AutoServerFinishMission() // 检查服务端任务动作
+	g.AutoEntryGroup()          // 检查场景上是否有实体需要卸载/加载
 }
 
 // 登录任务检查

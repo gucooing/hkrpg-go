@@ -12,17 +12,20 @@ import (
 )
 
 type LevelFloor struct {
-	FloorID       uint32       `json:"FloorID"`
-	FloorName     string       `json:"FloorName"`
-	StartGroupID  uint32       `json:"StartGroupID"`
-	StartAnchorID uint32       `json:"StartAnchorID"`
-	GroupList     []*GroupList `json:"GroupList"`
+	FloorID                  uint32               `json:"FloorID"`
+	FloorName                string               `json:"FloorName"`
+	StartGroupID             uint32               `json:"StartGroupID"`
+	StartAnchorID            uint32               `json:"StartAnchorID"`
+	GroupInstanceList        []*GroupInstanceList `json:"GroupInstanceList"`
+	EnableGroupStreaming     bool                 `json:"EnableGroupStreaming"`
+	EnableGroupSpaceConflict bool                 `json:"EnableGroupSpaceConflict"`
+	TempGroupUnloadByY       uint32               `json:"TempGroupUnloadByY"`
 }
-type GroupList struct {
+type GroupInstanceList struct {
 	ID        uint32 `json:"ID"`
 	Name      string `json:"Name"`
-	GroupGUID string `json:"GroupGUID"`
 	GroupPath string `json:"GroupPath"`
+	IsDelete  bool   `json:"IsDelete"`
 }
 
 func (g *GameDataConfig) loadFloor() {
@@ -57,11 +60,14 @@ func (g *GameDataConfig) loadFloor() {
 			g.FloorMap[planeId][floorId] = new(LevelFloor)
 		}
 		g.FloorMap[planeId][floorId] = levelFloor
-
 	}
 
 	logger.Info("load %v Floor", len(g.FloorMap))
+	g.loadGroup() // 场景实体
+}
 
+func GetFloor() map[uint32]map[uint32]*LevelFloor {
+	return CONF.FloorMap
 }
 
 func GetFloorById(planeId, floorId uint32) *LevelFloor {
@@ -87,4 +93,26 @@ func extractNumbersFloor(filename string) (uint32, uint32) {
 	fValue, _ := strconv.ParseUint(fValueStr, 10, 32)
 
 	return uint32(pValue), uint32(fValue)
+}
+
+func GetAnchor(planeId, floorId, startGroupID, startAnchorID uint32) *AnchorList {
+	floor := GetFloorById(planeId, floorId)
+	if floor == nil {
+		return nil
+	}
+	if uint32(len(floor.GroupInstanceList)) < startGroupID {
+		return nil
+	}
+	groupInstance := floor.GroupInstanceList[startGroupID]
+	if groupInstance == nil {
+		return nil
+	}
+	group := GetNGroupById(planeId, floorId, groupInstance.ID)
+	if group == nil {
+		return nil
+	}
+	if uint32(len(group.AnchorList)) < startAnchorID {
+		return nil
+	}
+	return group.AnchorList[startAnchorID]
 }

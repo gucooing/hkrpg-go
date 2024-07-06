@@ -100,6 +100,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DestroyItemCsReq: g.DestroyItemCsReq,  // 销毁物品
 		cmd.SellItemCsReq:    g.SellItemCsReq,     // 光锥销毁
 		cmd.UseItemCsReq:     g.UseItemCsReq,      // 物品使用
+		cmd.ComposeItemCsReq: g.ComposeItemCsReq,  // 合成
 		// 交易
 		cmd.GetShopListCsReq:            g.GetShopListCsReq,            // 获取商店物品列表
 		cmd.ExchangeHcoinCsReq:          g.ExchangeHcoinCsReq,          // 梦华兑换
@@ -127,13 +128,14 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
 		// 任务
 		// cmd.GetMainMissionCustomValueCsReq:g.GetMainMissionCustomValueCsReq,
-		cmd.GetMissionEventDataCsReq: g.GetMissionEventDataCsReq, // 获取任务状态
-		cmd.GetMissionStatusCsReq:    g.HandleGetMissionStatusCsReq,
-		cmd.GetMissionDataCsReq:      g.GetMissionDataCsReq,     // 获取任务数据
-		cmd.FinishTalkMissionCsReq:   g.FinishTalkMissionCsReq,  // 完成任务
-		cmd.GetVideoVersionKeyCsReq:  g.GetVideoVersionKeyCsReq, // 获取key
-		cmd.GetSecretKeyInfoCsReq:    g.GetSecretKeyInfoCsReq,   // key
-		cmd.FinishItemIdCsReq:        g.FinishItemIdCsReq,       // 对话选项
+		cmd.GetMissionEventDataCsReq:     g.GetMissionEventDataCsReq, // 获取任务状态
+		cmd.GetMissionStatusCsReq:        g.HandleGetMissionStatusCsReq,
+		cmd.GetMissionDataCsReq:          g.GetMissionDataCsReq,          // 获取任务数据
+		cmd.FinishTalkMissionCsReq:       g.FinishTalkMissionCsReq,       // 完成任务
+		cmd.FinishCosumeItemMissionCsReq: g.FinishCosumeItemMissionCsReq, // 完成道具提交任务
+		cmd.GetVideoVersionKeyCsReq:      g.GetVideoVersionKeyCsReq,      // 获取key
+		cmd.GetSecretKeyInfoCsReq:        g.GetSecretKeyInfoCsReq,        // key
+		cmd.FinishItemIdCsReq:            g.FinishItemIdCsReq,            // 对话选项
 		// 活动
 		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求

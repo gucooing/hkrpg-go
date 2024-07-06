@@ -19,6 +19,7 @@ type GameDataConfig struct {
 	wg       sync.WaitGroup
 	goppFunc []loadFunc // 多线程读取预处理方法
 	// 配置表路径前缀
+	pathPrefix   string
 	resPrefix    string
 	excelPrefix  string
 	configPrefix string
@@ -120,6 +121,7 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 		info := fmt.Sprintf("open game data config dir error: %v", err)
 		panic(info)
 	}
+	g.pathPrefix = pathPrefix
 
 	g.resPrefix = pathPrefix
 	g.resPrefix += "/"
@@ -170,39 +172,39 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 
 func (g *GameDataConfig) load() {
 	g.loadFunc = []loadFunc{
-		g.loadAvatarData,                // 角色
-		g.loadAvatarExpItemConfig,       // 角色升级经验材料配置
-		g.loadAvatarPromotionConfig,     // 角色突破配置
-		g.loadMultiplePathAvatarConfig,  // 多命途角色配置
-		g.loadExpType,                   // 经验配置
-		g.loadEquipmentConfig,           // 光锥
-		g.loadEquipmentExpType,          // 光锥经验配置
-		g.loadEquipmentPromotionConfig,  // 光锥突破配置
-		g.loadRelic,                     // 遗器
-		g.loadRelicMainAffixConfig,      // 圣遗物主属性配置
-		g.loadRelicSubAffixConfig,       // 圣遗物副属性配置
-		g.loadRelicExpType,              // 圣遗物经验配置
-		g.loadItemConfig,                // 材料
-		g.loadItemConfigEquipment,       // 背包光锥配置
-		g.loadItemConfigRelic,           // 背包遗器配置
-		g.loadItemUseBuffData,           // 物品增益配置表
-		g.loadRogueTalent,               // 模拟宇宙天赋
-		g.loadRogueMapGen,               // 模拟宇宙id场景映射表
-		g.loadRogueManager,              // 模拟宇宙排期表
-		g.loadRogueMonster,              // 模拟宇宙怪物配置
-		g.loadRogueMonsterGroup,         // 模拟宇宙怪物生成配置
-		g.loadRogueBuff,                 // 模拟宇宙buff列表
-		g.loadRogueAreaConfig,           // 模拟宇宙关卡配置
-		g.loadRogueMap,                  // 模拟宇宙关卡地图表
-		g.loadCocoonConfig,              // 挑战/周本
-		g.loadMappingInfo,               // 挑战/周本奖励
-		g.loadAvatarSkilltree,           // 技能库
-		g.loadMazeBuff,                  // 技能buff库
-		g.loadMazePlane,                 // 场景id
-		g.loadNPCMonsterData,            // 怪物表
-		g.loadMazeProp,                  // 实体列表？
-		g.loadNPCData,                   // NPC列表？
-		g.loadGroup,                     // 场景实体
+		g.loadAvatarData,               // 角色
+		g.loadAvatarExpItemConfig,      // 角色升级经验材料配置
+		g.loadAvatarPromotionConfig,    // 角色突破配置
+		g.loadMultiplePathAvatarConfig, // 多命途角色配置
+		g.loadExpType,                  // 经验配置
+		g.loadEquipmentConfig,          // 光锥
+		g.loadEquipmentExpType,         // 光锥经验配置
+		g.loadEquipmentPromotionConfig, // 光锥突破配置
+		g.loadRelic,                    // 遗器
+		g.loadRelicMainAffixConfig,     // 圣遗物主属性配置
+		g.loadRelicSubAffixConfig,      // 圣遗物副属性配置
+		g.loadRelicExpType,             // 圣遗物经验配置
+		g.loadItemConfig,               // 材料
+		g.loadItemConfigEquipment,      // 背包光锥配置
+		g.loadItemConfigRelic,          // 背包遗器配置
+		g.loadItemUseBuffData,          // 物品增益配置表
+		g.loadRogueTalent,              // 模拟宇宙天赋
+		g.loadRogueMapGen,              // 模拟宇宙id场景映射表
+		g.loadRogueManager,             // 模拟宇宙排期表
+		g.loadRogueMonster,             // 模拟宇宙怪物配置
+		g.loadRogueMonsterGroup,        // 模拟宇宙怪物生成配置
+		g.loadRogueBuff,                // 模拟宇宙buff列表
+		g.loadRogueAreaConfig,          // 模拟宇宙关卡配置
+		g.loadRogueMap,                 // 模拟宇宙关卡地图表
+		g.loadCocoonConfig,             // 挑战/周本
+		g.loadMappingInfo,              // 挑战/周本奖励
+		g.loadAvatarSkilltree,          // 技能库
+		g.loadMazeBuff,                 // 技能buff库
+		g.loadMazePlane,                // 场景id
+		g.loadNPCMonsterData,           // 怪物表
+		g.loadMazeProp,                 // 实体列表？
+		g.loadNPCData,                  // NPC列表？
+		// g.loadGroup,                     // 场景实体
 		g.loadFloor,                     // 场景
 		g.loadMapEntrance,               // 地图入口
 		g.loadBanners,                   // 卡池信息

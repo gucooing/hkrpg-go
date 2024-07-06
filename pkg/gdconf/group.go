@@ -14,20 +14,18 @@ import (
 
 type LevelGroup struct {
 	GroupId              uint32
-	GroupName            string                 `json:"GroupName"`
-	LoadSide             string                 `json:"LoadSide"`             // 负载端
-	Category             string                 `json:"Category"`             // 类别
-	OwnerMainMissionID   uint32                 `json:"OwnerMainMissionID"`   // 主任务id
-	LoadCondition        *LoadCondition         `json:"LoadCondition"`        // 加载条件
-	UnloadCondition      *UnloadCondition       `json:"UnloadCondition"`      // 卸载条件
-	ForceUnloadCondition *ForceUnloadCondition  `json:"ForceUnloadCondition"` // 强制卸载条件
-	LoadOnInitial        bool                   `json:"LoadOnInitial"`        // 是否默认加载
-	PropList             []*PropList            `json:"PropList"`             // 实体列表
-	MonsterList          []*MonsterList         `json:"MonsterList"`          // 怪物列表
-	NPCList              []*NPCList             `json:"NPCList"`              // NPC列表
-	AnchorList           []*AnchorList          `json:"AnchorList"`           // 锚点列表
-	IsDId                bool                   `json:"-"`
-	DLevelGroup          map[uint32]*LevelGroup `json:"-"`
+	GroupName            string                `json:"GroupName"`
+	LoadSide             string                `json:"LoadSide"`             // 负载端
+	Category             string                `json:"Category"`             // 类别
+	OwnerMainMissionID   uint32                `json:"OwnerMainMissionID"`   // 主任务id
+	LoadCondition        *LoadCondition        `json:"LoadCondition"`        // 加载条件
+	UnloadCondition      *UnloadCondition      `json:"UnloadCondition"`      // 卸载条件
+	ForceUnloadCondition *ForceUnloadCondition `json:"ForceUnloadCondition"` // 强制卸载条件
+	LoadOnInitial        bool                  `json:"LoadOnInitial"`        // 是否默认加载
+	PropList             []*PropList           `json:"PropList"`             // 实体列表
+	MonsterList          []*MonsterList        `json:"MonsterList"`          // 怪物列表
+	NPCList              []*NPCList            `json:"NPCList"`              // NPC列表
+	AnchorList           []*AnchorList         `json:"AnchorList"`           // 锚点列表
 }
 type LoadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
@@ -140,59 +138,43 @@ type StageObjectCapture struct {
 
 func (g *GameDataConfig) loadGroup() {
 	g.GroupMap = make(map[uint32]map[uint32]map[uint32]*LevelGroup)
-	playerElementsFilePath := g.configPrefix + "LevelOutput/SharedRuntimeGroup"
-	files, err := scanFiles(playerElementsFilePath)
-	if err != nil {
-		logger.Error("error LevelOutput/SharedRuntimeGroup:", err)
-		return
-	}
 
 	syncs := sync.Mutex{}
 	wg := sync.WaitGroup{}
+	floor := GetFloor()
 
-	for _, file := range files {
-		wg.Add(1)
-		go func() {
-			levelGroup := new(LevelGroup)
-			planeId, floorId, groupId, dId := extractNumbers(filepath.Base(file))
+	for planeId, floorList := range floor {
+		for floorId, floorInfo := range floorList {
+			for _, groupInfo := range floorInfo.GroupInstanceList {
+				wg.Add(1)
+				go func() {
+					levelGroup := new(LevelGroup)
+					playerElementsFile, err := os.ReadFile(g.pathPrefix + "/" + groupInfo.GroupPath)
+					if err != nil {
+						logger.Error("open file error: %v", err)
+						return
+					}
 
-			playerElementsFile, err := os.ReadFile(file)
-			if err != nil {
-				info := fmt.Sprintf("open file error: %v", err)
-				panic(info)
-			}
+					err = hjson.Unmarshal(playerElementsFile, levelGroup)
+					if err != nil {
+						info := fmt.Sprintf("parse file error: %v", err)
+						panic(info)
+					}
+					levelGroup.GroupId = groupInfo.ID
 
-			err = hjson.Unmarshal(playerElementsFile, levelGroup)
-			if err != nil {
-				info := fmt.Sprintf("parse file error: %v", err)
-				panic(info)
+					syncs.Lock()
+					if g.GroupMap[planeId] == nil {
+						g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
+					}
+					if g.GroupMap[planeId][floorId] == nil {
+						g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
+					}
+					g.GroupMap[planeId][floorId][groupInfo.ID] = levelGroup
+					syncs.Unlock()
+					wg.Done()
+				}()
 			}
-			levelGroup.GroupId = groupId
-
-			syncs.Lock()
-			if g.GroupMap[planeId] == nil {
-				g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
-			}
-			if g.GroupMap[planeId][floorId] == nil {
-				g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
-			}
-			if g.GroupMap[planeId][floorId][groupId] != nil {
-				levelGroup.IsDId = true
-				levelGroup.DLevelGroup = g.GroupMap[planeId][floorId][groupId].DLevelGroup
-			}
-			if dId != 0 {
-				g.GroupMap[planeId][floorId][groupId] = levelGroup
-				g.GroupMap[planeId][floorId][groupId].IsDId = true
-				if g.GroupMap[planeId][floorId][groupId].DLevelGroup == nil {
-					g.GroupMap[planeId][floorId][groupId].DLevelGroup = make(map[uint32]*LevelGroup)
-				}
-				g.GroupMap[planeId][floorId][groupId].DLevelGroup[dId] = levelGroup
-			} else {
-				g.GroupMap[planeId][floorId][groupId] = levelGroup
-			}
-			syncs.Unlock()
-			wg.Done()
-		}()
+		}
 	}
 
 	wg.Wait()
@@ -229,36 +211,11 @@ func scanFiles(dir string) ([]string, error) {
 	return files, nil
 }
 
-func extractNumbers(filename string) (uint32, uint32, uint32, uint32) {
-	filename = strings.TrimSuffix(filename, ".json")
-
-	var pValueStr, fValueStr, gValueStr, dValueStr string
-	parts := strings.Split(filename, "_")
-	if len(parts) == 4 {
-		pValueStr = strings.TrimLeft(parts[1], "P")
-		fValueStr = strings.TrimLeft(parts[2], "F")
-		gValueStr = strings.TrimLeft(parts[3], "G")
-	}
-	if len(parts) == 5 {
-		pValueStr = strings.TrimLeft(parts[1], "P")
-		fValueStr = strings.TrimLeft(parts[2], "F")
-		gValueStr = strings.TrimLeft(parts[3], "G")
-		dValueStr = strings.TrimLeft(parts[4], "D")
-	}
-
-	pValue, _ := strconv.ParseUint(pValueStr, 10, 32)
-	fValue, _ := strconv.ParseUint(fValueStr, 10, 32)
-	gValue, _ := strconv.ParseUint(gValueStr, 10, 32)
-	dValue, _ := strconv.ParseUint(dValueStr, 10, 32)
-
-	return uint32(pValue), uint32(fValue), uint32(gValue), uint32(dValue)
-}
-
 func GetStateValue(state string) uint32 {
 	stateMap := map[string]uint32{
 		"Closed":            0,
 		"Open":              1,
-		"Locked":            0,
+		"Locked":            2,
 		"BridgeState1":      3,
 		"BridgeState2":      4,
 		"BridgeState3":      5,

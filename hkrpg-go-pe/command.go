@@ -20,6 +20,7 @@ func (r *CmdRouteManager) initRoute() {
 		"give":       give,
 		"state":      state,
 		"worldLevel": worldLevel,
+		"tp":         tp,
 	}
 }
 
@@ -86,4 +87,16 @@ func worldLevel(parameter []string, s *HkRpgGoServer) {
 		return
 	}
 	p.GamePlayer.GmWorldLevel(&spb.GmWorldLevel{WorldLevel: alg.S2U32(parameter[2])})
+}
+
+func tp(parameter []string, s *HkRpgGoServer) {
+	index := len(parameter)
+	if index < 3 {
+		return
+	}
+	p := s.GetPlayer(alg.S2U32(parameter[1]))
+	if p == nil {
+		return
+	}
+	p.GamePlayer.EnterSceneByServerScNotify(alg.S2U32(parameter[2]), 0)
 }

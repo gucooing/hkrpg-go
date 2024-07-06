@@ -24,16 +24,29 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 	var groupID = mapEntrance.StartGroupID
 	var pos *proto.Vector
 	var rot *proto.Vector
-	if teleportsMap.Teleports[teleportId] != nil {
-		anchorID = teleportsMap.Teleports[teleportId].AnchorID
-		groupID = teleportsMap.Teleports[teleportId].AnchorGroupID
-	}
+
 	// 获取队伍
 	curLine := g.GetCurLineUp()
 	rsp.Lineup = g.GetLineUpPb(curLine)
 	// 获取坐标
-	if teleportsMap.TeleportsByGroupId != nil && teleportsMap.TeleportsByGroupId[groupID] != nil && teleportsMap.TeleportsByGroupId[groupID].AnchorList != nil {
-		anchor := teleportsMap.TeleportsByGroupId[groupID].AnchorList[anchorID]
+	var anchor *gdconf.AnchorList
+	if teleportsMap.Teleports[teleportId] != nil {
+		anchorID = teleportsMap.Teleports[teleportId].AnchorID
+		groupID = teleportsMap.Teleports[teleportId].AnchorGroupID
+		anchor = teleportsMap.TeleportsByGroupId[groupID].AnchorList[anchorID]
+	} else {
+		if teleportId == 0 {
+			anchor = gdconf.GetAnchor(mapEntrance.PlaneID, mapEntrance.FloorID, groupID, anchorID)
+		} else {
+			confMi := gdconf.GetMappingInfoById(teleportId, 0)
+			if confMi != nil {
+				group := gdconf.GetNGroupById(confMi.PlaneID, confMi.FloorID, confMi.GroupID)
+				anchor = group.AnchorList[0] // 相当于随机取了
+			}
+		}
+	}
+
+	if anchor != nil {
 		pos = &proto.Vector{
 			X: int32(anchor.PosX * 1000),
 			Y: int32(anchor.PosY * 1000),
@@ -45,25 +58,11 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId uint32) {
 			Z: int32(anchor.RotZ * 1000),
 		}
 	}
-	// 实在找不到就随便找一个锚点传送
-	if pos == nil {
-		for _, anchor := range teleportsMap.Teleports {
-			pos = &proto.Vector{
-				X: int32(anchor.PosX * 1000),
-				Y: int32(anchor.PosY * 1000),
-				Z: int32(anchor.PosZ * 1000),
-			}
-			rot = &proto.Vector{
-				X: int32(anchor.RotX * 1000),
-				Y: int32(anchor.RotY * 1000),
-				Z: int32(anchor.RotZ * 1000),
-			}
-			break
-		}
-	}
+
 	if pos == nil {
 		// 这都没有那就不要传送了
 		logger.Error("entryId:%v,teleportId:%v error", entryId, teleportId)
+		g.Send(cmd.EnterSceneByServerScNotify, rsp)
 		return
 	}
 	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)

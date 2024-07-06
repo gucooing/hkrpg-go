@@ -130,6 +130,19 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg []byte) {
 	g.Send(cmd.UseItemScRsp, rsp)
 }
 
+func (g *GamePlayer) ComposeItemCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.ComposeItemCsReq, payloadMsg)
+	req := msg.(*proto.ComposeItemCsReq)
+	// TODO
+	rsp := &proto.ComposeItemScRsp{
+		Count:          req.Count,
+		ComposeId:      req.ComposeId,
+		Retcode:        0,
+		ReturnItemList: nil,
+	}
+	g.Send(cmd.ComposeItemScRsp, rsp)
+}
+
 /***************************relic*************************************/
 
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg []byte) {
@@ -414,13 +427,13 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg []byte) {
 
 	// 遍历用来升级的光锥
 	for _, equipment := range req.GetCostData().ItemList {
-		// 如果没有则退出
-		if equipment.GetEquipmentUniqueId() == 0 {
+		// 获取光锥配置
+		costEdb := g.GetEquipmentById(equipment.GetEquipmentUniqueId())
+		if costEdb == nil {
 			continue
 		}
 		allSync.DelEquipmentList = append(allSync.DelEquipmentList, equipment.GetEquipmentUniqueId())
-		// 获取光锥配置
-		equipmentconfig := gdconf.GetEquipmentConfigById(g.GetItem().EquipmentMap[equipment.GetEquipmentUniqueId()].Tid)
+		equipmentconfig := gdconf.GetEquipmentConfigById(costEdb.Tid)
 		if equipmentconfig == nil {
 			rsp := &proto.ExpUpEquipmentScRsp{}
 			g.Send(cmd.ExpUpEquipmentScRsp, rsp)

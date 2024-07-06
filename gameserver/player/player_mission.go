@@ -122,6 +122,13 @@ func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr})
 }
 
+func (g *GamePlayer) FinishCosumeItemMissionCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.FinishCosumeItemMissionCsReq, payloadMsg)
+	req := msg.(*proto.FinishCosumeItemMissionCsReq)
+	g.FinishCosumeItemMission(req.SubMissionId)
+	g.Send(cmd.FinishCosumeItemMissionScRsp, &proto.FinishCosumeItemMissionScRsp{SubMissionId: req.SubMissionId})
+}
+
 func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finSub, finishMain []uint32) {
 	if len(nextSub) == 0 && len(finSub) == 0 && len(finishMain) == 0 {
 		return
@@ -157,4 +164,8 @@ func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finSub, finishMain []uin
 		})
 	}
 	g.Send(cmd.PlayerSyncScNotify, notify)
+}
+
+func (g *GamePlayer) MissionRewardScNotify() {
+
 }
