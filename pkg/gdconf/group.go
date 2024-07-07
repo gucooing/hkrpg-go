@@ -15,6 +15,7 @@ import (
 type LevelGroup struct {
 	GroupId              uint32
 	GroupName            string                `json:"GroupName"`
+	AreaAnchorName       string                `json:"AreaAnchorName"`
 	LoadSide             string                `json:"LoadSide"`             // 负载端
 	Category             string                `json:"Category"`             // 类别
 	OwnerMainMissionID   uint32                `json:"OwnerMainMissionID"`   // 主任务id
@@ -291,6 +292,9 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 		if MazePropExcel == nil {
 			continue
 		}
+		if strings.Contains(prop.Name, "FogDoor") {
+			continue
+		}
 		// 对ValueSource进行预处理
 		if prop.ValueSource != nil && prop.ValueSource.Values != nil {
 			for _, value := range prop.ValueSource.Values {
@@ -298,7 +302,7 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 				case string:
 					valueStr := value.Value.(string)
 					if strings.Contains(value.Key, "Door") ||
-						strings.Contains(value.Key, "Bridge") ||
+						// strings.Contains(value.Key, "Bridge") ||
 						strings.Contains(value.Key, "UnlockTarget") ||
 						strings.Contains(value.Key, "Rootcontamination") ||
 						strings.Contains(value.Key, "Portal") {
@@ -357,16 +361,16 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) map[uint32]*NPCList {
 		if NPCDataExcel == nil { // 过滤没有的
 			continue
 		}
-		repeatNpc := false
-		for _, npcl := range nPCList {
-			if npcl.NPCID == npc.NPCID {
-				repeatNpc = true
-				break
-			}
-		}
-		if repeatNpc { // 过滤重复的
-			continue
-		}
+		// repeatNpc := false
+		// for _, npcl := range nPCList {
+		// 	if npcl.NPCID == npc.NPCID {
+		// 		repeatNpc = true
+		// 		break
+		// 	}
+		// }
+		// if repeatNpc { // 过滤重复的
+		// 	continue
+		// }
 
 		nPCList = append(nPCList, npc)
 		npcList[npc.ID] = npc

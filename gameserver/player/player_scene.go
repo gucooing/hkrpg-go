@@ -229,7 +229,6 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 		PropEntityId: req.PropEntityId,
 	}
 	var propEntityIdList []uint32
-	// isUp := false
 
 	pe := g.GetPropEntityById(req.PropEntityId)
 	if pe == nil {
@@ -242,48 +241,51 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
 	}
+	confProp := gdconf.GetServerPropById(mapEntrance.PlaneID, mapEntrance.FloorID, pe.GroupId, pe.InstId)
+	if confProp == nil {
+		g.Send(cmd.InteractPropScRsp, rsp)
+		return
+	}
 	confInteract := gdconf.GetInteractConfigById(req.InteractId)
 	if confInteract == nil {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
 	}
+	oldState := g.GetPropState(blockBin, pe.GroupId, pe.InstId, confProp.State)
+	newState := gdconf.GetStateValue(confInteract.TargetState)
+	setState := newState
 	mazeProp := gdconf.GetMazePropId(pe.PropId)
 	if mazeProp == nil {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
 	}
 	switch mazeProp.PropType {
-	case gdconf.PROP_ORDINARY:
-		confProp := gdconf.GetServerPropById(mapEntrance.PlaneID, mapEntrance.FloorID, pe.GroupId, pe.InstId)
-		if confProp == nil {
-			return
+	case gdconf.PROP_TREASURE_CHEST: // 宝箱
+		if oldState == 12 && newState == 13 {
+			g.AddMaterial([]*Material{{Tid: Mcoin, Num: 1000}})
+			g.AllPlayerSyncScNotify(&AllPlayerSync{
+				MaterialList: []uint32{Mcoin},
+			})
 		}
-		// 处理交互的物体
-		if confProp.GoppValue != nil {
-			for _, goppValue := range confProp.GoppValue {
-				g.UpPropState(blockBin, goppValue.GroupId, goppValue.InstId, 1) // 更新地图
-				enep := g.GetPropEntity(goppValue.GroupId, goppValue.InstId)
-				if enep == nil {
-					continue
-				}
+	case gdconf.PROP_DESTRUCT: // 破坏物
+		if newState == 0 {
+			setState = 1
+		}
+	case gdconf.PROP_MAZE_PUZZLE: // 拼图
+	}
+
+	if confProp.GoppValue != nil {
+		for _, goppValue := range confProp.GoppValue {
+			if enep := g.GetPropEntity(goppValue.GroupId, goppValue.InstId); enep != nil {
+				g.UpPropState(blockBin, goppValue.GroupId, goppValue.InstId, 1) // 更新状态
 				propEntityIdList = append(propEntityIdList, enep.EntityId)
 			}
 		}
-	case gdconf.PROP_TREASURE_CHEST: // 宝箱
-		g.AddMaterial([]*Material{{Tid: Mcoin, Num: 1000}})
-		g.AllPlayerSyncScNotify(&AllPlayerSync{
-			MaterialList: []uint32{Mcoin},
-		})
-		// isUp = true
 	}
-	// 更新本体
 
-	rsp.PropState = gdconf.GetStateValue(confInteract.TargetState) // 获取新状态
-
-	// if isUp {
 	propEntityIdList = append(propEntityIdList, req.PropEntityId)
-	g.UpPropState(blockBin, pe.GroupId, pe.InstId, rsp.PropState) // 更新地图
-	// }
+	g.UpPropState(blockBin, pe.GroupId, pe.InstId, setState) // 更新地图
+	rsp.PropState = setState
 	// 统一通知
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
 	g.UpInteractSubMission(blockBin)                            // 检查交互任务
@@ -302,13 +304,18 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 			continue
 		}
 		isAddend := true
-		info := new(proto.GroupRefreshInfo)
+		var info *proto.GroupRefreshInfo
 		for _, ninfo := range notify.GroupRefreshList {
 			if ninfo.GroupId == pe.GroupId {
 				info = ninfo
 				isAddend = false
 				break
 			}
+		}
+		if isAddend {
+			info = new(proto.GroupRefreshInfo)
+			info.GroupId = pe.GroupId
+			notify.GroupRefreshList = append(notify.GroupRefreshList, info)
 		}
 		info.RefreshEntity = append(info.RefreshEntity, &proto.SceneEntityRefreshInfo{
 			AddEntity: &proto.SceneEntityInfo{
@@ -325,10 +332,6 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 				},
 			},
 		})
-		if isAddend {
-			info.GroupId = pe.GroupId
-			notify.GroupRefreshList = append(notify.GroupRefreshList, info)
-		}
 	}
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)

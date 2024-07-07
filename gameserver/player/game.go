@@ -1,6 +1,7 @@
 package player
 
 import (
+	"encoding/base64"
 	"strconv"
 	"time"
 
@@ -251,7 +252,7 @@ func LogMsgRecv(cmdId uint16, payloadMsg []byte) {
 		}
 		err := pb.Unmarshal(payloadMsg, protoObj)
 		if err != nil {
-			logger.Error("unmarshal proto data NAME: %s  err: %v", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), err)
+			logger.Error("unmarshal proto data NAME: %s  err: %v || b64:%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), err, base64.StdEncoding.EncodeToString(payloadMsg))
 			return
 		}
 		data := protojson.Format(protoObj)

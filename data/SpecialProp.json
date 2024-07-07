@@ -20,5 +20,16 @@
         }
       }
     ]
+  },
+  "2013201": {
+    "EntryId": 2013201,
+    "GroupList": [
+      {
+        "GroupId": 3,
+        "PropState": {
+          "300007": "Closed"
+        }
+      }
+    ]
   }
 }
