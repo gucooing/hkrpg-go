@@ -1,18 +1,22 @@
 package player
 
 import (
+	"sync"
+
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 type OnlineData struct {
-	LoginToday            bool       // 是否是今天第一次登录
-	BattleId              uint32     // 战斗id
-	IsPaused              bool       // 是否暂停
-	GameObjectGuidCounter uint32     // 游戏对象guid计数器 貌似一个玩家用一个就行了
-	IsNickName            bool       // 是否修改昵称
-	SceneMap              *SceneMap  // 在线场景管理
-	CurBattle             *CurBattle // 正在进行的战斗
+	LoginToday            bool                     // 是否是今天第一次登录
+	BattleId              uint32                   // 战斗id
+	IsPaused              bool                     // 是否暂停
+	GameObjectGuidCounter uint32                   // 游戏对象guid计数器 貌似一个玩家用一个就行了
+	IsNickName            bool                     // 是否修改昵称
+	SceneMap              *SceneMap                // 在线场景管理
+	BlockMap              map[uint32]*spb.BlockBin // 缓存场景
+	blockMapLock          sync.Mutex               // 缓存场景互斥锁
+	CurBattle             *CurBattle               // 正在进行的战斗
 }
 
 func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
@@ -91,6 +95,7 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 			GameObjectGuidCounter: 0,
 			IsNickName:            false,
 			SceneMap:              NewSceneMap(),
+			BlockMap:              NewBlockMap(),
 			CurBattle:             g.NewCurBattle(),
 			BattleId:              10000,
 		}

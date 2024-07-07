@@ -371,3 +371,44 @@ func (g *GamePlayer) GetTrialLineupAvatar(avatarId, index uint32) *proto.LineupA
 	}
 	return info
 }
+
+func (g *GamePlayer) GetLineupAvatarDataList(db *spb.Line) []*proto.LineupAvatarData {
+	lADList := make([]*proto.LineupAvatarData, 0)
+	if db == nil {
+		return lADList
+	}
+	for slot, lineAvatar := range db.AvatarIdList {
+		switch lineAvatar.LineAvatarType {
+		case spb.LineAvatarType_LineAvatarType_MI:
+			lADList = append(lADList, g.GetLineupAvatarData(lineAvatar.AvatarId, slot))
+		case spb.LineAvatarType_LineAvatarType_TRIAL:
+			lADList = append(lADList, g.GetTrialLineupAvatarData(lineAvatar.AvatarId, slot))
+		default:
+			continue
+		}
+	}
+
+	return lADList
+}
+
+func (g *GamePlayer) GetLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
+	db := g.GetAvatarBinById(avatarId)
+	if db == nil {
+		return nil
+	}
+	info := &proto.LineupAvatarData{
+		Hp:         db.Hp,
+		Id:         avatarId,
+		AvatarType: proto.AvatarType(db.AvatarType),
+	}
+	return info
+}
+
+func (g *GamePlayer) GetTrialLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
+	info := &proto.LineupAvatarData{
+		Hp:         10000,
+		Id:         avatarId,
+		AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
+	}
+	return info
+}

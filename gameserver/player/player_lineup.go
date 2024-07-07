@@ -44,6 +44,13 @@ func (g *GamePlayer) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetCurLineupDataScRsp, rsp)
 }
 
+func (g *GamePlayer) GetLineupAvatarDataCsReq(payloadMsg []byte) {
+	rsp := new(proto.GetLineupAvatarDataScRsp)
+	rsp.AvatarDataList = g.GetLineupAvatarDataList(g.GetCurLineUp())
+
+	g.Send(cmd.GetLineupAvatarDataScRsp, rsp)
+}
+
 func (g *GamePlayer) HandleJoinLineupCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.JoinLineupCsReq, payloadMsg)
 	req := msg.(*proto.JoinLineupCsReq)

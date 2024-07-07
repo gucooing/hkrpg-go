@@ -26,15 +26,16 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.PlayerLoginCsReq:       g.HandlePlayerLoginCsReq,       // 玩家登录请求 第二个登录包
 		cmd.PlayerLoginFinishCsReq: g.HandlePlayerLoginFinishCsReq, // 登录完成包
 		// 队伍
-		cmd.GetAllLineupDataCsReq:   g.HandleGetAllLineupDataCsReq,  // 获取队伍信息请求
-		cmd.GetCurLineupDataCsReq:   g.HandleGetCurLineupDataCsReq,  // 获取当前上场队伍请求
-		cmd.JoinLineupCsReq:         g.HandleJoinLineupCsReq,        // 更新队伍请求
-		cmd.SwitchLineupIndexCsReq:  g.HandleSwitchLineupIndexCsReq, // 上场队伍更新请求
-		cmd.SwapLineupCsReq:         g.HandleSwapLineupCsReq,        // 队伍角色交换请求
-		cmd.SetLineupNameCsReq:      g.SetLineupNameCsReq,           // 修改队伍名称
-		cmd.ReplaceLineupCsReq:      g.ReplaceLineupCsReq,           // 快速入队
-		cmd.ChangeLineupLeaderCsReq: g.ChangeLineupLeaderCsReq,      // 切换角色
-		cmd.QuitLineupCsReq:         g.QuitLineupCsReq,              // 角色离队
+		cmd.GetAllLineupDataCsReq:    g.HandleGetAllLineupDataCsReq,  // 获取队伍信息请求
+		cmd.GetCurLineupDataCsReq:    g.HandleGetCurLineupDataCsReq,  // 获取当前上场队伍请求
+		cmd.GetLineupAvatarDataCsReq: g.GetLineupAvatarDataCsReq,     // 获取队伍
+		cmd.JoinLineupCsReq:          g.HandleJoinLineupCsReq,        // 更新队伍请求
+		cmd.SwitchLineupIndexCsReq:   g.HandleSwitchLineupIndexCsReq, // 上场队伍更新请求
+		cmd.SwapLineupCsReq:          g.HandleSwapLineupCsReq,        // 队伍角色交换请求
+		cmd.SetLineupNameCsReq:       g.SetLineupNameCsReq,           // 修改队伍名称
+		cmd.ReplaceLineupCsReq:       g.ReplaceLineupCsReq,           // 快速入队
+		cmd.ChangeLineupLeaderCsReq:  g.ChangeLineupLeaderCsReq,      // 切换角色
+		cmd.QuitLineupCsReq:          g.QuitLineupCsReq,              // 角色离队
 		// 角色管理
 		cmd.GetHeroBasicTypeInfoCsReq: g.HandleGetHeroBasicTypeInfoCsReq, // 请求主角基本信息
 		cmd.GetAvatarDataCsReq:        g.HandleGetAvatarDataCsReq,        // 请求全部角色信息
@@ -65,6 +66,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartCocoonStageCsReq:    g.StartCocoonStageCsReq,    // 副本/周本等
 		cmd.ActivateFarmElementCsReq: g.ActivateFarmElementCsReq, // 虚影战斗
 		cmd.SceneEnterStageCsReq:     g.SceneEnterStageCsReq,     // 场景直接发起战斗
+		cmd.StartRaidCsReq:           g.StartRaidCsReq,           // 拓境探游
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期

@@ -23,6 +23,14 @@ func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg []byte) {
 	g.Send(cmd.SceneEnterStageScRsp, rsp)
 }
 
+func (g *GamePlayer) StartRaidCsReq(payloadMsg []byte) {
+	// msg := g.DecodePayloadToProto(cmd.StartRaidCsReq, payloadMsg)
+	// req := msg.(*proto.StartRaidCsReq)
+
+	rsp := &proto.StartRaidScRsp{}
+	g.Send(cmd.StartRaidScRsp, rsp)
+}
+
 /***********************************攻击事件处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {

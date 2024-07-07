@@ -134,6 +134,11 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	if !g.SetPlayerPlayerBasicBriefData(status) {
 		logger.Error("[UID:%v]玩家简要信息保存失败", g.Uid)
 	}
+	// 保存地图数据
+	for _, block := range g.GetAllBlockMap() {
+		g.UpdateBlock(block)
+	}
+
 	return true
 }
 

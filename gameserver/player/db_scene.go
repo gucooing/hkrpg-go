@@ -478,18 +478,52 @@ func (g *GamePlayer) AutoEntryGroup() {
 	g.UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList)
 }
 
+func NewBlockMap() map[uint32]*spb.BlockBin {
+	return map[uint32]*spb.BlockBin{}
+}
+
+func (g *GamePlayer) GetBlockMap() map[uint32]*spb.BlockBin {
+	db := g.GetOnlineData()
+	if db.BlockMap == nil {
+		db.BlockMap = NewBlockMap()
+	}
+	return db.BlockMap
+}
+
+func (g *GamePlayer) GetAllBlockMap() map[uint32]*spb.BlockBin {
+	db := g.GetOnlineData()
+	if db.BlockMap == nil {
+		db.BlockMap = NewBlockMap()
+	}
+	blockMap := make(map[uint32]*spb.BlockBin)
+	db.blockMapLock.Lock()
+	defer db.blockMapLock.Unlock()
+	for k, v := range db.BlockMap {
+		blockMap[k] = v
+	}
+	return blockMap
+}
+
 // 从db拉取地图数据
 func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
 	if entryId >= 10000000 {
 		entryId = alg.S2U32(strconv.Itoa(int(entryId))[:7])
 	}
-	bin := database.GetBlockData(g.DB, g.Uid, entryId)
-	block := new(spb.BlockBin)
-	if err := pb.Unmarshal(bin.BinData, block); err != nil {
-		logger.Debug("entryId:%v,block error", entryId)
+	on := g.GetOnlineData()
+	db := g.GetBlockMap()
+	on.blockMapLock.Lock()
+	defer on.blockMapLock.Unlock()
+	if db[entryId] == nil {
+		bin := database.GetBlockData(g.DB, g.Uid, entryId)
+		block := new(spb.BlockBin)
+		if err := pb.Unmarshal(bin.BinData, block); err != nil {
+			logger.Debug("entryId:%v,block error", entryId)
+		}
+		db[entryId] = block
 	}
-	block.EntryId = entryId
-	return block
+
+	db[entryId].EntryId = entryId
+	return db[entryId]
 }
 
 // 更新地图数据到数据库
@@ -596,11 +630,9 @@ func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 		}
 	}
 	if conf := gdconf.GetSpecialProp(db.EntryId); conf != nil {
-		for _, groupInfo := range conf.GroupList {
-			if groupInfo.GroupId == groupId {
-				if state := groupInfo.PropState[prop.ID]; state != "" {
-					g.ObjectCaptureUpPropState(db, groupId, prop.ID, gdconf.GetStateValue(state))
-				}
+		if spGroup := conf.GroupList[groupId]; spGroup != nil {
+			if state := spGroup.PropState[prop.ID]; state != "" {
+				g.ObjectCaptureUpPropState(db, groupId, prop.ID, gdconf.GetStateValue(state))
 			}
 		}
 	}
@@ -825,6 +857,10 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
+		SceneMissionInfo: &proto.MissionStatusBySceneInfo{
+			MainMissionIdList:      make([]uint32, 0),
+			FinishedSubMissionList: make([]*proto.Mission, 0),
+		},
 	}
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)
@@ -833,6 +869,10 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
+	// finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
+	// subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
+	// mainMissionList := g.GetMainMissionList()                   // 接取的主任务
+	// finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
 	// 清理老实体列表
 	g.UpSceneMap()
 	// 添加队伍角色进实体列表，并设置坐标
@@ -840,9 +880,33 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	blockBin := g.GetBlock(entryId)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	for _, levelGroup := range foorMap {
-		if levelGroup.GroupId == 0 {
-			continue
-		}
+		// if levelGroup.LoadCondition != nil {
+		// 	for _, condition := range levelGroup.LoadCondition.Conditions {
+		// 		switch condition.Type {
+		// 		case "":
+		// 			if mainMissionList[condition.ID] != nil {
+		// 				scene.SceneMissionInfo.HLCFMJHNLFB = append(scene.SceneMissionInfo.HLCFMJHNLFB, condition.ID)
+		// 			}
+		// 		case "SubMission":
+		// 			mission := &proto.Mission{
+		// 				Status:   0,
+		// 				Progress: 0,
+		// 				Id:       condition.ID,
+		// 			}
+		// 			if bin := finishSubMainMissionList[condition.ID]; bin != nil {
+		// 				mission.Status = proto.MissionStatus(bin.Status)
+		// 				mission.Progress = bin.Progress
+		// 			} else if bin2 := subMainMissionList[condition.ID]; bin2 != nil {
+		// 				mission.Status = proto.MissionStatus(bin2.Status)
+		// 				mission.Progress = bin2.Progress
+		// 			}
+		// 			scene.SceneMissionInfo.FinishedSubMissionList = append(scene.SceneMissionInfo.FinishedSubMissionList, mission)
+		// 		}
+		// 	}
+		// }
+		// if levelGroup.UnloadCondition != nil {
+		//
+		// }
 		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
 			continue
 		}
@@ -867,7 +931,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 		}
 	}
-	g.UpdateBlock(blockBin)
+	// g.UpdateBlock(blockBin)
 	return scene
 }
 

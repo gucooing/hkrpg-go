@@ -289,7 +289,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 	// 统一通知
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
 	g.UpInteractSubMission(blockBin)                            // 检查交互任务
-	g.UpdateBlock(blockBin)                                     // 保存地图
+	// g.UpdateBlock(blockBin)                                     // 保存地图
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 
@@ -432,7 +432,7 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 		// 添加实体
 		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddPropSceneEntityRefreshInfo(groupInfo.GroupID, group.PropList, db)...)
 		notify.GroupRefreshList = append(notify.GroupRefreshList, groupRefreshInfo)
-		g.UpdateBlock(db)
+		// g.UpdateBlock(db)
 	}
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)

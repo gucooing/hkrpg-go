@@ -9,8 +9,8 @@ import (
 )
 
 type SpecialProp struct {
-	EntryId   uint32       `json:"EntryId"`
-	GroupList []*GroupList `json:"GroupList"`
+	EntryId   uint32                `json:"EntryId"`
+	GroupList map[uint32]*GroupList `json:"GroupList"`
 }
 type GroupList struct {
 	GroupId   uint32            `json:"GroupId"`
