@@ -5,7 +5,7 @@
       "21":{
         "GroupId": 21,
         "PropState": {
-          "300007": "Closed"
+          "300004": "Unlocked"
         }
       }
     }
@@ -16,7 +16,8 @@
       "8":{
         "GroupId": 8,
         "PropState": {
-          "300005": "Closed"
+          "300001": "Unlocked",
+          "300011": "Unlocked"
         }
       }
     }
@@ -27,11 +28,7 @@
       "3":{
         "GroupId": 3,
         "PropState": {
-          "300013": "Open",
-          "300015": "Closed",
-          "300016": "Closed",
-          "300017": "Closed",
-          "300018": "Closed"
+          "300013": "Open"
         }
       },
       "4":{

@@ -216,7 +216,8 @@ func GetStateValue(state string) uint32 {
 	stateMap := map[string]uint32{
 		"Closed":            0,
 		"Open":              1,
-		"Locked":            2,
+		"Locked":            0, // 锁定
+		"Unlocked":          2,
 		"BridgeState1":      3,
 		"BridgeState2":      4,
 		"BridgeState3":      5,

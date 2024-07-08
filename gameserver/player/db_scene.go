@@ -857,10 +857,6 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
-		SceneMissionInfo: &proto.MissionStatusBySceneInfo{
-			MainMissionIdList:      make([]uint32, 0),
-			FinishedSubMissionList: make([]*proto.Mission, 0),
-		},
 	}
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)
@@ -869,10 +865,6 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	entityGroup := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	// finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
-	// subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
-	// mainMissionList := g.GetMainMissionList()                   // 接取的主任务
-	// finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
 	// 清理老实体列表
 	g.UpSceneMap()
 	// 添加队伍角色进实体列表，并设置坐标
@@ -880,33 +872,6 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	blockBin := g.GetBlock(entryId)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	for _, levelGroup := range foorMap {
-		// if levelGroup.LoadCondition != nil {
-		// 	for _, condition := range levelGroup.LoadCondition.Conditions {
-		// 		switch condition.Type {
-		// 		case "":
-		// 			if mainMissionList[condition.ID] != nil {
-		// 				scene.SceneMissionInfo.HLCFMJHNLFB = append(scene.SceneMissionInfo.HLCFMJHNLFB, condition.ID)
-		// 			}
-		// 		case "SubMission":
-		// 			mission := &proto.Mission{
-		// 				Status:   0,
-		// 				Progress: 0,
-		// 				Id:       condition.ID,
-		// 			}
-		// 			if bin := finishSubMainMissionList[condition.ID]; bin != nil {
-		// 				mission.Status = proto.MissionStatus(bin.Status)
-		// 				mission.Progress = bin.Progress
-		// 			} else if bin2 := subMainMissionList[condition.ID]; bin2 != nil {
-		// 				mission.Status = proto.MissionStatus(bin2.Status)
-		// 				mission.Progress = bin2.Progress
-		// 			}
-		// 			scene.SceneMissionInfo.FinishedSubMissionList = append(scene.SceneMissionInfo.FinishedSubMissionList, mission)
-		// 		}
-		// 	}
-		// }
-		// if levelGroup.UnloadCondition != nil {
-		//
-		// }
 		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
 			continue
 		}

@@ -10,12 +10,15 @@ import (
 )
 
 type AllPlayerSync struct {
-	IsBasic          bool     // 基本信息
-	AvatarList       []uint32 // 角色列表
-	MaterialList     []uint32 // 物品id列表
-	EquipmentList    []uint32 // 光锥列表
-	DelEquipmentList []uint32 // 删除列表
-	RelicList        []uint32 // 圣遗物列表
+	IsBasic                bool     // 基本信息
+	AvatarList             []uint32 // 角色列表
+	MaterialList           []uint32 // 物品id列表
+	EquipmentList          []uint32 // 光锥列表
+	DelEquipmentList       []uint32 // 删除列表
+	RelicList              []uint32 // 圣遗物列表
+	MissionFinishMainList  []uint32 // 已完成的主任务
+	MissionFinishSubList   []uint32 // 已完成的子任务
+	MissionProgressSubList []uint32 // 需要通知的子任务
 }
 
 // 玩家ping包处理
@@ -105,6 +108,10 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 		EquipmentList:     make([]*proto.Equipment, 0),
 		DelEquipmentList:  make([]uint32, 0),
 		RelicList:         make([]*proto.Relic, 0),
+		MissionSync: &proto.MissionSync{
+			MissionList:       make([]*proto.Mission, 0),
+			MainMissionIdList: make([]uint32, 0),
+		},
 	}
 	db := g.GetMaterialMap()
 	// 添加账户基本信息
@@ -154,6 +161,34 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 	if allSync.RelicList != nil {
 		for _, uniqueId := range allSync.RelicList {
 			notify.RelicList = append(notify.RelicList, g.GetRelic(uniqueId))
+		}
+	}
+	// 添加完成的主任务
+	notify.MissionSync.MainMissionIdList = allSync.MissionFinishMainList
+	// 添加需要通知的子任务
+	if allSync.MissionProgressSubList != nil {
+		subMissionList := g.GetSubMainMissionList()
+		for _, subId := range allSync.MissionProgressSubList {
+			if dbSub := subMissionList[subId]; dbSub != nil {
+				notify.MissionSync.MissionList = append(notify.MissionSync.MissionList, &proto.Mission{
+					Id:       dbSub.MissionId,
+					Progress: dbSub.Progress,
+					Status:   proto.MissionStatus(dbSub.Status),
+				})
+			}
+		}
+	}
+	// 添加完成的子任务
+	if allSync.MissionFinishSubList != nil {
+		subMissionList := g.GetFinishSubMainMissionList()
+		for _, subId := range allSync.MissionFinishSubList {
+			if dbSub := subMissionList[subId]; dbSub != nil {
+				notify.MissionSync.MissionList = append(notify.MissionSync.MissionList, &proto.Mission{
+					Id:       dbSub.MissionId,
+					Progress: dbSub.Progress,
+					Status:   proto.MissionStatus(dbSub.Status),
+				})
+			}
 		}
 	}
 

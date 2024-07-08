@@ -129,43 +129,6 @@ func (g *GamePlayer) FinishCosumeItemMissionCsReq(payloadMsg []byte) {
 	g.Send(cmd.FinishCosumeItemMissionScRsp, &proto.FinishCosumeItemMissionScRsp{SubMissionId: req.SubMissionId})
 }
 
-func (g *GamePlayer) MissionPlayerSyncScNotify(nextSub, finSub, finishMain []uint32) {
-	if len(nextSub) == 0 && len(finSub) == 0 && len(finishMain) == 0 {
-		return
-	}
-	notify := &proto.PlayerSyncScNotify{
-		MissionSync: &proto.MissionSync{
-			MissionList:       make([]*proto.Mission, 0),
-			MainMissionIdList: finishMain,
-		},
-	}
-	finishSubMainMissionList := g.GetFinishSubMainMissionList()
-	subMainMissionList := g.GetSubMainMissionList()
-	for _, sub := range finSub {
-		db := finishSubMainMissionList[sub]
-		if db == nil {
-			continue
-		}
-		notify.MissionSync.MissionList = append(notify.MissionSync.MissionList, &proto.Mission{
-			Id:       db.MissionId,
-			Progress: db.Progress,
-			Status:   proto.MissionStatus(db.Status),
-		})
-	}
-	for _, sub := range nextSub {
-		db := subMainMissionList[sub]
-		if db == nil {
-			continue
-		}
-		notify.MissionSync.MissionList = append(notify.MissionSync.MissionList, &proto.Mission{
-			Id:       db.MissionId,
-			Progress: db.Progress,
-			Status:   proto.MissionStatus(db.Status),
-		})
-	}
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
 func (g *GamePlayer) MissionRewardScNotify() {
 
 }
