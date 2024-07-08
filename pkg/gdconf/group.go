@@ -302,7 +302,8 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 				case string:
 					valueStr := value.Value.(string)
 					if strings.Contains(value.Key, "Door") ||
-						// strings.Contains(value.Key, "Bridge") ||
+						strings.Contains(value.Key, "FlipBridge") ||
+						value.Key == "Bridge" ||
 						strings.Contains(value.Key, "UnlockTarget") ||
 						strings.Contains(value.Key, "Rootcontamination") ||
 						strings.Contains(value.Key, "Portal") {
