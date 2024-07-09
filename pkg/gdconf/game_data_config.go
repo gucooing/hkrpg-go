@@ -41,6 +41,7 @@ type GameDataConfig struct {
 	ItemConfigEquipmentMap       map[uint32]*ItemConfigEquipment                 // 背包光锥配置
 	ItemConfigRelicMap           map[uint32]*ItemConfigRelic                     // 背包遗器配置
 	ItemUseBuffDataMap           map[uint32]*ItemUseBuffData                     // 物品增益配置表
+	ItemComposeConfigMap         map[uint32]*ItemComposeConfig                   // 合成配置表
 	RogueTalentMap               map[uint32]*RogueTalent                         // 模拟宇宙天赋
 	RogueMapGenMap               map[uint32][]uint32                             // 模拟宇宙id场景映射表
 	RogueManagerMap              map[uint32]*RogueManagerList                    // 模拟宇宙排期表
@@ -189,6 +190,7 @@ func (g *GameDataConfig) load() {
 		g.loadItemConfigEquipment,      // 背包光锥配置
 		g.loadItemConfigRelic,          // 背包遗器配置
 		g.loadItemUseBuffData,          // 物品增益配置表
+		g.loadItemComposeConfig,        // 合成配置表
 		g.loadRogueTalent,              // 模拟宇宙天赋
 		g.loadRogueMapGen,              // 模拟宇宙id场景映射表
 		g.loadRogueManager,             // 模拟宇宙排期表

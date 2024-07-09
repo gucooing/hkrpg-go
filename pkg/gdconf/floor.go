@@ -14,7 +14,7 @@ import (
 type LevelFloor struct {
 	FloorID                  uint32               `json:"FloorID"`
 	FloorName                string               `json:"FloorName"`
-	StartGroupID             uint32               `json:"StartGroupID"`
+	StartGroupIndex          uint32               `json:"StartGroupIndex"`
 	StartAnchorID            uint32               `json:"StartAnchorID"`
 	GroupInstanceList        []*GroupInstanceList `json:"GroupInstanceList"`
 	EnableGroupStreaming     bool                 `json:"EnableGroupStreaming"`
@@ -100,10 +100,10 @@ func GetAnchorByIndex(planeId, floorId uint32) *AnchorList {
 	if floor == nil {
 		return nil
 	}
-	if uint32(len(floor.GroupInstanceList)) < floor.StartGroupID {
+	if uint32(len(floor.GroupInstanceList)) < floor.StartGroupIndex {
 		return nil
 	}
-	groupInstance := floor.GroupInstanceList[floor.StartGroupID]
+	groupInstance := floor.GroupInstanceList[floor.StartGroupIndex]
 	if groupInstance == nil {
 		return nil
 	}

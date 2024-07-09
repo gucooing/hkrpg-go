@@ -32,3 +32,33 @@ const (
 	ItemSubTypeRelicSetShowOnly      ItemSubType = "RelicSetShowOnly"
 	ItemSubTypeRelicRarityShowOnly   ItemSubType = "RelicRarityShowOnly"
 )
+
+type FormulaType = string
+
+const (
+	FormulaTypeUnknown       FormulaType = "Unknown"
+	FormulaTypeNormal        FormulaType = "Normal"
+	FormulaTypeSepcial       FormulaType = "Sepcial"
+	FormulaTypeSelectedRelic FormulaType = "SelectedRelic"
+)
+
+type LimitType = string
+
+const (
+	LimitTypeNull              LimitType = "Null"
+	LimitTypeLevel             LimitType = "Level"
+	LimitTypeMainMission       LimitType = "MainMission"
+	LimitTypeEventMission      LimitType = "EventMission"
+	LimitTypeWorldLevel        LimitType = "WorldLevel"
+	LimitTypePreGoods          LimitType = "PreGoods"
+	LimitTypeHasNoRefreshGoods LimitType = "HasNoRefreshGoods"
+	LimitTypeSubMission        LimitType = "SubMission"
+)
+
+type FuncType = string
+
+const (
+	FuncTypeUnknown FuncType = "Unknown"
+	FuncTypeCompose FuncType = "Compose"
+	FuncTypeReplace FuncType = "Replace"
+)

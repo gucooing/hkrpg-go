@@ -292,8 +292,12 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 	db.LeaderSlot = 0
 	db.LineType = lineUpType
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-	for id, avatarId := range avatarList {
-		db.AvatarIdList[uint32(id)] = &spb.LineAvatarList{AvatarId: avatarId, Slot: uint32(id), LineAvatarType: avatarType}
+	var id uint32 = 0
+	for _, avatarId := range avatarList {
+		if g.SpecialMainAvatar(avatarId) {
+			db.AvatarIdList[id] = &spb.LineAvatarList{AvatarId: avatarId, Slot: id, LineAvatarType: avatarType}
+			id++
+		}
 	}
 	// 拷贝角色
 	for _, avatar := range avatarList {
@@ -301,6 +305,27 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 		g.CopyBattleAvatar(avatarBin)
 	}
 	g.SyncLineupNotify(db)
+}
+
+func (g *GamePlayer) SpecialMainAvatar(trialAvatarId uint32) bool {
+	conf := gdconf.GetSpecialAvatarById(trialAvatarId)
+	if conf == nil {
+		return true
+	}
+	avatarDb := g.GetAvatar()
+	if conf.AvatarID/1000 == 8 {
+		switch avatarDb.Gender {
+		case spb.Gender_GenderMan:
+			if conf.AvatarID%2 == 0 {
+				return false
+			}
+		case spb.Gender_GenderWoman:
+			if conf.AvatarID%2 != 0 {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 /*****************************************功能方法****************************/

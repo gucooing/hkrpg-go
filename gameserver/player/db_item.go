@@ -484,8 +484,6 @@ func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 	}
 }
 
-/*************************************PlayerSyncScNotify大全*******************************/
-
 func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},

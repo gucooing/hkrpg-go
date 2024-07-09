@@ -4,6 +4,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 type ActivityInfoOnline struct {
@@ -21,19 +22,21 @@ func (g *GamePlayer) GetActivityInfoOnline() *ActivityInfoOnline {
 func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
 	req := msg.(*proto.StartTrialActivityCsReq)
-
+	rsp := &proto.StartTrialActivityScRsp{StageId: req.StageId}
 	avatarDemo := gdconf.GetAvatarDemoConfigById(req.StageId)
 	if avatarDemo == nil {
+		g.Send(cmd.StartTrialActivityScRsp, rsp)
 		return
 	}
 	// 记录关卡
 	db := g.GetActivityInfoOnline()
 	db.StageId = req.StageId
+	// 设置状态
+	g.SetBattleStatus(spb.BattleType_Battle_TrialActivity)
 	// 更新角色
 	g.SetBattleLineUp(Activity, avatarDemo.TrialAvatarList)
 	g.StartTrialEnterSceneByServerScNotify()
 
-	rsp := &proto.StartTrialActivityScRsp{StageId: req.StageId}
 	g.Send(cmd.StartTrialActivityScRsp, rsp)
 }
 
@@ -74,10 +77,10 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 	entityGroupList := &proto.SceneEntityGroupInfo{
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	startGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, avatarDemo.MazeGroupID1)
+	anchor := gdconf.GetAnchorByIndex(mapEntrance.PlaneID, mapEntrance.FloorID)
 	var pos *proto.Vector
 	var rot *proto.Vector
-	for _, anchor := range startGroup.AnchorList {
+	if anchor != nil {
 		pos = &proto.Vector{
 			X: int32(anchor.PosX * 1000),
 			Y: int32(anchor.PosY * 1000),
@@ -88,7 +91,6 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 			Y: int32(anchor.RotY * 1000),
 			Z: int32(anchor.RotZ * 1000),
 		}
-		break
 	}
 	lineUp := g.GetBattleLineUpById(Activity)
 
@@ -157,28 +159,24 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 	return scene
 }
 
-func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(rsp *proto.PVEBattleResultScRsp) {
-	// rsp.BattleAvatarList = g.TrialActivityGetBattleAvatarList()
-	// if rsp.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
-	// 	// 传送回原来的场景
-	// 	g.SceneByServerScNotify(g.GetScene().EntryId, g.GetPosPb(), g.GetRotPb())
-	// 	// 储存通关状态
-	// 	g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, g.GetTrialActivityState().AvatarDemoId)
-	// 	// 发送通关通知
-	// 	scNotify := &proto.TrialActivityDataChangeScNotify{
-	// 		TrialActivityInfo: &proto.TrialActivityInfo{
-	// 			StageId:     g.GetTrialActivityState().AvatarDemoId,
-	// 			TakenReward: false,
-	// 		},
-	// 	}
-	// 	g.Send(cmd.TrialActivityDataChangeScNotify, scNotify)
-	// 	notify := &proto.CurTrialActivityScNotify{
-	// 		// TrialActivityId: g.GetTrialActivityState().AvatarDemoId,
-	// 		Status: proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
-	// 	}
-	// 	g.Send(cmd.CurTrialActivityScNotify, notify)
-	// 	// 恢复战斗状态为空
-	// 	g.GetBattleState().BattleType = spb.BattleType_Battle_NONE
-	// }
-	g.Send(cmd.PVEBattleResultScRsp, rsp)
+func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(req *proto.PVEBattleResultCsReq) {
+	g.SetBattleStatus(spb.BattleType_Battle_NONE)
+	db := g.GetActivityInfoOnline()
+	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
+		// 储存通关状态
+		g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, db.StageId)
+		// 发送通关通知
+		scNotify := &proto.TrialActivityDataChangeScNotify{
+			TrialActivityInfo: &proto.TrialActivityInfo{
+				StageId:     db.StageId,
+				TakenReward: false,
+			},
+		}
+		g.Send(cmd.TrialActivityDataChangeScNotify, scNotify)
+		notify := &proto.CurTrialActivityScNotify{
+			StageId: db.StageId,
+			Status:  proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
+		}
+		g.Send(cmd.CurTrialActivityScNotify, notify)
+	}
 }

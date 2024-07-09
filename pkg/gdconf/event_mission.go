@@ -40,7 +40,6 @@ func (g *GameDataConfig) loadEventMission() {
 	}
 
 	logger.Info("load %v EventMission", len(g.EventMissionMap))
-
 }
 
 func GetEventMission() map[uint32]*EventMission {

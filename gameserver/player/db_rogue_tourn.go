@@ -275,7 +275,7 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 			},
 			RogueTournMiracleInfo: g.GetChessRogueMiracleInfo(),
 			RogueTournFormulaInfo: g.GetRogueTournFormulaInfo(),
-			RogueTournValuesItem: &proto.RogueTournValuesItem{
+			RogueTournValuesItem: &proto.RogueGameItemInfo{
 				VirtualItem: map[uint32]uint32{Cf: g.GetMaterialById(Cf)},
 			},
 			RogueTournLayerInfo: g.GetRogueTournLayerInfo(),
@@ -340,12 +340,12 @@ func (g *GamePlayer) GetRogueTournLayerInfo() *proto.RogueTournLayerInfo {
 	}
 	info := &proto.RogueTournLayerInfo{
 		Status:        proto.RogueTournLevelStatus(curLayer.Status),
-		LayerInfoList: make([]*proto.LayerInfoList, 0),
+		LayerInfoList: make([]*proto.RogueTournLayer, 0),
 		Reason:        0,
 		CurLayerIndex: curRogueTourn.CurLayerIndex,
 	}
 	for _, layerInfo := range curRogueTourn.CurLayerList {
-		layerInfoList := &proto.LayerInfoList{
+		layerInfoList := &proto.RogueTournLayer{
 			LayerId:               layerInfo.LayerId,
 			RogueTournLayerStatus: proto.RogueTournLayerStatus(layerInfo.Status),
 			CurRoomIndex:          layerInfo.CurRoomIndex,
@@ -365,9 +365,9 @@ func (g *GamePlayer) GetRogueTournLayerInfo() *proto.RogueTournLayerInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournBuffInfo() *proto.RogueTournBuffInfo {
-	info := &proto.RogueTournBuffInfo{
-		RogueTournMazeBuffInfo: &proto.RogueMazeBuffInfo{
+func (g *GamePlayer) GetRogueTournBuffInfo() *proto.RogueDLCBuffInfo {
+	info := &proto.RogueDLCBuffInfo{
+		RogueDlcMazeBuffInfo: &proto.RogueMazeBuffInfo{
 			BuffList: make([]*proto.RogueCommonBuff, 0),
 		},
 	}
@@ -417,7 +417,7 @@ func (g *GamePlayer) GetRogueMapRotateInfo(roomId uint32) *proto.RogueMapRotateI
 	}
 	if roomConf.RotateInfo.IsRotate {
 		info.IsRotate = roomConf.RotateInfo.IsRotate
-		info.RotateNum = roomConf.RotateInfo.RotateNum
+		info.HMCAFEJAPJK = roomConf.RotateInfo.RotateNum
 		info.MapInfo = &proto.IJJHKDNFKMD{
 			BIKIIIKJIIG: &proto.Vector{},
 			EFGOCIAIKMN: &proto.AEKLIMBAKCL{

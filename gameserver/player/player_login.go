@@ -116,6 +116,7 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 2.任务检查
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
+	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 取消掉战斗状态
 	if !g.IsPE {
 		g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
 	}

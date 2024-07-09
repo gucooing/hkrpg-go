@@ -129,9 +129,9 @@ func (g *GamePlayer) RogueTournLevelInfoUpdateScNotify(layerIndex, roomIndex uin
 	notify := &proto.RogueTournLevelInfoUpdateScNotify{
 		ReachedLayerCount: layerIndex,
 		Status:            proto.RogueTournLevelStatus(layerInfo.Status),
-		LayerInfoList:     make([]*proto.LayerInfoList, 0),
+		LayerInfoList:     make([]*proto.RogueTournLayer, 0),
 	}
-	notify.LayerInfoList = append(notify.LayerInfoList, &proto.LayerInfoList{
+	notify.LayerInfoList = append(notify.LayerInfoList, &proto.RogueTournLayer{
 		LayerId:               layerInfo.LayerId,
 		RogueTournLayerStatus: proto.RogueTournLayerStatus(layerInfo.Status),
 		CurRoomIndex:          layerInfo.CurRoomIndex,

@@ -142,13 +142,26 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg []byte) {
 func (g *GamePlayer) ComposeItemCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.ComposeItemCsReq, payloadMsg)
 	req := msg.(*proto.ComposeItemCsReq)
-	// TODO
 	rsp := &proto.ComposeItemScRsp{
 		Count:          req.Count,
 		ComposeId:      req.ComposeId,
 		Retcode:        0,
-		ReturnItemList: nil,
+		ReturnItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
+	conf := gdconf.GetItemComposeConfig(req.ComposeId)
+	if conf == nil {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_FORMULA_NOT_EXIST)
+		g.Send(cmd.ComposeItemScRsp, rsp)
+		return
+	}
+	// 扣除材料
+	// TODO
+	// 发送合成物
+	rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
+		ItemId: conf.ItemID,
+		Num:    req.Count,
+	})
+
 	g.Send(cmd.ComposeItemScRsp, rsp)
 }
 
