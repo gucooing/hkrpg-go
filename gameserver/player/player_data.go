@@ -47,8 +47,8 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		RelicList:                     make([]*proto.RelicList, 0),
 	}
 
-	for _, avatar := range g.BasicBin.Avatar.AvatarList {
-		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.AvatarId)
+	for _, avatar := range g.GetAvatarList() {
+		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.CurPath)
 	}
 
 	for _, equipment := range gdconf.GetItemConfigEquipmentMap() {
@@ -288,8 +288,9 @@ func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) SetClientPausedCsReq(payloadMsg []byte) {
 	rsp := new(proto.SetClientPausedScRsp)
-	g.OnlineData.IsPaused = !g.OnlineData.IsPaused
-	rsp.Paused = g.OnlineData.IsPaused
+	dbOnl := g.GetOnlineData()
+	dbOnl.IsPaused = !dbOnl.IsPaused
+	rsp.Paused = dbOnl.IsPaused
 
 	g.Send(cmd.SetClientPausedScRsp, rsp)
 }
@@ -322,12 +323,14 @@ func (g *GamePlayer) HandleGetPhoneDataCsReq(payloadMsg []byte) {
 func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetNicknameCsReq, payloadMsg)
 	req := msg.(*proto.SetNicknameCsReq)
+	dbOnl := g.GetOnlineData()
+	dbBas := g.GetBasicBin()
 
-	if g.OnlineData.IsNickName {
-		g.BasicBin.Nickname = req.Nickname
+	if dbOnl.IsNickName {
+		dbBas.Nickname = req.Nickname
 	}
 
-	g.OnlineData.IsNickName = !g.OnlineData.IsNickName
+	dbOnl.IsNickName = !dbOnl.IsNickName
 
 	g.PlayerPlayerSyncScNotify()
 	g.Send(cmd.SetNicknameScRsp, nil)
@@ -336,8 +339,8 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetGameplayBirthdayCsReq, payloadMsg)
 	req := msg.(*proto.SetGameplayBirthdayCsReq)
-
-	g.BasicBin.Birthday = req.Birthday
+	dbBas := g.GetBasicBin()
+	dbBas.Birthday = req.Birthday
 
 	rsp := &proto.SetGameplayBirthdayScRsp{Birthday: req.Birthday}
 
@@ -347,8 +350,8 @@ func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetSignatureCsReq, payloadMsg)
 	req := msg.(*proto.SetSignatureCsReq)
-
-	g.BasicBin.Signature = req.Signature
+	dbBas := g.GetBasicBin()
+	dbBas.Signature = req.Signature
 
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
 

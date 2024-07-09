@@ -396,7 +396,7 @@ func (g *GamePlayer) addRelicAffix(str *addRelicAffix) {
 	}
 }
 
-func (g *GamePlayer) DelRelic(uniqueId uint32) []*Material {
+func (g *GamePlayer) SellDelRelic(uniqueId uint32) []*Material {
 	var material []*Material
 	db := g.GetRelicMap()
 	if db[uniqueId] == nil {
@@ -413,7 +413,6 @@ func (g *GamePlayer) DelRelic(uniqueId uint32) []*Material {
 			Num: itme.ItemNum,
 		})
 	}
-	g.DelRelicPlayerSyncScNotify([]uint32{uniqueId})
 	return material
 }
 
@@ -498,25 +497,28 @@ func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
 }
 
 // 删除物品
-func (g *GamePlayer) DelEquipment(equipmentList []uint32) {
+func (g *GamePlayer) DelEquipment(equipmentList []uint32) bool {
 	db := g.GetEquipmentMap()
 	for _, equipment := range equipmentList {
 		if db[equipment] == nil {
-			continue
+			return false
 		}
+	}
+	for _, equipment := range equipmentList {
 		delete(db, equipment)
 	}
+	return true
 }
 
-func (g *GamePlayer) DelRelicPlayerSyncScNotify(relicList []uint32) {
+func (g *GamePlayer) DelRelic(relicList []uint32) bool {
 	db := g.GetRelicMap()
-	notify := &proto.PlayerSyncScNotify{DelRelicList: make([]uint32, 0)}
 	for _, relic := range relicList {
 		if db[relic] == nil {
-			continue
+			return false
 		}
-		delete(db, relic)
-		notify.DelRelicList = append(notify.DelRelicList, relic)
 	}
-	g.Send(cmd.PlayerSyncScNotify, notify)
+	for _, relic := range relicList {
+		delete(db, relic)
+	}
+	return true
 }

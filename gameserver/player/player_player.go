@@ -16,6 +16,7 @@ type AllPlayerSync struct {
 	EquipmentList          []uint32 // 光锥列表
 	DelEquipmentList       []uint32 // 删除列表
 	RelicList              []uint32 // 圣遗物列表
+	DelRelicList           []uint32 // 删除列表
 	MissionFinishMainList  []uint32 // 已完成的主任务
 	MissionFinishSubList   []uint32 // 已完成的子任务
 	MissionProgressSubList []uint32 // 需要通知的子任务
@@ -163,6 +164,8 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 			notify.RelicList = append(notify.RelicList, g.GetRelic(uniqueId))
 		}
 	}
+	// 删除圣遗物
+	notify.DelRelicList = allSync.DelRelicList
 	// 添加完成的主任务
 	notify.MissionSync.MainMissionIdList = allSync.MissionFinishMainList
 	// 添加需要通知的子任务
