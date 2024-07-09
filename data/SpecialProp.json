@@ -10,13 +10,24 @@
       }
     }
   },
+  "2012101": {
+    "EntryId": 2012101,
+    "GroupList": {
+      "3":{
+        "GroupId": 3,
+        "PropState": {
+          "300005": "Elevator2"
+        }
+      }
+    }
+  },
   "2012301": {
     "EntryId": 2012301,
     "GroupList": {
       "8":{
         "GroupId": 8,
         "PropState": {
-          "300001": "Unlocked",
+          "300001": "Elevator2",
           "300011": "Unlocked"
         }
       }

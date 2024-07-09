@@ -756,13 +756,6 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 		case constant.PropState:
 			ifFinish = g.MissionPropState(id)
 			break
-		default: // 跳过检查
-			for _, jumpId := range jumpSubMissionList {
-				if id == jumpId {
-					ifFinish = true
-					break
-				}
-			}
 		}
 		if ifFinish {
 			finishServerSubMissionList = append(finishServerSubMissionList, id)
@@ -781,7 +774,7 @@ func (g *GamePlayer) FinishServerMainMission() []uint32 {
 	finishSubMissionList := g.GetFinishSubMainMissionList() // 已完成的子任务
 	finishServerMainMissionList := make([]uint32, 0)
 	for _, mainMission := range mainMissionList {
-		if mainMission.MissionId == 4030001 {
+		if mainMission.MissionId == 4030001 || mainMission.MissionId == 4030002 {
 			finishServerMainMissionList = append(finishServerMainMissionList, mainMission.MissionId)
 			continue
 		}
