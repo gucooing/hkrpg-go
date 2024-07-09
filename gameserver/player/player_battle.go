@@ -34,7 +34,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	// 根据各种情况进行处理
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
-		g.AddOnLineAvatarBuff(req.AttackedByEntityId, req.SkillIndex)
+		g.HandleAvatarSkill(req.AttackedByEntityId, req.SkillIndex)
 	}
 	// 添加参与此次攻击的实体
 	mpem := &MPEM{
