@@ -225,7 +225,7 @@ func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
 	return equipment
 }
 
-func (g *GamePlayer) AddEquipment(tid uint32) {
+func (g *GamePlayer) AddEquipment(tid uint32) uint32 {
 	uniqueId := uint32(SNOWFLAKE.GenId())
 	db := g.GetEquipmentMap()
 	db[uniqueId] = &spb.Equipment{
@@ -238,8 +238,7 @@ func (g *GamePlayer) AddEquipment(tid uint32) {
 		IsProtected:  false,
 		Rank:         1,
 	}
-	// TODO 要删掉
-	g.AllPlayerSyncScNotify(&AllPlayerSync{EquipmentList: []uint32{uniqueId}})
+	return uniqueId
 }
 
 func (g *GamePlayer) SellDelEquipment(uniqueId uint32) []*Material {
@@ -289,7 +288,7 @@ func (g *GamePlayer) GetRelic(uniqueId uint32) *proto.Relic {
 	return relic
 }
 
-func (g *GamePlayer) AddRelic(tid uint32) {
+func (g *GamePlayer) AddRelic(tid uint32) uint32 {
 	uniqueId := uint32(SNOWFLAKE.GenId())
 	relicConf := gdconf.GetRelicById(tid)
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
@@ -319,10 +318,10 @@ func (g *GamePlayer) AddRelic(tid uint32) {
 	relic.RelicAffix = relicAffix
 
 	db[uniqueId] = relic
-	g.RelicPlayerSyncScNotify(uniqueId)
+	return uniqueId
 }
 
-func (g *GamePlayer) AddBtRelic(tid uint32) {
+func (g *GamePlayer) AddBtRelic(tid uint32) uint32 {
 	uniqueId := uint32(SNOWFLAKE.GenId())
 	relicConf := gdconf.GetRelicById(tid)
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
@@ -350,7 +349,7 @@ func (g *GamePlayer) AddBtRelic(tid uint32) {
 	relic.RelicAffix = relicAffix
 
 	db[uniqueId] = relic
-	g.RelicPlayerSyncScNotify(uniqueId)
+	return uniqueId
 }
 
 type addRelicAffix struct {
@@ -420,18 +419,42 @@ func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData) {
 	// TODO
 }
 
-/*********************************************接口方法******************************************/
-
-func (g *GamePlayer) RelicPlayerSyncScNotify(uniqueId uint32) {
-	notify := &proto.PlayerSyncScNotify{
-		RelicList: make([]*proto.Relic, 0),
+func (g *GamePlayer) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData) (proto.Retcode, *AllPlayerSync) {
+	// 扣除材料
+	var pileItem []*Material
+	allSync := &AllPlayerSync{
+		IsBasic:      true,
+		MaterialList: make([]uint32, 0),
 	}
-
-	relic := g.GetProtoRelicById(uniqueId)
-	notify.RelicList = append(notify.RelicList, relic)
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
+	if composeItemList != nil {
+		for _, item := range composeItemList.ItemList {
+			allSync.MaterialList = append(allSync.MaterialList, item.GetPileItem().ItemId)
+			pileItem = append(pileItem, &Material{
+				Tid: item.GetPileItem().ItemId,
+				Num: item.GetPileItem().ItemNum,
+			})
+		}
+	}
+	if conf.MaterialCost != nil {
+		for _, item := range conf.MaterialCost {
+			allSync.MaterialList = append(allSync.MaterialList, item.ItemID)
+			pileItem = append(pileItem, &Material{
+				Tid: item.ItemID,
+				Num: item.ItemNum * count,
+			})
+		}
+	}
+	pileItem = append(pileItem, &Material{
+		Tid: Scoin,
+		Num: conf.CoinCost * count,
+	})
+	if !g.DelMaterial(pileItem) {
+		return proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH, nil
+	}
+	return proto.Retcode_RET_SUCC, allSync
 }
+
+/*********************************************接口方法******************************************/
 
 func (g *GamePlayer) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 	if relicDb, ok := g.GetItem().RelicMap[uniqueId]; !ok {

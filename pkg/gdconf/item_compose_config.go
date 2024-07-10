@@ -16,7 +16,8 @@ type ItemComposeConfig struct {
 	SpecialMaterialCost       []uint32             `json:"SpecialMaterialCost"`
 	SpecialMaterialCostNumber uint32               `json:"SpecialMaterialCostNumber"`
 	ItemID                    uint32               `json:"ItemID"`
-	MaterialCost              []*ItemC             `json:"MaterialCost"`
+	MaterialCost              []*ItemC             `json:"MaterialCost"` // 消耗材料
+	CoinCost                  uint32               `json:"CoinCost"`     // Scoin
 	Type                      uint32               `json:"Type"`
 	Order                     uint32               `json:"Order"`
 	WorldLevelRequire         uint32               `json:"WorldLevelRequire"`

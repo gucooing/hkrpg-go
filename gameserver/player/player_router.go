@@ -98,11 +98,12 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartPartialChallengeCsReq:   g.StartPartialChallengeCsReq,   // 末日幻影,二次启动!
 		cmd.EnterChallengeNextPhaseCsReq: g.EnterChallengeNextPhaseCsReq, // 前往下一节点
 		// 背包
-		cmd.GetBagCsReq:      g.HandleGetBagCsReq, // 获取背包物品
-		cmd.DestroyItemCsReq: g.DestroyItemCsReq,  // 销毁物品
-		cmd.SellItemCsReq:    g.SellItemCsReq,     // 光锥销毁
-		cmd.UseItemCsReq:     g.UseItemCsReq,      // 物品使用
-		cmd.ComposeItemCsReq: g.ComposeItemCsReq,  // 合成
+		cmd.GetBagCsReq:               g.HandleGetBagCsReq,         // 获取背包物品
+		cmd.DestroyItemCsReq:          g.DestroyItemCsReq,          // 销毁物品
+		cmd.SellItemCsReq:             g.SellItemCsReq,             // 光锥销毁
+		cmd.UseItemCsReq:              g.UseItemCsReq,              // 物品使用
+		cmd.ComposeItemCsReq:          g.ComposeItemCsReq,          // 合成
+		cmd.ComposeSelectedRelicCsReq: g.ComposeSelectedRelicCsReq, // 遗器合成
 		// 交易
 		cmd.GetShopListCsReq:            g.GetShopListCsReq,            // 获取商店物品列表
 		cmd.ExchangeHcoinCsReq:          g.ExchangeHcoinCsReq,          // 梦华兑换
@@ -206,7 +207,7 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 	go LogMsgRecv(cmdId, payloadMsg)
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		// logger.Error("C --> S no route for msg, cmdId: %v", cmdId)
+		// logger.Error("C --> S no route for msg, cmdId: %v msg:%s", cmdId, base64.StdEncoding.EncodeToString(payloadMsg))
 		return
 	}
 	handlerFunc(payloadMsg)

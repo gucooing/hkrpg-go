@@ -154,15 +154,62 @@ func (g *GamePlayer) ComposeItemCsReq(payloadMsg []byte) {
 		g.Send(cmd.ComposeItemScRsp, rsp)
 		return
 	}
-	// 扣除材料
-	// TODO
+	retcode, allSync := g.ComposeItem(conf, req.Count, req.ComposeItemList)
+	rsp.Retcode = uint32(retcode)
+	if retcode != 0 {
+		g.Send(cmd.ComposeItemScRsp, rsp)
+		return
+	}
+	var addMaterial []*Material
+	allSync.MaterialList = append(allSync.MaterialList, conf.ItemID)
+	addMaterial = append(addMaterial, &Material{
+		Tid: conf.ItemID,
+		Num: req.Count,
+	})
 	// 发送合成物
 	rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
 		ItemId: conf.ItemID,
 		Num:    req.Count,
 	})
+	g.AddItem(addMaterial)
 
+	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.ComposeItemScRsp, rsp)
+}
+
+func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.ComposeSelectedRelicCsReq, payloadMsg)
+	req := msg.(*proto.ComposeSelectedRelicCsReq)
+	rsp := &proto.ComposeSelectedRelicScRsp{
+		Retcode:        0,
+		ReturnItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
+		ComposeId:      req.ComposeId,
+	}
+	conf := gdconf.GetItemComposeConfig(req.ComposeId)
+	if conf == nil {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_FORMULA_NOT_EXIST)
+		g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
+		return
+	}
+	retcode, allSync := g.ComposeItem(conf, req.Count, req.ComposeItemList)
+	rsp.Retcode = uint32(retcode)
+	if retcode != 0 {
+		g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
+		return
+	}
+
+	for i := 0; i < int(req.Count); i++ {
+		uniqueId := g.AddRelic(req.ComposeSetId)
+		allSync.RelicList = append(allSync.RelicList, uniqueId)
+		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
+			ItemId:   req.ComposeSetId,
+			Num:      1,
+			UniqueId: uniqueId,
+		})
+	}
+
+	g.AllPlayerSyncScNotify(allSync)
+	g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
 }
 
 /***************************relic*************************************/

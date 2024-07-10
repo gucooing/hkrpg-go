@@ -46,7 +46,8 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		}
 		// add equipment
 		for _, equipment := range itemConf.Equipment {
-			g.AddEquipment(equipment.ID)
+			uniqueId := g.AddEquipment(equipment.ID)
+			allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
 		}
 		// add item
 		for _, item := range itemConf.Item {
@@ -58,11 +59,13 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		}
 		// add relic
 		for _, relic := range itemConf.Relic {
-			g.AddRelic(relic.ID)
+			uniqueId := g.AddRelic(relic.ID)
+			allSync.RelicList = append(allSync.RelicList, uniqueId)
 		}
 		// add bt relic
 		for _, relic := range itemConf.Relic {
-			g.AddBtRelic(relic.ID)
+			uniqueId := g.AddBtRelic(relic.ID)
+			allSync.RelicList = append(allSync.RelicList, uniqueId)
 		}
 		g.AddMaterial(pileItem)
 		// g.ScenePlaneEventScNotify(pileItem)
