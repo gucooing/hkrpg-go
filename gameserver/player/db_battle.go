@@ -709,9 +709,9 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) []*proto.Scene
 			MonsterList: make([]*proto.SceneMonster, 0),
 			// MonsterParam:   &proto.SceneMonsterWaveParam{},
 		}
-		for _, monsterList := range monsterListMap {
+		for _, monsterId := range monsterListMap {
 			sceneMonster := &proto.SceneMonster{
-				MonsterId: monsterList,
+				MonsterId: monsterId,
 			}
 			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
 		}

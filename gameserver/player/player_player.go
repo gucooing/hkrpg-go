@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -179,6 +180,8 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 					Progress: dbSub.Progress,
 					Status:   proto.MissionStatus(dbSub.Status),
 				})
+			} else {
+				logger.Error("subMission db error id:", subId)
 			}
 		}
 	}
@@ -192,6 +195,8 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 					Progress: dbSub.Progress,
 					Status:   proto.MissionStatus(dbSub.Status),
 				})
+			} else {
+				logger.Error("finishSubMission db error id:", subId)
 			}
 		}
 	}

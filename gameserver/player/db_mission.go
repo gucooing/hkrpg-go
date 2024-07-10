@@ -77,6 +77,7 @@ func (g *GamePlayer) LoginReadyMission() {
 		return
 	}
 	g.InspectMission(nil)
+	g.AllCheckMainMission()
 }
 
 /*********************************客户端操作*********************************/
@@ -380,13 +381,13 @@ func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 	for {
 		// 接取检查
 		mainList, subList := g.AcceptInspectMission()
-		newProgressSubList = append(newProgressSubList, subList...)
+		newProgressSubList = append(newProgressSubList, subList...) // 将接取的任务添加到同步列表
 		// 完成检查
-		finishList, finishSubList, progressSubList, material := g.AcceptInspectSubMission()
-		finishMainList = append(finishMainList, finishList...)
-		newFinishSubList = append(newFinishSubList, finishSubList...)
-		newProgressSubList = append(newProgressSubList, progressSubList...)
-		materialList = append(materialList, material...)
+		finishList, finishSubList, progressSubList, material := g.FinishInspectMission()
+		finishMainList = append(finishMainList, finishList...)              // 将完成的任务添加到同步列表
+		newFinishSubList = append(newFinishSubList, finishSubList...)       // 将完成的任务添加到同步列表
+		newProgressSubList = append(newProgressSubList, progressSubList...) // 将接取的任务添加到同步列表
+		materialList = append(materialList, material...)                    // 添加同步
 
 		if len(mainList) == 0 &&
 			len(subList) == 0 &&
@@ -433,7 +434,7 @@ func (g *GamePlayer) AcceptInspectMission() ([]uint32, []uint32) {
 	return mainList, subList
 }
 
-func (g *GamePlayer) AcceptInspectSubMission() ([]uint32, []uint32, []uint32, []uint32) {
+func (g *GamePlayer) FinishInspectMission() ([]uint32, []uint32, []uint32, []uint32) {
 	finishSubList, progressSubList := g.FinishServerSubMission()
 	g.AddFinishSubMission(finishSubList)
 	// 主任务完成检查
@@ -452,6 +453,25 @@ func (g *GamePlayer) CheckMainMission(finishMainList []uint32) []uint32 {
 	finishSubList := g.GetFinishSubMainMissionList()
 	finishSubMission := make([]uint32, 0)
 	for _, mainId := range finishMainList {
+		conf := gdconf.GetGoppMainMissionById(mainId)
+		if conf == nil {
+			continue
+		}
+		for _, subInfo := range conf.SubMissionList {
+			if finishSubList[subInfo.ID] == nil {
+				finishSubMission = append(finishSubMission, subInfo.ID)
+			}
+		}
+	}
+
+	return finishSubMission
+}
+
+// 全局检查将已完成的主任务下还没有完成的子任务全部完成
+func (g *GamePlayer) AllCheckMainMission() []uint32 {
+	finishSubList := g.GetFinishSubMainMissionList()
+	finishSubMission := make([]uint32, 0)
+	for mainId := range g.GetFinishMainMissionList() {
 		conf := gdconf.GetGoppMainMissionById(mainId)
 		if conf == nil {
 			continue

@@ -107,6 +107,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.StaminaInfoScNotify()
 		// 任务判断
 		if battleBin.EventId != 0 {
+			rsp.EventId = battleBin.EventId
 			g.UpBattleSubMission(req.BattleId)
 		}
 		if battleBin.CocoonId != 0 { // 副本处理
