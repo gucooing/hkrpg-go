@@ -72,7 +72,8 @@ func (g *GamePlayer) DestroyItemCsReq(payloadMsg []byte) {
 	if db == req.CurItemCount {
 		g.DelMaterial([]*Material{{Tid: req.ItemId, Num: req.ItemCount}})
 	}
-	g.Send(cmd.DestroyItemScRsp, nil)
+	rsp := &proto.DestroyItemScRsp{CurItemCount: g.GetMaterialById(req.ItemId)}
+	g.Send(cmd.DestroyItemScRsp, rsp)
 }
 
 func (g *GamePlayer) SellItemCsReq(payloadMsg []byte) {

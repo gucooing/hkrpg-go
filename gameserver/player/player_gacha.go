@@ -99,7 +99,13 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 		GachaItemList: make([]*proto.GachaItem, 0),
 		GachaNum:      req.GachaNum,
 	}
-	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	allSync := &AllPlayerSync{
+		IsBasic:       true,
+		MaterialList:  make([]uint32, 0),
+		RelicList:     make([]uint32, 0),
+		AvatarList:    make([]uint32, 0),
+		EquipmentList: make([]uint32, 0),
+	}
 	var dPileItem []*Material
 	var pileItem []*Material
 
@@ -145,7 +151,7 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 
 	for i := 0; i < int(req.GachaNum); i++ {
 		id := g.GachaRandom(req.GachaId)
-		isAvatar, isNew := g.AddGachaItem(id)
+		isAvatar, isNew := g.AddGachaItem(id, allSync)
 		gachaItemList := &proto.GachaItem{
 			TransferItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 			IsNew:            isNew,

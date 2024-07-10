@@ -53,18 +53,17 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 func (g *GamePlayer) BattlePassInfoNotify() {
 	// 战斗通行证信息通知
 	notify := &proto.BattlePassInfoNotify{
-		// TakenPremiumExtendedReward: 127,
-		// TakenFreeExtendedReward:    2,
-		// Unkfield:                   4,
-		// TakenPremiumReward2:        7,
-		// TakenFreeReward:            6,
-		// TakenPremiumReward1:        2,
-		// TakenPremiumOptionalReward: 2251799813685246,
-		Exp:   1,
-		Level: 70,
-		// CurBpId:                    5,
-		// CurWeekAddExpSum:           8000,
-		BpTierType: proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
+		TakenPremiumOptionalReward: 2251799813685246,
+		TakenPremiumExtendedReward: 127,
+		TakenPremiumReward2:        7,
+		Exp:                        1,
+		TakenPremiumReward1:        2,
+		CurWeekAddExpSum:           8000,
+		TakenFreeExtendedReward:    2,
+		CurBpId:                    5,
+		TakenFreeReward:            6,
+		BpTierType:                 proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
+		Level:                      70,
 	}
 	g.Send(cmd.BattlePassInfoNotify, notify)
 }
@@ -75,7 +74,8 @@ func (g *GamePlayer) LoginNotify() {
 	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
 	g.Send(cmd.SyncTurnFoodNotify, &proto.SyncTurnFoodNotify{})
 	g.StaminaInfoScNotify()
-	g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{})
+	g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{OMLECGGPKAB: []*proto.DailyTask{{MainMissionId: 3020104}}})
+	g.DailyActiveInfoNotify()
 	g.Send(cmd.RaidInfoNotify, &proto.RaidInfoNotify{})
 	g.BattlePassInfoNotify()
 	g.Send(cmd.ComposeLimitNumCompleteNotify, &proto.ComposeLimitNumCompleteNotify{})

@@ -6,6 +6,51 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
+/*******************每日任务****************/
+
+// 每日实训
+var dailyActiveQuestIdList = []uint32{2100132, 2100133, 2100134, 2100139, 2100150, 2100152, 2100153, 2100154}
+
+func (g *GamePlayer) DailyActiveInfoNotify() {
+	notify := &proto.DailyActiveInfoNotify{
+		DailyActiveLevelList:   make([]*proto.DailyActivityInfo, 0),
+		DailyActiveQuestIdList: dailyActiveQuestIdList,
+		DailyActivePoint:       500,
+	}
+	for i := 1; i < 6; i++ {
+		dailyActivityInfo := &proto.DailyActivityInfo{
+			WorldLevel:       g.GetWorldLevel(),
+			Level:            uint32(i),
+			DailyActivePoint: uint32(i * 100),
+			IsHasTaken:       true,
+		}
+		notify.DailyActiveLevelList = append(notify.DailyActiveLevelList, dailyActivityInfo)
+	}
+	g.Send(cmd.DailyActiveInfoNotify, notify)
+}
+
+func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg []byte) {
+	rsp := &proto.GetDailyActiveInfoScRsp{
+		DailyActiveLevelList:   make([]*proto.DailyActivityInfo, 0),
+		DailyActiveQuestIdList: dailyActiveQuestIdList,
+		DailyActivePoint:       500,
+	}
+
+	for i := 1; i < 6; i++ {
+		dailyActivityInfo := &proto.DailyActivityInfo{
+			WorldLevel:       g.GetWorldLevel(),
+			Level:            uint32(i),
+			DailyActivePoint: uint32(i * 100),
+			IsHasTaken:       true,
+		}
+		rsp.DailyActiveLevelList = append(rsp.DailyActiveLevelList, dailyActivityInfo)
+	}
+
+	g.Send(cmd.GetDailyActiveInfoScRsp, rsp)
+}
+
+/*******************任务****************/
+
 func (g *GamePlayer) MissionAcceptScNotify() {
 	notify := &proto.MissionAcceptScNotify{
 		SubMissionIdList: make([]uint32, 0),

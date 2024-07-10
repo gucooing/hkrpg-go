@@ -35,15 +35,8 @@ func (g *GamePlayer) GetDbGacha(gachaId uint32) *spb.GachaNum {
 	return gaCha.GachaMap[gachaId]
 }
 
-func (g *GamePlayer) AddGachaItem(id uint32) (bool, bool) {
+func (g *GamePlayer) AddGachaItem(id uint32, allSync *AllPlayerSync) (bool, bool) {
 	var pileItem []*Material
-	allSync := &AllPlayerSync{
-		IsBasic:       true,
-		AvatarList:    make([]uint32, 0),
-		MaterialList:  make([]uint32, 0),
-		EquipmentList: make([]uint32, 0),
-		RelicList:     make([]uint32, 0),
-	}
 	if id >= 20000 {
 		uniqueId := g.AddEquipment(id)
 		allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)

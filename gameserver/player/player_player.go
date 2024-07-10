@@ -108,6 +108,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 		MaterialList:      make([]*proto.Material, 0),
 		EquipmentList:     make([]*proto.Equipment, 0),
 		DelEquipmentList:  make([]uint32, 0),
+		DelRelicList:      make([]uint32, 0),
 		RelicList:         make([]*proto.Relic, 0),
 		MissionSync: &proto.MissionSync{
 			MissionList:       make([]*proto.Mission, 0),

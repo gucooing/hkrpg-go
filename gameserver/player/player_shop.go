@@ -142,7 +142,7 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
 		Tid: req.ItemId,
 		Num: req.GoodsNum,
 	})
-	g.AddMaterial(pileItem)
+	g.AddItem(pileItem)
 
 	allSync.MaterialList = append(allSync.MaterialList, req.ItemId)
 	g.AllPlayerSyncScNotify(allSync)

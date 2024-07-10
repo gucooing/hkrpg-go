@@ -130,9 +130,10 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
 		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
 		// 任务
+		cmd.GetDailyActiveInfoCsReq: g.GetDailyActiveInfoCsReq, // 每日实训
 		// cmd.GetMainMissionCustomValueCsReq:g.GetMainMissionCustomValueCsReq,
-		cmd.GetMissionEventDataCsReq:     g.GetMissionEventDataCsReq, // 获取任务状态
-		cmd.GetMissionStatusCsReq:        g.HandleGetMissionStatusCsReq,
+		cmd.GetMissionEventDataCsReq:     g.GetMissionEventDataCsReq,
+		cmd.GetMissionStatusCsReq:        g.HandleGetMissionStatusCsReq,  // 获取任务状态
 		cmd.GetMissionDataCsReq:          g.GetMissionDataCsReq,          // 获取任务数据
 		cmd.FinishTalkMissionCsReq:       g.FinishTalkMissionCsReq,       // 完成任务
 		cmd.FinishCosumeItemMissionCsReq: g.FinishCosumeItemMissionCsReq, // 完成道具提交任务
@@ -142,7 +143,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		// 活动
 		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
-		cmd.GetDailyActiveInfoCsReq:        g.GetDailyActiveInfoCsReq,              // 每日任务
 		cmd.GetLoginActivityCsReq:          g.GetLoginActivityCsReq,                // 登录活动完成情况
 		cmd.GetTrialActivityDataCsReq:      g.GetTrialActivityDataCsReq,            // 角色试用完成情况
 		cmd.StartTrialActivityCsReq:        g.StartTrialActivityCsReq,              // 角色试用
