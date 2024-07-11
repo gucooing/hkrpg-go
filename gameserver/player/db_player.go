@@ -36,7 +36,7 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		Item:                 NewItem(),
 		Gacha:                NewGacha(),
 		Battle:               NewBattle(),
-		RewardTakenLevelList: nil,
+		RewardTakenLevelList: make([]uint32, 0),
 		OpenStateMap:         nil,
 		RegisterTime:         0,
 		TotalLoginDays:       0,
@@ -244,5 +244,27 @@ func (g *GamePlayer) FinishTutorialGuide(id uint32) {
 	db := g.GetTutorialGuide()
 	if db[id] != nil {
 		db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
+	}
+}
+
+func (g *GamePlayer) GetRewardTakenLevelList() []uint32 {
+	db := g.GetBasicBin()
+	if db.RewardTakenLevelList == nil {
+		db.RewardTakenLevelList = make([]uint32, 0)
+	}
+	return db.RewardTakenLevelList
+}
+
+func (g *GamePlayer) AddRewardTakenLevelList(id uint32) {
+	db := g.GetRewardTakenLevelList()
+	isAdd := true
+	for _, level := range db {
+		if level == id {
+			isAdd = false
+			break
+		}
+	}
+	if isAdd {
+		db = append(db, id)
 	}
 }

@@ -61,7 +61,7 @@ func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg []byte) {
 		if mainMissionList[id] != nil {
 			rsp.MissionDataList = append(rsp.MissionDataList, &proto.MissionData{
 				Id:              id,
-				CustomValueList: nil,
+				CustomValueList: make([]*proto.MissionCustomValue, 0),
 				Status:          proto.MissionStatus(mainMissionList[id].Status),
 			})
 		}

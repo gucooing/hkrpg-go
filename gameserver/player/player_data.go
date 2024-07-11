@@ -421,7 +421,7 @@ func (g *GamePlayer) ContentPackageSyncDataScNotify() {
 
 func (g *GamePlayer) GetLevelRewardTakenListCsReq(payloadMsg []byte) {
 	rsp := &proto.GetLevelRewardTakenListScRsp{
-		LevelRewardTakenList: make([]uint32, 0),
+		LevelRewardTakenList: g.GetRewardTakenLevelList(),
 	}
 	g.Send(cmd.GetLevelRewardTakenListScRsp, rsp)
 }
@@ -429,11 +429,45 @@ func (g *GamePlayer) GetLevelRewardTakenListCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetLevelRewardCsReq, payloadMsg)
 	req := msg.(*proto.GetLevelRewardCsReq)
-
+	allSync := &AllPlayerSync{
+		IsBasic:      true,
+		MaterialList: make([]uint32, 0),
+	}
+	pileItem := make([]*Material, 0)
 	rsp := &proto.GetLevelRewardScRsp{
-		Reward:  nil,
+		Reward:  &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		Retcode: 0,
 		Level:   req.Level,
 	}
+	conf := gdconf.GetPlayerLevelConfig(req.Level)
+	if conf == nil {
+		g.Send(cmd.GetLevelRewardScRsp, rsp)
+		return
+	}
+	rewardConf := gdconf.GetRewardDataById(conf.LevelRewardID)
+	if rewardConf == nil {
+		g.Send(cmd.GetLevelRewardScRsp, rsp)
+		return
+	}
+	allSync.MaterialList = append(allSync.MaterialList, Hcoin)
+	pileItem = append(pileItem, &Material{
+		Tid: Hcoin,
+		Num: rewardConf.Hcoin,
+	})
+	for _, info := range rewardConf.Items {
+		allSync.MaterialList = append(allSync.MaterialList, info.ItemID)
+		pileItem = append(pileItem, &Material{
+			Tid: info.ItemID,
+			Num: info.Count,
+		})
+		rsp.Reward.ItemList = append(rsp.Reward.ItemList, &proto.Item{
+			ItemId: info.ItemID,
+			Num:    info.Count,
+		})
+	}
+
+	g.AddItem(pileItem)
+	g.AddRewardTakenLevelList(req.Level)
+	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.GetLevelRewardScRsp, rsp)
 }

@@ -143,6 +143,8 @@ func (g *GamePlayer) RaidReward(conf *gdconf.RaidConfig) {
 	switch conf.Type {
 	case constant.RaidConfigTypeEquilibriumTrial:
 		g.AddWorldLevel(1)
+	case constant.RaidConfigTypeActivityRaidCollection:
+
 	}
 	g.AllPlayerSyncScNotify(allSync)
 }

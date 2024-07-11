@@ -1,6 +1,8 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/constant"
+	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -42,10 +44,26 @@ func (g *GamePlayer) LeaveRaidCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.LeaveRaidCsReq, payloadMsg)
 	req := msg.(*proto.LeaveRaidCsReq)
 	rsp := &proto.LeaveRaidScRsp{}
+	db := g.GetCurRaidInfo()
 	g.NewRaidInfo(req.RaidId) // 重置
+	var teleportToAnchor = true
 	// 设置状态
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)
-	// 回到之前的位置
-	g.SceneByServerScNotify(g.GetCurEntryId(), g.GetPosPb(), g.GetRotPb())
+	conf := gdconf.GetRaidConfig(db.RaidId, db.HardLevel)
+	if conf == nil {
+		g.Send(cmd.LeaveRaidScRsp, rsp)
+		return
+	}
+	switch conf.Type {
+	case constant.RaidConfigTypeMission:
+		teleportToAnchor = false
+	case constant.RaidConfigTypeSaveMission:
+		teleportToAnchor = false
+	}
+	if teleportToAnchor {
+		// 回到之前的位置
+		g.SceneByServerScNotify(g.GetCurEntryId(), g.GetPosPb(), g.GetRotPb())
+	}
+
 	g.Send(cmd.LeaveRaidScRsp, rsp)
 }
