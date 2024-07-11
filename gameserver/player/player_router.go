@@ -66,7 +66,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartCocoonStageCsReq:    g.StartCocoonStageCsReq,    // 副本/周本等
 		cmd.ActivateFarmElementCsReq: g.ActivateFarmElementCsReq, // 虚影战斗
 		cmd.SceneEnterStageCsReq:     g.SceneEnterStageCsReq,     // 场景直接发起战斗
+		cmd.GetRaidInfoCsReq:         g.GetRaidInfoCsReq,         // 获取raid
 		cmd.StartRaidCsReq:           g.StartRaidCsReq,           // 拓境探游
+		cmd.LeaveRaidCsReq:           g.LeaveRaidCsReq,           // 退出拓境探游
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期
@@ -130,16 +132,16 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
 		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
 		// 任务
-		cmd.GetDailyActiveInfoCsReq: g.GetDailyActiveInfoCsReq, // 每日实训
-		// cmd.GetMainMissionCustomValueCsReq:g.GetMainMissionCustomValueCsReq,
-		cmd.GetMissionEventDataCsReq:     g.GetMissionEventDataCsReq,
-		cmd.GetMissionStatusCsReq:        g.HandleGetMissionStatusCsReq,  // 获取任务状态
-		cmd.GetMissionDataCsReq:          g.GetMissionDataCsReq,          // 获取任务数据
-		cmd.FinishTalkMissionCsReq:       g.FinishTalkMissionCsReq,       // 完成任务
-		cmd.FinishCosumeItemMissionCsReq: g.FinishCosumeItemMissionCsReq, // 完成道具提交任务
-		cmd.GetVideoVersionKeyCsReq:      g.GetVideoVersionKeyCsReq,      // 获取key
-		cmd.GetSecretKeyInfoCsReq:        g.GetSecretKeyInfoCsReq,        // key
-		cmd.FinishItemIdCsReq:            g.FinishItemIdCsReq,            // 对话选项
+		cmd.GetDailyActiveInfoCsReq:        g.GetDailyActiveInfoCsReq, // 每日实训
+		cmd.GetMainMissionCustomValueCsReq: g.GetMainMissionCustomValueCsReq,
+		cmd.GetMissionEventDataCsReq:       g.GetMissionEventDataCsReq,
+		cmd.GetMissionStatusCsReq:          g.HandleGetMissionStatusCsReq,  // 获取任务状态
+		cmd.GetMissionDataCsReq:            g.GetMissionDataCsReq,          // 获取任务数据
+		cmd.FinishTalkMissionCsReq:         g.FinishTalkMissionCsReq,       // 完成任务
+		cmd.FinishCosumeItemMissionCsReq:   g.FinishCosumeItemMissionCsReq, // 完成道具提交任务
+		cmd.GetVideoVersionKeyCsReq:        g.GetVideoVersionKeyCsReq,      // 获取key
+		cmd.GetSecretKeyInfoCsReq:          g.GetSecretKeyInfoCsReq,        // key
+		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,            // 对话选项
 		// 活动
 		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
@@ -149,27 +151,28 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.TakeLoginActivityRewardCsReq:   g.TakeLoginActivityRewardCsReq,         // 领取登录活动奖励
 		cmd.TakeTrialActivityRewardCsReq:   g.TakeTrialActivityRewardCsReq,         // 角色试用奖励领取
 		// 基础
-		cmd.SetClientPausedCsReq:         g.SetClientPausedCsReq,          // 客户端暂停请求
-		cmd.SyncClientResVersionCsReq:    g.SyncClientResVersionCsReq,     // 版本同步
-		cmd.GetAssistHistoryCsReq:        g.HandleGetAssistHistoryCsReq,   // 漫游签证
-		cmd.SetHeadIconCsReq:             g.SetHeadIconCsReq,              // 切换头像
-		cmd.SetHeroBasicTypeCsReq:        g.SetHeroBasicTypeCsReq,         // 切换主角类型
-		cmd.SetNicknameCsReq:             g.SetNicknameCsReq,              // 修改昵称请求
-		cmd.SetGameplayBirthdayCsReq:     g.SetGameplayBirthdayCsReq,      // 修改生日请求
-		cmd.SetSignatureCsReq:            g.SetSignatureCsReq,             // 简介修改请求
-		cmd.GetPlayerBoardDataCsReq:      g.HandleGetPlayerBoardDataCsReq, // 获取角色名片页信息
-		cmd.GetFarmStageGachaInfoCsReq:   g.GetFarmStageGachaInfoCsReq,    // 获取怪物刷新情况
-		cmd.GetTutorialCsReq:             g.GetTutorialCsReq,              // 获取新手教程状态
-		cmd.GetTutorialGuideCsReq:        g.GetTutorialGuideCsReq,         // 获取教程指南
-		cmd.UnlockTutorialCsReq:          g.UnlockTutorialCsReq,           // 教程解锁
-		cmd.UnlockTutorialGuideCsReq:     g.UnlockTutorialGuideCsReq,      // 解锁指南
-		cmd.FinishTutorialCsReq:          g.FinishTutorialCsReq,           // 完成教程
-		cmd.FinishTutorialGuideCsReq:     g.FinishTutorialGuideCsReq,      // 完成指南
-		cmd.SetPlayerInfoCsReq:           g.SetPlayerInfoCsReq,            // 新手设置名字
-		cmd.PlayerHeartBeatCsReq:         g.HandlePlayerHeartBeatCsReq,    // 玩家ping包
-		cmd.GetSpringRecoverDataCsReq:    g.GetSpringRecoverDataCsReq,     // 恢复
-		cmd.GetLevelRewardTakenListCsReq: g.GetLevelRewardTakenListCsReq,  // 等级奖励领取情况
-		cmd.GetLevelRewardCsReq:          g.GetLevelRewardCsReq,           // 领取等级奖励
+		cmd.SetClientPausedCsReq:           g.SetClientPausedCsReq,           // 客户端暂停请求
+		cmd.SyncClientResVersionCsReq:      g.SyncClientResVersionCsReq,      // 版本同步
+		cmd.GetAssistHistoryCsReq:          g.HandleGetAssistHistoryCsReq,    // 漫游签证
+		cmd.SetHeadIconCsReq:               g.SetHeadIconCsReq,               // 切换头像
+		cmd.SetHeroBasicTypeCsReq:          g.SetHeroBasicTypeCsReq,          // 切换主角类型
+		cmd.SetNicknameCsReq:               g.SetNicknameCsReq,               // 修改昵称请求
+		cmd.SetGameplayBirthdayCsReq:       g.SetGameplayBirthdayCsReq,       // 修改生日请求
+		cmd.SetSignatureCsReq:              g.SetSignatureCsReq,              // 简介修改请求
+		cmd.GetPlayerBoardDataCsReq:        g.HandleGetPlayerBoardDataCsReq,  // 获取角色名片页信息
+		cmd.GetFarmStageGachaInfoCsReq:     g.GetFarmStageGachaInfoCsReq,     // 获取怪物刷新情况
+		cmd.GetTutorialCsReq:               g.GetTutorialCsReq,               // 获取新手教程状态
+		cmd.GetTutorialGuideCsReq:          g.GetTutorialGuideCsReq,          // 获取教程指南
+		cmd.UnlockTutorialCsReq:            g.UnlockTutorialCsReq,            // 教程解锁
+		cmd.UnlockTutorialGuideCsReq:       g.UnlockTutorialGuideCsReq,       // 解锁指南
+		cmd.FinishTutorialCsReq:            g.FinishTutorialCsReq,            // 完成教程
+		cmd.FinishTutorialGuideCsReq:       g.FinishTutorialGuideCsReq,       // 完成指南
+		cmd.SetPlayerInfoCsReq:             g.SetPlayerInfoCsReq,             // 新手设置名字
+		cmd.PlayerHeartBeatCsReq:           g.HandlePlayerHeartBeatCsReq,     // 玩家ping包
+		cmd.GetSpringRecoverDataCsReq:      g.GetSpringRecoverDataCsReq,      // 恢复
+		cmd.GetLevelRewardTakenListCsReq:   g.GetLevelRewardTakenListCsReq,   // 等级奖励领取情况
+		cmd.GetLevelRewardCsReq:            g.GetLevelRewardCsReq,            // 领取等级奖励
+		cmd.SpringRecoverSingleAvatarCsReq: g.SpringRecoverSingleAvatarCsReq, // 回血锚点
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集

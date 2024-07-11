@@ -153,6 +153,10 @@ func (g *GamePlayer) GetWorldLevel() uint32 {
 	return db.WorldLevel
 }
 
+func (g *GamePlayer) AddWorldLevel(num uint32) {
+	g.SetWorldLevel(g.GetWorldLevel() + num)
+}
+
 func (g *GamePlayer) SetWorldLevel(worldLevel uint32) {
 	if worldLevel < 0 || worldLevel > 6 {
 		return

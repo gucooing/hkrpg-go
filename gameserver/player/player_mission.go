@@ -51,6 +51,31 @@ func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg []byte) {
 
 /*******************任务****************/
 
+func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetMainMissionCustomValueCsReq, payloadMsg)
+	req := msg.(*proto.GetMainMissionCustomValueCsReq)
+	rsp := &proto.GetMainMissionCustomValueScRsp{MissionDataList: make([]*proto.MissionData, 0)}
+	mainMissionList := g.GetMainMissionList()             // 已接取的主任务
+	finishMainMissionList := g.GetFinishMainMissionList() // 已完成的主任务
+	for _, id := range req.MainMissionIdList {
+		if mainMissionList[id] != nil {
+			rsp.MissionDataList = append(rsp.MissionDataList, &proto.MissionData{
+				Id:              id,
+				CustomValueList: nil,
+				Status:          proto.MissionStatus(mainMissionList[id].Status),
+			})
+		}
+		if finishMainMissionList[id] != nil {
+			rsp.MissionDataList = append(rsp.MissionDataList, &proto.MissionData{
+				Id:              id,
+				CustomValueList: nil,
+				Status:          proto.MissionStatus(finishMainMissionList[id].Status),
+			})
+		}
+	}
+	g.Send(cmd.GetMainMissionCustomValueScRsp, rsp)
+}
+
 func (g *GamePlayer) MissionAcceptScNotify() {
 	notify := &proto.MissionAcceptScNotify{
 		SubMissionIdList: make([]uint32, 0),
@@ -163,7 +188,7 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg []byte) {
 func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.FinishTalkMissionCsReq, payloadMsg)
 	req := msg.(*proto.FinishTalkMissionCsReq)
-	g.TalkStrSubMission(req.TalkStr) // 获取子任务
+	g.TalkStrSubMission(req) // 获取子任务
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr})
 }
 

@@ -15,6 +15,7 @@ const (
 	Rogue         = 3  // 第一个模拟宇宙队伍
 	RogueTourn    = 4  // 差分宇宙
 	Activity      = 5  // 角色试用队伍
+	Raid          = 6  // 副本队伍
 )
 
 func NewLineUp() *spb.LineUp {
@@ -212,6 +213,16 @@ func (g *GamePlayer) UnDbLineUp(index uint32, Slot uint32, avatarId uint32) {
 	db.LeaderSlot = Slot
 }
 
+// 队伍更新
+func (g *GamePlayer) UnDbAvatarLineUp(db *spb.Line, avatarId, newAvatarId uint32) {
+	for _, info := range db.AvatarIdList {
+		if info.AvatarId == avatarId {
+			info.AvatarId = newAvatarId
+		}
+	}
+	g.SyncLineupNotify(db)
+}
+
 // 交换角色
 func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
 	db := g.GetLineUpById(index)
@@ -238,6 +249,8 @@ func (g *GamePlayer) GetBattleLineUp() *spb.Line {
 		return g.GetBattleLineUpById(RogueTourn)
 	case spb.BattleType_Battle_TrialActivity:
 		return g.GetBattleLineUpById(Activity)
+	case spb.BattleType_Battle_RAID:
+		return g.GetBattleLineUpById(Raid)
 	default:
 		return g.GetCurLineUp()
 	}
@@ -274,7 +287,6 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 		}
 	}
 	var lineUpType spb.ExtraLineupType
-	var avatarType spb.LineAvatarType
 	switch index {
 	case Challenge_1:
 		lineUpType = spb.ExtraLineupType_LINEUP_CHALLENGE
@@ -286,7 +298,6 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 		lineUpType = spb.ExtraLineupType_LINEUP_TOURN_ROGUE
 	case Activity:
 		lineUpType = spb.ExtraLineupType_LINEUP_STAGE_TRIAL
-		avatarType = spb.LineAvatarType_LineAvatarType_TRIAL
 	}
 	db := g.GetBattleLineUpById(index)
 	db.LeaderSlot = 0
@@ -294,7 +305,7 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
 	var id uint32 = 0
 	for _, avatarId := range avatarList {
-		if g.SpecialMainAvatar(avatarId) {
+		if ok, avatarType := g.SpecialMainAvatar(avatarId); ok {
 			db.AvatarIdList[id] = &spb.LineAvatarList{AvatarId: avatarId, Slot: id, LineAvatarType: avatarType}
 			id++
 		}
@@ -307,25 +318,25 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 	g.SyncLineupNotify(db)
 }
 
-func (g *GamePlayer) SpecialMainAvatar(trialAvatarId uint32) bool {
+func (g *GamePlayer) SpecialMainAvatar(trialAvatarId uint32) (bool, spb.LineAvatarType) {
 	conf := gdconf.GetSpecialAvatarById(trialAvatarId)
 	if conf == nil {
-		return true
+		return true, spb.LineAvatarType_LineAvatarType_MI
 	}
 	avatarDb := g.GetAvatar()
 	if conf.AvatarID/1000 == 8 {
 		switch avatarDb.Gender {
 		case spb.Gender_GenderMan:
 			if conf.AvatarID%2 == 0 {
-				return false
+				return false, spb.LineAvatarType_LineAvatarType_TRIAL
 			}
 		case spb.Gender_GenderWoman:
 			if conf.AvatarID%2 != 0 {
-				return false
+				return false, spb.LineAvatarType_LineAvatarType_TRIAL
 			}
 		}
 	}
-	return true
+	return true, spb.LineAvatarType_LineAvatarType_TRIAL
 }
 
 /*****************************************功能方法****************************/

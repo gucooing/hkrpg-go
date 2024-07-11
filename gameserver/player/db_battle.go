@@ -146,6 +146,7 @@ func NewBattle() *spb.Battle {
 		BattleType: 0,
 		Rogue:      nil,
 		Challenge:  nil,
+		Rain:       nil,
 	}
 }
 

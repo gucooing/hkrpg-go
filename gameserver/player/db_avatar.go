@@ -3,6 +3,7 @@ package player
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -137,7 +138,7 @@ func (g *GamePlayer) AddAvatar(avatarId uint32, src proto.AddAvatarSrcState) {
 	})
 }
 
-// 添加命途
+// AddMultiPathAvatar 添加命途
 func (g *GamePlayer) AddMultiPathAvatar(avatarId uint32) {
 	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
 	if patchConf == nil {
@@ -313,6 +314,55 @@ func (g *GamePlayer) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
 		return g.GetRelicById(v.EquipRelic[slot])
 	}
 	return nil
+}
+
+func (g *GamePlayer) AvatarRecover(avatarId uint32) {
+	db := g.GetAvatarById(avatarId)
+	if db != nil {
+		db.Hp = 10000
+	}
+}
+
+func (g *GamePlayer) CheckUnlockMultiPath() {
+	finishMainMissionList := g.GetFinishMainMissionList()   // 已完成的主任务
+	finishSubMissionList := g.GetFinishSubMainMissionList() // 已完成的子任务
+	allSync := &AllPlayerSync{AvatarList: make([]uint32, 0)}
+	for _, info := range gdconf.GetMultiplePathAvatarConfigMap() {
+		if info.UnlockConditions == nil {
+			continue
+		}
+		db := g.GetAvatarById(info.AvatarID)
+		if db == nil {
+			continue
+		}
+		if db.MultiPathAvatarInfoList[info.AvatarID] != nil {
+			continue
+		}
+		var isUnlock = false
+		for _, unlockInfo := range info.UnlockConditions {
+			switch unlockInfo.Type {
+			case "FinishMainMission":
+				if finishMainMissionList[alg.S2U32(unlockInfo.Param)] != nil {
+					isUnlock = true
+				} else {
+					isUnlock = false
+					break
+				}
+			case "FinishSubMission":
+				if finishSubMissionList[alg.S2U32(unlockInfo.Param)] != nil {
+					isUnlock = true
+				} else {
+					isUnlock = false
+					break
+				}
+			}
+		}
+		if isUnlock {
+			allSync.AvatarList = append(allSync.AvatarList, info.BaseAvatarID)
+			g.AddMultiPathAvatar(info.AvatarID)
+		}
+	}
+	g.AllPlayerSyncScNotify(allSync)
 }
 
 /****************************************************功能***************************************************/

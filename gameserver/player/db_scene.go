@@ -506,24 +506,28 @@ func (g *GamePlayer) GetAllBlockMap() map[uint32]*spb.BlockBin {
 
 // 从db拉取地图数据
 func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
+	newEntryId := entryId
 	if entryId >= 10000000 {
-		entryId = alg.S2U32(strconv.Itoa(int(entryId))[:7])
+		newEntryId = alg.S2U32(strconv.Itoa(int(entryId))[:7])
+	}
+	if mapEntrance := gdconf.GetMapEntranceById(newEntryId); mapEntrance == nil {
+		newEntryId = entryId
 	}
 	on := g.GetOnlineData()
 	db := g.GetBlockMap()
 	on.blockMapLock.Lock()
 	defer on.blockMapLock.Unlock()
-	if db[entryId] == nil {
-		bin := database.GetBlockData(g.DB, g.Uid, entryId)
+	if db[newEntryId] == nil {
+		bin := database.GetBlockData(g.DB, g.Uid, newEntryId)
 		block := new(spb.BlockBin)
 		if err := pb.Unmarshal(bin.BinData, block); err != nil {
-			logger.Debug("entryId:%v,block error", entryId)
+			logger.Debug("entryId:%v,block error", newEntryId)
 		}
-		db[entryId] = block
+		db[newEntryId] = block
 	}
 
-	db[entryId].EntryId = entryId
-	return db[entryId]
+	db[newEntryId].EntryId = newEntryId
+	return db[newEntryId]
 }
 
 // 更新地图数据到数据库
@@ -532,13 +536,16 @@ func (g *GamePlayer) UpdateBlock(block *spb.BlockBin) {
 	if err != nil {
 		return
 	}
-	entryId := block.EntryId
-	if entryId >= 10000000 {
-		entryId = alg.S2U32(strconv.Itoa(int(entryId))[:7])
+	newEntryId := block.EntryId
+	if block.EntryId >= 10000000 {
+		newEntryId = alg.S2U32(strconv.Itoa(int(block.EntryId))[:7])
+	}
+	if mapEntrance := gdconf.GetMapEntranceById(newEntryId); mapEntrance == nil {
+		newEntryId = block.EntryId
 	}
 	blockData := &database.BlockData{
 		Uid:         g.Uid,
-		EntryId:     entryId,
+		EntryId:     newEntryId,
 		DataVersion: 0, // TODO
 		BinData:     bin,
 	}
@@ -636,6 +643,18 @@ func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 			}
 		}
 	}
+}
+
+func floorTentry(floorID uint32) uint32 {
+	if floorID < 10000000 {
+		return 1000001
+	}
+	st := strconv.Itoa(int(floorID))
+	entryId := alg.S2U32(st[:6] + st[7:8])
+	if mapEntrance := gdconf.GetMapEntranceById(entryId); mapEntrance == nil {
+		return floorID
+	}
+	return entryId
 }
 
 /****************************************************功能***************************************************/

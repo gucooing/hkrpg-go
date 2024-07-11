@@ -224,6 +224,8 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 		logger.Warn("不存在此gameserver")
 		return
 	}
+	// 结束定时器
+	player.closeStop()
 	// 删除登录玩家
 	gs.gate.delLoginPlayerByUid(rsp.Uid)
 	// 将玩家添加到已登录玩家列表
@@ -241,8 +243,6 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 
 	player.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 	player.GateToPlayer(cmd.PlayerGetTokenScRsp, prsp)
-	// 结束定时器
-	player.closeStop()
 	// 删除登录锁
 	gs.gate.Store.DistUnlock(strconv.Itoa(int(player.AccountId)))
 	logger.Info("[AccountId:%v][UID:%v]登录gate", player.AccountId, player.Uid)

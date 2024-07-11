@@ -31,6 +31,10 @@ func (g *GameDataConfig) loadMultiplePathAvatarConfig() {
 	logger.Info("load %v MultiplePathAvatarConfig", len(g.MultiplePathAvatarConfigMap))
 }
 
+func GetMultiplePathAvatarConfigMap() map[uint32]*MultiplePathAvatarConfig {
+	return CONF.MultiplePathAvatarConfigMap
+}
+
 func GetMultiplePathAvatarConfig(avatarID uint32) *MultiplePathAvatarConfig {
 	return CONF.MultiplePathAvatarConfigMap[avatarID]
 }

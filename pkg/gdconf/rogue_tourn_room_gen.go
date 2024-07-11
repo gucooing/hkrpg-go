@@ -60,7 +60,7 @@ func (g *GameDataConfig) loadRogueTournRoomGen() {
 			g.RogueTournRoom.RogueTournRoomGenByType[room.RogueRoomType], room,
 		)
 	}
-	logger.Info("load %v RogueTournRoomGen", len(g.BannersMap))
+	logger.Info("load %v RogueTournRoomGen", len(g.RogueTournRoom.RogueTournRoomGenMap))
 }
 
 func GetRogueTournRoomGenById(id uint32) *RogueTournRoomGen {

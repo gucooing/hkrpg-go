@@ -196,18 +196,21 @@ var triggerMissions = map[uint32]uint32{
 }
 
 // 客户端告知任务完成
-func (g *GamePlayer) TalkStrSubMission(talkStr string) {
+func (g *GamePlayer) TalkStrSubMission(req *proto.FinishTalkMissionCsReq) {
 	finishSubMission := make([]uint32, 0)
 	for id := range g.GetSubMainMissionList() {
 		conf := gdconf.GetSubMainMissionById(id)
 		if conf == nil {
 			continue
 		}
-		if conf.ParamStr1 == talkStr {
+		if conf.ParamStr1 == req.TalkStr {
 			if anotherId := triggerMissions[id]; anotherId != 0 {
 				finishSubMission = append(finishSubMission, anotherId)
 			}
 			finishSubMission = append(finishSubMission, id)
+			if req.CustomValueList != nil {
+				// TODO
+			}
 		}
 	}
 	if len(finishSubMission) != 0 {
@@ -422,7 +425,9 @@ func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 		g.AllPlayerSyncScNotify(allSync)
 		g.InspectMission(nil)
 	}
-	g.AutoEntryGroup() // 检查场景卸加载
+	g.AutoEntryGroup()       // 检查场景卸加载
+	g.CheckUnlockMultiPath() // 命途解锁检查
+	g.CheckRaid()            // raid完成检查
 }
 
 func (g *GamePlayer) AcceptInspectMission() ([]uint32, []uint32) {
@@ -524,20 +529,32 @@ func (g *GamePlayer) AddMainMission(acceptMainList []uint32) {
 		return
 	}
 	mainMissionList := g.GetMainMissionList()
-	finishMainMissionList := g.GetFinishMainMissionList()
 	for _, id := range acceptMainList {
-		if mainMissionList[id] == nil ||
-			finishMainMissionList[id] == nil {
-			mainMissionList[id] = &spb.MissionInfo{
-				MissionId: id,
-				Progress:  0,
-				Status:    spb.MissionStatus_MISSION_DOING,
+		g.DelMainMission([]uint32{id}) // 重复添加时删除旧任务
+		mainMissionList[id] = &spb.MissionInfo{
+			MissionId: id,
+			Progress:  0,
+			Status:    spb.MissionStatus_MISSION_DOING,
+		}
+		// 特殊任务处理
+		if id == 1000300 {
+			g.AddAvatar(1003, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
+			g.GetTrialAvatar(1003)
+		}
+		if id == 1011402 {
+			var mainAvatarId uint32 = 1008003
+			if g.GetAvatar().Gender == spb.Gender_GenderWoman {
+				mainAvatarId = 1008004
 			}
-			// 特殊任务处理
-			if id == 1000300 {
-				g.AddAvatar(1003, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
-				g.GetTrialAvatar(1003)
+			avatarList := make([]uint32, 0)
+			for _, info := range g.GetBattleLineUp().AvatarIdList {
+				avatarId := info.AvatarId
+				if avatarId == 8001 {
+					avatarId = mainAvatarId
+				}
+				avatarList = append(avatarList, avatarId)
 			}
+			g.SetBattleLineUp(Raid, avatarList)
 		}
 	}
 }
@@ -625,6 +642,35 @@ func (g *GamePlayer) AddFinishSubMission(finishSubList []uint32) {
 		}
 		g.Send(cmd.StartFinishSubMissionScNotify,
 			&proto.StartFinishSubMissionScNotify{SubMissionId: subId})
+	}
+}
+
+func (g *GamePlayer) DelMainMission(mainMissionIDList []uint32) {
+	mainMissionList := g.GetMainMissionList()
+	finishMainMissionList := g.GetFinishMainMissionList()
+	for _, mainId := range mainMissionIDList {
+		if mainMissionList[mainId] != nil {
+			delete(mainMissionList, mainId)
+		}
+		if finishMainMissionList[mainId] != nil {
+			delete(finishMainMissionList, mainId)
+		}
+		if conf := gdconf.GetGoppMainMissionById(mainId); conf != nil {
+			for _, info := range conf.SubMissionList {
+				g.DelSubMission(info.ID)
+			}
+		}
+	}
+}
+
+func (g *GamePlayer) DelSubMission(subId uint32) {
+	subMissionList := g.GetSubMainMissionList()
+	finishSubMissionList := g.GetFinishSubMainMissionList()
+	if subMissionList[subId] != nil {
+		delete(subMissionList, subId)
+	}
+	if finishSubMissionList[subId] != nil {
+		delete(finishSubMissionList, subId)
 	}
 }
 
@@ -745,6 +791,10 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 			break
 		case constant.EnterFloor: // 传送
 			ifFinish = g.MissionEnterFloor(id)
+			break
+		case constant.EnterRaidScene: // raid传送
+			g.RaidEnterSceneByServerScNotify(conf.ParamInt2)
+			ifFinish = true
 			break
 		case constant.SubMissionFinishCnt: // 完成列表中的子任务即可
 			finish, progress := g.SubMissionFinishCnt(id)

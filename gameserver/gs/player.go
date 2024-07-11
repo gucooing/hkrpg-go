@@ -68,8 +68,8 @@ func (s *GameServer) getAllPlayer() map[uint32]*GamePlayer {
 	players := make(map[uint32]*GamePlayer)
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
-	for uuid, play := range s.playerMap {
-		players[uuid] = play
+	for uid, play := range s.playerMap {
+		players[uid] = play
 	}
 	return players
 }

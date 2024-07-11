@@ -153,11 +153,11 @@ func (p *PlayerGame) PlayerLogoutCsReq(tcpMsg *alg.PackMsg) {
 
 // 玩家超时离线
 func (s *GateServer) AutoDelPlayer() {
-	ticker := time.NewTicker(time.Second * 120)
+	ticker := time.NewTicker(time.Second * 30)
 	for {
 		<-ticker.C
 		for _, play := range s.getAllPlayer() {
-			if getCurTime()-play.LastActiveTime > 300000 {
+			if getCurTime()-play.LastActiveTime > 10000 {
 				switch play.Status {
 				case spb.PlayerStatus_PlayerStatus_PostLogin:
 					s.ttiPlayerKill(play, spb.Retcode_RET_PLAYER_TIMEOUT)

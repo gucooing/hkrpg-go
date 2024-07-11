@@ -180,6 +180,7 @@ message Battle {// 战斗
   Rogue rogue = 2; // 期数-情况
   Challenge challenge = 3; // 忘却之庭
   RogueTourn rogue_tourn = 4; // 差分宇宙
+  Raid rain = 5;// 副本
 }
 
 message Rogue {
@@ -286,6 +287,22 @@ message CurChallenge {// 正在进行的忘却之庭信息
   bool is_boos = 15;// 是否末日之影
 }
 
+message Raid {
+  uint32 cur_raid_id = 1;//当前关卡
+  map<uint32,RaidInfo> raid_map = 2;// 关卡列表
+  map<uint32,RaidInfo> finish_raid_map = 3;// 已完成的关卡列表
+}
+
+message RaidInfo {
+  uint32 raid_id = 1;//关卡id
+  uint32 hard_level = 2;// 难度
+  uint32 entry_id = 3; // 场景
+  RaidStatus status = 4;//状态
+  VectorBin pos = 5; // 坐标
+  VectorBin rot = 6; // 朝向
+  uint64 finish_time = 7;// 完成时间
+}
+
 message Gacha {
   map<uint32, GachaNum> gacha_map = 1;// [GachaType]*CeilingNum
 }
@@ -330,9 +347,9 @@ message Mission {// 任务
 
 message MainMission{// 主线任务
   map<uint32, MissionInfo> main_mission_list = 1; // 主任务
-  map<uint32, MissionInfo> sub_mission_list = 2;//子任务
+  map<uint32, MissionInfo> sub_mission_list = 2;// 子任务
   map<uint32, MissionInfo> finish_main_mission_list = 3;// 已完成的主任务
-  map<uint32, MissionInfo> finish_sub_mission_list = 4;//已完成支任务
+  map<uint32, MissionInfo> finish_sub_mission_list = 4;// 已完成子任务
 }
 
 message MissionInfo{

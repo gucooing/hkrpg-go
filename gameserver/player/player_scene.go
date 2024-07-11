@@ -293,6 +293,21 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 
+func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SpringRecoverSingleAvatarCsReq, payloadMsg)
+	req := msg.(*proto.SpringRecoverSingleAvatarCsReq)
+	g.AvatarRecover(req.Id)
+
+	rsp := &proto.SpringRecoverSingleAvatarScRsp{
+		Hp:         10000,
+		Retcode:    0,
+		AvatarType: req.AvatarType,
+		Id:         req.Id,
+	}
+	g.SyncLineupNotify(g.GetBattleLineUp())
+	g.Send(cmd.SpringRecoverSingleAvatarScRsp, rsp)
+}
+
 // 更新实体状态
 func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db *spb.BlockBin) {
 	notify := &proto.SceneGroupRefreshScNotify{
