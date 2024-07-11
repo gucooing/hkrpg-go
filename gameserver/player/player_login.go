@@ -74,7 +74,7 @@ func (g *GamePlayer) LoginNotify() {
 	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
 	g.Send(cmd.SyncTurnFoodNotify, &proto.SyncTurnFoodNotify{})
 	g.StaminaInfoScNotify()
-	g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{OMLECGGPKAB: []*proto.DailyTask{{MainMissionId: 3020104}}})
+	// g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{OMLECGGPKAB: []*proto.DailyTask{{MainMissionId: 3020104}}})
 	g.DailyActiveInfoNotify()
 	g.Send(cmd.RaidInfoNotify, &proto.RaidInfoNotify{})
 	g.BattlePassInfoNotify()
@@ -120,6 +120,7 @@ func (g *GamePlayer) LoginReady() { // 登录准备工作
 	if !g.IsPE {
 		g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
 	}
+	// g.AddMainMission([]uint32{3020104})
 	g.LoginReadyMission()    // 任务检查
 	g.CheckUnlockMultiPath() // 命途解锁检查
 }

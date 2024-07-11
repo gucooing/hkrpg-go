@@ -397,8 +397,6 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, nil)
-	// TODO 主动调用
-	g.HandleGetArchiveDataCsReq(nil)
 	g.ContentPackageSyncDataScNotify()
 }
 

@@ -579,6 +579,7 @@ func (g *GamePlayer) GetPlayerHeroBasicTypeInfo() []*proto.PlayerHeroBasicTypeIn
 			BasicType:      proto.HeroBasicType(pathInfo.AvatarId),
 			EquipRelicList: make([]*proto.EquipRelic, 0),
 			Rank:           pathInfo.Rank,
+			IKLNOPEPBKL:    pathInfo.EquipmentUniqueId,
 		}
 		// 获取装备圣遗物
 		for tp, relic := range pathInfo.EquipRelic {

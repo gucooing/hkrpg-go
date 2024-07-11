@@ -891,9 +891,6 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	blockBin := g.GetBlock(entryId)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	for _, levelGroup := range foorMap {
-		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
-			continue
-		}
 		if !g.IfLoadMap(levelGroup) {
 			g.AddNoLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 			continue
@@ -911,11 +908,8 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		g.GetNPCMonsterByID(entityGroupLists, levelGroup)
 		// 添加NPC实体
 		g.GetNPCByID(entityGroupLists, levelGroup)
-		if len(entityGroupLists.EntityList) != 0 {
-			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
-		}
+		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 	}
-	// g.UpdateBlock(blockBin)
 	return scene
 }
 
@@ -1279,4 +1273,22 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	}
 	scene.EntityGroupList = append(scene.EntityGroupList, monsterEntityGroup)
 	return scene
+}
+
+func (g *GamePlayer) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
+	info := &proto.SpringRecoverConfig{
+		RecoverPct:  10000,
+		AutoRecover: true,
+		// MANPHKHEFPC: nil,
+	}
+	return info
+}
+
+func (g *GamePlayer) GetHealPoolInfo() *proto.HealPoolInfo {
+	info := &proto.HealPoolInfo{
+		RefreshTime: time.Now().Unix(),
+		HealPool:    23500,
+	}
+
+	return info
 }

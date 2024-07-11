@@ -253,9 +253,6 @@ func (g *GamePlayer) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 	blockBin := g.GetBlock(entryId)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	for _, levelGroup := range foorMap {
-		if len(levelGroup.PropList) == 0 && len(levelGroup.NPCList) == 0 && len(levelGroup.MonsterList) == 0 {
-			continue
-		}
 		if !g.IfLoadMap(levelGroup) {
 			g.AddNoLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 			continue
@@ -273,10 +270,7 @@ func (g *GamePlayer) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 		g.GetNPCMonsterByID(entityGroupLists, levelGroup)
 		// 添加NPC实体
 		g.GetNPCByID(entityGroupLists, levelGroup)
-		if len(entityGroupLists.EntityList) != 0 {
-			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
-		}
+		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 	}
-	g.UpdateBlock(blockBin)
 	return scene
 }

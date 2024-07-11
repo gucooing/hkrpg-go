@@ -39,6 +39,8 @@ func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetSpringRecoverDataCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetSpringRecoverDataScRsp)
+	rsp.SpringRecoverConfig = g.GetSpringRecoverConfig()
+	rsp.HealPoolInfo = g.GetHealPoolInfo()
 	g.Send(cmd.GetSpringRecoverDataScRsp, rsp)
 }
 
