@@ -289,8 +289,18 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 	// 统一通知
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
 	g.UpInteractSubMission(blockBin)                            // 检查交互任务
-	// g.UpdateBlock(blockBin)                                     // 保存地图
 	g.Send(cmd.InteractPropScRsp, rsp)
+}
+
+func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GroupStateChangeCsReq, payloadMsg)
+	req := msg.(*proto.GroupStateChangeCsReq)
+
+	rsp := &proto.GroupStateChangeScRsp{
+		GroupStateInfo: req.GroupStateInfo,
+		Retcode:        0,
+	}
+	g.Send(cmd.GroupStateChangeScRsp, rsp)
 }
 
 func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg []byte) {

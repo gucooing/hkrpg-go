@@ -469,3 +469,33 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg []byte) {
 	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.GetLevelRewardScRsp, rsp)
 }
+
+func (g *GamePlayer) TakeBpRewardCsReq(payloadMsg []byte) {
+	// msg := g.DecodePayloadToProto(cmd.TakeBpRewardCsReq, payloadMsg)
+	// req := msg.(*proto.TakeBpRewardCsReq)
+
+	rsp := &proto.TakeBpRewardScRsp{
+		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: Hcoin, Num: 1000}}},
+		Retcode: 0,
+	}
+	g.AddItem([]*Material{{Tid: Hcoin, Num: 1000}})
+	g.AllPlayerSyncScNotify(&AllPlayerSync{IsBasic: true})
+	g.Send(cmd.TakeBpRewardScRsp, rsp)
+}
+
+func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg []byte) {
+	allSync := &AllPlayerSync{
+		IsBasic:       true,
+		AvatarList:    make([]uint32, 0),
+		MaterialList:  make([]uint32, 0),
+		EquipmentList: make([]uint32, 0),
+		RelicList:     make([]uint32, 0),
+	}
+	g.AllGive(allSync)
+	rsp := &proto.TakeAllRewardScRsp{
+		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: Mcoin, Num: 1000}}},
+		Retcode: 0,
+	}
+	g.AllPlayerSyncScNotify(allSync)
+	g.Send(cmd.TakeAllRewardScRsp, rsp)
+}

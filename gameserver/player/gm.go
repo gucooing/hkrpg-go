@@ -17,58 +17,9 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		EquipmentList: make([]uint32, 0),
 		RelicList:     make([]uint32, 0),
 	}
-	itemConf := gdconf.GetItemConfigMap()
-	avatarConf := gdconf.GetAvatarDataMap()
+
 	if req.GiveAll {
-		var pileItem []*Material
-		// add avatar
-		for _, avatar := range avatarConf {
-			x := avatar.AvatarId / 1000
-			if x != 1 && x != 8 {
-				continue
-			}
-			allSync.AvatarList = append(allSync.AvatarList, avatar.AvatarId)
-			g.AddAvatar(avatar.AvatarId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
-		}
-		// add playerIcon
-		var playerIconList []uint32
-		for _, playerIcon := range itemConf.AvatarPlayerIcon {
-			playerIconList = append(playerIconList, playerIcon.ID)
-		}
-		g.GetItem().HeadIcon = playerIconList
-		// add rank
-		for _, rank := range itemConf.AvatarRank {
-			allSync.MaterialList = append(allSync.MaterialList, rank.ID)
-			pileItem = append(pileItem, &Material{
-				Tid: rank.ID,
-				Num: 6,
-			})
-		}
-		// add equipment
-		for _, equipment := range itemConf.Equipment {
-			uniqueId := g.AddEquipment(equipment.ID)
-			allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
-		}
-		// add item
-		for _, item := range itemConf.Item {
-			allSync.MaterialList = append(allSync.MaterialList, item.ID)
-			pileItem = append(pileItem, &Material{
-				Tid: item.ID,
-				Num: 99999,
-			})
-		}
-		// add relic
-		for _, relic := range itemConf.Relic {
-			uniqueId := g.AddRelic(relic.ID)
-			allSync.RelicList = append(allSync.RelicList, uniqueId)
-		}
-		// add bt relic
-		for _, relic := range itemConf.Relic {
-			uniqueId := g.AddBtRelic(relic.ID)
-			allSync.RelicList = append(allSync.RelicList, uniqueId)
-		}
-		g.AddMaterial(pileItem)
-		// g.ScenePlaneEventScNotify(pileItem)
+		g.AllGive(allSync)
 	} else {
 		allSync.MaterialList = append(allSync.MaterialList, req.ItemId)
 		g.AddItem([]*Material{{
@@ -78,6 +29,59 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 	}
 	// 同步通知
 	g.AllPlayerSyncScNotify(allSync)
+}
+
+func (g *GamePlayer) AllGive(allSync *AllPlayerSync) {
+	var pileItem []*Material
+	itemConf := gdconf.GetItemConfigMap()
+	avatarConf := gdconf.GetAvatarDataMap()
+	// add avatar
+	for _, avatar := range avatarConf {
+		x := avatar.AvatarId / 1000
+		if x != 1 && x != 8 {
+			continue
+		}
+		allSync.AvatarList = append(allSync.AvatarList, avatar.AvatarId)
+		g.AddAvatar(avatar.AvatarId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
+	}
+	// add playerIcon
+	var playerIconList []uint32
+	for _, playerIcon := range itemConf.AvatarPlayerIcon {
+		playerIconList = append(playerIconList, playerIcon.ID)
+	}
+	g.GetItem().HeadIcon = playerIconList
+	// add rank
+	for _, rank := range itemConf.AvatarRank {
+		allSync.MaterialList = append(allSync.MaterialList, rank.ID)
+		pileItem = append(pileItem, &Material{
+			Tid: rank.ID,
+			Num: 6,
+		})
+	}
+	// add equipment
+	for _, equipment := range itemConf.Equipment {
+		uniqueId := g.AddEquipment(equipment.ID)
+		allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
+	}
+	// add item
+	for _, item := range itemConf.Item {
+		allSync.MaterialList = append(allSync.MaterialList, item.ID)
+		pileItem = append(pileItem, &Material{
+			Tid: item.ID,
+			Num: 99999,
+		})
+	}
+	// add relic
+	for _, relic := range itemConf.Relic {
+		uniqueId := g.AddRelic(relic.ID)
+		allSync.RelicList = append(allSync.RelicList, uniqueId)
+	}
+	// add bt relic
+	for _, relic := range itemConf.Relic {
+		uniqueId := g.AddBtRelic(relic.ID)
+		allSync.RelicList = append(allSync.RelicList, uniqueId)
+	}
+	g.AddItem(pileItem)
 }
 
 // 设置世界等级

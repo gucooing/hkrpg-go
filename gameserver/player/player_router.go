@@ -59,7 +59,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.EnterSceneCsReq:        g.EnterSceneCsReq,            // 场景传送
 		cmd.GetUnlockTeleportCsReq: g.GetUnlockTeleportCsReq,     // 获取解锁的传送点
 		cmd.InteractPropCsReq:      g.InteractPropCsReq,          // 实体交互
-		// cmd.GroupStateChangeCsReq: // 组状态变更
+		cmd.GroupStateChangeCsReq:  g.GroupStateChangeCsReq,      // 组状态变更
 		// 战斗
 		cmd.SceneCastSkillCsReq:      g.SceneCastSkillCsReq,      // 场景开启战斗
 		cmd.PVEBattleResultCsReq:     g.PVEBattleResultCsReq,     // PVE战斗结算
@@ -173,6 +173,8 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetLevelRewardCsReq:            g.GetLevelRewardCsReq,            // 领取等级奖励
 		cmd.GetSpringRecoverDataCsReq:      g.GetSpringRecoverDataCsReq,      // 恢复
 		cmd.SpringRecoverSingleAvatarCsReq: g.SpringRecoverSingleAvatarCsReq, // 回血锚点
+		cmd.TakeBpRewardCsReq:              g.TakeBpRewardCsReq,              // 战令奖励领取
+		cmd.TakeAllRewardCsReq:             g.TakeAllRewardCsReq,             // 领取全部战令奖励
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集
