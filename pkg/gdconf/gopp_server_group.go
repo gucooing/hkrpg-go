@@ -45,29 +45,27 @@ func (g *GameDataConfig) goppServerGroup() {
 				continue
 			}
 			for groupsId, groups := range levelGroup {
-				if groups.LoadSide != "Server" ||
-					strings.Contains(groups.GroupName, "PuzzleCompass") {
-					// strings.Contains(groups.GroupName, "RaidEntrance") {
-					continue
+				if strings.Contains(groups.GroupName, ".prefab") ||
+					(groups.LoadSide == "Server" && !strings.Contains(groups.GroupName, "PuzzleCompass")) {
+					g.ServerGroupMap[planeId][floorId][groupsId] = &GoppLevelGroup{
+						GroupId:            groups.GroupId,
+						GroupName:          groups.GroupName,
+						LoadSide:           groups.LoadSide,
+						Category:           groups.Category,
+						OwnerMainMissionID: groups.OwnerMainMissionID,
+						LoadCondition:      groups.LoadCondition,
+						UnloadCondition:    groups.UnloadCondition,
+						LoadOnInitial:      groups.LoadOnInitial,
+						PropList:           nil,
+						MonsterList:        nil,
+						NPCList:            nil,
+						AnchorList:         nil,
+					}
+					g.ServerGroupMap[planeId][floorId][groupsId].PropList = LoadProp(groups)
+					g.ServerGroupMap[planeId][floorId][groupsId].MonsterList = LoadMonster(groups)
+					g.ServerGroupMap[planeId][floorId][groupsId].NPCList = LoadNpc(groups, nPCList)
+					g.ServerGroupMap[planeId][floorId][groupsId].AnchorList = LoadAnchor(groups)
 				}
-				g.ServerGroupMap[planeId][floorId][groupsId] = &GoppLevelGroup{
-					GroupId:            groups.GroupId,
-					GroupName:          groups.GroupName,
-					LoadSide:           groups.LoadSide,
-					Category:           groups.Category,
-					OwnerMainMissionID: groups.OwnerMainMissionID,
-					LoadCondition:      groups.LoadCondition,
-					UnloadCondition:    groups.UnloadCondition,
-					LoadOnInitial:      groups.LoadOnInitial,
-					PropList:           nil,
-					MonsterList:        nil,
-					NPCList:            nil,
-					AnchorList:         nil,
-				}
-				g.ServerGroupMap[planeId][floorId][groupsId].PropList = LoadProp(groups)
-				g.ServerGroupMap[planeId][floorId][groupsId].MonsterList = LoadMonster(groups)
-				g.ServerGroupMap[planeId][floorId][groupsId].NPCList = LoadNpc(groups, nPCList)
-				g.ServerGroupMap[planeId][floorId][groupsId].AnchorList = LoadAnchor(groups)
 			}
 		}
 	}

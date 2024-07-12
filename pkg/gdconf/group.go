@@ -16,7 +16,8 @@ type LevelGroup struct {
 	GroupId              uint32
 	GroupName            string                `json:"GroupName"`
 	AreaAnchorName       string                `json:"AreaAnchorName"`
-	LoadSide             string                `json:"LoadSide"`             // 负载端
+	LoadSide             string                `json:"LoadSide"` // 负载端
+	IsHoyoGroup          bool                  `json:"IsHoyoGroup"`
 	Category             string                `json:"Category"`             // 类别
 	OwnerMainMissionID   uint32                `json:"OwnerMainMissionID"`   // 主任务id
 	LoadCondition        *LoadCondition        `json:"LoadCondition"`        // 加载条件

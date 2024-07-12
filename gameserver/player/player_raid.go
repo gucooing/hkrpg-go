@@ -1,7 +1,6 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -44,20 +43,17 @@ func (g *GamePlayer) LeaveRaidCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.LeaveRaidCsReq, payloadMsg)
 	req := msg.(*proto.LeaveRaidCsReq)
 	rsp := &proto.LeaveRaidScRsp{}
-	db := g.GetCurRaidInfo()
-	g.NewRaidInfo(req.RaidId) // 重置
+	db := g.GetRaidInfo(req.RaidId)
 	var teleportToAnchor = true
 	// 设置状态
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)
 	conf := gdconf.GetRaidConfig(db.RaidId, db.HardLevel)
+	g.NewRaidInfo(req.RaidId) // 重置
 	if conf == nil {
 		g.Send(cmd.LeaveRaidScRsp, rsp)
 		return
 	}
-	switch conf.Type {
-	case constant.RaidConfigTypeMission:
-		teleportToAnchor = false
-	case constant.RaidConfigTypeSaveMission:
+	if (conf.MainMissionIDBefore != conf.MainMissionIDAfter) || conf.MainMissionIDBefore == 0 {
 		teleportToAnchor = false
 	}
 	if teleportToAnchor {

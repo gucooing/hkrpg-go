@@ -59,18 +59,36 @@ func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg []byte) {
 	finishMainMissionList := g.GetFinishMainMissionList() // 已完成的主任务
 	for _, id := range req.MainMissionIdList {
 		if mainMissionList[id] != nil {
-			rsp.MissionDataList = append(rsp.MissionDataList, &proto.MissionData{
+			mission := &proto.MissionData{
 				Id:              id,
 				CustomValueList: make([]*proto.MissionCustomValue, 0),
 				Status:          proto.MissionStatus(mainMissionList[id].Status),
-			})
+			}
+			if mainMissionList[id].MissionCustomValue != nil {
+				for _, v := range mainMissionList[id].MissionCustomValue {
+					mission.CustomValueList = append(mission.CustomValueList, &proto.MissionCustomValue{
+						CustomValue: v.CustomValue,
+						Index:       v.Index,
+					})
+				}
+			}
+			rsp.MissionDataList = append(rsp.MissionDataList, mission)
 		}
 		if finishMainMissionList[id] != nil {
-			rsp.MissionDataList = append(rsp.MissionDataList, &proto.MissionData{
+			mission := &proto.MissionData{
 				Id:              id,
-				CustomValueList: nil,
+				CustomValueList: make([]*proto.MissionCustomValue, 0),
 				Status:          proto.MissionStatus(finishMainMissionList[id].Status),
-			})
+			}
+			if finishMainMissionList[id].MissionCustomValue != nil {
+				for _, v := range finishMainMissionList[id].MissionCustomValue {
+					mission.CustomValueList = append(mission.CustomValueList, &proto.MissionCustomValue{
+						CustomValue: v.CustomValue,
+						Index:       v.Index,
+					})
+				}
+			}
+			rsp.MissionDataList = append(rsp.MissionDataList, mission)
 		}
 	}
 	g.Send(cmd.GetMainMissionCustomValueScRsp, rsp)
@@ -189,7 +207,7 @@ func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.FinishTalkMissionCsReq, payloadMsg)
 	req := msg.(*proto.FinishTalkMissionCsReq)
 	g.TalkStrSubMission(req) // 获取子任务
-	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr})
+	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr, CustomValueList: req.CustomValueList})
 }
 
 func (g *GamePlayer) FinishCosumeItemMissionCsReq(payloadMsg []byte) {

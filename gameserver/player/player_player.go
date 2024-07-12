@@ -105,6 +105,19 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 	if allSync == nil {
 		return
 	}
+	if !allSync.IsBasic &&
+		len(allSync.AvatarList) == 0 &&
+		len(allSync.MaterialList) == 0 &&
+		len(allSync.EquipmentList) == 0 &&
+		len(allSync.DelEquipmentList) == 0 &&
+		len(allSync.RelicList) == 0 &&
+		len(allSync.DelRelicList) == 0 &&
+		len(allSync.MissionFinishMainList) == 0 &&
+		len(allSync.MissionFinishSubList) == 0 &&
+		len(allSync.MissionProgressSubList) == 0 {
+		return
+	}
+
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync:        &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		BasicTypeInfoList: make([]*proto.PlayerHeroBasicTypeInfo, 0),

@@ -356,6 +356,12 @@ message MissionInfo{
   uint32 mission_id = 1; //任务id
   uint32 progress = 3; // 步骤
   MissionStatus status = 4;// 任务状态
+  repeated MissionCustomValue mission_custom_value = 5;
+}
+
+message MissionCustomValue {
+  uint32 index = 1;
+  uint32 customValue = 2;
 }
 
 message TutorialDb {// 教程

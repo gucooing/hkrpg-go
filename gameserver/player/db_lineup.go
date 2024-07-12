@@ -110,7 +110,7 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 }
 
 func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
-	db := g.GetCurLineUp()
+	db := g.GetBattleLineUp()
 	var lineAvatarType spb.LineAvatarType
 	isTrial := false
 	if g.GetAvatarById(trialAvatarId) != nil {
@@ -154,7 +154,7 @@ func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
 }
 
 func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
-	db := g.GetCurLineUp()
+	db := g.GetBattleLineUp()
 	isJh := false
 	for id, info := range db.AvatarIdList {
 		if info.AvatarId == trialAvatarId {

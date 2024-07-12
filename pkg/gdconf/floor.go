@@ -111,18 +111,22 @@ func GetAnchorByIndex(planeId, floorId uint32) *AnchorList {
 	if group == nil {
 		return nil
 	}
+	// if uint32(len(group.AnchorList)) < floor.StartAnchorID {
+	// 	return nil
+	// }
+	// return group.AnchorList[floor.StartAnchorID]
 	for _, anchorInfo := range group.AnchorList {
 		if anchorInfo.ID == floor.StartAnchorID {
 			return anchorInfo
 		}
 	}
-	// if uint32(len(group.AnchorList)) < floor.StartAnchorID {
-	// 	return nil
-	// }
 	return nil
 }
 
 func GetAnchor(planeId, floorId, startGroupID, startAnchorID uint32) *AnchorList {
+	if startGroupID == 0 || startAnchorID == 0 {
+		return GetAnchorByIndex(planeId, floorId)
+	}
 	group := GetNGroupById(planeId, floorId, startGroupID)
 	if group == nil {
 		return nil

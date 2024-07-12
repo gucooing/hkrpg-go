@@ -96,11 +96,17 @@ func (g *GamePlayer) newRaidInfo(req *proto.StartRaidCsReq) proto.Retcode {
 func (g *GamePlayer) SetRaidLineUp(conf *gdconf.RaidConfig) {
 	avatarList := make([]uint32, 0)
 	switch conf.TeamType {
-	case constant.RaidTeamTypePlayer:
+	case constant.RaidTeamTypePlayer: // 原有
 		for _, info := range g.GetCurLineUp().AvatarIdList {
 			avatarList = append(avatarList, info.AvatarId)
 		}
-	case constant.RaidTeamTypeTrial:
+	case constant.RaidTeamTypeTrial: // 仅试用
+		avatarList = conf.TrialAvatarList
+	case constant.RaidTeamTypeTrialOnly: // 仅试用
+		avatarList = conf.TrialAvatarList
+	case constant.RaidTeamTypeTrialAndPlayer: // 原有补位试用
+		avatarList = conf.TrialAvatarList
+	case constant.RaidTeamTypeTrialOrPlayer: // 试用或原有
 		avatarList = conf.TrialAvatarList
 	}
 	g.SetBattleLineUp(Raid, avatarList)
@@ -127,26 +133,11 @@ func (g *GamePlayer) CheckRaid() {
 		finishDb := g.GetFinishRaidMap()
 		if finishDb[db.RaidId] == nil {
 			finishDb[db.RaidId] = db
-			g.RaidReward(conf) // 发送奖励
 		}
 		db.Status = spb.RaidStatus_RAID_STATUS_FINISH
 		db.FinishTime = uint64(time.Now().Unix())
 		g.RaidInfoNotify(db.RaidId)
 	}
-}
-
-func (g *GamePlayer) RaidReward(conf *gdconf.RaidConfig) {
-	if conf == nil {
-		return
-	}
-	allSync := &AllPlayerSync{IsBasic: true}
-	switch conf.Type {
-	case constant.RaidConfigTypeEquilibriumTrial:
-		g.AddWorldLevel(1)
-	case constant.RaidConfigTypeActivityRaidCollection:
-
-	}
-	g.AllPlayerSyncScNotify(allSync)
 }
 
 func (g *GamePlayer) RaidInfoNotify(raidID uint32) {
@@ -161,8 +152,57 @@ func (g *GamePlayer) RaidInfoNotify(raidID uint32) {
 		WorldLevel: db.HardLevel,
 		FinishTime: db.FinishTime,
 	}
+	// TODO 有重复领取的问题，db加个字段就行了
+	if db.Status == spb.RaidStatus_RAID_STATUS_FINISH {
+		notify.ItemList.ItemList = g.RaidReward(db.RaidId, db.HardLevel)
+	}
 
 	g.Send(cmd.RaidInfoNotify, notify)
+}
+
+func (g *GamePlayer) RaidReward(raidID, hardLevel uint32) []*proto.Item {
+	conf := gdconf.GetRaidConfig(raidID, hardLevel)
+	itemList := make([]*proto.Item, 0)
+	if conf == nil {
+		return itemList
+	}
+	allSync := &AllPlayerSync{IsBasic: true}
+	pileItem := make([]*Material, 0)
+	switch conf.Type {
+	case constant.RaidConfigTypeEquilibriumTrial:
+		g.AddWorldLevel(1)
+	default:
+		if !conf.SkipRewardOnFinish && conf.RewardList != nil {
+			for _, reward := range conf.RewardList {
+				rewardConf := gdconf.GetRewardDataById(reward)
+				if rewardConf == nil {
+					continue
+				}
+				allSync.MaterialList = append(allSync.MaterialList, Hcoin)
+				pileItem = append(pileItem, &Material{
+					Tid: Hcoin,
+					Num: rewardConf.Hcoin,
+				})
+				itemList = append(itemList, &proto.Item{
+					ItemId: Hcoin,
+					Num:    rewardConf.Hcoin,
+				})
+				for _, info := range rewardConf.Items {
+					allSync.MaterialList = append(allSync.MaterialList, info.ItemID)
+					pileItem = append(pileItem, &Material{
+						Tid: info.ItemID,
+						Num: info.Count,
+					})
+					itemList = append(itemList, &proto.Item{
+						ItemId: info.ItemID,
+						Num:    info.Count,
+					})
+				}
+			}
+		}
+	}
+	g.AllPlayerSyncScNotify(allSync)
+	return itemList
 }
 
 func (g *GamePlayer) RaidEnterSceneByServerScNotify(entryId uint32) {
