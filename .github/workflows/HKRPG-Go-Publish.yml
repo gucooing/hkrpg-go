@@ -35,8 +35,50 @@ jobs:
       run: |
         zip -r go/hkrpg/build/data.zip go/hkrpg/data/*
 
-    - name: Upload Archive
+    - name: Upload hkrpg-go-pe
       uses: actions/upload-artifact@v4
       with:
-        name: hkrpg-go
-        path: go/hkrpg/build/*
+        name: hkrpg-go-pe
+        path: go/hkrpg/build/hkrpg-go-pe/*
+
+    - name: Upload dispatch
+      uses: actions/upload-artifact@v4
+      with:
+        name: dispatch
+        path: go/hkrpg/build/dispatch/*
+
+    - name: Upload gameserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: gameserver
+        path: go/hkrpg/build/gameserver/*
+
+    - name: Upload gateserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: gateserver
+        path: go/hkrpg/build/gateserver/*
+
+    - name: Upload muipserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: muipserver
+        path: go/hkrpg/build/muipserver/*
+
+    - name: Upload multiserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: multiserver
+        path: go/hkrpg/build/multiserver/*
+
+    - name: Upload nodeserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: nodeserver
+        path: go/hkrpg/build/nodeserver/*
+
+    - name: Upload robot
+      uses: actions/upload-artifact@v4
+      with:
+        name: robot
+        path: go/hkrpg/build/robot/*

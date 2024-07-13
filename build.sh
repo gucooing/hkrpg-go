@@ -32,6 +32,6 @@ for file in $PE_PATH $MAIN_PATH $DISPATCH_PATH $GAMESERVER_PATH $GATE_PATH $MUIP
       OUTPUT_NAME="$OUTPUT_NAME.exe"
     fi
     echo "Building $OUTPUT_NAME..."
-    env GOOS=$GOOS GOARCH=$GOARCH go build -v -x -work -o $OUT_DIR/$platform/$OUTPUT_NAME $file
+    env GOOS=$GOOS GOARCH=$GOARCH go build -o $OUT_DIR/${FILENAME%.*}/$OUTPUT_NAME $file
   done
 done
