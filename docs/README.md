@@ -13,7 +13,9 @@
 #### 自行编译
 > 此处不交流交叉编译
 
- 进入./ cmd文件夹中，可看到各个服务的文件夹，进入每一个文件夹执行 `go build xxxx.go` 即可
+进入./ cmd文件夹中，可看到各个服务的文件夹，进入每一个文件夹执行 `go build xxxx.go` 即可
+### 不想编译
+前往[Build-dev](https://github.com/gucooing/hkrpg-go-public/actions/workflows/HKRPG-Go-Publish.yml)下载
 
 ## 运行
 ### 1.准备资源：
@@ -26,10 +28,10 @@ resources的准备:
 ### 2.运行，
 运行时需要携带启动参数 -i appid ， 其中appid格式为ipv4格式，如：9001.1.1.1 其中含义：
 ```bash
-9001：区服id  ；
-1：服务id ； 
-1:  主机id;
-1:  本次启动服务id；
+9001: 区服id;
+1:    服务id; 
+1:    主机id;
+1:    本次启动服务id;
 ```
 了解到了appid的组成含义后你可以先不携带参数启动一次，使其生成各个服务的配置文件，生成的配置文件在conf文件夹里，然后根据你自己定义的appid更改默认配置文件中的appid(虽然服务采用发现形式添加新服务，但是还是推荐每一个配置文件中的appid配置表都相同)，然后根据自己的想法更改配置文件中的其他参数。
 ### 3.数据库的准备，
@@ -62,3 +64,8 @@ resources的准备:
 
 ## 注意事项
 请处理好内外网，不要让外网可随意访问到集群内部网络
+如果你的外网带宽不足 1Gpbs/s 延迟不低于10ms 请不要使用外网数据库
+
+## 想测试但不想配置复杂的环境
+
+1.前往[Build-dev](https://github.com/gucooing/hkrpg-go-public/actions/workflows/HKRPG-Go-Publish.yml)下载hkrpg-pe-go文件

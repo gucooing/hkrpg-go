@@ -24,7 +24,7 @@ jobs:
       run: cd go/hkrpg && go mod tidy
     
     - name: Build
-      run: cd go/hkrpg && bash build.sh
+      run: cd go/hkrpg && bash Releases.sh
 
     - name: Package
       run: |
