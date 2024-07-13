@@ -2,6 +2,7 @@ package player
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -340,7 +341,7 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 		return g.IfMissionLoadMap(levelGroup, false)
 	default:
 		logger.Warn("未知的地图类型 Category:%s", levelGroup.Category)
-		return false
+		return true
 	}
 }
 
@@ -355,8 +356,12 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 			return false
 		}
 	}
-	if levelGroup.LoadCondition == nil && levelGroup.UnloadCondition == nil {
-		return isLoaded
+	if levelGroup.LoadCondition == nil &&
+		levelGroup.UnloadCondition == nil {
+		if levelGroup.Category == "Mission" && levelGroup.OwnerMainMissionID != 0 {
+			return true
+		}
+		return mainIsLoaded
 	}
 	// 检查强制卸载条件
 	// 检查加载条件
@@ -625,10 +630,17 @@ func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 	if db == nil {
 		return
 	}
-	// if prop.MappingInfoID != 0 && prop.State == "" {
-	// 	g.UpPropState(db, groupId, prop.ID, 1)
-	// 	return
-	// }
+	if strings.Contains(prop.Name, "Elevator_0") {
+		g.ObjectCaptureUpPropState(db, groupId, prop.ID, 15)
+	}
+	if prop.ValueSource != nil {
+		for _, v := range prop.ValueSource.Values {
+			if v.Key == "IsAutoDoor" {
+				g.ObjectCaptureUpPropState(db, groupId, prop.ID, 1)
+				break
+			}
+		}
+	}
 	if prop.StageObjectCapture != nil { // 特殊处理
 		switch prop.StageObjectCapture.BlockAlias {
 		case "RogueLobby_01": // 模拟宇宙入口直接开放
@@ -876,6 +888,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
+		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
 	}
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)
@@ -911,6 +924,131 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 	}
 	return scene
+}
+
+func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.LevelGroup) *proto.MissionStatusBySceneInfo {
+	info := &proto.MissionStatusBySceneInfo{
+		AcceptMainMissionIdList: make([]uint32, 0),
+		MainMissionIdList:       make([]uint32, 0),
+		SceneSubMissionList:     make([]*proto.Mission, 0),
+	}
+	if foorMap == nil {
+		return info
+	}
+	mainMissionList := g.GetMainMissionList()
+	finishMainMissionList := g.GetFinishMainMissionList()
+	subMissionList := g.GetSubMainMissionList()
+	finishSubMissionList := g.GetFinishSubMainMissionList()
+	for _, groupInfo := range foorMap {
+		if groupInfo.OwnerMainMissionID != 0 {
+			var isAdd = true
+			for _, id := range info.AcceptMainMissionIdList {
+				if id == groupInfo.OwnerMainMissionID {
+					isAdd = false
+					break
+				}
+			}
+			for _, id := range info.MainMissionIdList {
+				if id == groupInfo.OwnerMainMissionID {
+					isAdd = false
+					break
+				}
+			}
+			if isAdd {
+				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
+					info.AcceptMainMissionIdList = append(info.AcceptMainMissionIdList, groupInfo.OwnerMainMissionID)
+				}
+				if finishMainMissionList[groupInfo.OwnerMainMissionID] != nil {
+					info.MainMissionIdList = append(info.MainMissionIdList, groupInfo.OwnerMainMissionID)
+				}
+			}
+		}
+		if groupInfo.AtmosphereCondition != nil {
+			for _, conditions := range groupInfo.AtmosphereCondition.Conditions {
+				var isAdd = true
+				for _, v := range info.SceneSubMissionList {
+					if v.Id == conditions.SubMissionID {
+						isAdd = false
+						break
+					}
+				}
+				if isAdd {
+					db := finishSubMissionList[conditions.SubMissionID]
+					if db == nil {
+						db = subMissionList[conditions.SubMissionID]
+					}
+					if db != nil {
+						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+							Status: proto.MissionStatus(db.Status),
+							Id:     conditions.SubMissionID,
+						})
+					}
+					// info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+					// 	Id: conditions.SubMissionID,
+					// })
+				}
+			}
+		}
+		if groupInfo.LoadCondition != nil {
+			for _, conditions := range groupInfo.LoadCondition.Conditions {
+				var isAdd = true
+				if conditions.Type != "SubMission" {
+					continue
+				}
+				for _, v := range info.SceneSubMissionList {
+					if v.Id == conditions.ID {
+						isAdd = false
+						break
+					}
+				}
+				if isAdd {
+					db := finishSubMissionList[conditions.ID]
+					if db == nil {
+						db = subMissionList[conditions.ID]
+					}
+					if db != nil {
+						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+							Status: proto.MissionStatus(db.Status),
+							Id:     conditions.ID,
+						})
+					}
+					// info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+					// 	Id: conditions.ID,
+					// })
+				}
+			}
+		}
+		if groupInfo.UnloadCondition != nil {
+			for _, conditions := range groupInfo.UnloadCondition.Conditions {
+				var isAdd = true
+				if conditions.Type != "SubMission" {
+					continue
+				}
+				for _, v := range info.SceneSubMissionList {
+					if v.Id == conditions.ID {
+						isAdd = false
+						break
+					}
+				}
+				if isAdd {
+					db := finishSubMissionList[conditions.ID]
+					if db == nil {
+						db = subMissionList[conditions.ID]
+					}
+					if db != nil {
+						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+							Status: proto.MissionStatus(db.Status),
+							Id:     conditions.ID,
+						})
+					}
+					// info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+					// 	Id: conditions.ID,
+					// })
+				}
+			}
+		}
+	}
+	return info
 }
 
 // 删除怪物

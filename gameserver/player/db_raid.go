@@ -35,6 +35,11 @@ func (g *GamePlayer) GetFinishRaidMap() map[uint32]*spb.RaidInfo {
 	return db.FinishRaidMap
 }
 
+func (g *GamePlayer) GetFinishRaidInfo(raid uint32) *spb.RaidInfo {
+	db := g.GetFinishRaidMap()
+	return db[raid]
+}
+
 func (g *GamePlayer) NewRaidInfo(raid uint32) {
 	db := g.GetRaid()
 	if db.CurRaidId == raid {

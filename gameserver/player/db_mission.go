@@ -136,9 +136,7 @@ func (g *GamePlayer) UpInteractSubMission(db *spb.BlockBin) {
 			}
 		}
 	}
-	if len(finishSubMission) != 0 {
-		g.InspectMission(finishSubMission)
-	}
+	g.InspectMission(finishSubMission)
 }
 
 // 处理战斗任务
@@ -383,7 +381,7 @@ func (g *GamePlayer) MissionPropState(id uint32) bool {
 
 /*********************************检查操作*********************************/
 
-// 登录任务检查
+// 任务检查
 func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 	g.AddFinishSubMission(finishSubMission)
 	finishMainList := make([]uint32, 0)
@@ -526,9 +524,10 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			})
 			g.AllPlayerSyncScNotify(&AllPlayerSync{MaterialList: []uint32{finishAction.FinishActionPara[0]}})
 		case constant.DelMission: // 结束任务
-			for _, missionId := range finishAction.FinishActionPara {
-				g.InspectMission([]uint32{missionId})
-			}
+			g.InspectMission(finishAction.FinishActionPara)
+		case constant.DisableMission: // 删除主线任务
+			g.AddFinishMainMission(finishAction.FinishActionPara)
+			g.InspectMission(nil)
 		}
 	}
 }
@@ -574,6 +573,7 @@ func (g *GamePlayer) AddSubMission(acceptSubList []uint32) {
 	if acceptSubList == nil {
 		return
 	}
+	g.Send(cmd.MissionAcceptScNotify, &proto.MissionAcceptScNotify{SubMissionIdList: acceptSubList})
 	subMissionList := g.GetSubMainMissionList()
 	finishSubMissionList := g.GetFinishSubMainMissionList()
 	for _, subId := range acceptSubList {
@@ -583,6 +583,9 @@ func (g *GamePlayer) AddSubMission(acceptSubList []uint32) {
 				MissionId: subId,
 				Progress:  0,
 				Status:    spb.MissionStatus_MISSION_DOING,
+			}
+			if subId == 102130113 {
+				g.SetBattleLineUp(Raid, []uint32{1031213, 1021205})
 			}
 		}
 	}
@@ -597,12 +600,12 @@ func (g *GamePlayer) AddFinishMainMission(finishMainList []uint32) []uint32 {
 	finishMainMissionList := g.GetFinishMainMissionList()
 	for _, id := range finishMainList {
 		finishMainMissionList[id] = &spb.MissionInfo{
-			MissionId:          id,
-			Progress:           1,
-			Status:             spb.MissionStatus_MISSION_FINISH,
-			MissionCustomValue: mainMissionList[id].MissionCustomValue,
+			MissionId: id,
+			Progress:  1,
+			Status:    spb.MissionStatus_MISSION_FINISH,
 		}
-		if mainMissionList[id] != nil {
+		if db := mainMissionList[id]; db != nil {
+			finishMainMissionList[id].MissionCustomValue = db.MissionCustomValue
 			delete(mainMissionList, id)
 		}
 		g.Send(cmd.StartFinishMainMissionScNotify,
@@ -732,6 +735,7 @@ func (g *GamePlayer) AcceptSubMission() []uint32 {
 			case constant.MissionBeginTypeAuto:
 				break
 			case constant.MissionBeginTypeUnknown:
+				// isNext = false
 				break
 			case constant.MissionBeginTypeAnySequence:
 				isNext = false
@@ -882,6 +886,14 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 				progressSubMissionList = append(progressSubMissionList, progress)
 			}
 			break
+		case constant.RaidFinishCnt: // 完成raid
+			ifFinish = true
+			for _, raid := range conf.ParamIntList {
+				if g.GetFinishRaidInfo(raid) == nil {
+					ifFinish = false
+					break
+				}
+			}
 		case constant.MessagePerformSectionFinish: // 发送对话框
 			g.AddMessageGroup(conf.ParamInt1)
 			break

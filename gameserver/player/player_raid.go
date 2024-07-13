@@ -43,7 +43,11 @@ func (g *GamePlayer) LeaveRaidCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.LeaveRaidCsReq, payloadMsg)
 	req := msg.(*proto.LeaveRaidCsReq)
 	rsp := &proto.LeaveRaidScRsp{}
-	db := g.GetRaidInfo(req.RaidId)
+	db := g.GetFinishRaidInfo(req.RaidId)
+	if db == nil {
+		g.Send(cmd.LeaveRaidScRsp, rsp)
+		return
+	}
 	var teleportToAnchor = true
 	// 设置状态
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)

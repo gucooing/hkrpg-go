@@ -16,6 +16,8 @@ type LevelGroup struct {
 	GroupId              uint32
 	GroupName            string                `json:"GroupName"`
 	AreaAnchorName       string                `json:"AreaAnchorName"`
+	SaveType             string                `json:"SaveType"`
+	AtmosphereCondition  *AtmosphereCondition  `json:"AtmosphereCondition"`
 	LoadSide             string                `json:"LoadSide"` // 负载端
 	IsHoyoGroup          bool                  `json:"IsHoyoGroup"`
 	Category             string                `json:"Category"`             // 类别
@@ -28,6 +30,10 @@ type LevelGroup struct {
 	MonsterList          []*MonsterList        `json:"MonsterList"`          // 怪物列表
 	NPCList              []*NPCList            `json:"NPCList"`              // NPC列表
 	AnchorList           []*AnchorList         `json:"AnchorList"`           // 锚点列表
+}
+type AtmosphereCondition struct {
+	Conditions []*Conditions `json:"Conditions"`
+	Operation  string        `json:"Operation"`
 }
 type LoadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
@@ -44,9 +50,10 @@ type ForceUnloadCondition struct {
 	DelayToLevelReload bool          `json:"DelayToLevelReload"`
 }
 type Conditions struct {
-	Type  string `json:"Type"`
-	Phase string `json:"Phase"`
-	ID    uint32 `json:"ID"`
+	Type         string `json:"Type"`
+	Phase        string `json:"Phase"`
+	ID           uint32 `json:"ID"`
+	SubMissionID uint32 `json:"SubMissionID"`
 }
 type PropList struct {
 	ID                       uint32              `json:"ID"`
@@ -308,6 +315,7 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 						value.Key == "Bridge" ||
 						strings.Contains(value.Key, "UnlockTarget") ||
 						strings.Contains(value.Key, "Rootcontamination") ||
+						strings.Contains(value.Key, "Controller") ||
 						strings.Contains(value.Key, "Portal") {
 						if prop.GoppValue == nil {
 							prop.GoppValue = make([]*GoppValue, 0)

@@ -1,6 +1,8 @@
 package player
 
 import (
+	"strings"
+
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -168,9 +170,9 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 				mapList := &proto.SceneMapInfo{
 					LightenSectionList: make([]uint32, 0),
 					ChestList: []*proto.ChestInfo{
-						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_NORMAL},
-						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
-						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
+						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_NORMAL, UnlockedAmount: 1},
+						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE, UnlockedAmount: 1},
+						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE, UnlockedAmount: 1},
 					},
 					UnlockTeleportList: make([]uint32, 0),
 				}
@@ -274,6 +276,10 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 	case gdconf.PROP_MAZE_PUZZLE: // 拼图
 	}
 
+	if strings.Contains(confProp.Name, "Console") {
+		setState = oldState
+	}
+
 	if confProp.GoppValue != nil {
 		for _, goppValue := range confProp.GoppValue {
 			if enep := g.GetPropEntity(goppValue.GroupId, goppValue.InstId); enep != nil {
@@ -295,11 +301,37 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GroupStateChangeCsReq, payloadMsg)
 	req := msg.(*proto.GroupStateChangeCsReq)
-
 	rsp := &proto.GroupStateChangeScRsp{
 		GroupStateInfo: req.GroupStateInfo,
 		Retcode:        0,
 	}
+	if req.GroupStateInfo != nil {
+		blockBin := g.GetBlock(req.GroupStateInfo.EntryId)
+		mapEntrance := gdconf.GetMapEntranceById(blockBin.EntryId)
+		if mapEntrance == nil {
+			g.Send(cmd.GroupStateChangeScRsp, rsp)
+			return
+		}
+		confGroup := gdconf.GetNGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, req.GroupStateInfo.GroupId)
+		if confGroup == nil || confGroup.PropList == nil {
+			g.Send(cmd.GroupStateChangeScRsp, rsp)
+			return
+		}
+		var propEntityIdList []uint32
+		for _, prop := range confGroup.PropList {
+			if strings.Contains(prop.Name, "Console") {
+				if enep := g.GetPropEntity(confGroup.GroupId, prop.ID); enep != nil {
+					g.UpPropState(blockBin, confGroup.GroupId, prop.ID, 1) // 更新状态
+					propEntityIdList = append(propEntityIdList, enep.EntityId)
+				}
+			}
+		}
+		g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
+	}
+	g.Send(cmd.GroupStateChangeScNotify, &proto.GroupStateChangeScNotify{
+		GroupStateInfo: req.GroupStateInfo,
+	})
+
 	g.Send(cmd.GroupStateChangeScRsp, rsp)
 }
 

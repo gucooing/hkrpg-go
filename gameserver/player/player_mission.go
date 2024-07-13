@@ -1,7 +1,6 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -94,11 +93,8 @@ func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMainMissionCustomValueScRsp, rsp)
 }
 
-func (g *GamePlayer) MissionAcceptScNotify() {
-	notify := &proto.MissionAcceptScNotify{
-		SubMissionIdList: make([]uint32, 0),
-	}
-	g.Send(cmd.MissionAcceptScNotify, notify)
+func (g *GamePlayer) UpdateTrackMainMissionIdCsReq(payloadMsg []byte) {
+	g.Send(cmd.UpdateTrackMainMissionIdScRsp, &proto.UpdateTrackMainMissionIdScRsp{})
 }
 
 func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg []byte) {
@@ -107,15 +103,12 @@ func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg []byte) {
 		ChallengeEventId: 0,
 		MissionEventList: make([]*proto.Mission, 0),
 	}
-	conf := gdconf.GetEventMission()
-	for id, mission := range conf {
-		if mission.TakeType == "Auto" {
-			rsp.MissionEventList = append(rsp.MissionEventList, &proto.Mission{
-				Id:       id,
-				Progress: 0,
-				Status:   proto.MissionStatus_MISSION_DOING,
-			})
-		}
+	for _, mission := range g.GetMainMissionList() {
+		rsp.MissionEventList = append(rsp.MissionEventList, &proto.Mission{
+			Id:       mission.MissionId,
+			Progress: mission.MissionId,
+			Status:   proto.MissionStatus(mission.Status),
+		})
 	}
 	g.Send(cmd.GetMissionEventDataScRsp, rsp)
 }
@@ -131,9 +124,8 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 		Retcode:                     0,
 		UnfinishedMainMissionIdList: make([]uint32, 0),
 		DisabledMainMissionIdList:   make([]uint32, 0),
+		MainMissionMcvList:          make([]*proto.GBGPCCLIIEA, 0),
 	}
-	rsp.FinishedMainMissionIdList = []uint32{}
-	rsp.SubMissionStatusList = make([]*proto.Mission, 0)
 	if g.IsJumpMission {
 		for _, id := range req.MainMissionIdList {
 			rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, id)
@@ -147,11 +139,12 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 		g.Send(cmd.GetMissionStatusScRsp, rsp)
 		return
 	}
-	finishMainDb := g.GetFinishMainMissionList()
-	finishMainSubDb := g.GetFinishSubMainMissionList()
-	curMainSubDb := g.GetSubMainMissionList()
+	finishMainDb := g.GetFinishMainMissionList() // 完成的主线任务
+	finishSubMissionList := g.GetFinishSubMainMissionList()
+	subMissionList := g.GetSubMainMissionList()
 	// 处理主线任务
 	for _, id := range req.MainMissionIdList {
+		rsp.MainMissionMcvList = append(rsp.MainMissionMcvList, &proto.GBGPCCLIIEA{MainMissionId: id})
 		if finishMainDb[id] != nil {
 			rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, id)
 		} else {
@@ -161,10 +154,10 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 	// 处理子任务
 	for _, id := range req.SubMissionIdList {
 		status := proto.MissionStatus_MISSION_NONE
-		if curMainSubDb[id] != nil {
+		if subMissionList[id] != nil {
 			status = proto.MissionStatus_MISSION_DOING
 		}
-		if finishMainSubDb[id] != nil {
+		if finishSubMissionList[id] != nil {
 			status = proto.MissionStatus_MISSION_FINISH
 		}
 		rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
@@ -181,9 +174,10 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg []byte) {
 	subMainMissionList := g.GetSubMainMissionList()
 
 	rsp := &proto.GetMissionDataScRsp{
-		MissionDataList: make([]*proto.MissionData, 0),
-		MissionList:     make([]*proto.Mission, 0),
+		MissionDataList: make([]*proto.MissionData, 0), // doing mainMissionList
+		MissionList:     make([]*proto.Mission, 0),     // doing subMissionList
 		Retcode:         0,
+		// GOBNFADAILM:     1021201, // 102120113 // cur mainMission
 	}
 	// add main
 	for _, main := range mainMissionList {

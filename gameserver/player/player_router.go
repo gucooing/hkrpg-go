@@ -135,13 +135,15 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetDailyActiveInfoCsReq:        g.GetDailyActiveInfoCsReq, // 每日实训
 		cmd.GetMainMissionCustomValueCsReq: g.GetMainMissionCustomValueCsReq,
 		cmd.GetMissionEventDataCsReq:       g.GetMissionEventDataCsReq,
-		cmd.GetMissionStatusCsReq:          g.HandleGetMissionStatusCsReq,  // 获取任务状态
-		cmd.GetMissionDataCsReq:            g.GetMissionDataCsReq,          // 获取任务数据
-		cmd.FinishTalkMissionCsReq:         g.FinishTalkMissionCsReq,       // 完成任务
-		cmd.FinishCosumeItemMissionCsReq:   g.FinishCosumeItemMissionCsReq, // 完成道具提交任务
-		cmd.GetVideoVersionKeyCsReq:        g.GetVideoVersionKeyCsReq,      // 获取key
-		cmd.GetSecretKeyInfoCsReq:          g.GetSecretKeyInfoCsReq,        // key
-		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,            // 对话选项
+		cmd.GetMissionStatusCsReq:          g.HandleGetMissionStatusCsReq,   // 获取任务状态
+		cmd.GetMissionDataCsReq:            g.GetMissionDataCsReq,           // 获取任务数据
+		cmd.FinishTalkMissionCsReq:         g.FinishTalkMissionCsReq,        // 完成任务
+		cmd.FinishCosumeItemMissionCsReq:   g.FinishCosumeItemMissionCsReq,  // 完成道具提交任务
+		cmd.GetVideoVersionKeyCsReq:        g.GetVideoVersionKeyCsReq,       // 获取key
+		cmd.GetSecretKeyInfoCsReq:          g.GetSecretKeyInfoCsReq,         // key
+		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,             // 对话选项
+		cmd.UpdateTrackMainMissionIdCsReq:  g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
+
 		// 活动
 		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
