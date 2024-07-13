@@ -6,7 +6,7 @@
 *.test
 *.out
 *.bat
-*.py
+protocol/*.py
 bulid
 go.work
 test.go
