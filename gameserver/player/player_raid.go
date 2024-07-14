@@ -65,5 +65,7 @@ func (g *GamePlayer) LeaveRaidCsReq(payloadMsg []byte) {
 		g.SceneByServerScNotify(g.GetCurEntryId(), g.GetPosPb(), g.GetRotPb())
 	}
 
+	// 任务检查
+	g.InspectMission(nil)
 	g.Send(cmd.LeaveRaidScRsp, rsp)
 }

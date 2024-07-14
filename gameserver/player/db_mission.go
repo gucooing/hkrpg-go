@@ -521,10 +521,10 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			g.RecoverLine()
 		case constant.AddMissionItem: // 添加任务道具
 			for index, item := range finishAction.FinishActionPara {
-				if len(finishAction.FinishActionPara) < index+1 && index%2 != 0 {
+				if len(finishAction.FinishActionPara) < index+2 && index%2 != 0 {
 					continue
 				}
-				allSync.MaterialList = append(allSync.MaterialList, uint32(index))
+				allSync.MaterialList = append(allSync.MaterialList, item)
 				pileItem = append(pileItem, &Material{
 					Tid: item,
 					Num: finishAction.FinishActionPara[index+1],
@@ -532,10 +532,10 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			}
 		case constant.AddRecoverMissionItem: // 添加任务恢复道具
 			for index, item := range finishAction.FinishActionPara {
-				if len(finishAction.FinishActionPara) < index+1 && index%2 != 0 {
+				if len(finishAction.FinishActionPara) < index+2 && index%2 != 0 {
 					continue
 				}
-				allSync.MaterialList = append(allSync.MaterialList, uint32(index))
+				allSync.MaterialList = append(allSync.MaterialList, item)
 				pileItem = append(pileItem, &Material{
 					Tid: item,
 					Num: finishAction.FinishActionPara[index+1],
@@ -667,9 +667,10 @@ func (g *GamePlayer) AddFinishSubMission(finishSubList []uint32) {
 		if conf == nil {
 			continue
 		}
+		isDel := false
 		if subMissionList[subId] != nil {
 			delete(subMissionList, subId)
-			g.AutoServerMissionFinishAction(subId)
+			isDel = true
 		}
 		finishSubMissionList[subId] = &spb.MissionInfo{
 			MissionId: subId,
@@ -678,6 +679,9 @@ func (g *GamePlayer) AddFinishSubMission(finishSubList []uint32) {
 		}
 		g.Send(cmd.StartFinishSubMissionScNotify,
 			&proto.StartFinishSubMissionScNotify{SubMissionId: subId})
+		if isDel {
+			g.AutoServerMissionFinishAction(subId)
+		}
 	}
 }
 

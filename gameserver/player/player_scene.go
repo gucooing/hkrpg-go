@@ -335,6 +335,18 @@ func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg []byte) {
 	g.Send(cmd.GroupStateChangeScRsp, rsp)
 }
 
+func (g *GamePlayer) DeployRotaterCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.DeployRotaterCsReq, payloadMsg)
+	req := msg.(*proto.DeployRotaterCsReq)
+
+	rsp := &proto.DeployRotaterScRsp{
+		Retcode:     0,
+		EnergyInfo:  nil,
+		RotaterData: req.RotaterData,
+	}
+	g.Send(cmd.DeployRotaterScRsp, rsp)
+}
+
 func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SpringRecoverSingleAvatarCsReq, payloadMsg)
 	req := msg.(*proto.SpringRecoverSingleAvatarCsReq)

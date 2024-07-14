@@ -74,7 +74,7 @@ func (g *GamePlayer) newRaidInfo(req *proto.StartRaidCsReq) proto.Retcode {
 		return proto.Retcode_RET_RECENT_ELEMENT_STAGE_NOT_MATCH
 	}
 	// 调整队伍
-	g.SetRaidLineUp(conf)
+	g.SetRaidLineUp(req, conf)
 	// 获取任务
 	mainMission := conf.MainMissionIDList[0]
 	missionConf := gdconf.GetGoppMainMissionById(mainMission)
@@ -98,7 +98,7 @@ func (g *GamePlayer) newRaidInfo(req *proto.StartRaidCsReq) proto.Retcode {
 }
 
 // 设置队伍
-func (g *GamePlayer) SetRaidLineUp(conf *gdconf.RaidConfig) {
+func (g *GamePlayer) SetRaidLineUp(req *proto.StartRaidCsReq, conf *gdconf.RaidConfig) {
 	avatarList := make([]uint32, 0)
 	switch conf.TeamType {
 	case constant.RaidTeamTypePlayer: // 原有
@@ -111,8 +111,8 @@ func (g *GamePlayer) SetRaidLineUp(conf *gdconf.RaidConfig) {
 		avatarList = conf.TrialAvatarList
 	case constant.RaidTeamTypeTrialAndPlayer: // 原有补位试用
 		avatarList = conf.TrialAvatarList
-	case constant.RaidTeamTypeTrialOrPlayer: // 试用或原有
-		avatarList = conf.TrialAvatarList
+	case constant.RaidTeamTypeTrialOrPlayer: // 选择的角色中必须要有这个试用
+		avatarList = req.AvatarList
 	}
 	g.SetBattleLineUp(Raid, avatarList)
 }
@@ -283,6 +283,7 @@ func (g *GamePlayer) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
+		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
 	}
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)

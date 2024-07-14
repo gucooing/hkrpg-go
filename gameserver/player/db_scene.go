@@ -979,8 +979,9 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 					}
 					if db != nil {
 						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
-							Status: proto.MissionStatus(db.Status),
-							Id:     conditions.SubMissionID,
+							Status:   proto.MissionStatus(db.Status),
+							Progress: db.Progress,
+							Id:       conditions.SubMissionID,
 						})
 					}
 					// info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
@@ -1008,8 +1009,9 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 					}
 					if db != nil {
 						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
-							Status: proto.MissionStatus(db.Status),
-							Id:     conditions.ID,
+							Status:   proto.MissionStatus(db.Status),
+							Progress: db.Progress,
+							Id:       conditions.ID,
 						})
 					}
 					// info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
@@ -1037,8 +1039,9 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 					}
 					if db != nil {
 						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
-							Status: proto.MissionStatus(db.Status),
-							Id:     conditions.ID,
+							Status:   proto.MissionStatus(db.Status),
+							Progress: db.Progress,
+							Id:       conditions.ID,
 						})
 					}
 					// info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{

@@ -422,14 +422,18 @@ type BattleAvatar struct {
 func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*proto.BattleAvatar, []*proto.BattleBuff) {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
 	buffList := make([]*proto.BattleBuff, 0)
-	for index, bA := range bAList {
-		if bA.AvatarId == 0 {
+	var index uint32 = 0
+	for _, bA := range bAList {
+		if bA.AvatarId == 0 || index > 3 {
 			continue
 		}
 		switch bA.AvatarType {
 		case spb.LineAvatarType_LineAvatarType_MI:
 			battleAvatarList = append(battleAvatarList, g.GetBattleAvatar(bA.AvatarId, index))
 		case spb.LineAvatarType_LineAvatarType_TRIAL:
+			if ok, _ := g.SpecialMainAvatar(bA.AvatarId); !ok {
+				continue
+			}
 			battleAvatarList = append(battleAvatarList, g.GetTrialBattleAvatar(bA.AvatarId, index))
 		default:
 			continue
@@ -446,6 +450,7 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*p
 			})
 			g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)
 		}
+		index++
 	}
 	return battleAvatarList, buffList
 }
@@ -515,9 +520,6 @@ func (g *GamePlayer) GetBattleAvatar(avatarId, index uint32) *proto.BattleAvatar
 func (g *GamePlayer) GetTrialBattleAvatar(avatarId, index uint32) *proto.BattleAvatar {
 	avatarBin := gdconf.GetSpecialAvatarById(avatarId)
 	if avatarBin == nil {
-		return nil
-	}
-	if ok, _ := g.SpecialMainAvatar(avatarId); !ok {
 		return nil
 	}
 	info := &proto.BattleAvatar{

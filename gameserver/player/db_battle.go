@@ -597,7 +597,7 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 	monsterWaveList, stageId, trialAvatarList := g.GetSceneMonsterWave(mem)
 	if trialAvatarList != nil && len(trialAvatarList) > 0 {
 		bAList = make(map[uint32]*BattleAvatar)
-		for _, avatarId := range trialAvatarList {
+		for id, avatarId := range trialAvatarList {
 			if avatarId == 0 {
 				continue
 			}
@@ -606,7 +606,7 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 				AvatarId:   avatarId,
 				AvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
 			}
-			bAList[avatarId] = bA
+			bAList[uint32(id)] = bA
 		}
 	}
 	battleAvatarList, buffList := g.GetProtoBattleAvatar(bAList)
