@@ -36,9 +36,9 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.TOKENHK }}
       with:
-        tag_name: v1.3.0
-        name: Release v1.3.0
-        body: sr 2.3.0
+        tag_name: v1.3.1
+        name: Release v1.3.1
+        body: sr 2.3.0 主线任务修复至黄金年代的故事
         draft: false
         prerelease: false
         files: go/hkrpg/build/*
