@@ -517,6 +517,9 @@ func (g *GamePlayer) GetTrialBattleAvatar(avatarId, index uint32) *proto.BattleA
 	if avatarBin == nil {
 		return nil
 	}
+	if ok, _ := g.SpecialMainAvatar(avatarId); !ok {
+		return nil
+	}
 	info := &proto.BattleAvatar{
 		AvatarType:    proto.AvatarType_AVATAR_TRIAL_TYPE,
 		Id:            avatarId,

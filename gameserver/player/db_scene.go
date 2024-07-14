@@ -630,7 +630,7 @@ func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 	if db == nil {
 		return
 	}
-	if strings.Contains(prop.Name, "Elevator_0") {
+	if strings.Contains(prop.Name, "Elevator0") {
 		g.ObjectCaptureUpPropState(db, groupId, prop.ID, 15)
 	}
 	if prop.ValueSource != nil {

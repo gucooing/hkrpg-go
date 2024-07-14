@@ -136,7 +136,9 @@ func (g *GamePlayer) UpInteractSubMission(db *spb.BlockBin) {
 			}
 		}
 	}
-	g.InspectMission(finishSubMission)
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
 }
 
 // 处理战斗任务
@@ -509,6 +511,8 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 	if conf.FinishActionList == nil {
 		return
 	}
+	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	pileItem := make([]*Material, 0)
 	for _, finishAction := range conf.FinishActionList {
 		switch finishAction.FinishActionType {
 		case constant.ChangeLineup: // 强制更新队伍
@@ -516,20 +520,40 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 		case constant.Recover: // 恢复队伍
 			g.RecoverLine()
 		case constant.AddMissionItem: // 添加任务道具
-			g.AddMaterial([]*Material{
-				{
-					Tid: finishAction.FinishActionPara[0],
-					Num: finishAction.FinishActionPara[1],
-				},
-			})
-			g.AllPlayerSyncScNotify(&AllPlayerSync{MaterialList: []uint32{finishAction.FinishActionPara[0]}})
+			for index, item := range finishAction.FinishActionPara {
+				if len(finishAction.FinishActionPara) < index+1 && index%2 != 0 {
+					continue
+				}
+				allSync.MaterialList = append(allSync.MaterialList, uint32(index))
+				pileItem = append(pileItem, &Material{
+					Tid: item,
+					Num: finishAction.FinishActionPara[index+1],
+				})
+			}
+		case constant.AddRecoverMissionItem: // 添加任务恢复道具
+			for index, item := range finishAction.FinishActionPara {
+				if len(finishAction.FinishActionPara) < index+1 && index%2 != 0 {
+					continue
+				}
+				allSync.MaterialList = append(allSync.MaterialList, uint32(index))
+				pileItem = append(pileItem, &Material{
+					Tid: item,
+					Num: finishAction.FinishActionPara[index+1],
+				})
+			}
+		case constant.DelMissionItem: // 删除任务道具
+
 		case constant.DelMission: // 结束任务
 			g.InspectMission(finishAction.FinishActionPara)
 		case constant.DisableMission: // 删除主线任务
 			g.AddFinishMainMission(finishAction.FinishActionPara)
 			g.InspectMission(nil)
+		case constant.DelSubMission: // 删除子任务
+			g.InspectMission(finishAction.FinishActionPara)
 		}
 	}
+	g.AddItem(pileItem)
+	g.AllPlayerSyncScNotify(allSync)
 }
 
 /*********************************数据库操作*********************************/
@@ -583,9 +607,6 @@ func (g *GamePlayer) AddSubMission(acceptSubList []uint32) {
 				MissionId: subId,
 				Progress:  0,
 				Status:    spb.MissionStatus_MISSION_DOING,
-			}
-			if subId == 102130113 {
-				g.SetBattleLineUp(Raid, []uint32{1031213, 1021205})
 			}
 		}
 	}
@@ -906,6 +927,9 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 			break
 		case constant.PropState:
 			ifFinish = g.MissionPropState(id)
+			break
+		case constant.UseSelectedItem: // 使用消耗品
+			ifFinish = true
 			break
 		}
 		if ifFinish {
