@@ -9,6 +9,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -667,6 +668,31 @@ func floorTentry(floorID uint32) uint32 {
 		return floorID
 	}
 	return entryId
+}
+
+// 任务设置物品状态
+func (g *GamePlayer) SetFloorSavedValue(conf *gdconf.SubMission, finishAction *gdconf.FinishAction) {
+	if len(finishAction.FinishActionParaString) < 4 {
+		return
+	}
+	planeId := alg.S2U32(finishAction.FinishActionParaString[0])
+	floorId := alg.S2U32(finishAction.FinishActionParaString[1])
+	name := finishAction.FinishActionParaString[2]
+	state := alg.S2I32(finishAction.FinishActionParaString[3])
+	notify := &proto.UpdateFloorSavedValueNotify{
+		SavedValue: map[string]int32{name: state},
+	}
+	g.Send(cmd.UpdateFloorSavedValueNotify, notify)
+
+	db := g.GetBlock(floorTentry(conf.WayPointFloorID))
+	groupID, instId := gdconf.GetSavedValue(planeId, floorId, name)
+	if groupID == 0 || instId == 0 {
+		return // TODO subMission 103030204
+	}
+	g.UpPropState(db, groupID, instId, uint32(state))
+	if enep := g.GetPropEntity(groupID, instId); enep != nil {
+		g.PropSceneGroupRefreshScNotify([]uint32{enep.EntityId}, db)
+	}
 }
 
 /****************************************************功能***************************************************/

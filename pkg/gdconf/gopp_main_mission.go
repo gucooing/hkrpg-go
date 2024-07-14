@@ -43,10 +43,13 @@ type SubMission struct {
 	ParamStr1         string                    `json:"ParamStr1"`
 	ParamIntList      []uint32                  `json:"ParamIntList"`
 	ParamItemList     []*ParamItem              `json:"ParamItemList"`
+	SubRewardID       uint32                    `json:"SubRewardID"`
 	FinishActionList  []*FinishAction           `json:"FinishActionList"`
 	Progress          uint32                    `json:"Progress"`
 	IsShow            bool                      `json:"IsShow"`
 	WayPointFloorID   uint32                    `json:"WayPointFloorID"`
+	WayPointGroupID   uint32                    `json:"WayPointGroupID"`
+	WayPointEntityID  uint32                    `json:"WayPointEntityID"`
 	MapNPCList        []*MapNPC                 `json:"MapNPCList"`
 	MapPropList       []*MapProp                `json:"MapPropList"`
 }
@@ -57,8 +60,9 @@ type ParamItem struct {
 }
 
 type FinishAction struct {
-	FinishActionType constant.FinishActionType `json:"FinishActionType"`
-	FinishActionPara []uint32                  `json:"FinishActionPara"`
+	FinishActionType       constant.FinishActionType `json:"FinishActionType"`
+	FinishActionPara       []uint32                  `json:"FinishActionPara"`
+	FinishActionParaString []string                  `json:"FinishActionParaString"`
 }
 
 type MapNPC struct {

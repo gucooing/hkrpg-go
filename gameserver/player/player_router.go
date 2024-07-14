@@ -60,7 +60,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetUnlockTeleportCsReq: g.GetUnlockTeleportCsReq,     // 获取解锁的传送点
 		cmd.InteractPropCsReq:      g.InteractPropCsReq,          // 实体交互
 		cmd.GroupStateChangeCsReq:  g.GroupStateChangeCsReq,      // 组状态变更
-		cmd.DeployRotaterCsReq:     g.DeployRotaterCsReq,         // 旋转更改
+		cmd.DeployRotaterCsReq:     g.DeployRotaterCsReq,         // 设置旋转
 		// 战斗
 		cmd.SceneCastSkillCsReq:      g.SceneCastSkillCsReq,      // 场景开启战斗
 		cmd.PVEBattleResultCsReq:     g.PVEBattleResultCsReq,     // PVE战斗结算

@@ -146,5 +146,6 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
 
 	allSync.MaterialList = append(allSync.MaterialList, req.ItemId)
 	g.AllPlayerSyncScNotify(allSync)
+	g.MissionGetItem(req.ItemId) // 任务检查
 	g.Send(cmd.BuyGoodsScRsp, rsp)
 }

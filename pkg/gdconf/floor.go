@@ -20,12 +20,24 @@ type LevelFloor struct {
 	EnableGroupStreaming     bool                 `json:"EnableGroupStreaming"`
 	EnableGroupSpaceConflict bool                 `json:"EnableGroupSpaceConflict"`
 	TempGroupUnloadByY       uint32               `json:"TempGroupUnloadByY"`
+	CustomValues             []*CustomValue       `json:"CustomValues"`
+	SavedValues              []*SavedValue        `json:"SavedValues"`
 }
 type GroupInstanceList struct {
 	ID        uint32 `json:"ID"`
 	Name      string `json:"Name"`
 	GroupPath string `json:"GroupPath"`
 	IsDelete  bool   `json:"IsDelete"`
+}
+type CustomValue struct {
+	ID   uint32 `json:"ID"`
+	Name string `json:"Name"`
+}
+type SavedValue struct {
+	ID            uint32   `json:"ID"`
+	Name          string   `json:"Name"`
+	AllowedValues []uint32 `json:"AllowedValues"`
+	MaxValue      uint32   `json:"MaxValue"`
 }
 
 func (g *GameDataConfig) loadFloor() {
@@ -137,4 +149,32 @@ func GetAnchor(planeId, floorId, startGroupID, startAnchorID uint32) *AnchorList
 		}
 	}
 	return nil
+}
+
+func GetSavedValue(planeId, floorId uint32, name string) (uint32, uint32) {
+	floor := GetFloorById(planeId, floorId)
+	var group *LevelGroup
+	var porp *PropList
+	if floor != nil && floor.SavedValues != nil {
+		for _, v := range floor.SavedValues {
+			if v.Name == name {
+				if len(v.AllowedValues) == 0 {
+					return 0, 0
+				}
+				groupInstance := floor.GroupInstanceList[v.AllowedValues[0]]
+				if groupInstance == nil {
+					return 0, 0
+				}
+				group = GetNGroupById(planeId, floorId, groupInstance.ID)
+				if group == nil {
+					return 0, 0
+				}
+				porp = group.PropList[v.AllowedValues[1]]
+			}
+		}
+	}
+	if group != nil && porp != nil {
+		return group.GroupId, porp.ID
+	}
+	return 0, 0
 }

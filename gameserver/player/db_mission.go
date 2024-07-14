@@ -381,13 +381,31 @@ func (g *GamePlayer) MissionPropState(id uint32) bool {
 	return false
 }
 
+func (g *GamePlayer) MissionGetItem(itemId uint32) {
+	finishSubMission := make([]uint32, 0)
+	subMissionList := g.GetSubMainMissionList()
+	for _, info := range subMissionList {
+		conf := gdconf.GetSubMainMissionById(info.MissionId)
+		if conf == nil {
+			continue
+		}
+		if conf.FinishType == constant.GetItem {
+			if conf.ParamInt1 == itemId {
+				finishSubMission = append(finishSubMission, info.MissionId)
+			}
+		}
+	}
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
+}
+
 /*********************************检查操作*********************************/
 
 // 任务检查
 func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
-	g.AddFinishSubMission(finishSubMission)
+	materialList := g.AddFinishSubMission(finishSubMission)
 	finishMainList := make([]uint32, 0)
-	materialList := make([]uint32, 0)
 	newFinishSubList := make([]uint32, 0)
 	newProgressSubList := make([]uint32, 0)
 	newFinishSubList = append(newFinishSubList, finishSubMission...)
@@ -443,8 +461,7 @@ func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 func (g *GamePlayer) AcceptInspectMission() ([]uint32, []uint32) {
 	mainList := g.AcceptMainMission() // 接取主任务
 	g.AddMainMission(mainList)
-	subList := g.AcceptSubMission()                      // 接取子任务
-	subList = append(subList, g.MissionCustomValue()...) // CustomValue 任务接取
+	subList := g.AcceptSubMission() // 接取子任务
 	g.AddSubMission(subList)
 
 	return mainList, subList
@@ -452,13 +469,15 @@ func (g *GamePlayer) AcceptInspectMission() ([]uint32, []uint32) {
 
 func (g *GamePlayer) FinishInspectMission() ([]uint32, []uint32, []uint32, []uint32) {
 	finishSubList, progressSubList := g.FinishServerSubMission()
-	g.AddFinishSubMission(finishSubList)
+	subMaterialList := g.AddFinishSubMission(finishSubList)
 	// 主任务完成检查
 	finishMainList := g.FinishServerMainMission()
 	materialList := g.AddFinishMainMission(finishMainList)
+	materialList = append(materialList, subMaterialList...)
 	// 完成主任务中的未完成子任务
 	finishSubLists := g.CheckMainMission(finishMainList)
-	g.AddFinishSubMission(finishSubLists)
+	subMaterialList2 := g.AddFinishSubMission(finishSubLists)
+	materialList = append(materialList, subMaterialList2...)
 	finishSubList = append(finishSubList, finishSubLists...)
 
 	return finishMainList, finishSubList, progressSubList, materialList
@@ -550,6 +569,24 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			g.InspectMission(nil)
 		case constant.DelSubMission: // 删除子任务
 			g.InspectMission(finishAction.FinishActionPara)
+		case constant.EnterEntryIfNotThere: // 传送到目标场景
+			if len(finishAction.FinishActionPara) < 3 {
+				continue
+			}
+			entryId := finishAction.FinishActionPara[0]
+			groupID := finishAction.FinishActionPara[1]
+			anchorID := finishAction.FinishActionPara[2]
+			g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
+		case constant.SetFloorSavedValue: // 设置物品状态
+			g.SetFloorSavedValue(conf, finishAction)
+		case constant.MoveToAnchor: // 移动到锚点
+			if len(finishAction.FinishActionPara) < 3 {
+				continue
+			}
+			entryId := finishAction.FinishActionPara[0]
+			groupID := finishAction.FinishActionPara[1]
+			anchorID := finishAction.FinishActionPara[2]
+			g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
 		}
 	}
 	g.AddItem(pileItem)
@@ -656,9 +693,10 @@ func (g *GamePlayer) AddFinishMainMission(finishMainList []uint32) []uint32 {
 	return materialList
 }
 
-func (g *GamePlayer) AddFinishSubMission(finishSubList []uint32) {
+func (g *GamePlayer) AddFinishSubMission(finishSubList []uint32) []uint32 {
+	materialList := make([]uint32, 0)
 	if finishSubList == nil {
-		return
+		return materialList
 	}
 	subMissionList := g.GetSubMainMissionList()
 	finishSubMissionList := g.GetFinishSubMainMissionList()
@@ -679,10 +717,28 @@ func (g *GamePlayer) AddFinishSubMission(finishSubList []uint32) {
 		}
 		g.Send(cmd.StartFinishSubMissionScNotify,
 			&proto.StartFinishSubMissionScNotify{SubMissionId: subId})
+		// 奖励发放
+		rewardConf := gdconf.GetRewardDataById(conf.SubRewardID)
+		if rewardConf != nil {
+			pileItem := make([]*Material, 0)
+			pileItem = append(pileItem, &Material{
+				Tid: Hcoin,
+				Num: rewardConf.Hcoin,
+			})
+			for _, data := range rewardConf.Items {
+				materialList = append(materialList, data.ItemID)
+				pileItem = append(pileItem, &Material{
+					Tid: data.ItemID,
+					Num: data.Count,
+				})
+			}
+			g.AddItem(pileItem)
+		}
 		if isDel {
 			g.AutoServerMissionFinishAction(subId)
 		}
 	}
+	return materialList
 }
 
 func (g *GamePlayer) DelMainMission(mainMissionIDList []uint32) {
@@ -777,6 +833,8 @@ func (g *GamePlayer) AcceptSubMission() []uint32 {
 						break
 					}
 				}
+			case constant.MissionBeginTypeCustomValue:
+				isNext = g.MissionCustomValue(subInfo.ID, m.MissionCustomValue)
 			default:
 				logger.Error("error TakeType missionId:%v", subInfo.ID)
 			}
@@ -789,46 +847,32 @@ func (g *GamePlayer) AcceptSubMission() []uint32 {
 	return acceptSubMissionList
 }
 
-func (g *GamePlayer) MissionCustomValue() []uint32 {
-	mainList := g.GetMainMissionList()
-	finishSub := g.GetFinishSubMainMissionList()
-	sub := g.GetSubMainMissionList()
-	acceptSubMissionList := make([]uint32, 0)
-	for _, v := range mainList {
-		mainConf := gdconf.GetGoppMainMissionById(v.MissionId)
-		if v.MissionCustomValue == nil || mainConf == nil {
-			continue
-		}
-		for _, customValue := range v.MissionCustomValue {
-			for _, info := range mainConf.SubMissionList {
-				if sub[info.ID] != nil ||
-					finishSub[info.ID] != nil ||
-					info.TakeType != constant.MissionBeginTypeCustomValue ||
-					info.TakeParamIntList == nil {
-					continue
-				}
-				var index uint32 = 0
-				var isAccept = false
-				for _, takeParamId := range info.TakeParamIntList {
-					if takeParamId == 0 {
-						continue
-					}
-					if customValue.Index == index &&
-						customValue.CustomValue == takeParamId {
-						index++
-						isAccept = true
-					} else {
-						isAccept = false
-						break
-					}
-				}
-				if isAccept {
-					acceptSubMissionList = append(acceptSubMissionList, info.ID)
-				}
+func (g *GamePlayer) MissionCustomValue(subId uint32, customValueList []*spb.MissionCustomValue) bool {
+	conf := gdconf.GetSubMainMissionById(subId)
+	if conf.TakeParamIntList == nil {
+		return false
+	}
+	for _, customValue := range customValueList {
+		var index uint32 = 0
+		var isAccept = false
+		for _, takeParamId := range conf.TakeParamIntList {
+			if takeParamId == 0 {
+				continue
+			}
+			if customValue.Index == index &&
+				customValue.CustomValue == takeParamId {
+				index++
+				isAccept = true
+			} else {
+				isAccept = false
+				break
 			}
 		}
+		if isAccept {
+			return true
+		}
 	}
-	return acceptSubMissionList
+	return false
 }
 
 func (g *GamePlayer) IsAcceptMainMission(mission *gdconf.MainMission, mainMissionList, finishMainMissionList map[uint32]*spb.MissionInfo) bool {

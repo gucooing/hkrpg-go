@@ -338,7 +338,7 @@ func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg []byte) {
 func (g *GamePlayer) DeployRotaterCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DeployRotaterCsReq, payloadMsg)
 	req := msg.(*proto.DeployRotaterCsReq)
-
+	// 设置旋转
 	rsp := &proto.DeployRotaterScRsp{
 		Retcode:     0,
 		EnergyInfo:  nil,
