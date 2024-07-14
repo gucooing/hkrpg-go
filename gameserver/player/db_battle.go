@@ -655,7 +655,8 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 	// 添加怪物波列表
 	stageID := cocoonConfig.StageID
 	for _, stage := range cocoonConfig.StageIDList {
-		g.GetSceneMonsterWaveByStageID(stage, monsterWaveList)
+		_, bin := g.GetSceneMonsterWaveByStageID(stage)
+		monsterWaveList = append(monsterWaveList, bin...)
 		if stageID == 0 {
 			stageID = stage
 		}
@@ -695,18 +696,23 @@ func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWav
 		if stage == nil {
 			continue
 		}
-		trialAvatarList = g.GetSceneMonsterWaveByStageID(stage.StageID, mWList)
+		list, bin := g.GetSceneMonsterWaveByStageID(stage.StageID)
+		mWList = append(mWList, bin...)
 		if id == 0 {
 			stageID = stage.StageID // 阶段id
+		}
+		if list != nil && len(list) > 0 {
+			trialAvatarList = list
 		}
 	}
 	return mWList, stageID, trialAvatarList
 }
 
-func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32, mWList []*proto.SceneMonsterWave) []uint32 {
+func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) ([]uint32, []*proto.SceneMonsterWave) {
+	mWList := make([]*proto.SceneMonsterWave, 0)
 	stageConfig := gdconf.GetStageConfigById(stageID)
 	if stageConfig == nil {
-		return nil
+		return nil, nil
 	}
 	for _, monsterListMap := range stageConfig.MonsterList {
 		monsterWaveList := &proto.SceneMonsterWave{
@@ -724,7 +730,7 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32, mWList []*prot
 		}
 		mWList = append(mWList, monsterWaveList)
 	}
-	return stageConfig.TrialAvatarList
+	return stageConfig.TrialAvatarList, mWList
 }
 
 // 根据战斗情况添加buff
