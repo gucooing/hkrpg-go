@@ -1282,6 +1282,45 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 	return sceneEntityRefreshInfo
 }
 
+// 添加Buff
+func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId uint32, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
+	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
+	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
+		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+	}
+	// for _, lineAvatar := range lineUp.AvatarIdList {
+	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
+		AddEntity: &proto.SceneEntityInfo{
+			Motion: &proto.MotionInfo{
+				Pos: pos,
+				Rot: &proto.Vector{Y: 139439},
+			},
+			EntityId: g.GetNextGameObjectGuid(),
+			SummonUnit: &proto.SceneSummonUnitInfo{
+				CasterEntityId:  casterEntityId,
+				AttachEntityId:  casterEntityId,
+				SummonUnitId:    13091,
+				CreateTimeMs:    uint64(time.Now().UnixMilli()),
+				TriggerNameList: make([]string, 0),
+				LifeTimeMs:      -1,
+			},
+		},
+	}
+	// g.AddEntity(0, &AvatarEntity{
+	// 	Entity: Entity{
+	// 		EntityId: entityList.AddEntity.EntityId,
+	// 		GroupId:  0,
+	// 		Pos:      pos,
+	// 		Rot:      rot,
+	// 	},
+	// 	AvatarId: lineAvatar.AvatarId,
+	// })
+	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
+	// }
+	groupRefreshInfo = append(groupRefreshInfo, sceneGroupRefreshInfo)
+	return groupRefreshInfo
+}
+
 func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
 	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{

@@ -68,7 +68,7 @@ func (g *GamePlayer) AllGive(allSync *AllPlayerSync) {
 		allSync.MaterialList = append(allSync.MaterialList, item.ID)
 		pileItem = append(pileItem, &Material{
 			Tid: item.ID,
-			Num: 99999,
+			Num: 999999999,
 		})
 	}
 	// add relic

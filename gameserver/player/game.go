@@ -54,7 +54,7 @@ func getCurTime() uint64 {
 // 拉取账户数据
 func (g *GamePlayer) GetPlayerDateByDb() {
 	var err error
-	dbPlayer := database.QueryAccountUidByFieldPlayer(g.DB, g.AccountId)
+	dbPlayer := database.QueryAccountUidByFieldPlayer(g.DB, g.Uid)
 	if dbPlayer == nil || dbPlayer.BinData == nil {
 		dbPlayer = new(database.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
@@ -77,7 +77,7 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 
 		err = database.AddDatePlayerFieldByFieldName(g.DB, dbPlayer)
 		if err != nil {
-			logger.Error("账号数据储存失败")
+			logger.Error("账号数据储存失败,err:%s", err.Error())
 		}
 	} else {
 		g.BasicBin = new(spb.PlayerBasicCompBin)

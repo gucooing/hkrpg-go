@@ -22,6 +22,7 @@ func (r *CmdRouteManager) initRoute() {
 		"worldLevel": worldLevel,
 		"tp":         tp,
 		"list":       list,
+		"unlocked":   unlocked,
 	}
 }
 
@@ -113,4 +114,17 @@ func list(parameter []string, s *HkRpgGoServer) {
 		allPlayers = append(allPlayers, &playerList{uid: v.Uid, name: v.GamePlayer.GetNickname()})
 	}
 	logger.Info("PlayerList:%s", allPlayers)
+}
+
+func unlocked(parameter []string, s *HkRpgGoServer) {
+	index := len(parameter)
+	if index < 2 {
+		return
+	}
+	p := s.GetPlayer(alg.S2U32(parameter[1]))
+	if p == nil {
+		return
+	}
+	p.GamePlayer.FinishAllMission()
+	p.GamePlayer.FinishAllTutorial()
 }

@@ -62,3 +62,11 @@ const (
 	FuncTypeCompose FuncType = "Compose"
 	FuncTypeReplace FuncType = "Replace"
 )
+
+type ItemFoodUseTag = string
+
+const (
+	ItemFoodUseTagHP ItemFoodUseTag = "HP"
+	ItemFoodUseTagBP ItemFoodUseTag = "BP"
+	ItemFoodUseTagSP ItemFoodUseTag = "SP"
+)

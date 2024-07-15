@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -415,8 +416,18 @@ func (g *GamePlayer) SellDelRelic(uniqueId uint32) []*Material {
 	return material
 }
 
-func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData) {
-	// TODO
+func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData, avatarId uint32) {
+	if conf == nil {
+		return
+	}
+	for _, tag := range conf.ConsumeTag {
+		switch tag {
+		case constant.ItemFoodUseTagBP:
+			g.AddLineUpMp(conf.PreviewSkillPoint)
+		case constant.ItemFoodUseTagHP:
+			g.AvatarRecoverPercent(avatarId, conf.PreviewHPRecoveryValue, conf.PreviewHPRecoveryPercent)
+		}
+	}
 }
 
 func (g *GamePlayer) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData) (proto.Retcode, *AllPlayerSync) {

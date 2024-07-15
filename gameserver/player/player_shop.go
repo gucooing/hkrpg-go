@@ -149,3 +149,15 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
 	g.MissionGetItem(req.ItemId) // 任务检查
 	g.Send(cmd.BuyGoodsScRsp, rsp)
 }
+
+func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetRollShopInfoCsReq, payloadMsg)
+	req := msg.(*proto.GetRollShopInfoCsReq)
+	rsp := &proto.GetRollShopInfoScRsp{
+		GachaRandom: 1,
+		NOPNEOADJEI: nil,
+		RollShopId:  req.RollShopId,
+		Retcode:     0,
+	}
+	g.Send(cmd.GetRollShopInfoScRsp, rsp)
+}

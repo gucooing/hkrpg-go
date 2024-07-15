@@ -131,6 +131,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 		mapEntrance := gdconf.GetMapEntranceById(entryId)
 		if mapEntrance != nil {
 			groupList := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
+			block := g.GetBlock(entryId)
 			// teleportsMap := gdconf.GetTeleportsById(mapEntrance.PlaneID, mapEntrance.FloorID)
 			// if teleportsMap != nil {
 			// 	mapList := &proto.SceneMapInfo{
@@ -187,14 +188,8 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 					mapList.MazeGroupList = append(mapList.MazeGroupList, &proto.MazeGroup{GroupId: group.GroupId})
 					for _, prop := range group.PropList {
 						if prop.MappingInfoID != 0 {
-							var state uint32 = 0
-							if prop.AnchorID != 0 {
-								state = 8 // 默认解锁
-							} else {
-								state = 1 // gdconf.GetStateValue(prop.State)
-							}
 							mazeProp := &proto.MazePropState{
-								State:    state,
+								State:    g.GetPropState(block, group.GroupId, prop.ID, prop.State),
 								GroupId:  group.GroupId,
 								ConfigId: prop.ID,
 							}

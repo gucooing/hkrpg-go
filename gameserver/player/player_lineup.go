@@ -9,7 +9,7 @@ import (
 // 队伍更新通知
 func (g *GamePlayer) SyncLineupNotify(db *spb.Line) {
 	rsq := &proto.SyncLineupNotify{
-		ReasonList: nil,
+		ReasonList: make([]proto.SyncLineupReason, 0),
 		Lineup:     g.GetLineUpPb(db),
 	}
 	g.Send(cmd.SyncLineupNotify, rsq)

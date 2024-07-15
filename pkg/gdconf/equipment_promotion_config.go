@@ -15,6 +15,12 @@ type EquipmentPromotionConfig struct {
 	MaxLevel           uint32               `json:"MaxLevel"`           // 突破前最大等级
 	PlayerLevelRequire uint32               `json:"PlayerLevelRequire"` // 突破需要的账号等级
 	WorldLevelRequire  uint32               `json:"WorldLevelRequire"`  // 突破需要的世界等级
+	BaseHP             *Value               `json:"BaseHP"`
+	BaseHPAdd          *Value               `json:"BaseHPAdd"`
+	BaseAttack         *Value               `json:"BaseAttack"`
+	BaseAttackAdd      *Value               `json:"BaseAttackAdd"`
+	BaseDefence        *Value               `json:"BaseDefence"`
+	BaseDefenceAdd     *Value               `json:"BaseDefenceAdd"`
 }
 
 func (g *GameDataConfig) loadEquipmentPromotionConfig() {
@@ -48,4 +54,11 @@ func GetEquipmentPromotionConfigByLevel(equipmentID, promotion uint32) uint32 {
 func GetEquipmentMaxLevel(equipmentId, promotion uint32) uint32 {
 	promotionConfig := CONF.EquipmentPromotionConfigMap[equipmentId][promotion]
 	return promotionConfig.MaxLevel
+}
+
+func GetEquipmentPromotionConfig(equipmentID, promotion uint32) *EquipmentPromotionConfig {
+	if CONF.EquipmentPromotionConfigMap[equipmentID] == nil {
+		return nil
+	}
+	return CONF.EquipmentPromotionConfigMap[equipmentID][promotion]
 }

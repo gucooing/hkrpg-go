@@ -5,6 +5,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -323,7 +324,50 @@ func (g *GamePlayer) AvatarRecover(avatarId uint32) {
 	}
 }
 
-func (g *GamePlayer) CheckUnlockMultiPath() {
+func (g *GamePlayer) getAvatarBaseHp(avatarId uint32) float64 {
+	avatarDb := g.GetAvatarById(avatarId)
+	if avatarDb == nil {
+		return 0
+	}
+	logger.Debug("avatar old hp:", avatarDb.Hp)
+	avatarConf := gdconf.GetAvatarPromotionConfig(avatarId, avatarDb.PromoteLevel)
+	if avatarConf == nil {
+		return 0
+	}
+	// 获取装备光锥增加血量
+	var equipmentAddHp float64
+	equipmentDb := g.GetEquipmentById(avatarDb.MultiPathAvatarInfoList[avatarDb.CurPath].EquipmentUniqueId)
+	if equipmentDb != nil {
+		equipmentConf := gdconf.GetEquipmentPromotionConfig(equipmentDb.Tid, equipmentDb.Promotion)
+		equipmentAddHp = equipmentConf.BaseHP.Value + equipmentConf.BaseHPAdd.Value*float64(equipmentDb.Level-1)
+	}
+	// 计算白字
+	baseHp := avatarConf.HPBase.Value + avatarConf.HPAdd.Value*float64(avatarDb.Level-1) + equipmentAddHp
+	logger.Debug("avatar base hp:", baseHp)
+	return baseHp
+}
+
+func (g *GamePlayer) AvatarRecoverPercent(avatarId uint32, Value, percent float64) {
+	avatarDb := g.GetAvatarById(avatarId)
+	if avatarDb == nil {
+		return
+	}
+	// 计算白字
+	baseHp := g.getAvatarBaseHp(avatarId)
+	// 计算绿字
+	equiHp := float64(0)
+	// 正式计算血量
+	hp := baseHp + equiHp // 总血量
+	// 计算现有血量
+	oldHp := float64(avatarDb.Hp) / 10000 * hp
+	// 计算增加后的血量
+	newHp := oldHp + Value + hp*percent
+	// 更新客户端血量
+	avatarDb.Hp = uint32(newHp / hp * 10000)
+	logger.Debug("avatar new hp:", avatarDb.Hp)
+}
+
+func (g *GamePlayer) CheckUnlockMultiPath() { // 任务检查发放命途
 	finishMainMissionList := g.GetFinishMainMissionList()   // 已完成的主任务
 	finishSubMissionList := g.GetFinishSubMainMissionList() // 已完成的子任务
 	allSync := &AllPlayerSync{AvatarList: make([]uint32, 0)}

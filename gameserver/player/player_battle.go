@@ -9,6 +9,17 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCostMpCsReq, payloadMsg)
+	req := msg.(*proto.SceneCastSkillCostMpCsReq)
+	rsp := &proto.SceneCastSkillCostMpScRsp{
+		CastEntityId: req.CastEntityId,
+		Retcode:      0,
+	}
+	g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{CastEntityId: req.CastEntityId})
+	g.Send(cmd.SceneCastSkillCostMpScRsp, rsp)
+}
+
 func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneEnterStageCsReq, payloadMsg)
 	req := msg.(*proto.SceneEnterStageCsReq)
@@ -34,6 +45,10 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	// 根据各种情况进行处理
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
+		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+			GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(req.AttackedByEntityId, g.GetRotPb(), g.GetPosPb()),
+		})
+		g.DelLineUpMp(1)
 		g.HandleAvatarSkill(req.AttackedByEntityId, req.SkillIndex)
 	}
 	// 添加参与此次攻击的实体
@@ -58,6 +73,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	if mpem.PropId != nil { // 物品效果
 		g.SceneCastSkillProp(mpem)
 	}
+	g.SyncLineupNotify(g.GetBattleLineUp())               // 队伍同步
 	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
@@ -183,7 +199,7 @@ func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
 			g.AddLineUpMp(2) // 如果涉及到更新战斗中的队伍状态，这部分需要改
 		}
 		if conf.RecoverHp {
-
+			g.AvatarRecoverPercent(pem.AvatarId, 0.3, 0)
 		}
 	}
 }

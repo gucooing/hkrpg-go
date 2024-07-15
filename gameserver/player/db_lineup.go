@@ -275,8 +275,13 @@ func (g *GamePlayer) AddLineUpMp(mp uint32) {
 	if db.Mp += mp; db.Mp > 5 {
 		db.Mp = 5
 	}
-	// 更新通知
-	g.SyncLineupNotify(g.GetCurLineUp())
+}
+
+func (g *GamePlayer) DelLineUpMp(mp uint32) {
+	db := g.GetLineUp()
+	if db.Mp -= mp; db.Mp < 0 {
+		db.Mp = 0
+	}
 }
 
 func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {

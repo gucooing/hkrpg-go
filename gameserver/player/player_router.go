@@ -62,14 +62,15 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GroupStateChangeCsReq:  g.GroupStateChangeCsReq,      // 组状态变更
 		cmd.DeployRotaterCsReq:     g.DeployRotaterCsReq,         // 设置旋转
 		// 战斗
-		cmd.SceneCastSkillCsReq:      g.SceneCastSkillCsReq,      // 场景开启战斗
-		cmd.PVEBattleResultCsReq:     g.PVEBattleResultCsReq,     // PVE战斗结算
-		cmd.StartCocoonStageCsReq:    g.StartCocoonStageCsReq,    // 副本/周本等
-		cmd.ActivateFarmElementCsReq: g.ActivateFarmElementCsReq, // 虚影战斗
-		cmd.SceneEnterStageCsReq:     g.SceneEnterStageCsReq,     // 场景直接发起战斗
-		cmd.GetRaidInfoCsReq:         g.GetRaidInfoCsReq,         // 获取raid
-		cmd.StartRaidCsReq:           g.StartRaidCsReq,           // 拓境探游
-		cmd.LeaveRaidCsReq:           g.LeaveRaidCsReq,           // 退出拓境探游
+		cmd.SceneCastSkillCostMpCsReq: g.SceneCastSkillCostMpCsReq, // 技能使用
+		cmd.SceneCastSkillCsReq:       g.SceneCastSkillCsReq,       // 场景开启战斗
+		cmd.PVEBattleResultCsReq:      g.PVEBattleResultCsReq,      // PVE战斗结算
+		cmd.StartCocoonStageCsReq:     g.StartCocoonStageCsReq,     // 副本/周本等
+		cmd.ActivateFarmElementCsReq:  g.ActivateFarmElementCsReq,  // 虚影战斗
+		cmd.SceneEnterStageCsReq:      g.SceneEnterStageCsReq,      // 场景直接发起战斗
+		cmd.GetRaidInfoCsReq:          g.GetRaidInfoCsReq,          // 获取raid
+		cmd.StartRaidCsReq:            g.StartRaidCsReq,            // 拓境探游
+		cmd.LeaveRaidCsReq:            g.LeaveRaidCsReq,            // 退出拓境探游
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期
@@ -112,6 +113,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.ExchangeHcoinCsReq:          g.ExchangeHcoinCsReq,          // 梦华兑换
 		cmd.ExchangeRogueRewardKeyCsReq: g.ExchangeRogueRewardKeyCsReq, // 储存沉浸器
 		cmd.BuyGoodsCsReq:               g.BuyGoodsCsReq,               // 商店交易
+		cmd.GetRollShopInfoCsReq:        g.GetRollShopInfoCsReq,        //
 		// 好友
 		cmd.GetFriendLoginInfoCsReq:     g.HandleGetFriendLoginInfoCsReq, // 获取好友信息列表
 		cmd.GetFriendListInfoCsReq:      g.GetFriendListInfoCsReq,        // 获取好友信息
@@ -144,7 +146,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetSecretKeyInfoCsReq:          g.GetSecretKeyInfoCsReq,         // key
 		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,             // 对话选项
 		cmd.UpdateTrackMainMissionIdCsReq:  g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
-
 		// 活动
 		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求

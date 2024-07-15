@@ -132,10 +132,11 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg []byte) {
 		g.AddUnlockFormulaList(req.UseItemId)
 		rsp.FormulaId = conf.ID
 	case constant.ItemSubTypeFood: // 食物
-		g.useItem(gdconf.GetItemUseBuffDataById(req.UseItemId))
+		g.useItem(gdconf.GetItemUseBuffDataById(req.UseItemId), req.BaseAvatarId)
 	}
 	allSync.MaterialList = append(allSync.MaterialList, req.UseItemId)
 	g.AllPlayerSyncScNotify(allSync)
+	g.SyncLineupNotify(g.GetBattleLineUp())
 
 	g.Send(cmd.UseItemScRsp, rsp)
 }

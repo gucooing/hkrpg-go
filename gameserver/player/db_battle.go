@@ -471,7 +471,8 @@ type MPEM struct {
 	MonsterId       []uint32 // 怪物id
 	PropEntityId    []uint32 // 物品实体id
 	PropId          []uint32 // 怪物id
-
+	AvatarId        uint32   // 角色id
+	AvatarEntityId  uint32   // 角色实体id
 }
 
 func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
@@ -483,6 +484,8 @@ func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
 		switch entity.(type) {
 		case *AvatarEntity:
 			mpem.IsAvatar = true
+			mpem.AvatarId = entity.(*AvatarEntity).AvatarId
+			mpem.AvatarEntityId = id
 		case *MonsterEntity:
 			if mpem.MonsterEntityId == nil {
 				mpem.MonsterEntityId = make([]uint32, 0)
