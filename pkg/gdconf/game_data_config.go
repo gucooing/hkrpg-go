@@ -33,6 +33,7 @@ type GameDataConfig struct {
 	EquipmentConfigMap           map[uint32]*EquipmentConfig                     // 光锥
 	EquipmentExpTypeMap          map[uint32]map[uint32]*EquipmentExp             // 光锥经验配置
 	EquipmentPromotionConfigMap  map[uint32]map[uint32]*EquipmentPromotionConfig // 光锥突破配置
+	EquipmentSkillConfigMap      map[uint32]map[uint32]*EquipmentSkillConfig     // 光锥效果配置
 	RelicMap                     map[uint32]*Relic                               // 遗器
 	RelicMainAffixConfigMap      map[uint32]map[uint32]*RelicMainAffixConfig     // 圣遗物主属性配置
 	RelicSubAffixConfigMap       map[uint32]map[uint32]*RelicSubAffixConfig      // 圣遗物副属性配置
@@ -183,6 +184,7 @@ func (g *GameDataConfig) load() {
 		g.loadEquipmentConfig,          // 光锥
 		g.loadEquipmentExpType,         // 光锥经验配置
 		g.loadEquipmentPromotionConfig, // 光锥突破配置
+		g.loadEquipmentSkillConfig,     // 光锥效果配置
 		g.loadRelic,                    // 遗器
 		g.loadRelicMainAffixConfig,     // 圣遗物主属性配置
 		g.loadRelicSubAffixConfig,      // 圣遗物副属性配置

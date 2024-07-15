@@ -10,10 +10,12 @@ import (
 )
 
 type RelicSubAffixConfig struct {
-	GroupID  uint32 `json:"GroupID"`
-	AffixID  uint32 `json:"AffixID"`
-	Property string `json:"Property"`
-	StepNum  uint32 `json:"StepNum"`
+	GroupID   uint32 `json:"GroupID"`
+	AffixID   uint32 `json:"AffixID"`
+	Property  string `json:"Property"`
+	StepNum   uint32 `json:"StepNum"`
+	BaseValue *Value `json:"BaseValue"`
+	StepValue *Value `json:"StepValue"`
 }
 
 func (g *GameDataConfig) loadRelicSubAffixConfig() {
@@ -32,7 +34,6 @@ func (g *GameDataConfig) loadRelicSubAffixConfig() {
 	}
 
 	logger.Info("load %v RelicSubAffixConfig", len(g.RelicSubAffixConfigMap))
-
 }
 
 func GetRelicSubAffixConfigById(ID uint32) *RelicSubAffixConfig {
@@ -43,4 +44,11 @@ func GetRelicSubAffixConfigById(ID uint32) *RelicSubAffixConfig {
 	}
 	idIndex := keys[rand.Intn(len(keys))]
 	return relicSubAffixConfigMap[idIndex]
+}
+
+func GetRelicSubAffixConfig(id, index uint32) *RelicSubAffixConfig {
+	if CONF.RelicSubAffixConfigMap[id] == nil {
+		return nil
+	}
+	return CONF.RelicSubAffixConfigMap[id][index]
 }

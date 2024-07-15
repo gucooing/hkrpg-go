@@ -329,7 +329,7 @@ func (g *GamePlayer) getAvatarBaseHp(avatarId uint32) float64 {
 	if avatarDb == nil {
 		return 0
 	}
-	logger.Debug("avatar old hp:", avatarDb.Hp)
+	logger.Debug("avatar %v oldHp:%v", avatarId, avatarDb.Hp)
 	avatarConf := gdconf.GetAvatarPromotionConfig(avatarId, avatarDb.PromoteLevel)
 	if avatarConf == nil {
 		return 0
@@ -343,8 +343,69 @@ func (g *GamePlayer) getAvatarBaseHp(avatarId uint32) float64 {
 	}
 	// 计算白字
 	baseHp := avatarConf.HPBase.Value + avatarConf.HPAdd.Value*float64(avatarDb.Level-1) + equipmentAddHp
-	logger.Debug("avatar base hp:", baseHp)
+	logger.Debug("avatar %v base baseHp:%v", avatarId, baseHp)
 	return baseHp
+}
+
+func (g *GamePlayer) getAvatarEquiHp(avatarId uint32, baseHp float64) float64 {
+	avatarDb := g.GetAvatarById(avatarId)
+	if avatarDb == nil {
+		return 0
+	}
+	path := avatarDb.MultiPathAvatarInfoList[avatarDb.CurPath]
+	// 获取装备光锥增加血量
+	var equipmentAddHp float64
+	equipmentDb := g.GetEquipmentById(path.EquipmentUniqueId)
+	if equipmentDb != nil {
+		equipmentConf := gdconf.GetEquipmentSkillConfig(equipmentDb.Tid, equipmentDb.Rank)
+		if equipmentConf != nil {
+			for _, abilityProperty := range equipmentConf.AbilityProperty {
+				if abilityProperty.PropertyType == "AttackAddedRatio" {
+					equipmentAddHp = baseHp * abilityProperty.Value.Value
+					break
+				}
+			}
+		}
+	}
+	// 获取圣遗物增加血量
+	var relicAddHp float64
+	for _, relicUniqueId := range path.EquipRelic {
+		relicDb := g.GetRelicById(relicUniqueId)
+		if relicDb == nil {
+			continue
+		}
+		relicConf := gdconf.GetRelicById(relicDb.Tid)
+		if relicConf == nil {
+			continue
+		}
+		// 主属性
+		mainAffixConf := gdconf.GetRelicMainAffixConfig(relicConf.MainAffixGroup, relicDb.MainAffixId)
+		if mainAffixConf != nil {
+			if mainAffixConf.Property == "HPDelta" {
+				relicAddHp += mainAffixConf.BaseValue.Value + mainAffixConf.LevelAdd.Value*float64(relicDb.Level)
+			}
+			if mainAffixConf.Property == "HPAddedRatio" {
+				relicAddHp += (mainAffixConf.BaseValue.Value + mainAffixConf.LevelAdd.Value*float64(relicDb.Level)) * baseHp
+			}
+		}
+		// 副属性
+		for _, subAffix := range relicDb.RelicAffix {
+			subAffixConf := gdconf.GetRelicSubAffixConfig(relicConf.SubAffixGroup, subAffix.AffixId)
+			if subAffixConf == nil {
+				continue
+			}
+			if subAffixConf.Property == "HPDelta" {
+				relicAddHp += subAffixConf.BaseValue.Value*float64(subAffix.Cnt) + subAffixConf.StepValue.Value*float64(subAffix.Step)
+			}
+			if subAffixConf.Property == "HPAddedRatio" {
+				relicAddHp += (subAffixConf.BaseValue.Value*float64(subAffix.Cnt) + subAffixConf.StepValue.Value*float64(subAffix.Step)) * baseHp
+			}
+		}
+	}
+	equiHp := equipmentAddHp + relicAddHp
+	logger.Debug("avatar %v equiHp:%v", avatarId, equiHp)
+
+	return equiHp
 }
 
 func (g *GamePlayer) AvatarRecoverPercent(avatarId uint32, Value, percent float64) {
@@ -355,7 +416,7 @@ func (g *GamePlayer) AvatarRecoverPercent(avatarId uint32, Value, percent float6
 	// 计算白字
 	baseHp := g.getAvatarBaseHp(avatarId)
 	// 计算绿字
-	equiHp := float64(0)
+	equiHp := g.getAvatarEquiHp(avatarId, baseHp)
 	// 正式计算血量
 	hp := baseHp + equiHp // 总血量
 	// 计算现有血量
@@ -364,7 +425,10 @@ func (g *GamePlayer) AvatarRecoverPercent(avatarId uint32, Value, percent float6
 	newHp := oldHp + Value + hp*percent
 	// 更新客户端血量
 	avatarDb.Hp = uint32(newHp / hp * 10000)
-	logger.Debug("avatar new hp:", avatarDb.Hp)
+	if avatarDb.Hp < 0 {
+		avatarDb.Hp = 2000
+	}
+	logger.Debug("avatar %v new hp:%v", avatarId, avatarDb.Hp)
 }
 
 func (g *GamePlayer) CheckUnlockMultiPath() { // 任务检查发放命途

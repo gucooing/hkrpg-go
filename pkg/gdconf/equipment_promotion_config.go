@@ -38,7 +38,6 @@ func (g *GameDataConfig) loadEquipmentPromotionConfig() {
 		panic(info)
 	}
 	logger.Info("load %v EquipmentPromotionConfig", len(g.EquipmentPromotionConfigMap))
-
 }
 
 func GetEquipmentPromotionConfigByLevel(equipmentID, promotion uint32) uint32 {
