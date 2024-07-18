@@ -309,6 +309,7 @@ func (g *GamePlayer) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
+			State:      g.GetGroupState(blockBin, levelGroup.GroupId),
 		}
 		// 添加物品实体
 		g.GetPropByID(entityGroupLists, levelGroup, blockBin, entryId)

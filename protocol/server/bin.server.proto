@@ -394,6 +394,7 @@ message BlockBin{// 地图配置
 
 message BlockList{
   map<uint32, PropInfo>  prop_info = 1;// 物品实体信息
+  uint32 group_state = 2;// 组状态
 }
 
 message PropInfo{

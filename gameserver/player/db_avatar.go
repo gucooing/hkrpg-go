@@ -553,7 +553,7 @@ func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*p
 				Level:           1,
 				OwnerIndex:      index,
 				WaveFlag:        4294967295,
-				TargetIndexList: []uint32{1},
+				TargetIndexList: []uint32{index},
 				DynamicValues:   make(map[string]float32),
 			})
 			g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)

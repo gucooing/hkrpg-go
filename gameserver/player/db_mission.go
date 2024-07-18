@@ -587,6 +587,10 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			groupID := finishAction.FinishActionPara[1]
 			anchorID := finishAction.FinishActionPara[2]
 			g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
+		case constant.SetGroupState: // 设置组状态
+			groupID := finishAction.FinishActionPara[0]
+			groupState := finishAction.FinishActionPara[1]
+			g.SetGroupState(g.GetBlock(floorTentry(conf.LevelFloorID)), groupID, groupState)
 		}
 	}
 	g.AddItem(pileItem)

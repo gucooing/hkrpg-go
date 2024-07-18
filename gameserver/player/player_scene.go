@@ -342,6 +342,42 @@ func (g *GamePlayer) DeployRotaterCsReq(payloadMsg []byte) {
 	g.Send(cmd.DeployRotaterScRsp, rsp)
 }
 
+func (g *GamePlayer) StartWolfBroGameCsReq(payloadMsg []byte) {
+	g.Send(cmd.WolfBroGameDataChangeScNotify, &proto.WolfBroGameDataChangeScNotify{
+		WolfBroGameData: &proto.WolfBroGameData{
+			KHOGNFEGNLC: &proto.WolfBroGameInfo{
+				Motion: &proto.MotionInfo{
+					Pos: g.GetPosPb(),
+					Rot: g.GetRotPb(),
+				},
+				BOLDFGOJGII: 0,
+				ADLJJIGGBHE: make([]*proto.Vector, 0),
+				OAOLMHLHNAI: false,
+			},
+			LINLMHBEAPC: "114514",
+			Id:          3,
+		},
+	})
+	g.Send(cmd.StartWolfBroGameScRsp, &proto.StartWolfBroGameScRsp{})
+}
+
+func (g *GamePlayer) SetGroupCustomSaveDataCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SetGroupCustomSaveDataCsReq, payloadMsg)
+	req := msg.(*proto.SetGroupCustomSaveDataCsReq)
+	g.Send(cmd.GroupStateChangeScNotify, &proto.GroupStateChangeScNotify{
+		GroupStateInfo: &proto.GroupStateInfo{
+			EntryId:    req.EntryId,
+			GroupState: 1,
+			GroupId:    req.GroupId,
+		},
+	})
+	g.Send(cmd.SetGroupCustomSaveDataScRsp, &proto.SetGroupCustomSaveDataScRsp{
+		EntryId: req.EntryId,
+		GroupId: req.GroupId,
+		Retcode: 0,
+	})
+}
+
 func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SpringRecoverSingleAvatarCsReq, payloadMsg)
 	req := msg.(*proto.SpringRecoverSingleAvatarCsReq)
@@ -462,9 +498,11 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 		if groupInfo.GroupID == 0 { // 不能卸载角色
 			continue
 		}
+		db := g.GetBlock(groupInfo.EntryId)
 		groupRefreshInfo := &proto.GroupRefreshInfo{
 			GroupId:       groupInfo.GroupID,
 			RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+			State:         g.GetGroupState(db, groupInfo.GroupID),
 		}
 
 		for _, entify := range groupInfo.EntityMap {
@@ -488,6 +526,7 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 		groupRefreshInfo := &proto.GroupRefreshInfo{
 			GroupId:       groupInfo.GroupID,
 			RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+			State:         g.GetGroupState(db, groupInfo.GroupID),
 		}
 		// 添加怪物
 		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddMonsterSceneEntityRefreshInfo(groupInfo.GroupID, group.MonsterList)...)

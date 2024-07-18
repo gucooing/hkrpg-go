@@ -158,7 +158,7 @@ func GetSavedValue(planeId, floorId uint32, name string) (uint32, uint32) {
 	if floor != nil && floor.SavedValues != nil {
 		for _, v := range floor.SavedValues {
 			if v.Name == name {
-				if len(v.AllowedValues) == 0 {
+				if len(v.AllowedValues) < 2 {
 					return 0, 0
 				}
 				groupInstance := floor.GroupInstanceList[v.AllowedValues[0]]
@@ -167,6 +167,9 @@ func GetSavedValue(planeId, floorId uint32, name string) (uint32, uint32) {
 				}
 				group = GetNGroupById(planeId, floorId, groupInstance.ID)
 				if group == nil {
+					return 0, 0
+				}
+				if uint32(len(group.PropList)) < v.AllowedValues[1] {
 					return 0, 0
 				}
 				porp = group.PropList[v.AllowedValues[1]]

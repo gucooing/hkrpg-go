@@ -607,6 +607,30 @@ func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32
 	}
 }
 
+func (g *GamePlayer) GetGroupState(db *spb.BlockBin, groupId uint32) uint32 {
+	if db.BlockList == nil {
+		db.BlockList = make(map[uint32]*spb.BlockList)
+	}
+	if db.BlockList[groupId] == nil {
+		db.BlockList[groupId] = &spb.BlockList{
+			PropInfo: make(map[uint32]*spb.PropInfo),
+		}
+	}
+	return db.BlockList[groupId].GroupState
+}
+
+func (g *GamePlayer) SetGroupState(db *spb.BlockBin, groupId, groupState uint32) {
+	if db.BlockList == nil {
+		db.BlockList = make(map[uint32]*spb.BlockList)
+	}
+	if db.BlockList[groupId] == nil {
+		db.BlockList[groupId] = &spb.BlockList{
+			PropInfo: make(map[uint32]*spb.PropInfo),
+		}
+	}
+	db.BlockList[groupId].GroupState = groupState
+}
+
 func (g *GamePlayer) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
 	if db.BlockList == nil {
 		db.BlockList = make(map[uint32]*spb.BlockList)
@@ -940,6 +964,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
+			State:      g.GetGroupState(blockBin, levelGroup.GroupId),
 		}
 		// 添加物品实体
 		g.GetPropByID(entityGroupLists, levelGroup, blockBin, entryId)
@@ -1283,7 +1308,7 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 }
 
 // 添加Buff
-func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId uint32, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
+func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId uint32, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
 	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
@@ -1299,7 +1324,7 @@ func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId uint32, pos
 			SummonUnit: &proto.SceneSummonUnitInfo{
 				CasterEntityId:  casterEntityId,
 				AttachEntityId:  casterEntityId,
-				SummonUnitId:    13091,
+				SummonUnitId:    summonId,
 				CreateTimeMs:    uint64(time.Now().UnixMilli()),
 				TriggerNameList: make([]string, 0),
 				LifeTimeMs:      -1,

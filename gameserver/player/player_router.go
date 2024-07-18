@@ -53,14 +53,16 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DressRelicAvatarCsReq: g.DressRelicAvatarCsReq, // 圣遗物装备
 		cmd.ExpUpRelicCsReq:       g.ExpUpRelicCsReq,       // 圣遗物升级
 		// 场景
-		cmd.GetSceneMapInfoCsReq:   g.HanldeGetSceneMapInfoCsReq, // 获取地图信息
-		cmd.GetCurSceneInfoCsReq:   g.HandleGetCurSceneInfoCsReq, // 获取场景信息(关键包)
-		cmd.SceneEntityMoveCsReq:   g.SceneEntityMoveCsReq,       // 场景实体移动
-		cmd.EnterSceneCsReq:        g.EnterSceneCsReq,            // 场景传送
-		cmd.GetUnlockTeleportCsReq: g.GetUnlockTeleportCsReq,     // 获取解锁的传送点
-		cmd.InteractPropCsReq:      g.InteractPropCsReq,          // 实体交互
-		cmd.GroupStateChangeCsReq:  g.GroupStateChangeCsReq,      // 组状态变更
-		cmd.DeployRotaterCsReq:     g.DeployRotaterCsReq,         // 设置旋转
+		cmd.GetSceneMapInfoCsReq:        g.HanldeGetSceneMapInfoCsReq, // 获取地图信息
+		cmd.GetCurSceneInfoCsReq:        g.HandleGetCurSceneInfoCsReq, // 获取场景信息(关键包)
+		cmd.SceneEntityMoveCsReq:        g.SceneEntityMoveCsReq,       // 场景实体移动
+		cmd.EnterSceneCsReq:             g.EnterSceneCsReq,            // 场景传送
+		cmd.GetUnlockTeleportCsReq:      g.GetUnlockTeleportCsReq,     // 获取解锁的传送点
+		cmd.InteractPropCsReq:           g.InteractPropCsReq,          // 实体交互
+		cmd.GroupStateChangeCsReq:       g.GroupStateChangeCsReq,      // 组状态变更
+		cmd.DeployRotaterCsReq:          g.DeployRotaterCsReq,         // 设置旋转
+		cmd.StartWolfBroGameCsReq:       g.StartWolfBroGameCsReq,      // 变身
+		cmd.SetGroupCustomSaveDataCsReq: g.SetGroupCustomSaveDataCsReq,
 		// 战斗
 		cmd.SceneCastSkillCostMpCsReq: g.SceneCastSkillCostMpCsReq, // 技能使用
 		cmd.SceneCastSkillCsReq:       g.SceneCastSkillCsReq,       // 场景开启战斗

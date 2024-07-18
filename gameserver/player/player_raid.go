@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -16,8 +17,9 @@ func (g *GamePlayer) GetRaidInfoCsReq(payloadMsg []byte) {
 	}
 	for _, db := range g.GetFinishRaidMap() {
 		rsp.FinishedRaidInfoList = append(rsp.FinishedRaidInfoList, &proto.FinishedRaidInfo{
-			WorldLevel: db.HardLevel,
-			RaidId:     db.RaidId,
+			WorldLevel:  db.HardLevel,
+			RaidId:      db.RaidId,
+			CKJLBFCBDDB: make([]uint32, 0),
 		})
 	}
 
@@ -45,6 +47,7 @@ func (g *GamePlayer) LeaveRaidCsReq(payloadMsg []byte) {
 	rsp := &proto.LeaveRaidScRsp{}
 	db := g.GetFinishRaidInfo(req.RaidId)
 	if db == nil {
+		g.SceneByServerScNotify(g.GetCurEntryId(), g.GetPosPb(), g.GetRotPb())
 		g.Send(cmd.LeaveRaidScRsp, rsp)
 		return
 	}
@@ -57,9 +60,13 @@ func (g *GamePlayer) LeaveRaidCsReq(payloadMsg []byte) {
 		g.Send(cmd.LeaveRaidScRsp, rsp)
 		return
 	}
-	if (conf.MainMissionIDBefore != conf.MainMissionIDAfter) || conf.MainMissionIDBefore == 0 {
-		teleportToAnchor = false
+	switch conf.Type {
+	case constant.RaidConfigTypeMission:
+		if (conf.MainMissionIDBefore != conf.MainMissionIDAfter) || conf.MainMissionIDBefore == 0 {
+			teleportToAnchor = false
+		}
 	}
+
 	if teleportToAnchor {
 		// 回到之前的位置
 		g.SceneByServerScNotify(g.GetCurEntryId(), g.GetPosPb(), g.GetRotPb())
