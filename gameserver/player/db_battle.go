@@ -3,12 +3,15 @@
 package player
 
 import (
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -106,23 +109,39 @@ func (g *GamePlayer) GetOnLineAvatarBuffById(id uint32) *OnLineAvatarBuff {
 	return db[id]
 }
 
-func (g *GamePlayer) HandleAvatarSkill(entityId, skillIndex uint32) {
+func (g *GamePlayer) HandleAvatarSkill(entityId uint32) (bool, bool) {
 	avatar := g.GetAvatarEntity(entityId)
+	isBattle := true
+	isDelMp := false
 	if avatar == nil {
-		return
+		return true, false
 	}
 	confAvatar := gdconf.GetAdventurePlayerByAvatarId(avatar.AvatarId)
-	if confAvatar == nil || uint32(len(confAvatar.MazeSkillIdList)) < skillIndex {
-		return
+	if confAvatar == nil {
+		return true, false
 	}
-	confBuff := gdconf.GetAvatarMazeBuffById(confAvatar.MazeSkillIdList[skillIndex], 1)
-	if confBuff == nil {
-		return
+	for _, mazeSkillId := range confAvatar.MazeSkillIdList {
+		confBuff := gdconf.GetAvatarMazeBuffById(mazeSkillId, 1)
+		if confBuff == nil {
+			continue
+		}
+		switch confBuff.UseType {
+		case "AddBattleBuff":
+			g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
+		}
+		if strings.Contains(confBuff.BuffEffect, "MazeBuffEffect") {
+			// isBattle = false
+			summonId := strconv.FormatUint(uint64(mazeSkillId), 10)[:4] + strconv.FormatUint(uint64(mazeSkillId), 10)[5:]
+			g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+				GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(entityId, alg.S2U32(summonId), g.GetRotPb(), g.GetPosPb()),
+			})
+		}
+		if confBuff.InBattleBindingKey != "" {
+			isDelMp = true
+		}
 	}
-	switch confBuff.UseType {
-	case "AddBattleBuff":
-		g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
-	}
+
+	return isBattle, isDelMp
 }
 
 func (g *GamePlayer) AddOnLineAvatarBuff(avatarID, buffId uint32) {

@@ -16,7 +16,6 @@ func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg []byte) {
 		CastEntityId: req.CastEntityId,
 		Retcode:      0,
 	}
-	g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{CastEntityId: req.CastEntityId})
 	g.Send(cmd.SceneCastSkillCostMpScRsp, rsp)
 }
 
@@ -43,13 +42,11 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
 	// 根据各种情况进行处理
+	isBattle := true
+	isDelMp := false
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
-		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
-			GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(req.AttackedByEntityId, g.GetRotPb(), g.GetPosPb()),
-		})
-		g.DelLineUpMp(1)
-		g.HandleAvatarSkill(req.AttackedByEntityId, req.SkillIndex)
+		isBattle, isDelMp = g.HandleAvatarSkill(req.AttackedByEntityId)
 	}
 	// 添加参与此次攻击的实体
 	mpem := &MPEM{
@@ -59,22 +56,37 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		PropEntityId:    make([]uint32, 0),
 		PropId:          make([]uint32, 0),
 	}
-	// 怪物协助列表
-	g.GetMem([]uint32{req.AttackedByEntityId}, mpem)
+	// 添加攻击发起者
 	if req.AssistMonsterEntityInfo != nil {
 		for _, info := range req.AssistMonsterEntityInfo {
 			g.GetMem(info.EntityIdList, mpem)
 		}
 	} else {
-		if req.AssistMonsterEntityIdList != nil {
-			g.GetMem(req.AssistMonsterEntityIdList, mpem)
+		g.GetMem([]uint32{req.AttackedByEntityId}, mpem)
+	}
+	// 添加被攻击者
+	if req.AssistMonsterEntityIdList != nil {
+		g.GetMem(req.AssistMonsterEntityIdList, mpem)
+	} else {
+		if req.HitTargetEntityIdList != nil {
+			g.GetMem(req.HitTargetEntityIdList, mpem)
 		}
+	}
+	if len(mpem.MonsterEntityId) != 0 && isBattle {
+		isDelMp = true
+	}
+	if isDelMp {
+		g.DelLineUpMp(1)
+		g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
+			CastEntityId: req.CastEntityId,
+			Mp:           g.GetLineUpMp(),
+		})
 	}
 	if mpem.PropId != nil { // 物品效果
 		g.SceneCastSkillProp(mpem)
 	}
-	g.SyncLineupNotify(g.GetBattleLineUp())               // 队伍同步
-	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 { // 是否满足战斗条件
+	g.SyncLineupNotify(g.GetBattleLineUp())                            // 队伍同步
+	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 || !isBattle { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
