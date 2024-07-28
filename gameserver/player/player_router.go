@@ -193,6 +193,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.FinishPerformSectionIdCsReq:       g.FinishPerformSectionIdCsReq,       // 完成npc聊天
 		cmd.GetNpcStatusCsReq:                 g.GetNpcStatusCsReq,                 // 获取npc聊天状态
 		// 乱七八糟
+		cmd.GetAuthkeyCsReq: g.GetAuthkeyCsReq, // 兑换码
 	}
 }
 

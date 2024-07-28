@@ -133,11 +133,16 @@ func (s *HkRpgGoServer) AutoUpDataPlayer() {
 		if g.Uid == 0 {
 			continue
 		}
-		lastActiveTime := g.GamePlayer.LastActiveTime
+		if g.LastActiveTime+50 < timestamp {
+			g.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_LOGIN_WHITE_TIMEOUT})
+			s.killPlayer(g)
+			continue
+		}
+		lastActiveTime := g.GamePlayer.LastUpDataTime
 		if timestamp-lastActiveTime >= 180 {
 			logger.Debug("[UID:%v]玩家数据自动保存", g.Uid)
 			g.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE)
-			g.GamePlayer.LastActiveTime = timestamp + rand.Int63n(120)
+			g.GamePlayer.LastUpDataTime = timestamp + rand.Int63n(120)
 			num++
 		}
 	}
@@ -304,6 +309,7 @@ type PlayerGame struct {
 	XorKey           []byte // 密钥
 	KcpConn          *kcp.UDPSession
 	GamePlayer       *player.GamePlayer // 玩家内存
+	LastActiveTime   int64              // 最近一次的活跃时间
 	recvPlayerCancel context.CancelFunc
 }
 
@@ -370,6 +376,7 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	p.GamePlayer = s.NewPlayer(uidPlayer.Uid, accountUid)
 	recvPlayerCtx, recvPlayerCancel := context.WithCancel(context.Background())
 	p.recvPlayerCancel = recvPlayerCancel
+	p.LastActiveTime = time.Now().Unix()
 	go p.recvPlayer(recvPlayerCtx)
 	s.addPlayer(p) // 添加角色到列表中
 	p.GamePlayer.GetPlayerDateByDb()
@@ -392,12 +399,13 @@ func (s *HkRpgGoServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g.DB = s.db.HkrpgGoPe
 	g.IsPE = true
 	g.RouteManager = player.NewRouteManager(g)
-	g.LastActiveTime = time.Now().Unix()
+	g.LastUpDataTime = time.Now().Unix()
 
 	return g
 }
 
 func (s *HkRpgGoServer) RegisterMessage(p *PlayerGame, msg *alg.PackMsg) {
+	p.LastActiveTime = time.Now().Unix()
 	switch msg.CmdId {
 	case cmd.PlayerLogoutCsReq:
 		logger.Info("[UID:%v]玩家主动离线", p.Uid)

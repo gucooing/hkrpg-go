@@ -112,7 +112,20 @@ func (g *GamePlayer) SetHeadIconCsReq(payloadMsg []byte) {
 	}
 
 	g.Send(cmd.SetHeadIconScRsp, rsp)
+}
 
+func (g *GamePlayer) GetAuthkeyCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetAuthkeyCsReq, payloadMsg)
+	req := msg.(*proto.GetAuthkeyCsReq)
+
+	rsp := &proto.GetAuthkeyScRsp{
+		MHHOCCLKLFD: "",
+		LIFIHJFLHHM: req.LIFIHJFLHHM,
+		KFDBLEEICMC: req.KFDBLEEICMC,
+		DKHDNIFJCEM: req.DKHDNIFJCEM,
+		Retcode:     0,
+	}
+	g.Send(cmd.GetAuthkeyScRsp, rsp)
 }
 
 func (g *GamePlayer) SetHeroBasicTypeCsReq(payloadMsg []byte) {

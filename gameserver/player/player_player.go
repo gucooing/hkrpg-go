@@ -1,8 +1,6 @@
 package player
 
 import (
-	"time"
-
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -32,7 +30,7 @@ func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
 	rsp := new(proto.PlayerHeartBeatScRsp)
 	rsp.ServerTimeMs = sTime
 	rsp.ClientTimeMs = req.ClientTimeMs
-	g.LastActiveTime = time.Now().Unix()
+	// g.LastUpDataTime = time.Now().Unix()
 
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }

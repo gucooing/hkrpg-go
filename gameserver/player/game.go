@@ -33,7 +33,7 @@ type GamePlayer struct {
 	BasicBin       *spb.PlayerBasicCompBin // 玩家pb数据
 	RouteManager   *RouteManager           // 路由
 	SendChan       chan Msg                // 发送消息通道
-	LastActiveTime int64                   // 最近一次的活跃时间
+	LastUpDataTime int64                   // 最近一次的活跃时间
 }
 
 type RecvMsg struct {

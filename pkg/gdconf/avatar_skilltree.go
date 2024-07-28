@@ -34,7 +34,6 @@ func (g *GameDataConfig) loadAvatarSkilltree() {
 		panic(info)
 	}
 	logger.Info("load %v AvatarSkillTreeConfig", len(g.AvatarSkilltreeMap))
-
 }
 
 func GetAvatarSkilltreeListById(avatarId uint32) map[uint32]uint32 {

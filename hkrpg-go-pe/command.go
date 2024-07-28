@@ -103,17 +103,8 @@ func tp(parameter []string, s *HkRpgGoServer) {
 	p.GamePlayer.EnterSceneByServerScNotify(alg.S2U32(parameter[2]), 0, 0, 0)
 }
 
-type playerList struct {
-	uid  uint32
-	name string
-}
-
 func list(parameter []string, s *HkRpgGoServer) {
-	var allPlayers []*playerList
-	for _, v := range s.getAllPlayer() {
-		allPlayers = append(allPlayers, &playerList{uid: v.Uid, name: v.GamePlayer.GetNickname()})
-	}
-	logger.Info("PlayerList:%s", allPlayers)
+	logger.Info("PlayerList:%s", len(s.getAllPlayer()))
 }
 
 func unlocked(parameter []string, s *HkRpgGoServer) {
