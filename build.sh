@@ -8,6 +8,8 @@ else
 fi
 
 go mod tidy
+CGO_ENABLED=0
+
 
 OUT_DIR=./build
 PROJECT_NAME=hkrpg-go
