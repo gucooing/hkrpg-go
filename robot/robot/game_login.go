@@ -42,7 +42,7 @@ func (r *RoBot) PlayerLoginScRsp() {
 	req := new(proto.GetBagScRsp)
 
 	r.send(cmd.GetBasicInfoCsReq, req)
-	r.send(cmd.GetHeroBasicTypeInfoCsReq, req)
+	r.send(cmd.GetMultiPathAvatarInfoCsReq, req)
 	r.send(cmd.GetBagCsReq, req)
 	r.send(cmd.GetMarkItemListCsReq, req)
 	r.send(cmd.GetPlayerBoardDataCsReq, req)
