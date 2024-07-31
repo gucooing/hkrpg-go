@@ -151,11 +151,11 @@ func (g *GamePlayer) RaidInfoNotify(raidID uint32) {
 		return
 	}
 	notify := &proto.RaidInfoNotify{
-		ItemList:   &proto.ItemList{ItemList: make([]*proto.Item, 0)},
-		RaidId:     db.RaidId,
-		Status:     proto.RaidStatus(db.Status),
-		WorldLevel: db.HardLevel,
-		FinishTime: db.FinishTime,
+		ItemList:       &proto.ItemList{ItemList: make([]*proto.Item, 0)},
+		RaidId:         db.RaidId,
+		Status:         proto.RaidStatus(db.Status),
+		WorldLevel:     db.HardLevel,
+		RaidFinishTime: db.FinishTime,
 	}
 	// TODO 有重复领取的问题，db加个字段就行了
 	if db.Status == spb.RaidStatus_RAID_STATUS_FINISH {
@@ -272,15 +272,19 @@ func (g *GamePlayer) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 	if foorMap == nil {
 		return nil
 	}
+	worldId := gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID
+	if worldId == 100 {
+		worldId = 401
+	}
 	scene := &proto.SceneInfo{
-		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
+		WorldId:            worldId,
 		LeaderEntityId:     leaderEntityId,
 		FloorId:            mapEntrance.FloorID,
 		GameModeType:       8,
 		PlaneId:            mapEntrance.PlaneID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        make([]uint32, 0),
+		LevelGroupIdList:   make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
@@ -305,7 +309,7 @@ func (g *GamePlayer) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 		} else {
 			g.AddLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 		}
-		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
+		scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),

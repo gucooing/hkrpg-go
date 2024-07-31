@@ -53,17 +53,17 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 func (g *GamePlayer) BattlePassInfoNotify() {
 	// 战斗通行证信息通知
 	notify := &proto.BattlePassInfoNotify{
-		TakenPremiumOptionalReward: 2251799813685246,
-		TakenPremiumExtendedReward: 127,
-		TakenPremiumReward2:        7,
-		Exp:                        1,
-		TakenPremiumReward1:        2,
-		CurWeekAddExpSum:           8000,
-		TakenFreeExtendedReward:    2,
-		CurBpId:                    5,
-		TakenFreeReward:            6,
-		BpTierType:                 proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
-		Level:                      70,
+		// TakenPremiumOptionalReward: 2251799813685246,
+		// TakenPremiumExtendedReward: 127,
+		// TakenPremiumReward2:        7,
+		Exp: 1,
+		// TakenPremiumReward1:        2,
+		// CurWeekAddExpSum:           8000,
+		// TakenFreeExtendedReward:    2,
+		// CurBpId:                    5,
+		// TakenFreeReward:            6,
+		// BpTierType:                 proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
+		Level: 70,
 	}
 	g.Send(cmd.BattlePassInfoNotify, notify)
 }

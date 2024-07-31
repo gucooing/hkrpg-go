@@ -16,6 +16,7 @@ type TextJoinConfig struct {
 
 func (g *GameDataConfig) loadTextJoinConfig() {
 	g.TextJoinConfigMap = make(map[uint32]*TextJoinConfig)
+	textJoinConfigMap := make([]*TextJoinConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "TextJoinConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -23,13 +24,15 @@ func (g *GameDataConfig) loadTextJoinConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.TextJoinConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &textJoinConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range textJoinConfigMap {
+		g.TextJoinConfigMap[v.TextJoinID] = v
+	}
 	logger.Info("load %v TextJoinConfig", len(g.TextJoinConfigMap))
-
 }
 
 func GetTextJoinConfigById(ID uint32) *TextJoinConfig {

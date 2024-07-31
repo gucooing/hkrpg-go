@@ -23,6 +23,7 @@ type ItemConfigRelic struct {
 
 func (g *GameDataConfig) loadItemConfigRelic() {
 	g.ItemConfigRelicMap = make(map[uint32]*ItemConfigRelic)
+	itemConfigRelicMap := make([]*ItemConfigRelic, 0)
 	playerElementsFilePath := g.excelPrefix + "ItemConfigRelic.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -30,13 +31,15 @@ func (g *GameDataConfig) loadItemConfigRelic() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ItemConfigRelicMap)
+	err = hjson.Unmarshal(playerElementsFile, &itemConfigRelicMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range itemConfigRelicMap {
+		g.ItemConfigRelicMap[v.ID] = v
+	}
 	logger.Info("load %v ItemConfigRelic", len(g.ItemConfigRelicMap))
-
 }
 
 func GetItemConfigRelicById(ID uint32) *ItemConfigRelic {

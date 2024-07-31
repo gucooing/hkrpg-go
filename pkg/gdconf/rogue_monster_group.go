@@ -22,6 +22,7 @@ type RogueMonsterGroup struct {
 
 func (g *GameDataConfig) loadRogueMonsterGroup() {
 	g.RogueMonsterGroupMap = make(map[uint32]*RogueMonsterGroups)
+	rogueMonsterGroupMap := make([]*RogueMonsterGroups, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueMonsterGroup.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -29,14 +30,16 @@ func (g *GameDataConfig) loadRogueMonsterGroup() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueMonsterGroupMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueMonsterGroupMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range rogueMonsterGroupMap {
+		g.RogueMonsterGroupMap[v.RogueMonsterGroupID] = v
+	}
 
 	logger.Info("load %v RogueMonsterGroup", len(g.RogueMonsterGroupMap))
-
 }
 
 func GetRogueMonsterGroupByGroupID(groupID uint32) uint32 {

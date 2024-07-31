@@ -16,6 +16,7 @@ type ActivityLoginConfig struct {
 
 func (g *GameDataConfig) loadActivityLoginConfig() {
 	g.ActivityLoginConfigMap = make(map[uint32]*ActivityLoginConfig)
+	activityLoginConfigMap := make([]*ActivityLoginConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "ActivityLoginConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -23,13 +24,15 @@ func (g *GameDataConfig) loadActivityLoginConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ActivityLoginConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &activityLoginConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range activityLoginConfigMap {
+		g.ActivityLoginConfigMap[v.ID] = v
+	}
 	logger.Info("load %v ActivityLoginConfig", len(g.ActivityLoginConfigMap))
-
 }
 
 func GetActivityLoginConfigById(id uint32) *ActivityLoginConfig {

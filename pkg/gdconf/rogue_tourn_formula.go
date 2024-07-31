@@ -24,6 +24,7 @@ type RogueTournFormula struct {
 
 func (g *GameDataConfig) loadRogueTournFormula() {
 	g.RogueTournFormulaMap = make(map[uint32]*RogueTournFormula)
+	rogueTournFormulaMap := make([]*RogueTournFormula, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueTournFormula.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -31,10 +32,13 @@ func (g *GameDataConfig) loadRogueTournFormula() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueTournFormulaMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueTournFormulaMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range rogueTournFormulaMap {
+		g.RogueTournFormulaMap[v.FormulaID] = v
 	}
 	logger.Info("load %v RogueTournFormula", len(g.RogueTournFormulaMap))
 }

@@ -60,15 +60,15 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 	}
 
 	// 设置队伍
-	if req.TeamOne == nil {
+	if req.FirstLineup == nil {
 		g.SetBattleStatus(spb.BattleType_Battle_NONE)
 		g.Send(cmd.StartChallengeScRsp, &proto.StartChallengeScRsp{})
 		return
 	}
 	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
-	g.SetBattleLineUp(Challenge_1, req.TeamOne)
-	if req.TeamTwo != nil {
-		g.SetBattleLineUp(Challenge_2, req.TeamTwo)
+	g.SetBattleLineUp(Challenge_1, req.FirstLineup)
+	if req.SecondLineup != nil {
+		g.SetBattleLineUp(Challenge_2, req.SecondLineup)
 	}
 	// 设置当前战斗的忘却之庭
 	g.SetCurChallenge(req.ChallengeId, storyInfo)
@@ -283,17 +283,21 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 				Z: int32(monster.RotZ * 1000),
 			}
 			seri := &proto.SceneEntityRefreshInfo{
-				AddEntity: &proto.SceneEntityInfo{
-					GroupId:  mazeGroupID,
-					InstId:   monster.ID,
-					EntityId: entityId,
-					Motion: &proto.MotionInfo{
-						Pos: monsterPos,
-						Rot: monsterRot,
-					},
-					NpcMonster: &proto.SceneNpcMonsterInfo{
-						MonsterId: npcMonsterIDList[id],
-						EventId:   eventIDList[id],
+				Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+					AddEntity: &proto.SceneEntityInfo{
+						GroupId:  mazeGroupID,
+						InstId:   monster.ID,
+						EntityId: entityId,
+						Motion: &proto.MotionInfo{
+							Pos: monsterPos,
+							Rot: monsterRot,
+						},
+						EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+							NpcMonster: &proto.SceneNpcMonsterInfo{
+								MonsterId: npcMonsterIDList[id],
+								EventId:   eventIDList[id],
+							},
+						},
 					},
 				},
 			}

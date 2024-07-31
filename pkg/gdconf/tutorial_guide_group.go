@@ -20,6 +20,7 @@ type TutorialGuideGroup struct {
 
 func (g *GameDataConfig) loadTutorialGuideGroup() {
 	g.TutorialGuideGroupMap = make(map[uint32]*TutorialGuideGroup)
+	tutorialGuideGroupMap := make([]*TutorialGuideGroup, 0)
 	playerElementsFilePath := g.excelPrefix + "TutorialGuideGroup.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -27,13 +28,15 @@ func (g *GameDataConfig) loadTutorialGuideGroup() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.TutorialGuideGroupMap)
+	err = hjson.Unmarshal(playerElementsFile, &tutorialGuideGroupMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range tutorialGuideGroupMap {
+		g.TutorialGuideGroupMap[v.GroupID] = v
+	}
 	logger.Info("load %v TutorialGuideGroup", len(g.TutorialGuideGroupMap))
-
 }
 
 func GetTutorialGuideGroup() map[uint32]*TutorialGuideGroup {

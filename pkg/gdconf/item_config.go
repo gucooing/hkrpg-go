@@ -32,14 +32,14 @@ type ItemConfig struct {
 }
 
 func (g *GameDataConfig) loadItemConfig() {
-	itemMap := make(map[uint32]*ItemConfig)
-	avatarMap := make(map[uint32]*ItemConfig)
-	avatarPlayerIconMap := make(map[uint32]*ItemConfig)
-	avatarRankMap := make(map[uint32]*ItemConfig)
-	bookMap := make(map[uint32]*ItemConfig)
-	diskMap := make(map[uint32]*ItemConfig)
-	equipmentMap := make(map[uint32]*ItemConfig)
-	relicMap := make(map[uint32]*ItemConfig)
+	itemMap := make([]*ItemConfig, 0)
+	avatarMap := make([]*ItemConfig, 0)
+	avatarPlayerIconMap := make([]*ItemConfig, 0)
+	avatarRankMap := make([]*ItemConfig, 0)
+	bookMap := make([]*ItemConfig, 0)
+	diskMap := make([]*ItemConfig, 0)
+	equipmentMap := make([]*ItemConfig, 0)
+	relicMap := make([]*ItemConfig, 0)
 
 	playerElementsFileItemConfig, err := os.ReadFile(g.excelPrefix + "ItemConfig.json")
 	if err != nil {
@@ -130,15 +130,41 @@ func (g *GameDataConfig) loadItemConfig() {
 	}
 
 	g.ItemConfigMap = &ItemList{
-		Item:             itemMap,
-		Avatar:           avatarMap,
-		AvatarPlayerIcon: avatarPlayerIconMap,
-		AvatarRank:       avatarRankMap,
-		Book:             bookMap,
-		Disk:             diskMap,
-		Equipment:        equipmentMap,
-		Relic:            relicMap,
+		Item:             make(map[uint32]*ItemConfig),
+		Avatar:           make(map[uint32]*ItemConfig),
+		AvatarPlayerIcon: make(map[uint32]*ItemConfig),
+		AvatarRank:       make(map[uint32]*ItemConfig),
+		Book:             make(map[uint32]*ItemConfig),
+		Disk:             make(map[uint32]*ItemConfig),
+		Equipment:        make(map[uint32]*ItemConfig),
+		Relic:            make(map[uint32]*ItemConfig),
 	}
+
+	for _, v := range itemMap {
+		g.ItemConfigMap.Item[v.ID] = v
+	}
+	for _, v := range avatarMap {
+		g.ItemConfigMap.Avatar[v.ID] = v
+	}
+	for _, v := range avatarPlayerIconMap {
+		g.ItemConfigMap.AvatarPlayerIcon[v.ID] = v
+	}
+	for _, v := range avatarRankMap {
+		g.ItemConfigMap.AvatarRank[v.ID] = v
+	}
+	for _, v := range bookMap {
+		g.ItemConfigMap.Book[v.ID] = v
+	}
+	for _, v := range diskMap {
+		g.ItemConfigMap.Disk[v.ID] = v
+	}
+	for _, v := range equipmentMap {
+		g.ItemConfigMap.Equipment[v.ID] = v
+	}
+	for _, v := range relicMap {
+		g.ItemConfigMap.Relic[v.ID] = v
+	}
+
 	logger.Info("load %v ItemConfig", len(g.ItemConfigMap.Item))
 
 }

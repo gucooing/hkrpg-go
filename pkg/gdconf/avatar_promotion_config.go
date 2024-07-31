@@ -37,6 +37,7 @@ type Value struct {
 
 func (g *GameDataConfig) loadAvatarPromotionConfig() {
 	g.AvatarPromotionConfigMap = make(map[uint32]map[uint32]*AvatarPromotionConfig)
+	avatarPromotionConfigMap := make([]*AvatarPromotionConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "AvatarPromotionConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -44,10 +45,16 @@ func (g *GameDataConfig) loadAvatarPromotionConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.AvatarPromotionConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &avatarPromotionConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range avatarPromotionConfigMap {
+		if g.AvatarPromotionConfigMap[v.AvatarID] == nil {
+			g.AvatarPromotionConfigMap[v.AvatarID] = make(map[uint32]*AvatarPromotionConfig)
+		}
+		g.AvatarPromotionConfigMap[v.AvatarID][v.Promotion] = v
 	}
 	logger.Info("load %v AvatarPromotionConfig", len(g.AvatarPromotionConfigMap))
 

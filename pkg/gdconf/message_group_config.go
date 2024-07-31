@@ -35,13 +35,16 @@ func (g *GameDataConfig) loadMessageGroupConfig() {
 		g.MessageGroupConfig.LoadMessageGroupConfig = make(map[uint32]*LoadMessageGroupConfig)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MessageGroupConfig.LoadMessageGroupConfig)
+	loadMessageGroupConfig := make([]*LoadMessageGroupConfig, 0)
+
+	err = hjson.Unmarshal(playerElementsFile, &loadMessageGroupConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
 
-	for _, info := range g.MessageGroupConfig.LoadMessageGroupConfig {
+	for _, info := range loadMessageGroupConfig {
+		g.MessageGroupConfig.LoadMessageGroupConfig[info.ID] = info
 		for _, sectionID := range info.MessageSectionIDList {
 			if g.MessageGroupConfig.GoppMessageGroupConfig == nil {
 				g.MessageGroupConfig.GoppMessageGroupConfig = make(map[uint32]*LoadMessageGroupConfig)
@@ -51,6 +54,7 @@ func (g *GameDataConfig) loadMessageGroupConfig() {
 	}
 
 	logger.Info("load %v MessageGroupConfig", len(g.MessageGroupConfig.LoadMessageGroupConfig))
+
 }
 
 func GetMessageGroupConfigByID(id uint32) *LoadMessageGroupConfig {

@@ -26,6 +26,7 @@ type EventMission struct {
 
 func (g *GameDataConfig) loadEventMission() {
 	g.EventMissionMap = make(map[uint32]*EventMission)
+	eventMissionMap := make([]*EventMission, 0)
 	playerElementsFilePath := g.excelPrefix + "EventMission.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -33,13 +34,17 @@ func (g *GameDataConfig) loadEventMission() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.EventMissionMap)
+	err = hjson.Unmarshal(playerElementsFile, &eventMissionMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range eventMissionMap {
+		g.EventMissionMap[v.ID] = v
+	}
 
 	logger.Info("load %v EventMission", len(g.EventMissionMap))
+
 }
 
 func GetEventMission() map[uint32]*EventMission {

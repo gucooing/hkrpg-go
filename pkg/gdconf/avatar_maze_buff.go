@@ -49,6 +49,7 @@ type BuffDescBattle struct {
 
 func (g *GameDataConfig) loadAvatarMazeBuff() {
 	g.AvatarMazeBuffMap = make(map[uint32]map[uint32]*AvatarMazeBuff)
+	avatarMazeBuffMap := make([]*AvatarMazeBuff, 0)
 	playerElementsFilePath := g.excelPrefix + "AvatarMazeBuff.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -56,13 +57,18 @@ func (g *GameDataConfig) loadAvatarMazeBuff() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.AvatarMazeBuffMap)
+	err = hjson.Unmarshal(playerElementsFile, &avatarMazeBuffMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range avatarMazeBuffMap {
+		if g.AvatarMazeBuffMap[v.ID] == nil {
+			g.AvatarMazeBuffMap[v.ID] = make(map[uint32]*AvatarMazeBuff)
+		}
+		g.AvatarMazeBuffMap[v.ID][v.Lv] = v
+	}
 	logger.Info("load %v AvatarMazeBuff", len(g.AvatarMazeBuffMap))
-
 }
 
 func GetAvatarMazeBuffById(id, level uint32) *AvatarMazeBuff {

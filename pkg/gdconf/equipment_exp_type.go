@@ -16,6 +16,7 @@ type EquipmentExp struct {
 
 func (g *GameDataConfig) loadEquipmentExpType() {
 	g.EquipmentExpTypeMap = make(map[uint32]map[uint32]*EquipmentExp)
+	equipmentExpTypeMap := make([]*EquipmentExp, 0)
 	playerElementsFilePath := g.excelPrefix + "EquipmentExpType.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -23,13 +24,18 @@ func (g *GameDataConfig) loadEquipmentExpType() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.EquipmentExpTypeMap)
+	err = hjson.Unmarshal(playerElementsFile, &equipmentExpTypeMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range equipmentExpTypeMap {
+		if g.EquipmentExpTypeMap[v.ExpType] == nil {
+			g.EquipmentExpTypeMap[v.ExpType] = make(map[uint32]*EquipmentExp)
+		}
+		g.EquipmentExpTypeMap[v.ExpType][v.Level] = v
+	}
 	logger.Info("load %v EquipmentExpType", len(g.EquipmentExpTypeMap))
-
 }
 
 func GetEquipmentExpByLevel(equipmentType, exp, level, promotion, equipmentId uint32) (uint32, uint32) {

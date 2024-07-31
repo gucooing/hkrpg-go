@@ -25,6 +25,7 @@ type RewardList struct {
 
 func (g *GameDataConfig) loadAvatarData() {
 	g.AvatarDataMap = make(map[uint32]*AvatarData)
+	avatarDataMap := make([]*AvatarData, 0)
 	playerElementsFilePath := g.excelPrefix + "AvatarConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -32,10 +33,13 @@ func (g *GameDataConfig) loadAvatarData() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.AvatarDataMap)
+	err = hjson.Unmarshal(playerElementsFile, &avatarDataMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range avatarDataMap {
+		g.AvatarDataMap[v.AvatarId] = v
 	}
 	logger.Info("load %v AvatarConfig", len(g.AvatarDataMap))
 }

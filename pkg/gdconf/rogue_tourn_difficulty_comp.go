@@ -15,6 +15,7 @@ type RogueTournDifficultyComp struct {
 
 func (g *GameDataConfig) loadRogueTournDifficultyComp() {
 	g.RogueTournDifficultyCompMap = make(map[uint32]*RogueTournDifficultyComp)
+	rogueTournDifficultyCompMap := make([]*RogueTournDifficultyComp, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueTournDifficultyComp.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -22,13 +23,15 @@ func (g *GameDataConfig) loadRogueTournDifficultyComp() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueTournDifficultyCompMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueTournDifficultyCompMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range rogueTournDifficultyCompMap {
+		g.RogueTournDifficultyCompMap[v.DifficultyCompID] = v
+	}
 	logger.Info("load %v RogueTournDifficultyComp", len(g.RogueTournDifficultyCompMap))
-
 }
 
 func GetRogueTournDifficultyCompMap() map[uint32]*RogueTournDifficultyComp {

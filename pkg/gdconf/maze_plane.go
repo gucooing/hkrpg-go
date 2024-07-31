@@ -19,6 +19,7 @@ type MazePlane struct {
 
 func (g *GameDataConfig) loadMazePlane() {
 	g.MazePlaneMap = make(map[uint32]*MazePlane)
+	mazePlaneMap := make([]*MazePlane, 0)
 	playerElementsFilePath := g.excelPrefix + "MazePlane.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,10 +27,13 @@ func (g *GameDataConfig) loadMazePlane() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MazePlaneMap)
+	err = hjson.Unmarshal(playerElementsFile, &mazePlaneMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range mazePlaneMap {
+		g.MazePlaneMap[v.PlaneID] = v
 	}
 	logger.Info("load %v MazePlane", len(g.MazePlaneMap))
 

@@ -11,11 +11,11 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg []byte) {
 	rsp := &proto.RogueTournQueryScRsp{
 		Retcode:           0,
 		RogueTournCurInfo: g.GetRogueTournCurInfo(),
-		RogueTournInfo: &proto.RogueTournInfo{
+		RogueGetInfo: &proto.RogueTournInfo{
 			RogueTournSaveList:       make([]*proto.RogueTournSaveList, 0),
 			RogueTournAreaInfo:       g.GetRogueTournAreaInfo(),
 			InspirationCircuit:       g.GetInspirationCircuitInfo(),
-			RogueTournSeasonInfo:     g.GetRogueTournSeasonInfo(),
+			RogueSeasonInfo:          g.GetRogueTournSeasonInfo(),
 			ExtraScoreInfo:           g.GetExtraScoreInfo(),
 			RogueTournExpInfo:        g.GetRogueTournExpInfo(),
 			RogueTournHandbook:       g.GetRogueTournHandbookInfo(),
@@ -70,7 +70,7 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 		RogueAction: &proto.RogueAction{
 			Action: &proto.RogueAction_RogueFormulaSelectInfo{
 				RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
-					SelectFormulaIdListFieldNumber: []uint32{130204, 130408, 130307},
+					SelectFormulaIdList: []uint32{130204, 130408, 130307},
 				},
 			},
 		},
@@ -127,22 +127,22 @@ func (g *GamePlayer) RogueTournLevelInfoUpdateScNotify(layerIndex, roomIndex uin
 	layerInfo := db.CurLayerList[layerIndex]
 	roomInfo := layerInfo.RogueTournRoomList[roomIndex]
 	notify := &proto.RogueTournLevelInfoUpdateScNotify{
-		ReachedLayerCount: layerIndex,
-		Status:            proto.RogueTournLevelStatus(layerInfo.Status),
-		LayerInfoList:     make([]*proto.RogueTournLayer, 0),
+		CurLevelIndex: layerIndex,
+		Status:        proto.RogueTournLevelStatus(layerInfo.Status),
+		LevelInfoList: make([]*proto.RogueTournLevel, 0),
 	}
-	notify.LayerInfoList = append(notify.LayerInfoList, &proto.RogueTournLayer{
-		LayerId:               layerInfo.LayerId,
-		RogueTournLayerStatus: proto.RogueTournLayerStatus(layerInfo.Status),
-		CurRoomIndex:          layerInfo.CurRoomIndex,
-		RogueTournRoomList: []*proto.RogueTournRoomList{
+	notify.LevelInfoList = append(notify.LevelInfoList, &proto.RogueTournLevel{
+		LayerId:      layerInfo.LayerId,
+		Status:       proto.RogueTournLayerStatus(layerInfo.Status),
+		CurRoomIndex: layerInfo.CurRoomIndex,
+		TournRoomList: []*proto.RogueTournRoomList{
 			{
-				RogueTournRoomStatus: proto.RogueTournRoomStatus(roomInfo.Status),
-				RoomIndex:            roomInfo.RoomIndex,
-				RoomId:               roomInfo.RoomId,
+				Status:    proto.RogueTournRoomStatus(roomInfo.Status),
+				RoomIndex: roomInfo.RoomIndex,
+				RoomId:    roomInfo.RoomId,
 			},
 		},
-		LayerIndex: layerInfo.LayerIndex,
+		LevelIndex: layerInfo.LayerIndex,
 	})
 
 	g.Send(cmd.RogueTournLevelInfoUpdateScNotify, notify)
@@ -157,7 +157,7 @@ func (g *GamePlayer) FormulaSyncRogueCommonPendingActionScNotify(formulaList []u
 			RogueAction: &proto.RogueAction{
 				Action: &proto.RogueAction_RogueFormulaSelectInfo{
 					RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
-						SelectFormulaIdListFieldNumber: formulaList,
+						SelectFormulaIdList: formulaList,
 					},
 				},
 			},
@@ -187,12 +187,12 @@ func (g *GamePlayer) FormulaSyncRogueCommonActionResultScNotify(formulaId uint32
 						FormulaId: formulaId,
 						FormulaBuffTypeList: []*proto.FormulaBuffTypeInfo{
 							{
-								Num:        conf.MainBuffNum,
-								BuffTypeId: conf.MainBuffTypeID,
+								FormulaBuffNum: conf.MainBuffNum,
+								Key:            conf.MainBuffTypeID,
 							},
 							{
-								Num:        conf.SubBuffNum,
-								BuffTypeId: conf.SubBuffTypeID,
+								FormulaBuffNum: conf.SubBuffNum,
+								Key:            conf.SubBuffTypeID,
 							},
 						},
 					},

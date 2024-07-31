@@ -30,6 +30,7 @@ type ItemUseBuffData struct {
 
 func (g *GameDataConfig) loadItemUseBuffData() {
 	g.ItemUseBuffDataMap = make(map[uint32]*ItemUseBuffData)
+	itemUseBuffData := make([]*ItemUseBuffData, 0)
 	playerElementsFilePath := g.excelPrefix + "ItemUseBuffData.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -37,10 +38,13 @@ func (g *GameDataConfig) loadItemUseBuffData() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ItemUseBuffDataMap)
+	err = hjson.Unmarshal(playerElementsFile, &itemUseBuffData)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range itemUseBuffData {
+		g.ItemUseBuffDataMap[v.UseDataID] = v
 	}
 	logger.Info("load %v ItemUseBuffData", len(g.ItemUseBuffDataMap))
 }

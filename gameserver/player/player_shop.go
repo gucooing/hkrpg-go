@@ -154,10 +154,10 @@ func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetRollShopInfoCsReq, payloadMsg)
 	req := msg.(*proto.GetRollShopInfoCsReq)
 	rsp := &proto.GetRollShopInfoScRsp{
-		GachaRandom: 1,
-		NOPNEOADJEI: nil,
-		RollShopId:  req.RollShopId,
-		Retcode:     0,
+		GachaRandom:     1,
+		ShopGroupIdList: make([]uint32, 0),
+		RollShopId:      req.RollShopId,
+		Retcode:         0,
 	}
 	g.Send(cmd.GetRollShopInfoScRsp, rsp)
 }

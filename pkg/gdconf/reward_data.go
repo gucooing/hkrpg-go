@@ -33,6 +33,7 @@ type Items struct {
 
 func (g *GameDataConfig) loadRewardData() {
 	g.RewardDataMap = make(map[uint32]*RewardData)
+	rewardDataMap := make([]*RewardData, 0)
 	playerElementsFilePath := g.excelPrefix + "RewardData.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -40,13 +41,13 @@ func (g *GameDataConfig) loadRewardData() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RewardDataMap)
+	err = hjson.Unmarshal(playerElementsFile, &rewardDataMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
 
-	for _, data := range g.RewardDataMap {
+	for _, data := range rewardDataMap {
 		data.Items = make([]*Items, 0)
 		if data.ItemID_1 != 0 {
 			data.Items = append(data.Items, &Items{
@@ -84,6 +85,7 @@ func (g *GameDataConfig) loadRewardData() {
 				Count:  data.Count_6,
 			})
 		}
+		g.RewardDataMap[data.RewardID] = data
 	}
 
 	logger.Info("load %v RewardData", len(g.RewardDataMap))

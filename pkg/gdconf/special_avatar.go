@@ -27,6 +27,7 @@ type SpecialAvatar struct {
 
 func (g *GameDataConfig) loadSpecialAvatar() {
 	g.SpecialAvatarMap = make(map[uint32]map[uint32]*SpecialAvatar)
+	specialAvatarMap := make([]*SpecialAvatar, 0)
 	playerElementsFilePath := g.excelPrefix + "SpecialAvatar.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -34,13 +35,18 @@ func (g *GameDataConfig) loadSpecialAvatar() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.SpecialAvatarMap)
+	err = hjson.Unmarshal(playerElementsFile, &specialAvatarMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range specialAvatarMap {
+		if g.SpecialAvatarMap[v.SpecialAvatarID] == nil {
+			g.SpecialAvatarMap[v.SpecialAvatarID] = make(map[uint32]*SpecialAvatar)
+		}
+		g.SpecialAvatarMap[v.SpecialAvatarID][v.WorldLevel] = v
+	}
 	logger.Info("load %v SpecialAvatar", len(g.SpecialAvatarMap))
-
 }
 
 func GetSpecialAvatarById(stageID uint32) *SpecialAvatar {

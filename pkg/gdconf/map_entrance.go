@@ -22,6 +22,7 @@ type MapEntrance struct {
 
 func (g *GameDataConfig) loadMapEntrance() {
 	g.MapEntranceMap = make(map[uint32]*MapEntrance)
+	mapEntranceMap := make([]*MapEntrance, 0)
 	playerElementsFilePath := g.excelPrefix + "MapEntrance.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -29,13 +30,15 @@ func (g *GameDataConfig) loadMapEntrance() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MapEntranceMap)
+	err = hjson.Unmarshal(playerElementsFile, &mapEntranceMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range mapEntranceMap {
+		g.MapEntranceMap[v.ID] = v
+	}
 	logger.Info("load %v MapEntrance", len(g.MapEntranceMap))
-
 }
 
 func GetMapEntranceById(entryId uint32) *MapEntrance {

@@ -763,7 +763,7 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 			}
 		}
 		entityList := &proto.SceneEntityInfo{
-			Actor: actor,
+			EntityOneofCase: &proto.SceneEntityInfo_Actor{Actor: actor},
 			Motion: &proto.MotionInfo{
 				Pos: pos,
 				Rot: rot,
@@ -810,9 +810,11 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 				Pos: pos,
 				Rot: rot,
 			},
-			Prop: &proto.ScenePropInfo{
-				PropId:    propList.PropID, // PropID
-				PropState: g.GetPropState(db, sceneGroup.GroupId, propList.ID, propList.State),
+			EntityOneofCase: &proto.SceneEntityInfo_Prop{
+				Prop: &proto.ScenePropInfo{
+					PropId:    propList.PropID, // PropID
+					PropState: g.GetPropState(db, sceneGroup.GroupId, propList.ID, propList.State),
+				},
 			},
 		}
 		// 添加物品实体
@@ -853,10 +855,12 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 				Pos: pos,
 				Rot: rot,
 			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.GetWorldLevel(),
-				MonsterId:  monsterList.NPCMonsterID,
-				EventId:    monsterList.EventID,
+			EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+				NpcMonster: &proto.SceneNpcMonsterInfo{
+					WorldLevel: g.GetWorldLevel(),
+					MonsterId:  monsterList.NPCMonsterID,
+					EventId:    monsterList.EventID,
+				},
 			},
 		}
 		// 添加怪物实体
@@ -896,9 +900,11 @@ func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 				Pos: pos,
 				Rot: rot,
 			},
-			Npc: &proto.SceneNpcInfo{
-				ExtraInfo: nil,
-				NpcId:     npcList.NPCID,
+			EntityOneofCase: &proto.SceneEntityInfo_Npc{
+				Npc: &proto.SceneNpcInfo{
+					ExtraInfo: nil,
+					NpcId:     npcList.NPCID,
+				},
 			},
 		}
 		// 添加npc
@@ -927,15 +933,19 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	if foorMap == nil {
 		return nil
 	}
+	worldId := gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID
+	if worldId == 100 {
+		worldId = 401
+	}
 	scene := &proto.SceneInfo{
-		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
+		WorldId:            worldId,
 		LeaderEntityId:     leaderEntityId,
 		FloorId:            mapEntrance.FloorID,
 		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		PlaneId:            mapEntrance.PlaneID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        make([]uint32, 0),
+		LevelGroupIdList:   make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
@@ -960,7 +970,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		} else {
 			g.AddLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 		}
-		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
+		scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
@@ -979,9 +989,9 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 
 func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.LevelGroup) *proto.MissionStatusBySceneInfo {
 	info := &proto.MissionStatusBySceneInfo{
-		AcceptMainMissionIdList: make([]uint32, 0),
-		MainMissionIdList:       make([]uint32, 0),
-		SceneSubMissionList:     make([]*proto.Mission, 0),
+		DisabledMainMissionIdList: make([]uint32, 0),
+		FinishedMainMissionIdList: make([]uint32, 0),
+		SubMissionStatusList:      make([]*proto.Mission, 0),
 	}
 	if foorMap == nil {
 		return info
@@ -993,13 +1003,13 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 	for _, groupInfo := range foorMap {
 		if groupInfo.OwnerMainMissionID != 0 {
 			var isAdd = true
-			for _, id := range info.AcceptMainMissionIdList {
+			for _, id := range info.DisabledMainMissionIdList {
 				if id == groupInfo.OwnerMainMissionID {
 					isAdd = false
 					break
 				}
 			}
-			for _, id := range info.MainMissionIdList {
+			for _, id := range info.FinishedMainMissionIdList {
 				if id == groupInfo.OwnerMainMissionID {
 					isAdd = false
 					break
@@ -1007,17 +1017,17 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 			}
 			if isAdd {
 				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
-					info.AcceptMainMissionIdList = append(info.AcceptMainMissionIdList, groupInfo.OwnerMainMissionID)
+					info.DisabledMainMissionIdList = append(info.DisabledMainMissionIdList, groupInfo.OwnerMainMissionID)
 				}
 				if finishMainMissionList[groupInfo.OwnerMainMissionID] != nil {
-					info.MainMissionIdList = append(info.MainMissionIdList, groupInfo.OwnerMainMissionID)
+					info.FinishedMainMissionIdList = append(info.FinishedMainMissionIdList, groupInfo.OwnerMainMissionID)
 				}
 			}
 		}
 		if groupInfo.AtmosphereCondition != nil {
 			for _, conditions := range groupInfo.AtmosphereCondition.Conditions {
 				var isAdd = true
-				for _, v := range info.SceneSubMissionList {
+				for _, v := range info.SubMissionStatusList {
 					if v.Id == conditions.SubMissionID {
 						isAdd = false
 						break
@@ -1029,7 +1039,7 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 						db = subMissionList[conditions.SubMissionID]
 					}
 					if db != nil {
-						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
 							Status:   proto.MissionStatus(db.Status),
 							Progress: db.Progress,
 							Id:       conditions.SubMissionID,
@@ -1047,7 +1057,7 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 				if conditions.Type != "SubMission" {
 					continue
 				}
-				for _, v := range info.SceneSubMissionList {
+				for _, v := range info.SubMissionStatusList {
 					if v.Id == conditions.ID {
 						isAdd = false
 						break
@@ -1059,7 +1069,7 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 						db = subMissionList[conditions.ID]
 					}
 					if db != nil {
-						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
 							Status:   proto.MissionStatus(db.Status),
 							Progress: db.Progress,
 							Id:       conditions.ID,
@@ -1077,7 +1087,7 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 				if conditions.Type != "SubMission" {
 					continue
 				}
-				for _, v := range info.SceneSubMissionList {
+				for _, v := range info.SubMissionStatusList {
 					if v.Id == conditions.ID {
 						isAdd = false
 						break
@@ -1089,7 +1099,7 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 						db = subMissionList[conditions.ID]
 					}
 					if db != nil {
-						info.SceneSubMissionList = append(info.SceneSubMissionList, &proto.Mission{
+						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
 							Status:   proto.MissionStatus(db.Status),
 							Progress: db.Progress,
 							Id:       conditions.ID,
@@ -1118,7 +1128,9 @@ func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.GroupRef
 			GroupId: entity.GroupId,
 			RefreshEntity: []*proto.SceneEntityRefreshInfo{
 				{
-					DeleteEntity: entity.EntityId,
+					Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{
+						DeleteEntity: entity.EntityId,
+					},
 				},
 			},
 			RefreshType: proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_LOADED,
@@ -1144,18 +1156,22 @@ func (g *GamePlayer) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monste
 			Z: int32(monster.RotZ * 1000),
 		}
 		seri := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				GroupId:  mazeGroupID,
-				InstId:   monster.ID,
-				EntityId: entityId,
-				Motion: &proto.MotionInfo{
-					Pos: monsterPos,
-					Rot: monsterRot,
-				},
-				NpcMonster: &proto.SceneNpcMonsterInfo{
-					WorldLevel: g.GetWorldLevel(),
-					MonsterId:  monster.NPCMonsterID,
-					EventId:    monster.EventID,
+			Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+				AddEntity: &proto.SceneEntityInfo{
+					GroupId:  mazeGroupID,
+					InstId:   monster.ID,
+					EntityId: entityId,
+					Motion: &proto.MotionInfo{
+						Pos: monsterPos,
+						Rot: monsterRot,
+					},
+					EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+						NpcMonster: &proto.SceneNpcMonsterInfo{
+							WorldLevel: g.GetWorldLevel(),
+							MonsterId:  monster.NPCMonsterID,
+							EventId:    monster.EventID,
+						},
+					},
 				},
 			},
 		}
@@ -1191,17 +1207,21 @@ func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList ma
 			Z: int32(npc.RotZ * 1000),
 		}
 		seri := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				GroupId:  mazeGroupID,
-				InstId:   npc.ID,
-				EntityId: entityId,
-				Motion: &proto.MotionInfo{
-					Pos: pos,
-					Rot: rot,
-				},
-				Npc: &proto.SceneNpcInfo{
-					ExtraInfo: nil,
-					NpcId:     npc.NPCID,
+			Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+				AddEntity: &proto.SceneEntityInfo{
+					GroupId:  mazeGroupID,
+					InstId:   npc.ID,
+					EntityId: entityId,
+					Motion: &proto.MotionInfo{
+						Pos: pos,
+						Rot: rot,
+					},
+					EntityOneofCase: &proto.SceneEntityInfo_Npc{
+						Npc: &proto.SceneNpcInfo{
+							ExtraInfo: nil,
+							NpcId:     npc.NPCID,
+						},
+					},
 				},
 			},
 		}
@@ -1238,17 +1258,21 @@ func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList 
 			Z: int32(prop.RotZ * 1000),
 		}
 		seri := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				GroupId:  mazeGroupID,
-				InstId:   prop.ID,
-				EntityId: entityId,
-				Motion: &proto.MotionInfo{
-					Pos: pos,
-					Rot: rot,
-				},
-				Prop: &proto.ScenePropInfo{
-					PropId:    prop.PropID, // PropID
-					PropState: g.GetPropState(db, mazeGroupID, prop.ID, prop.State),
+			Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+				AddEntity: &proto.SceneEntityInfo{
+					GroupId:  mazeGroupID,
+					InstId:   prop.ID,
+					EntityId: entityId,
+					Motion: &proto.MotionInfo{
+						Pos: pos,
+						Rot: rot,
+					},
+					EntityOneofCase: &proto.SceneEntityInfo_Prop{
+						Prop: &proto.ScenePropInfo{
+							PropId:    prop.PropID, // PropID
+							PropState: g.GetPropState(db, mazeGroupID, prop.ID, prop.State),
+						},
+					},
 				},
 			},
 		}
@@ -1283,19 +1307,22 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 		if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
 			actor.AvatarType = proto.AvatarType_AVATAR_TRIAL_TYPE
 		}
+		entityId := g.GetNextGameObjectGuid()
 		entityList := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				Actor: actor,
-				Motion: &proto.MotionInfo{
-					Pos: pos,
-					Rot: rot,
+			Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+				AddEntity: &proto.SceneEntityInfo{
+					EntityOneofCase: &proto.SceneEntityInfo_Actor{Actor: actor},
+					Motion: &proto.MotionInfo{
+						Pos: pos,
+						Rot: rot,
+					},
+					EntityId: entityId,
 				},
-				EntityId: g.GetNextGameObjectGuid(),
 			},
 		}
 		g.AddEntity(0, &AvatarEntity{
 			Entity: Entity{
-				EntityId: entityList.AddEntity.EntityId,
+				EntityId: entityId,
 				GroupId:  0,
 				Pos:      pos,
 				Rot:      rot,
@@ -1315,19 +1342,23 @@ func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId u
 	}
 	// for _, lineAvatar := range lineUp.AvatarIdList {
 	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-		AddEntity: &proto.SceneEntityInfo{
-			Motion: &proto.MotionInfo{
-				Pos: pos,
-				Rot: &proto.Vector{Y: 139439},
-			},
-			EntityId: g.GetNextGameObjectGuid(),
-			SummonUnit: &proto.SceneSummonUnitInfo{
-				CasterEntityId:  casterEntityId,
-				AttachEntityId:  casterEntityId,
-				SummonUnitId:    summonId,
-				CreateTimeMs:    uint64(time.Now().UnixMilli()),
-				TriggerNameList: make([]string, 0),
-				LifeTimeMs:      -1,
+		Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+			AddEntity: &proto.SceneEntityInfo{
+				Motion: &proto.MotionInfo{
+					Pos: pos,
+					Rot: &proto.Vector{Y: 139439},
+				},
+				EntityId: g.GetNextGameObjectGuid(),
+				EntityOneofCase: &proto.SceneEntityInfo_SummonUnit{
+					SummonUnit: &proto.SceneSummonUnitInfo{
+						CasterEntityId:  casterEntityId,
+						AttachEntityId:  casterEntityId,
+						SummonUnitId:    summonId,
+						CreateTimeMs:    uint64(time.Now().UnixMilli()),
+						TriggerNameList: make([]string, 0),
+						LifeTimeMs:      -1,
+					},
+				},
 			},
 		},
 	}
@@ -1361,13 +1392,15 @@ func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 		}
 		entityId := g.GetNextGameObjectGuid()
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				Actor: actor,
-				Motion: &proto.MotionInfo{
-					Pos: pos,
-					Rot: rot,
+			Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+				AddEntity: &proto.SceneEntityInfo{
+					EntityOneofCase: &proto.SceneEntityInfo_Actor{Actor: actor},
+					Motion: &proto.MotionInfo{
+						Pos: pos,
+						Rot: rot,
+					},
+					EntityId: entityId,
 				},
-				EntityId: entityId,
 			},
 		}
 		g.AddEntity(0, &AvatarEntity{
@@ -1411,17 +1444,21 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		return nil
 	}
 	// 获取映射信息
+	worldId := gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID
+	if worldId == 100 {
+		worldId = 401
+	}
 	scene := &proto.SceneInfo{
 		ClientPosVersion:   0,
 		PlaneId:            mapEntrance.PlaneID,
 		FloorId:            mapEntrance.FloorID,
 		LeaderEntityId:     leaderEntityId,
-		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
+		WorldId:            worldId,
 		EntryId:            challengeMazeConfig.MapEntranceID,
 		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		SyncBuffInfo:       make([]*proto.BuffInfo, 0),
-		GroupIdList:        make([]uint32, 0),
+		EnvBuffList:        make([]*proto.BuffInfo, 0),
+		LevelGroupIdList:   make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		LightenSectionList: []uint32{0},
 		EntityList:         make([]*proto.SceneEntityInfo, 0),
@@ -1429,7 +1466,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 
 	// 添加场景buff
 	if curChallenge.MazeBuffId != 0 {
-		scene.SyncBuffInfo = append(scene.SyncBuffInfo, &proto.BuffInfo{
+		scene.EnvBuffList = append(scene.EnvBuffList, &proto.BuffInfo{
 			Count:     4294967295,
 			LifeTime:  -1,
 			BuffId:    curChallenge.MazeBuffId,
@@ -1439,7 +1476,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	}
 	// 添加自选buff
 	if g.GetCurChallengeBuffId() != 0 {
-		scene.SyncBuffInfo = append(scene.SyncBuffInfo, &proto.BuffInfo{
+		scene.EnvBuffList = append(scene.EnvBuffList, &proto.BuffInfo{
 			Count:     4294967295,
 			LifeTime:  -1,
 			BuffId:    g.GetCurChallengeBuffId(),
@@ -1483,9 +1520,11 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 					Pos: monsterPos,
 					Rot: monsterRot,
 				},
-				NpcMonster: &proto.SceneNpcMonsterInfo{
-					MonsterId: npcMonsterIDList[id],
-					EventId:   eventIDList[id],
+				EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+					NpcMonster: &proto.SceneNpcMonsterInfo{
+						MonsterId: npcMonsterIDList[id],
+						EventId:   eventIDList[id],
+					},
 				},
 			}
 			// 添加怪物实体
@@ -1508,8 +1547,8 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 
 func (g *GamePlayer) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
 	info := &proto.SpringRecoverConfig{
-		RecoverPct:  10000,
-		AutoRecover: true,
+		DefaultHp:     10000,
+		AutoRecoverHp: true,
 		// MANPHKHEFPC: nil,
 	}
 	return info

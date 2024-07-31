@@ -27,6 +27,7 @@ type CocoonConfig struct {
 
 func (g *GameDataConfig) loadCocoonConfig() {
 	g.CocoonConfigMap = make(map[uint32]map[uint32]*CocoonConfig)
+	cocoonConfigMap := make([]*CocoonConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "CocoonConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -34,14 +35,20 @@ func (g *GameDataConfig) loadCocoonConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.CocoonConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &cocoonConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
 
-	logger.Info("load %v CocoonConfig", len(g.CocoonConfigMap))
+	for _, v := range cocoonConfigMap {
+		if g.CocoonConfigMap[v.StageID] == nil {
+			g.CocoonConfigMap[v.StageID] = make(map[uint32]*CocoonConfig)
+		}
+		g.CocoonConfigMap[v.StageID][v.WorldLevel] = v
+	}
 
+	logger.Info("load %v CocoonConfig", len(g.CocoonConfigMap))
 }
 
 func GetCocoonConfigById(stageID, worldLevel uint32) *CocoonConfig {

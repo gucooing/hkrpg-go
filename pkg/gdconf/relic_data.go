@@ -10,6 +10,7 @@ import (
 
 type Relic struct {
 	ID             uint32 `json:"ID"`
+	ItemID         uint32 `json:"ItemID"`
 	SetID          uint32 `json:"SetID"`
 	TypeS          string `json:"Type"`
 	Type           uint32 // 星级
@@ -24,6 +25,8 @@ type Relic struct {
 
 func (g *GameDataConfig) loadRelic() {
 	g.RelicMap = make(map[uint32]*Relic)
+	relicMap := make([]*Relic, 0)
+	relicMaps := make([]*Relic, 0)
 	playerElementsFilePath := g.excelPrefix + "RelicConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -31,12 +34,26 @@ func (g *GameDataConfig) loadRelic() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RelicMap)
+	err = hjson.Unmarshal(playerElementsFile, &relicMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for _, relic := range g.RelicMap {
+
+	playerElementsFilePaths := g.excelPrefix + "RelicExpItem.json"
+	playerElementsFiles, err := os.ReadFile(playerElementsFilePaths)
+	if err != nil {
+		info := fmt.Sprintf("open file error: %v", err)
+		panic(info)
+	}
+	err = hjson.Unmarshal(playerElementsFiles, &relicMaps)
+	if err != nil {
+		info := fmt.Sprintf("parse file error: %v", err)
+		panic(info)
+	}
+	relicMap = append(relicMap, relicMaps...)
+
+	for _, relic := range relicMap {
 		switch relic.MaxLevel {
 		case 6:
 			relic.Type = 2
@@ -47,18 +64,11 @@ func (g *GameDataConfig) loadRelic() {
 		case 15:
 			relic.Type = 5
 		}
-	}
-
-	playerElementsFilePaths := g.excelPrefix + "RelicExpItem.json"
-	playerElementsFiles, err := os.ReadFile(playerElementsFilePaths)
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFiles, &g.RelicMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		if relic.ID == 0 {
+			g.RelicMap[relic.ItemID] = relic
+		} else {
+			g.RelicMap[relic.ID] = relic
+		}
 	}
 
 	logger.Info("load %v RelicConfig", len(g.RelicMap))

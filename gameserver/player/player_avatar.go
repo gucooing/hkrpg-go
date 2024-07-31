@@ -6,18 +6,22 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
 
-func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
-	avatarDb := g.GetAvatar()
-	main := g.GetAvatarById(8001)
-	rsp := &proto.GetHeroBasicTypeInfoScRsp{
-		Gender:            proto.Gender(avatarDb.Gender),
-		CurBasicType:      proto.HeroBasicType(main.CurPath),
-		IsGenderModified:  false,
-		BasicTypeInfoList: g.GetPlayerHeroBasicTypeInfo(),
-		Retcode:           0,
+func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg []byte) {
+	rsp := &proto.GetMultiPathAvatarInfoScRsp{
+		Retcode:                 0,
+		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),      // 已解锁多命途角色信息
+		CurAvatarPath:           make(map[uint32]proto.MultiPathAvatarType), // 多命途角色列表
+		BasicTypeIdList:         []uint32{g.GetAvatarById(8001).CurPath},    // 主角命途
 	}
 
-	g.Send(cmd.GetHeroBasicTypeInfoScRsp, rsp)
+	for _, avatarDb := range g.GetAvatarList() {
+		if avatarDb.IsMultiPath {
+			rsp.MultiPathAvatarInfoList = append(rsp.MultiPathAvatarInfoList, g.GetMultiPathAvatarInfo(avatarDb.AvatarId)...)
+			rsp.CurAvatarPath[avatarDb.AvatarId] = proto.MultiPathAvatarType(avatarDb.CurPath)
+		}
+	}
+
+	g.Send(cmd.GetMultiPathAvatarInfoScRsp, rsp)
 }
 
 func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
@@ -39,7 +43,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
 	req := msg.(*proto.RankUpAvatarCsReq)
 	rsp := &proto.RankUpAvatarScRsp{}
-	db := g.GetAvatarBinById(req.GetDressAvatarId())
+	db := g.GetAvatarBinById(req.GetAvatarId())
 	cost := req.GetCostData()
 	if db == nil || cost == nil {
 		g.Send(cmd.RankUpAvatarScRsp, rsp)
@@ -64,7 +68,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 	}
 	g.AddAvatarRank(1, db)
 
-	allSync.AvatarList = append(allSync.AvatarList, req.GetDressAvatarId())
+	allSync.AvatarList = append(allSync.AvatarList, req.GetAvatarId())
 	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.RankUpAvatarScRsp, rsp)
 }

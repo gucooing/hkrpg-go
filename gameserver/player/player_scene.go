@@ -99,11 +99,11 @@ func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 	if mapEntrance == nil {
 		return
 	}
-	enteredSceneInfo := &proto.EnteredScene{
+	enteredSceneInfo := &proto.EnteredSceneInfo{
 		FloorId: mapEntrance.FloorID,
 		PlaneId: mapEntrance.PlaneID,
 	}
-	rsp.EnteredSceneList = []*proto.EnteredScene{enteredSceneInfo}
+	rsp.EnteredSceneInfoList = []*proto.EnteredSceneInfo{enteredSceneInfo}
 
 	g.Send(cmd.GetEnteredSceneScRsp, rsp)
 }
@@ -171,9 +171,9 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 				mapList := &proto.SceneMapInfo{
 					LightenSectionList: make([]uint32, 0),
 					ChestList: []*proto.ChestInfo{
-						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_NORMAL, UnlockedAmount: 1},
-						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE, UnlockedAmount: 1},
-						{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE, UnlockedAmount: 1},
+						{ChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_NORMAL, OpenedNum: 1},
+						{ChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE, OpenedNum: 1},
+						{ChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE, OpenedNum: 1},
 					},
 					UnlockTeleportList: make([]uint32, 0),
 				}
@@ -345,17 +345,17 @@ func (g *GamePlayer) DeployRotaterCsReq(payloadMsg []byte) {
 func (g *GamePlayer) StartWolfBroGameCsReq(payloadMsg []byte) {
 	g.Send(cmd.WolfBroGameDataChangeScNotify, &proto.WolfBroGameDataChangeScNotify{
 		WolfBroGameData: &proto.WolfBroGameData{
-			KHOGNFEGNLC: &proto.WolfBroGameInfo{
-				Motion: &proto.MotionInfo{
-					Pos: g.GetPosPb(),
-					Rot: g.GetRotPb(),
-				},
-				BOLDFGOJGII: 0,
-				ADLJJIGGBHE: make([]*proto.Vector, 0),
-				OAOLMHLHNAI: false,
-			},
-			LINLMHBEAPC: "114514",
-			Id:          3,
+			// KHOGNFEGNLC: &proto.WolfBroGameInfo{
+			// 	Motion: &proto.MotionInfo{
+			// 		Pos: g.GetPosPb(),
+			// 		Rot: g.GetRotPb(),
+			// 	},
+			// 	BOLDFGOJGII: 0,
+			// 	ADLJJIGGBHE: make([]*proto.Vector, 0),
+			// 	OAOLMHLHNAI: false,
+			// },
+			// LINLMHBEAPC: "114514",
+			Id: 3,
 		},
 	})
 	g.Send(cmd.StartWolfBroGameScRsp, &proto.StartWolfBroGameScRsp{})
@@ -418,17 +418,21 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 			notify.GroupRefreshList = append(notify.GroupRefreshList, info)
 		}
 		info.RefreshEntity = append(info.RefreshEntity, &proto.SceneEntityRefreshInfo{
-			AddEntity: &proto.SceneEntityInfo{
-				EntityId: pe.EntityId,
-				GroupId:  pe.GroupId,
-				InstId:   pe.InstId,
-				Motion: &proto.MotionInfo{
-					Pos: pe.Pos,
-					Rot: pe.Rot,
-				},
-				Prop: &proto.ScenePropInfo{
-					PropId:    pe.PropId, // PropID
-					PropState: g.GetPropState(db, pe.GroupId, pe.InstId, ""),
+			Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+				AddEntity: &proto.SceneEntityInfo{
+					EntityId: pe.EntityId,
+					GroupId:  pe.GroupId,
+					InstId:   pe.InstId,
+					Motion: &proto.MotionInfo{
+						Pos: pe.Pos,
+						Rot: pe.Rot,
+					},
+					EntityOneofCase: &proto.SceneEntityInfo_Prop{
+						Prop: &proto.ScenePropInfo{
+							PropId:    pe.PropId, // PropID
+							PropState: g.GetPropState(db, pe.GroupId, pe.InstId, ""),
+						},
+					},
 				},
 			},
 		})
@@ -464,12 +468,14 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial
 		info.RefreshType = proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_UNLOAD
 	}
 	info.RefreshEntity = append(info.RefreshEntity, &proto.SceneEntityRefreshInfo{
-		AddEntity: &proto.SceneEntityInfo{
-			EntityId: entityId,
-			Actor:    actor,
-			Motion: &proto.MotionInfo{
-				Rot: pos,
-				Pos: rot,
+		Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+			AddEntity: &proto.SceneEntityInfo{
+				EntityId:        entityId,
+				EntityOneofCase: &proto.SceneEntityInfo_Actor{Actor: actor},
+				Motion: &proto.MotionInfo{
+					Rot: pos,
+					Pos: rot,
+				},
 			},
 		},
 	})
@@ -507,7 +513,7 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 
 		for _, entify := range groupInfo.EntityMap {
 			groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, &proto.SceneEntityRefreshInfo{
-				DeleteEntity: g.GetEntryId(entify),
+				Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{DeleteEntity: g.GetEntryId(entify)},
 			})
 		}
 

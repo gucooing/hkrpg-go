@@ -23,10 +23,10 @@ func (g *GamePlayer) GetFirstTalkByPerformanceNpcCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.GetFirstTalkByPerformanceNpcCsReq, payloadMsg)
 	req := msg.(*proto.GetFirstTalkByPerformanceNpcCsReq)
 	rsp := &proto.GetFirstTalkByPerformanceNpcScRsp{
-		NpcMeetStatusList: make([]*proto.NpcMeetStatusInfo, 0),
+		NpcMeetStatusList: make([]*proto.NpcMeetByPerformanceStatus, 0),
 	}
-	for _, getNpcList := range req.FirstTalkIdList {
-		npcTalkInfo := &proto.NpcMeetStatusInfo{MeetId: getNpcList}
+	for _, getNpcList := range req.PerformanceIdList {
+		npcTalkInfo := &proto.NpcMeetByPerformanceStatus{PerformanceId: getNpcList}
 		rsp.NpcMeetStatusList = append(rsp.NpcMeetStatusList, npcTalkInfo)
 	}
 	g.Send(cmd.GetFirstTalkByPerformanceNpcScRsp, rsp)
@@ -52,11 +52,11 @@ func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg []byte) {
 			}
 			for _, msgSection := range db.MessageSectionList {
 				messageGroup.MessageSectionList = append(messageGroup.MessageSectionList, &proto.MessageSection{
-					Status:         proto.MessageSectionStatus(msgSection.Status),
-					Id:             msgSection.Id,
-					ToChooseItemId: make([]uint32, 0),
-					MessageItemId:  0,
-					ItemList:       make([]*proto.MessageItem, 0),
+					Status:          proto.MessageSectionStatus(msgSection.Status),
+					Id:              msgSection.Id,
+					MessageItemList: make([]uint32, 0),
+					FrozenItemId:    0,
+					ItemList:        make([]*proto.MessageItem, 0),
 				})
 			}
 			rsp.MessageGroupList = append(rsp.MessageGroupList, messageGroup)

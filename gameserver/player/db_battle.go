@@ -238,7 +238,7 @@ func (g *GamePlayer) NewCurChallenge() {
 	db.CurChallenge = nil
 }
 
-func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartChallengeStoryInfo) *spb.CurChallenge {
+func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.ChallengeBuffInfo) *spb.CurChallenge {
 	db := g.GetChallenge()
 	var buffOne uint32 = 0
 	var buffTwe uint32 = 0
@@ -246,11 +246,11 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartC
 	if storyInfo != nil {
 		if storyInfo.StoryBuffInfo == nil {
 			isBoos = true
-			buffOne = storyInfo.GetBossBuffInfo().GetStoryBuffOne()
-			buffTwe = storyInfo.GetBossBuffInfo().GetStoryBuffTwo()
+			buffOne = storyInfo.GetBossBuffInfo().GetBuffOne()
+			buffTwe = storyInfo.GetBossBuffInfo().GetBuffTwo()
 		} else {
-			buffOne = storyInfo.GetStoryBuffInfo().GetStoryBuffOne()
-			buffTwe = storyInfo.GetStoryBuffInfo().GetStoryBuffTwo()
+			buffOne = storyInfo.GetStoryBuffInfo().GetBuffOne()
+			buffTwe = storyInfo.GetStoryBuffInfo().GetBuffTwo()
 		}
 	}
 	conf := gdconf.GetChallengeMazeConfigById(challengeId)
@@ -636,7 +636,7 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
 		WorldLevel:       g.GetWorldLevel(),                       // 世界等级
 		BattleId:         battleId,                                // 战斗Id
-		AvatarBattleList: battleAvatarList,                        // 战斗角色列表
+		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		StageId:          stageId,                                 // 起始战斗
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
@@ -690,7 +690,7 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 		WorldLevel:       req.GetWorldLevel(),                     // 关卡等级
 		BattleId:         battleId,                                // 战斗Id
 		StageId:          stageID,                                 // 起始战斗
-		AvatarBattleList: battleAvatarList,                        // 战斗角色列表
+		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
 		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
@@ -738,10 +738,10 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) ([]uint32, []*
 	}
 	for _, monsterListMap := range stageConfig.MonsterList {
 		monsterWaveList := &proto.SceneMonsterWave{
-			StageId:     stageID,
-			WaveId:      1,
-			DropList:    make([]*proto.ItemList, 0),
-			MonsterList: make([]*proto.SceneMonster, 0),
+			BattleStageId: stageID,
+			BattleWaveId:  1,
+			DropList:      make([]*proto.ItemList, 0),
+			MonsterList:   make([]*proto.SceneMonster, 0),
 			// MonsterParam:   &proto.SceneMonsterWaveParam{},
 		}
 		for _, monsterId := range monsterListMap {
@@ -832,14 +832,14 @@ func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
 	}
 	if db.IsBoos {
 		return &proto.ChallengeStoryInfo{
-			CurBossBuff: &proto.ChallengeBossBuffInfo{
+			CurBossBuffs: &proto.ChallengeBossBuffList{
 				ChallengeBossConst: 1, // 这玩意不是1就不能进下一节点
 				BuffList:           []uint32{db.BuffOne, db.BuffTwo},
 			},
 		}
 	} else {
 		return &proto.ChallengeStoryInfo{
-			CurStoryBuff: &proto.ChallengeStoryBuffInfo{
+			CurStoryBuffs: &proto.ChallengeStoryBuffList{
 				BuffList: []uint32{db.BuffOne, db.BuffTwo},
 			},
 		}

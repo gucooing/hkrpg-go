@@ -70,12 +70,12 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.RegionName = "hkrpg-go"
 	queryGateway.Port = port
 	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
-	queryGateway.B1 = true
-	queryGateway.B2 = true
-	queryGateway.B3 = true
-	queryGateway.B4 = true
-	queryGateway.B5 = true
-	queryGateway.B6 = true
+	queryGateway.Unk1 = true
+	queryGateway.Unk2 = true
+	queryGateway.Unk3 = true
+	queryGateway.Unk4 = true
+	queryGateway.Unk5 = true
+	queryGateway.Unk6 = true
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {

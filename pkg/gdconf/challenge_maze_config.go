@@ -41,7 +41,7 @@ type ChallengeState struct {
 
 func (g *GameDataConfig) loadChallengeMazeConfig() {
 	g.ChallengeMazeConfigMap = make(map[uint32]*ChallengeMazeConfig)
-	challengeMazeConfigMap := make(map[uint32]*ChallengeMazeConfig)
+	challengeMazeConfigMap := make([]*ChallengeMazeConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "ChallengeMazeConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -81,7 +81,7 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
-	for id, challengeMazeConfig := range challengeMazeConfigMap {
+	for _, challengeMazeConfig := range challengeMazeConfigMap {
 		challengeMazeConfig.ChallengeState = make(map[uint32]*ChallengeState)
 		if challengeMazeConfig.StageNum == 2 {
 			challengeState := &ChallengeState{
@@ -100,7 +100,7 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		}
 		challengeMazeConfig.ChallengeState[1] = challengeState
 
-		g.ChallengeMazeConfigMap[id] = challengeMazeConfig
+		g.ChallengeMazeConfigMap[challengeMazeConfig.ID] = challengeMazeConfig
 	}
 
 	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeMazeConfigMap))

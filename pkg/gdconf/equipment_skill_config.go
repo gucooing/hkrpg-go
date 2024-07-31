@@ -22,6 +22,7 @@ type AbilityProperty struct {
 
 func (g *GameDataConfig) loadEquipmentSkillConfig() {
 	g.EquipmentSkillConfigMap = make(map[uint32]map[uint32]*EquipmentSkillConfig)
+	erquipmentSkillConfig := make([]*EquipmentSkillConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "EquipmentSkillConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -29,10 +30,16 @@ func (g *GameDataConfig) loadEquipmentSkillConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.EquipmentSkillConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &erquipmentSkillConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range erquipmentSkillConfig {
+		if g.EquipmentSkillConfigMap[v.SkillID] == nil {
+			g.EquipmentSkillConfigMap[v.SkillID] = make(map[uint32]*EquipmentSkillConfig)
+		}
+		g.EquipmentSkillConfigMap[v.SkillID][v.Level] = v
 	}
 	logger.Info("load %v EquipmentSkillConfig", len(g.EquipmentSkillConfigMap))
 }

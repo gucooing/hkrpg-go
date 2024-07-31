@@ -19,6 +19,7 @@ type RogueManagerList struct {
 
 func (g *GameDataConfig) loadRogueManager() {
 	g.RogueManagerMap = make(map[uint32]*RogueManagerList)
+	rogueManagerMap := make([]*RogueManagerList, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueManager.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,14 +27,17 @@ func (g *GameDataConfig) loadRogueManager() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueManagerMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueManagerMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
 
-	logger.Info("load %v RogueManager", len(g.RogueManagerMap))
+	for _, v := range rogueManagerMap {
+		g.RogueManagerMap[v.RogueSeason] = v
+	}
 
+	logger.Info("load %v RogueManager", len(g.RogueManagerMap))
 }
 
 func GetRogueManager() map[uint32]*RogueManagerList {

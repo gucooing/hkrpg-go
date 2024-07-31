@@ -25,6 +25,7 @@ type EquipmentPromotionConfig struct {
 
 func (g *GameDataConfig) loadEquipmentPromotionConfig() {
 	g.EquipmentPromotionConfigMap = make(map[uint32]map[uint32]*EquipmentPromotionConfig)
+	equipmentPromotionConfigMap := make([]*EquipmentPromotionConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "EquipmentPromotionConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -32,10 +33,16 @@ func (g *GameDataConfig) loadEquipmentPromotionConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.EquipmentPromotionConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &equipmentPromotionConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range equipmentPromotionConfigMap {
+		if g.EquipmentPromotionConfigMap[v.EquipmentID] == nil {
+			g.EquipmentPromotionConfigMap[v.EquipmentID] = make(map[uint32]*EquipmentPromotionConfig)
+		}
+		g.EquipmentPromotionConfigMap[v.EquipmentID][v.Promotion] = v
 	}
 	logger.Info("load %v EquipmentPromotionConfig", len(g.EquipmentPromotionConfigMap))
 }

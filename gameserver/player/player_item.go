@@ -39,7 +39,7 @@ func (g *GamePlayer) HandleGetBagCsReq(payloadMsg []byte) {
 	// 获取背包材料
 	db := g.GetMaterialMap()
 	for id, materia := range db {
-		if materia == 0 {
+		if materia == 0 || !isMateria(id) {
 			delete(db, id)
 			continue
 		}
@@ -201,10 +201,10 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg []byte) {
 	}
 
 	for i := 0; i < int(req.Count); i++ {
-		uniqueId := g.AddRelic(req.ComposeSetId)
+		uniqueId := g.AddRelic(req.ComposeId)
 		allSync.RelicList = append(allSync.RelicList, uniqueId)
 		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
-			ItemId:   req.ComposeSetId,
+			ItemId:   req.ComposeId,
 			Num:      1,
 			UniqueId: uniqueId,
 		})
@@ -219,7 +219,7 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg []byte) {
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressRelicAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressRelicAvatarCsReq)
-	g.DressRelicAvatar(req.GetDressAvatarId(), req.GetSwitchList())
+	g.DressRelicAvatar(req.GetAvatarId(), req.GetSwitchList())
 	g.Send(cmd.DressRelicAvatarScRsp, nil)
 }
 
@@ -384,7 +384,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg []byte) {
 func (g *GamePlayer) DressAvatarCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.DressAvatarCsReq, payloadMsg)
 	req := msg.(*proto.DressAvatarCsReq)
-	g.DressAvatar(req.GetDressAvatarId(), req.GetEquipmentUniqueId())
+	g.DressAvatar(req.GetAvatarId(), req.GetEquipmentUniqueId())
 	g.Send(cmd.DressAvatarScRsp, nil)
 }
 

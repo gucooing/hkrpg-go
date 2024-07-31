@@ -68,7 +68,7 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 		EntryId:            avatarDemo.MapEntranceID,
 		GameModeType:       14, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
+		LevelGroupIdList:   nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -100,7 +100,7 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 
 	// 添加实体
 	levelGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, avatarDemo.MazeGroupID1)
-	scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
+	scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
 	sceneGroupState := &proto.SceneGroupState{
 		GroupId:   levelGroup.GroupId,
 		IsDefault: true,
@@ -134,9 +134,11 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 				Pos: monsterPos,
 				Rot: monsterRot,
 			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				MonsterId: avatarDemo.NpcMonsterIDList1[0],
-				EventId:   avatarDemo.EventIDList1[0],
+			EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+				NpcMonster: &proto.SceneNpcMonsterInfo{
+					MonsterId: avatarDemo.NpcMonsterIDList1[0],
+					EventId:   avatarDemo.EventIDList1[0],
+				},
 			},
 		}
 		// 添加怪物实体

@@ -27,17 +27,17 @@ func (g *GamePlayer) GetRogueInitialScoreCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueTalentInfoScRsp{
-		RogueTalentInfo: &proto.RogueTalentInfo{
-			RogueTalentList: make([]*proto.RogueTalent, 0),
+		TalentInfoList: &proto.RogueTalentInfoList{
+			TalentInfo: make([]*proto.RogueTalentInfo, 0),
 		},
 	}
 
 	for _, talent := range gdconf.GetTalentIDList() {
-		rogueTalent := &proto.RogueTalent{
+		rogueTalent := &proto.RogueTalentInfo{
 			Status:   proto.RogueTalentStatus_ROGUE_TALENT_STATUS_ENABLE,
 			TalentId: talent,
 		}
-		rsp.RogueTalentInfo.RogueTalentList = append(rsp.RogueTalentInfo.RogueTalentList, rogueTalent)
+		rsp.TalentInfoList.TalentInfo = append(rsp.TalentInfoList.TalentInfo, rogueTalent)
 	}
 
 	g.Send(cmd.GetRogueTalentInfoScRsp, rsp)
@@ -133,7 +133,7 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, 
 	if len(curRoom.NextSiteIdList) == 0 {
 		// 没有关卡了,结算!
 		g.FinishRogueRoom(g.GetCurRogue().CurSiteId)
-		g.Send(cmd.SyncRogueExploreWinScNotify, &proto.SyncRogueExploreWinScNotify{IsWin: true})
+		g.Send(cmd.SyncRogueExploreWinScNotify, &proto.SyncRogueExploreWinScNotify{IsExploreWin: true})
 	} else {
 		// 祝福选择页通知 SyncRogueCommonPendingActionScNotify
 		// for x := 0; x < monsterNum; x++ {
@@ -156,11 +156,11 @@ func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
 	if action != nil {
 		switch action.(type) {
 		case *proto.HandleRogueCommonPendingActionCsReq_BuffSelectResult: // 添加buff
-			buffId := action.(*proto.HandleRogueCommonPendingActionCsReq_BuffSelectResult).BuffSelectResult.BuffId
+			buffId := action.(*proto.HandleRogueCommonPendingActionCsReq_BuffSelectResult).BuffSelectResult.BuffSelectId
 			g.AddRogueBuff(buffId)
 			g.SyncRogueCommonActionResultScNotify(buffId)
 		case *proto.HandleRogueCommonPendingActionCsReq_RogueTournFormulaResult: // 添加方程
-			formulaId := action.(*proto.HandleRogueCommonPendingActionCsReq_RogueTournFormulaResult).RogueTournFormulaResult.FormulaId
+			formulaId := action.(*proto.HandleRogueCommonPendingActionCsReq_RogueTournFormulaResult).RogueTournFormulaResult.TournFormulaId
 			g.AddCurRogueTournFormula(formulaId)
 			g.FormulaSyncRogueCommonActionResultScNotify(formulaId)
 		}
@@ -329,13 +329,13 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetRogueBuffEnhanceInfoCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueBuffEnhanceInfoScRsp{
-		BuffEnhanceInfo: &proto.RogueBuffEnhanceInfo{
-			EnhanceInfo: make([]*proto.RogueBuffEnhance, 0),
+		BuffEnhanceInfo: &proto.RogueBuffEnhanceInfoList{
+			EnhanceInfoList: make([]*proto.RogueBuffEnhanceInfo, 0),
 		},
 	}
 	db := g.GetRogueBuffList()
 	for _, info := range db {
-		rsp.BuffEnhanceInfo.EnhanceInfo = append(rsp.BuffEnhanceInfo.EnhanceInfo, &proto.RogueBuffEnhance{
+		rsp.BuffEnhanceInfo.EnhanceInfoList = append(rsp.BuffEnhanceInfo.EnhanceInfoList, &proto.RogueBuffEnhanceInfo{
 			CostData: &proto.ItemCostData{
 				ItemList: make([]*proto.ItemCost, 0),
 			},
@@ -347,13 +347,13 @@ func (g *GamePlayer) GetRogueBuffEnhanceInfoCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) GetRogueAdventureRoomInfoCsReq(payloadMsg []byte) {
 	rsp := &proto.GetRogueAdventureRoomInfoScRsp{
-		NKIEHEJPKPK: &proto.BDJFNCAHDCP{
-			OLHEOHGEGEP: 16,
-			IMPECOKHIHL: 1,
-			Status:      0,
-			MIBJHFNEHJC: 0,
-			ScoreId:     0,
-		},
+		// NKIEHEJPKPK: &proto.BDJFNCAHDCP{
+		// 	OLHEOHGEGEP: 16,
+		// 	IMPECOKHIHL: 1,
+		// 	Status:      0,
+		// 	MIBJHFNEHJC: 0,
+		// 	ScoreId:     0,
+		// },
 	}
 	g.Send(cmd.GetRogueAdventureRoomInfoScRsp, rsp)
 }

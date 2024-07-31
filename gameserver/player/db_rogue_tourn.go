@@ -179,8 +179,8 @@ func (g *GamePlayer) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
 
 func (g *GamePlayer) GetInspirationCircuitInfo() *proto.InspirationCircuitInfo {
 	info := &proto.InspirationCircuitInfo{
-		RogueTalentInfo: &proto.RogueTalentInfo{RogueTalentList: make([]*proto.RogueTalent, 0)},
-		InspirationNum:  g.GetMaterialById(Inspiration),
+		TalentInfoList: &proto.RogueTalentInfoList{TalentInfo: make([]*proto.RogueTalentInfo, 0)},
+		InspirationNum: g.GetMaterialById(Inspiration),
 	}
 	for v, k := range gdconf.GetRogueTournPermanentTalentMap() {
 		status := proto.RogueTalentStatus_ROGUE_TALENT_STATUS_LOCK
@@ -188,7 +188,7 @@ func (g *GamePlayer) GetInspirationCircuitInfo() *proto.InspirationCircuitInfo {
 			status = proto.RogueTalentStatus_ROGUE_TALENT_STATUS_UNLOCK
 		}
 		status = proto.RogueTalentStatus_ROGUE_TALENT_STATUS_ENABLE
-		info.RogueTalentInfo.RogueTalentList = append(info.RogueTalentInfo.RogueTalentList, &proto.RogueTalent{
+		info.TalentInfoList.TalentInfo = append(info.TalentInfoList.TalentInfo, &proto.RogueTalentInfo{
 			Status:   status,
 			TalentId: v,
 		})
@@ -224,7 +224,7 @@ func (g *GamePlayer) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
 	info := &proto.RogueTournHandbookInfo{
 		HandbookFormulaList:    make([]uint32, 0),
 		HandbookBuffList:       make([]uint32, 0),
-		EOJECMKIABF:            0,
+		ONPBIAFFJJK:            0,
 		TakeHandbookRewardList: make([]uint32, 0),
 		HandbookAvatarBaseList: make([]uint32, 0),
 		HandbookMiracleList:    make([]uint32, 0),
@@ -269,32 +269,32 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 	}
 	info := &proto.RogueTournCurInfo{
 		RogueTournCurAreaInfo: g.GetRogueTournCurAreaInfo(),
-		RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
-			RogueTournGameAreaInfo: &proto.RogueTournGameAreaInfo{
-				AreaId: curRogueTourn.AreaId,
-			},
-			RogueTournMiracleInfo: g.GetChessRogueMiracleInfo(),
-			RogueTournFormulaInfo: g.GetRogueTournFormulaInfo(),
-			RogueTournValuesItem: &proto.RogueGameItemInfo{
-				VirtualItem: map[uint32]uint32{Cf: g.GetMaterialById(Cf)},
-			},
-			RogueTournLayerInfo: g.GetRogueTournLayerInfo(),
-			RogueTournVirtualItem: &proto.RogueTournVirtualItem{
-				GameItemInfo: &proto.ItemCostData{ItemList: []*proto.ItemCost{
-					{
-						ItemOneofCase: &proto.ItemCost_PileItem{
-							PileItem: &proto.PileItem{
-								ItemId:  Cf,
-								ItemNum: g.GetMaterialById(Cf),
+		RogueTournCurGame: &proto.RogueTournCurInfo_RogueTournCurGameInfo{
+			RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
+				RogueTournGameAreaInfo: &proto.RogueTournGameAreaInfo{
+					AreaId: curRogueTourn.AreaId,
+				},
+				MiracleInfo:      g.GetChessRogueMiracleInfo(),
+				TournFormulaInfo: g.GetRogueTournFormulaInfo(),
+				ItemValue: &proto.RogueGameItemValue{
+					VirtualItem: map[uint32]uint32{Cf: g.GetMaterialById(Cf)},
+				},
+				Level: g.GetRogueTournLayerInfo(),
+				Lineup: &proto.RogueTournVirtualItem{
+					RogueReviveCost: &proto.ItemCostData{ItemList: []*proto.ItemCost{
+						{
+							ItemOneofCase: &proto.ItemCost_PileItem{
+								PileItem: &proto.PileItem{
+									ItemId:  Cf,
+									ItemNum: g.GetMaterialById(Cf),
+								},
 							},
 						},
-					},
-				}},
+					}},
+				},
+				Buff:        g.GetRogueTournBuffInfo(),
+				UnlockValue: g.GetKeywordUnlockInfo(),
 			},
-			RogueTournBuffInfo: g.GetRogueTournBuffInfo(),
-			KeywordUnlockInfo:  g.GetKeywordUnlockInfo(),
-			DLCLNIJBHBD:        nil,
-			ENGCMKFPKLH:        nil,
 		},
 	}
 	return info
@@ -312,8 +312,8 @@ func (g *GamePlayer) GetRogueTournCurAreaInfo() *proto.RogueTournCurAreaInfo {
 	return info
 }
 
-func (g *GamePlayer) GetKeywordUnlockInfo() *proto.KeywordUnlockInfo {
-	info := &proto.KeywordUnlockInfo{KeywordUnlockMap: map[uint32]bool{
+func (g *GamePlayer) GetKeywordUnlockInfo() *proto.KeywordUnlockValue {
+	info := &proto.KeywordUnlockValue{KeywordUnlockMap: map[uint32]bool{
 		1615010: false,
 		1615110: false,
 		1615210: false,
@@ -324,7 +324,7 @@ func (g *GamePlayer) GetKeywordUnlockInfo() *proto.KeywordUnlockInfo {
 
 func (g *GamePlayer) GetChessRogueMiracleInfo() *proto.ChessRogueMiracleInfo {
 	info := &proto.ChessRogueMiracleInfo{
-		MiracleInfo: &proto.ChessRogueMiracle{
+		ChessRogueMiracleInfo: &proto.ChessRogueMiracle{
 			MiracleList: make([]*proto.GameRogueMiracle, 0),
 		},
 	}
@@ -332,42 +332,42 @@ func (g *GamePlayer) GetChessRogueMiracleInfo() *proto.ChessRogueMiracleInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournLayerInfo() *proto.RogueTournLayerInfo {
+func (g *GamePlayer) GetRogueTournLayerInfo() *proto.RogueTournLevelInfo {
 	curRogueTourn := g.GetCurRogueTourn()
 	curLayer := g.GetCurLayerInfo()
 	if curRogueTourn == nil || curLayer == nil {
 		return nil
 	}
-	info := &proto.RogueTournLayerInfo{
+	info := &proto.RogueTournLevelInfo{
 		Status:        proto.RogueTournLevelStatus(curLayer.Status),
-		LayerInfoList: make([]*proto.RogueTournLayer, 0),
+		LevelInfoList: make([]*proto.RogueTournLevel, 0),
 		Reason:        0,
-		CurLayerIndex: curRogueTourn.CurLayerIndex,
+		CurLevelIndex: curRogueTourn.CurLayerIndex,
 	}
 	for _, layerInfo := range curRogueTourn.CurLayerList {
-		layerInfoList := &proto.RogueTournLayer{
-			LayerId:               layerInfo.LayerId,
-			RogueTournLayerStatus: proto.RogueTournLayerStatus(layerInfo.Status),
-			CurRoomIndex:          layerInfo.CurRoomIndex,
-			RogueTournRoomList:    make([]*proto.RogueTournRoomList, 0),
-			LayerIndex:            layerInfo.LayerIndex,
+		layerInfoList := &proto.RogueTournLevel{
+			LayerId:       layerInfo.LayerId,
+			Status:        proto.RogueTournLayerStatus(layerInfo.Status),
+			CurRoomIndex:  layerInfo.CurRoomIndex,
+			TournRoomList: make([]*proto.RogueTournRoomList, 0),
+			LevelIndex:    layerInfo.LayerIndex,
 		}
 		for _, roomInfo := range layerInfo.RogueTournRoomList {
-			layerInfoList.RogueTournRoomList = append(layerInfoList.RogueTournRoomList, &proto.RogueTournRoomList{
-				RogueTournRoomStatus: proto.RogueTournRoomStatus(roomInfo.Status),
-				RoomIndex:            roomInfo.RoomIndex,
-				RoomId:               roomInfo.RoomId,
+			layerInfoList.TournRoomList = append(layerInfoList.TournRoomList, &proto.RogueTournRoomList{
+				Status:    proto.RogueTournRoomStatus(roomInfo.Status),
+				RoomIndex: roomInfo.RoomIndex,
+				RoomId:    roomInfo.RoomId,
 			})
 		}
-		info.LayerInfoList = append(info.LayerInfoList, layerInfoList)
+		info.LevelInfoList = append(info.LevelInfoList, layerInfoList)
 	}
 
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournBuffInfo() *proto.RogueDLCBuffInfo {
-	info := &proto.RogueDLCBuffInfo{
-		RogueDlcMazeBuffInfo: &proto.RogueMazeBuffInfo{
+func (g *GamePlayer) GetRogueTournBuffInfo() *proto.ChessRogueBuffInfo {
+	info := &proto.ChessRogueBuffInfo{
+		ChessRogueBuffInfo: &proto.ChessRogueBuff{
 			BuffList: make([]*proto.RogueCommonBuff, 0),
 		},
 	}
@@ -377,7 +377,7 @@ func (g *GamePlayer) GetRogueTournBuffInfo() *proto.RogueDLCBuffInfo {
 func (g *GamePlayer) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
 	db := g.GetCurRogueTournFormula()
 	info := &proto.RogueTournFormulaInfo{
-		FormulaTypeInfo: &proto.FormulaTypeInfo{
+		FormulaTypeValue: &proto.FormulaTypeValue{
 			FormulaTypeMap: make(map[uint32]int32),
 		},
 	}
@@ -391,12 +391,12 @@ func (g *GamePlayer) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
 			FormulaId: id,
 			FormulaBuffTypeList: []*proto.FormulaBuffTypeInfo{
 				{
-					Num:        conf.MainBuffNum,
-					BuffTypeId: conf.MainBuffTypeID,
+					FormulaBuffNum: conf.MainBuffNum,
+					Key:            conf.MainBuffTypeID,
 				},
 				{
-					Num:        conf.SubBuffNum,
-					BuffTypeId: conf.SubBuffTypeID,
+					FormulaBuffNum: conf.SubBuffNum,
+					Key:            conf.SubBuffTypeID,
 				},
 			},
 		}
@@ -407,26 +407,26 @@ func (g *GamePlayer) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
 
 func (g *GamePlayer) GetRogueMapRotateInfo(roomId uint32) *proto.RogueMapRotateInfo {
 	info := &proto.RogueMapRotateInfo{
-		RotaterData: make([]*proto.RotaterData, 0),
-		ChargerInfo: make([]*proto.ChargerInfo, 0),
-		EnergyInfo:  &proto.RotatorEnergyInfo{},
+		RotaterDataList: make([]*proto.RotaterData, 0),
+		ChargerInfo:     make([]*proto.ChargerInfo, 0),
+		EnergyInfo:      &proto.RotaterEnergyInfo{},
 	}
 	roomConf := gdconf.GetRogueTournRoomGenById(roomId)
 	if roomConf == nil {
 		return info
 	}
 	if roomConf.RotateInfo.IsRotate {
-		info.IsRotate = roomConf.RotateInfo.IsRotate
-		info.HMCAFEJAPJK = roomConf.RotateInfo.RotateNum
-		info.MapInfo = &proto.IJJHKDNFKMD{
-			BIKIIIKJIIG: &proto.Vector{},
-			EFGOCIAIKMN: &proto.AEKLIMBAKCL{
-				Z:           -0.70710677,
-				Y:           0,
-				X:           0,
-				EAGOBFLBPFN: 0.70710677,
-			},
-		}
+		// info.IsRotate = roomConf.RotateInfo.IsRotate
+		// info.HMCAFEJAPJK = roomConf.RotateInfo.RotateNum
+		// info.MapInfo = &proto.IJJHKDNFKMD{
+		// 	BIKIIIKJIIG: &proto.Vector{},
+		// 	EFGOCIAIKMN: &proto.AEKLIMBAKCL{
+		// 		Z:           -0.70710677,
+		// 		Y:           0,
+		// 		X:           0,
+		// 		EAGOBFLBPFN: 0.70710677,
+		// 	},
+		// }
 	}
 
 	return info
@@ -451,7 +451,7 @@ func (g *GamePlayer) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		EntryId:            roomConf.MapEntrance,
 		GameModeType:       17, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
+		LevelGroupIdList:   nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -466,7 +466,7 @@ func (g *GamePlayer) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		if len(sceneGroup.AnchorList) > 0 {
 			avatarGroupID = groupID
 		}
-		scene.GroupIdList = append(scene.GroupIdList, groupID)
+		scene.LevelGroupIdList = append(scene.LevelGroupIdList, groupID)
 		sceneGroupState := &proto.SceneGroupState{
 			GroupId:   groupID,
 			IsDefault: true,
@@ -543,12 +543,18 @@ func (g *GamePlayer) GetRogueTournNPCMonsterByID(entityGroupList *proto.SceneEnt
 				Pos: pos,
 				Rot: rot,
 			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				ExtraInfo: &proto.NpcMonsterExtraInfo{RogueInfo: &proto.NpcMonsterRogueInfo{
-					RogueMonsterId: info.RogueMonsterID,
-				}},
-				MonsterId: info.NpcMonsterID,
-				EventId:   info.EventID,
+			EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+				NpcMonster: &proto.SceneNpcMonsterInfo{
+					ExtraInfo: &proto.NpcMonsterExtraInfo{
+						Extra: &proto.NpcMonsterExtraInfo_RogueInfo{
+							RogueInfo: &proto.NpcMonsterRogueInfo{
+								RogueMonsterId: info.RogueMonsterID,
+							},
+						},
+					},
+					MonsterId: info.NpcMonsterID,
+					EventId:   info.EventID,
+				},
 			},
 		}
 		// 添加实体
@@ -587,10 +593,10 @@ func (g *GamePlayer) GetRogueTournPropByID(entityGroupList *proto.SceneEntityGro
 				Pos: pos,
 				Rot: rot,
 			},
-			Prop: &proto.ScenePropInfo{
-				PropId:    propList.PropID, // PropID
-				PropState: gdconf.GetStateValue(propList.State),
-			},
+		}
+		prop := &proto.ScenePropInfo{
+			PropId:    propList.PropID, // PropID
+			PropState: gdconf.GetStateValue(propList.State),
 		}
 		// 3:战斗 5:事件 8:奖励
 		db := g.GetCurLayerInfo()
@@ -607,15 +613,18 @@ func (g *GamePlayer) GetRogueTournPropByID(entityGroupList *proto.SceneEntityGro
 			default:
 				propId = 1034 // 红色
 			}
-			entityList.Prop.PropState = 1
-			entityList.Prop.PropId = propId // 颜色
-			entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
+			prop.PropState = 1
+			prop.PropId = propId // 颜色
+			prop.ExtraInfo = &proto.PropExtraInfo{
 				InfoOneofCase: &proto.PropExtraInfo_RogueTournDoorInfo{
 					RogueTournDoorInfo: &proto.RogueTournDoorInfo{
 						RogueTournRoomType: roomType,
 					},
 				},
 			}
+		}
+		entityList.EntityOneofCase = &proto.SceneEntityInfo_Prop{
+			Prop: prop,
 		}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}

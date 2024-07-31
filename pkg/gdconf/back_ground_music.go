@@ -17,6 +17,7 @@ type BackGroundMusic struct {
 
 func (g *GameDataConfig) loadBackGroundMusic() {
 	g.BackGroundMusicMap = make(map[uint32]*BackGroundMusic)
+	backGroundMusicMap := make([]*BackGroundMusic, 0)
 	playerElementsFilePath := g.excelPrefix + "BackGroundMusic.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -24,10 +25,13 @@ func (g *GameDataConfig) loadBackGroundMusic() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.BackGroundMusicMap)
+	err = hjson.Unmarshal(playerElementsFile, &backGroundMusicMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range backGroundMusicMap {
+		g.BackGroundMusicMap[v.ID] = v
 	}
 	logger.Info("load %v BackGroundMusic", len(g.BackGroundMusicMap))
 

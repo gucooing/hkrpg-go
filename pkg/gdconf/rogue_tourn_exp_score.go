@@ -17,6 +17,7 @@ type RogueTournExpScore struct {
 
 func (g *GameDataConfig) loadRogueTournExpScore() {
 	g.RogueTournExpScoreMap = make(map[uint32]*RogueTournExpScore)
+	rogueTournExpScoreMap := make([]*RogueTournExpScore, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueTournExpScore.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -24,13 +25,15 @@ func (g *GameDataConfig) loadRogueTournExpScore() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueTournExpScoreMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueTournExpScoreMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range rogueTournExpScoreMap {
+		g.RogueTournExpScoreMap[v.ID] = v
+	}
 	logger.Info("load %v RogueTournExpScore", len(g.RogueTournExpScoreMap))
-
 }
 
 func GetRogueTournExpScoreById(id uint32) *RogueTournExpScore {

@@ -35,6 +35,7 @@ type ItemC struct {
 
 func (g *GameDataConfig) loadItemComposeConfig() {
 	g.ItemComposeConfigMap = make(map[uint32]*ItemComposeConfig)
+	itemComposeConfig := make([]*ItemComposeConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "ItemComposeConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -42,10 +43,13 @@ func (g *GameDataConfig) loadItemComposeConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ItemComposeConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &itemComposeConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range itemComposeConfig {
+		g.ItemComposeConfigMap[v.ID] = v
 	}
 
 	logger.Info("load %v ItemComposeConfig", len(g.ItemComposeConfigMap))

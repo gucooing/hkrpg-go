@@ -22,6 +22,7 @@ type StageConfig struct {
 
 func (g *GameDataConfig) loadStageConfig() {
 	g.StageConfigMap = make(map[uint32]*StageConfig)
+	stageConfigMap := make([]*StageConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "StageConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -29,10 +30,13 @@ func (g *GameDataConfig) loadStageConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.StageConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &stageConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range stageConfigMap {
+		g.StageConfigMap[v.StageID] = v
 	}
 
 	logger.Info("load %v StageConfig", len(g.StageConfigMap))

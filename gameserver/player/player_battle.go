@@ -111,7 +111,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	}
 	var teleportToAnchor = false
 	rsp := &proto.PVEBattleResultScRsp{
-		AvatarBattleList: make([]*proto.BattleAvatar, 0),
+		BattleAvatarList: make([]*proto.BattleAvatar, 0),
 		BattleId:         req.BattleId,
 		StageId:          req.StageId,
 		EndStatus:        req.EndStatus, // 战斗结算状态
@@ -120,7 +120,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		ResVersion:       strconv.Itoa(int(req.ClientVersion)), // 版本验证
 	}
 	// 更新角色状态
-	g.BattleUpAvatar(req.Stt.GetAvatarBattleList(), req.GetEndStatus())
+	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
 
 	// 根据不同结算状态处理
 	switch req.EndStatus {
@@ -218,9 +218,9 @@ func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
 
 func (g *GamePlayer) SyncEntityBuffChangeListScNotify(entityId uint32) {
 	notify := &proto.SyncEntityBuffChangeListScNotify{
-		EntityBuffChangeList: make([]*proto.EntityBuffChange, 0),
+		EntityBuffChangeList: make([]*proto.SceneEntityBuffChange, 0),
 	}
-	notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, &proto.EntityBuffChange{
+	notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, &proto.SceneEntityBuffChange{
 		EntityId: entityId,
 	})
 	g.Send(cmd.SyncEntityBuffChangeListScNotify, notify)

@@ -19,6 +19,7 @@ type LoadingDesc struct {
 
 func (g *GameDataConfig) loadLoadingDesc() {
 	g.LoadingDescMap = make(map[uint32]*LoadingDesc)
+	loadingDescMap := make([]*LoadingDesc, 0)
 	playerElementsFilePath := g.excelPrefix + "LoadingDesc.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,10 +27,13 @@ func (g *GameDataConfig) loadLoadingDesc() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.LoadingDescMap)
+	err = hjson.Unmarshal(playerElementsFile, &loadingDescMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range loadingDescMap {
+		g.LoadingDescMap[v.ID] = v
 	}
 
 	logger.Info("load %v LoadingDesc", len(g.LoadingDescMap))

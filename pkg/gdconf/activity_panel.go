@@ -22,6 +22,7 @@ type UnlockConditions struct {
 
 func (g *GameDataConfig) loadActivityPanel() {
 	g.ActivityPanelMap = make(map[uint32]*ActivityPanel)
+	activityPanelMap := make([]*ActivityPanel, 0)
 	playerElementsFilePath := g.excelPrefix + "ActivityPanel.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -29,13 +30,15 @@ func (g *GameDataConfig) loadActivityPanel() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ActivityPanelMap)
+	err = hjson.Unmarshal(playerElementsFile, &activityPanelMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range activityPanelMap {
+		g.ActivityPanelMap[v.ActivityModuleID] = v
+	}
 	logger.Info("load %v ActivityPanel", len(g.ActivityPanelMap))
-
 }
 
 func GetActivityPanelById(ID uint32) *ActivityPanel {

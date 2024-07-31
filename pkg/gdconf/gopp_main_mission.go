@@ -107,7 +107,7 @@ type GroupID struct {
 }
 
 type FixedValue struct {
-	Value uint32 `json:"Value"`
+	Value float64 `json:"Value"`
 }
 
 func (g *GameDataConfig) goppMainMission() {
@@ -222,7 +222,7 @@ func IsBattleMission(id, eventId uint32) bool {
 			continue
 		}
 		for _, task := range info.TaskList {
-			if task.EventID != nil && task.EventID.FixedValue.Value == eventId {
+			if task.EventID != nil && uint32(task.EventID.FixedValue.Value) == eventId {
 				isFinish = true
 				break
 			}
@@ -237,7 +237,7 @@ func getGroupIDUint32(x interface{}) uint32 {
 	case uint32:
 		return x.(uint32)
 	case *GroupID:
-		return x.(GroupID).FixedValue.Value
+		return uint32(x.(GroupID).FixedValue.Value)
 	}
 	return 0
 }

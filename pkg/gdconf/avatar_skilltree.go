@@ -21,6 +21,7 @@ type AvatarSkilltree struct {
 
 func (g *GameDataConfig) loadAvatarSkilltree() {
 	g.AvatarSkilltreeMap = make(map[uint32]map[uint32]*AvatarSkilltree)
+	avatarSkilltreeMap := make([]*AvatarSkilltree, 0)
 	playerElementsFilePath := g.excelPrefix + "AvatarSkillTreeConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -28,12 +29,19 @@ func (g *GameDataConfig) loadAvatarSkilltree() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.AvatarSkilltreeMap)
+	err = hjson.Unmarshal(playerElementsFile, &avatarSkilltreeMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range avatarSkilltreeMap {
+		if g.AvatarSkilltreeMap[v.PointID] == nil {
+			g.AvatarSkilltreeMap[v.PointID] = make(map[uint32]*AvatarSkilltree)
+		}
+		g.AvatarSkilltreeMap[v.PointID][v.Level] = v
+	}
 	logger.Info("load %v AvatarSkillTreeConfig", len(g.AvatarSkilltreeMap))
+
 }
 
 func GetAvatarSkilltreeListById(avatarId uint32) map[uint32]uint32 {

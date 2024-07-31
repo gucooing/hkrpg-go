@@ -81,7 +81,10 @@ func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
 
 	if req.IsModify {
 		if req.Gender == proto.Gender_GenderWoman {
-			g.Send(cmd.HeroBasicTypeChangedNotify, &proto.HeroBasicTypeChangedNotify{CurBasicType: proto.HeroBasicType_GirlWarrior})
+			g.Send(cmd.AvatarPathChangedNotify, &proto.AvatarPathChangedNotify{
+				CurMultiPathAvatarType: proto.MultiPathAvatarType_GirlWarriorType,
+				BaseAvatarId:           8001,
+			})
 			db := g.GetAvatar()
 			db.Gender = spb.Gender_GenderWoman
 			main.CurPath = uint32(spb.HeroBasicType_GirlWarrior)
@@ -91,9 +94,9 @@ func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
 		g.CreateCharacterSubMission()
 	}
 	rsp := &proto.SetPlayerInfoScRsp{
-		Retcode:      0,
-		CurBasicType: proto.HeroBasicType(main.CurPath),
-		IsModify:     req.IsModify,
+		Retcode:       0,
+		CurAvatarPath: proto.MultiPathAvatarType(main.CurPath),
+		IsModify:      req.IsModify,
 	}
 	g.PlayerPlayerSyncScNotify() // 角色信息通知
 	g.Send(cmd.SetPlayerInfoScRsp, rsp)
@@ -117,16 +120,16 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 	}
 
 	notify := &proto.PlayerSyncScNotify{
-		AvatarSync:        &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
-		BasicTypeInfoList: make([]*proto.PlayerHeroBasicTypeInfo, 0),
-		MaterialList:      make([]*proto.Material, 0),
-		EquipmentList:     make([]*proto.Equipment, 0),
-		DelEquipmentList:  make([]uint32, 0),
-		DelRelicList:      make([]uint32, 0),
-		RelicList:         make([]*proto.Relic, 0),
+		AvatarSync:              &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
+		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),
+		MaterialList:            make([]*proto.Material, 0),
+		EquipmentList:           make([]*proto.Equipment, 0),
+		DelEquipmentList:        make([]uint32, 0),
+		DelRelicList:            make([]uint32, 0),
+		RelicList:               make([]*proto.Relic, 0),
 		MissionSync: &proto.MissionSync{
-			MissionList:       make([]*proto.Mission, 0),
-			MainMissionIdList: make([]uint32, 0),
+			MissionList:               make([]*proto.Mission, 0),
+			FinishedMainMissionIdList: make([]uint32, 0),
 		},
 	}
 	db := g.GetMaterialMap()
@@ -146,8 +149,12 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 	// 添加角色
 	if allSync.AvatarList != nil {
 		for _, avatarId := range allSync.AvatarList {
-			if avatarId/1000 == 8 {
-				notify.BasicTypeInfoList = g.GetPlayerHeroBasicTypeInfo()
+			avatarDb := g.GetAvatarById(avatarId)
+			if avatarDb == nil {
+				continue
+			}
+			if avatarDb.IsMultiPath {
+				notify.MultiPathAvatarInfoList = append(notify.MultiPathAvatarInfoList, g.GetMultiPathAvatarInfo(avatarId)...)
 			}
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, g.GetProtoAvatarById(avatarId))
 
@@ -182,7 +189,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *AllPlayerSync) {
 	// 删除圣遗物
 	notify.DelRelicList = allSync.DelRelicList
 	// 添加完成的主任务
-	notify.MissionSync.MainMissionIdList = allSync.MissionFinishMainList
+	notify.MissionSync.FinishedMainMissionIdList = allSync.MissionFinishMainList
 	// 添加需要通知的子任务
 	if allSync.MissionProgressSubList != nil {
 		subMissionList := g.GetSubMainMissionList()

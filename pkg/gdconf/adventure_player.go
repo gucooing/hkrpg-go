@@ -16,6 +16,7 @@ type AdventurePlayer struct {
 
 func (g *GameDataConfig) loadAdventurePlayer() {
 	g.AdventurePlayerMap = make(map[uint32]*AdventurePlayer)
+	adventurePlayerMap := make([]*AdventurePlayer, 0)
 	playerElementsFilePath := g.excelPrefix + "AdventurePlayer.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -23,13 +24,15 @@ func (g *GameDataConfig) loadAdventurePlayer() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.AdventurePlayerMap)
+	err = hjson.Unmarshal(playerElementsFile, &adventurePlayerMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range adventurePlayerMap {
+		g.AdventurePlayerMap[v.ID] = v
+	}
 	logger.Info("load %v AdventurePlayer", len(g.AdventurePlayerMap))
-
 }
 
 func GetAdventurePlayerByAvatarId(id uint32) *AdventurePlayer {

@@ -29,6 +29,7 @@ type AvatarDemoConfig struct {
 
 func (g *GameDataConfig) loadAvatarDemoConfig() {
 	g.AvatarDemoConfigMap = make(map[uint32]*AvatarDemoConfig)
+	avatarDemoConfigMap := make([]*AvatarDemoConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "AvatarDemoConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -36,13 +37,15 @@ func (g *GameDataConfig) loadAvatarDemoConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.AvatarDemoConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &avatarDemoConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range avatarDemoConfigMap {
+		g.AvatarDemoConfigMap[v.StageID] = v
+	}
 	logger.Info("load %v AvatarDemoConfig", len(g.AvatarDemoConfigMap))
-
 }
 
 func GetAvatarDemoConfigById(stageID uint32) *AvatarDemoConfig {

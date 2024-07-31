@@ -37,13 +37,13 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.ChangeLineupLeaderCsReq:  g.ChangeLineupLeaderCsReq,      // 切换角色
 		cmd.QuitLineupCsReq:          g.QuitLineupCsReq,              // 角色离队
 		// 角色管理
-		cmd.GetHeroBasicTypeInfoCsReq: g.HandleGetHeroBasicTypeInfoCsReq, // 请求主角基本信息
-		cmd.GetAvatarDataCsReq:        g.HandleGetAvatarDataCsReq,        // 请求全部角色信息
-		cmd.RankUpAvatarCsReq:         g.RankUpAvatarCsReq,               // 提高角色命座
-		cmd.AvatarExpUpCsReq:          g.AvatarExpUpCsReq,                // 角色升级
-		cmd.PromoteAvatarCsReq:        g.PromoteAvatarCsReq,              // 角色突破
-		cmd.UnlockSkilltreeCsReq:      g.UnlockSkilltreeCsReq,            // 行迹升级
-		cmd.TakePromotionRewardCsReq:  g.TakePromotionRewardCsReq,        // 领取角色突破奖励
+		cmd.GetMultiPathAvatarInfoCsReq: g.GetMultiPathAvatarInfoCsReq, // 请求多命途角色基本信息
+		cmd.GetAvatarDataCsReq:          g.HandleGetAvatarDataCsReq,    // 请求全部角色信息
+		cmd.RankUpAvatarCsReq:           g.RankUpAvatarCsReq,           // 提高角色命座
+		cmd.AvatarExpUpCsReq:            g.AvatarExpUpCsReq,            // 角色升级
+		cmd.PromoteAvatarCsReq:          g.PromoteAvatarCsReq,          // 角色突破
+		cmd.UnlockSkilltreeCsReq:        g.UnlockSkilltreeCsReq,        // 行迹升级
+		cmd.TakePromotionRewardCsReq:    g.TakePromotionRewardCsReq,    // 领取角色突破奖励
 		// 光锥
 		cmd.DressAvatarCsReq:      g.DressAvatarCsReq,      // 角色光锥装备
 		cmd.ExpUpEquipmentCsReq:   g.ExpUpEquipmentCsReq,   // 光锥升级
@@ -161,7 +161,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SyncClientResVersionCsReq:      g.SyncClientResVersionCsReq,      // 版本同步
 		cmd.GetAssistHistoryCsReq:          g.HandleGetAssistHistoryCsReq,    // 漫游签证
 		cmd.SetHeadIconCsReq:               g.SetHeadIconCsReq,               // 切换头像
-		cmd.SetHeroBasicTypeCsReq:          g.SetHeroBasicTypeCsReq,          // 切换主角类型
+		cmd.SetAvatarPathCsReq:             g.SetAvatarPathCsReq,             // 切换主角类型
 		cmd.SetNicknameCsReq:               g.SetNicknameCsReq,               // 修改昵称请求
 		cmd.SetGameplayBirthdayCsReq:       g.SetGameplayBirthdayCsReq,       // 修改生日请求
 		cmd.SetSignatureCsReq:              g.SetSignatureCsReq,              // 简介修改请求

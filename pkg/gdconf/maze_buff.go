@@ -30,6 +30,7 @@ type MazeBuff struct {
 
 func (g *GameDataConfig) loadMazeBuff() {
 	g.MazeBuffMap = make(map[uint32]map[uint32]*MazeBuff)
+	mazeBuffMap := make([]*MazeBuff, 0)
 	playerElementsFilePath := g.excelPrefix + "MazeBuff.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -37,10 +38,16 @@ func (g *GameDataConfig) loadMazeBuff() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MazeBuffMap)
+	err = hjson.Unmarshal(playerElementsFile, &mazeBuffMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range mazeBuffMap {
+		if g.MazeBuffMap[v.ID] == nil {
+			g.MazeBuffMap[v.ID] = make(map[uint32]*MazeBuff)
+		}
+		g.MazeBuffMap[v.ID][v.Lv] = v
 	}
 
 	logger.Info("load %v MazeBuff", len(g.MazeBuffMap))

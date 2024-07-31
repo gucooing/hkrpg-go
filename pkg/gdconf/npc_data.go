@@ -19,6 +19,7 @@ type NPCData struct {
 
 func (g *GameDataConfig) loadNPCData() {
 	g.NPCDataMap = make(map[uint32]*NPCData)
+	nPCDataMap := make([]*NPCData, 0)
 	playerElementsFilePath := g.excelPrefix + "NPCData.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,10 +27,13 @@ func (g *GameDataConfig) loadNPCData() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.NPCDataMap)
+	err = hjson.Unmarshal(playerElementsFile, &nPCDataMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range nPCDataMap {
+		g.NPCDataMap[v.ID] = v
 	}
 	logger.Info("load %v NPCData", len(g.NPCDataMap))
 

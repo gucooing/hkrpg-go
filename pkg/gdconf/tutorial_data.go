@@ -16,6 +16,7 @@ type TutorialData struct {
 
 func (g *GameDataConfig) loadTutorialData() {
 	g.TutorialDataMap = make(map[uint32]*TutorialData)
+	tutorialDataMap := make([]*TutorialData, 0)
 	playerElementsFilePath := g.excelPrefix + "TutorialData.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -23,13 +24,15 @@ func (g *GameDataConfig) loadTutorialData() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.TutorialDataMap)
+	err = hjson.Unmarshal(playerElementsFile, &tutorialDataMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range tutorialDataMap {
+		g.TutorialDataMap[v.TutorialID] = v
+	}
 	logger.Info("load %v TutorialData", len(g.TutorialDataMap))
-
 }
 
 func GetTutorialData() map[uint32]*TutorialData {

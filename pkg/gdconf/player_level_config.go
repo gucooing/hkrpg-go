@@ -17,6 +17,7 @@ type PlayerLevelConfig struct {
 
 func (g *GameDataConfig) loadPlayerLevelConfig() {
 	g.PlayerLevelConfigMap = make(map[uint32]*PlayerLevelConfig)
+	playerLevelConfig := make([]*PlayerLevelConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "PlayerLevelConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -24,10 +25,13 @@ func (g *GameDataConfig) loadPlayerLevelConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.PlayerLevelConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &playerLevelConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range playerLevelConfig {
+		g.PlayerLevelConfigMap[v.Level] = v
 	}
 	logger.Info("load %v PlayerLevelConfig", len(g.PlayerLevelConfigMap))
 }

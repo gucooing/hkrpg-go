@@ -17,6 +17,7 @@ type MessageSectionConfig struct {
 
 func (g *GameDataConfig) loadMessageSectionConfig() {
 	g.MessageSectionConfigMap = make(map[uint32]*MessageSectionConfig)
+	messageSectionConfig := make([]*MessageSectionConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "MessageSectionConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -24,10 +25,13 @@ func (g *GameDataConfig) loadMessageSectionConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MessageSectionConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &messageSectionConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range messageSectionConfig {
+		g.MessageSectionConfigMap[v.ID] = v
 	}
 
 	logger.Info("load %v MessageSectionConfig", len(g.MessageSectionConfigMap))

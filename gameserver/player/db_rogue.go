@@ -334,16 +334,16 @@ func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 	db := g.GetCurRogue()
 	info := &proto.RogueCurrentInfo{
-		RogueAeonInfo:    g.GetGameAeonInfo(),
-		GameMiracleInfo:  g.GetGameMiracleInfo(),
-		RogueLineupInfo:  g.GetRogueLineupInfo(),
-		Status:           proto.RogueStatus(db.Status),
-		MapInfo:          g.GetRogueMap(),
-		PendingAction:    g.GetRogueCommonPendingAction(),
-		IsWin:            db.IsWin,
-		ModuleInfo:       &proto.RogueModuleInfo{ModuleIdList: make([]uint32, 0)},
-		RogueVirtualItem: g.GetRogueVirtualItem(),
-		RogueBuffInfo:    g.GetRogueBuffInfo(),
+		RogueAeonInfo:   g.GetGameAeonInfo(),
+		GameMiracleInfo: g.GetGameMiracleInfo(),
+		RogueLineupInfo: g.GetRogueLineupInfo(),
+		Status:          proto.RogueStatus(db.Status),
+		RoomMap:         g.GetRogueMap(),
+		PendingAction:   g.GetRogueCommonPendingAction(),
+		IsExploreWin:    db.IsWin,
+		ModuleInfo:      &proto.RogueModuleInfo{ModuleIdList: make([]uint32, 0)},
+		VirtualItemInfo: g.GetRogueVirtualItem(),
+		RogueBuffInfo:   g.GetRogueBuffInfo(),
 	}
 
 	return info
@@ -354,15 +354,14 @@ func (g *GamePlayer) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
 	if conf == nil {
 		return nil
 	}
-	// db, poolRefreshed := g.GetRogueHistoryById(conf.SeasonId)
-	db, _ := g.GetRogueHistoryById(conf.SeasonId)
+	db, poolRefreshed := g.GetRogueHistoryById(conf.SeasonId)
 	info := &proto.RogueScoreRewardInfo{
-		PoolId:    20 + g.GetWorldLevel(),
-		EndTime:   conf.EndTime.Time.Unix(),
-		BeginTime: conf.BeginTime.Time.Unix(),
-		// PoolRefreshed:          poolRefreshed, // 是否刷新
-		// HasTakenInitialScore:   false,         // 是否已取得初始分数
-		ExploreScore:           db.Score, // 本期分数
+		PoolId:                 20 + g.GetWorldLevel(),
+		RewardEndTime:          conf.EndTime.Time.Unix(),
+		RewardBeginTime:        conf.BeginTime.Time.Unix(),
+		PoolRefreshed:          poolRefreshed, // 是否刷新
+		HasTakenInitialScore:   false,         // 是否已取得初始分数
+		ExploreScore:           db.Score,      // 本期分数
 		TakenNormalFreeRowList: make([]uint32, 0),
 	}
 	return info
@@ -486,7 +485,7 @@ func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
 func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
 	info := &proto.RogueVirtualItem{
 		// Sus:        0,
-		RogueMoney: g.GetMaterialById(Cf),
+		// RogueMoney: g.GetMaterialById(Cf),
 	}
 
 	return info
@@ -547,7 +546,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 		EntryId:            rogueRoom.MapEntrance,
 		GameModeType:       5, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
+		LevelGroupIdList:   nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -583,7 +582,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 		if sceneGroup == nil {
 			continue
 		}
-		scene.GroupIdList = append(scene.GroupIdList, groupID)
+		scene.LevelGroupIdList = append(scene.LevelGroupIdList, groupID)
 		sceneGroupState := &proto.SceneGroupState{
 			GroupId:   groupID,
 			IsDefault: true,
@@ -629,10 +628,12 @@ func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGr
 				Pos: pos,
 				Rot: rot,
 			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				WorldLevel: g.GetWorldLevel(),
-				MonsterId:  rogueMonster.NpcMonsterID,
-				EventId:    rogueMonster.EventID,
+			EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+				NpcMonster: &proto.SceneNpcMonsterInfo{
+					WorldLevel: g.GetWorldLevel(),
+					MonsterId:  rogueMonster.NpcMonsterID,
+					EventId:    rogueMonster.EventID,
+				},
 			},
 		}
 		// 添加实体
@@ -671,10 +672,10 @@ func (g *GamePlayer) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInf
 				Pos: pos,
 				Rot: rot,
 			},
-			Prop: &proto.ScenePropInfo{
-				PropId:    propList.PropID, // PropID
-				PropState: gdconf.GetStateValue(propList.State),
-			},
+		}
+		prop := &proto.ScenePropInfo{
+			PropId:    propList.PropID, // PropID
+			PropState: gdconf.GetStateValue(propList.State),
 		}
 		if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
 			index := 0
@@ -692,13 +693,13 @@ func (g *GamePlayer) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInf
 
 				switch exceRoom.RogueRoomType {
 				case 3, 8:
-					entityList.Prop.PropId = 1022
+					prop.PropId = 1022
 				case 5:
-					entityList.Prop.PropId = 1023
+					prop.PropId = 1023
 				default:
-					entityList.Prop.PropId = 1021
+					prop.PropId = 1021
 				}
-				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
+				prop.ExtraInfo = &proto.PropExtraInfo{
 					InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
 						RogueInfo: &proto.PropRogueInfo{
 							RoomId: nextRoom.RoomId,
@@ -707,11 +708,12 @@ func (g *GamePlayer) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInf
 					},
 				}
 			} else {
-				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{}
-				entityList.Prop.PropId = 1000
+				prop.ExtraInfo = &proto.PropExtraInfo{}
+				prop.PropId = 1000
 			}
-			entityList.Prop.PropState = 1
+			prop.PropState = 1
 		}
+		entityList.EntityOneofCase = &proto.SceneEntityInfo_Prop{Prop: prop}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 }

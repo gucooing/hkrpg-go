@@ -34,7 +34,7 @@ func (g *GameDataConfig) loadRogueBuff() {
 		SiteList:        make(map[uint32]map[uint32]*RogueBuff),
 		RogueBuffByType: make(map[uint32]map[uint32][]uint32),
 	}
-	rogueBuffMap := make(map[uint32]map[uint32]*RogueBuff)
+	rogueBuffMap := make([]*RogueBuff, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueBuff.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -50,21 +50,19 @@ func (g *GameDataConfig) loadRogueBuff() {
 
 	RogueBuffByType := make(map[uint32]map[uint32][]uint32)
 
-	for buffID, rogueBuff := range rogueBuffMap {
-		g.RogueBuffMap.StartId = append(g.RogueBuffMap.StartId, buffID)
-		g.RogueBuffMap.SiteList[buffID] = make(map[uint32]*RogueBuff)
-		for leve, buff := range rogueBuff {
-			g.RogueBuffMap.SiteList[buffID][leve] = buff
-			if leve == 1 {
-				if RogueBuffByType[buff.RogueBuffType] == nil {
-					RogueBuffByType[buff.RogueBuffType] = make(map[uint32][]uint32)
-				}
-				if RogueBuffByType[buff.RogueBuffType][buff.RogueBuffRarity] == nil {
-					RogueBuffByType[buff.RogueBuffType][buff.RogueBuffRarity] = make([]uint32, 0)
-				}
-				RogueBuffByType[buff.RogueBuffType][buff.RogueBuffRarity] = append(RogueBuffByType[buff.RogueBuffType][buff.RogueBuffRarity], buff.MazeBuffID)
+	for _, buffInfo := range rogueBuffMap {
+		if g.RogueBuffMap.SiteList[buffInfo.MazeBuffID] == nil {
+			g.RogueBuffMap.StartId = append(g.RogueBuffMap.StartId, buffInfo.MazeBuffID)
+			g.RogueBuffMap.SiteList[buffInfo.MazeBuffID] = make(map[uint32]*RogueBuff)
+			if RogueBuffByType[buffInfo.RogueBuffType] == nil {
+				RogueBuffByType[buffInfo.RogueBuffType] = make(map[uint32][]uint32)
 			}
+			if RogueBuffByType[buffInfo.RogueBuffType][buffInfo.RogueBuffRarity] == nil {
+				RogueBuffByType[buffInfo.RogueBuffType][buffInfo.RogueBuffRarity] = make([]uint32, 0)
+			}
+			RogueBuffByType[buffInfo.RogueBuffType][buffInfo.RogueBuffRarity] = append(RogueBuffByType[buffInfo.RogueBuffType][buffInfo.RogueBuffRarity], buffInfo.MazeBuffID)
 		}
+		g.RogueBuffMap.SiteList[buffInfo.MazeBuffID][buffInfo.MazeBuffLevel] = buffInfo
 	}
 
 	g.RogueBuffMap.RogueBuffByType = RogueBuffByType

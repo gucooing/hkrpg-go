@@ -22,6 +22,7 @@ type Cost struct {
 
 func (g *GameDataConfig) loadRogueTournPermanentTalent() {
 	g.RogueTournPermanentTalentMap = make(map[uint32]*RogueTournPermanentTalent)
+	rogueTournPermanentTalentMap := make([]*RogueTournPermanentTalent, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueTournPermanentTalent.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -29,13 +30,15 @@ func (g *GameDataConfig) loadRogueTournPermanentTalent() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueTournPermanentTalentMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueTournPermanentTalentMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range rogueTournPermanentTalentMap {
+		g.RogueTournPermanentTalentMap[v.TalentID] = v
+	}
 	logger.Info("load %v RogueTournPermanentTalent", len(g.RogueTournPermanentTalentMap))
-
 }
 
 func GetRogueTournPermanentTalentMap() map[uint32]*RogueTournPermanentTalent {

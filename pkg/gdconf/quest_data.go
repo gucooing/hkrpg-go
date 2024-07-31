@@ -19,6 +19,7 @@ type QuestData struct {
 
 func (g *GameDataConfig) loadQuestData() {
 	g.QuestDataMap = make(map[uint32]*QuestData)
+	questDataMap := make([]*QuestData, 0)
 	playerElementsFilePath := g.excelPrefix + "QuestData.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,13 +27,15 @@ func (g *GameDataConfig) loadQuestData() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.QuestDataMap)
+	err = hjson.Unmarshal(playerElementsFile, &questDataMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range questDataMap {
+		g.QuestDataMap[v.QuestID] = v
+	}
 	logger.Info("load %v QuestData", len(g.QuestDataMap))
-
 }
 
 func GetQuestDataById(questID uint32) *QuestData {

@@ -25,6 +25,7 @@ type RogueTournArea struct {
 
 func (g *GameDataConfig) loadRogueTournArea() {
 	g.RogueTournAreaMap = make(map[uint32]*RogueTournArea)
+	rogueTournAreaMap := make([]*RogueTournArea, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueTournArea.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -32,13 +33,15 @@ func (g *GameDataConfig) loadRogueTournArea() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueTournAreaMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueTournAreaMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range rogueTournAreaMap {
+		g.RogueTournAreaMap[v.AreaID] = v
+	}
 	logger.Info("load %v RogueTournArea", len(g.RogueTournAreaMap))
-
 }
 
 func GetRogueTournAreaById(id uint32) *RogueTournArea {

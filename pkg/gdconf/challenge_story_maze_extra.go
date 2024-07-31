@@ -17,6 +17,7 @@ type ChallengeStoryMazeExtra struct {
 
 func (g *GameDataConfig) loadChallengeStoryMazeExtra() {
 	g.ChallengeStoryMazeExtraMap = make(map[uint32]*ChallengeStoryMazeExtra, 0)
+	challengeStoryMazeExtraMap := make([]*ChallengeStoryMazeExtra, 0)
 	playerElementsFilePath := g.excelPrefix + "ChallengeStoryMazeExtra.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -24,10 +25,14 @@ func (g *GameDataConfig) loadChallengeStoryMazeExtra() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ChallengeStoryMazeExtraMap)
+	err = hjson.Unmarshal(playerElementsFile, &challengeStoryMazeExtraMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+
+	for _, v := range challengeStoryMazeExtraMap {
+		g.ChallengeStoryMazeExtraMap[v.ID] = v
 	}
 
 	logger.Info("load %v ChallengeStoryMazeExtra", len(g.ChallengeStoryMazeExtraMap))

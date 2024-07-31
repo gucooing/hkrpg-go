@@ -17,9 +17,9 @@ func (g *GamePlayer) GetRaidInfoCsReq(payloadMsg []byte) {
 	}
 	for _, db := range g.GetFinishRaidMap() {
 		rsp.FinishedRaidInfoList = append(rsp.FinishedRaidInfoList, &proto.FinishedRaidInfo{
-			WorldLevel:  db.HardLevel,
-			RaidId:      db.RaidId,
-			CKJLBFCBDDB: make([]uint32, 0),
+			WorldLevel: db.HardLevel,
+			RaidId:     db.RaidId,
+			// CKJLBFCBDDB: make([]uint32, 0),
 		})
 	}
 

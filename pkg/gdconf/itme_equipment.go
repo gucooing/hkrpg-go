@@ -28,6 +28,7 @@ type ReturnItemIDList struct {
 
 func (g *GameDataConfig) loadItemConfigEquipment() {
 	g.ItemConfigEquipmentMap = make(map[uint32]*ItemConfigEquipment)
+	itemConfigEquipmentMap := make([]*ItemConfigEquipment, 0)
 	playerElementsFilePath := g.excelPrefix + "ItemConfigEquipment.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -35,13 +36,15 @@ func (g *GameDataConfig) loadItemConfigEquipment() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ItemConfigEquipmentMap)
+	err = hjson.Unmarshal(playerElementsFile, &itemConfigEquipmentMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range itemConfigEquipmentMap {
+		g.ItemConfigEquipmentMap[v.ID] = v
+	}
 	logger.Info("load %v ItemConfigEquipment", len(g.ItemConfigEquipmentMap))
-
 }
 
 func GetItemConfigEquipmentById(ID uint32) *ItemConfigEquipment {

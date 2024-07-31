@@ -16,6 +16,7 @@ type RelicExpType struct {
 
 func (g *GameDataConfig) loadRelicExpType() {
 	g.RelicExpTypeMap = make(map[uint32]map[uint32]*RelicExpType)
+	relicExpTypeMap := make([]*RelicExpType, 0)
 	playerElementsFilePath := g.excelPrefix + "RelicExpType.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -23,13 +24,18 @@ func (g *GameDataConfig) loadRelicExpType() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RelicExpTypeMap)
+	err = hjson.Unmarshal(playerElementsFile, &relicExpTypeMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range relicExpTypeMap {
+		if g.RelicExpTypeMap[v.ExpType] == nil {
+			g.RelicExpTypeMap[v.ExpType] = make(map[uint32]*RelicExpType)
+		}
+		g.RelicExpTypeMap[v.ExpType][v.Level] = v
+	}
 	logger.Info("load %v RelicExpType", len(g.RelicExpTypeMap))
-
 }
 
 func GetRelicExpByLevel(relicType, exp, level, relicId uint32) (uint32, uint32) {

@@ -1,0 +1,5 @@
+package yuankong
+
+func NewYuanKong() {
+
+}

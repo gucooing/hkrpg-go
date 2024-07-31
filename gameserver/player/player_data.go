@@ -24,6 +24,7 @@ func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp.NextRecoverTime = time.Now().Unix() + 94
 	rsp.GameplayBirthday = g.BasicBin.Birthday
 	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
+	rsp.Gender = uint32(g.GetAvatar().Gender)
 	// rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
 	// 	B1:                true,
 	// 	B2:                true,
@@ -43,7 +44,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		ArchiveAvatarIdList:           make([]uint32, 0),
 		ArchiveEquipmentIdList:        make([]uint32, 0),
 		ArchiveMissingEquipmentIdList: make([]uint32, 0),
-		ArchiveMonsterIdList:          make([]*proto.ArchiveMonsterId, 0),
+		KillMonsterList:               make([]*proto.MonsterList, 0),
 		RelicList:                     make([]*proto.RelicList, 0),
 	}
 
@@ -56,11 +57,11 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 	}
 
 	for _, monsterList := range gdconf.GetMonsterConfigMap() {
-		archiveMonsterIdList := &proto.ArchiveMonsterId{
+		archiveMonsterIdList := &proto.MonsterList{
 			Num:       1,
 			MonsterId: monsterList.MonsterID,
 		}
-		archiveData.ArchiveMonsterIdList = append(archiveData.ArchiveMonsterIdList, archiveMonsterIdList)
+		archiveData.KillMonsterList = append(archiveData.KillMonsterList, archiveMonsterIdList)
 	}
 
 	for _, relicList := range gdconf.GetRelicMap() {
@@ -71,7 +72,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		archiveData.RelicList = append(archiveData.RelicList, archiveRelicList)
 	}
 
-	rsp.ArchiveInfo = archiveData
+	rsp.ArchiveData = archiveData
 
 	g.Send(cmd.GetArchiveDataScRsp, rsp)
 }
@@ -115,34 +116,34 @@ func (g *GamePlayer) SetHeadIconCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) GetAuthkeyCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetAuthkeyCsReq, payloadMsg)
-	req := msg.(*proto.GetAuthkeyCsReq)
+	// msg := g.DecodePayloadToProto(cmd.GetAuthkeyCsReq, payloadMsg)
+	// req := msg.(*proto.GetAuthkeyCsReq)
 
 	rsp := &proto.GetAuthkeyScRsp{
-		MHHOCCLKLFD: "",
-		LIFIHJFLHHM: req.LIFIHJFLHHM,
-		KFDBLEEICMC: req.KFDBLEEICMC,
-		DKHDNIFJCEM: req.DKHDNIFJCEM,
-		Retcode:     0,
+		// MHHOCCLKLFD: "",
+		// LIFIHJFLHHM: req.LIFIHJFLHHM,
+		// KFDBLEEICMC: req.KFDBLEEICMC,
+		// DKHDNIFJCEM: req.DKHDNIFJCEM,
+		Retcode: 0,
 	}
 	g.Send(cmd.GetAuthkeyScRsp, rsp)
 }
 
-func (g *GamePlayer) SetHeroBasicTypeCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SetHeroBasicTypeCsReq, payloadMsg)
-	req := msg.(*proto.SetHeroBasicTypeCsReq)
-
-	db := g.GetAvatarById(8001)
-
-	db.CurPath = uint32(req.BasicType)
-
-	g.AllPlayerSyncScNotify(&AllPlayerSync{AvatarList: []uint32{8001}})
-
-	rsp := &proto.SetHeroBasicTypeScRsp{
-		BasicType: req.BasicType,
+func (g *GamePlayer) SetAvatarPathCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SetAvatarPathCsReq, payloadMsg)
+	req := msg.(*proto.SetAvatarPathCsReq)
+	rsp := &proto.SetAvatarPathScRsp{
+		AvatarId: req.AvatarId,
 	}
-
-	g.Send(cmd.SetHeroBasicTypeScRsp, rsp)
+	conf := gdconf.GetMultiplePathAvatarConfig(uint32(req.AvatarId))
+	if conf != nil {
+		db := g.GetAvatarById(conf.BaseAvatarID)
+		if db != nil {
+			db.CurPath = uint32(req.AvatarId)
+			g.AllPlayerSyncScNotify(&AllPlayerSync{AvatarList: []uint32{conf.BaseAvatarID}})
+		}
+	}
+	g.Send(cmd.SetAvatarPathScRsp, rsp)
 
 }
 
@@ -416,12 +417,12 @@ func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 func (g *GamePlayer) ContentPackageSyncDataScNotify() {
 	notify := &proto.ContentPackageSyncDataScNotify{
 		Data: &proto.ContentPackageData{
-			ContentInfoList: make([]*proto.ContentInfo, 0),
+			ContentPackageList: make([]*proto.ContentPackageInfo, 0),
 		},
 	}
 
 	for _, id := range []uint32{200001, 200002} { // TODO ContentPackageConfig.json
-		notify.Data.ContentInfoList = append(notify.Data.ContentInfoList, &proto.ContentInfo{
+		notify.Data.ContentPackageList = append(notify.Data.ContentPackageList, &proto.ContentPackageInfo{
 			ContentId: id,
 			Status:    proto.ContentPackageStatus_ContentPackageStatus_Finished,
 		})

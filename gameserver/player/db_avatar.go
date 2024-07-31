@@ -672,27 +672,29 @@ func (g *GamePlayer) GetTrialBattleAvatar(avatarId, index uint32) *proto.BattleA
 	return info
 }
 
-func (g *GamePlayer) GetPlayerHeroBasicTypeInfo() []*proto.PlayerHeroBasicTypeInfo {
-	basicTypeInfoList := make([]*proto.PlayerHeroBasicTypeInfo, 0)
+func (g *GamePlayer) GetMultiPathAvatarInfo(avatarId uint32) []*proto.MultiPathAvatarInfo {
+	basicTypeInfoList := make([]*proto.MultiPathAvatarInfo, 0)
 	avatarDb := g.GetAvatar()
-	avatarBin := g.GetAvatarBinById(8001)
+	avatarBin := g.GetAvatarBinById(avatarId)
 	for id, pathInfo := range avatarBin.MultiPathAvatarInfoList {
-		switch avatarDb.Gender {
-		case spb.Gender_GenderMan:
-			if id%2 == 0 {
-				continue
-			}
-		case spb.Gender_GenderWoman:
-			if id%2 != 0 {
-				continue
+		if avatarBin.AvatarId == 8001 {
+			switch avatarDb.Gender {
+			case spb.Gender_GenderMan:
+				if id%2 == 0 {
+					continue
+				}
+			case spb.Gender_GenderWoman:
+				if id%2 != 0 {
+					continue
+				}
 			}
 		}
-		basicTypeInfo := &proto.PlayerHeroBasicTypeInfo{
-			SkillTreeList:  make([]*proto.AvatarSkillTree, 0),
-			BasicType:      proto.HeroBasicType(pathInfo.AvatarId),
-			EquipRelicList: make([]*proto.EquipRelic, 0),
-			Rank:           pathInfo.Rank,
-			IKLNOPEPBKL:    pathInfo.EquipmentUniqueId,
+		basicTypeInfo := &proto.MultiPathAvatarInfo{
+			MultiPathSkillTree: make([]*proto.AvatarSkillTree, 0),
+			AvatarId:           proto.MultiPathAvatarType(pathInfo.AvatarId),
+			EquipRelicList:     make([]*proto.EquipRelic, 0),
+			Rank:               pathInfo.Rank,
+			PathEquipmentId:    pathInfo.EquipmentUniqueId,
 		}
 		// 获取装备圣遗物
 		for tp, relic := range pathInfo.EquipRelic {
@@ -710,7 +712,7 @@ func (g *GamePlayer) GetPlayerHeroBasicTypeInfo() []*proto.PlayerHeroBasicTypeIn
 				PointId: skill.PointId,
 				Level:   skill.Level,
 			}
-			basicTypeInfo.SkillTreeList = append(basicTypeInfo.SkillTreeList, avatarSkillTree)
+			basicTypeInfo.MultiPathSkillTree = append(basicTypeInfo.MultiPathSkillTree, avatarSkillTree)
 		}
 		basicTypeInfoList = append(basicTypeInfoList, basicTypeInfo)
 	}

@@ -75,7 +75,7 @@ type MazeProp struct {
 }
 
 func (g *GameDataConfig) loadMazeProp() {
-	mazePropMap := make(map[uint32]*mazeProp)
+	mazePropMap := make([]*mazeProp, 0)
 	g.MazePropMap = make(map[uint32]*MazeProp)
 	playerElementsFilePath := g.excelPrefix + "MazeProp.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
@@ -89,7 +89,7 @@ func (g *GameDataConfig) loadMazeProp() {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
-	for id, x := range mazePropMap {
+	for _, x := range mazePropMap {
 		mp := &MazeProp{
 			ID:                   x.ID,
 			PropType:             getPropType(x.PropType),
@@ -111,7 +111,7 @@ func (g *GameDataConfig) loadMazeProp() {
 		} else if strings.Contains(x.ConfigEntityPath, "_Door_") {
 			mp.IsDoor = true
 		}
-		g.MazePropMap[id] = mp
+		g.MazePropMap[x.ID] = mp
 	}
 	logger.Info("load %v MazeProp", len(g.MazePropMap))
 

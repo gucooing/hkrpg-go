@@ -26,6 +26,7 @@ type RogueRoom struct {
 func (g *GameDataConfig) goppRogueRoom() {
 	g.RogueRoomMap = &RogueRoomMap{}
 	g.RogueRoomMap.RogueRoomJson = make(map[uint32]*RogueRoom)
+	excelRoom := make([]*RogueRoom, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueRoom.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -33,10 +34,13 @@ func (g *GameDataConfig) goppRogueRoom() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueRoomMap.RogueRoomJson)
+	err = hjson.Unmarshal(playerElementsFile, &excelRoom)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range excelRoom {
+		g.RogueRoomMap.RogueRoomJson[v.RogueRoomID] = v
 	}
 
 	for _, v := range g.RogueRoomMap.RogueRoomJson {

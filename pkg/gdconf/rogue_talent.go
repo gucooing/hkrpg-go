@@ -20,6 +20,7 @@ type RogueTalent struct {
 
 func (g *GameDataConfig) loadRogueTalent() {
 	g.RogueTalentMap = make(map[uint32]*RogueTalent)
+	rogueTalentMap := make([]*RogueTalent, 0)
 	playerElementsFilePath := g.excelPrefix + "RogueTalent.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -27,10 +28,13 @@ func (g *GameDataConfig) loadRogueTalent() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.RogueTalentMap)
+	err = hjson.Unmarshal(playerElementsFile, &rogueTalentMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range rogueTalentMap {
+		g.RogueTalentMap[v.TalentID] = v
 	}
 
 	logger.Info("load %v RogueTalent", len(g.RogueTalentMap))

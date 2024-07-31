@@ -16,6 +16,7 @@ type ExpType struct {
 
 func (g *GameDataConfig) loadExpType() {
 	g.ExpTypeMap = make(map[uint32]map[uint32]*ExpType)
+	expTypeMap := make([]*ExpType, 0)
 	playerElementsFilePath := g.excelPrefix + "ExpType.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -23,10 +24,16 @@ func (g *GameDataConfig) loadExpType() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.ExpTypeMap)
+	err = hjson.Unmarshal(playerElementsFile, &expTypeMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range expTypeMap {
+		if g.ExpTypeMap[v.ExpType] == nil {
+			g.ExpTypeMap[v.ExpType] = make(map[uint32]*ExpType)
+		}
+		g.ExpTypeMap[v.ExpType][v.Level] = v
 	}
 	logger.Info("load %v ExpType", len(g.ExpTypeMap))
 

@@ -16,17 +16,21 @@ type MultiplePathAvatarConfig struct {
 
 func (g *GameDataConfig) loadMultiplePathAvatarConfig() {
 	g.MultiplePathAvatarConfigMap = make(map[uint32]*MultiplePathAvatarConfig)
-	playerElementsFilePath := g.dataPrefix + "MultiplePathAvatarConfig.json"
+	multiplePathAvatarConfigMap := make([]*MultiplePathAvatarConfig, 0)
+	playerElementsFilePath := g.excelPrefix + "MultiplePathAvatarConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MultiplePathAvatarConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &multiplePathAvatarConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
+	}
+	for _, v := range multiplePathAvatarConfigMap {
+		g.MultiplePathAvatarConfigMap[v.AvatarID] = v
 	}
 	logger.Info("load %v MultiplePathAvatarConfig", len(g.MultiplePathAvatarConfigMap))
 }

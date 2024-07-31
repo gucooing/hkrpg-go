@@ -154,7 +154,7 @@ func (g *GamePlayer) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 	}
 	playerDetailInfo := &proto.PlayerDetailInfo{
 		DisplayAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
-		Record: &proto.PlayerRecordInfo{
+		RecordInfo: &proto.PlayerRecordInfo{
 			// Level:                  friend.Level,
 			// UnlockedAvatarNum:      999,
 			// UnlockedAchievementNum: 999,
@@ -174,7 +174,6 @@ func (g *GamePlayer) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 		IsBanned:         false,
 		HeadIcon:         friend.HeadImageAvatarId,
 		Platform:         proto.PlatformType(friend.PlatformType),
-		RecordInfo:       &proto.DisplayRecordInfo{},
 		Signature:        friend.Signature,
 		Nickname:         friend.Nickname,
 	}

@@ -18,6 +18,7 @@ type PlaneEvent struct {
 
 func (g *GameDataConfig) loadPlaneEvent() {
 	g.PlaneEventMap = make(map[uint32]map[uint32]*PlaneEvent)
+	planeEventMap := make([]*PlaneEvent, 0)
 	playerElementsFilePath := g.excelPrefix + "PlaneEvent.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -25,13 +26,18 @@ func (g *GameDataConfig) loadPlaneEvent() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.PlaneEventMap)
+	err = hjson.Unmarshal(playerElementsFile, &planeEventMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range planeEventMap {
+		if g.PlaneEventMap[v.EventID] == nil {
+			g.PlaneEventMap[v.EventID] = make(map[uint32]*PlaneEvent)
+		}
+		g.PlaneEventMap[v.EventID][v.WorldLevel] = v
+	}
 	logger.Info("load %v PlaneEvent", len(g.PlaneEventMap))
-
 }
 
 func GetPlaneEventById(eventID, worldLevel uint32) *PlaneEvent {

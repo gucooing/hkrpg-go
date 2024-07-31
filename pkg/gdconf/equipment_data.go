@@ -10,6 +10,7 @@ import (
 
 type EquipmentConfig struct {
 	EquipmentID          uint32    `json:"EquipmentID"`
+	ItemID               uint32    `json:"ItemID"`
 	Release              bool      `json:"Release"`
 	Rarity               string    `json:"Rarity"`
 	AvatarBaseType       string    `json:"AvatarBaseType"`
@@ -25,6 +26,8 @@ type EquipmentConfig struct {
 
 func (g *GameDataConfig) loadEquipmentConfig() {
 	g.EquipmentConfigMap = make(map[uint32]*EquipmentConfig)
+	equipmentConfigMap := make([]*EquipmentConfig, 0)
+	equipmentConfigMaps := make([]*EquipmentConfig, 0)
 	playerElementsFilePath := g.excelPrefix + "EquipmentConfig.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -32,7 +35,7 @@ func (g *GameDataConfig) loadEquipmentConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.EquipmentConfigMap)
+	err = hjson.Unmarshal(playerElementsFile, &equipmentConfigMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
@@ -44,14 +47,23 @@ func (g *GameDataConfig) loadEquipmentConfig() {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFiles, &g.EquipmentConfigMap)
+	err = hjson.Unmarshal(playerElementsFiles, &equipmentConfigMaps)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
 
-	logger.Info("load %v EquipmentConfig", len(g.EquipmentConfigMap))
+	equipmentConfigMap = append(equipmentConfigMap, equipmentConfigMaps...)
 
+	for _, v := range equipmentConfigMap {
+		if v.EquipmentID == 0 {
+			g.EquipmentConfigMap[v.ItemID] = v
+		} else {
+			g.EquipmentConfigMap[v.EquipmentID] = v
+		}
+	}
+
+	logger.Info("load %v EquipmentConfig", len(g.EquipmentConfigMap))
 }
 
 func GetEquipmentConfigById(ID uint32) *EquipmentConfig {

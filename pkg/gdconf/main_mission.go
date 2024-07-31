@@ -33,6 +33,7 @@ type TakeParam struct {
 
 func (g *GameDataConfig) loadMainMission() {
 	g.MainMissionMap = make(map[uint32]*MainMission)
+	mainMissionMap := make([]*MainMission, 0)
 	playerElementsFilePath := g.excelPrefix + "MainMission.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -40,14 +41,16 @@ func (g *GameDataConfig) loadMainMission() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &g.MainMissionMap)
+	err = hjson.Unmarshal(playerElementsFile, &mainMissionMap)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	for _, v := range mainMissionMap {
+		g.MainMissionMap[v.MainMissionID] = v
+	}
 
 	logger.Info("load %v MainMission", len(g.MainMissionMap))
-
 }
 
 func GetMainMission() map[uint32]*MainMission {

@@ -146,6 +146,17 @@ func (g *GamePlayer) AddItem(pileItem []*Material) {
 	}
 }
 
+func isMateria(id uint32) bool {
+	itemConf := gdconf.GetItemConfigMap()
+	if itemConf.Item[id] != nil ||
+		itemConf.AvatarRank[id] != nil ||
+		itemConf.Book[id] != nil ||
+		itemConf.Disk[id] != nil {
+		return true
+	}
+	return false
+}
+
 func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 	db := g.GetMaterialMap()
 	for _, material := range pileItem {
