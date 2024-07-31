@@ -30,6 +30,7 @@ func (g *GameDataConfig) loadBackGroundMusic() {
 		panic(info)
 	}
 	logger.Info("load %v BackGroundMusic", len(g.BackGroundMusicMap))
+
 }
 
 func GetBackGroundMusicById(iD uint32) *BackGroundMusic {

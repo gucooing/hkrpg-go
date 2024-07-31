@@ -41,6 +41,7 @@ func (g *GameDataConfig) loadItemConfigEquipment() {
 		panic(info)
 	}
 	logger.Info("load %v ItemConfigEquipment", len(g.ItemConfigEquipmentMap))
+
 }
 
 func GetItemConfigEquipmentById(ID uint32) *ItemConfigEquipment {

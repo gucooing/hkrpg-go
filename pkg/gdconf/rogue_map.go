@@ -54,6 +54,7 @@ func (g *GameDataConfig) loadRogueMap() {
 	}
 
 	logger.Info("load %v RogueMap", len(g.RogueMap))
+
 }
 
 func GetRogueMapSiteById(rogueMapID uint32) map[uint32]*RogueMapList {

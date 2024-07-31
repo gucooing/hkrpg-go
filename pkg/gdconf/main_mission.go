@@ -47,6 +47,7 @@ func (g *GameDataConfig) loadMainMission() {
 	}
 
 	logger.Info("load %v MainMission", len(g.MainMissionMap))
+
 }
 
 func GetMainMission() map[uint32]*MainMission {

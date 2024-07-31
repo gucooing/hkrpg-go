@@ -1,5 +1,5 @@
 # 准备环境
-1. golang >= 1.20
+1. golang >= 1.22.1
 2. mysql
 3. redis
 4. bash(使用build.sh时才需要)
@@ -13,18 +13,25 @@
 #### 自行编译
 > 此处不交流交叉编译
 
- 进入./ cmd文件夹中，可看到各个服务的文件夹，进入每一个文件夹执行 `go build xxxx.go` 即可
+进入./ cmd文件夹中，可看到各个服务的文件夹，进入每一个文件夹执行 `go build xxxx.go` 即可
+### 不想编译
+前往[Build-dev](https://github.com/gucooing/hkrpg-go-public/actions/workflows/HKRPG-Go-Publish.yml)下载
 
 ## 运行
 ### 1.准备资源：
-data resources，data使用仓库的data即可，resources使用lc项目的resources即可，但资源文件夹需要给予读写权限。
+data resources，data使用仓库的data即可，但资源文件夹需要给予读写权限。
+
+resources的准备:
+1. 下载[StarRailData](https://github.com/Dimbreath/StarRailData)
+2. 下载补充文件（任务文件）[StarRailData-missioninfo](https://github.com/oureveryday/StarRailData-missioninfo)
+3. 先将StarRailData解压到resources中，然后用StarRailData-missioninfo覆盖一次(只覆盖更新Config即可，不要覆盖ExcelOutput不兼容)
 ### 2.运行，
 运行时需要携带启动参数 -i appid ， 其中appid格式为ipv4格式，如：9001.1.1.1 其中含义：
 ```bash
-9001：区服id  ；
-1：服务id ； 
-1:  主机id;
-1:  本次启动服务id；
+9001: 区服id;
+1:    服务id; 
+1:    主机id;
+1:    本次启动服务id;
 ```
 了解到了appid的组成含义后你可以先不携带参数启动一次，使其生成各个服务的配置文件，生成的配置文件在conf文件夹里，然后根据你自己定义的appid更改默认配置文件中的appid(虽然服务采用发现形式添加新服务，但是还是推荐每一个配置文件中的appid配置表都相同)，然后根据自己的想法更改配置文件中的其他参数。
 ### 3.数据库的准备，
@@ -57,3 +64,8 @@ data resources，data使用仓库的data即可，resources使用lc项目的resou
 
 ## 注意事项
 请处理好内外网，不要让外网可随意访问到集群内部网络
+如果你的外网带宽不足 1Gpbs/s 延迟不低于10ms 请不要使用外网数据库
+
+## 想测试但不想配置复杂的环境
+
+1.前往[Build-dev](https://github.com/gucooing/hkrpg-go-public/actions/workflows/HKRPG-Go-Publish.yml)下载hkrpg-pe-go文件

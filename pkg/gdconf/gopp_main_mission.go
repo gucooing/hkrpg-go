@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -32,6 +33,8 @@ type SubMission struct {
 	AudioEmotionState string                    `json:"AudioEmotionState"`
 	TakeType          constant.MissionBeginType `json:"TakeType"`
 	TakeParamIntList  []uint32                  `json:"TakeParamIntList"`
+	MazePlaneID       uint32                    `json:"MazePlaneID"`
+	MazeFloorID       uint32                    `json:"MazeFloorID"`
 	FinishType        constant.QuestFinishType  `json:"FinishType"`
 	ParamType         string                    `json:"ParamType"`
 	ParamInt1         uint32                    `json:"ParamInt1"`
@@ -40,10 +43,13 @@ type SubMission struct {
 	ParamStr1         string                    `json:"ParamStr1"`
 	ParamIntList      []uint32                  `json:"ParamIntList"`
 	ParamItemList     []*ParamItem              `json:"ParamItemList"`
+	SubRewardID       uint32                    `json:"SubRewardID"`
 	FinishActionList  []*FinishAction           `json:"FinishActionList"`
 	Progress          uint32                    `json:"Progress"`
 	IsShow            bool                      `json:"IsShow"`
 	WayPointFloorID   uint32                    `json:"WayPointFloorID"`
+	WayPointGroupID   uint32                    `json:"WayPointGroupID"`
+	WayPointEntityID  uint32                    `json:"WayPointEntityID"`
 	MapNPCList        []*MapNPC                 `json:"MapNPCList"`
 	MapPropList       []*MapProp                `json:"MapPropList"`
 }
@@ -54,8 +60,9 @@ type ParamItem struct {
 }
 
 type FinishAction struct {
-	FinishActionType constant.FinishActionType `json:"FinishActionType"`
-	FinishActionPara []uint32                  `json:"FinishActionPara"`
+	FinishActionType       constant.FinishActionType `json:"FinishActionType"`
+	FinishActionPara       []uint32                  `json:"FinishActionPara"`
+	FinishActionParaString []string                  `json:"FinishActionParaString"`
 }
 
 type MapNPC struct {
@@ -70,6 +77,7 @@ type MapProp struct {
 
 type MissionJson struct {
 	OnStartSequece []*OnStartSequece `json:"OnStartSequece"`
+	OnInitSequece  []*OnStartSequece `json:"OnInitSequece"`
 	Type           string            `json:"Type"`
 }
 
@@ -80,12 +88,13 @@ type OnStartSequece struct {
 type Task struct {
 	Type string `json:"$type"`
 	// 传送相关
-	EntranceID uint32 `json:"EntranceID"`
+	EntranceID  uint32 `json:"EntranceID"`
+	TaskEnabled bool   `json:"TaskEnabled"`
 	// 战斗相关
 	EventID      *EventID    `json:"EventID"`
 	GroupID      interface{} `json:"GroupID"`
+	AnchorID     interface{} `json:"AnchorID"`
 	BattleAreaID interface{} `json:"BattleAreaID"`
-	TaskEnabled  bool        `json:"TaskEnabled"`
 }
 
 type EventID struct {
@@ -113,7 +122,7 @@ func (g *GameDataConfig) goppMainMission() {
 		playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 		if err != nil {
 			logger.Debug("open MainMission error: %v", err)
-			continue
+			return
 		}
 		err = hjson.Unmarshal(playerElementsFile, &goppMainMission)
 		if err != nil {
@@ -124,7 +133,6 @@ func (g *GameDataConfig) goppMainMission() {
 			g.GoppMission.GoppMainMission = make(map[uint32]*GoppMainMission)
 		}
 		g.GoppMission.GoppMainMission[id] = goppMainMission
-
 		for _, subMission := range goppMainMission.SubMissionList {
 			if g.GoppMission.GoppSubMainMission == nil {
 				g.GoppMission.GoppSubMainMission = make(map[uint32]*SubMission)
@@ -168,26 +176,39 @@ func GetSubMainMissionById(id uint32) *SubMission {
 	return CONF.GoppMission.GoppSubMainMission[id]
 }
 
-func GetEntryId(id uint32) (uint32, bool) {
-	var entryId uint32
-	var isFloor = false
-	conf := CONF.GoppMission.GoppMissionJson[id]
-	if conf == nil {
-		return 0, false
-	}
-	for _, info := range conf.OnStartSequece {
-		if info.TaskList == nil {
-			continue
+func GetEntryId(id uint32) (uint32, uint32, uint32, bool) {
+	conf := GetSubMainMissionById(id)
+	jsonConf := CONF.GoppMission.GoppMissionJson[id]
+	if jsonConf != nil {
+		for _, info := range jsonConf.OnStartSequece {
+			if info.TaskList == nil {
+				continue
+			}
+			for _, task := range info.TaskList {
+				if CONF.MapEntranceMap[task.EntranceID] != nil {
+					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
+				}
+			}
 		}
-		for _, task := range info.TaskList {
-			entryId = task.EntranceID
-			if CONF.MapEntranceMap[entryId] != nil {
-				isFloor = true
-				break
+		for _, info := range jsonConf.OnInitSequece {
+			if info.TaskList == nil {
+				continue
+			}
+			for _, task := range info.TaskList {
+				if CONF.MapEntranceMap[task.EntranceID] != nil {
+					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
+				}
 			}
 		}
 	}
-	return entryId, isFloor
+	if conf == nil {
+		return 0, 0, 0, false
+	}
+	str := strconv.Itoa(int(conf.ParamInt2))
+	part1 := str[:6]
+	part2 := str[6:7]
+	newNumStr := part1 + part2
+	return alg.S2U32(newNumStr), 0, 0, true
 }
 
 func IsBattleMission(id, eventId uint32) bool {
@@ -209,4 +230,14 @@ func IsBattleMission(id, eventId uint32) bool {
 	}
 
 	return isFinish
+}
+
+func getGroupIDUint32(x interface{}) uint32 {
+	switch x.(type) {
+	case uint32:
+		return x.(uint32)
+	case *GroupID:
+		return x.(GroupID).FixedValue.Value
+	}
+	return 0
 }

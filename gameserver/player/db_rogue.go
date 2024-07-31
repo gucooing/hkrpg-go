@@ -3,16 +3,17 @@ package player
 import (
 	"math/rand"
 
-	gsdb "github.com/gucooing/hkrpg-go/gameserver/db"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 const (
-	QuestRogue = 0       // 模拟宇宙
-	RogueDlc   = 6000302 // 模拟宇宙：寰宇蝗灾
-	RogueNous  = 6000901 // 模拟宇宙：黄金与机械
+	QuestRogue      = 0       // 模拟宇宙
+	RogueDlc        = 6000302 // 模拟宇宙：寰宇蝗灾
+	RogueNous       = 6000901 // 模拟宇宙：黄金与机械
+	QuestRogueTourn = 301     // 差分宇宙
 )
 
 // Default Probability
@@ -71,6 +72,11 @@ func (g *GamePlayer) GetRogueHistoryById(id uint32) (*spb.RogueHistory, bool) {
 	return db[id], isPoolRefreshed
 }
 
+func (g *GamePlayer) NewCurRogue() {
+	db := g.GetDbRogue()
+	db.CurRogue = new(spb.CurRogue)
+}
+
 func (g *GamePlayer) GetCurRogue() *spb.CurRogue {
 	db := g.GetDbRogue()
 	if db.CurRogue == nil {
@@ -108,6 +114,26 @@ func (g *GamePlayer) GetRoomBySiteId(siteId uint32) *spb.RogueRoom {
 		db.RogueRoomMap = make(map[uint32]*spb.RogueRoom)
 	}
 	return db.RogueRoomMap[siteId]
+}
+
+func (g *GamePlayer) FinishRogueRoom(siteId uint32) {
+	room := g.GetRoomBySiteId(siteId)
+	if room == nil {
+		return
+	}
+	room.RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_FINISH
+	g.SyncRogueMapRoomScNotify(siteId)
+}
+
+func (g *GamePlayer) UpCurRogueRoom(siteId uint32) {
+	db := g.GetCurRogue()
+	if db.RogueRoomMap[siteId] == nil {
+		return
+	}
+	db.RogueRoomMap[siteId].RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_PLAY
+	db.CurSiteId = siteId
+	// 更新通知
+	g.SyncRogueMapRoomScNotify(siteId)
 }
 
 func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
@@ -306,14 +332,15 @@ func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 }
 
 func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
+	db := g.GetCurRogue()
 	info := &proto.RogueCurrentInfo{
 		RogueAeonInfo:    g.GetGameAeonInfo(),
 		GameMiracleInfo:  g.GetGameMiracleInfo(),
 		RogueLineupInfo:  g.GetRogueLineupInfo(),
-		Status:           proto.RogueStatus_ROGUE_STATUS_DOING,
+		Status:           proto.RogueStatus(db.Status),
 		MapInfo:          g.GetRogueMap(),
 		PendingAction:    g.GetRogueCommonPendingAction(),
-		IsWin:            false,
+		IsWin:            db.IsWin,
 		ModuleInfo:       &proto.RogueModuleInfo{ModuleIdList: make([]uint32, 0)},
 		RogueVirtualItem: g.GetRogueVirtualItem(),
 		RogueBuffInfo:    g.GetRogueBuffInfo(),
@@ -323,39 +350,42 @@ func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 }
 
 func (g *GamePlayer) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
-	conf := gsdb.GetCurRogue()
+	conf := database.GetCurRogue()
 	if conf == nil {
 		return nil
 	}
-	db, poolRefreshed := g.GetRogueHistoryById(conf.SeasonId)
+	// db, poolRefreshed := g.GetRogueHistoryById(conf.SeasonId)
+	db, _ := g.GetRogueHistoryById(conf.SeasonId)
 	info := &proto.RogueScoreRewardInfo{
-		PoolId:                 20 + g.GetWorldLevel(),
-		EndTime:                conf.EndTime.Time.Unix(),
-		BeginTime:              conf.EndTime.Time.Unix(),
-		PoolRefreshed:          poolRefreshed, // 是否刷新
-		HasTakenInitialScore:   false,         // 是否已取得初始分数
-		ExploreScore:           db.Score,      // 本期分数
+		PoolId:    20 + g.GetWorldLevel(),
+		EndTime:   conf.EndTime.Time.Unix(),
+		BeginTime: conf.BeginTime.Time.Unix(),
+		// PoolRefreshed:          poolRefreshed, // 是否刷新
+		// HasTakenInitialScore:   false,         // 是否已取得初始分数
+		ExploreScore:           db.Score, // 本期分数
 		TakenNormalFreeRowList: make([]uint32, 0),
 	}
 	return info
 }
 
 func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
-	conf := gsdb.GetCurRogue()
+	conf := database.GetCurRogue()
 	if conf == nil {
 		return nil
 	}
 	info := &proto.RogueSeasonInfo{
-		EndTime:   conf.EndTime.Time.Unix(),
-		BeginTime: conf.EndTime.Time.Unix(),
+		EndTime:   4070894399,
+		BeginTime: 1711310400,
 		Season:    conf.SeasonId,
 	}
 	return info
 }
 
 func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
-	info := &proto.RogueAreaInfo{RogueAreaList: make([]*proto.RogueArea, 0)}
-	conf := gsdb.GetCurRogue()
+	info := &proto.RogueAreaInfo{
+		RogueAreaList: make([]*proto.RogueArea, 0),
+	}
+	conf := database.GetCurRogue()
 	if conf == nil {
 		return info
 	}
@@ -368,11 +398,10 @@ func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
 		RogueArea := &proto.RogueArea{
 			AreaId:     dbRogueArea.AreaId,
 			AreaStatus: proto.RogueAreaStatus(dbRogueArea.RogueAreaStatus),
-
-			MapId:           0,
-			HasTakenReward:  false,
-			RogueStatus:     0,
-			CurReachRoomNum: 0,
+			// MapId:           0,
+			HasTakenReward: false,
+			RogueStatus:    0,
+			// CurReachRoomNum: 0,
 		}
 		info.RogueAreaList = append(info.RogueAreaList, RogueArea)
 	}
@@ -445,12 +474,18 @@ func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
 	info := &proto.RogueBuffInfo{
 		MazeBuffList: make([]*proto.RogueBuff, 0),
 	}
+	for _, in := range g.GetRogueBuffList() {
+		info.MazeBuffList = append(info.MazeBuffList, &proto.RogueBuff{
+			Level:  in.BuffLevel,
+			BuffId: in.BuffId,
+		})
+	}
 	return info
 }
 
 func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
 	info := &proto.RogueVirtualItem{
-		Sus:        0,
+		// Sus:        0,
 		RogueMoney: g.GetMaterialById(Cf),
 	}
 
@@ -641,44 +676,42 @@ func (g *GamePlayer) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInf
 				PropState: gdconf.GetStateValue(propList.State),
 			},
 		}
-		// if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
-		// 	index := 0
-		// 	if propList.Name == "Door2" {
-		// 		index = 1
-		// 	}
-		// 	room := g.GetCurDbRoom()
-		// 	if propList.Name == "Door1" && len(room.NextSiteIdList) == 1 {
-		// 		continue
-		// 	}
-		// 	if len(room.NextSiteIdList) == 1 {
-		// 		index = 0
-		// 	}
-		// 	if len(room.NextSiteIdList) > 0 {
-		// 		siteId := room.NextSiteIdList[index]
-		// 		nextRoom := g.GetDbRoomBySiteId(siteId)
-		// 		exceRoom := gdconf.GetRogueRoomById(nextRoom.RoomId)
-		//
-		// 		switch exceRoom.RogueRoomType {
-		// 		case 3, 8:
-		// 			entityList.Prop.PropId = 1022
-		// 		case 5:
-		// 			entityList.Prop.PropId = 1023
-		// 		default:
-		// 			entityList.Prop.PropId = 1021
-		// 		}
-		// 		entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
-		// 			InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
-		// 				RogueInfo: &proto.PropRogueInfo{
-		// 					RoomId: nextRoom.RoomId,
-		// 					SiteId: siteId,
-		// 				},
-		// 			},
-		// 		}
-		// 	} else {
-		// 		entityList.Prop.PropId = 1000
-		// 	}
-		// 	entityList.Prop.PropState = 1
-		// }
+		if propList.PropID == 1000 || propList.PropID == 1021 || propList.PropID == 1022 || propList.PropID == 1023 {
+			index := 0
+			if propList.Name == "Door2" {
+				index = 1
+			}
+			room := g.GetCurRogueRoom()
+			if len(room.NextSiteIdList) == 1 {
+				index = 0
+			}
+			if len(room.NextSiteIdList) > 0 {
+				siteId := room.NextSiteIdList[index]
+				nextRoom := g.GetRoomBySiteId(siteId)
+				exceRoom := gdconf.GetRogueRoomById(nextRoom.RoomId)
+
+				switch exceRoom.RogueRoomType {
+				case 3, 8:
+					entityList.Prop.PropId = 1022
+				case 5:
+					entityList.Prop.PropId = 1023
+				default:
+					entityList.Prop.PropId = 1021
+				}
+				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{
+					InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
+						RogueInfo: &proto.PropRogueInfo{
+							RoomId: nextRoom.RoomId,
+							SiteId: siteId,
+						},
+					},
+				}
+			} else {
+				entityList.Prop.ExtraInfo = &proto.PropExtraInfo{}
+				entityList.Prop.PropId = 1000
+			}
+			entityList.Prop.PropState = 1
+		}
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 }

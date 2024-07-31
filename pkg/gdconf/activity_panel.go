@@ -35,6 +35,7 @@ func (g *GameDataConfig) loadActivityPanel() {
 		panic(info)
 	}
 	logger.Info("load %v ActivityPanel", len(g.ActivityPanelMap))
+
 }
 
 func GetActivityPanelById(ID uint32) *ActivityPanel {

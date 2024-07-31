@@ -4,10 +4,8 @@ import (
 	"encoding/base64"
 	"io"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/hkrpg-go/dispatch/config"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
@@ -15,10 +13,15 @@ import (
 
 func (s *Server) QueryDispatchHandler(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_dispatch", c.Request.RemoteAddr)
+	gate := s.getGate()
+	if gate == nil && !s.IsPe {
+		s.ErrorDispatch(c)
+		return
+	}
 	dispatchRegionsData := new(proto.Dispatch)
 	dispatchRegionsData.TopSeverRegionName = "hkrpg-go"
 	serverList := make([]*proto.RegionInfo, 0)
-	for _, cfg := range config.GetConfig().Dispatch {
+	for _, cfg := range s.DispatchList {
 		server := &proto.RegionInfo{
 			Name:        cfg.Name,
 			Title:       cfg.Title,
@@ -48,15 +51,24 @@ func (s *Server) getGate() *Gate {
 func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_gateway", c.Request.RemoteAddr)
 	gate := s.getGate()
-	if gate == nil {
+	if gate == nil && !s.IsPe {
 		s.ErrorGate(c)
 		return
 	}
+	var ip string
+	var port uint32
+	if s.IsPe {
+		ip = s.KcpIp
+		port = s.KcpPort
+	} else {
+		ip = gate.Ip
+		port = gate.Port
+	}
 	queryGateway := new(proto.GateServer)
 	queryGateway.Msg = "OK"
-	queryGateway.Ip = gate.Ip
+	queryGateway.Ip = ip
 	queryGateway.RegionName = "hkrpg-go"
-	queryGateway.Port = gate.Port
+	queryGateway.Port = port
 	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 	queryGateway.B1 = true
 	queryGateway.B2 = true
@@ -78,9 +90,18 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_gateway_capture", c.Request.RemoteAddr)
 	gate := s.getGate()
-	if gate == nil {
+	if gate == nil && !s.IsPe {
 		s.ErrorGate(c)
 		return
+	}
+	var ip string
+	var port uint32
+	if s.IsPe {
+		ip = s.KcpIp
+		port = s.KcpPort
+	} else {
+		ip = gate.Ip
+		port = gate.Port
 	}
 	urlPath := c.Request.URL.RawQuery
 
@@ -106,8 +127,8 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 		logger.Error("", err)
 	}
 
-	dispatch.Ip = gate.Ip
-	dispatch.Port = gate.Port
+	dispatch.Ip = ip
+	dispatch.Port = port
 	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)
@@ -120,9 +141,18 @@ func (s *Server) QueryGatewayHandlerCapture(c *gin.Context) {
 func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 	logger.Info("[ADDR:%s]query_gateway_capture", c.Request.RemoteAddr)
 	gate := s.getGate()
-	if gate == nil {
+	if gate == nil && !s.IsPe {
 		s.ErrorGate(c)
 		return
+	}
+	var ip string
+	var port uint32
+	if s.IsPe {
+		ip = s.KcpIp
+		port = s.KcpPort
+	} else {
+		ip = gate.Ip
+		port = gate.Port
 	}
 	urlPath := c.Request.URL.RawQuery
 
@@ -148,8 +178,8 @@ func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 		logger.Error("", err)
 	}
 
-	dispatch.Ip = gate.Ip
-	dispatch.Port = gate.Port
+	dispatch.Ip = ip
+	dispatch.Port = port
 	dispatch.ClientSecretKey = base64.RawStdEncoding.EncodeToString(s.Ec2b.Bytes())
 
 	rspbin, _ := pb.Marshal(dispatch)
@@ -159,12 +189,11 @@ func (s *Server) QueryGatewayHandlerCaptureCn(c *gin.Context) {
 	c.String(200, dispatchb64)
 }
 
-func (s *Server) ErrorGate(c *gin.Context) {
-	queryGateway := new(proto.GateServer)
-	// queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
-	queryGateway.RegionName = "hkrpg-go"
-	queryGateway.Msg = "gate error"
-	// queryGateway.MsgError = "游戏正在维护中，详情请关注官方公告。"
+func (s *Server) ErrorDispatch(c *gin.Context) {
+	queryGateway := new(proto.Dispatch)
+	queryGateway.Retcode = uint32(proto.Retcode_RET_REPEATED_REQ)
+	queryGateway.Msg = "gate error\n游戏正在停服维护中，预计于{LOCALTIME:4070880000}{LOCALTIMEZONE}({LOCALZONE})开服，详情请关注官方公告。"
+	queryGateway.TopSeverRegionName = "https://bbs.mihoyo.com/srToBBS.html"
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {
@@ -175,10 +204,19 @@ func (s *Server) ErrorGate(c *gin.Context) {
 	c.String(200, reqdataBase64)
 }
 
-func stou32(msg string) uint32 {
-	if msg == "" {
-		return 0
+func (s *Server) ErrorGate(c *gin.Context) {
+	queryGateway := new(proto.GateServer)
+	// queryGateway.Retcode = proto.Retcode_RET_TIMEOUT
+	queryGateway.RegionName = "hkrpg-go"
+	queryGateway.Msg = "gate error"
+	queryGateway.Retcode = uint32(proto.Retcode_RET_TIMEOUT)
+	// queryGateway.TipsMsg = "游戏正在维护中，详情请关注官方公告。"
+
+	reqdata, err := pb.Marshal(queryGateway)
+	if err != nil {
+		logger.Error("pb marshal Gateserver error: %v", err)
+		return
 	}
-	ms, _ := strconv.ParseUint(msg, 10, 32)
-	return uint32(ms)
+	reqdataBase64 := base64.StdEncoding.EncodeToString(reqdata)
+	c.String(200, reqdataBase64)
 }

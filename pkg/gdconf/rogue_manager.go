@@ -33,6 +33,7 @@ func (g *GameDataConfig) loadRogueManager() {
 	}
 
 	logger.Info("load %v RogueManager", len(g.RogueManagerMap))
+
 }
 
 func GetRogueManager() map[uint32]*RogueManagerList {

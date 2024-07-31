@@ -22,6 +22,15 @@ func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }
 
+func (g *GamePlayer) HeliobusActivityDataCsReq(payloadMsg []byte) {
+	rsp := &proto.HeliobusActivityDataScRsp{
+		ChallengeList: make([]*proto.ChallengeList, 0),
+		Level:         15,
+		Phase:         0,
+	}
+	g.Send(cmd.HeliobusActivityDataScRsp, rsp)
+}
+
 func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg []byte) {
 	rsp := &proto.GetLoginActivityScRsp{
 		LoginActivityList: make([]*proto.LoginActivityData, 0),

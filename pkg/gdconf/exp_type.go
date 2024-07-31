@@ -29,6 +29,7 @@ func (g *GameDataConfig) loadExpType() {
 		panic(info)
 	}
 	logger.Info("load %v ExpType", len(g.ExpTypeMap))
+
 }
 
 func GetExpTypeByLevel(expType, exp, level, promotion, avatarId uint32) (uint32, uint32, uint32) {

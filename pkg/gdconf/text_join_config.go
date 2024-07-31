@@ -29,6 +29,7 @@ func (g *GameDataConfig) loadTextJoinConfig() {
 		panic(info)
 	}
 	logger.Info("load %v TextJoinConfig", len(g.TextJoinConfigMap))
+
 }
 
 func GetTextJoinConfigById(ID uint32) *TextJoinConfig {

@@ -53,6 +53,9 @@ func (g *GamePlayer) AddFriend(uid uint32) {
 // 获取好友申请每次都去redis里取
 func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 	friend := new(spb.ApplyFriend)
+	if g.IsPE {
+		return friend.RecvApplyFriend
+	}
 	redisDb, ok := database.GetPlayerFriend(base.Db.PlayerBriefDataRedis, g.Uid)
 	if !ok {
 		return make(map[uint32]*spb.ReceiveApply, 0)
@@ -66,7 +69,7 @@ func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 }
 
 func (g *GamePlayer) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefData {
-	if uid == 0 {
+	if uid == 0 || g.IsPE {
 		return &spb.PlayerBasicBriefData{
 			Nickname:          "hkrpg-go|game_server:" + strconv.Itoa(int(g.GameAppId)),
 			Level:             80,
@@ -122,11 +125,9 @@ func (g *GamePlayer) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
 		return nil
 	}
 	simpleInfo := &proto.PlayerSimpleInfo{
-		AILINANGJNE:    "",
 		ChatBubbleId:   220003,
 		IsBanned:       false,
 		HeadIcon:       friend.HeadImageAvatarId,
-		LDFIOFJHJJA:    "",
 		Signature:      friend.Signature,
 		Platform:       proto.PlatformType(friend.PlatformType),
 		LastActiveTime: friend.LastLoginTime,
@@ -153,32 +154,27 @@ func (g *GamePlayer) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 	}
 	playerDetailInfo := &proto.PlayerDetailInfo{
 		DisplayAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
-		Record: &proto.PlayerBasicBrief{
-			Level:                  friend.Level,
-			UnlockedAvatarNum:      999,
-			UnlockedAchievementNum: 999,
-			UnlockedBookNum:        999,
-			UnlockedMusicNum:       999,
-			FKBLOGEAFJJ:            2000,
+		Record: &proto.PlayerRecordInfo{
+			// Level:                  friend.Level,
+			// UnlockedAvatarNum:      999,
+			// UnlockedAchievementNum: 999,
+			// UnlockedBookNum:        999,
+			// UnlockedMusicNum:       999,
+			// FKBLOGEAFJJ:            2000,
 			CollectionInfo: &proto.PlayerCollectionInfo{
-				DCIOBLHLICO: 2006,
-				KLLEONMNLDI: 60,
+				// DCIOBLHLICO: 2006,
+				// KLLEONMNLDI: 60,
 			},
-			WorldLevel: friend.WorldLevel,
+			// WorldLevel: friend.WorldLevel,
 		},
-		AILINANGJNE:      "",
 		WorldLevel:       friend.WorldLevel,
 		Uid:              friend.Uid,
-		EFNHCOEKDCN:      true,
 		AssistAvatarList: make([]*proto.DisplayAvatarDetailInfo, 0),
 		Level:            friend.Level,
 		IsBanned:         false,
-		MAPJDADPKOL:      0,
 		HeadIcon:         friend.HeadImageAvatarId,
 		Platform:         proto.PlatformType(friend.PlatformType),
-		AKFPFMGILAO:      0,
 		RecordInfo:       &proto.DisplayRecordInfo{},
-		LDFIOFJHJJA:      "",
 		Signature:        friend.Signature,
 		Nickname:         friend.Nickname,
 	}
@@ -204,7 +200,6 @@ func (g *GamePlayer) GetFriendSimpleInfo(uid uint32) *proto.FriendSimpleInfo {
 		PlayerInfo:  simpleInfo,    // 基本信息
 		RemarkName:  db.RemarkName, // 备注
 		PlayerState: 0,
-		CFMIKLHJMLE: nil,
 		IsMarked:    db.IsMarked, // 是否特别关注
 	}
 	return friendSimpleInfo

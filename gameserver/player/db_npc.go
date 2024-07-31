@@ -26,19 +26,20 @@ func (g *GamePlayer) GetMessageGroupByContactId(contactId uint32) *spb.MessageGr
 
 func (g *GamePlayer) AddMessageGroup(sectionId uint32) {
 	db := g.GetMessageGroup()
-	conf := gdconf.GetMessageGroupConfigBySectionID(sectionId)
-	if conf == nil {
+	confMg := gdconf.GetMessageGroupConfigBySectionID(sectionId)
+	confMs := gdconf.GetMessageSectionConfig(sectionId)
+	if confMg == nil || confMs == nil {
 		return
 	}
-	contactId := conf.MessageContactsID
+	contactId := confMg.MessageContactsID
 	db[contactId] = &spb.MessageGroup{
-		ContactId:          conf.MessageContactsID,
-		Id:                 conf.ID,
+		ContactId:          confMg.MessageContactsID,
+		Id:                 confMg.ID,
 		MessageSectionList: make(map[uint32]*spb.MessageSection),
 		RefreshTime:        time.Now().Unix(),
 		Status:             spb.MessageGroupStatus_MESSAGE_GROUP_DOING,
 	}
-	for _, confsectionId := range conf.MessageSectionIDList {
+	for _, confsectionId := range confMg.MessageSectionIDList {
 		db[contactId].MessageSectionList[confsectionId] = &spb.MessageSection{
 			Id:     confsectionId,
 			Status: spb.MessageSectionStatus_MESSAGE_SECTION_DOING,

@@ -41,6 +41,7 @@ func (g *GameDataConfig) loadCocoonConfig() {
 	}
 
 	logger.Info("load %v CocoonConfig", len(g.CocoonConfigMap))
+
 }
 
 func GetCocoonConfigById(stageID, worldLevel uint32) *CocoonConfig {

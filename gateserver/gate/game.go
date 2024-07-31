@@ -196,7 +196,7 @@ func (gs *gameServer) GateGamePingRsp(playerMsg pb.Message) {
 
 // 玩家在gs注册请求
 func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32) {
-	logger.Debug("[UID:%v][AccountId:%v]发送登录通知", uid, accountId)
+	logger.Debug("[UID:%v][AccountId:%v]向GS发送登录通知", uid, accountId)
 	req := &spb.GateGamePlayerLoginReq{
 		Uid:       uid,
 		AccountId: accountId,
@@ -224,6 +224,8 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 		logger.Warn("不存在此gameserver")
 		return
 	}
+	// 结束定时器
+	player.closeStop()
 	// 删除登录玩家
 	gs.gate.delLoginPlayerByUid(rsp.Uid)
 	// 将玩家添加到已登录玩家列表
@@ -241,11 +243,9 @@ func (gs *gameServer) GateGamePlayerLoginRsp(playerMsg pb.Message) {
 
 	player.Status = spb.PlayerStatus_PlayerStatus_PostLogin
 	player.GateToPlayer(cmd.PlayerGetTokenScRsp, prsp)
-	// 结束定时器
-	player.closeStop()
 	// 删除登录锁
 	gs.gate.Store.DistUnlock(strconv.Itoa(int(player.AccountId)))
-	logger.Info("[AccountId:%v][UID:%v]登录gate", player.AccountId, player.Uid)
+	logger.Info("[AccountId:%v][UID:%v]登录完成", player.AccountId, player.Uid)
 }
 
 func (p *PlayerGame) closeStop() {

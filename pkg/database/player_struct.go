@@ -15,3 +15,8 @@ type BlockData struct { // 地图db
 	DataVersion uint32
 	BinData     []byte
 }
+
+type PlayerBasic struct {
+	Uid     uint32 `gorm:"primaryKey"`
+	BinData []byte
+}

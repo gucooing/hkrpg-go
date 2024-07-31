@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
@@ -14,8 +15,13 @@ import (
 type LevelGroup struct {
 	GroupId              uint32
 	GroupName            string                `json:"GroupName"`
-	LoadSide             string                `json:"LoadSide"`             // 负载端
+	AreaAnchorName       string                `json:"AreaAnchorName"`
+	SaveType             string                `json:"SaveType"`
+	AtmosphereCondition  *AtmosphereCondition  `json:"AtmosphereCondition"`
+	LoadSide             string                `json:"LoadSide"` // 负载端
+	IsHoyoGroup          bool                  `json:"IsHoyoGroup"`
 	Category             string                `json:"Category"`             // 类别
+	OwnerMainMissionID   uint32                `json:"OwnerMainMissionID"`   // 主任务id
 	LoadCondition        *LoadCondition        `json:"LoadCondition"`        // 加载条件
 	UnloadCondition      *UnloadCondition      `json:"UnloadCondition"`      // 卸载条件
 	ForceUnloadCondition *ForceUnloadCondition `json:"ForceUnloadCondition"` // 强制卸载条件
@@ -25,6 +31,10 @@ type LevelGroup struct {
 	NPCList              []*NPCList            `json:"NPCList"`              // NPC列表
 	AnchorList           []*AnchorList         `json:"AnchorList"`           // 锚点列表
 }
+type AtmosphereCondition struct {
+	Conditions []*Conditions `json:"Conditions"`
+	Operation  string        `json:"Operation"`
+}
 type LoadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
 	Operation          string        `json:"Operation"`
@@ -32,6 +42,7 @@ type LoadCondition struct {
 }
 type UnloadCondition struct {
 	Conditions         []*Conditions `json:"Conditions"`
+	Operation          string        `json:"Operation"`
 	DelayToLevelReload bool          `json:"DelayToLevelReload"`
 }
 type ForceUnloadCondition struct {
@@ -39,9 +50,10 @@ type ForceUnloadCondition struct {
 	DelayToLevelReload bool          `json:"DelayToLevelReload"`
 }
 type Conditions struct {
-	Type  string `json:"Type"`
-	Phase string `json:"Phase"`
-	ID    uint32 `json:"ID"`
+	Type         string `json:"Type"`
+	Phase        string `json:"Phase"`
+	ID           uint32 `json:"ID"`
+	SubMissionID uint32 `json:"SubMissionID"`
 }
 type PropList struct {
 	ID                       uint32              `json:"ID"`
@@ -135,41 +147,48 @@ type StageObjectCapture struct {
 
 func (g *GameDataConfig) loadGroup() {
 	g.GroupMap = make(map[uint32]map[uint32]map[uint32]*LevelGroup)
-	playerElementsFilePath := g.configPrefix + "LevelOutput/Group"
-	files, err := scanFiles(playerElementsFilePath)
-	if err != nil {
-		logger.Error("error LevelOutput/Group:", err)
-		return
+
+	syncs := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	floor := GetFloor()
+
+	for planeId, floorList := range floor {
+		for floorId, floorInfo := range floorList {
+			for _, groupInfo := range floorInfo.GroupInstanceList {
+				wg.Add(1)
+				go func() {
+					levelGroup := new(LevelGroup)
+					playerElementsFile, err := os.ReadFile(g.pathPrefix + "/" + groupInfo.GroupPath)
+					if err != nil {
+						logger.Error("open file error: %v", err)
+						return
+					}
+
+					err = hjson.Unmarshal(playerElementsFile, levelGroup)
+					if err != nil {
+						info := fmt.Sprintf("parse file error: %v", err)
+						panic(info)
+					}
+					levelGroup.GroupId = groupInfo.ID
+
+					syncs.Lock()
+					if g.GroupMap[planeId] == nil {
+						g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
+					}
+					if g.GroupMap[planeId][floorId] == nil {
+						g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
+					}
+					g.GroupMap[planeId][floorId][groupInfo.ID] = levelGroup
+					syncs.Unlock()
+					wg.Done()
+				}()
+			}
+		}
 	}
 
-	for _, file := range files {
-		levelGroup := new(LevelGroup)
-		planeId, floorId, groupId := extractNumbers(filepath.Base(file))
-
-		playerElementsFile, err := os.ReadFile(file)
-		if err != nil {
-			info := fmt.Sprintf("open file error: %v", err)
-			panic(info)
-		}
-
-		err = hjson.Unmarshal(playerElementsFile, levelGroup)
-		if err != nil {
-			info := fmt.Sprintf("parse file error: %v", err)
-			panic(info)
-		}
-		levelGroup.GroupId = groupId
-
-		if g.GroupMap[planeId] == nil {
-			g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
-		}
-		if g.GroupMap[planeId][floorId] == nil {
-			g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
-		}
-
-		g.GroupMap[planeId][floorId][groupId] = levelGroup
-	}
-
+	wg.Wait()
 	logger.Info("load %v Groups", len(g.GroupMap))
+
 }
 
 func GetNGroupById(planeId, floorId, groupId uint32) *LevelGroup {
@@ -186,7 +205,6 @@ func GetGroupMap() map[uint32]map[uint32]map[uint32]*LevelGroup {
 
 func scanFiles(dir string) ([]string, error) {
 	var files []string
-
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -196,47 +214,27 @@ func scanFiles(dir string) ([]string, error) {
 		}
 		return nil
 	})
-
 	if err != nil {
 		return nil, err
 	}
-
 	return files, nil
-}
-
-func extractNumbers(filename string) (uint32, uint32, uint32) {
-	filename = strings.TrimSuffix(filename, ".json")
-
-	parts := strings.Split(filename, "_")
-	if len(parts) != 4 {
-		return 0, 0, 0
-	}
-
-	pValueStr := strings.TrimLeft(parts[1], "P")
-	fValueStr := strings.TrimLeft(parts[2], "F")
-	gValueStr := strings.TrimLeft(parts[3], "G")
-
-	pValue, _ := strconv.ParseUint(pValueStr, 10, 32)
-	fValue, _ := strconv.ParseUint(fValueStr, 10, 32)
-	gValue, _ := strconv.ParseUint(gValueStr, 10, 32)
-
-	return uint32(pValue), uint32(fValue), uint32(gValue)
 }
 
 func GetStateValue(state string) uint32 {
 	stateMap := map[string]uint32{
 		"Closed":            0,
 		"Open":              1,
-		"Locked":            0,
+		"Locked":            0, // 锁定
+		"Unlocked":          2,
 		"BridgeState1":      3,
 		"BridgeState2":      4,
 		"BridgeState3":      5,
 		"BridgeState4":      6,
-		"CheckPointDisable": 8,
+		"CheckPointDisable": 8, // 锚点
 		"CheckPointEnable":  8,
 		"TriggerDisable":    9,
 		"TriggerEnable":     10,
-		"ChestLocked":       11,
+		"ChestLocked":       11, //  宝箱
 		"ChestClosed":       12,
 		"ChestUsed":         13,
 		"Elevator1":         14,
@@ -303,6 +301,9 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 		if MazePropExcel == nil {
 			continue
 		}
+		if strings.Contains(prop.Name, "FogDoor") {
+			continue
+		}
 		// 对ValueSource进行预处理
 		if prop.ValueSource != nil && prop.ValueSource.Values != nil {
 			for _, value := range prop.ValueSource.Values {
@@ -310,9 +311,11 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 				case string:
 					valueStr := value.Value.(string)
 					if strings.Contains(value.Key, "Door") ||
-						strings.Contains(value.Key, "Bridge") ||
+						strings.Contains(value.Key, "FlipBridge") ||
+						value.Key == "Bridge" ||
 						strings.Contains(value.Key, "UnlockTarget") ||
 						strings.Contains(value.Key, "Rootcontamination") ||
+						strings.Contains(value.Key, "Controller") ||
 						strings.Contains(value.Key, "Portal") {
 						if prop.GoppValue == nil {
 							prop.GoppValue = make([]*GoppValue, 0)
@@ -369,16 +372,16 @@ func LoadNpc(groupList *LevelGroup, nPCList []*NPCList) map[uint32]*NPCList {
 		if NPCDataExcel == nil { // 过滤没有的
 			continue
 		}
-		repeatNpc := false
-		for _, npcl := range nPCList {
-			if npcl.NPCID == npc.NPCID {
-				repeatNpc = true
-				break
-			}
-		}
-		if repeatNpc { // 过滤重复的
-			continue
-		}
+		// repeatNpc := false
+		// for _, npcl := range nPCList {
+		// 	if npcl.NPCID == npc.NPCID {
+		// 		repeatNpc = true
+		// 		break
+		// 	}
+		// }
+		// if repeatNpc { // 过滤重复的
+		// 	continue
+		// }
 
 		nPCList = append(nPCList, npc)
 		npcList[npc.ID] = npc

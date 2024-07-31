@@ -22,7 +22,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: "1.20"
+        go-version: "1.22.4"
         check-latest: true
 
     - name: Go Tidy
@@ -35,8 +35,56 @@ jobs:
       run: |
         zip -r go/hkrpg/build/data.zip go/hkrpg/data/*
 
-    - name: Upload Archive
+    - name: Upload data
       uses: actions/upload-artifact@v4
       with:
-        name: hkrpg-go
-        path: go/hkrpg/build/*
+        name: data.zip
+        path: go/hkrpg/build/data.zip
+
+    - name: Upload hkrpg-go-pe
+      uses: actions/upload-artifact@v4
+      with:
+        name: hkrpg-go-pe.zip
+        path: go/hkrpg/build/hkrpg-go-pe/*
+
+    - name: Upload dispatch
+      uses: actions/upload-artifact@v4
+      with:
+        name: dispatch.zip
+        path: go/hkrpg/build/dispatch/*
+
+    - name: Upload gameserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: gameserver.zip
+        path: go/hkrpg/build/gameserver/*
+
+    - name: Upload gateserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: gateserver.zip
+        path: go/hkrpg/build/gateserver/*
+
+    - name: Upload muipserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: muipserver.zip
+        path: go/hkrpg/build/muipserver/*
+
+    - name: Upload multiserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: multiserver.zip
+        path: go/hkrpg/build/multiserver/*
+
+    - name: Upload nodeserver
+      uses: actions/upload-artifact@v4
+      with:
+        name: nodeserver.zip
+        path: go/hkrpg/build/nodeserver/*
+
+    - name: Upload robot
+      uses: actions/upload-artifact@v4
+      with:
+        name: robot.zip
+        path: go/hkrpg/build/robot/*

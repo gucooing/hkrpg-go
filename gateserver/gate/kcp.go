@@ -28,7 +28,7 @@ func (s *GateServer) RunKcp() error {
 			kcpConn.SetWriteDelay(false)
 			kcpConn.SetWindowSize(256, 256)
 			kcpConn.SetMtu(1200)
-			kcpConn.SetIdleTicker(10 * time.Second)
+			kcpConn.SetIdleTicker(120 * time.Second)
 			sessionId := kcpConn.GetSessionId()
 			logger.Info("sessionId:%v", sessionId)
 			// 读取密钥相关文件
@@ -41,7 +41,6 @@ func (s *GateServer) RunKcp() error {
 // kcp接收
 func (s *GateServer) recvHandle(p *PlayerGame) {
 	payload := make([]byte, PacketMaxLen)
-	kcpMsgList := make([]*alg.PackMsg, 0)
 
 	// panic捕获
 	defer func() {
@@ -64,9 +63,10 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 			logger.Debug("exit recv loop, conn read err: %v", err)
 			return
 		}
+		kcpMsgList := make([]*alg.PackMsg, 0)
 		bin = payload[:recvLen]
 		alg.DecodeBinToPayload(bin, &kcpMsgList, p.XorKey)
-		for id, msg := range kcpMsgList {
+		for _, msg := range kcpMsgList {
 			// playerMsg := alg.DecodePayloadToProto(msg)
 			switch p.Status {
 			case spb.PlayerStatus_PlayerStatus_PreLogin:
@@ -80,11 +80,6 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 				continue
 			case spb.PlayerStatus_PlayerStatus_PostLogin:
 				p.PlayerRegisterMessage(msg.CmdId, msg)
-				if len(kcpMsgList) == 1 {
-					kcpMsgList = kcpMsgList[:0]
-				} else {
-					kcpMsgList = append(kcpMsgList[:id], kcpMsgList[id+1:]...)
-				}
 			default:
 				return
 			}
@@ -147,19 +142,19 @@ func SendHandle(p *PlayerGame, kcpMsg *alg.PackMsg) {
 }
 
 // kcp统计
-func (s *GateServer) kcpNetInfo() {
+func kcpNetInfo() {
 	ticker := time.NewTicker(time.Second * 60)
 	kcpErrorCount := uint64(0)
 	for {
 		<-ticker.C
 		snmp := kcp.DefaultSnmp.Copy()
 		kcpErrorCount += snmp.KCPInErrors
-		logger.Info("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
-		logger.Info("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
-		logger.Info("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
+		logger.Debug("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
+		logger.Debug("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
+		logger.Debug("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
 		clientConnNum := atomic.LoadInt32(&CLIENT_CONN_NUM)
-		logger.Info("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
-		logger.Info("QPS: %v /s", QPS/60)
+		logger.Debug("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
+		logger.Debug("QPS: %v /s", QPS/60)
 		QPS = 0
 		kcp.DefaultSnmp.Reset()
 	}

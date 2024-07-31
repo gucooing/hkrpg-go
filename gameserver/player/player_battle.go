@@ -9,6 +9,16 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
+func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCostMpCsReq, payloadMsg)
+	req := msg.(*proto.SceneCastSkillCostMpCsReq)
+	rsp := &proto.SceneCastSkillCostMpScRsp{
+		CastEntityId: req.CastEntityId,
+		Retcode:      0,
+	}
+	g.Send(cmd.SceneCastSkillCostMpScRsp, rsp)
+}
+
 func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SceneEnterStageCsReq, payloadMsg)
 	req := msg.(*proto.SceneEnterStageCsReq)
@@ -32,43 +42,57 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
 	// 根据各种情况进行处理
+	isBattle := true
+	isDelMp := false
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
-		g.AddOnLineAvatarBuff(req.AttackedByEntityId, req.SkillIndex)
+		isBattle, isDelMp = g.HandleAvatarSkill(req.AttackedByEntityId)
 	}
-	if len(req.HitTargetEntityIdList) == 0 {
-		g.Send(cmd.SceneCastSkillScRsp, rsp)
-		return
-	}
+	// 添加参与此次攻击的实体
 	mpem := &MPEM{
-		IsBattle: false,
-		EntityId: make([]uint32, 0),
-		MPid:     make([]uint32, 0),
+		IsAvatar:        false,
+		MonsterEntityId: make([]uint32, 0),
+		MonsterId:       make([]uint32, 0),
+		PropEntityId:    make([]uint32, 0),
+		PropId:          make([]uint32, 0),
 	}
-	// 添加协助怪物
+	// 添加攻击发起者
 	if req.AssistMonsterEntityInfo != nil {
 		for _, info := range req.AssistMonsterEntityInfo {
 			g.GetMem(info.EntityIdList, mpem)
 		}
 	} else {
-		g.GetMem(req.HitTargetEntityIdList, mpem) // 被攻击者
+		g.GetMem([]uint32{req.AttackedByEntityId}, mpem)
 	}
-	if len(mpem.EntityId) == 0 { // 这里的情况是，是怪物主动攻击发生的战斗
-		g.GetMem([]uint32{req.AttackedByEntityId}, mpem) // 发起攻击者
+	// 添加被攻击者
+	if req.AssistMonsterEntityIdList != nil {
+		g.GetMem(req.AssistMonsterEntityIdList, mpem)
+	} else {
+		if req.HitTargetEntityIdList != nil {
+			g.GetMem(req.HitTargetEntityIdList, mpem)
+		}
 	}
-
-	if len(mpem.EntityId) == 0 { // 这里的情况是角色普通攻击并没有命中怪物
-		g.Send(cmd.SceneCastSkillScRsp, rsp)
-		return
+	if len(mpem.MonsterEntityId) != 0 && isBattle {
+		isDelMp = true
 	}
-	if !mpem.IsBattle { // 不是战斗就要去处理物品效果了
+	if isDelMp {
+		g.DelLineUpMp(1)
+		g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
+			CastEntityId: req.CastEntityId,
+			Mp:           g.GetLineUpMp(),
+		})
+	}
+	if mpem.PropId != nil { // 物品效果
 		g.SceneCastSkillProp(mpem)
+	}
+	g.SyncLineupNotify(g.GetBattleLineUp())                            // 队伍同步
+	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 || !isBattle { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
-	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MPid, g.GetBattleLineUp())
+	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MonsterId, g.GetBattleLineUp())
 	// 记录战斗
-	battleBackup.monsterEntity = mpem.EntityId
+	battleBackup.monsterEntity = mpem.MonsterEntityId
 	battleBackup.AttackedByEntityId = req.AttackedByEntityId
 	g.AddBattleBackup(battleBackup)
 	// 回复
@@ -87,7 +111,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 	}
 	var teleportToAnchor = false
 	rsp := &proto.PVEBattleResultScRsp{
-		BattleAvatarList: make([]*proto.BattleAvatar, 0),
+		AvatarBattleList: make([]*proto.BattleAvatar, 0),
 		BattleId:         req.BattleId,
 		StageId:          req.StageId,
 		EndStatus:        req.EndStatus, // 战斗结算状态
@@ -111,6 +135,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.StaminaInfoScNotify()
 		// 任务判断
 		if battleBin.EventId != 0 {
+			rsp.EventId = battleBin.EventId
 			g.UpBattleSubMission(req.BattleId)
 		}
 		if battleBin.CocoonId != 0 { // 副本处理
@@ -130,13 +155,16 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		g.ChallengePVEBattleResultCsReq(req)
 	case spb.BattleType_Battle_ROGUE:
 		teleportToAnchor = false
-		g.RoguePVEBattleResultCsReq(req)
+		g.RoguePVEBattleResultCsReq(req, len(battleBin.monsterEntity))
+	case spb.BattleType_Battle_TrialActivity: // 角色试用
+		g.TrialActivityPVEBattleResultScRsp(req)
+		teleportToAnchor = true
 	}
 
 	// 是否传送到最近锚点
 	if teleportToAnchor {
 		// 当前坐标通知(移动到最近锚点)
-		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0)
+		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0, 0, 0)
 	}
 
 	g.DelBattleBackupById(req.BattleId)
@@ -166,10 +194,15 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
 }
 
+func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg []byte) {
+	// msg := g.DecodePayloadToProto(cmd.ActivateFarmElementCsReq, payloadMsg)
+	// req := msg.(*proto.ActivateFarmElementCsReq)
+}
+
 /***********************************物品破坏处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
-	for _, propId := range pem.MPid {
+	for _, propId := range pem.PropId {
 		conf := gdconf.GetMazePropId(propId)
 		if conf == nil {
 			continue
@@ -178,7 +211,7 @@ func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
 			g.AddLineUpMp(2) // 如果涉及到更新战斗中的队伍状态，这部分需要改
 		}
 		if conf.RecoverHp {
-
+			g.AvatarRecoverPercent(pem.AvatarId, 0.3, 0)
 		}
 	}
 }

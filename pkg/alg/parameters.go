@@ -71,6 +71,14 @@ func S2U32(msg string) uint32 {
 	return uint32(ms)
 }
 
+func S2I32(msg string) int32 {
+	if msg == "" {
+		return 0
+	}
+	ms, _ := strconv.ParseUint(msg, 10, 32)
+	return int32(ms)
+}
+
 func GetEveryDay4() time.Duration {
 	currentTime := time.Now()
 	nextExecution := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 4, 0, 0, 0, currentTime.Location())

@@ -50,15 +50,19 @@ enum ExtraLineupType {// 队伍类型
   LINEUP_TREASURE_DUNGEON = 11;
   LINEUP_CHESS_ROGUE = 12;
   LINEUP_HELIOBUS = 13;
+  LINEUP_TOURN_ROGUE = 14;
+  LINEUP_RELIC_ROGUE = 15;
 }
 
 enum BattleType{// 战斗状态
   Battle_NONE = 0; // 普通状态
   Battle_CHALLENGE = 1; // 忘却之庭
   Battle_CHALLENGE_Story = 2; // 忘却之庭活动
-  //  Battle_CHALLENGE_Story_2 = 3; // 忘却之庭活动2
+  Battle_CHALLENGE_Story_2 = 3; // 末日之影
   Battle_ROGUE = 4;// 模拟宇宙
-  Battle_TrialActivity = 5;
+  Battle_TrialActivity = 5; // 角色试用
+  Battle_ROGUE_TOURN = 6; // 差分宇宙
+  Battle_RAID = 7;// 副本
 }
 
 enum LanguageType {// 语言
@@ -178,6 +182,34 @@ enum LineAvatarType {// 队伍角色属性
   LineAvatarType_ASSIST = 2;// 援助
 }
 
+enum RogueTalentStatus { // 灵感回路信息
+  ROGUE_TALENT_STATUS_LOCK = 0;
+  ROGUE_TALENT_STATUS_UNLOCK = 1;
+  ROGUE_TALENT_STATUS_ENABLE = 2;
+}
+
+enum RogueStatus { // 模拟宇宙状态
+  ROGUE_STATUS_NONE = 0;
+  ROGUE_STATUS_DOING = 1;
+  ROGUE_STATUS_PENDING = 2;
+  ROGUE_STATUS_ENDLESS = 3;
+  ROGUE_STATUS_FINISH = 4;
+}
+
+enum RogueTournLayerStatus { // 差分宇宙小关卡状态
+  ROGUE_TOURN_LAYER_STATUS_NONE = 0;
+  ROGUE_TOURN_LAYER_STATUS_PROCESSING = 1;
+  ROGUE_TOURN_LAYER_STATUS_FINISH = 2;
+}
+
+enum RogueTournRoomStatus { // 差分宇宙房间状态
+  ROGUE_TOURN_ROOM_STATUS_NONE = 0;
+  ROGUE_TOURN_ROOM_STATUS_INITED = 1;
+  ROGUE_TOURN_ROOM_STATUS_PROCESSING = 2;
+  ROGUE_TOURN_ROOM_STATUS_FINISH = 3;
+}
+
+
 enum RogueAreaStatus {
   RogueAreaStatus_ROGUE_AREA_STATUS_LOCK = 0;
   RogueAreaStatus_ROGUE_AREA_STATUS_UNLOCK = 1;
@@ -191,6 +223,13 @@ enum RoomStatus{
   RogueRoomStatus_ROGUE_ROOM_STATUS_UNLOCK = 2;
   RogueRoomStatus_ROGUE_ROOM_STATUS_PLAY = 3;
   RogueRoomStatus_ROGUE_ROOM_STATUS_FINISH = 4;
+}
+
+enum RaidStatus{
+  RAID_STATUS_NONE = 0;
+  RAID_STATUS_DOING = 1;
+  RAID_STATUS_FINISH = 2;
+  RAID_STATUS_FAILED = 3;
 }
 
 enum Retcode {

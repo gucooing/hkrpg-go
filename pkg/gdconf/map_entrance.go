@@ -35,6 +35,7 @@ func (g *GameDataConfig) loadMapEntrance() {
 		panic(info)
 	}
 	logger.Info("load %v MapEntrance", len(g.MapEntranceMap))
+
 }
 
 func GetMapEntranceById(entryId uint32) *MapEntrance {

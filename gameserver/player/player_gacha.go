@@ -34,27 +34,27 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 	rsp.GachaInfoList = make([]*proto.GachaInfo, 0)
 
 	for _, bannerslist := range gdconf.GetBannersMap() {
-		// gacha := g.GetDbGacha(bannerslist.Id)
+		gacha := g.GetDbGacha(bannerslist.Id)
 		gachaInfoList := &proto.GachaInfo{
 			DropHistoryWebview: "http://127.0.0.1:8080/api/gacha/history", // 历史记录
 			DetailWebview:      "http://127.0.0.1:8080",                   // 卡池详情
-			ItemDetailList:     bannerslist.RateUpItems5,                  // 五星up
-			PrizeItemList:      bannerslist.RateUpItems4,                  // 四星up
+			ItemDetailList:     bannerslist.RateUpItems4,                  // 五星up
+			PrizeItemList:      bannerslist.RateUpItems5,                  // 四星up
 			GachaId:            bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {
-			gachaInfoList.GachaInfoList = &proto.GachaCeiling{
-				// IsClaimed:  false, // 是否已领取自选
+			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
+				IsClaimed:  false, // 是否已领取自选
 				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-				// CeilingNum: gacha.CeilingNum,
+				CeilingNum: gacha.CeilingNum,
 			}
-			for _, id := range bannerslist.RateUpItems5 {
-				avatarlist := &proto.GachaCeilingAvatar{
-					RepeatedCnt: 0,
-					AvatarId:    id,
-				}
-				gachaInfoList.GachaInfoList.AvatarList = append(gachaInfoList.GachaInfoList.AvatarList, avatarlist)
-			}
+			// for _, id := range bannerslist.RateUpItems5 {
+			// 	avatarlist := &proto.GachaCeilingAvatar{
+			// 		RepeatedCnt: 0,
+			// 		AvatarId:    id,
+			// 	}
+			// 	gachaInfoList.GachaCeiling.AvatarList = append(gachaInfoList.GachaCeiling.AvatarList, avatarlist)
+			// }
 		} else {
 			gachaInfoList.BeginTime = bannerslist.BeginTime // 开始时间
 			gachaInfoList.EndTime = bannerslist.EndTime     // 结束时间
@@ -67,24 +67,24 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
-	// msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
-	// req := msg.(*proto.GetGachaCeilingCsReq)
+	msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
+	req := msg.(*proto.GetGachaCeilingCsReq)
 
 	rsp := &proto.GetGachaCeilingScRsp{
-		// GachaType: req.GachaType,
+		GachaType: req.GachaType,
 	}
 	list := []uint32{1003, 1101, 1211}
-	rsp.GachaInfoList = &proto.GachaCeiling{
-		// IsClaimed:  false,
+	rsp.GachaCeiling = &proto.GachaCeiling{
+		IsClaimed:  false,
 		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-		// CeilingNum: g.GetDbGacha(1001).CeilingNum,
+		CeilingNum: g.GetDbGacha(1001).CeilingNum,
 	}
 	for _, id := range list {
 		avatarlist := &proto.GachaCeilingAvatar{
 			RepeatedCnt: 0,
 			AvatarId:    id,
 		}
-		rsp.GachaInfoList.AvatarList = append(rsp.GachaInfoList.AvatarList, avatarlist)
+		rsp.GachaCeiling.AvatarList = append(rsp.GachaCeiling.AvatarList, avatarlist)
 	}
 
 	g.Send(cmd.GetGachaCeilingScRsp, rsp)
@@ -98,6 +98,13 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 		CeilingNum:    0,
 		GachaItemList: make([]*proto.GachaItem, 0),
 		GachaNum:      req.GachaNum,
+	}
+	allSync := &AllPlayerSync{
+		IsBasic:       true,
+		MaterialList:  make([]uint32, 0),
+		RelicList:     make([]uint32, 0),
+		AvatarList:    make([]uint32, 0),
+		EquipmentList: make([]uint32, 0),
 	}
 	var dPileItem []*Material
 	var pileItem []*Material
@@ -117,21 +124,25 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 			Tid: 101,
 			Num: req.GachaNum,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 101)
 	case "NewPlayer":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 101,
 			Num: 8,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 101)
 	case "AvatarUp":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 102,
 			Num: req.GachaNum,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 102)
 	case "WeaponUp":
 		dPileItem = append(dPileItem, &Material{
 			Tid: 102,
 			Num: req.GachaNum,
 		})
+		allSync.MaterialList = append(allSync.MaterialList, 102)
 	default:
 		g.Send(cmd.DoGachaScRsp, rsp)
 		return
@@ -140,7 +151,7 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 
 	for i := 0; i < int(req.GachaNum); i++ {
 		id := g.GachaRandom(req.GachaId)
-		isAvatar, isNew := g.AddGachaItem(id)
+		isAvatar, isNew := g.AddGachaItem(id, allSync)
 		gachaItemList := &proto.GachaItem{
 			TransferItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 			IsNew:            isNew,
@@ -180,6 +191,8 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 					Tid: 10000 + id,
 					Num: 1,
 				})
+				allSync.MaterialList = append(allSync.MaterialList, 252)
+				allSync.MaterialList = append(allSync.MaterialList, 10000+id)
 			}
 		} else {
 			tokenItemList := &proto.Item{
@@ -197,8 +210,10 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
 		Tid: 251,
 		Num: req.GachaNum * 42,
 	})
+	allSync.MaterialList = append(allSync.MaterialList, 251)
 
 	g.AddMaterial(pileItem)
+	g.AllPlayerSyncScNotify(allSync)
 
 	g.Send(cmd.DoGachaScRsp, rsp)
 }

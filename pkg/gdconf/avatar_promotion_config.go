@@ -50,6 +50,7 @@ func (g *GameDataConfig) loadAvatarPromotionConfig() {
 		panic(info)
 	}
 	logger.Info("load %v AvatarPromotionConfig", len(g.AvatarPromotionConfigMap))
+
 }
 
 func GetAvatarPromotionConfigByLevel(avatarId, promotion uint32) uint32 {
@@ -69,4 +70,11 @@ func GetAvatarMaxLevel(avatarId, promotion uint32) uint32 {
 
 func GetAvatarPromotionConfigMap() map[uint32]map[uint32]*AvatarPromotionConfig {
 	return CONF.AvatarPromotionConfigMap
+}
+
+func GetAvatarPromotionConfig(avatarId, promotion uint32) *AvatarPromotionConfig {
+	if CONF.AvatarPromotionConfigMap[avatarId] == nil {
+		return nil
+	}
+	return CONF.AvatarPromotionConfigMap[avatarId][promotion]
 }

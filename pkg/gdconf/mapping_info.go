@@ -39,6 +39,7 @@ func (g *GameDataConfig) loadMappingInfo() {
 	}
 
 	logger.Info("load %v MappingInfo", len(g.MappingInfoMap))
+
 }
 
 func GetMappingInfoById(stageID, worldLevel uint32) *MappingInfo {

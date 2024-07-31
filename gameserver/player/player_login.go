@@ -21,7 +21,7 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
 func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
 	db := g.GetMaterialMap()
-	rsp.Stamina = db[Stamina]
+	rsp.Stamina = db[Stamina] // 还有多久恢复下一个体力
 	rsp.ServerTimestampMs = uint64(time.Now().UnixMilli())
 	rsp.CurTimezone = 4 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
@@ -37,7 +37,7 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	g.LoginReady() // 登录准备工作
 	g.Send(cmd.PlayerLoginScRsp, rsp)
 	g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE) // 更新一次数据
-	g.LoginNotify()
+	go g.LoginNotify()
 }
 
 func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
@@ -53,36 +53,35 @@ func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
 func (g *GamePlayer) BattlePassInfoNotify() {
 	// 战斗通行证信息通知
 	notify := &proto.BattlePassInfoNotify{
-		// TakenPremiumExtendedReward: 127,
-		// TakenFreeExtendedReward:    2,
-		// Unkfield:                   4,
-		// TakenPremiumReward2:        7,
-		// TakenFreeReward:            6,
-		// TakenPremiumReward1:        2,
-		// TakenPremiumOptionalReward: 2251799813685246,
-		Exp:   1,
-		Level: 70,
-		// CurBpId:                    5,
-		// CurWeekAddExpSum:           8000,
-		BpTier: proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
+		TakenPremiumOptionalReward: 2251799813685246,
+		TakenPremiumExtendedReward: 127,
+		TakenPremiumReward2:        7,
+		Exp:                        1,
+		TakenPremiumReward1:        2,
+		CurWeekAddExpSum:           8000,
+		TakenFreeExtendedReward:    2,
+		CurBpId:                    5,
+		TakenFreeReward:            6,
+		BpTierType:                 proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
+		Level:                      70,
 	}
 	g.Send(cmd.BattlePassInfoNotify, notify)
 }
 
 // 登录通知包
 func (g *GamePlayer) LoginNotify() {
-	// g.MissionAcceptScNotify()
+	g.Send(cmd.UpdateFeatureSwitchScNotify, &proto.UpdateFeatureSwitchScNotify{})
+	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
+	g.Send(cmd.SyncTurnFoodNotify, &proto.SyncTurnFoodNotify{})
 	g.StaminaInfoScNotify()
-	g.Send(cmd.UpdateFeatureSwitchScNotify, nil)
-	g.Send(cmd.SyncServerSceneChangeNotify, nil)
-	g.Send(cmd.SyncTurnFoodNotify, nil)
-	g.Send(cmd.DailyTaskDataScNotify, nil)
-	g.Send(cmd.RaidInfoNotify, nil)
+	// g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{OMLECGGPKAB: []*proto.DailyTask{{MainMissionId: 3020104}}})
+	g.DailyActiveInfoNotify()
+	g.Send(cmd.RaidInfoNotify, &proto.RaidInfoNotify{})
 	g.BattlePassInfoNotify()
-	g.Send(cmd.ComposeLimitNumCompleteNotify, nil)
-	g.Send(cmd.GeneralVirtualItemDataNotify, nil)
-	g.Send(cmd.NewMailScNotify, nil)
-	g.Send(cmd.NewAssistHistoryNotify, nil)
+	g.Send(cmd.ComposeLimitNumCompleteNotify, &proto.ComposeLimitNumCompleteNotify{})
+	g.Send(cmd.GeneralVirtualItemDataNotify, &proto.GeneralVirtualItemDataNotify{})
+	// g.Send(cmd.NewMailScNotify, nil)
+	// g.Send(cmd.NewAssistHistoryNotify, nil)
 	// g.ServerAnnounceNotify()
 	// g.ClientDownloadDataScNotify()
 }
@@ -91,15 +90,9 @@ func (g *GamePlayer) LoginNotify() {
 func (g *GamePlayer) ServerAnnounceNotify() {
 	notify := &proto.ServerAnnounceNotify{AnnounceDataList: make([]*proto.AnnounceData, 0)}
 	notify.AnnounceDataList = append(notify.AnnounceDataList, &proto.AnnounceData{
-		OEFAEICOAAK: "1",
-		NCPMKFHMCCF: "2",
-		EndTime:     4294967295,
-		BLOAEHJLPFN: 0,
-		OKMBMPIOPDC: false,
-		DFBOGDOGCPP: 0,
-		ConfigId:    0,
-		CHJOJJLOBEI: "通知文本",
-		BeginTime:   1664308800,
+		EndTime:   4294967295,
+		ConfigId:  0,
+		BeginTime: 1664308800,
 	})
 	g.Send(cmd.ServerAnnounceNotify, notify)
 }
@@ -109,7 +102,7 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 	content, _ := os.ReadFile("./data/t.lua")
 	// luac := base64.StdEncoding.EncodeToString(content)
 	// luac, _ := base64.StdEncoding.DecodeString("wind")
-	g.Send(NewM, &proto.ClientDownloadDataScNotify{
+	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{
 		DownloadData: &proto.ClientDownloadData{
 			Version: 1,
 			Time:    1935664461,
@@ -123,6 +116,11 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 2.任务检查
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
-	g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
-	g.LoginReadyMission()                // 任务检查
+	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 取消掉战斗状态
+	if !g.IsPE {
+		g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
+	}
+	// g.AddMainMission([]uint32{3020104})
+	g.LoginReadyMission()    // 任务检查
+	g.CheckUnlockMultiPath() // 命途解锁检查
 }

@@ -31,6 +31,7 @@ func (g *GameDataConfig) loadRogueMonster() {
 	}
 
 	logger.Info("load %v RogueMonster", len(g.RogueMonsterMap))
+
 }
 
 func GetRogueMonsterByRogueMonsterID(rogueMonsterID uint32) *RogueMonster {

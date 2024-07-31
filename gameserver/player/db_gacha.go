@@ -35,13 +35,16 @@ func (g *GamePlayer) GetDbGacha(gachaId uint32) *spb.GachaNum {
 	return gaCha.GachaMap[gachaId]
 }
 
-func (g *GamePlayer) AddGachaItem(id uint32) (bool, bool) {
+func (g *GamePlayer) AddGachaItem(id uint32, allSync *AllPlayerSync) (bool, bool) {
 	var pileItem []*Material
 	if id >= 20000 {
-		g.AddEquipment(id)
+		uniqueId := g.AddEquipment(id)
+		allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
 		return false, false
 	} else {
-		if g.BasicBin.Avatar.AvatarList[id] != nil {
+		if g.GetAvatarBinById(id) != nil {
+			allSync.MaterialList = append(allSync.MaterialList, id+10000)
+			allSync.MaterialList = append(allSync.MaterialList, 252)
 			pileItem = append(pileItem, &Material{
 				Tid: id + 10000,
 				Num: 1,
@@ -53,6 +56,7 @@ func (g *GamePlayer) AddGachaItem(id uint32) (bool, bool) {
 			g.AddMaterial(pileItem)
 			return true, false
 		}
+		allSync.AvatarList = append(allSync.AvatarList, id)
 		g.AddAvatar(id, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
 		return true, true
 	}

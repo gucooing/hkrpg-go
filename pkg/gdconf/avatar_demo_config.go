@@ -42,6 +42,7 @@ func (g *GameDataConfig) loadAvatarDemoConfig() {
 		panic(info)
 	}
 	logger.Info("load %v AvatarDemoConfig", len(g.AvatarDemoConfigMap))
+
 }
 
 func GetAvatarDemoConfigById(stageID uint32) *AvatarDemoConfig {

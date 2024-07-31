@@ -36,6 +36,7 @@ func (g *GameDataConfig) loadRogueMonsterGroup() {
 	}
 
 	logger.Info("load %v RogueMonsterGroup", len(g.RogueMonsterGroupMap))
+
 }
 
 func GetRogueMonsterGroupByGroupID(groupID uint32) uint32 {

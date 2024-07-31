@@ -1,21 +1,22 @@
 package player
 
 import (
+	"sync"
+
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 type OnlineData struct {
-	LoginToday            bool               // 是否是今天第一次登录
-	Battle                map[uint32]*Battle // 正在进行的战斗
-	BattleState           *BattleState       // 战斗情况
-	BattleId              uint32             // 战斗id
-	EntityBattleId        uint32             // 攻击实体id
-	IsPaused              bool               // 是否暂停
-	GameObjectGuidCounter uint32             // 游戏对象guid计数器 貌似一个玩家用一个就行了
-	IsNickName            bool               // 是否修改昵称
-	SceneMap              *SceneMap          // 在线场景管理
-	CurBattle             *CurBattle         // 正在进行的战斗
+	LoginToday            bool                     // 是否是今天第一次登录
+	BattleId              uint32                   // 战斗id
+	IsPaused              bool                     // 是否暂停
+	GameObjectGuidCounter uint32                   // 游戏对象guid计数器 貌似一个玩家用一个就行了
+	IsNickName            bool                     // 是否修改昵称
+	SceneMap              *SceneMap                // 在线场景管理
+	BlockMap              map[uint32]*spb.BlockBin // 缓存场景
+	blockMapLock          sync.Mutex               // 缓存场景互斥锁
+	CurBattle             *CurBattle               // 正在进行的战斗
 }
 
 func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
@@ -35,7 +36,7 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		Item:                 NewItem(),
 		Gacha:                NewGacha(),
 		Battle:               NewBattle(),
-		RewardTakenLevelList: nil,
+		RewardTakenLevelList: make([]uint32, 0),
 		OpenStateMap:         nil,
 		RegisterTime:         0,
 		TotalLoginDays:       0,
@@ -68,7 +69,7 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 	// 添加默认数据
 	g.AddAvatar(1001, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
 	g.AddAvatar(8001, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
-	g.AddHeroBasicTypeInfo(spb.HeroBasicType_BoyWarrior)
+	// g.AddHeroBasicTypeInfo(spb.HeroBasicType_BoyWarrior)
 	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
 
 	return g.BasicBin
@@ -90,13 +91,11 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 	if g.OnlineData == nil {
 		g.OnlineData = &OnlineData{
 			LoginToday:            false,
-			Battle:                nil,
-			BattleState:           nil,
-			EntityBattleId:        0,
 			IsPaused:              false,
 			GameObjectGuidCounter: 0,
 			IsNickName:            false,
-			SceneMap:              g.GetSceneMap(),
+			SceneMap:              NewSceneMap(),
+			BlockMap:              NewBlockMap(),
 			CurBattle:             g.NewCurBattle(),
 			BattleId:              10000,
 		}
@@ -106,8 +105,9 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 }
 
 func (g *GamePlayer) GetNextGameObjectGuid() uint32 {
-	g.OnlineData.GameObjectGuidCounter++
-	return 0 + g.OnlineData.GameObjectGuidCounter
+	db := g.GetOnlineData()
+	db.GameObjectGuidCounter++
+	return 0 + db.GameObjectGuidCounter
 }
 
 func (g *GamePlayer) GetBattleIdGuid() uint32 {
@@ -151,6 +151,10 @@ func (g *GamePlayer) GetWorldLevel() uint32 {
 		db.WorldLevel = 0
 	}
 	return db.WorldLevel
+}
+
+func (g *GamePlayer) AddWorldLevel(num uint32) {
+	g.SetWorldLevel(g.GetWorldLevel() + num)
 }
 
 func (g *GamePlayer) SetWorldLevel(worldLevel uint32) {
@@ -240,5 +244,27 @@ func (g *GamePlayer) FinishTutorialGuide(id uint32) {
 	db := g.GetTutorialGuide()
 	if db[id] != nil {
 		db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
+	}
+}
+
+func (g *GamePlayer) GetRewardTakenLevelList() []uint32 {
+	db := g.GetBasicBin()
+	if db.RewardTakenLevelList == nil {
+		db.RewardTakenLevelList = make([]uint32, 0)
+	}
+	return db.RewardTakenLevelList
+}
+
+func (g *GamePlayer) AddRewardTakenLevelList(id uint32) {
+	db := g.GetRewardTakenLevelList()
+	isAdd := true
+	for _, level := range db {
+		if level == id {
+			isAdd = false
+			break
+		}
+	}
+	if isAdd {
+		db = append(db, id)
 	}
 }

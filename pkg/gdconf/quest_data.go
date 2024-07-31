@@ -32,6 +32,7 @@ func (g *GameDataConfig) loadQuestData() {
 		panic(info)
 	}
 	logger.Info("load %v QuestData", len(g.QuestDataMap))
+
 }
 
 func GetQuestDataById(questID uint32) *QuestData {

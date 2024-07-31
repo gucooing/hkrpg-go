@@ -39,6 +39,7 @@ func (g *GameDataConfig) loadNPCMonsterData() {
 		panic(info)
 	}
 	logger.Info("load %v NPCMonsterData", len(g.NPCMonsterDataMap))
+
 }
 
 func GetNPCMonsterId(id uint32) *NPCMonsterData {

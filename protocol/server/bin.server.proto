@@ -69,15 +69,7 @@ message Scene {
 message Avatar {
   map<uint32, AvatarBin> avatar_list = 1; // 角色列表
   Gender gender = 2; // 性别
-  HeroBasicType cur_main_avatar = 3; // 主角属性
-  map<uint32, HeroBasicTypeInfo> hero_basic_type_info = 4; // 主角属性列表
   map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
-}
-
-message HeroBasicTypeInfo {
-  uint32 rank = 1;
-  HeroBasicType basic_type = 2;
-  repeated AvatarSkillBin skill_tree_list = 3;
 }
 
 message AvatarBin {
@@ -87,15 +79,22 @@ message AvatarBin {
   uint32 avatar_type = 4; // 状态
   uint64 first_met_time_stamp = 5; // 获取时间
   uint32 promote_level = 6; // 突破等级
-  uint32 rank = 7; // 激活命座数
+  repeated uint32 taken_rewards = 7; // 已领取的突破奖励
   uint32 hp = 8; // 血量
   AvatarSpBarInfo sp_bar = 9; // 能量
-  repeated AvatarSkillBin skilltree_list = 10; // 技能库
-  uint32 equipment_uniqueId = 11; // 装备光锥
-  map<uint32, uint32> equip_relic = 12; // 装备圣遗物
-  repeated uint32 taken_rewards = 13; // 已领取的突破奖励
-  uint32 buff_list = 14; // 开启战斗的buff
+  bool is_multi_path = 10; // 是否多命途
+  uint32 cur_path = 11;//当前命途
+  map<uint32,MultiPathAvatarInfo>multi_path_avatar_info_list = 12;//属性列表
 }
+
+message MultiPathAvatarInfo {
+  uint32 avatar_id = 1; // ID
+  uint32 rank = 2;
+  repeated AvatarSkillBin skilltree_list = 3; // 技能库
+  uint32 equipment_uniqueId = 4; // 装备光锥
+  map<uint32, uint32> equip_relic = 5; // 装备圣遗物
+}
+
 
 message AvatarSpBarInfo {
   uint32 cur_sp = 1; // 当前能量
@@ -125,7 +124,7 @@ message Line {
   map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
   uint32 index = 3; // 第几个队伍
   uint32 leader_slot = 4; // 当前角色是第几个
-  // ExtraLineupType line_type = 5;// 队伍类型
+  ExtraLineupType line_type = 5;// 队伍类型
 }
 
 message LineAvatarList {
@@ -139,6 +138,7 @@ message Item  {
   map<uint32, Equipment> equipment_map = 2; // 光锥
   map<uint32, uint32> material_map = 3; // 材料
   repeated uint32 head_icon = 4; // 头像
+  repeated uint32 unlock_formula_list = 5;// 解锁配方
 }
 
 message Relic {
@@ -179,6 +179,8 @@ message Battle {// 战斗
   BattleType battle_type = 1; // 当前状态
   Rogue rogue = 2; // 期数-情况
   Challenge challenge = 3; // 忘却之庭
+  RogueTourn rogue_tourn = 4; // 差分宇宙
+  Raid rain = 5;// 副本
 }
 
 message Rogue {
@@ -201,6 +203,8 @@ message CurRogue {// 当前正在进行的模拟宇宙
   uint32 aeon_id = 6; // 命途
   map<uint32, RogueBuff> buff_list = 7;// 模拟宇宙已获得祝福列表
   uint32 RogueActivityModuleID = 8;//模拟宇宙类型
+  bool is_win = 9;// 是否胜利
+  RogueStatus status = 10 ;// 状态
 }
 
 message RogueRoom {
@@ -217,6 +221,40 @@ message RogueBuff {
 message RogueHistory{
   uint32 season_id = 1; // 期数
   uint32 score = 2; // 分数
+}
+
+message RogueTourn {// 差分宇宙
+  uint32 exp = 1; // 经验
+  repeated uint32 taken_level_rewards = 2;// 已领取的等级奖励
+  map<uint32, InspirationCircuitInfo> inspiration_circuit_info = 3; // 灵感回路信息
+  repeated uint32 unlock_difficulty_info = 4;// 已解锁难度
+  CurRogueTourn cur_rogue_tourn = 5;// 当前差分宇宙
+}
+
+message InspirationCircuitInfo {// 灵感回路
+  uint32 inspiration_circuit_id = 1;
+  RogueTalentStatus status = 2;
+}
+
+message CurRogueTourn{// 当前差分宇宙
+  uint32 area_id = 1; // 关卡
+  repeated uint32 formula_list = 2; //方程列表
+  map<uint32,LayerInfo> cur_layer_list = 3;// 关卡列表
+  uint32 cur_layer_index = 4;//第几关当前
+}
+
+message LayerInfo{
+  uint32 layer_id = 1;//小关卡id
+  RogueTournLayerStatus status = 2;// 状态
+  uint32 layer_index = 3;//第几个小房间
+  map<uint32,RogueTournRoomInfo> rogue_tourn_room_list = 4;// 小关卡下属房间
+  uint32 cur_room_index = 5; // 第几个房间当前
+}
+
+message RogueTournRoomInfo{
+  uint32 room_id = 1;//id
+  uint32 room_index = 2;//第几个房间
+  RogueTournRoomStatus status = 3; // 状态
 }
 
 message Challenge {
@@ -245,6 +283,24 @@ message CurChallenge {// 正在进行的忘却之庭信息
   uint32 buff_one = 11; // 第一关buff
   uint32 buff_two = 12; // 第二关buff
   uint32 kill_monster = 13; // 当前关卡已杀死怪物数量
+  uint32 maze_buff_id = 14;//地图buff
+  bool is_boos = 15;// 是否末日之影
+}
+
+message Raid {
+  uint32 cur_raid_id = 1;//当前关卡
+  map<uint32,RaidInfo> raid_map = 2;// 关卡列表
+  map<uint32,RaidInfo> finish_raid_map = 3;// 已完成的关卡列表
+}
+
+message RaidInfo {
+  uint32 raid_id = 1;//关卡id
+  uint32 hard_level = 2;// 难度
+  uint32 entry_id = 3; // 场景
+  RaidStatus status = 4;//状态
+  VectorBin pos = 5; // 坐标
+  VectorBin rot = 6; // 朝向
+  uint64 finish_time = 7;// 完成时间
 }
 
 message Gacha {
@@ -291,15 +347,21 @@ message Mission {// 任务
 
 message MainMission{// 主线任务
   map<uint32, MissionInfo> main_mission_list = 1; // 主任务
-  map<uint32, MissionInfo> sub_mission_list = 2;//子任务
+  map<uint32, MissionInfo> sub_mission_list = 2;// 子任务
   map<uint32, MissionInfo> finish_main_mission_list = 3;// 已完成的主任务
-  map<uint32, MissionInfo> finish_sub_mission_list = 4;//已完成支任务
+  map<uint32, MissionInfo> finish_sub_mission_list = 4;// 已完成子任务
 }
 
 message MissionInfo{
   uint32 mission_id = 1; //任务id
   uint32 progress = 3; // 步骤
   MissionStatus status = 4;// 任务状态
+  repeated MissionCustomValue mission_custom_value = 5;
+}
+
+message MissionCustomValue {
+  uint32 index = 1;
+  uint32 customValue = 2;
 }
 
 message TutorialDb {// 教程
@@ -332,6 +394,7 @@ message BlockBin{// 地图配置
 
 message BlockList{
   map<uint32, PropInfo>  prop_info = 1;// 物品实体信息
+  uint32 group_state = 2;// 组状态
 }
 
 message PropInfo{

@@ -61,7 +61,6 @@ func (r *RoBot) PlayerLoginScRsp() {
 	r.send(cmd.GetCurChallengeCsReq, req)
 	r.send(cmd.GetRogueInfoCsReq, req)
 	r.send(cmd.ChessRogueQueryCsReq, req)
-	r.send(cmd.GetRogueDialogueEventDataCsReq, req)
 	syncClientResVersionCsReq := &proto.SyncClientResVersionCsReq{
 		ResVersion: 6057946,
 	}

@@ -6,7 +6,7 @@
 *.test
 *.out
 *.bat
-*.py
+protocol/*.py
 bulid
 go.work
 test.go
@@ -190,3 +190,4 @@ rich.go
 config.json
 protocol/hkrpg
 ./muipserver
+protocol/proto/StarRail.proto

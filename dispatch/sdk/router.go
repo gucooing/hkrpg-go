@@ -43,6 +43,7 @@ func (s *Server) InitRouter() {
 	}
 	// 杂
 	s.Router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)
+	s.Router.GET("/common/apicdkey/api/exchangeCdkey", s.ExchangeCdkey)
 }
 
 func (s *Server) HandleDefault(c *gin.Context) {

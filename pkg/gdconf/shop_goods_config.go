@@ -45,6 +45,7 @@ func (g *GameDataConfig) loadShopGoodsConfig() {
 	}
 
 	logger.Info("load %v ShopGoodsConfig", len(g.ShopGoodsConfigMap))
+
 }
 
 func GetShopGoodsConfigMap() map[uint32]map[uint32]*ShopGoodsConfig {

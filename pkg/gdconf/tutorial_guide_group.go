@@ -33,6 +33,7 @@ func (g *GameDataConfig) loadTutorialGuideGroup() {
 		panic(info)
 	}
 	logger.Info("load %v TutorialGuideGroup", len(g.TutorialGuideGroupMap))
+
 }
 
 func GetTutorialGuideGroup() map[uint32]*TutorialGuideGroup {

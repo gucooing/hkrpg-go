@@ -68,6 +68,19 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
+	playerElementsFilePathBoss := g.excelPrefix + "ChallengeBossMazeConfig.json"
+	playerElementsFileBoss, err := os.ReadFile(playerElementsFilePathBoss)
+	if err != nil {
+		info := fmt.Sprintf("open file error: %v", err)
+		panic(info)
+	}
+
+	err = hjson.Unmarshal(playerElementsFileBoss, &challengeMazeConfigMap)
+	if err != nil {
+		info := fmt.Sprintf("parse file error: %v", err)
+		panic(info)
+	}
+
 	for id, challengeMazeConfig := range challengeMazeConfigMap {
 		challengeMazeConfig.ChallengeState = make(map[uint32]*ChallengeState)
 		if challengeMazeConfig.StageNum == 2 {
@@ -91,6 +104,7 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 	}
 
 	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeMazeConfigMap))
+
 }
 
 func GetChallengeMazeConfigById(questID uint32) *ChallengeMazeConfig {

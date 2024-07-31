@@ -5,9 +5,10 @@ import (
 )
 
 type Account struct {
-	AccountId  uint `gorm:"primarykey;AUTO_INCREMENT"`
+	AccountId  uint32 `gorm:"primarykey;AUTO_INCREMENT"`
 	Username   string
 	Token      string
+	ComboToken string
 	CreateTime int64
 	CreatedAt  time.Time
 	UpdatedAt  time.Time

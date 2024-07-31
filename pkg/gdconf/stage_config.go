@@ -14,6 +14,10 @@ type StageConfig struct {
 	HardLevelGroup   uint32              `json:"HardLevelGroup"`   // 强度等级
 	MonsterList      []map[string]uint32 `json:"MonsterList"`      // 怪物id
 	ForbidExitBattle bool                `json:"ForbidExitBattle"` // 禁止退出
+	ForbidAutoBattle bool                `json:"ForbidAutoBattle"`
+	Release          bool                `json:"Release"`
+	ResetBattleSpeed bool                `json:"ResetBattleSpeed"`
+	TrialAvatarList  []uint32            `json:"TrialAvatarList"` // 试用角色
 }
 
 func (g *GameDataConfig) loadStageConfig() {
@@ -32,6 +36,7 @@ func (g *GameDataConfig) loadStageConfig() {
 	}
 
 	logger.Info("load %v StageConfig", len(g.StageConfigMap))
+
 }
 
 func GetStageConfigById(stageID uint32) *StageConfig {

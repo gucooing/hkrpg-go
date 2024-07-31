@@ -128,3 +128,14 @@ func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg []byte) {
 
 	g.Send(cmd.GetNpcStatusScRsp, rsp)
 }
+
+func (g *GamePlayer) FinishItemIdCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.FinishItemIdCsReq, payloadMsg)
+	req := msg.(*proto.FinishItemIdCsReq)
+	rsp := &proto.FinishItemIdScRsp{
+		TextId:  req.TextId,
+		ItemId:  req.ItemId,
+		Retcode: 0,
+	}
+	g.Send(cmd.FinishItemIdScRsp, rsp)
+}

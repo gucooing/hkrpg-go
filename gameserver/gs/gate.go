@@ -229,6 +229,8 @@ func (ge *gateServer) NewPlayer(uid, accountId uint32, msg chan player.Msg) *pla
 	g.SendChan = msg
 	g.GameAppId = ge.game.AppId
 	g.GateAppId = ge.appid
+	g.IsJumpMission = ge.game.Config.IsJumpMission
+	g.DB = ge.game.Store.PlayerDataMysql
 
 	return g
 }

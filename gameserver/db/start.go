@@ -43,7 +43,7 @@ func NewStore(config *config.Config) *Store {
 	s.PlayerBriefDataRedis = database.NewRedis(playerBriefDataRedis.Addr, playerBriefDataRedis.Password, playerBriefDataRedis.DB)
 
 	logger.Info("数据库连接成功")
-	s.GetDbConf() // 初始化数据库配置表
+	database.GetDbConf(s.ServerConf) // 初始化数据库配置表
 	return s
 }
 

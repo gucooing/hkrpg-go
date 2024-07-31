@@ -45,12 +45,6 @@ func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServ
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
 
-	if gamePlayer.p.OnlineData == nil {
-		gamePlayer.p.OnlineData = &player.OnlineData{
-			Battle:      make(map[uint32]*player.Battle),
-			BattleState: &player.BattleState{},
-		}
-	}
 	if s.playerMap[uid] == nil {
 		s.playerMap[uid] = gamePlayer
 		PLAYERNUM++
@@ -74,8 +68,8 @@ func (s *GameServer) getAllPlayer() map[uint32]*GamePlayer {
 	players := make(map[uint32]*GamePlayer)
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()
-	for uuid, play := range s.playerMap {
-		players[uuid] = play
+	for uid, play := range s.playerMap {
+		players[uid] = play
 	}
 	return players
 }

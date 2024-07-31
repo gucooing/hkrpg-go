@@ -171,6 +171,8 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	p.Seed = serverSeedUint64
 	p.Uid = uidPlayer.Uid
 
+	logger.Info("[UID:%v][AccountId:%v]玩家登录中", p.Uid, accountUid)
+
 	// 保存玩家到临时登录列表中
 	if !s.addLoginPlayer(p.Uid, p) {
 		logger.Warn("[UID:%v][AccountId:%v]超出预期的玩家重复登录", p.Uid, accountUid)
@@ -179,7 +181,6 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 
 	// 下线重复登录的玩家
 	if bin, ok := s.Store.GetPlayerStatus(req.AccountUid); ok {
-		logger.Info("[UID:%v][AccountId:%v]玩家重复登录", p.Uid, accountUid)
 		statu := new(spb.PlayerStatusRedisData)
 		err := pb.Unmarshal(bin, statu)
 		if err != nil {
@@ -201,7 +202,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 				logoutReq.Retcode = spb.Retcode_RET_PLAYER_REPEAT_LOGIN // 异网关重复登录
 			}
 			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, logoutReq)
-			logger.Debug("[UID:%v][AccountId:%v]重复登录，下线玩家中", p.Uid, accountUid)
+			logger.Info("[UID:%v][AccountId:%v]重复登录，下线旧玩家", p.Uid, accountUid)
 			return
 		} else {
 			s.Store.DistUnlockPlayerStatus(req.AccountUid)
@@ -214,5 +215,6 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 
 func (gs *gameServer) playerLogin(p *PlayerGame) {
 	// 通知game玩家登录
+	logger.Info("[UID:%v][AccountId:%v]玩家登录准备完成,正式登录", p.Uid, p.AccountId)
 	gs.GateGamePlayerLoginReq(p.Uid, p.AccountId)
 }

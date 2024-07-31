@@ -14,6 +14,8 @@ type RelicMainAffixConfig struct {
 	AffixID     uint32 `json:"AffixID"`
 	Property    string `json:"Property"`
 	IsAvailable bool   `json:"IsAvailable"`
+	BaseValue   *Value `json:"BaseValue"`
+	LevelAdd    *Value `json:"LevelAdd"`
 }
 
 func (g *GameDataConfig) loadRelicMainAffixConfig() {
@@ -32,6 +34,7 @@ func (g *GameDataConfig) loadRelicMainAffixConfig() {
 	}
 
 	logger.Info("load %v RelicMainAffixConfig", len(g.RelicMainAffixConfigMap))
+
 }
 
 func GetRelicMainAffixConfigById(ID uint32) *RelicMainAffixConfig {
@@ -42,4 +45,11 @@ func GetRelicMainAffixConfigById(ID uint32) *RelicMainAffixConfig {
 	}
 	idIndex := keys[rand.Intn(len(keys))]
 	return relicMainAffixConfigMap[idIndex]
+}
+
+func GetRelicMainAffixConfig(id, index uint32) *RelicMainAffixConfig {
+	if CONF.RelicMainAffixConfigMap[id] == nil {
+		return nil
+	}
+	return CONF.RelicMainAffixConfigMap[id][index]
 }

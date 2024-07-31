@@ -3,12 +3,15 @@
 package player
 
 import (
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -16,9 +19,10 @@ import (
 var BattleBackupLock sync.Mutex // 战斗列表互斥锁
 
 type CurBattle struct {
-	BattleBackup    map[uint32]*BattleBackup     // 正在进行的战斗[战斗id]战斗细节
-	RogueInfoOnline *RogueInfoOnline             // 模拟宇宙临时数据
-	AvatarBuff      map[uint32]*OnLineAvatarBuff // 角色在线buff
+	BattleBackup       map[uint32]*BattleBackup     // 正在进行的战斗[战斗id]战斗细节
+	RogueInfoOnline    *RogueInfoOnline             // 模拟宇宙临时数据
+	AvatarBuff         map[uint32]*OnLineAvatarBuff // 角色在线buff
+	ActivityInfoOnline *ActivityInfoOnline          // 角色试用在线数据
 }
 
 type BattleBackup struct {
@@ -105,23 +109,39 @@ func (g *GamePlayer) GetOnLineAvatarBuffById(id uint32) *OnLineAvatarBuff {
 	return db[id]
 }
 
-func (g *GamePlayer) HandleAvatarSkill(entityId, skillIndex uint32) {
+func (g *GamePlayer) HandleAvatarSkill(entityId uint32) (bool, bool) {
 	avatar := g.GetAvatarEntity(entityId)
+	isBattle := true
+	isDelMp := false
 	if avatar == nil {
-		return
+		return true, false
 	}
 	confAvatar := gdconf.GetAdventurePlayerByAvatarId(avatar.AvatarId)
-	if confAvatar == nil || uint32(len(confAvatar.MazeSkillIdList)) < skillIndex {
-		return
+	if confAvatar == nil {
+		return true, false
 	}
-	confBuff := gdconf.GetAvatarMazeBuffById(confAvatar.MazeSkillIdList[skillIndex], 1)
-	if confBuff == nil {
-		return
+	for _, mazeSkillId := range confAvatar.MazeSkillIdList {
+		confBuff := gdconf.GetAvatarMazeBuffById(mazeSkillId, 1)
+		if confBuff == nil {
+			continue
+		}
+		switch confBuff.UseType {
+		case "AddBattleBuff":
+			g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
+		}
+		if strings.Contains(confBuff.BuffEffect, "MazeBuffEffect") {
+			// isBattle = false
+			summonId := strconv.FormatUint(uint64(mazeSkillId), 10)[:4] + strconv.FormatUint(uint64(mazeSkillId), 10)[5:]
+			g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+				GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(entityId, alg.S2U32(summonId), g.GetRotPb(), g.GetPosPb()),
+			})
+		}
+		if confBuff.InBattleBindingKey != "" {
+			isDelMp = true
+		}
 	}
-	switch confBuff.UseType {
-	case "AddBattleBuff":
-		g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
-	}
+
+	return isBattle, isDelMp
 }
 
 func (g *GamePlayer) AddOnLineAvatarBuff(avatarID, buffId uint32) {
@@ -140,63 +160,12 @@ func (g *GamePlayer) DelOnLineAvatarBuff(avatarID, buffId uint32) {
 	delete(db, avatarID)
 }
 
-type BattleState struct {
-	BattleType         spb.BattleType
-	TrialActivityState *TrialActivityState
-	BuffList           []uint32 // 进入战斗需要添加的buff
-	AvatarBuffList     []uint32 // 角色buff
-}
-type TrialActivityState struct {
-	AvatarDemoId  uint32
-	NPCMonsterPos *spb.VectorBin
-	NPCMonsterRot *spb.VectorBin
-	PlaneID       uint32
-	FloorID       uint32
-	EntranceID    uint32
-
-	NPCMonsterID uint32
-	EventID      uint32
-	GroupID      uint32
-	ConfigID     uint32
-}
-
-type Battle struct {
-	BattleId         uint32                // 战斗ID
-	Wave             uint32                // 次数
-	EventIDList      []uint32              // 怪物群实体id
-	LogicRandomSeed  uint32                // 逻辑随机种子
-	RoundsLimit      uint32                // 回合限制
-	StaminaCost      uint32                // 扣除体力
-	DisplayItemList  []*Material           // 奖励物品
-	BuffList         []*proto.BattleBuff   // Buff列表
-	BattleAvatarList []*proto.BattleAvatar // 战斗角色列表
-}
-
-func (g *GamePlayer) GetBattleState() *BattleState {
-	if g.OnlineData.BattleState == nil {
-		g.OnlineData.BattleState = &BattleState{
-			BattleType:         0,
-			BuffList:           make([]uint32, 0),
-			TrialActivityState: &TrialActivityState{},
-		}
-	}
-	return g.OnlineData.BattleState
-}
-
-func (g *GamePlayer) GetTrialActivityState() *TrialActivityState {
-	if g.GetBattleState().TrialActivityState == nil {
-		g.GetBattleState().TrialActivityState = &TrialActivityState{}
-	}
-	return g.GetBattleState().TrialActivityState
-}
-
-/************************************区分一下***************************************/
-
 func NewBattle() *spb.Battle {
 	return &spb.Battle{
 		BattleType: 0,
 		Rogue:      nil,
 		Challenge:  nil,
+		Rain:       nil,
 	}
 }
 
@@ -273,9 +242,16 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartC
 	db := g.GetChallenge()
 	var buffOne uint32 = 0
 	var buffTwe uint32 = 0
+	var isBoos = false
 	if storyInfo != nil {
-		buffOne = storyInfo.GetStoryBuffInfo().GetStoryBuffOne()
-		buffTwe = storyInfo.GetStoryBuffInfo().GetStoryBuffTwo()
+		if storyInfo.StoryBuffInfo == nil {
+			isBoos = true
+			buffOne = storyInfo.GetBossBuffInfo().GetStoryBuffOne()
+			buffTwe = storyInfo.GetBossBuffInfo().GetStoryBuffTwo()
+		} else {
+			buffOne = storyInfo.GetStoryBuffInfo().GetStoryBuffOne()
+			buffTwe = storyInfo.GetStoryBuffInfo().GetStoryBuffTwo()
+		}
 	}
 	conf := gdconf.GetChallengeMazeConfigById(challengeId)
 	db.CurChallenge = &spb.CurChallenge{
@@ -286,6 +262,8 @@ func (g *GamePlayer) SetCurChallenge(challengeId uint32, storyInfo *proto.StartC
 		RoundCount:  0,
 		BuffOne:     buffOne,
 		BuffTwo:     buffTwe,
+		MazeBuffId:  conf.MazeBuffID,
+		IsBoos:      isBoos,
 	}
 	return db.CurChallenge
 }
@@ -507,18 +485,16 @@ func (g *GamePlayer) AddChallengeDeadAvatar(deadNum uint32) {
 }
 
 type MPEM struct {
-	IsBattle bool     // 是否战斗
-	EntityId []uint32 // 实体id
-	MPid     []uint32 // 怪物/物品对应id
+	IsAvatar        bool     // 是否有玩家参与
+	MonsterEntityId []uint32 // 怪物实体id
+	MonsterId       []uint32 // 怪物id
+	PropEntityId    []uint32 // 物品实体id
+	PropId          []uint32 // 怪物id
+	AvatarId        uint32   // 角色id
+	AvatarEntityId  uint32   // 角色实体id
 }
 
 func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
-	if mpem.EntityId == nil {
-		mpem.EntityId = make([]uint32, 0)
-	}
-	if mpem.MPid == nil {
-		mpem.MPid = make([]uint32, 0)
-	}
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
 		if entity == nil {
@@ -526,13 +502,27 @@ func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
 		}
 		switch entity.(type) {
 		case *AvatarEntity:
+			mpem.IsAvatar = true
+			mpem.AvatarId = entity.(*AvatarEntity).AvatarId
+			mpem.AvatarEntityId = id
 		case *MonsterEntity:
-			mpem.EntityId = append(mpem.EntityId, id)
-			mpem.MPid = append(mpem.MPid, entity.(*MonsterEntity).EventID)
-			mpem.IsBattle = true
+			if mpem.MonsterEntityId == nil {
+				mpem.MonsterEntityId = make([]uint32, 0)
+			}
+			if mpem.MonsterId == nil {
+				mpem.MonsterId = make([]uint32, 0)
+			}
+			mpem.MonsterEntityId = append(mpem.MonsterEntityId, id)
+			mpem.MonsterId = append(mpem.MonsterId, entity.(*MonsterEntity).EventID)
 		case *PropEntity:
-			mpem.EntityId = append(mpem.EntityId, id)
-			mpem.MPid = append(mpem.MPid, entity.(*PropEntity).PropId)
+			if mpem.PropEntityId == nil {
+				mpem.PropEntityId = make([]uint32, 0)
+			}
+			if mpem.PropId == nil {
+				mpem.PropId = make([]uint32, 0)
+			}
+			mpem.PropEntityId = append(mpem.PropEntityId, id)
+			mpem.PropId = append(mpem.PropId, entity.(*PropEntity).PropId)
 		case *NpcEntity:
 		default:
 			logger.Debug("[EntityId:%v]没有找到相关实体信息", id)
@@ -572,6 +562,9 @@ func (g *GamePlayer) ChallengeSettle() {
 	if db.ScoreOne+db.ScoreTwo >= 30000 {
 		db.Stars++
 	}
+	if db.IsBoos {
+		db.Stars++
+	}
 }
 
 // 忘却之庭战斗失败处理
@@ -604,11 +597,13 @@ func (g *GamePlayer) CocoonBattle(cocoonId, worldLevel uint32) {
 
 /****************************************************功能***************************************************/
 
+// 场景战斗
 func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.SceneBattleInfo, *BattleBackup) {
 	if mem == nil || lineUp == nil {
 		logger.Debug("[UID:%v]战斗获取失败", g.Uid)
 		return nil, nil
 	}
+	battleId := g.GetBattleIdGuid()
 	bAList := make(map[uint32]*BattleAvatar, 0)
 	for id, lp := range lineUp.AvatarIdList {
 		if lp.AvatarId == 0 {
@@ -621,14 +616,27 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 		}
 		bAList[id] = bA
 	}
-	battleId := g.GetBattleIdGuid()
-	monsterWaveList, stageId := g.GetSceneMonsterWave(mem)
+	monsterWaveList, stageId, trialAvatarList := g.GetSceneMonsterWave(mem)
+	if trialAvatarList != nil && len(trialAvatarList) > 0 {
+		bAList = make(map[uint32]*BattleAvatar)
+		for id, avatarId := range trialAvatarList {
+			if avatarId == 0 {
+				continue
+			}
+			bA := &BattleAvatar{
+				AssistUid:  0,
+				AvatarId:   avatarId,
+				AvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
+			}
+			bAList[uint32(id)] = bA
+		}
+	}
 	battleAvatarList, buffList := g.GetProtoBattleAvatar(bAList)
 	battleInfo := &proto.SceneBattleInfo{
 		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
 		WorldLevel:       g.GetWorldLevel(),                       // 世界等级
 		BattleId:         battleId,                                // 战斗Id
-		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
+		AvatarBattleList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		StageId:          stageId,                                 // 起始战斗
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
@@ -646,6 +654,7 @@ func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.
 	return battleInfo, battleBackup
 }
 
+// 副本战斗
 func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoonStageCsReq) (*proto.SceneBattleInfo, *BattleBackup) {
 	if lineUp == nil {
 		logger.Debug("[UID:%v]战斗获取失败", g.Uid)
@@ -668,14 +677,11 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 	// 添加怪物波列表
 	stageID := cocoonConfig.StageID
 	for _, stage := range cocoonConfig.StageIDList {
-		bin := g.GetSceneMonsterWaveByStageID(stage)
-		if bin == nil {
-			continue
-		}
+		_, bin := g.GetSceneMonsterWaveByStageID(stage)
+		monsterWaveList = append(monsterWaveList, bin...)
 		if stageID == 0 {
 			stageID = stage
 		}
-		monsterWaveList = append(monsterWaveList, bin...)
 	}
 	battleId := g.GetBattleIdGuid()
 	battleAvatarList, buffList := g.GetProtoBattleAvatar(bAList)
@@ -684,7 +690,7 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 		WorldLevel:       req.GetWorldLevel(),                     // 关卡等级
 		BattleId:         battleId,                                // 战斗Id
 		StageId:          stageID,                                 // 起始战斗
-		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
+		AvatarBattleList: battleAvatarList,                        // 战斗角色列表
 		MonsterWaveList:  monsterWaveList,                         // 怪物列表
 		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
 		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
@@ -703,31 +709,32 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 	return battleInfo, battleBackup
 }
 
-func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWave, uint32) {
+func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWave, uint32, []uint32) {
 	mWList := make([]*proto.SceneMonsterWave, 0)
 	var stageID uint32 = 0
+	var trialAvatarList []uint32
 	for id, meid := range mem {
 		stage := gdconf.GetPlaneEventById(meid, g.GetWorldLevel())
 		if stage == nil {
 			continue
 		}
-		bin := g.GetSceneMonsterWaveByStageID(stage.StageID)
-		if bin == nil {
-			continue
-		}
+		list, bin := g.GetSceneMonsterWaveByStageID(stage.StageID)
 		mWList = append(mWList, bin...)
 		if id == 0 {
 			stageID = stage.StageID // 阶段id
 		}
+		if list != nil && len(list) > 0 {
+			trialAvatarList = list
+		}
 	}
-	return mWList, stageID
+	return mWList, stageID, trialAvatarList
 }
 
-func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) []*proto.SceneMonsterWave {
+func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) ([]uint32, []*proto.SceneMonsterWave) {
 	mWList := make([]*proto.SceneMonsterWave, 0)
 	stageConfig := gdconf.GetStageConfigById(stageID)
 	if stageConfig == nil {
-		return nil
+		return nil, nil
 	}
 	for _, monsterListMap := range stageConfig.MonsterList {
 		monsterWaveList := &proto.SceneMonsterWave{
@@ -737,16 +744,15 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) []*proto.Scene
 			MonsterList: make([]*proto.SceneMonster, 0),
 			// MonsterParam:   &proto.SceneMonsterWaveParam{},
 		}
-		for _, monsterList := range monsterListMap {
+		for _, monsterId := range monsterListMap {
 			sceneMonster := &proto.SceneMonster{
-				MonsterId: monsterList,
+				MonsterId: monsterId,
 			}
 			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
 		}
 		mWList = append(mWList, monsterWaveList)
 	}
-
-	return mWList
+	return stageConfig.TrialAvatarList, mWList
 }
 
 // 根据战斗情况添加buff
@@ -770,10 +776,9 @@ func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
 	db := g.GetCurChallenge()
 	buffList := make([]*proto.BattleBuff, 0)
 	// 关卡buff
-	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
-	if conf.MazeBuffID != 0 {
+	if db.MazeBuffId != 0 {
 		buffList = append(buffList, &proto.BattleBuff{
-			Id:         conf.MazeBuffID,
+			Id:         db.MazeBuffId,
 			Level:      1,
 			OwnerIndex: 4294967295,
 			WaveFlag:   4294967295,
@@ -813,7 +818,7 @@ func (g *GamePlayer) GetChallengeInfo() *proto.CurChallenge {
 		ExtraLineupType: lineUpType,                       // 队伍type
 		PlayerInfo:      g.GetCurChallengeStoryInfo(),     // 挑战buff
 		RoundCount:      db.RoundCount,                    // 已使用回合数
-		ScoreOne:        db.ScoreOne,                      // 第一层得分
+		ScoreId:         db.ScoreOne,                      // 第一层得分
 		ScoreTwo:        db.ScoreTwo,                      // 第二层得分
 	}
 	return challengeInfo
@@ -825,14 +830,20 @@ func (g *GamePlayer) GetCurChallengeStoryInfo() *proto.ChallengeStoryInfo {
 	if db == nil {
 		return nil
 	}
-	challengeStoryInfo := &proto.ChallengeStoryInfo{
-		StoryBuffs: &proto.ChallengeStoryInfo_CurStoryBuff{
+	if db.IsBoos {
+		return &proto.ChallengeStoryInfo{
+			CurBossBuff: &proto.ChallengeBossBuffInfo{
+				ChallengeBossConst: 1, // 这玩意不是1就不能进下一节点
+				BuffList:           []uint32{db.BuffOne, db.BuffTwo},
+			},
+		}
+	} else {
+		return &proto.ChallengeStoryInfo{
 			CurStoryBuff: &proto.ChallengeStoryBuffInfo{
 				BuffList: []uint32{db.BuffOne, db.BuffTwo},
 			},
-		},
+		}
 	}
-	return challengeStoryInfo
 }
 
 // 获取回合限制
@@ -870,25 +881,35 @@ func (g *GamePlayer) GetBattleTargetInfo() map[uint32]*proto.BattleTargetList {
 	if g.GetBattleStatus() != spb.BattleType_Battle_CHALLENGE_Story {
 		return battleTargetInfoList
 	}
-	conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
-	if conf == nil {
-		return battleTargetInfoList
+	battleTargetList1 := make([]*proto.BattleTarget, 0)
+	if db.IsBoos {
+		for _, id := range []uint32{90004, 90005} {
+			battleTargetList1 = append(battleTargetList1, &proto.BattleTarget{
+				Id: id,
+			})
+		}
+	} else {
+		conf := gdconf.GetChallengeStoryMazeExtraById(db.ChallengeId)
+		if conf == nil {
+			return battleTargetInfoList
+		}
+		battleTargetList1 = append(battleTargetList1, &proto.BattleTarget{
+			Id: 10001,
+		})
+		battleTargetList5 := make([]*proto.BattleTarget, 0)
+		for _, id := range conf.BattleTargetID {
+			battleTarget := &proto.BattleTarget{
+				Id:       id,
+				Progress: 0,
+			}
+			battleTargetList5 = append(battleTargetList5, battleTarget)
+		}
+		battleTargetInfoList[5] = &proto.BattleTargetList{
+			BattleTargetList: battleTargetList5,
+		}
 	}
 	battleTargetInfoList[1] = &proto.BattleTargetList{
-		BattleTargetList: []*proto.BattleTarget{{
-			Id: 10001,
-		}},
-	}
-	battleTargetList := make([]*proto.BattleTarget, 0)
-	for _, id := range conf.BattleTargetID {
-		battleTarget := &proto.BattleTarget{
-			Id:       id,
-			Progress: 0,
-		}
-		battleTargetList = append(battleTargetList, battleTarget)
-	}
-	battleTargetInfoList[5] = &proto.BattleTargetList{
-		BattleTargetList: battleTargetList,
+		BattleTargetList: battleTargetList1,
 	}
 	return battleTargetInfoList
 }

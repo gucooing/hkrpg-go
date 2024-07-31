@@ -32,6 +32,7 @@ func (g *GameDataConfig) loadMazePlane() {
 		panic(info)
 	}
 	logger.Info("load %v MazePlane", len(g.MazePlaneMap))
+
 }
 
 func GetMazePlaneById(planeID uint32) *MazePlane {

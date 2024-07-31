@@ -109,6 +109,8 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
 	req := msg.(*proto.BuyGoodsCsReq)
 	var pileItem []*Material
 
+	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+
 	rsp := &proto.BuyGoodsScRsp{
 		ReturnItemList: &proto.ItemList{
 			ItemList: []*proto.Item{{
@@ -128,16 +130,34 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
 
 	var material []*Material
 	goodsConfig := gdconf.GetShopGoodsConfigByGoodsID(req.ShopId, req.GoodsId)
-	material = append(material, &Material{
-		Tid: goodsConfig.CurrencyList[0],
-		Num: goodsConfig.CurrencyCostList[0],
-	})
+	for id, cost := range goodsConfig.CurrencyList {
+		allSync.MaterialList = append(allSync.MaterialList, cost)
+		material = append(material, &Material{
+			Tid: cost,
+			Num: goodsConfig.CurrencyCostList[id],
+		})
+	}
 	g.DelMaterial(material)
 	pileItem = append(pileItem, &Material{
 		Tid: req.ItemId,
 		Num: req.GoodsNum,
 	})
-	g.AddMaterial(pileItem)
+	g.AddItem(pileItem)
 
+	allSync.MaterialList = append(allSync.MaterialList, req.ItemId)
+	g.AllPlayerSyncScNotify(allSync)
+	g.MissionGetItem(req.ItemId) // 任务检查
 	g.Send(cmd.BuyGoodsScRsp, rsp)
+}
+
+func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetRollShopInfoCsReq, payloadMsg)
+	req := msg.(*proto.GetRollShopInfoCsReq)
+	rsp := &proto.GetRollShopInfoScRsp{
+		GachaRandom: 1,
+		NOPNEOADJEI: nil,
+		RollShopId:  req.RollShopId,
+		Retcode:     0,
+	}
+	g.Send(cmd.GetRollShopInfoScRsp, rsp)
 }

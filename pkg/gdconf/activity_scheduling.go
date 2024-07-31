@@ -30,6 +30,7 @@ func (g *GameDataConfig) loadActivityScheduling() {
 	}
 
 	logger.Info("load %v ActivityScheduling", len(g.ActivitySchedulingMap))
+
 }
 
 func GetActivitySchedulingMap() []*ActivityScheduling {

@@ -1,0 +1,86 @@
+{
+  "2000401": {
+    "EntryId": 2000401,
+    "GroupList": {
+      "42":{
+        "GroupId": 42,
+        "PropState": {
+          "300002": "Open"
+        }
+      }
+    }
+  },
+  "2011101": {
+    "EntryId": 2011101,
+    "GroupList": {
+      "21":{
+        "GroupId": 21,
+        "PropState": {
+          "300004": "Unlocked"
+        }
+      }
+    }
+  },
+  "2012101": {
+    "EntryId": 2012101,
+    "GroupList": {
+      "3":{
+        "GroupId": 3,
+        "PropState": {
+          "300005": "Elevator2"
+        }
+      }
+    }
+  },
+  "2012301": {
+    "EntryId": 2012301,
+    "GroupList": {
+      "8":{
+        "GroupId": 8,
+        "PropState": {
+          "300001": "Elevator2",
+          "300011": "Unlocked"
+        }
+      }
+    }
+  },
+  "2013101": {
+    "EntryId": 2013101,
+    "GroupList": {
+      "6":{
+        "GroupId": 6,
+        "PropState": {
+          "300010": "Unlocked"
+        }
+      }
+    }
+  },
+  "2013201": {
+    "EntryId": 2013201,
+    "GroupList": {
+      "3":{
+        "GroupId": 3,
+        "PropState": {
+          "300013": "Open"
+        }
+      },
+      "4":{
+        "GroupId": 4,
+        "PropState": {
+          "300003": "Open"
+        }
+      }
+    }
+  },
+  "2023101": {
+    "EntryId": 2023101,
+    "GroupList": {
+      "54":{
+        "GroupId": 54,
+        "PropState": {
+          "300004": "Closed"
+        }
+      }
+    }
+  }
+}

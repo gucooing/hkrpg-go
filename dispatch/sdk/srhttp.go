@@ -72,3 +72,8 @@ func (s *Server) GetAgreementInfos(c *gin.Context) {
 	c.Header("Content-type", "application/json")
 	_, _ = c.Writer.WriteString("{\"retcode\":0,\"message\":\"OK\",\"data\":{\"marketing_agreements\":[]}}")
 }
+
+func (s *Server) ExchangeCdkey(c *gin.Context) {
+	c.Header("Content-type", "application/json")
+	c.String(200, "{\"retcode\":0,\"message\":\"OK\",\"data\":{\"msg\":\"兑换成功\"}}")
+}

@@ -96,7 +96,7 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 			os.Exit(0)
 		}
 	}()
-	go s.kcpNetInfo()
+	go kcpNetInfo()
 	go s.kcpEnetHandle(kcpListener)
 	go s.AutoDelPlayer()
 

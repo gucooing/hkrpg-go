@@ -29,6 +29,7 @@ func (g *GameDataConfig) loadActivityLoginConfig() {
 		panic(info)
 	}
 	logger.Info("load %v ActivityLoginConfig", len(g.ActivityLoginConfigMap))
+
 }
 
 func GetActivityLoginConfigById(id uint32) *ActivityLoginConfig {

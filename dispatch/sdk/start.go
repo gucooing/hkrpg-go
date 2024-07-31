@@ -10,27 +10,32 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gucooing/hkrpg-go/dispatch"
 	"github.com/gucooing/hkrpg-go/dispatch/config"
-	"github.com/gucooing/hkrpg-go/dispatch/db"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 
 type Server struct {
-	AppId      uint32
-	Port       string
-	InnerAddr  string
-	OuterAddr  string
-	node       *NodeService
-	Config     *config.Config
-	Store      *db.Store
-	Router     *gin.Engine
-	server     *http.Server
-	AutoCreate sync.Mutex
-	Ec2b       *random.Ec2b
-	Ticker     *time.Ticker
-	Stop       chan struct{}
+	AppId        uint32
+	Port         string
+	InnerAddr    string
+	OuterAddr    string
+	IsAutoCreate bool
+	node         *NodeService
+	Config       *config.Config
+	Store        *dispatch.Store
+	Router       *gin.Engine
+	server       *http.Server
+	AutoCreate   sync.Mutex
+	Ec2b         *random.Ec2b
+	DispatchList []config.Dispatch
+	Ticker       *time.Ticker
+	Stop         chan struct{}
+	IsPe         bool
+	KcpIp        string
+	KcpPort      uint32
 }
 
 // 初始化所有服务
@@ -44,14 +49,16 @@ func NewServer(cfg *config.Config, appid string) *Server {
 		log.Println("Dispatch Port error")
 		os.Exit(0)
 	}
+	s.IsAutoCreate = cfg.AutoCreate
 	s.Port = appConf.Port
 	s.InnerAddr = appConf.InnerAddr
 	s.OuterAddr = appConf.OuterAddr
-	s.Store = db.NewStore(s.Config) // 初始化数据库连接
-	gin.SetMode(gin.ReleaseMode)    // 初始化gin
-	s.Router = gin.New()            // gin.Default()
+	s.Store = dispatch.NewStore(s.Config) // 初始化数据库连接
+	gin.SetMode(gin.ReleaseMode)          // 初始化gin
+	s.Router = gin.New()                  // gin.Default()
 	s.Router.Use(gin.Recovery())
 	s.Ec2b = alg.GetEc2b() // 读取ec2b密钥
+	s.DispatchList = cfg.Dispatch
 	// 开启dispatch定时器
 	s.Ticker = time.NewTicker(5 * time.Second)
 	s.Stop = make(chan struct{})

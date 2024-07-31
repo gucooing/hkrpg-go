@@ -36,6 +36,7 @@ func (g *GameDataConfig) loadItemConfigRelic() {
 		panic(info)
 	}
 	logger.Info("load %v ItemConfigRelic", len(g.ItemConfigRelicMap))
+
 }
 
 func GetItemConfigRelicById(ID uint32) *ItemConfigRelic {

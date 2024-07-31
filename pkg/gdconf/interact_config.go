@@ -32,6 +32,7 @@ func (g *GameDataConfig) loadInteractConfig() {
 	}
 
 	logger.Info("load %v InteractConfig", len(g.InteractConfigMap))
+
 }
 
 func GetInteractConfigMap() map[uint32]*InteractConfig {

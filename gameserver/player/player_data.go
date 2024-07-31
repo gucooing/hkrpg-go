@@ -1,10 +1,11 @@
 package player
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 func (g *GamePlayer) StaminaInfoScNotify() {
@@ -20,7 +21,7 @@ func (g *GamePlayer) StaminaInfoScNotify() {
 func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg []byte) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
-	rsp.NextRecoverTime = 1716449614
+	rsp.NextRecoverTime = time.Now().Unix() + 94
 	rsp.GameplayBirthday = g.BasicBin.Birthday
 	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
 	// rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
@@ -46,8 +47,8 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg []byte) {
 		RelicList:                     make([]*proto.RelicList, 0),
 	}
 
-	for _, avatar := range g.BasicBin.Avatar.AvatarList {
-		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.AvatarId)
+	for _, avatar := range g.GetAvatarList() {
+		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.CurPath)
 	}
 
 	for _, equipment := range gdconf.GetItemConfigEquipmentMap() {
@@ -111,14 +112,31 @@ func (g *GamePlayer) SetHeadIconCsReq(payloadMsg []byte) {
 	}
 
 	g.Send(cmd.SetHeadIconScRsp, rsp)
+}
 
+func (g *GamePlayer) GetAuthkeyCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetAuthkeyCsReq, payloadMsg)
+	req := msg.(*proto.GetAuthkeyCsReq)
+
+	rsp := &proto.GetAuthkeyScRsp{
+		MHHOCCLKLFD: "",
+		LIFIHJFLHHM: req.LIFIHJFLHHM,
+		KFDBLEEICMC: req.KFDBLEEICMC,
+		DKHDNIFJCEM: req.DKHDNIFJCEM,
+		Retcode:     0,
+	}
+	g.Send(cmd.GetAuthkeyScRsp, rsp)
 }
 
 func (g *GamePlayer) SetHeroBasicTypeCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetHeroBasicTypeCsReq, payloadMsg)
 	req := msg.(*proto.SetHeroBasicTypeCsReq)
 
-	g.BasicBin.Avatar.CurMainAvatar = spb.HeroBasicType(req.BasicType)
+	db := g.GetAvatarById(8001)
+
+	db.CurPath = uint32(req.BasicType)
+
+	g.AllPlayerSyncScNotify(&AllPlayerSync{AvatarList: []uint32{8001}})
 
 	rsp := &proto.SetHeroBasicTypeScRsp{
 		BasicType: req.BasicType,
@@ -134,35 +152,14 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg []byte) {
 
 	rsp := &proto.GetPrivateChatHistoryScRsp{
 		ChatMessageList: make([]*proto.ChatMessageData, 0),
-		OLIGKFNJKMA:     0,
 		ContactId:       req.ContactId,
 		Retcode:         0,
 	}
 	g.Send(cmd.GetPrivateChatHistoryScRsp, rsp)
 }
 
-// func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
-// 	msg := g.DecodePayloadToProto(cmd.SendMsgCsReq, payloadMsg)
-// 	req := msg.(*proto.SendMsgCsReq)
-// 	logger.Info("[ToUidList:%v][Emote:%v][MsgType:%s][Text:%s][ChatType:%s]", req.TargetList, req.ExtraId, req.MessageType, req.MessageText, req.ChatType)
-//
-// 	for _, touid := range req.TargetList {
-// 		if touid == 0 {
-//
-// 		}
-// 		notify := &proto.RevcMsgScNotify{
-// 			TargetUid:   touid,
-// 			ExtraId:     req.ExtraId,
-// 			MessageType: req.MessageType,
-// 			SourceUid:   g.Uid,
-// 			MessageText: req.MessageText,
-// 			ChatType:    req.ChatType,
-// 		}
-// 		g.Send(cmd.RevcMsgScNotify, notify)
-// 	}
-//
-// 	g.Send(cmd.SendMsgScRsp, nil)
-// }
+func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
+}
 
 func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg []byte) {
 	conf := gdconf.GetVideoVersionKey()
@@ -195,8 +192,7 @@ func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg []byte) {
 				Key:  "2597701279",
 			},
 		},
-		Retcode:     0,
-		JGHFBNMOFDP: nil,
+		Retcode: 0,
 	}
 	g.Send(cmd.GetSecretKeyInfoScRsp, rsp)
 }
@@ -305,8 +301,9 @@ func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) SetClientPausedCsReq(payloadMsg []byte) {
 	rsp := new(proto.SetClientPausedScRsp)
-	g.OnlineData.IsPaused = !g.OnlineData.IsPaused
-	rsp.Paused = g.OnlineData.IsPaused
+	dbOnl := g.GetOnlineData()
+	dbOnl.IsPaused = !dbOnl.IsPaused
+	rsp.Paused = dbOnl.IsPaused
 
 	g.Send(cmd.SetClientPausedScRsp, rsp)
 }
@@ -339,12 +336,14 @@ func (g *GamePlayer) HandleGetPhoneDataCsReq(payloadMsg []byte) {
 func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetNicknameCsReq, payloadMsg)
 	req := msg.(*proto.SetNicknameCsReq)
+	dbOnl := g.GetOnlineData()
+	dbBas := g.GetBasicBin()
 
-	if g.OnlineData.IsNickName {
-		g.BasicBin.Nickname = req.Nickname
+	if dbOnl.IsNickName {
+		dbBas.Nickname = req.Nickname
 	}
 
-	g.OnlineData.IsNickName = !g.OnlineData.IsNickName
+	dbOnl.IsNickName = !dbOnl.IsNickName
 
 	g.PlayerPlayerSyncScNotify()
 	g.Send(cmd.SetNicknameScRsp, nil)
@@ -353,8 +352,8 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg []byte) {
 func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetGameplayBirthdayCsReq, payloadMsg)
 	req := msg.(*proto.SetGameplayBirthdayCsReq)
-
-	g.BasicBin.Birthday = req.Birthday
+	dbBas := g.GetBasicBin()
+	dbBas.Birthday = req.Birthday
 
 	rsp := &proto.SetGameplayBirthdayScRsp{Birthday: req.Birthday}
 
@@ -364,8 +363,8 @@ func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg []byte) {
 func (g *GamePlayer) SetSignatureCsReq(payloadMsg []byte) {
 	msg := g.DecodePayloadToProto(cmd.SetSignatureCsReq, payloadMsg)
 	req := msg.(*proto.SetSignatureCsReq)
-
-	g.BasicBin.Signature = req.Signature
+	dbBas := g.GetBasicBin()
+	dbBas.Signature = req.Signature
 
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
 
@@ -411,6 +410,105 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg []byte) {
 
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg []byte) {
 	g.Send(cmd.PlayerLoginFinishScRsp, nil)
-	// TODO 主动调用
-	g.HandleGetArchiveDataCsReq(nil)
+	g.ContentPackageSyncDataScNotify()
+}
+
+func (g *GamePlayer) ContentPackageSyncDataScNotify() {
+	notify := &proto.ContentPackageSyncDataScNotify{
+		Data: &proto.ContentPackageData{
+			ContentInfoList: make([]*proto.ContentInfo, 0),
+		},
+	}
+
+	for _, id := range []uint32{200001, 200002} { // TODO ContentPackageConfig.json
+		notify.Data.ContentInfoList = append(notify.Data.ContentInfoList, &proto.ContentInfo{
+			ContentId: id,
+			Status:    proto.ContentPackageStatus_ContentPackageStatus_Finished,
+		})
+	}
+
+	g.Send(cmd.ContentPackageSyncDataScNotify, notify)
+}
+
+func (g *GamePlayer) GetLevelRewardTakenListCsReq(payloadMsg []byte) {
+	rsp := &proto.GetLevelRewardTakenListScRsp{
+		LevelRewardTakenList: g.GetRewardTakenLevelList(),
+	}
+	g.Send(cmd.GetLevelRewardTakenListScRsp, rsp)
+}
+
+func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg []byte) {
+	msg := g.DecodePayloadToProto(cmd.GetLevelRewardCsReq, payloadMsg)
+	req := msg.(*proto.GetLevelRewardCsReq)
+	allSync := &AllPlayerSync{
+		IsBasic:      true,
+		MaterialList: make([]uint32, 0),
+	}
+	pileItem := make([]*Material, 0)
+	rsp := &proto.GetLevelRewardScRsp{
+		Reward:  &proto.ItemList{ItemList: make([]*proto.Item, 0)},
+		Retcode: 0,
+		Level:   req.Level,
+	}
+	conf := gdconf.GetPlayerLevelConfig(req.Level)
+	if conf == nil {
+		g.Send(cmd.GetLevelRewardScRsp, rsp)
+		return
+	}
+	rewardConf := gdconf.GetRewardDataById(conf.LevelRewardID)
+	if rewardConf == nil {
+		g.Send(cmd.GetLevelRewardScRsp, rsp)
+		return
+	}
+	allSync.MaterialList = append(allSync.MaterialList, Hcoin)
+	pileItem = append(pileItem, &Material{
+		Tid: Hcoin,
+		Num: rewardConf.Hcoin,
+	})
+	for _, info := range rewardConf.Items {
+		allSync.MaterialList = append(allSync.MaterialList, info.ItemID)
+		pileItem = append(pileItem, &Material{
+			Tid: info.ItemID,
+			Num: info.Count,
+		})
+		rsp.Reward.ItemList = append(rsp.Reward.ItemList, &proto.Item{
+			ItemId: info.ItemID,
+			Num:    info.Count,
+		})
+	}
+
+	g.AddItem(pileItem)
+	g.AddRewardTakenLevelList(req.Level)
+	g.AllPlayerSyncScNotify(allSync)
+	g.Send(cmd.GetLevelRewardScRsp, rsp)
+}
+
+func (g *GamePlayer) TakeBpRewardCsReq(payloadMsg []byte) {
+	// msg := g.DecodePayloadToProto(cmd.TakeBpRewardCsReq, payloadMsg)
+	// req := msg.(*proto.TakeBpRewardCsReq)
+
+	rsp := &proto.TakeBpRewardScRsp{
+		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: Hcoin, Num: 1000}}},
+		Retcode: 0,
+	}
+	g.AddItem([]*Material{{Tid: Hcoin, Num: 1000}})
+	g.AllPlayerSyncScNotify(&AllPlayerSync{IsBasic: true})
+	g.Send(cmd.TakeBpRewardScRsp, rsp)
+}
+
+func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg []byte) {
+	allSync := &AllPlayerSync{
+		IsBasic:       true,
+		AvatarList:    make([]uint32, 0),
+		MaterialList:  make([]uint32, 0),
+		EquipmentList: make([]uint32, 0),
+		RelicList:     make([]uint32, 0),
+	}
+	g.AllGive(allSync)
+	rsp := &proto.TakeAllRewardScRsp{
+		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: Mcoin, Num: 1000}}},
+		Retcode: 0,
+	}
+	g.AllPlayerSyncScNotify(allSync)
+	g.Send(cmd.TakeAllRewardScRsp, rsp)
 }
