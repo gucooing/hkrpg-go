@@ -17,7 +17,7 @@ jobs:
         repository: gucooing/hkrpg-go
         ref: "dev"
         path: go/hkrpg
-        ssh-key: ${{ secrets.GAYHUB_TOKEN }}
+        ssh-key: ${{ secrets.GITHUB_TOKEN }}
         fetch-depth: 0
     - name: Set up Go
       uses: actions/setup-go@v4
