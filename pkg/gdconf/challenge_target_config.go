@@ -30,29 +30,33 @@ func (g *GameDataConfig) loadChallengeTargetConfig() {
 		panic(info)
 	}
 
+	challengeStoryTargetConfig := make([]*ChallengeTargetConfig, 0)
 	playerElementsFilePathStory := g.excelPrefix + "ChallengeStoryTargetConfig.json"
 	playerElementsFileStory, err := os.ReadFile(playerElementsFilePathStory)
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileStory, &challengeTargetConfigMap)
+	err = hjson.Unmarshal(playerElementsFileStory, &challengeStoryTargetConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	challengeTargetConfigMap = append(challengeTargetConfigMap, challengeStoryTargetConfig...)
 
+	challengeBossTargetConfig := make([]*ChallengeTargetConfig, 0)
 	playerElementsFilePathBoss := g.excelPrefix + "ChallengeBossTargetConfig.json"
 	playerElementsFileBoss, err := os.ReadFile(playerElementsFilePathBoss)
 	if err != nil {
 		info := fmt.Sprintf("open file error: %v", err)
 		panic(info)
 	}
-	err = hjson.Unmarshal(playerElementsFileBoss, &challengeTargetConfigMap)
+	err = hjson.Unmarshal(playerElementsFileBoss, &challengeBossTargetConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	challengeTargetConfigMap = append(challengeTargetConfigMap, challengeBossTargetConfig...)
 	for _, v := range challengeTargetConfigMap {
 		g.ChallengeTargetConfigMap[v.ID] = v
 	}
