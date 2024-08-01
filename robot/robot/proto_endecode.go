@@ -30,7 +30,7 @@ func (r *RoBot) EncodeProtoToPayload(protoMsg *ProtoMsg) (kcpMsg *alg.PackMsg) {
 }
 
 func (r *RoBot) DecodePayloadToProto(msg *alg.PackMsg) (protoObj pb.Message) {
-	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(msg.CmdId)
+	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjByCmdId(msg.CmdId)
 	if protoObj == nil {
 		logger.Debug("get new proto object is nil")
 		return nil

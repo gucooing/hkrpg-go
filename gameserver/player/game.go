@@ -220,7 +220,7 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 }
 
 func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
-	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
+	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjByCmdId(cmdId)
 	if protoObj == nil {
 		logger.Debug("get new proto object is nil")
 		return nil
@@ -253,7 +253,7 @@ func LogMsgSeed(cmdId uint16, playerMsg pb.Message) {
 
 func LogMsgRecv(cmdId uint16, payloadMsg []byte) {
 	if IsValid(cmdId) {
-		protoObj := cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
+		protoObj := cmd.GetSharedCmdProtoMap().GetProtoObjByCmdId(cmdId)
 		if protoObj == nil {
 			logger.Debug("get new proto object is nil")
 			return

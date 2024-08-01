@@ -106,7 +106,7 @@ func KcpNetInfo() {
 }
 
 func decodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
-	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
+	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjByCmdId(cmdId)
 	if protoObj == nil {
 		logger.Error("get new proto object is nil")
 		return nil
