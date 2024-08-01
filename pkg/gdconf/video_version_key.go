@@ -8,12 +8,17 @@ import (
 )
 
 type VideoVersionKey struct {
-	Id       uint32 `json:"ID"`
-	VideoKey uint64 `json:"VideoKey"`
+	ActivityVideoKeyInfoList []*VideoKeyInfo `json:"activityVideoKeyInfoList"`
+	VideoKeyInfoList         []*VideoKeyInfo `json:"videoKeyInfoList"`
+}
+
+type VideoKeyInfo struct {
+	Id       uint32 `json:"id"`
+	VideoKey uint64 `json:"videoKey"`
 }
 
 func (g *GameDataConfig) loadVideoVersionKey() {
-	g.VideoVersionKey = make([]*VideoVersionKey, 0)
+	g.VideoVersionKey = new(VideoVersionKey)
 	playerElementsFilePath := g.dataPrefix + "VideoVersionKey.json"
 	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 	if err != nil {
@@ -26,9 +31,9 @@ func (g *GameDataConfig) loadVideoVersionKey() {
 		logger.Error("parse file error: %v", err)
 		return
 	}
-	logger.Info("load %v VideoVersionKey", len(g.VideoVersionKey))
+	logger.Info("load %v VideoVersionKey", len(g.VideoVersionKey.VideoKeyInfoList)+len(g.VideoVersionKey.ActivityVideoKeyInfoList))
 }
 
-func GetVideoVersionKey() []*VideoVersionKey {
+func GetVideoVersionKey() *VideoVersionKey {
 	return CONF.VideoVersionKey
 }

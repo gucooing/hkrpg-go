@@ -85,7 +85,7 @@ type GameDataConfig struct {
 	RewardDataMap                map[uint32]*RewardData                          // 奖励配置
 	MainMissionMap               map[uint32]*MainMission                         // 主线任务
 	EventMissionMap              map[uint32]*EventMission                        // 事件任务？
-	VideoVersionKey              []*VideoVersionKey                              // 视频key
+	VideoVersionKey              *VideoVersionKey                                // 视频key
 	InteractConfigMap            map[uint32]*InteractConfig                      // 互动配置
 	MessageGroupConfig           *MessageGroupConfig                             // 消息配置
 	MessageSectionConfigMap      map[uint32]*MessageSectionConfig                // 消息配置2

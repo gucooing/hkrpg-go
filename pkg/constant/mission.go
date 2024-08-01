@@ -477,6 +477,7 @@ const (
 	FloorSavedValueList                                QuestFinishType = "FloorSavedValueList"
 	FinishGunPlayGamePerfect                           QuestFinishType = "FinishGunPlayGamePerfect"
 	OrigamiCnt                                         QuestFinishType = "OrigamiCnt"
+	BattleWinWithCustomValue                           QuestFinishType = "BattleWinWithCustomValue"
 )
 
 type MissionBeginType string

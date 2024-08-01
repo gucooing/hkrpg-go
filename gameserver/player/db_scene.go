@@ -346,6 +346,16 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	}
 }
 
+func extractDigits(str string) uint32 {
+	var result strings.Builder
+	for _, char := range str {
+		if char >= '0' && char <= '9' {
+			result.WriteRune(char)
+		}
+	}
+	return alg.S2U32(result.String())
+}
+
 func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsLoaded bool) bool {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
 	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
@@ -360,7 +370,11 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 	if levelGroup.LoadCondition == nil &&
 		levelGroup.UnloadCondition == nil {
 		if levelGroup.Category == "Mission" && levelGroup.OwnerMainMissionID != 0 {
-			return true
+			subMissionId := extractDigits(levelGroup.GroupName)
+			if subMissionId == 0 || subMainMissionList[subMissionId] != nil {
+				return true
+			}
+			return false
 		}
 		return mainIsLoaded
 	}

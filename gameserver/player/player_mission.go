@@ -94,7 +94,9 @@ func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg []byte) {
 }
 
 func (g *GamePlayer) UpdateTrackMainMissionIdCsReq(payloadMsg []byte) {
-	g.Send(cmd.UpdateTrackMainMissionIdScRsp, &proto.UpdateTrackMainMissionIdScRsp{})
+	msg := g.DecodePayloadToProto(cmd.UpdateTrackMainMissionIdCsReq, payloadMsg)
+	req := msg.(*proto.UpdateTrackMainMissionIdCsReq)
+	g.Send(cmd.UpdateTrackMainMissionIdScRsp, &proto.UpdateTrackMainMissionIdScRsp{TrackMissionId: req.TrackMissionId})
 }
 
 func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg []byte) {

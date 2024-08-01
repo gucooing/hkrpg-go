@@ -12,15 +12,15 @@ import (
 )
 
 const (
-	Hcoin       uint32 = 1  // 星琼
-	Scoin       uint32 = 2  // 金钱
-	Mcoin       uint32 = 3  // 梦华
-	Stamina     uint32 = 11 // 体力
-	RStamina    uint32 = 12 // 后备体力
-	Exp         uint32 = 22 // 经验
-	Cf          uint32 = 31 // 宇宙碎片
-	NewM               = 5  // 新道具
-	Inspiration uint32 = 53 // 灵感
+	Hcoin       uint32 = 1      // 星琼
+	Scoin       uint32 = 2      // 金钱
+	Mcoin       uint32 = 3      // 梦华
+	Stamina     uint32 = 11     // 体力
+	RStamina    uint32 = 12     // 后备体力
+	Exp         uint32 = 22     // 经验
+	Cf          uint32 = 31     // 宇宙碎片
+	NewM               = 53     // 新道具
+	Inspiration uint32 = 281018 // 灵感
 )
 
 type Material struct {
@@ -302,7 +302,13 @@ func (g *GamePlayer) GetRelic(uniqueId uint32) *proto.Relic {
 func (g *GamePlayer) AddRelic(tid uint32) uint32 {
 	uniqueId := uint32(SNOWFLAKE.GenId())
 	relicConf := gdconf.GetRelicById(tid)
+	if relicConf == nil {
+		return 0
+	}
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+	if mainAffixConf == nil {
+		return 0
+	}
 	db := g.GetRelicMap()
 
 	relic := &spb.Relic{

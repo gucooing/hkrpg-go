@@ -165,15 +165,25 @@ func (g *GamePlayer) SendMsgCsReq(payloadMsg []byte) {
 func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg []byte) {
 	conf := gdconf.GetVideoVersionKey()
 	rsp := &proto.GetVideoVersionKeyScRsp{
-		Retcode:          0,
-		VideoKeyInfoList: make([]*proto.VideoKeyInfo, 0),
+		Retcode:                  0,
+		VideoKeyInfoList:         make([]*proto.VideoKeyInfo, 0),
+		ActivityVideoKeyInfoList: make([]*proto.VideoKeyInfo, 0),
 	}
-	for _, video := range conf {
-		rsp.VideoKeyInfoList = append(rsp.VideoKeyInfoList, &proto.VideoKeyInfo{
-			VideoKey: video.VideoKey,
-			Id:       video.Id,
-		})
+	if conf != nil {
+		for _, video := range conf.VideoKeyInfoList {
+			rsp.VideoKeyInfoList = append(rsp.VideoKeyInfoList, &proto.VideoKeyInfo{
+				VideoKey: video.VideoKey,
+				Id:       video.Id,
+			})
+		}
+		for _, video := range conf.ActivityVideoKeyInfoList {
+			rsp.ActivityVideoKeyInfoList = append(rsp.ActivityVideoKeyInfoList, &proto.VideoKeyInfo{
+				VideoKey: video.VideoKey,
+				Id:       video.Id,
+			})
+		}
 	}
+
 	g.Send(cmd.GetVideoVersionKeyScRsp, rsp)
 }
 
@@ -190,7 +200,7 @@ func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg []byte) {
 			},
 			{
 				Type: proto.SecretKeyType_SECRET_KEY_BATTLE_TIME,
-				Key:  "2597701279",
+				Key:  "632897685",
 			},
 		},
 		Retcode: 0,

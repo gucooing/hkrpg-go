@@ -169,6 +169,39 @@ func (g *GamePlayer) UpBattleSubMission(battleId uint32) {
 	}
 }
 
+func (g *GamePlayer) BattleCustomValues(customValues map[string]float32, eventId uint32) {
+	if customValues == nil {
+		return
+	}
+	for k, v := range customValues {
+		switch k {
+		case "_PlayerWin":
+			g.BattleWinWithCustomValue(v, eventId)
+		default:
+			logger.Warn("new BattleCustomValues :%s", k)
+		}
+	}
+}
+
+func (g *GamePlayer) BattleWinWithCustomValue(paramInt1 float32, eventId uint32) {
+	finishSubMission := make([]uint32, 0)
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		switch conf.FinishType {
+		case constant.BattleWinWithCustomValue:
+			if eventId == conf.ParamInt2 && uint32(paramInt1) == conf.ParamInt1 {
+				finishSubMission = append(finishSubMission, id)
+			}
+		}
+	}
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
+}
+
 // 提交道具任务完成
 func (g *GamePlayer) FinishCosumeItemMission(subMissionId uint32) {
 	conf := gdconf.GetSubMainMissionById(subMissionId)

@@ -120,7 +120,8 @@ func (g *GamePlayer) LoginReady() { // 登录准备工作
 	if !g.IsPE {
 		g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
 	}
-	// g.AddMainMission([]uint32{3020104})
+	// g.AddMainMission([]uint32{2022003})
+	// g.DelMainMission([]uint32{2022003, 2022008})
 	g.LoginReadyMission()    // 任务检查
 	g.CheckUnlockMultiPath() // 命途解锁检查
 }

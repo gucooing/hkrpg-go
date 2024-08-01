@@ -55,6 +55,7 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
+	challengeStoryMazeConfig := make([]*ChallengeMazeConfig, 0)
 	playerElementsFilePathStory := g.excelPrefix + "ChallengeStoryMazeConfig.json"
 	playerElementsFileStory, err := os.ReadFile(playerElementsFilePathStory)
 	if err != nil {
@@ -62,12 +63,14 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFileStory, &challengeMazeConfigMap)
+	err = hjson.Unmarshal(playerElementsFileStory, &challengeStoryMazeConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	challengeMazeConfigMap = append(challengeMazeConfigMap, challengeStoryMazeConfig...)
 
+	challengeBossMazeConfig := make([]*ChallengeMazeConfig, 0)
 	playerElementsFilePathBoss := g.excelPrefix + "ChallengeBossMazeConfig.json"
 	playerElementsFileBoss, err := os.ReadFile(playerElementsFilePathBoss)
 	if err != nil {
@@ -75,11 +78,12 @@ func (g *GameDataConfig) loadChallengeMazeConfig() {
 		panic(info)
 	}
 
-	err = hjson.Unmarshal(playerElementsFileBoss, &challengeMazeConfigMap)
+	err = hjson.Unmarshal(playerElementsFileBoss, &challengeBossMazeConfig)
 	if err != nil {
 		info := fmt.Sprintf("parse file error: %v", err)
 		panic(info)
 	}
+	challengeMazeConfigMap = append(challengeMazeConfigMap, challengeBossMazeConfig...)
 
 	for _, challengeMazeConfig := range challengeMazeConfigMap {
 		challengeMazeConfig.ChallengeState = make(map[uint32]*ChallengeState)

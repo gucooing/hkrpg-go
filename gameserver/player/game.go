@@ -188,10 +188,12 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 			Uid: g.Uid,
 			Msg: newMsg,
 		}
-		g.SendChan <- Msg{
-			AppId:     g.GateAppId,
-			CmdId:     cmd.GameToGateMsgNotify,
-			PlayerMsg: gtgMsg,
+		if g.SendChan != nil {
+			g.SendChan <- Msg{
+				AppId:     g.GateAppId,
+				CmdId:     cmd.GameToGateMsgNotify,
+				PlayerMsg: gtgMsg,
+			}
 		}
 	}
 
@@ -212,8 +214,9 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 			PlayerMsg: gtgMsg,
 		}
 	}
-
-	g.SendChan <- msg
+	if g.SendChan != nil {
+		g.SendChan <- msg
+	}
 }
 
 func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {

@@ -119,7 +119,6 @@ func (s *HkRpgGoServer) gameTicker() {
 			s.AutoUpDataPlayer()
 		case <-s.everyDay4.C: // 4点事件
 			s.GlobalRotationEvent4h()
-			return
 		}
 	}
 }

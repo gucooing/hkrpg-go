@@ -137,6 +137,9 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 		if battleBin.EventId != 0 {
 			rsp.EventId = battleBin.EventId
 			g.UpBattleSubMission(req.BattleId)
+			if req.Stt.CustomValues != nil {
+				g.BattleCustomValues(req.Stt.CustomValues, battleBin.EventId)
+			}
 		}
 		if battleBin.CocoonId != 0 { // 副本处理
 			g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)
