@@ -79,7 +79,7 @@ func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32) {
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
-			ge.gateRegisterMessage(msg.CmdId, serviceMsg)
+			go ge.gateRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
 }
@@ -89,7 +89,7 @@ func (ge *gateServer) recvPlayer(recvPlayerCtx context.Context) {
 	for {
 		select {
 		case bin := <-ge.msgChan:
-			ge.playerToGame(bin)
+			go ge.playerToGame(bin)
 		case <-recvPlayerCtx.Done():
 			close(ge.msgChan)
 			return

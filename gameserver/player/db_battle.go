@@ -742,13 +742,14 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) ([]uint32, []*
 			BattleWaveId:  1,
 			DropList:      make([]*proto.ItemList, 0),
 			MonsterList:   make([]*proto.SceneMonster, 0),
-			// MonsterParam:   &proto.SceneMonsterWaveParam{},
+			MonsterParam:  &proto.SceneMonsterWaveParam{},
 		}
 		for _, monsterId := range monsterListMap {
 			sceneMonster := &proto.SceneMonster{
 				MonsterId: monsterId,
 			}
 			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
+			monsterWaveList.DropList = append(monsterWaveList.DropList, &proto.ItemList{})
 		}
 		mWList = append(mWList, monsterWaveList)
 	}
@@ -878,6 +879,12 @@ func (g *GamePlayer) GetRoundsLimit() uint32 {
 func (g *GamePlayer) GetBattleTargetInfo() map[uint32]*proto.BattleTargetList {
 	battleTargetInfoList := make(map[uint32]*proto.BattleTargetList)
 	db := g.GetCurChallenge()
+	battleTargetInfoList[1] = new(proto.BattleTargetList)
+	battleTargetInfoList[2] = new(proto.BattleTargetList)
+	battleTargetInfoList[3] = new(proto.BattleTargetList)
+	battleTargetInfoList[4] = new(proto.BattleTargetList)
+	battleTargetInfoList[5] = new(proto.BattleTargetList)
+
 	if g.GetBattleStatus() != spb.BattleType_Battle_CHALLENGE_Story {
 		return battleTargetInfoList
 	}

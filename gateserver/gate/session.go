@@ -53,7 +53,7 @@ func (r *RouteManager) initRoute(p *PlayerGame) {
 func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 	handlerFunc, ok := p.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		p.GateToGame(tcpMsg)
+		go p.GateToGame(tcpMsg)
 		return
 	}
 	handlerFunc(tcpMsg)

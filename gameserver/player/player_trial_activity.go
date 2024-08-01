@@ -99,64 +99,70 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupList)
 
 	// 添加实体
-	levelGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, avatarDemo.MazeGroupID1)
-	scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
-	sceneGroupState := &proto.SceneGroupState{
-		GroupId:   levelGroup.GroupId,
-		IsDefault: true,
-	}
-	scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
+	for _, levelGroup := range gdconf.GetServerGroup(mapEntrance.PlaneID, mapEntrance.FloorID) {
+		scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
+		sceneGroupState := &proto.SceneGroupState{
+			GroupId:   levelGroup.GroupId,
+			IsDefault: true,
+		}
+		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    levelGroup.GroupId,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
-	// 添加物品实体
-	g.GetPropByID(entityGroupLists, levelGroup, nil, avatarDemo.MapEntranceID)
-	// 添加怪物实体
-	for _, monsterList := range levelGroup.MonsterList {
-		entityId := g.GetNextGameObjectGuid()
-		monsterPos := &proto.Vector{
-			X: int32(monsterList.PosX * 1000),
-			Y: int32(monsterList.PosY * 1000),
-			Z: int32(monsterList.PosZ * 1000),
+		entityGroupLists := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-		monsterRot := &proto.Vector{
-			X: int32(monsterList.RotX * 1000),
-			Y: int32(monsterList.RotY * 1000),
-			Z: int32(monsterList.RotZ * 1000),
-		}
-		entityList := &proto.SceneEntityInfo{
-			GroupId:  levelGroup.GroupId,
-			InstId:   monsterList.ID,
-			EntityId: entityId,
-			Motion: &proto.MotionInfo{
-				Pos: monsterPos,
-				Rot: monsterRot,
-			},
-			EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
-				NpcMonster: &proto.SceneNpcMonsterInfo{
-					MonsterId: avatarDemo.NpcMonsterIDList1[0],
-					EventId:   avatarDemo.EventIDList1[0],
-				},
-			},
-		}
+		// 添加物品实体
+		g.GetPropByID(entityGroupLists, levelGroup, nil, avatarDemo.MapEntranceID)
 		// 添加怪物实体
-		g.AddEntity(levelGroup.GroupId, &MonsterEntity{
-			Entity: Entity{
-				InstId:   monsterList.ID,
-				EntityId: entityId,
-				GroupId:  levelGroup.GroupId,
-				Pos:      monsterPos,
-				Rot:      monsterRot,
-			},
-			EventID: avatarDemo.EventIDList1[0],
-		})
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		if levelGroup.GroupId == avatarDemo.MazeGroupID1 {
+			for _, monsterList := range levelGroup.MonsterList {
+				entityId := g.GetNextGameObjectGuid()
+				monsterPos := &proto.Vector{
+					X: int32(monsterList.PosX * 1000),
+					Y: int32(monsterList.PosY * 1000),
+					Z: int32(monsterList.PosZ * 1000),
+				}
+				monsterRot := &proto.Vector{
+					X: int32(monsterList.RotX * 1000),
+					Y: int32(monsterList.RotY * 1000),
+					Z: int32(monsterList.RotZ * 1000),
+				}
+				entityList := &proto.SceneEntityInfo{
+					GroupId:  levelGroup.GroupId,
+					InstId:   monsterList.ID,
+					EntityId: entityId,
+					Motion: &proto.MotionInfo{
+						Pos: monsterPos,
+						Rot: monsterRot,
+					},
+					EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+						NpcMonster: &proto.SceneNpcMonsterInfo{
+							MonsterId: avatarDemo.NpcMonsterIDList1[0],
+							EventId:   avatarDemo.EventIDList1[0],
+						},
+					},
+				}
+				// 添加怪物实体
+				g.AddEntity(levelGroup.GroupId, &MonsterEntity{
+					Entity: Entity{
+						InstId:   monsterList.ID,
+						EntityId: entityId,
+						GroupId:  levelGroup.GroupId,
+						Pos:      monsterPos,
+						Rot:      monsterRot,
+					},
+					EventID: avatarDemo.EventIDList1[0],
+				})
+				entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+			}
+		} else {
+			g.GetNPCMonsterByID(entityGroupLists, levelGroup)
+		}
+
+		// 添加NPC实体
+		g.GetNPCByID(entityGroupLists, levelGroup)
+		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 	}
-	// 添加NPC实体
-	g.GetNPCByID(entityGroupLists, levelGroup)
-	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 
 	return scene
 }

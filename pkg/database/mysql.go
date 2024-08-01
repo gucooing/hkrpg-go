@@ -28,11 +28,11 @@ func NewMysql(dsn string) *gorm.DB {
 		panic(err.Error())
 	}
 	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
-	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetMaxIdleConns(100)
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxOpenConns(1000)
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(10 * time.Second) // 10 秒钟
+	sqlDB.SetConnMaxLifetime(1 * time.Second) // 10 秒钟
 
 	return db
 }
@@ -54,11 +54,11 @@ func NewSqlite(dsn string) *gorm.DB {
 		panic(err.Error())
 	}
 	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
-	sqlDB.SetMaxIdleConns(5)
+	sqlDB.SetMaxIdleConns(100)
 	// SetMaxOpenConns 设置打开数据库连接的最大数量。
-	sqlDB.SetMaxOpenConns(10)
+	sqlDB.SetMaxOpenConns(1000)
 	// SetConnMaxLifetime 设置了连接可复用的最大时间。
-	sqlDB.SetConnMaxLifetime(10 * time.Second) // 10 秒钟
+	sqlDB.SetConnMaxLifetime(100 * time.Millisecond) // 10 秒钟
 
 	return db
 }

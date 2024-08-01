@@ -56,7 +56,7 @@ func (p *PlayerGame) HandleFriendCsReq(tcpMsg *alg.PackMsg) {
 	})
 	if req.IsAccept {
 		// 发送到gameserver
-		p.GateToGame(tcpMsg)
+		go p.GateToGame(tcpMsg)
 	} else {
 		// 返回给玩家
 		p.GateToPlayer(cmd.HandleFriendScRsp, &proto.HandleFriendScRsp{Uid: req.Uid, IsAccept: req.IsAccept})
