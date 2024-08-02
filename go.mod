@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-resty/resty/v2 v2.13.1
 	github.com/goccy/go-json v0.10.3
-	github.com/gucooing/gunet v0.0.9
+	github.com/gucooing/gunet v0.1.0
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/redis/go-redis/v9 v9.5.3
 	golang.org/x/net v0.26.0

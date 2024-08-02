@@ -13,7 +13,7 @@ type ProtoMsg struct {
 }
 
 func DecodePayloadToProto(msg *PackMsg) (protoObj pb.Message) {
-	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjByCmdId(msg.CmdId)
+	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(msg.CmdId)
 	if protoObj == nil {
 		log.Println("get new proto object is nil")
 		return nil

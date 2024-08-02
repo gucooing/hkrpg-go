@@ -40,8 +40,8 @@ github.com/goccy/go-json v0.10.3/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PU
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
-github.com/gucooing/gunet v0.0.9 h1:z2Fzdwlbk9PoMzbocXXLPnwld0sZTQ4UCjUeJYd0GOo=
-github.com/gucooing/gunet v0.0.9/go.mod h1:DL6M9gHf1/AZAPpbC4nx/PzTAOKQA1mXDRkGU+OcfuY=
+github.com/gucooing/gunet v0.1.0 h1:AKAbFJGOKFpU5fXRMnjtK4wB1LoI3qSjX5xutOBFG3w=
+github.com/gucooing/gunet v0.1.0/go.mod h1:DL6M9gHf1/AZAPpbC4nx/PzTAOKQA1mXDRkGU+OcfuY=
 github.com/hjson/hjson-go/v4 v4.4.0 h1:D/NPvqOCH6/eisTb5/ztuIS8GUvmpHaLOcNk1Bjr298=
 github.com/hjson/hjson-go/v4 v4.4.0/go.mod h1:KaYt3bTw3zhBjYqnXkYywcYctk0A2nxeEFTse3rH13E=
 github.com/jinzhu/inflection v1.0.0 h1:K317FqzuhWc8YvSVlFMCCUb36O/S9MCKRDI7QkRKD/E=
