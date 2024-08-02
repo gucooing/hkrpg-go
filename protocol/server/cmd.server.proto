@@ -63,14 +63,14 @@ message GameToNodePingRsp{// game to node ping包回复
 
 message GateToGameMsgNotify{// gate向game发送消息
   uint32 uid = 1;
-  //int64 uuid = 2;
-  bytes msg = 3;
+  int32 cmd_id = 2;
+  string b64msg = 3;
 }
 
 message GameToGateMsgNotify{// game向gate发送消息
   uint32 uid = 1;
-  //int64 uuid = 2;
-  bytes msg = 3;
+  int32 cmd_id = 2;
+  string b64msg = 3;
 }
 
 message GateLoginGameReq {// gate向game连接后发起请求

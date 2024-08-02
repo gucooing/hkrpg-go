@@ -24,6 +24,7 @@ func NewLineUp() *spb.LineUp {
 		Mp:             MaxMp,
 		LineUpList:     nil,
 		BattleLineList: nil,
+		StoryLineList:  nil,
 	}
 }
 
@@ -76,6 +77,38 @@ func (g *GamePlayer) GetBattleLineUpById(index uint32) *spb.Line {
 		}
 	}
 	return db.BattleLineList[index]
+}
+
+func (g *GamePlayer) GetStoryLine() map[uint32]*spb.Line {
+	db := g.GetLineUp()
+	if db.StoryLineList == nil {
+		db.StoryLineList = make(map[uint32]*spb.Line)
+	}
+	return db.StoryLineList
+}
+
+func (g *GamePlayer) GetStoryLineById(index uint32) *spb.Line {
+	db := g.GetLineUp()
+	if db.StoryLineList == nil {
+		db.StoryLineList = make(map[uint32]*spb.Line)
+	}
+	if db.StoryLineList[index] == nil {
+		db.StoryLineList[index] = &spb.Line{
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList, 4),
+			LeaderSlot:   0,
+		}
+	}
+	return db.StoryLineList[index]
+}
+
+func (g *GamePlayer) NewStoryLine(storyLineID uint32) {
+	// curLineup := g.GetCurLineUp()
+	// storyLine := g.GetStoryLineById(storyLineID)
+	// conf := gdconf.GetStroyLineTrialAvatarData(storyLineID)
+	// if conf == nil {
+	// 	return
+	// }
+
 }
 
 func (g *GamePlayer) NewTrialLine(trialList []uint32) {
@@ -192,6 +225,9 @@ func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
 }
 
 func (g *GamePlayer) GetCurLineUp() *spb.Line {
+	if g.IsChangeStory() {
+		return g.GetCurChangeStoryLineup()
+	}
 	db := g.GetLineUpById(g.GetLineUp().MainLineUp)
 	return db
 }
@@ -235,6 +271,9 @@ func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
 }
 
 func (g *GamePlayer) GetBattleLineUp() *spb.Line {
+	if g.IsChangeStory() {
+		return g.GetCurChangeStoryLineup()
+	}
 	status := g.GetBattleStatus()
 	switch status {
 	case spb.BattleType_Battle_NONE:
@@ -375,6 +414,10 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 		ExtraLineupType: proto.ExtraLineupType(db.LineType),
 		MaxMp:           MaxMp,
 		LeaderSlot:      db.LeaderSlot,
+		GameStoryLineId: 0,
+	}
+	if changeStory := g.GetCurChangeStoryInfo(); changeStory != nil {
+		lineupList.GameStoryLineId = changeStory.ChangeStoryId
 	}
 	return lineupList
 }

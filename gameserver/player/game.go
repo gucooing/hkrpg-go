@@ -179,14 +179,13 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
 	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
-	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
 
 	// NewM
 	if cmdId == cmd.GetTutorialGuideScRsp {
-		newMsg := alg.EncodePayloadToBin(&alg.PackMsg{CmdId: NewM, ProtoData: gunet.GetGunetTcpConn()}, nil)
 		gtgMsg := &spb.GameToGateMsgNotify{
-			Uid: g.Uid,
-			Msg: newMsg,
+			Uid:    g.Uid,
+			CmdId:  NewM,
+			B64Msg: base64.StdEncoding.EncodeToString(gunet.GetGunetTcpConn()),
 		}
 		if g.SendChan != nil {
 			g.SendChan <- Msg{
@@ -199,8 +198,9 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 
 	var msg Msg
 	gtgMsg := &spb.GameToGateMsgNotify{
-		Uid: g.Uid,
-		Msg: binMsg,
+		Uid:    g.Uid,
+		CmdId:  int32(tcpMsg.CmdId),
+		B64Msg: base64.StdEncoding.EncodeToString(tcpMsg.ProtoData),
 	}
 	if g.IsPE {
 		msg = Msg{

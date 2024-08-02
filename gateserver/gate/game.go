@@ -2,6 +2,7 @@ package gate
 
 import (
 	"context"
+	"encoding/base64"
 	"strconv"
 	"time"
 
@@ -292,11 +293,16 @@ func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	if player == nil {
 		return
 	}
-	msgList := make([]*alg.PackMsg, 0)
-	alg.DecodeBinToPayload(notify.Msg, &msgList, nil)
-	for _, msg := range msgList {
-		SendHandle(player, msg)
+	protoData, err := base64.StdEncoding.DecodeString(notify.B64Msg)
+	if err != nil {
+		logger.Warn("game server -> gate server player msg base64 decode,err:%s", err.Error())
+		return
 	}
+	SendHandle(player, &alg.PackMsg{
+		CmdId:     uint16(notify.CmdId),
+		HeadData:  make([]byte, 0),
+		ProtoData: protoData,
+	})
 }
 
 // game通知gate玩家下线

@@ -258,6 +258,8 @@ func (g *GamePlayer) GetAllPropEntity() []*PropEntity {
 func NewScene() *spb.Scene {
 	return &spb.Scene{
 		EntryId: 2000101,
+		Pos:     NewPos(),
+		Rot:     NewRot(),
 	}
 }
 
@@ -296,7 +298,7 @@ func NewRot() *spb.VectorBin {
 }
 
 func (g *GamePlayer) GetPos() *spb.VectorBin {
-	db := g.GetBasicBin()
+	db := g.GetScene()
 	if db.Pos == nil {
 		db.Pos = NewPos()
 	}
@@ -304,7 +306,7 @@ func (g *GamePlayer) GetPos() *spb.VectorBin {
 }
 
 func (g *GamePlayer) GetRot() *spb.VectorBin {
-	db := g.GetBasicBin()
+	db := g.GetScene()
 	if db.Rot == nil {
 		db.Rot = NewRot()
 	}

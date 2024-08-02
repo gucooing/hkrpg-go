@@ -41,12 +41,10 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 	rsp := &proto.SceneCastSkillScRsp{
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
-	// 根据各种情况进行处理
-	isBattle := true
 	isDelMp := false
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
-		isBattle, isDelMp = g.HandleAvatarSkill(req.AttackedByEntityId)
+		_, isDelMp = g.HandleAvatarSkill(req.AttackedByEntityId)
 	}
 	// 添加参与此次攻击的实体
 	mpem := &MPEM{
@@ -72,9 +70,6 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 			g.GetMem(req.HitTargetEntityIdList, mpem)
 		}
 	}
-	if len(mpem.MonsterEntityId) != 0 && isBattle {
-		isDelMp = true
-	}
 	if isDelMp {
 		g.DelLineUpMp(1)
 		g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
@@ -82,11 +77,9 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 			Mp:           g.GetLineUpMp(),
 		})
 	}
-	if mpem.PropId != nil { // 物品效果
-		g.SceneCastSkillProp(mpem)
-	}
-	g.SyncLineupNotify(g.GetBattleLineUp())                            // 队伍同步
-	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 || !isBattle { // 是否满足战斗条件
+	g.SceneCastSkillProp(mpem)                            // 物品效果
+	g.SyncLineupNotify(g.GetBattleLineUp())               // 队伍同步
+	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}

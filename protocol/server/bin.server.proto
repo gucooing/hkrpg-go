@@ -18,8 +18,7 @@ message PlayerBasicCompBin {
   uint32 head_image_avatar_id = 8; // 头像id
   uint32 birthday = 9; // 生日
   Scene scene = 10; // 当前场景
-  VectorBin pos = 11; // 坐标
-  VectorBin rot = 12; // 朝向
+  ChangeStory change_story = 11;//故事线
   Avatar avatar = 13; // 角色数据
   LineUp lineUp = 14; // 队伍数据
   Item item = 15; // 背包
@@ -61,9 +60,22 @@ message Activity{
 }
 
 message Scene {
-  uint32 entryId = 1;
+  uint32 entryId = 1; // 场景
   //  uint32 planeId = 2;
   //  uint32 floorId = 3;
+  VectorBin pos = 4; // 坐标
+  VectorBin rot = 5; // 朝向
+}
+
+message ChangeStory {
+  uint32 cur_change_story = 1; // 当前故事线
+  map<uint32,ChangeStoryInfo> change_story_info = 2;
+  bool is_change_story = 3;//是否在故事线中
+}
+
+message ChangeStoryInfo {
+  uint32 change_story_id = 1; // 故事线Id
+  Scene scene = 2;// 场景
 }
 
 message Avatar {
@@ -117,6 +129,7 @@ message LineUp {
   uint32 mp = 2; // 当前能量
   map<uint32, Line> line_up_list = 3; // 普通队伍
   map<uint32, Line>battle_line_list = 4; // 战斗队伍
+  map<uint32,Line> story_line_list = 5;// 故事线队伍
 }
 
 message Line {

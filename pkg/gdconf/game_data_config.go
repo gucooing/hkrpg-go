@@ -101,6 +101,7 @@ type GameDataConfig struct {
 	RogueTournExpRewardMap       map[uint32]map[uint32]*RogueTournExpReward      // 差分宇宙等级奖励配置
 	RogueTournRoom               *RogueTournRoom                                 // 差分宇宙地图配置
 	RaidConfigMap                map[uint32]map[uint32]*RaidConfig               // Raid配置
+	StroyLineTrialAvatarDataMap  map[uint32]*StroyLineTrialAvatarData            // 故事线剧情角色配置
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -252,6 +253,7 @@ func (g *GameDataConfig) load() {
 		g.loadRogueTournExpReward,       // 差分宇宙等级奖励配置
 		g.loadRogueTournRoomGen,         // 差分宇宙地图配置
 		g.loadRaidConfig,                // Raid配置
+		g.loadStroyLineTrialAvatarData,  // 故事线剧情角色配置
 	}
 }
 

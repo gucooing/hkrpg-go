@@ -2,6 +2,7 @@ package gs
 
 import (
 	"context"
+	"encoding/base64"
 	"strconv"
 	"time"
 
@@ -236,14 +237,15 @@ func (ge *gateServer) NewPlayer(uid, accountId uint32, msg chan player.Msg) *pla
 }
 
 func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
-	rsp := payloadMsg.(*spb.GateToGameMsgNotify)
-	paler := ge.game.getPlayerByUid(rsp.Uid)
+	notify := payloadMsg.(*spb.GateToGameMsgNotify)
+	paler := ge.game.getPlayerByUid(notify.Uid)
 	if paler != nil {
-		msgList := make([]*alg.PackMsg, 0)
-		alg.DecodeBinToPayload(rsp.Msg, &msgList, nil)
-		for _, msg := range msgList {
-			paler.p.RegisterMessage(msg.CmdId, msg.ProtoData)
+		protoData, err := base64.StdEncoding.DecodeString(notify.B64Msg)
+		if err != nil {
+			logger.Warn("gate server -> game server player msg base64 decode,err:%s", err.Error())
+			return
 		}
+		paler.p.RegisterMessage(uint16(notify.CmdId), protoData)
 	}
 }
 

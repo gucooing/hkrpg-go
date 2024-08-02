@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"encoding/base64"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -57,7 +58,6 @@ func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
 		return
 	}
 	handlerFunc(tcpMsg)
-	return
 }
 
 func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {
@@ -66,10 +66,10 @@ func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {
 
 // 将玩家消息转发到game
 func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
-	binMsg := alg.EncodePayloadToBin(tcpMsg, nil)
 	msg := &spb.GateToGameMsgNotify{
-		Uid: p.Uid,
-		Msg: binMsg,
+		Uid:    p.Uid,
+		CmdId:  int32(tcpMsg.CmdId),
+		B64Msg: base64.StdEncoding.EncodeToString(tcpMsg.ProtoData),
 	}
 	p.gs.sendGame(cmd.GateToGameMsgNotify, msg)
 }
