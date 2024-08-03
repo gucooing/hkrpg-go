@@ -96,7 +96,10 @@ func (g *GamePlayer) MissionAddChangeStoryLine(finishActionPara []uint32) {
 
 func (g *GamePlayer) GetDimensionId() uint32 {
 	if db := g.GetCurChangeStoryInfo(); db != nil {
-		return 1
+		conf := gdconf.GetStoryLineFloorData(db.ChangeStoryId)
+		if conf != nil {
+			return conf.DimensionID
+		}
 	}
 	return 0
 }

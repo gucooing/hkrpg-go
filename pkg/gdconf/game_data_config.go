@@ -103,6 +103,7 @@ type GameDataConfig struct {
 	RaidConfigMap                map[uint32]map[uint32]*RaidConfig               // Raid配置
 	StroyLineTrialAvatarDataMap  map[uint32]*StroyLineTrialAvatarData            // 故事线剧情角色配置
 	StoryLineMap                 map[uint32]*StoryLine                           // 故事线配置
+	StoryLineFloorDataMap        map[uint32]*StoryLineFloorData
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -256,6 +257,7 @@ func (g *GameDataConfig) load() {
 		g.loadRaidConfig,                // Raid配置
 		g.loadStroyLineTrialAvatarData,  // 故事线剧情角色配置
 		g.loadStoryLine,                 // 故事线配置
+		g.loadStoryLineFloorData,
 	}
 }
 
