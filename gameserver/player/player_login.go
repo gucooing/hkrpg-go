@@ -1,7 +1,7 @@
 package player
 
 import (
-	"os"
+	"encoding/base64"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -98,9 +98,10 @@ func (g *GamePlayer) ServerAnnounceNotify() {
 
 // wind
 func (g *GamePlayer) ClientDownloadDataScNotify() {
-	content, _ := os.ReadFile("./data/t.lua")
+	// content, _ := os.ReadFile("./data/t.lua")
 	// luac := base64.StdEncoding.EncodeToString(content)
-	// luac, _ := base64.StdEncoding.DecodeString("wind")
+	// logger.Info("luac:%s", luac)
+	content, _ := base64.StdEncoding.DecodeString("LS0g5a6a5LmJ56Gu6K6k5a+56K+d5qGG55qE5Zue6LCD5Ye95pWwDQpsb2NhbCBmdW5jdGlvbiBvbkRpYWxvZ0Nsb3NlZCgpDQogICAgLS0g5omT5byA5oyH5a6a55qEVVJMDQogICAgQ1MuVW5pdHlFbmdpbmUuQXBwbGljYXRpb24uT3BlblVSTCgiaHR0cHM6Ly9naXRodWIuY29tL2d1Y29vaW5nL2hrcnBnLWdvLXB1YmxpYyIpDQplbmQNCg0KLS0g5pi+56S66Ieq5a6a5LmJ56Gu6K6k5Y+W5raI5o+Q56S65qGG77yM5bm257uR5a6a5Zue6LCD5Ye95pWwDQpDUy5SUEcuQ2xpZW50LkNvbmZpcm1EaWFsb2dVdGlsLlNob3dDdXN0b21Pa0NhbmNlbEhpbnQoDQogICAgIjxjb2xvcj0jRkZGRjAwPuasoui/juadpeWIsGhrcnBnLWdv77yBXG48L2NvbG9yPjxjb2xvcj0jRjg5NkZDPuWFjTwvY29sb3I+PGNvbG9yPSNGMTkzRjk+6LS5PC9jb2xvcj48Y29sb3I9I0VBOTBGNj7CtzwvY29sb3I+PGNvbG9yPSNFMzhERjM+5bSpPC9jb2xvcj48Y29sb3I9I0RDOEFGMD7lnY88L2NvbG9yPjxjb2xvcj0jRDU4N0VEPjo8L2NvbG9yPjxjb2xvcj0jQ0U4NEVBPuaYnzwvY29sb3I+PGNvbG9yPSNDNzgxRTc+56m5PC9jb2xvcj48Y29sb3I9I0MwN0VFND7pk4E8L2NvbG9yPjxjb2xvcj0jQjk3QkUxPumBkzwvY29sb3I+XG48Y29sb3I9I0IyNzhERT7mnKzmnI3liqHlmajlrozlhajlhY3otLnlpoLmnpzmgqjmmK/otK3kubDlvpfliLDnmoTpgqPkuYjmgqjlt7Lnu4/ooqvpqpfkuobvvIE8L2NvbG9yPlxuPGNvbG9yPSNCMjc4REU+R2l0aHVi5byA5rqQ6aG555uuPC9jb2xvcj4iLA0KICAgIG9uRGlhbG9nQ2xvc2VkDQop")
 	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{
 		DownloadData: &proto.ClientDownloadData{
 			Version: 1,

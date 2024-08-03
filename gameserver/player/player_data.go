@@ -235,6 +235,7 @@ func (g *GamePlayer) GetTutorialGuideCsReq(payloadMsg pb.Message) {
 	}
 
 	g.Send(cmd.GetTutorialGuideScRsp, rsp)
+	g.ClientDownloadDataScNotify()
 }
 
 func (g *GamePlayer) UnlockTutorialCsReq(payloadMsg pb.Message) {
