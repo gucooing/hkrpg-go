@@ -786,9 +786,13 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 			if conf == nil {
 				continue
 			}
+			baseAvatarId := conf.AvatarID
+			if path := gdconf.GetMultiplePathAvatarConfig(conf.AvatarID); path != nil {
+				baseAvatarId = path.BaseAvatarID
+			}
 			actor = &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
-				BaseAvatarId: conf.AvatarID,
+				BaseAvatarId: baseAvatarId,
 				MapLayer:     0,
 				Uid:          0,
 			}
@@ -980,6 +984,8 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
+		GameStoryLineId:    g.GameStoryLineId(),
+		// DimensionId:        g.GetDimensionId(),
 	}
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)

@@ -625,7 +625,7 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			groupState := finishAction.FinishActionPara[1]
 			g.SetGroupState(g.GetBlock(floorTentry(conf.LevelFloorID)), groupID, groupState)
 		case constant.FATChangeStoryLine: // 强制添加并开启故事线
-
+			g.MissionAddChangeStoryLine(finishAction.FinishActionPara)
 		}
 	}
 	g.AddItem(pileItem)

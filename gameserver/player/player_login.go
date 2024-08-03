@@ -77,12 +77,13 @@ func (g *GamePlayer) LoginNotify() {
 	g.DailyActiveInfoNotify()
 	g.Send(cmd.RaidInfoNotify, &proto.RaidInfoNotify{})
 	g.BattlePassInfoNotify()
-	g.Send(cmd.ComposeLimitNumCompleteNotify, &proto.ComposeLimitNumCompleteNotify{})
-	g.Send(cmd.GeneralVirtualItemDataNotify, &proto.GeneralVirtualItemDataNotify{})
+	// g.Send(cmd.ComposeLimitNumCompleteNotify, &proto.ComposeLimitNumCompleteNotify{})
+	// g.Send(cmd.GeneralVirtualItemDataNotify, &proto.GeneralVirtualItemDataNotify{})
 	// g.Send(cmd.NewMailScNotify, nil)
 	// g.Send(cmd.NewAssistHistoryNotify, nil)
 	// g.ServerAnnounceNotify()
 	// g.ClientDownloadDataScNotify()
+	g.StoryLineInfoScNotify() // 故事线通知包
 }
 
 // 飘窗通知
@@ -120,8 +121,11 @@ func (g *GamePlayer) LoginReady() { // 登录准备工作
 	if !g.IsPE {
 		g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
 	}
-	// g.AddMainMission([]uint32{2022003})
+	// db := g.GetBasicBin()
+	// db.ChangeStory = NewChangeStory()
+	// g.AddMainMission([]uint32{2022101})
 	// g.DelMainMission([]uint32{2022003, 2022008})
+	// g.MissionAddChangeStoryLine([]uint32{0, 1020203, 1, 1})
 	g.LoginReadyMission()    // 任务检查
 	g.CheckUnlockMultiPath() // 命途解锁检查
 }

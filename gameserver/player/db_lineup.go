@@ -102,13 +102,31 @@ func (g *GamePlayer) GetStoryLineById(index uint32) *spb.Line {
 }
 
 func (g *GamePlayer) NewStoryLine(storyLineID uint32) {
-	// curLineup := g.GetCurLineUp()
-	// storyLine := g.GetStoryLineById(storyLineID)
-	// conf := gdconf.GetStroyLineTrialAvatarData(storyLineID)
-	// if conf == nil {
-	// 	return
-	// }
-
+	curLineup := g.GetCurLineUp()
+	db := g.GetLineUp()
+	if db.StoryLineList == nil {
+		db.StoryLineList = make(map[uint32]*spb.Line)
+	}
+	conf := gdconf.GetStroyLineTrialAvatarData(storyLineID)
+	if conf == nil {
+		return
+	}
+	storyLine := new(spb.Line)
+	storyLine.LeaderSlot = 0
+	storyLine.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
+	for slot, lineAvatar := range curLineup.AvatarIdList {
+		storyLine.AvatarIdList[slot] = &spb.LineAvatarList{
+			Slot:           slot,
+			AvatarId:       lineAvatar.AvatarId,
+			LineAvatarType: 0,
+		}
+	}
+	storyLine.AvatarIdList[0] = &spb.LineAvatarList{
+		Slot:           0,
+		AvatarId:       conf.CaptainAvatarID,
+		LineAvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
+	}
+	db.StoryLineList[storyLineID] = storyLine
 }
 
 func (g *GamePlayer) NewTrialLine(trialList []uint32) {
@@ -226,7 +244,8 @@ func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
 
 func (g *GamePlayer) GetCurLineUp() *spb.Line {
 	if g.IsChangeStory() {
-		return g.GetCurChangeStoryLineup()
+		db := g.GetChangeStory()
+		return g.GetStoryLineById(db.CurChangeStory)
 	}
 	db := g.GetLineUpById(g.GetLineUp().MainLineUp)
 	return db
@@ -272,7 +291,7 @@ func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
 
 func (g *GamePlayer) GetBattleLineUp() *spb.Line {
 	if g.IsChangeStory() {
-		return g.GetCurChangeStoryLineup()
+		return g.GetCurLineUp()
 	}
 	status := g.GetBattleStatus()
 	switch status {
@@ -415,9 +434,11 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 		MaxMp:           MaxMp,
 		LeaderSlot:      db.LeaderSlot,
 		GameStoryLineId: 0,
+		Sus:             make([]uint32, 0),
 	}
 	if changeStory := g.GetCurChangeStoryInfo(); changeStory != nil {
 		lineupList.GameStoryLineId = changeStory.ChangeStoryId
+		lineupList.Sus = []uint32{15}
 	}
 	return lineupList
 }

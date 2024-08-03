@@ -206,7 +206,7 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
-			logger.Error("!!! GATESERVER MAIN LOOP PANIC !!!")
+			logger.Error("!!! GAMESERVER MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			logger.Error("uid: %v", g.Uid)

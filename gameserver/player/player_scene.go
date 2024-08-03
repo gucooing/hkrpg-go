@@ -139,6 +139,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 						{ChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE, OpenedNum: 1},
 					},
 					UnlockTeleportList: make([]uint32, 0),
+					DimensionId:        g.GetDimensionId(),
 				}
 
 				mapList.EntryId = entryId
@@ -171,9 +172,30 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.EnterSceneCsReq)
-	rsp := &proto.GetEnteredSceneScRsp{}
+	rsp := &proto.GetEnteredSceneScRsp{
+		EnteredSceneInfoList: make([]*proto.EnteredSceneInfo, 0),
+		Retcode:              0,
+	}
+	entryId := req.EntryId
+	teleportId := req.TeleportId
+	var groupId uint32 = 0
+	var anchorId uint32 = 0
 
-	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId, 0, 0)
+	changeStory := g.GetChangeStoryInfo(req.GameStoryLineId)
+	if req.GameStoryLineId != 0 && changeStory != nil {
+		db := g.GetChangeStory()
+		db.IsChangeStory = true
+		db.CurChangeStory = req.GameStoryLineId
+		entryId = changeStory.Scene.EntryId
+		groupId = changeStory.Scene.GroupId
+		anchorId = changeStory.Scene.AnchorId
+		g.NewStoryLine(req.GameStoryLineId)
+	} else {
+		db := g.GetChangeStory()
+		db.IsChangeStory = false
+	}
+
+	g.EnterSceneByServerScNotify(entryId, teleportId, groupId, anchorId)
 
 	g.Send(cmd.EnterSceneScRsp, rsp)
 	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)

@@ -65,6 +65,8 @@ message Scene {
   //  uint32 floorId = 3;
   VectorBin pos = 4; // 坐标
   VectorBin rot = 5; // 朝向
+  uint32 group_id = 6;
+  uint32 anchor_id = 7;
 }
 
 message ChangeStory {

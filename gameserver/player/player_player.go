@@ -31,8 +31,6 @@ func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg pb.Message) {
 	rsp.ServerTimeMs = sTime
 	rsp.ClientTimeMs = req.ClientTimeMs
 
-	logger.Info("[UID:%v]PlayerHeartBeatCsReq", g.Uid)
-
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }
 

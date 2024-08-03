@@ -40,7 +40,6 @@ func (g *GameDataConfig) loadStageConfig() {
 	}
 
 	logger.Info("load %v StageConfig", len(g.StageConfigMap))
-
 }
 
 func GetStageConfigById(stageID uint32) *StageConfig {
