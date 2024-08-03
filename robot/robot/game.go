@@ -82,7 +82,8 @@ func (r *RoBot) sendHandle(cmdid uint16, playerMsg pb.Message) {
 	_, err := r.KcpConn.Write(binMsg)
 	if err != nil {
 		CLIENT_CONN_NUM--
-		r.KcpAddr = ""
+		r.KcpConn.Close()
+		r.KcpConn = nil
 		logger.Info("[UID%v] 退出登录", r.GameUid)
 		logger.Error("exit send loop, conn write err: %v", err)
 		return

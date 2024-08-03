@@ -6,11 +6,11 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetShopListCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetShopListCsReq, payloadMsg)
-	req := msg.(*proto.GetShopListCsReq)
+func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetShopListCsReq)
 
 	rsp := new(proto.GetShopListScRsp)
 	rsp.ShopList = make([]*proto.Shop, 0)
@@ -71,9 +71,8 @@ func (g *GamePlayer) GetShopListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetShopListScRsp, rsp)
 }
 
-func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.ExchangeHcoinCsReq, payloadMsg)
-	req := msg.(*proto.ExchangeHcoinCsReq)
+func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ExchangeHcoinCsReq)
 	var dPileItem []*Material
 	var aPileItem []*Material
 
@@ -98,15 +97,13 @@ func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg []byte) {
 	g.Send(cmd.ExchangeHcoinScRsp, rsp)
 }
 
-func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.ExchangeRogueRewardKeyCsReq, payloadMsg)
-	req := msg.(*proto.ExchangeRogueRewardKeyCsReq)
+func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ExchangeRogueRewardKeyCsReq)
 	g.Send(cmd.ExchangeRogueRewardKeyScRsp, &proto.ExchangeRogueRewardKeyCsReq{Count: req.Count})
 }
 
-func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.BuyGoodsCsReq, payloadMsg)
-	req := msg.(*proto.BuyGoodsCsReq)
+func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.BuyGoodsCsReq)
 	var pileItem []*Material
 
 	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
@@ -150,9 +147,8 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
 	g.Send(cmd.BuyGoodsScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetRollShopInfoCsReq, payloadMsg)
-	req := msg.(*proto.GetRollShopInfoCsReq)
+func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetRollShopInfoCsReq)
 	rsp := &proto.GetRollShopInfoScRsp{
 		GachaRandom:     1,
 		ShopGroupIdList: make([]uint32, 0),

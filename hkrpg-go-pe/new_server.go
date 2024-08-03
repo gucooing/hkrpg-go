@@ -2,7 +2,6 @@ package hkrpg_go_pe
 
 import (
 	"context"
-	"encoding/binary"
 	"log"
 	"math/rand"
 	"os"
@@ -31,10 +30,7 @@ import (
 )
 
 const (
-	PacketMaxLen            = 343 * 1024 // 最大应用层包长度
-	KcpConnEstNotify        = "KcpConnEstNotify"
-	KcpConnAddrChangeNotify = "KcpConnAddrChangeNotify"
-	KcpConnCloseNotify      = "KcpConnCloseNotify"
+	PacketMaxLen = 343 * 1024 // 最大应用层包长度
 )
 
 var CLIENT_CONN_NUM int32 = 0 // 当前客户端连接数
@@ -98,8 +94,8 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 		os.Exit(0)
 	}
 	s.kcpListener = kcpListener
+	s.kcpListener.EnetHandle()
 	go kcpNetInfo()
-	go s.kcpEnetHandle(kcpListener)
 	s.playerMap = make(map[uint32]*PlayerGame)
 	s.CmdRouteManager = NewCmdRouteManager()
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
@@ -133,12 +129,11 @@ func (s *HkRpgGoServer) AutoUpDataPlayer() {
 			continue
 		}
 		if g.LastActiveTime+50 < timestamp {
-			g.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_LOGIN_WHITE_TIMEOUT})
 			s.killPlayer(g)
 			continue
 		}
-		lastActiveTime := g.GamePlayer.LastUpDataTime
-		if timestamp-lastActiveTime >= 180 {
+		lastUpDataTime := g.GamePlayer.LastUpDataTime
+		if timestamp-lastUpDataTime >= 180 {
 			logger.Debug("[UID:%v]玩家数据自动保存", g.Uid)
 			g.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE)
 			g.GamePlayer.LastUpDataTime = timestamp + rand.Int63n(120)
@@ -167,47 +162,10 @@ func (s *HkRpgGoServer) RunGameServer() error {
 			kcpConn.SetWriteDelay(false)
 			kcpConn.SetWindowSize(256, 256)
 			kcpConn.SetMtu(1200)
-			kcpConn.SetIdleTicker(120 * time.Second)
 			// 读取密钥相关文件
 			g := s.NewGame(kcpConn)
-			go s.recvHandle(g)
+			s.recvHandle(g)
 		}()
-	}
-}
-
-// kcp连接事件处理函数
-func (s *HkRpgGoServer) kcpEnetHandle(listener *kcp.Listener) {
-	logger.Info("kcp enet handle start")
-	for {
-		enetNotify := <-listener.GetEnetNotifyChan()
-		logger.Debug("[Kcp Enet] addr: %v, conv: %v, sessionId: %v, connType: %v, enetType: %v",
-			enetNotify.Addr, enetNotify.Conv, enetNotify.SessionId, enetNotify.ConnType, enetNotify.EnetType)
-		switch enetNotify.ConnType {
-		case kcp.ConnEnetSyn:
-			if enetNotify.EnetType != kcp.EnetClientConnectKey {
-				logger.Error("enet type not match, sessionId: %v", enetNotify.SessionId)
-				continue
-			}
-			sessionId := atomic.AddUint32(&s.sessionIdCounter, 1)
-			listener.SendEnetNotifyToPeer(&kcp.Enet{
-				Addr:      enetNotify.Addr,
-				SessionId: sessionId,
-				Conv:      binary.BigEndian.Uint32(random.GetRandomByte(4)),
-				ConnType:  kcp.ConnEnetEst,
-				EnetType:  enetNotify.EnetType,
-			})
-		case kcp.ConnEnetAddrChange:
-			// 连接地址改变通知
-			s.kcpEventChan <- &gate.KcpEvent{
-				SessionId:    enetNotify.SessionId,
-				EventId:      KcpConnAddrChangeNotify,
-				EventMessage: enetNotify.Addr,
-			}
-		case kcp.ConnEnetFin:
-			// 连接断开通知
-			logger.Info("kcp 断开连接:%v", enetNotify.SessionId)
-		default:
-		}
 	}
 }
 
@@ -257,12 +215,16 @@ func (s *HkRpgGoServer) recvHandle(p *PlayerGame) {
 		kcpMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &kcpMsgList, p.XorKey)
 		for _, msg := range kcpMsgList {
-			// playerMsg := alg.DecodePayloadToProto(msg)
+			playerMsg := alg.DecodePayloadToProto(msg)
+			if playerMsg == nil {
+				logger.Warn("[UID:%v]DecodePayloadToProto error", p.Uid)
+				continue
+			}
 			if p.IsLogin {
-				s.RegisterMessage(p, msg)
+				s.RegisterMessage(p, msg.CmdId, playerMsg)
 			} else {
 				if msg.CmdId == cmd.PlayerGetTokenCsReq {
-					s.PlayerGetTokenCsReq(p, msg.ProtoData)
+					s.PlayerGetTokenCsReq(p, playerMsg)
 				} else {
 					return
 				}
@@ -273,16 +235,14 @@ func (s *HkRpgGoServer) recvHandle(p *PlayerGame) {
 
 // 发送事件处理
 func (p *PlayerGame) SendHandle(cmdId uint16, playerMsg pb.Message) {
+	if p.GamePlayer.IsClosed {
+		return
+	}
 	rspMsg := new(alg.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
 	kcpMsg := alg.EncodeProtoToPayload(rspMsg)
 	binMsg := alg.EncodePayloadToBin(kcpMsg, p.XorKey)
-	_, err := p.KcpConn.Write(binMsg)
-	if err != nil {
-		logger.Debug("exit send loop, conn write err: %v", err)
-		return
-	}
 	// 密钥交换
 	if kcpMsg.CmdId == cmd.PlayerGetTokenScRsp {
 		if p.Seed == 0 {
@@ -290,6 +250,11 @@ func (p *PlayerGame) SendHandle(cmdId uint16, playerMsg pb.Message) {
 		}
 		p.XorKey = random.CreateXorPad(p.Seed, false)
 		logger.Info("[UID:%v][SEED:%v]玩家登录成功", p.Uid, p.Seed)
+	}
+	_, err := p.KcpConn.Write(binMsg)
+	if err != nil {
+		logger.Debug("exit send loop, conn write err: %v", err)
+		return
 	}
 	if kcpMsg.CmdId == cmd.GetTutorialGuideScRsp {
 		binMsg2 := alg.EncodePayloadToBin(&alg.PackMsg{
@@ -302,14 +267,13 @@ func (p *PlayerGame) SendHandle(cmdId uint16, playerMsg pb.Message) {
 }
 
 type PlayerGame struct {
-	IsLogin          bool
-	Seed             uint64
-	Uid              uint32
-	XorKey           []byte // 密钥
-	KcpConn          *kcp.UDPSession
-	GamePlayer       *player.GamePlayer // 玩家内存
-	LastActiveTime   int64              // 最近一次的活跃时间
-	recvPlayerCancel context.CancelFunc
+	IsLogin        bool
+	Seed           uint64
+	Uid            uint32
+	XorKey         []byte // 密钥
+	KcpConn        *kcp.UDPSession
+	GamePlayer     *player.GamePlayer // 玩家内存
+	LastActiveTime int64              // 最近一次的活跃时间
 }
 
 func (s *HkRpgGoServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
@@ -322,12 +286,8 @@ func (s *HkRpgGoServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
 	return pg
 }
 
-func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
-	req := new(proto.PlayerGetTokenCsReq)
-	err := pb.Unmarshal(playerMsg, req)
-	if err != nil {
-		return
-	}
+func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg pb.Message) {
+	req := playerMsg.(*proto.PlayerGetTokenCsReq)
 	rsp := new(proto.PlayerGetTokenScRsp)
 	if req.Token == "" || req.AccountUid == "" {
 		return
@@ -373,10 +333,9 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 	p.Uid = uidPlayer.Uid
 	// 拉取玩家数据
 	p.GamePlayer = s.NewPlayer(uidPlayer.Uid, accountUid)
-	recvPlayerCtx, recvPlayerCancel := context.WithCancel(context.Background())
-	p.recvPlayerCancel = recvPlayerCancel
 	p.LastActiveTime = time.Now().Unix()
-	go p.recvPlayer(recvPlayerCtx)
+	go p.recvPlayer()
+	go p.GamePlayer.RecvMsg()
 	s.addPlayer(p) // 添加角色到列表中
 	p.GamePlayer.GetPlayerDateByDb()
 	// 生成seed
@@ -393,7 +352,10 @@ func (s *HkRpgGoServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g := new(player.GamePlayer)
 	g.Uid = uid
 	g.AccountId = accountId
+	g.RecvChan = make(chan player.Msg)
 	g.SendChan = make(chan player.Msg)
+	g.RecvCtx, g.RecvCal = context.WithCancel(context.Background())
+	g.SendCtx, g.SendCal = context.WithCancel(context.Background())
 	g.IsJumpMission = s.config.GameServer.IsJumpMission
 	g.DB = s.db.HkrpgGoPe
 	g.IsPE = true
@@ -403,24 +365,36 @@ func (s *HkRpgGoServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	return g
 }
 
-func (s *HkRpgGoServer) RegisterMessage(p *PlayerGame, msg *alg.PackMsg) {
+func (s *HkRpgGoServer) RegisterMessage(p *PlayerGame, cmdId uint16, payloadMsg pb.Message) {
 	p.LastActiveTime = time.Now().Unix()
-	switch msg.CmdId {
+	switch cmdId {
 	case cmd.PlayerLogoutCsReq:
 		logger.Info("[UID:%v]玩家主动离线", p.Uid)
 		s.killPlayer(p)
 		return
 	}
-	p.GamePlayer.RegisterMessage(msg.CmdId, msg.ProtoData)
+	if p.GamePlayer.RecvChan != nil {
+		p.GamePlayer.RecvChan <- player.Msg{
+			CmdId:     cmdId,
+			MsgType:   player.Client,
+			PlayerMsg: payloadMsg,
+		}
+		if p.GamePlayer.IsClosed {
+			close(p.GamePlayer.RecvChan)
+		}
+	}
 }
 
-func (p *PlayerGame) recvPlayer(recvPlayerCtx context.Context) {
+func (p *PlayerGame) recvPlayer() {
 	for {
 		select {
 		case bin := <-p.GamePlayer.SendChan:
-			p.SendHandle(bin.CmdId, bin.PlayerMsg)
-		case <-recvPlayerCtx.Done():
-			close(p.GamePlayer.SendChan)
+			switch bin.MsgType {
+			case player.Server:
+				p.SendHandle(bin.CmdId, bin.PlayerMsg)
+			}
+		case <-p.GamePlayer.SendCtx.Done():
+			p.GamePlayer.IsClosed = true
 			return
 		}
 	}
@@ -458,11 +432,14 @@ func (s *HkRpgGoServer) killPlayer(p *PlayerGame) {
 		EnetType:  kcp.EnetTimeout,
 	})
 	p.KcpConn.Close() // 断开kcp连接
-	if p.recvPlayerCancel != nil {
-		p.recvPlayerCancel()                                                  // 断开收包
-		p.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE) // 保存数据
-		delete(s.playerMap, p.Uid)
+	if p.GamePlayer.SendCal != nil {
+		p.GamePlayer.SendCal()
 	}
+	if p.GamePlayer.RecvCal != nil {
+		p.GamePlayer.RecvCal()
+	}
+	p.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE) // 保存数据
+	delete(s.playerMap, p.Uid)
 }
 
 func (s *HkRpgGoServer) Close() {
@@ -477,7 +454,6 @@ func (s *HkRpgGoServer) killAutoUpDataPlayer() {
 		if g.Uid == 0 {
 			continue
 		}
-		g.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_SQUEEZED})
 		s.killPlayer(g)
 		num++
 	}

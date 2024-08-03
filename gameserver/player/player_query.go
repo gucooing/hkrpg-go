@@ -4,15 +4,15 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandleQueryProductInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleQueryProductInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.QueryProductInfoScRsp, nil)
 }
 
-func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SceneEntityMoveCsReq, payloadMsg)
-	req := msg.(*proto.SceneEntityMoveCsReq)
+func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SceneEntityMoveCsReq)
 	if g.GetBattleStatus() == spb.BattleType_Battle_NONE {
 		entityList := g.GetEntity(0)
 		if entityList == nil {

@@ -9,6 +9,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -41,9 +42,9 @@ func NewRouteManager(p *PlayerGame) (r *RouteManager) {
 
 func (r *RouteManager) initRoute(p *PlayerGame) {
 	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
-		cmd.PlayerHeartBeatCsReq: p.HandlePlayerHeartBeatCsReq,
-		cmd.PlayerLogoutCsReq:    p.PlayerLogoutCsReq,
-		cmd.GetAuthkeyCsReq:      p.nilProto,
+		// cmd.PlayerHeartBeatCsReq: p.HandlePlayerHeartBeatCsReq,
+		cmd.PlayerLogoutCsReq: p.PlayerLogoutCsReq,
+		cmd.GetAuthkeyCsReq:   p.nilProto,
 		// 好友
 		cmd.ApplyFriendCsReq:  p.ApplyFriendCsReq,  // 发送好友申请
 		cmd.HandleFriendCsReq: p.HandleFriendCsReq, // 处理好友申请
@@ -52,9 +53,10 @@ func (r *RouteManager) initRoute(p *PlayerGame) {
 }
 
 func (p *PlayerGame) PlayerRegisterMessage(cmdId uint16, tcpMsg *alg.PackMsg) {
+	p.LastActiveTime = getCurTime()
 	handlerFunc, ok := p.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		go p.GateToGame(tcpMsg)
+		p.GateToGame(tcpMsg)
 		return
 	}
 	handlerFunc(tcpMsg)
@@ -66,12 +68,42 @@ func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {
 
 // 将玩家消息转发到game
 func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
+	// logger.Debug("[UID:%v]gate->game:%s", p.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(tcpMsg.CmdId))
 	msg := &spb.GateToGameMsgNotify{
-		Uid:    p.Uid,
-		CmdId:  int32(tcpMsg.CmdId),
-		B64Msg: base64.StdEncoding.EncodeToString(tcpMsg.ProtoData),
+		Uid:   p.Uid,
+		CmdId: int32(tcpMsg.CmdId),
+		Msg:   tcpMsg.ProtoData,
 	}
 	p.gs.sendGame(cmd.GateToGameMsgNotify, msg)
+}
+
+func testMsg(cmdId uint16, B64Msg string) {
+	payloadMsg, _ := base64.StdEncoding.DecodeString(B64Msg)
+	protoObj := cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
+	if protoObj == nil {
+		logger.Warn("get new proto object is nil")
+		return
+	}
+	err := pb.Unmarshal(payloadMsg, protoObj)
+	if err != nil {
+		logger.Error("unmarshal proto data NAME: %s  err: %v || b64:%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), err, base64.StdEncoding.EncodeToString(payloadMsg))
+		return
+	}
+}
+
+func testsMsg(cmdId uint16, payloadMsg []byte) {
+	protoObj := cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
+	if protoObj == nil {
+		logger.Warn("get new proto object is nil")
+		return
+	}
+	err := pb.Unmarshal(payloadMsg, protoObj)
+	if err != nil {
+		logger.Error("unmarshal proto data NAME: %s  err: %v || b64:%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), err, base64.StdEncoding.EncodeToString(payloadMsg))
+		return
+	}
+	data := protojson.Format(protoObj)
+	logger.Debug("S --> C : NAME: %s KcpMsg: \n%s\n", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
 }
 
 // 将消息发送给客户端

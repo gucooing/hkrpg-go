@@ -4,9 +4,10 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetMailCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetMailCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetMailScRsp)
 	rsp.TotalNum = 1
 	rsp.IsEnd = true
@@ -15,9 +16,8 @@ func (g *GamePlayer) GetMailCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMailScRsp, rsp)
 }
 
-func (g *GamePlayer) MarkReadMailCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.MarkReadMailCsReq, payloadMsg)
-	req := msg.(*proto.MarkReadMailCsReq)
+func (g *GamePlayer) MarkReadMailCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.MarkReadMailCsReq)
 	g.ReadMail(req.Id)
 	rsp := &proto.MarkReadMailScRsp{
 		Retcode: 0,
@@ -26,9 +26,8 @@ func (g *GamePlayer) MarkReadMailCsReq(payloadMsg []byte) {
 	g.Send(cmd.MarkReadMailScRsp, rsp)
 }
 
-func (g *GamePlayer) DelMailCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.DelMailCsReq, payloadMsg)
-	req := msg.(*proto.DelMailCsReq)
+func (g *GamePlayer) DelMailCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.DelMailCsReq)
 	rsp := &proto.DelMailScRsp{
 		IdList: make([]uint32, 0),
 	}
@@ -39,9 +38,8 @@ func (g *GamePlayer) DelMailCsReq(payloadMsg []byte) {
 	g.Send(cmd.DelMailScRsp, rsp)
 }
 
-func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.TakeMailAttachmentCsReq, payloadMsg)
-	req := msg.(*proto.TakeMailAttachmentCsReq)
+func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TakeMailAttachmentCsReq)
 	rsp := &proto.TakeMailAttachmentScRsp{
 		Retcode:        0,
 		SuccMailIdList: make([]uint32, 0),

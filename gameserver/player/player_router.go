@@ -1,13 +1,12 @@
 package player
 
 import (
-	"encoding/base64"
-
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	pb "google.golang.org/protobuf/proto"
 )
 
-type HandlerFunc func(payloadMsg []byte)
+type HandlerFunc func(payloadMsg pb.Message)
 
 type RouteManager struct {
 	handlerFuncRouteMap map[uint16]HandlerFunc
@@ -203,7 +202,7 @@ func NewRouteManager(g *GamePlayer) (r *RouteManager) {
 	return r
 }
 
-func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMsg pb.Message*/) {
+func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
@@ -211,17 +210,49 @@ func (g *GamePlayer) RegisterMessage(cmdId uint16, payloadMsg []byte /*payloadMs
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
 			logger.Error("uid: %v", g.Uid)
-			logger.Error("NAME: %s KcpMsg: \n%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), base64.StdEncoding.EncodeToString(payloadMsg))
 			return
 		}
 	}()
-	// 异步打印需要的数据包
-	go LogMsgRecv(cmdId, payloadMsg)
+	if g.Uid == LogMsgPlayer {
+		LogMsgRecv(cmdId, payloadMsg)
+	}
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		// logger.Error("C --> S no route for msg, cmdId: %v msg:%s", cmdId, base64.StdEncoding.EncodeToString(payloadMsg))
+		logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
 		return
 	}
 	handlerFunc(payloadMsg)
 	return
+}
+
+// 收包
+func (g *GamePlayer) RecvMsg() {
+	for {
+		select {
+		case recvMsg := <-g.RecvChan:
+			switch recvMsg.MsgType {
+			case Client:
+				g.registerMessage(recvMsg.CmdId, recvMsg.PlayerMsg)
+			case Gm:
+
+			}
+		case <-g.RecvCtx.Done():
+			g.IsClosed = true
+			return
+		}
+	}
+}
+
+// 发包
+func (g *GamePlayer) SendMsg(cmdId uint16, playerMsg pb.Message) {
+	if g.SendChan != nil {
+		g.SendChan <- Msg{
+			CmdId:     cmdId,
+			MsgType:   Server,
+			PlayerMsg: playerMsg,
+		}
+		if g.IsClosed {
+			close(g.SendChan)
+		}
+	}
 }

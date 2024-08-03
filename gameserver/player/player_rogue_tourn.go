@@ -5,9 +5,10 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg []byte) {
+func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournQueryScRsp{
 		Retcode:           0,
 		RogueTournCurInfo: g.GetRogueTournCurInfo(),
@@ -25,7 +26,7 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg []byte) {
 	g.Send(cmd.RogueTournQueryScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournGetPermanentTalentInfoScRsp{
 		InspirationCircuit: g.GetInspirationCircuitInfo(),
 		Retcode:            0,
@@ -33,14 +34,13 @@ func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.RogueTournGetPermanentTalentInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournGetMiscRealTimeDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) RogueTournGetMiscRealTimeDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournGetMiscRealTimeDataScRsp{}
 	g.Send(cmd.RogueTournGetMiscRealTimeDataScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.RogueTournStartCsReq, payloadMsg)
-	req := msg.(*proto.RogueTournStartCsReq)
+func (g *GamePlayer) RogueTournStartCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RogueTournStartCsReq)
 	rsp := new(proto.RogueTournStartScRsp)
 	conf := gdconf.GetRogueTournAreaById(req.AreaId)
 	if conf == nil {
@@ -79,7 +79,7 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg []byte) {
 	g.Send(cmd.RogueTournStartScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg []byte) {
+func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg pb.Message) {
 	curRoom := g.GetCurRogueTournRoom()
 	rsp := &proto.RogueTournEnterScRsp{
 		RogueTournCurInfo: g.GetRogueTournCurInfo(),
@@ -93,7 +93,7 @@ func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg []byte) {
 	g.Send(cmd.RogueTournEnterScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg []byte) {
+func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournSettleScRsp{
 		Retcode: 0,
 		// IOLFDOIPNKA:            nil,
@@ -104,9 +104,8 @@ func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg []byte) {
 	g.Send(cmd.RogueTournSettleScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.RogueTournEnterRoomCsReq, payloadMsg)
-	req := msg.(*proto.RogueTournEnterRoomCsReq)
+func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RogueTournEnterRoomCsReq)
 	g.UpdateRogueTournEnterRoom(req.CurRoomIndex, req.NextRoomType)
 	curRoom := g.GetCurRogueTournRoom()
 	rsp := &proto.RogueTournEnterRoomScRsp{

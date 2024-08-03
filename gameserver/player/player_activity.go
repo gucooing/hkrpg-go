@@ -4,9 +4,10 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
 	rsp.ScheduleData = make([]*proto.ActivityScheduleData, 0)
 	for _, activity := range gdconf.GetActivitySchedulingMap() {
@@ -22,7 +23,7 @@ func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }
 
-func (g *GamePlayer) HeliobusActivityDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HeliobusActivityDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.HeliobusActivityDataScRsp{
 		ChallengeList: make([]*proto.ChallengeList, 0),
 		Level:         15,
@@ -31,7 +32,7 @@ func (g *GamePlayer) HeliobusActivityDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.HeliobusActivityDataScRsp, rsp)
 }
 
-func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetLoginActivityScRsp{
 		LoginActivityList: make([]*proto.LoginActivityData, 0),
 	}
@@ -56,9 +57,8 @@ func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetLoginActivityScRsp, rsp)
 }
 
-func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.TakeLoginActivityRewardCsReq, payloadMsg)
-	req := msg.(*proto.TakeLoginActivityRewardCsReq)
+func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TakeLoginActivityRewardCsReq)
 	var pileItem []*Material
 
 	activityLoginConfig := gdconf.GetActivityLoginConfigById(req.Id)
@@ -87,7 +87,7 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg []byte) {
 	g.Send(cmd.TakeLoginActivityRewardScRsp, rsp)
 }
 
-func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetTrialActivityDataScRsp{
 		TrialActivityList: make([]*proto.TrialActivityInfo, 0),
 	}
@@ -101,9 +101,8 @@ func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg []byte) {
 
 }
 
-func (g *GamePlayer) TakeTrialActivityRewardCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.TakeTrialActivityRewardCsReq, payloadMsg)
-	req := msg.(*proto.TakeTrialActivityRewardCsReq)
+func (g *GamePlayer) TakeTrialActivityRewardCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TakeTrialActivityRewardCsReq)
 	var pileItem []*Material
 
 	rsp := &proto.TakeTrialActivityRewardScRsp{

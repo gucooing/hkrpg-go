@@ -6,6 +6,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type AllPlayerSync struct {
@@ -22,20 +23,20 @@ type AllPlayerSync struct {
 }
 
 // 玩家ping包处理
-func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.PlayerHeartBeatCsReq, payloadMsg)
-	req := msg.(*proto.PlayerHeartBeatCsReq)
+func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.PlayerHeartBeatCsReq)
 	sTime := getCurTime()
 
 	rsp := new(proto.PlayerHeartBeatScRsp)
 	rsp.ServerTimeMs = sTime
 	rsp.ClientTimeMs = req.ClientTimeMs
-	// g.LastUpDataTime = time.Now().Unix()
+
+	logger.Info("[UID:%v]PlayerHeartBeatCsReq", g.Uid)
 
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }
 
-func (g *GamePlayer) GetSpringRecoverDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetSpringRecoverDataCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetSpringRecoverDataScRsp)
 	rsp.SpringRecoverConfig = g.GetSpringRecoverConfig()
 	rsp.HealPoolInfo = g.GetHealPoolInfo()
@@ -72,9 +73,8 @@ func (g *GamePlayer) AddTrailblazerExp(num uint32) {
 	g.PlayerPlayerSyncScNotify()
 }
 
-func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SetPlayerInfoCsReq, payloadMsg)
-	req := msg.(*proto.SetPlayerInfoCsReq)
+func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SetPlayerInfoCsReq)
 
 	g.SetNickname(req.Nickname)
 	main := g.GetAvatarBinById(8001)

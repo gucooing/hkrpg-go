@@ -7,11 +7,11 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCostMpCsReq, payloadMsg)
-	req := msg.(*proto.SceneCastSkillCostMpCsReq)
+func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SceneCastSkillCostMpCsReq)
 	rsp := &proto.SceneCastSkillCostMpScRsp{
 		CastEntityId: req.CastEntityId,
 		Retcode:      0,
@@ -19,9 +19,8 @@ func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg []byte) {
 	g.Send(cmd.SceneCastSkillCostMpScRsp, rsp)
 }
 
-func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SceneEnterStageCsReq, payloadMsg)
-	req := msg.(*proto.SceneEnterStageCsReq)
+func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SceneEnterStageCsReq)
 	battleInfo, battleBackup := g.GetSceneBattleInfo([]uint32{req.EventId}, g.GetBattleLineUp())
 	rsp := &proto.SceneEnterStageScRsp{
 		Retcode:    0,
@@ -35,9 +34,8 @@ func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg []byte) {
 
 /***********************************攻击事件处理***********************************/
 
-func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SceneCastSkillCsReq, payloadMsg)
-	req := msg.(*proto.SceneCastSkillCsReq)
+func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SceneCastSkillCsReq)
 	rsp := &proto.SceneCastSkillScRsp{
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
@@ -95,9 +93,8 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg []byte) {
 
 /***********************************战斗结算***********************************/
 
-func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.PVEBattleResultCsReq, payloadMsg)
-	req := msg.(*proto.PVEBattleResultCsReq)
+func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.PVEBattleResultCsReq)
 	battleBin := g.GetBattleBackupById(req.BattleId)
 	if battleBin == nil {
 		return
@@ -169,9 +166,8 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg []byte) {
 
 /***********************************关卡/副本***********************************/
 
-func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.StartCocoonStageCsReq, payloadMsg)
-	req := msg.(*proto.StartCocoonStageCsReq)
+func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.StartCocoonStageCsReq)
 	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 设置战斗状态
 	battleInfo, battleBackup := g.GetCocoonBattleInfo(g.GetCurLineUp(), req)
 	if battleInfo == nil {
@@ -190,7 +186,7 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
 }
 
-func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg []byte) {
+func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
 	// msg := g.DecodePayloadToProto(cmd.ActivateFarmElementCsReq, payloadMsg)
 	// req := msg.(*proto.ActivateFarmElementCsReq)
 }

@@ -22,7 +22,7 @@ type GamePlayer struct {
 	gate           *gateServer        // 玩家所属gate
 	game           *GameServer        // 玩家所属game
 	p              *player.GamePlayer // 玩家内存
-	LastActiveTime int64              // 最近一次的保存时间
+	lastActiveTime int64              // 最近一次的通信时间
 }
 
 // 这个kill玩家不会通知给gate
@@ -31,6 +31,12 @@ func (s *GameServer) killPlayer(p *GamePlayer) {
 	s.Store.DistUnlockPlayerStatus(strconv.Itoa(int(p.p.AccountId)))
 	s.delPlayerMap(p.p.Uid)
 	logger.Info("[UID:%v]玩家下线成功", p.p.Uid)
+	if p.p.SendCal != nil {
+		p.p.SendCal()
+	}
+	if p.p.RecvCal != nil {
+		p.p.RecvCal()
+	}
 }
 
 /************************************接口*********************************/
@@ -38,9 +44,10 @@ func (s *GameServer) killPlayer(p *GamePlayer) {
 func (s *GameServer) addPlayerMap(uid uint32, g *player.GamePlayer, ge *gateServer) (*GamePlayer, bool) {
 	g.RouteManager = player.NewRouteManager(g)
 	gamePlayer := &GamePlayer{
-		gate: ge,
-		game: s,
-		p:    g,
+		gate:           ge,
+		game:           s,
+		p:              g,
+		lastActiveTime: time.Now().Unix(),
 	}
 	s.playerMapLock.Lock()
 	defer s.playerMapLock.Unlock()

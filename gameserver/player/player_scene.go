@@ -8,6 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // 通知客户端进入场景
@@ -92,7 +93,7 @@ func (g *GamePlayer) SceneByServerScNotify(entryId uint32, pos, rot *proto.Vecto
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
 
-func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetEnteredSceneScRsp)
 	db := g.GetScene()
 	mapEntrance := gdconf.GetMapEntranceById(db.EntryId)
@@ -109,7 +110,7 @@ func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg []byte) {
 }
 
 // 客户端登录需要的包，不是传送的通知包
-func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg pb.Message) {
 	pos := g.GetPosPb()
 	rot := g.GetRotPb()
 	dbScene := g.GetScene()
@@ -120,11 +121,8 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetCurSceneInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetSceneMapInfoCsReq, payloadMsg)
-	req := msg.(*proto.GetSceneMapInfoCsReq)
-
-	// 1000101 1000001
+func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetSceneMapInfoCsReq)
 
 	rsp := new(proto.GetSceneMapInfoScRsp)
 	for _, entryId := range req.EntryIdList {
@@ -132,41 +130,6 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 		if mapEntrance != nil {
 			groupList := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
 			block := g.GetBlock(entryId)
-			// teleportsMap := gdconf.GetTeleportsById(mapEntrance.PlaneID, mapEntrance.FloorID)
-			// if teleportsMap != nil {
-			// 	mapList := &proto.SceneMapInfo{
-			// 		LightenSectionList: make([]uint32, 0),
-			// 		ChestList: []*proto.ChestInfo{
-			// 			{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_NORMAL},
-			// 			{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE},
-			// 			{MapInfoChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE},
-			// 		},
-			// 		// UnlockedTeleportList: make([]uint32, 0),
-			// 	}
-			//
-			// 	mapList.EntryId = entryId
-			//
-			// 	// for i := uint32(0); i < 100; i++ {
-			// 	// 	mapList.LightenSectionList = append(mapList.LightenSectionList, i)
-			// 	// }
-			//
-			// 	for _, teleports := range teleportsMap.TeleportsByGroupId {
-			// 		mazeGroup := &proto.MazeGroup{GroupId: teleports.GroupId}
-			// 		mapList.MazeGroupList = append(mapList.MazeGroupList, mazeGroup)
-			// 	}
-			//
-			// 	for _, teleports := range teleportsMap.Teleports {
-			// 		mazeProp := &proto.MazePropState{
-			// 			State:    gdconf.GetStateValue("CheckPointEnable"), // 默认解锁
-			// 			GroupId:  teleports.AnchorGroupID,
-			// 			ConfigId: teleports.ID,
-			// 		}
-			// 		mapList.MazePropList = append(mapList.MazePropList, mazeProp)
-			// 		mapList.UnlockTeleportList = append(mapList.UnlockTeleportList, teleports.MappingInfoID)
-			// 	}
-			// 	rsp.SceneMapInfo = append(rsp.SceneMapInfo, mapList)
-			// }
-
 			if groupList != nil {
 				mapList := &proto.SceneMapInfo{
 					LightenSectionList: make([]uint32, 0),
@@ -206,9 +169,8 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetSceneMapInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) EnterSceneCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.EnterSceneCsReq, payloadMsg)
-	req := msg.(*proto.EnterSceneCsReq)
+func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.EnterSceneCsReq)
 	rsp := &proto.GetEnteredSceneScRsp{}
 
 	g.EnterSceneByServerScNotify(req.EntryId, req.TeleportId, 0, 0)
@@ -217,9 +179,8 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg []byte) {
 	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
 }
 
-func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.InteractPropCsReq, payloadMsg)
-	req := msg.(*proto.InteractPropCsReq)
+func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.InteractPropCsReq)
 	rsp := &proto.InteractPropScRsp{
 		Retcode:      0,
 		PropState:    0,
@@ -293,9 +254,8 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg []byte) {
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 
-func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GroupStateChangeCsReq, payloadMsg)
-	req := msg.(*proto.GroupStateChangeCsReq)
+func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GroupStateChangeCsReq)
 	rsp := &proto.GroupStateChangeScRsp{
 		GroupStateInfo: req.GroupStateInfo,
 		Retcode:        0,
@@ -330,9 +290,8 @@ func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg []byte) {
 	g.Send(cmd.GroupStateChangeScRsp, rsp)
 }
 
-func (g *GamePlayer) DeployRotaterCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.DeployRotaterCsReq, payloadMsg)
-	req := msg.(*proto.DeployRotaterCsReq)
+func (g *GamePlayer) DeployRotaterCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.DeployRotaterCsReq)
 	// 设置旋转
 	rsp := &proto.DeployRotaterScRsp{
 		Retcode:     0,
@@ -342,7 +301,7 @@ func (g *GamePlayer) DeployRotaterCsReq(payloadMsg []byte) {
 	g.Send(cmd.DeployRotaterScRsp, rsp)
 }
 
-func (g *GamePlayer) StartWolfBroGameCsReq(payloadMsg []byte) {
+func (g *GamePlayer) StartWolfBroGameCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.WolfBroGameDataChangeScNotify, &proto.WolfBroGameDataChangeScNotify{
 		WolfBroGameData: &proto.WolfBroGameData{
 			// KHOGNFEGNLC: &proto.WolfBroGameInfo{
@@ -361,9 +320,8 @@ func (g *GamePlayer) StartWolfBroGameCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartWolfBroGameScRsp, &proto.StartWolfBroGameScRsp{})
 }
 
-func (g *GamePlayer) SetGroupCustomSaveDataCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SetGroupCustomSaveDataCsReq, payloadMsg)
-	req := msg.(*proto.SetGroupCustomSaveDataCsReq)
+func (g *GamePlayer) SetGroupCustomSaveDataCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SetGroupCustomSaveDataCsReq)
 	g.Send(cmd.GroupStateChangeScNotify, &proto.GroupStateChangeScNotify{
 		GroupStateInfo: &proto.GroupStateInfo{
 			EntryId:    req.EntryId,
@@ -378,9 +336,8 @@ func (g *GamePlayer) SetGroupCustomSaveDataCsReq(payloadMsg []byte) {
 	})
 }
 
-func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SpringRecoverSingleAvatarCsReq, payloadMsg)
-	req := msg.(*proto.SpringRecoverSingleAvatarCsReq)
+func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SpringRecoverSingleAvatarCsReq)
 	g.AvatarRecover(req.Id)
 
 	rsp := &proto.SpringRecoverSingleAvatarScRsp{

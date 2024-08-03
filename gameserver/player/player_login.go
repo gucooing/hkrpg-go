@@ -8,11 +8,11 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.PlayerLoginCsReq, payloadMsg)
-	req := msg.(*proto.PlayerLoginCsReq)
+func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v]登录的客户端版本是:%s", g.Uid, req.ClientVersion)
 	g.Platform = spb.PlatformType(req.Platform)
 	g.HandlePlayerLoginScRsp()
@@ -40,9 +40,8 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	go g.LoginNotify()
 }
 
-func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SyncClientResVersionCsReq, payloadMsg)
-	req := msg.(*proto.SyncClientResVersionCsReq)
+func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SyncClientResVersionCsReq)
 
 	rsp := new(proto.SyncClientResVersionScRsp)
 	rsp.ResVersion = req.ResVersion

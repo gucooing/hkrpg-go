@@ -6,9 +6,10 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetRaidInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRaidInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetRaidInfoScRsp{
 		ChallengeTakenRewardIdList: make([]uint32, 0),
 		ChallengeRaidList:          make([]*proto.ChallengeRaid, 0),
@@ -26,9 +27,8 @@ func (g *GamePlayer) GetRaidInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetRaidInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) StartRaidCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.StartRaidCsReq, payloadMsg)
-	req := msg.(*proto.StartRaidCsReq)
+func (g *GamePlayer) StartRaidCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.StartRaidCsReq)
 	rsp := &proto.StartRaidScRsp{}
 	g.NewRaidInfo(req.RaidId) // 重置
 	rsp.Retcode = uint32(g.newRaidInfo(req))
@@ -41,9 +41,8 @@ func (g *GamePlayer) StartRaidCsReq(payloadMsg []byte) {
 	g.Send(cmd.StartRaidScRsp, rsp)
 }
 
-func (g *GamePlayer) LeaveRaidCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.LeaveRaidCsReq, payloadMsg)
-	req := msg.(*proto.LeaveRaidCsReq)
+func (g *GamePlayer) LeaveRaidCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.LeaveRaidCsReq)
 	rsp := &proto.LeaveRaidScRsp{}
 	db := g.GetFinishRaidInfo(req.RaidId)
 	if db == nil {

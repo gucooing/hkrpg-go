@@ -5,9 +5,10 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetRogueScoreRewardInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRogueScoreRewardInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetRogueScoreRewardInfoScRsp{
 		Retcode: 0,
 		Info:    g.GetRogueScoreRewardInfo(),
@@ -16,7 +17,7 @@ func (g *GamePlayer) GetRogueScoreRewardInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetRogueScoreRewardInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueInitialScoreCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRogueInitialScoreCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetRogueInitialScoreScRsp{
 		RogueScoreRewardInfo: g.GetRogueScoreRewardInfo(),
 		Retcode:              0,
@@ -25,7 +26,7 @@ func (g *GamePlayer) GetRogueInitialScoreCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetRogueInitialScoreScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetRogueTalentInfoScRsp{
 		TalentInfoList: &proto.RogueTalentInfoList{
 			TalentInfo: make([]*proto.RogueTalentInfo, 0),
@@ -43,16 +44,15 @@ func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetRogueTalentInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRogueInfoCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetRogueInfoScRsp)
 	rsp.RogueInfo = g.GetRogueInfo()
 
 	g.Send(cmd.GetRogueInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) StartRogueCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.StartRogueCsReq, payloadMsg)
-	req := msg.(*proto.StartRogueCsReq)
+func (g *GamePlayer) StartRogueCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.StartRogueCsReq)
 	rsp := &proto.StartRogueScRsp{}
 	conf := gdconf.GetRogueAreaConfigById(req.AreaId)
 	if conf == nil {
@@ -149,9 +149,8 @@ func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, 
 	}
 }
 
-func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.HandleRogueCommonPendingActionCsReq, payloadMsg)
-	req := msg.(*proto.HandleRogueCommonPendingActionCsReq)
+func (g *GamePlayer) HandleRogueCommonPendingActionCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.HandleRogueCommonPendingActionCsReq)
 	action := req.Action
 	if action != nil {
 		switch action.(type) {
@@ -278,14 +277,14 @@ func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 	g.Send(cmd.SyncRogueCommonActionResultScNotify, notify)
 }
 
-func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRogueHandbookDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetRogueHandbookDataScRsp{
 		// HandbookInfo: &proto.RogueHandbook{},
 	}
 	g.Send(cmd.GetRogueHandbookDataScRsp, rsp)
 }
 
-func (g *GamePlayer) QuitRogueCsReq(payloadMsg []byte) {
+func (g *GamePlayer) QuitRogueCsReq(payloadMsg pb.Message) {
 	db := g.GetCurRogue()
 	db.Status = spb.RogueStatus_ROGUE_STATUS_FINISH
 	db.IsWin = true
@@ -298,7 +297,7 @@ func (g *GamePlayer) QuitRogueCsReq(payloadMsg []byte) {
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)
 }
 
-func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
+func (g *GamePlayer) LeaveRogueCsReq(payloadMsg pb.Message) {
 	curLine := g.GetCurLineUp()
 	// SyncRogueFinishScNotify
 	rsp := &proto.LeaveRogueScRsp{
@@ -311,9 +310,8 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg []byte) {
 	g.SetBattleStatus(spb.BattleType_Battle_NONE)
 }
 
-func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.EnterRogueMapRoomCsReq, payloadMsg)
-	req := msg.(*proto.EnterRogueMapRoomCsReq)
+func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.EnterRogueMapRoomCsReq)
 	g.FinishRogueRoom(g.GetCurRogue().CurSiteId)
 	g.UpCurRogueRoom(req.SiteId)
 	rsp := &proto.EnterRogueMapRoomScRsp{
@@ -327,7 +325,7 @@ func (g *GamePlayer) EnterRogueMapRoomCsReq(payloadMsg []byte) {
 	g.Send(cmd.EnterRogueMapRoomScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueBuffEnhanceInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRogueBuffEnhanceInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetRogueBuffEnhanceInfoScRsp{
 		BuffEnhanceInfo: &proto.RogueBuffEnhanceInfoList{
 			EnhanceInfoList: make([]*proto.RogueBuffEnhanceInfo, 0),
@@ -345,7 +343,7 @@ func (g *GamePlayer) GetRogueBuffEnhanceInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetRogueBuffEnhanceInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRogueAdventureRoomInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetRogueAdventureRoomInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetRogueAdventureRoomInfoScRsp{
 		// NKIEHEJPKPK: &proto.BDJFNCAHDCP{
 		// 	OLHEOHGEGEP: 16,

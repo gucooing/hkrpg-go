@@ -4,9 +4,10 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetMultiPathAvatarInfoScRsp{
 		Retcode:                 0,
 		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),      // 已解锁多命途角色信息
@@ -24,7 +25,7 @@ func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMultiPathAvatarInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetAvatarDataScRsp)
 	rsp.IsGetAll = true
 	rsp.AvatarList = make([]*proto.Avatar, 0)
@@ -39,9 +40,8 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetAvatarDataScRsp, rsp)
 }
 
-func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
-	req := msg.(*proto.RankUpAvatarCsReq)
+func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RankUpAvatarCsReq)
 	rsp := &proto.RankUpAvatarScRsp{}
 	db := g.GetAvatarBinById(req.GetAvatarId())
 	cost := req.GetCostData()
@@ -73,9 +73,8 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
 	g.Send(cmd.RankUpAvatarScRsp, rsp)
 }
 
-func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.AvatarExpUpCsReq, payloadMsg)
-	req := msg.(*proto.AvatarExpUpCsReq)
+func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.AvatarExpUpCsReq)
 	rsp := &proto.AvatarExpUpScRsp{}
 	cost := req.GetItemCost()
 	// 从背包获取需要升级的角色
@@ -177,9 +176,8 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	g.Send(cmd.AvatarExpUpScRsp, rsp)
 }
 
-func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.PromoteAvatarCsReq, payloadMsg)
-	req := msg.(*proto.PromoteAvatarCsReq)
+func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.PromoteAvatarCsReq)
 	rsp := &proto.AvatarExpUpScRsp{}
 	itemList := req.GetItemList()
 	// 从背包获取需要升级的角色
@@ -237,9 +235,8 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
 	g.Send(cmd.PromoteAvatarScRsp, rsp)
 }
 
-func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.UnlockSkilltreeCsReq, payloadMsg)
-	req := msg.(*proto.UnlockSkilltreeCsReq)
+func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.UnlockSkilltreeCsReq)
 	rsp := &proto.UnlockSkilltreeScRsp{}
 	avatarId := req.PointId / 1000 // 获取要升级技能的角色Id
 	if avatarId/1000 == 8 {
@@ -292,9 +289,8 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 	g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 }
 
-func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.TakePromotionRewardCsReq, payloadMsg)
-	req := msg.(*proto.TakePromotionRewardCsReq)
+func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TakePromotionRewardCsReq)
 	var pileItem []*Material
 	allSync := &AllPlayerSync{
 		AvatarList:   make([]uint32, 0),

@@ -4,24 +4,23 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetFirstTalkNpcScRsp, nil)
 }
 
-func (g *GamePlayer) GetNpcTakenRewardCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetNpcTakenRewardCsReq, payloadMsg)
-	req := msg.(*proto.GetNpcTakenRewardCsReq)
+func (g *GamePlayer) GetNpcTakenRewardCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetNpcTakenRewardCsReq)
 	rsp := new(proto.GetNpcTakenRewardScRsp)
 	rsp.NpcId = req.NpcId
 
 	g.Send(cmd.GetNpcTakenRewardScRsp, rsp)
 }
 
-func (g *GamePlayer) GetFirstTalkByPerformanceNpcCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetFirstTalkByPerformanceNpcCsReq, payloadMsg)
-	req := msg.(*proto.GetFirstTalkByPerformanceNpcCsReq)
+func (g *GamePlayer) GetFirstTalkByPerformanceNpcCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetFirstTalkByPerformanceNpcCsReq)
 	rsp := &proto.GetFirstTalkByPerformanceNpcScRsp{
 		NpcMeetStatusList: make([]*proto.NpcMeetByPerformanceStatus, 0),
 	}
@@ -32,9 +31,8 @@ func (g *GamePlayer) GetFirstTalkByPerformanceNpcCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetFirstTalkByPerformanceNpcScRsp, rsp)
 }
 
-func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetNpcMessageGroupCsReq, payloadMsg)
-	req := msg.(*proto.GetNpcMessageGroupCsReq)
+func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetNpcMessageGroupCsReq)
 	rsp := &proto.GetNpcMessageGroupScRsp{
 		MessageGroupList: make([]*proto.MessageGroup, 0),
 		Retcode:          0,
@@ -66,9 +64,8 @@ func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetNpcMessageGroupScRsp, rsp)
 }
 
-func (g *GamePlayer) FinishPerformSectionIdCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.FinishPerformSectionIdCsReq, payloadMsg)
-	req := msg.(*proto.FinishPerformSectionIdCsReq)
+func (g *GamePlayer) FinishPerformSectionIdCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.FinishPerformSectionIdCsReq)
 
 	g.FinishMessageGroup(req.SectionId)
 
@@ -107,7 +104,7 @@ func (g *GamePlayer) MessageGroupPlayerSyncScNotify(contactId uint32) {
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
-func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetNpcStatusScRsp{
 		NpcStatusList: make([]*proto.NpcStatus, 0),
 		Retcode:       0,
@@ -129,9 +126,8 @@ func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetNpcStatusScRsp, rsp)
 }
 
-func (g *GamePlayer) FinishItemIdCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.FinishItemIdCsReq, payloadMsg)
-	req := msg.(*proto.FinishItemIdCsReq)
+func (g *GamePlayer) FinishItemIdCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.FinishItemIdCsReq)
 	rsp := &proto.FinishItemIdScRsp{
 		TextId:  req.TextId,
 		ItemId:  req.ItemId,

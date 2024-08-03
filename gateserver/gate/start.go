@@ -82,6 +82,7 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 		os.Exit(0)
 	}
 	s.kcpListener = kcpListener
+	s.kcpListener.EnetHandle()
 	// 开启gate定时器
 	s.Ticker = time.NewTicker(5 * time.Second)
 	s.Stop = make(chan struct{})
@@ -97,7 +98,6 @@ func NewGate(cfg *config.Config, appid string) *GateServer {
 		}
 	}()
 	go kcpNetInfo()
-	go s.kcpEnetHandle(kcpListener)
 	go s.AutoDelPlayer()
 
 	return s

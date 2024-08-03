@@ -2,7 +2,6 @@ package gate
 
 import (
 	"context"
-	"encoding/base64"
 	"strconv"
 	"time"
 
@@ -283,7 +282,7 @@ func (gs *gameServer) GetToGamePlayerLogoutRsp(playerMsg pb.Message) {
 		newGs.playerLogin(loginPlay)
 	}
 
-	logger.Debug("[UID:%v]下线玩家成功", rsp.Uid)
+	logger.Info("[UID:%v]下线玩家成功", rsp.Uid)
 }
 
 // game通知gate玩家消息
@@ -293,15 +292,11 @@ func (gs *gameServer) GameToGateMsgNotify(playerMsg pb.Message) {
 	if player == nil {
 		return
 	}
-	protoData, err := base64.StdEncoding.DecodeString(notify.B64Msg)
-	if err != nil {
-		logger.Warn("game server -> gate server player msg base64 decode,err:%s", err.Error())
-		return
-	}
+	// logger.Debug("[UID:%v]game->gate:%s", notify.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(uint16(notify.CmdId)))
 	SendHandle(player, &alg.PackMsg{
 		CmdId:     uint16(notify.CmdId),
 		HeadData:  make([]byte, 0),
-		ProtoData: protoData,
+		ProtoData: notify.Msg,
 	})
 }
 

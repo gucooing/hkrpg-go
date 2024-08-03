@@ -3,6 +3,7 @@ package player
 import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 /*******************每日任务****************/
@@ -28,7 +29,7 @@ func (g *GamePlayer) DailyActiveInfoNotify() {
 	g.Send(cmd.DailyActiveInfoNotify, notify)
 }
 
-func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetDailyActiveInfoScRsp{
 		DailyActiveLevelList:   make([]*proto.DailyActivityInfo, 0),
 		DailyActiveQuestIdList: dailyActiveQuestIdList,
@@ -50,9 +51,8 @@ func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg []byte) {
 
 /*******************任务****************/
 
-func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetMainMissionCustomValueCsReq, payloadMsg)
-	req := msg.(*proto.GetMainMissionCustomValueCsReq)
+func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetMainMissionCustomValueCsReq)
 	rsp := &proto.GetMainMissionCustomValueScRsp{MainMissionList: make([]*proto.MainMission, 0)}
 	mainMissionList := g.GetMainMissionList()             // 已接取的主任务
 	finishMainMissionList := g.GetFinishMainMissionList() // 已完成的主任务
@@ -93,13 +93,12 @@ func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMainMissionCustomValueScRsp, rsp)
 }
 
-func (g *GamePlayer) UpdateTrackMainMissionIdCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.UpdateTrackMainMissionIdCsReq, payloadMsg)
-	req := msg.(*proto.UpdateTrackMainMissionIdCsReq)
+func (g *GamePlayer) UpdateTrackMainMissionIdCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.UpdateTrackMainMissionIdCsReq)
 	g.Send(cmd.UpdateTrackMainMissionIdScRsp, &proto.UpdateTrackMainMissionIdScRsp{TrackMissionId: req.TrackMissionId})
 }
 
-func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetMissionEventDataScRsp{
 		Retcode:          0,
 		ChallengeEventId: 0,
@@ -115,9 +114,8 @@ func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMissionEventDataScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetMissionStatusCsReq, payloadMsg)
-	req := msg.(*proto.GetMissionStatusCsReq)
+func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetMissionStatusCsReq)
 
 	rsp := &proto.GetMissionStatusScRsp{
 		FinishedMainMissionIdList:   make([]uint32, 0),
@@ -171,7 +169,7 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMissionStatusScRsp, rsp)
 }
 
-func (g *GamePlayer) GetMissionDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetMissionDataCsReq(payloadMsg pb.Message) {
 	mainMissionList := g.GetMainMissionList()
 	subMainMissionList := g.GetSubMainMissionList()
 
@@ -199,16 +197,14 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetMissionDataScRsp, rsp)
 }
 
-func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.FinishTalkMissionCsReq, payloadMsg)
-	req := msg.(*proto.FinishTalkMissionCsReq)
+func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.FinishTalkMissionCsReq)
 	g.TalkStrSubMission(req) // 获取子任务
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr, CustomValueList: req.CustomValueList})
 }
 
-func (g *GamePlayer) FinishCosumeItemMissionCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.FinishCosumeItemMissionCsReq, payloadMsg)
-	req := msg.(*proto.FinishCosumeItemMissionCsReq)
+func (g *GamePlayer) FinishCosumeItemMissionCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.FinishCosumeItemMissionCsReq)
 	g.FinishCosumeItemMission(req.SubMissionId)
 	g.Send(cmd.FinishCosumeItemMissionScRsp, &proto.FinishCosumeItemMissionScRsp{SubMissionId: req.SubMissionId})
 }

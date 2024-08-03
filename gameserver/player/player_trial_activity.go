@@ -5,6 +5,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type ActivityInfoOnline struct {
@@ -19,9 +20,8 @@ func (g *GamePlayer) GetActivityInfoOnline() *ActivityInfoOnline {
 	return db.ActivityInfoOnline
 }
 
-func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
-	req := msg.(*proto.StartTrialActivityCsReq)
+func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.StartTrialActivityCsReq)
 	rsp := &proto.StartTrialActivityScRsp{StageId: req.StageId}
 	avatarDemo := gdconf.GetAvatarDemoConfigById(req.StageId)
 	if avatarDemo == nil {

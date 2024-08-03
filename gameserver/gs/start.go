@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/gucooing/gunet"
-
 	"github.com/gucooing/hkrpg-go/gameserver/config"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
@@ -119,7 +118,7 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 			switch msg.CmdId {
 			case cmd.GateLoginGameReq:
 				rsp := serviceMsg.(*spb.GateLoginGameReq)
-				go s.recvGate(conn, rsp.AppId)
+				go s.newGate(conn, rsp.AppId)
 			}
 			return
 		}
@@ -134,11 +133,15 @@ func (s *GameServer) AutoUpDataPlayer() {
 		if g.p.Uid == 0 {
 			continue
 		}
-		lastActiveTime := g.LastActiveTime
-		if timestamp-lastActiveTime >= 180 {
+		if g.lastActiveTime+50 < timestamp {
+			logger.Info("[UID:%v]超时离线", g.p.Uid)
+			s.killPlayer(g)
+			continue
+		}
+		if timestamp-g.p.LastUpDataTime >= 180 {
 			logger.Debug("[UID:%v]玩家数据自动保存", g.p.Uid)
 			g.p.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE)
-			g.LastActiveTime = timestamp + rand.Int63n(120)
+			g.p.LastUpDataTime = timestamp + rand.Int63n(120)
 		}
 	}
 	logger.Info("自动保存玩家数据结束")

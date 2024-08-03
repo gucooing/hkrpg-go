@@ -7,11 +7,11 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetFarmStageGachaInfoCsReq, payloadMsg)
-	req := msg.(*proto.GetFarmStageGachaInfoCsReq)
+func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetFarmStageGachaInfoCsReq)
 
 	rsp := &proto.GetFarmStageGachaInfoScRsp{
 		FarmStageGachaInfoList: make([]*proto.FarmStageGachaInfo, 0),
@@ -29,7 +29,7 @@ func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetGachaInfoScRsp)
 	rsp.GachaInfoList = make([]*proto.GachaInfo, 0)
 
@@ -66,9 +66,8 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetGachaInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetGachaCeilingCsReq, payloadMsg)
-	req := msg.(*proto.GetGachaCeilingCsReq)
+func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetGachaCeilingCsReq)
 
 	rsp := &proto.GetGachaCeilingScRsp{
 		GachaType: req.GachaType,
@@ -90,9 +89,8 @@ func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetGachaCeilingScRsp, rsp)
 }
 
-func (g *GamePlayer) DoGachaCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.DoGachaCsReq, payloadMsg)
-	req := msg.(*proto.DoGachaCsReq)
+func (g *GamePlayer) DoGachaCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.DoGachaCsReq)
 	rsp := &proto.DoGachaScRsp{
 		GachaId:       req.GachaId,
 		CeilingNum:    0,

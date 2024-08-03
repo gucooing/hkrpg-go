@@ -5,11 +5,12 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 /***********************************忘却之庭***********************************/
 
-func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
 	rsp.ChallengeGroupList = make([]*proto.ChallengeGroup, 0)
@@ -35,7 +36,7 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg []byte) {
 
 // 获取状态
 
-func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetCurChallengeScRsp{
 		CurChallenge: g.GetChallengeInfo(),
 		LineupList: []*proto.LineupInfo{
@@ -48,9 +49,8 @@ func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg []byte) {
 
 // 进入忘却之庭
 
-func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.StartChallengeCsReq, payloadMsg)
-	req := msg.(*proto.StartChallengeCsReq)
+func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.StartChallengeCsReq)
 	// 设置战斗状态
 	storyInfo := req.GetPlayerInfo()
 	if storyInfo == nil {
@@ -86,7 +86,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg []byte) {
 
 // 忘却之庭战斗退出/结束
 
-func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg []byte) {
+func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
 	curChallenge := g.GetCurChallenge()
 	if curChallenge == nil {
 		return
@@ -318,7 +318,7 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 	return sceneEntityRefreshInfo
 }
 
-func (g *GamePlayer) StartPartialChallengeCsReq(payloadMsg []byte) {
+func (g *GamePlayer) StartPartialChallengeCsReq(payloadMsg pb.Message) {
 	// msg := g.DecodePayloadToProto(cmd.StartPartialChallengeCsReq, payloadMsg)
 	// req := msg.(*proto.StartPartialChallengeCsReq)
 	// g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE_Story_2)
@@ -326,7 +326,7 @@ func (g *GamePlayer) StartPartialChallengeCsReq(payloadMsg []byte) {
 	// g.SetCurChallenge(req.ChallengeId, storyInfo)
 }
 
-func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg []byte) {
+func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg pb.Message) {
 	rsp := &proto.EnterChallengeNextPhaseScRsp{
 		Scene: g.GetChallengeScene(),
 	}

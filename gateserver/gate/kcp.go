@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"encoding/binary"
 	"sync/atomic"
 	"time"
 
@@ -28,7 +27,6 @@ func (s *GateServer) RunKcp() error {
 			kcpConn.SetWriteDelay(false)
 			kcpConn.SetWindowSize(256, 256)
 			kcpConn.SetMtu(1200)
-			kcpConn.SetIdleTicker(120 * time.Second)
 			sessionId := kcpConn.GetSessionId()
 			logger.Info("sessionId:%v", sessionId)
 			// 读取密钥相关文件
@@ -87,50 +85,9 @@ func (s *GateServer) recvHandle(p *PlayerGame) {
 	}
 }
 
-// kcp连接事件处理函数
-func (s *GateServer) kcpEnetHandle(listener *kcp.Listener) {
-	logger.Info("kcp enet handle start")
-	for {
-		enetNotify := <-listener.GetEnetNotifyChan()
-		logger.Info("[Kcp Enet] addr: %v, conv: %v, sessionId: %v, connType: %v, enetType: %v",
-			enetNotify.Addr, enetNotify.Conv, enetNotify.SessionId, enetNotify.ConnType, enetNotify.EnetType)
-		switch enetNotify.ConnType {
-		case kcp.ConnEnetSyn:
-			if enetNotify.EnetType != kcp.EnetClientConnectKey {
-				logger.Error("enet type not match, sessionId: %v", enetNotify.SessionId)
-				continue
-			}
-			sessionId := atomic.AddUint32(&s.sessionIdCounter, 1)
-			listener.SendEnetNotifyToPeer(&kcp.Enet{
-				Addr:      enetNotify.Addr,
-				SessionId: sessionId,
-				Conv:      binary.BigEndian.Uint32(random.GetRandomByte(4)),
-				ConnType:  kcp.ConnEnetEst,
-				EnetType:  enetNotify.EnetType,
-			})
-		case kcp.ConnEnetAddrChange:
-			// 连接地址改变通知
-			s.kcpEventChan <- &KcpEvent{
-				SessionId:    enetNotify.SessionId,
-				EventId:      KcpConnAddrChangeNotify,
-				EventMessage: enetNotify.Addr,
-			}
-		case kcp.ConnEnetFin:
-			// 连接断开通知
-			logger.Info("kcp 断开连接:%v", enetNotify.SessionId)
-		default:
-		}
-	}
-}
-
 // 发送事件处理
 func SendHandle(p *PlayerGame, kcpMsg *alg.PackMsg) {
 	binMsg := alg.EncodePayloadToBin(kcpMsg, p.XorKey)
-	_, err := p.KcpConn.Write(binMsg)
-	if err != nil {
-		logger.Debug("exit send loop, conn write err: %v", err)
-		return
-	}
 	// 密钥交换
 	if kcpMsg.CmdId == cmd.PlayerGetTokenScRsp {
 		if p.Seed == 0 {
@@ -138,6 +95,11 @@ func SendHandle(p *PlayerGame, kcpMsg *alg.PackMsg) {
 		}
 		p.XorKey = random.CreateXorPad(p.Seed, false)
 		logger.Info("uid:%v,seed:%v,密钥交换成功", p.Uid, p.Seed)
+	}
+	_, err := p.KcpConn.Write(binMsg)
+	if err != nil {
+		logger.Debug("exit send loop, conn write err: %v", err)
+		return
 	}
 }
 

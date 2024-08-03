@@ -5,9 +5,10 @@ import (
 
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg pb.Message) {
 	db := g.GetFriendList()
 	rsp := &proto.GetFriendLoginInfoScRsp{
 		FriendUidList: make([]uint32, 0),
@@ -19,7 +20,7 @@ func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetFriendLoginInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetFriendListInfoScRsp)
 	rsp.FriendList = make([]*proto.FriendSimpleInfo, 0)
 	for uid := range g.GetFriendList() {
@@ -28,16 +29,15 @@ func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetFriendListInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetPlayerDetailInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetPlayerDetailInfoCsReq, payloadMsg)
-	req := msg.(*proto.GetPlayerDetailInfoCsReq)
+func (g *GamePlayer) GetPlayerDetailInfoCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetPlayerDetailInfoCsReq)
 	g.Send(cmd.GetPlayerDetailInfoScRsp, &proto.GetPlayerDetailInfoScRsp{
 		DetailInfo: g.GetPlayerDetailInfo(req.Uid),
 		Retcode:    0,
 	})
 }
 
-func (g *GamePlayer) GetFriendApplyListInfoCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetFriendApplyListInfoCsReq(payloadMsg pb.Message) {
 	receiveApplyList := g.GetRecvApplyFriend()
 	rsp := &proto.GetFriendApplyListInfoScRsp{
 		SendApplyList:    make([]uint32, 0),
@@ -55,7 +55,7 @@ func (g *GamePlayer) GetFriendApplyListInfoCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetFriendApplyListInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) GetChatFriendHistoryCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetChatFriendHistoryCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetChatFriendHistoryScRsp, &proto.GetChatFriendHistoryScRsp{
 		FriendHistoryInfo: []*proto.FriendHistoryInfo{
 			{
@@ -67,9 +67,8 @@ func (g *GamePlayer) GetChatFriendHistoryCsReq(payloadMsg []byte) {
 	})
 }
 
-func (g *GamePlayer) SearchPlayerCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SearchPlayerCsReq, payloadMsg)
-	req := msg.(*proto.SearchPlayerCsReq)
+func (g *GamePlayer) SearchPlayerCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SearchPlayerCsReq)
 	rsp := &proto.SearchPlayerScRsp{
 		Retcode:        0,
 		ResultUidList:  make([]uint32, 0),
@@ -86,9 +85,8 @@ func (g *GamePlayer) SearchPlayerCsReq(payloadMsg []byte) {
 	g.Send(cmd.SearchPlayerScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleFriendCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.HandleFriendCsReq, payloadMsg)
-	req := msg.(*proto.HandleFriendCsReq)
+func (g *GamePlayer) HandleFriendCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.HandleFriendCsReq)
 	if req.IsAccept {
 		g.AddFriend(req.Uid)
 	}

@@ -4,6 +4,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
 )
 
 // 队伍更新通知
@@ -22,7 +23,7 @@ func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
 
-func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetAllLineupDataScRsp)
 	rsp.LineupList = make([]*proto.LineupInfo, 0)
 	db := g.GetLineUp()
@@ -37,23 +38,22 @@ func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetAllLineupDataScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetCurLineupDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetCurLineupDataCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetCurLineupDataScRsp)
 	rsp.Lineup = g.GetLineUpPb(g.GetCurLineUp())
 
 	g.Send(cmd.GetCurLineupDataScRsp, rsp)
 }
 
-func (g *GamePlayer) GetLineupAvatarDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) GetLineupAvatarDataCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetLineupAvatarDataScRsp)
 	rsp.AvatarDataList = g.GetLineupAvatarDataList(g.GetCurLineUp())
 
 	g.Send(cmd.GetLineupAvatarDataScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleJoinLineupCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.JoinLineupCsReq, payloadMsg)
-	req := msg.(*proto.JoinLineupCsReq)
+func (g *GamePlayer) HandleJoinLineupCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.JoinLineupCsReq)
 
 	g.UnDbLineUp(req.Index, req.Slot, req.BaseAvatarId)
 
@@ -65,9 +65,8 @@ func (g *GamePlayer) HandleJoinLineupCsReq(payloadMsg []byte) {
 	g.Send(cmd.JoinLineupScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SwitchLineupIndexCsReq, payloadMsg)
-	req := msg.(*proto.SwitchLineupIndexCsReq)
+func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SwitchLineupIndexCsReq)
 
 	lineUpDb := g.GetLineUp()
 	lineUpDb.MainLineUp = req.Index
@@ -80,9 +79,8 @@ func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg []byte) {
 	g.Send(cmd.SwitchLineupIndexScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SwapLineupCsReq, payloadMsg)
-	req := msg.(*proto.SwapLineupCsReq)
+func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SwapLineupCsReq)
 
 	// 交换角色
 	g.SwapLineup(req.Index, req.SrcSlot, req.DstSlot)
@@ -96,9 +94,8 @@ func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg []byte) {
 	g.Send(cmd.SwapLineupScRsp, rsp)
 }
 
-func (g *GamePlayer) SetLineupNameCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SetLineupNameCsReq, payloadMsg)
-	req := msg.(*proto.SetLineupNameCsReq)
+func (g *GamePlayer) SetLineupNameCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SetLineupNameCsReq)
 	db := g.GetLineUpById(req.Index)
 	db.Name = req.Name
 
@@ -114,9 +111,8 @@ func (g *GamePlayer) SetLineupNameCsReq(payloadMsg []byte) {
 	g.Send(cmd.SetLineupNameScRsp, rsp)
 }
 
-func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.ReplaceLineupCsReq, payloadMsg)
-	req := msg.(*proto.ReplaceLineupCsReq)
+func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ReplaceLineupCsReq)
 
 	index := req.Index
 	isBattleLine := false
@@ -160,9 +156,8 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg []byte) {
 	g.Send(cmd.ReplaceLineupScRsp, &proto.ReplaceLineupScRsp{})
 }
 
-func (g *GamePlayer) ChangeLineupLeaderCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.ChangeLineupLeaderCsReq, payloadMsg)
-	req := msg.(*proto.ChangeLineupLeaderCsReq)
+func (g *GamePlayer) ChangeLineupLeaderCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ChangeLineupLeaderCsReq)
 
 	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
 
@@ -172,9 +167,8 @@ func (g *GamePlayer) ChangeLineupLeaderCsReq(payloadMsg []byte) {
 	g.Send(cmd.ChangeLineupLeaderScRsp, rsp)
 }
 
-func (g *GamePlayer) QuitLineupCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.QuitLineupCsReq, payloadMsg)
-	req := msg.(*proto.QuitLineupCsReq)
+func (g *GamePlayer) QuitLineupCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.QuitLineupCsReq)
 	db := g.GetCurLineUp()
 
 	for id, lineAvatar := range db.AvatarIdList {

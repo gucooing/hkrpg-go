@@ -121,20 +121,16 @@ func (r *RoBot) PlayerLoginScRsp() {
 }
 
 func (r *RoBot) PlayerHeartBeatCsReq() {
-	go func() {
-		for {
-			if r.KcpAddr == "" {
-				return
-			}
-			req := &proto.PlayerHeartBeatCsReq{
-				ClientTimeMs: uint64(time.Now().UnixMilli()),
-			}
-
-			r.send(cmd.PlayerHeartBeatCsReq, req)
-
-			time.Sleep(1 * time.Millisecond)
+	for {
+		if r.KcpConn == nil {
+			return
 		}
-	}()
+		req := &proto.PlayerHeartBeatCsReq{
+			ClientTimeMs: uint64(time.Now().UnixMilli()),
+		}
+		r.send(cmd.PlayerHeartBeatCsReq, req)
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
 func (r *RoBot) PlayerHeartbeatScRsp(payloadMsg []byte) {

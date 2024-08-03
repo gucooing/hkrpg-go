@@ -2,7 +2,6 @@ package gs
 
 import (
 	"context"
-	"encoding/base64"
 	"strconv"
 	"time"
 
@@ -16,11 +15,9 @@ import (
 )
 
 type gateServer struct {
-	game             *GameServer
-	appid            uint32
-	conn             *gunet.TcpConn  // gate tcp通道
-	msgChan          chan player.Msg // 消息通道
-	recvPlayerCancel context.CancelFunc
+	game  *GameServer
+	appid uint32
+	conn  *gunet.TcpConn // gate tcp通道
 }
 
 func (s *GameServer) addGeList(ge *gateServer) {
@@ -41,36 +38,35 @@ func (s *GameServer) getGeByAppid(appid uint32) *gateServer {
 	return s.gateList[appid]
 }
 
-// 从gate接收消息
-func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32) {
+func (s *GameServer) newGate(conn *gunet.TcpConn, appid uint32) {
 	ge := &gateServer{
 		game:  s,
 		appid: appid,
 		conn:  conn,
 	}
 	s.addGeList(ge)
-	rsp := &spb.GateLoginGameRsp{
+	ge.seedGate(cmd.GateLoginGameRsp, &spb.GateLoginGameRsp{
 		Retcode: 0,
-	}
-	ge.seedGate(cmd.GateLoginGameRsp, rsp)
-	ge.msgChan = make(chan player.Msg, 10)
-	recvPlayerCtx, recvPlayerCancel := context.WithCancel(context.Background())
-	ge.recvPlayerCancel = recvPlayerCancel
-	go ge.recvPlayer(recvPlayerCtx)
+	})
 	logger.Info("gate:[%v]在game注册成功", appid)
+	ge.recvGate()
+}
+
+// 从gate接收消息
+func (ge *gateServer) recvGate() {
 	// panic捕获
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Error("!!! GATE MAIN LOOP PANIC !!!")
 			logger.Error("error: %v", err)
 			logger.Error("stack: %v", logger.Stack())
-			logger.Error("the motherfucker gate: %v", appid)
+			logger.Error("the motherfucker gate: %v", ge.appid)
 			ge.killGate()
 		}
 	}()
 
 	for {
-		bin, err := conn.Read()
+		bin, err := ge.conn.Read()
 		if err != nil {
 			logger.Debug("exit recv loop, conn read err: %v", err)
 			ge.killGate()
@@ -81,19 +77,6 @@ func (s *GameServer) recvGate(conn *gunet.TcpConn, appid uint32) {
 		for _, msg := range nodeMsgList {
 			serviceMsg := alg.DecodePayloadToProto(msg)
 			go ge.gateRegisterMessage(msg.CmdId, serviceMsg)
-		}
-	}
-}
-
-// 接收player传来的消息
-func (ge *gateServer) recvPlayer(recvPlayerCtx context.Context) {
-	for {
-		select {
-		case bin := <-ge.msgChan:
-			go ge.playerToGame(bin)
-		case <-recvPlayerCtx.Done():
-			close(ge.msgChan)
-			return
 		}
 	}
 }
@@ -112,13 +95,6 @@ func (ge *gateServer) gateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 		ge.GateToGameMsgNotify(payloadMsg) // gate转发客户端消息到gs
 	default:
 		logger.Error("gate -> game cmdid error: %v", cmdId)
-	}
-}
-
-func (ge *gateServer) playerToGame(msg player.Msg) {
-	switch msg.CmdId {
-	case cmd.GameToGateMsgNotify:
-		ge.GameToGateMsgNotify(msg.PlayerMsg)
 	}
 }
 
@@ -168,8 +144,10 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 		ge.GateGamePlayerLoginRsp(rsp)
 		return
 	}
-	p := ge.NewPlayer(req.Uid, req.AccountId, ge.msgChan)
+	p := ge.NewPlayer(req.Uid, req.AccountId)
 	// 拉取账户数据
+	go p.RecvMsg()
+	go ge.recvPlayer(p)
 	p.GetPlayerDateByDb()
 	g, ok := ge.game.addPlayerMap(req.Uid, p, ge)
 	if !ok {
@@ -179,6 +157,37 @@ func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
 	logger.Info("[UID:%v]登录game", p.Uid)
 	ge.game.AddPlayerStatus(g)
 	ge.GateGamePlayerLoginRsp(rsp)
+}
+
+func (ge *gateServer) recvPlayer(p *player.GamePlayer) {
+	for {
+		select {
+		case bin := <-p.SendChan:
+			switch bin.MsgType {
+			case player.Server:
+				ge.sendPlayer(p, bin.CmdId, bin.PlayerMsg)
+			}
+		case <-p.SendCtx.Done():
+			p.IsClosed = true
+			return
+		}
+	}
+}
+
+func (ge *gateServer) sendPlayer(p *player.GamePlayer, cmdId uint16, playerMsg pb.Message) {
+	if p.IsClosed {
+		return
+	}
+	rspMsg := new(alg.ProtoMsg)
+	rspMsg.CmdId = cmdId
+	rspMsg.PayloadMessage = playerMsg
+	kcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	// logger.Debug("[UID:%v]game->gate:%s", p.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
+	ge.GameToGateMsgNotify(&spb.GameToGateMsgNotify{
+		Uid:   p.Uid,
+		CmdId: int32(cmdId),
+		Msg:   kcpMsg.ProtoData,
+	})
 }
 
 func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
@@ -223,11 +232,14 @@ func (ge *gateServer) playerRepeatLogin(req *spb.GetToGamePlayerLogoutReq) {
 	ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
 }
 
-func (ge *gateServer) NewPlayer(uid, accountId uint32, msg chan player.Msg) *player.GamePlayer {
+func (ge *gateServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g := new(player.GamePlayer)
 	g.Uid = uid
 	g.AccountId = accountId
-	g.SendChan = msg
+	g.SendChan = make(chan player.Msg, 10)
+	g.RecvChan = make(chan player.Msg, 10)
+	g.SendCtx, g.SendCal = context.WithCancel(context.Background())
+	g.RecvCtx, g.RecvCal = context.WithCancel(context.Background())
 	g.GameAppId = ge.game.AppId
 	g.GateAppId = ge.appid
 	g.IsJumpMission = ge.game.Config.IsJumpMission
@@ -240,12 +252,26 @@ func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 	notify := payloadMsg.(*spb.GateToGameMsgNotify)
 	paler := ge.game.getPlayerByUid(notify.Uid)
 	if paler != nil {
-		protoData, err := base64.StdEncoding.DecodeString(notify.B64Msg)
-		if err != nil {
-			logger.Warn("gate server -> game server player msg base64 decode,err:%s", err.Error())
-			return
+		// logger.Debug("[UID:%v]gate->game:%s", paler.p.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(uint16(notify.CmdId)))
+		paler.lastActiveTime = time.Now().Unix()
+		playerMsg := alg.DecodePayloadToProto(&alg.PackMsg{
+			CmdId:     uint16(notify.CmdId),
+			HeadData:  make([]byte, 0),
+			ProtoData: notify.Msg,
+		})
+		if playerMsg == nil {
+			logger.Warn("[UID:%v]DecodePayloadToProto error", paler.p.Uid)
 		}
-		paler.p.RegisterMessage(uint16(notify.CmdId), protoData)
+		if paler.p.RecvChan != nil {
+			paler.p.RecvChan <- player.Msg{
+				CmdId:     uint16(notify.CmdId),
+				MsgType:   player.Client,
+				PlayerMsg: playerMsg,
+			}
+			if paler.p.IsClosed {
+				close(paler.p.RecvChan)
+			}
+		}
 	}
 }
 
@@ -273,8 +299,5 @@ func (ge *gateServer) killGate() {
 		}
 	}
 	ge.game.delGeList(ge.appid)
-	if ge.recvPlayerCancel != nil {
-		ge.recvPlayerCancel()
-	}
 	logger.Info("[APPID:%v]gate server离线", ge.appid)
 }

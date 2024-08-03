@@ -1,7 +1,3 @@
-/*
-好用的kcp
-爱 来自 hk4e-go
-*/
 package kcp
 
 import (
@@ -26,14 +22,15 @@ const (
 	IKCP_MTU_DEF     = 1400
 	IKCP_ACK_FAST    = 3
 	IKCP_INTERVAL    = 100
-	IKCP_OVERHEAD    = 24 + 4 // KCP组合会话id是8个字节
 	IKCP_DEADLINK    = 20
 	IKCP_THRESH_INIT = 2
 	IKCP_THRESH_MIN  = 2
 	IKCP_PROBE_INIT  = 7000   // 7 secs to probe window size
 	IKCP_PROBE_LIMIT = 120000 // up to 120 secs to probe window
-	IKCP_SN_OFFSET   = 12 + 4 // KCP组合会话id是8个字节
+	IKCP_SN_OFFSET   = 16
 )
+
+var IKCP_OVERHEAD = 28
 
 // monotonic reference time point
 var refTime = time.Now()
@@ -191,7 +188,7 @@ func NewKCP(conv uint64, output output_callback) *KCP {
 	kcp.rcv_wnd = IKCP_WND_RCV
 	kcp.rmt_wnd = IKCP_WND_RCV
 	kcp.mtu = IKCP_MTU_DEF
-	kcp.mss = kcp.mtu - IKCP_OVERHEAD
+	kcp.mss = kcp.mtu - uint32(IKCP_OVERHEAD)
 	kcp.buffer = make([]byte, kcp.mtu)
 	kcp.rx_rto = IKCP_RTO_DEF
 	kcp.rx_minrto = IKCP_RTO_MIN
@@ -222,11 +219,11 @@ func (kcp *KCP) delSegment(seg *segment) {
 //
 // Return false if n >= mss
 func (kcp *KCP) ReserveBytes(n int) bool {
-	if n >= int(kcp.mtu-IKCP_OVERHEAD) || n < 0 {
+	if n >= int(kcp.mtu-uint32(IKCP_OVERHEAD)) || n < 0 {
 		return false
 	}
 	kcp.reserved = n
-	kcp.mss = kcp.mtu - IKCP_OVERHEAD - uint32(n)
+	kcp.mss = kcp.mtu - uint32(IKCP_OVERHEAD) - uint32(n)
 	return true
 }
 
@@ -1007,7 +1004,7 @@ func (kcp *KCP) SetMtu(mtu int) int {
 	if mtu < 50 || mtu < IKCP_OVERHEAD {
 		return -1
 	}
-	if kcp.reserved >= int(kcp.mtu-IKCP_OVERHEAD) || kcp.reserved < 0 {
+	if kcp.reserved >= int(kcp.mtu-uint32(IKCP_OVERHEAD)) || kcp.reserved < 0 {
 		return -1
 	}
 
@@ -1016,7 +1013,7 @@ func (kcp *KCP) SetMtu(mtu int) int {
 		return -2
 	}
 	kcp.mtu = uint32(mtu)
-	kcp.mss = kcp.mtu - IKCP_OVERHEAD - uint32(kcp.reserved)
+	kcp.mss = kcp.mtu - uint32(IKCP_OVERHEAD) - uint32(kcp.reserved)
 	kcp.buffer = buffer
 	return 0
 }

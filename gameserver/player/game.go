@@ -1,11 +1,10 @@
 package player
 
 import (
-	"encoding/base64"
+	"context"
 	"strconv"
 	"time"
 
-	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
@@ -18,6 +17,7 @@ import (
 )
 
 var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
+var LogMsgPlayer uint32 = 2
 
 type GamePlayer struct {
 	Uid           uint32
@@ -33,19 +33,28 @@ type GamePlayer struct {
 	BasicBin       *spb.PlayerBasicCompBin // 玩家pb数据
 	RouteManager   *RouteManager           // 路由
 	SendChan       chan Msg                // 发送消息通道
-	LastUpDataTime int64                   // 最近一次的活跃时间
-}
-
-type RecvMsg struct {
-	CmdId     uint16
-	PlayerMsg []byte
+	RecvChan       chan Msg                // 接收消息通道
+	SendCtx        context.Context
+	SendCal        context.CancelFunc
+	RecvCtx        context.Context
+	RecvCal        context.CancelFunc
+	IsClosed       bool
+	LastUpDataTime int64 // 最近一次的活跃时间
 }
 
 type Msg struct {
-	AppId     uint32 // gs appid
 	CmdId     uint16
+	MsgType   MsgType
 	PlayerMsg pb.Message
 }
+
+type MsgType int
+
+const (
+	Server MsgType = 1
+	Client MsgType = 2
+	Gm     MsgType = 3
+)
 
 func getCurTime() uint64 {
 	return uint64(time.Now().UnixMilli())
@@ -173,50 +182,10 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 }
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
-	// 打印需要的数据包
-	go LogMsgSeed(cmdId, playerMsg)
-	rspMsg := new(alg.ProtoMsg)
-	rspMsg.CmdId = cmdId
-	rspMsg.PayloadMessage = playerMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
-
-	// NewM
-	if cmdId == cmd.GetTutorialGuideScRsp {
-		gtgMsg := &spb.GameToGateMsgNotify{
-			Uid:    g.Uid,
-			CmdId:  NewM,
-			B64Msg: base64.StdEncoding.EncodeToString(gunet.GetGunetTcpConn()),
-		}
-		if g.SendChan != nil {
-			g.SendChan <- Msg{
-				AppId:     g.GateAppId,
-				CmdId:     cmd.GameToGateMsgNotify,
-				PlayerMsg: gtgMsg,
-			}
-		}
+	if g.Uid == LogMsgPlayer {
+		LogMsgSeed(cmdId, playerMsg)
 	}
-
-	var msg Msg
-	gtgMsg := &spb.GameToGateMsgNotify{
-		Uid:    g.Uid,
-		CmdId:  int32(tcpMsg.CmdId),
-		B64Msg: base64.StdEncoding.EncodeToString(tcpMsg.ProtoData),
-	}
-	if g.IsPE {
-		msg = Msg{
-			CmdId:     cmdId,
-			PlayerMsg: playerMsg,
-		}
-	} else {
-		msg = Msg{
-			AppId:     g.GateAppId,
-			CmdId:     cmd.GameToGateMsgNotify,
-			PlayerMsg: gtgMsg,
-		}
-	}
-	if g.SendChan != nil {
-		g.SendChan <- msg
-	}
+	g.SendMsg(cmdId, playerMsg)
 }
 
 func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
@@ -243,7 +212,6 @@ func IsValid(cmdid uint16) bool {
 	return true
 }
 
-// 异步打印数据包
 func LogMsgSeed(cmdId uint16, playerMsg pb.Message) {
 	if IsValid(cmdId) {
 		data := protojson.Format(playerMsg)
@@ -251,19 +219,9 @@ func LogMsgSeed(cmdId uint16, playerMsg pb.Message) {
 	}
 }
 
-func LogMsgRecv(cmdId uint16, payloadMsg []byte) {
+func LogMsgRecv(cmdId uint16, payloadMsg pb.Message) {
 	if IsValid(cmdId) {
-		protoObj := cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
-		if protoObj == nil {
-			logger.Debug("get new proto object is nil")
-			return
-		}
-		err := pb.Unmarshal(payloadMsg, protoObj)
-		if err != nil {
-			logger.Error("unmarshal proto data NAME: %s  err: %v || b64:%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), err, base64.StdEncoding.EncodeToString(payloadMsg))
-			return
-		}
-		data := protojson.Format(protoObj)
+		data := protojson.Format(payloadMsg)
 		logger.Debug("C --> S : NAME: %s KcpMsg: \n%s\n", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
 	}
 }
