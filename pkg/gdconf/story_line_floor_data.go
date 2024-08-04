@@ -33,7 +33,7 @@ func (g *GameDataConfig) loadStoryLineFloorData() {
 	for _, v := range storyLineFloorDataList {
 		g.StoryLineFloorDataMap[v.StoryLineID] = v
 	}
-	logger.Info("load %v StoryLineFloorData", len(g.StroyLineTrialAvatarDataMap))
+	logger.Info("load %v StoryLineFloorData", len(g.StoryLineFloorDataMap))
 }
 
 func GetStoryLineFloorData(id uint32) *StoryLineFloorData {

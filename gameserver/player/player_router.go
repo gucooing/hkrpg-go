@@ -49,6 +49,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.RankUpEquipmentCsReq:  g.RankUpEquipmentCsReq,  // 光锥叠影
 		cmd.PromoteEquipmentCsReq: g.PromoteEquipmentCsReq, // 光锥突破
 		// 圣遗物
+		cmd.RelicRecommendCsReq:   g.RelicRecommendCsReq,   // 获取推荐圣遗物
 		cmd.DressRelicAvatarCsReq: g.DressRelicAvatarCsReq, // 圣遗物装备
 		cmd.ExpUpRelicCsReq:       g.ExpUpRelicCsReq,       // 圣遗物升级
 		// 场景
