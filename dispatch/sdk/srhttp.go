@@ -14,7 +14,7 @@ func (s *Server) ComboGranterApiGetConfigHandler(c *gin.Context) {
 		Protocol:               true,
 		QrEnabled:              true,
 		LogLevel:               "DEBUG",
-		AnnounceURL:            "https://www.youtube.com/",
+		AnnounceURL:            s.OuterAddr,
 		PushAliasType:          0,
 		DisableYsdkGuard:       true,
 		EnableAnnouncePicPopup: true,
@@ -32,13 +32,6 @@ func (s *Server) GetExperimentListHandler(c *gin.Context) {
 }
 
 func (s *Server) SdkDataUploadHandler(c *gin.Context) {
-	req := c.Request
-	body, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		logger.Error("", body)
-		return
-	}
-	// logger.Debug("/sdk/dataUpload", string(body))
 	c.JSON(200, gin.H{
 		"code": 0,
 	})
@@ -46,25 +39,17 @@ func (s *Server) SdkDataUploadHandler(c *gin.Context) {
 
 func (s *Server) apmdataUpload(c *gin.Context) {
 	req := c.Request
-	_, err := ioutil.ReadAll(req.Body)
+	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
-		logger.Error("", err)
 		return
 	}
-	// logger.Debug("/apm/dataUpload", string(body))
+	logger.Debug("/apm/dataUpload", string(body))
 	c.JSON(200, gin.H{
 		"code": 0,
 	})
 }
 
 func (s *Server) commonh5log(c *gin.Context) {
-	req := c.Request
-	_, err := ioutil.ReadAll(req.Body)
-	if err != nil {
-		logger.Error("", err)
-		return
-	}
-	// logger.Debug("/common/h5log/log/batch", string(body))
 	c.String(200, "{\"retcode\":0,\"message\":\"success\",\"data\":null}")
 }
 

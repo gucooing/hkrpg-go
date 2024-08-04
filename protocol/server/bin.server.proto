@@ -405,6 +405,7 @@ message MessageSection {
 message BlockBin{// 地图配置
   uint32 entry_id = 1; // 地图
   map<uint32, BlockList> block_list = 2; // 区块信息
+  map<string,int32> floor_saved_data = 3;
 }
 
 message BlockList{

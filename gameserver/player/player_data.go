@@ -456,27 +456,11 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.GetLevelRewardScRsp, rsp)
 		return
 	}
-	rewardConf := gdconf.GetRewardDataById(conf.LevelRewardID)
-	if rewardConf == nil {
-		g.Send(cmd.GetLevelRewardScRsp, rsp)
-		return
-	}
-	allSync.MaterialList = append(allSync.MaterialList, Hcoin)
-	pileItem = append(pileItem, &Material{
-		Tid: Hcoin,
-		Num: rewardConf.Hcoin,
-	})
-	for _, info := range rewardConf.Items {
-		allSync.MaterialList = append(allSync.MaterialList, info.ItemID)
-		pileItem = append(pileItem, &Material{
-			Tid: info.ItemID,
-			Num: info.Count,
-		})
-		rsp.Reward.ItemList = append(rsp.Reward.ItemList, &proto.Item{
-			ItemId: info.ItemID,
-			Num:    info.Count,
-		})
-	}
+
+	pile, material, item := g.getRewardData(conf.LevelRewardID)
+	pileItem = append(pileItem, pile...)
+	allSync.MaterialList = append(allSync.MaterialList, material...)
+	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
 
 	g.AddItem(pileItem)
 	g.AddRewardTakenLevelList(req.Level)
@@ -486,7 +470,6 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) TakeBpRewardCsReq(payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.TakeBpRewardCsReq)
-
 	rsp := &proto.TakeBpRewardScRsp{
 		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: Hcoin, Num: 1000}}},
 		Retcode: 0,
@@ -511,4 +494,19 @@ func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg pb.Message) {
 	}
 	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.TakeAllRewardScRsp, rsp)
+}
+
+func (g *GamePlayer) ReserveStaminaExchangeCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ReserveStaminaExchangeCsReq)
+	rsp := &proto.ReserveStaminaExchangeScRsp{
+		Num:     req.Num,
+		Retcode: 0,
+	}
+	if !g.DelMaterial([]*Material{{Tid: RStamina, Num: req.Num}}) {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
+	}
+	g.AddItem([]*Material{{Tid: Stamina, Num: req.Num}})
+	g.StaminaInfoScNotify()
+
+	g.Send(cmd.ReserveStaminaExchangeScRsp, rsp)
 }

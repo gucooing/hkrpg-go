@@ -440,6 +440,78 @@ func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData, avatarId uint32) {
 	g.AvatarRecoverPercent(avatarId, conf.PreviewHPRecoveryValue, conf.PreviewHPRecoveryPercent)
 }
 
+func (g *GamePlayer) itemSubTypeMaterial(useDataID, useItemCount uint32) []*proto.Item {
+	conf := gdconf.GetItemUseData(useDataID)
+	itemList := make([]*proto.Item, 0)
+	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	pileItem := make([]*Material, 0)
+	if conf == nil {
+		return itemList
+	}
+	var i uint32 = 0
+	for i = 0; i < useItemCount; i++ {
+		for _, rewardId := range conf.UseParam {
+			pile, material, item := g.getRewardData(rewardId)
+			pileItem = append(pileItem, pile...)
+			allSync.MaterialList = append(allSync.MaterialList, material...)
+			itemList = append(itemList, item...)
+		}
+	}
+
+	g.AddItem(pileItem)
+	g.AllPlayerSyncScNotify(allSync)
+	return itemList
+}
+
+func (g *GamePlayer) ItemSubTypeGift(useDataID, useItemCount uint32) []*proto.Item {
+	conf := gdconf.GetItemUseData(useDataID)
+	itemList := make([]*proto.Item, 0)
+	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	pileItem := make([]*Material, 0)
+	if conf == nil {
+		return itemList
+	}
+	var i uint32 = 0
+	for i = 0; i < useItemCount; i++ {
+		for _, rewardId := range conf.UseParam {
+			pile, material, item := g.getRewardData(rewardId)
+			pileItem = append(pileItem, pile...)
+			allSync.MaterialList = append(allSync.MaterialList, material...)
+			itemList = append(itemList, item...)
+		}
+	}
+
+	g.AddItem(pileItem)
+	g.AllPlayerSyncScNotify(allSync)
+	return itemList
+}
+
+func (g *GamePlayer) getRewardData(rewardID uint32) ([]*Material, []uint32, []*proto.Item) {
+	pileItem := make([]*Material, 0)
+	materialList := make([]uint32, 0)
+	itemList := make([]*proto.Item, 0)
+	if rewardConf := gdconf.GetRewardDataById(rewardID); rewardConf != nil {
+		if rewardConf.Hcoin != 0 {
+			pileItem = append(pileItem, &Material{
+				Tid: Hcoin,
+				Num: rewardConf.Hcoin,
+			})
+		}
+		for _, data := range rewardConf.Items {
+			materialList = append(materialList, data.ItemID)
+			pileItem = append(pileItem, &Material{
+				Tid: data.ItemID,
+				Num: data.Count,
+			})
+			itemList = append(itemList, &proto.Item{
+				ItemId: data.ItemID,
+				Num:    data.Count,
+			})
+		}
+	}
+	return pileItem, materialList, itemList
+}
+
 func (g *GamePlayer) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData) (proto.Retcode, *AllPlayerSync) {
 	// 扣除材料
 	var pileItem []*Material

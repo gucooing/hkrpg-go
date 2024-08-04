@@ -47,6 +47,11 @@ func (g *GamePlayer) GetCurChangeStoryInfo() *spb.ChangeStoryInfo {
 	if !db.IsChangeStory {
 		return nil
 	}
+	if conf := gdconf.GetStoryLine(db.CurChangeStory); conf == nil {
+		db.IsChangeStory = false
+		db.CurChangeStory = 0
+		return nil
+	}
 	return g.GetChangeStoryInfo(db.CurChangeStory)
 }
 
@@ -86,6 +91,8 @@ func (g *GamePlayer) MissionAddChangeStoryLine(finishActionPara []uint32) {
 			},
 		}
 		db.IsChangeStory = true
+	} else {
+		return
 	}
 	g.StoryLineInfoScNotify() // 通知一次
 	g.SyncLineupNotify(g.GetCurLineUp())

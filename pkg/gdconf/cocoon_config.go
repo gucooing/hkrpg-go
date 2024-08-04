@@ -42,15 +42,15 @@ func (g *GameDataConfig) loadCocoonConfig() {
 	}
 
 	for _, v := range cocoonConfigMap {
-		if g.CocoonConfigMap[v.StageID] == nil {
-			g.CocoonConfigMap[v.StageID] = make(map[uint32]*CocoonConfig)
+		if g.CocoonConfigMap[v.ID] == nil {
+			g.CocoonConfigMap[v.ID] = make(map[uint32]*CocoonConfig)
 		}
-		g.CocoonConfigMap[v.StageID][v.WorldLevel] = v
+		g.CocoonConfigMap[v.ID][v.WorldLevel] = v
 	}
 
 	logger.Info("load %v CocoonConfig", len(g.CocoonConfigMap))
 }
 
-func GetCocoonConfigById(stageID, worldLevel uint32) *CocoonConfig {
-	return CONF.CocoonConfigMap[stageID][worldLevel]
+func GetCocoonConfigById(id, worldLevel uint32) *CocoonConfig {
+	return CONF.CocoonConfigMap[id][worldLevel]
 }

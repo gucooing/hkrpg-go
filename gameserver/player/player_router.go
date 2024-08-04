@@ -155,6 +155,11 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartTrialActivityCsReq:        g.StartTrialActivityCsReq,              // 角色试用
 		cmd.TakeLoginActivityRewardCsReq:   g.TakeLoginActivityRewardCsReq,         // 领取登录活动奖励
 		cmd.TakeTrialActivityRewardCsReq:   g.TakeTrialActivityRewardCsReq,         // 角色试用奖励领取
+		// 练剑游戏
+		cmd.GetSwordTrainingDataCsReq:   g.GetSwordTrainingDataCsReq,   // 获取练剑游戏信息
+		cmd.SwordTrainingStartGameCsReq: g.SwordTrainingStartGameCsReq, // 开始练剑游戏请求
+		// cmd.SwordTrainingLearnSkillCsReq:g.SwordTrainingLearnSkillCsReq,// 领悟剑招请求
+		// cmd.SwordTrainingTurnActionCsReq:g.SwordTrainingTurnActionCsReq,// 开始日常训练
 		// 基础
 		cmd.SetClientPausedCsReq:           g.SetClientPausedCsReq,           // 客户端暂停请求
 		cmd.SyncClientResVersionCsReq:      g.SyncClientResVersionCsReq,      // 版本同步
@@ -180,6 +185,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SpringRecoverSingleAvatarCsReq: g.SpringRecoverSingleAvatarCsReq, // 回血锚点
 		cmd.TakeBpRewardCsReq:              g.TakeBpRewardCsReq,              // 战令奖励领取
 		cmd.TakeAllRewardCsReq:             g.TakeAllRewardCsReq,             // 领取全部战令奖励
+		cmd.ReserveStaminaExchangeCsReq:    g.ReserveStaminaExchangeCsReq,    // 取出体力
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集

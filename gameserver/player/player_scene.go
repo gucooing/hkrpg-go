@@ -13,6 +13,9 @@ import (
 
 // 通知客户端进入场景
 func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, anchorID uint32) {
+	if entryId == 0 {
+		entryId = g.GetCurEntryId()
+	}
 	rsp := new(proto.EnterSceneByServerScNotify)
 	mapEntrance := gdconf.GetMapEntranceById(entryId)
 	if mapEntrance == nil {
@@ -140,6 +143,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 					},
 					UnlockTeleportList: make([]uint32, 0),
 					DimensionId:        g.GetDimensionId(),
+					FloorSavedData:     g.GetFloorSavedData(entryId),
 				}
 
 				mapList.EntryId = entryId
@@ -182,7 +186,12 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
 	var anchorId uint32 = 0
 
 	changeStory := g.GetChangeStoryInfo(req.GameStoryLineId)
-	if req.GameStoryLineId != 0 && changeStory != nil {
+
+	if conf := gdconf.GetStoryLine(req.GameStoryLineId); conf != nil {
+		if changeStory == nil {
+			g.MissionAddChangeStoryLine([]uint32{req.GameStoryLineId, 0, 0, 0})
+			return
+		}
 		db := g.GetChangeStory()
 		db.IsChangeStory = true
 		db.CurChangeStory = req.GameStoryLineId

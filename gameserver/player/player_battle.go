@@ -108,9 +108,19 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		CheckIdentical:   true,          // 反作弊验证
 		BinVersion:       "",
 		ResVersion:       strconv.Itoa(int(req.ClientVersion)), // 版本验证
+		DropData:         &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
 	// 更新角色状态
 	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
+
+	allSync := &AllPlayerSync{
+		IsBasic:       true,
+		MaterialList:  make([]uint32, 0),
+		EquipmentList: nil,
+		RelicList:     nil,
+	}
+	addPileItem := make([]*Material, 0)
+	delPileItem := make([]*Material, 0)
 
 	// 根据不同结算状态处理
 	switch req.EndStatus {
@@ -119,10 +129,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
 			GroupRefreshList: g.GetDelSceneGroupRefreshInfo(battleBin.monsterEntity),
 		})
-		// 账号状态改变通知
-		g.PlayerPlayerSyncScNotify()
-		// 体力改变通知
-		g.StaminaInfoScNotify()
 		// 任务判断
 		if battleBin.EventId != 0 {
 			rsp.EventId = battleBin.EventId
@@ -131,9 +137,22 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 				g.BattleCustomValues(req.Stt.CustomValues, battleBin.EventId)
 			}
 		}
-		if battleBin.CocoonId != 0 { // 副本处理
-			g.CocoonBattle(battleBin.CocoonId, battleBin.WorldLevel)
+		if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
+			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
+				g.getBattleDropData(conf.MappingInfoID, allSync, addPileItem, battleBin.WorldLevel)...)
 			g.FinishCocoon(battleBin.CocoonId)
+			delPileItem = append(delPileItem, &Material{
+				Tid: Stamina,
+				Num: conf.StaminaCost,
+			})
+		}
+		if conf := gdconf.GetFarmElementConfig(req.StageId); conf != nil {
+			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
+				g.getBattleDropData(conf.MappingInfoID, allSync, addPileItem, g.GetWorldLevel())...)
+			delPileItem = append(delPileItem, &Material{
+				Tid: Stamina,
+				Num: conf.StaminaCost,
+			})
 		}
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
 		teleportToAnchor = true
@@ -159,6 +178,11 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		// 当前坐标通知(移动到最近锚点)
 		g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0, 0, 0)
 	}
+
+	g.DelMaterial(delPileItem)
+	g.AddItem(addPileItem)
+	g.StaminaInfoScNotify()
+	g.AllPlayerSyncScNotify(allSync)
 
 	g.DelBattleBackupById(req.BattleId)
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
@@ -187,8 +211,13 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
-	// msg := g.DecodePayloadToProto(cmd.ActivateFarmElementCsReq, payloadMsg)
-	// req := msg.(*proto.ActivateFarmElementCsReq)
+	req := payloadMsg.(*proto.ActivateFarmElementCsReq)
+
+	rsp := &proto.ActivateFarmElementScRsp{
+		WorldLevel: req.WorldLevel,
+		EntityId:   req.EntityId,
+	}
+	g.Send(cmd.ActivateFarmElementScRsp, rsp)
 }
 
 /***********************************物品破坏处理***********************************/

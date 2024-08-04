@@ -123,9 +123,10 @@ func (g *GamePlayer) LoginReady() { // 登录准备工作
 	}
 	// db := g.GetBasicBin()
 	// db.ChangeStory = NewChangeStory()
-	// g.AddMainMission([]uint32{2022101})
+	// g.AddMainMission([]uint32{1030302})
 	// g.DelMainMission([]uint32{2022003, 2022008})
 	// g.MissionAddChangeStoryLine([]uint32{0, 1020203, 1, 1})
+	// g.SetFloorSavedData(1020101, "FSV_SwordTrainingActivityEntry", 1)
 	g.LoginReadyMission()    // 任务检查
 	g.CheckUnlockMultiPath() // 命途解锁检查
 }

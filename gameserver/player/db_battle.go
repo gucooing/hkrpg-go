@@ -586,13 +586,33 @@ func (g *GamePlayer) ChallengeBattleEndLose() bool {
 	return false
 }
 
-/*************副本*************/
+/*************奖励*************/
 
-func (g *GamePlayer) CocoonBattle(cocoonId, worldLevel uint32) {
-	cocoonConfig := gdconf.GetCocoonConfigById(cocoonId, worldLevel)
-	if cocoonConfig == nil {
-		return
+func (g *GamePlayer) getBattleDropData(mappingInfoID uint32, allSync *AllPlayerSync, addPileItem []*Material, worldLevel uint32) []*proto.Item {
+	conf := gdconf.GetMappingInfoById(mappingInfoID, worldLevel)
+	if conf == nil {
+		return nil
 	}
+	itemList := make([]*proto.Item, 0)
+	for _, displayItem := range conf.DisplayItemList {
+		itemNum := displayItem.ItemNum
+		if displayItem.ItemID == Scoin {
+			itemNum = 1500 + worldLevel*300
+		}
+		if itemNum == 0 {
+			itemNum = 1 + worldLevel
+		}
+		addPileItem = append(addPileItem, &Material{
+			Tid: displayItem.ItemID,
+			Num: itemNum,
+		})
+		itemList = append(itemList, &proto.Item{
+			ItemId: displayItem.ItemID,
+			Num:    itemNum,
+		})
+		allSync.MaterialList = append(allSync.MaterialList, displayItem.ItemID)
+	}
+	return itemList
 }
 
 /****************************************************功能***************************************************/
@@ -671,7 +691,8 @@ func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoo
 		bAList[lp.AvatarId] = bA
 	}
 	cocoonConfig := gdconf.GetCocoonConfigById(req.CocoonId, req.WorldLevel)
-	if cocoonConfig.DropList == nil {
+	if cocoonConfig == nil {
+		logger.Warn("No Cocoon like this can be found,cocoonId:%v,worldLevel:%v", req.CocoonId, req.WorldLevel)
 		return nil, nil
 	}
 	// 添加怪物波列表

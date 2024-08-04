@@ -116,6 +116,7 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 	rsp := &proto.UseItemScRsp{
 		UseItemId:    req.UseItemId,
 		UseItemCount: req.UseItemCount,
+		ReturnData:   &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
 
 	conf := gdconf.GetItemConfigById(req.UseItemId)
@@ -131,6 +132,18 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 		rsp.FormulaId = conf.ID
 	case constant.ItemSubTypeFood: // 食物
 		g.useItem(gdconf.GetItemUseBuffDataById(req.UseItemId), req.BaseAvatarId)
+	case constant.ItemSubTypeMaterial: // 兑换奖励
+		item := g.itemSubTypeMaterial(conf.UseDataID, req.UseItemCount)
+		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
+	case constant.ItemSubTypeGift:
+		item := g.ItemSubTypeGift(conf.UseDataID, req.UseItemCount)
+		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
+	}
+	if req.OptionalRewardId != 0 {
+		pile, material, item := g.getRewardData(req.OptionalRewardId)
+		allSync.MaterialList = append(allSync.MaterialList, material...)
+		g.AddItem(pile)
+		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	}
 	allSync.MaterialList = append(allSync.MaterialList, req.UseItemId)
 	g.AllPlayerSyncScNotify(allSync)
@@ -512,7 +525,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg pb.Message) {
 
 	// 扣除本次升级需要的信用点
 	pileItem = append(pileItem, &Material{
-		Tid: 2,
+		Tid: Scoin,
 		Num: delScoin,
 	})
 	// 更新需要升级的光锥状态
@@ -644,7 +657,7 @@ func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg pb.Message) {
 	delScoin = gdconf.GetEquipmentPromotionConfigByLevel(dbEquipment.Tid, dbEquipment.Promotion)
 	// 扣除本次升级需要的信用点
 	pileItem = append(pileItem, &Material{
-		Tid: 2,
+		Tid: Scoin,
 		Num: delScoin,
 	})
 	// 删除用来突破的材料

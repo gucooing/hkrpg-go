@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v5.26.0
-// source: FDFBKCOHBJG.proto
+// source: SwordTrainingStatus.proto
 
 package proto
 
@@ -20,20 +20,20 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type FDFBKCOHBJG int32
+type SwordTrainingStatus int32
 
 const (
-	FDFBKCOHBJG_SWORD_TRAINING_STATUS_TYPE_NONE       FDFBKCOHBJG = 0
-	FDFBKCOHBJG_SWORD_TRAINING_STATUS_TYPE_POWER      FDFBKCOHBJG = 1
-	FDFBKCOHBJG_SWORD_TRAINING_STATUS_TYPE_AGILITY    FDFBKCOHBJG = 2
-	FDFBKCOHBJG_SWORD_TRAINING_STATUS_TYPE_TOUGHNESS  FDFBKCOHBJG = 3
-	FDFBKCOHBJG_SWORD_TRAINING_STATUS_TYPE_PERCEPTION FDFBKCOHBJG = 4
-	FDFBKCOHBJG__SWORD_TRAINING_STATUS_TYPE_MAX       FDFBKCOHBJG = 5
+	SwordTrainingStatus_SWORD_TRAINING_STATUS_TYPE_NONE       SwordTrainingStatus = 0
+	SwordTrainingStatus_SWORD_TRAINING_STATUS_TYPE_POWER      SwordTrainingStatus = 1
+	SwordTrainingStatus_SWORD_TRAINING_STATUS_TYPE_AGILITY    SwordTrainingStatus = 2
+	SwordTrainingStatus_SWORD_TRAINING_STATUS_TYPE_TOUGHNESS  SwordTrainingStatus = 3
+	SwordTrainingStatus_SWORD_TRAINING_STATUS_TYPE_PERCEPTION SwordTrainingStatus = 4
+	SwordTrainingStatus__SWORD_TRAINING_STATUS_TYPE_MAX       SwordTrainingStatus = 5
 )
 
-// Enum value maps for FDFBKCOHBJG.
+// Enum value maps for SwordTrainingStatus.
 var (
-	FDFBKCOHBJG_name = map[int32]string{
+	SwordTrainingStatus_name = map[int32]string{
 		0: "SWORD_TRAINING_STATUS_TYPE_NONE",
 		1: "SWORD_TRAINING_STATUS_TYPE_POWER",
 		2: "SWORD_TRAINING_STATUS_TYPE_AGILITY",
@@ -41,7 +41,7 @@ var (
 		4: "SWORD_TRAINING_STATUS_TYPE_PERCEPTION",
 		5: "_SWORD_TRAINING_STATUS_TYPE_MAX",
 	}
-	FDFBKCOHBJG_value = map[string]int32{
+	SwordTrainingStatus_value = map[string]int32{
 		"SWORD_TRAINING_STATUS_TYPE_NONE":       0,
 		"SWORD_TRAINING_STATUS_TYPE_POWER":      1,
 		"SWORD_TRAINING_STATUS_TYPE_AGILITY":    2,
@@ -51,39 +51,40 @@ var (
 	}
 )
 
-func (x FDFBKCOHBJG) Enum() *FDFBKCOHBJG {
-	p := new(FDFBKCOHBJG)
+func (x SwordTrainingStatus) Enum() *SwordTrainingStatus {
+	p := new(SwordTrainingStatus)
 	*p = x
 	return p
 }
 
-func (x FDFBKCOHBJG) String() string {
+func (x SwordTrainingStatus) String() string {
 	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
 }
 
-func (FDFBKCOHBJG) Descriptor() protoreflect.EnumDescriptor {
-	return file_FDFBKCOHBJG_proto_enumTypes[0].Descriptor()
+func (SwordTrainingStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_SwordTrainingStatus_proto_enumTypes[0].Descriptor()
 }
 
-func (FDFBKCOHBJG) Type() protoreflect.EnumType {
-	return &file_FDFBKCOHBJG_proto_enumTypes[0]
+func (SwordTrainingStatus) Type() protoreflect.EnumType {
+	return &file_SwordTrainingStatus_proto_enumTypes[0]
 }
 
-func (x FDFBKCOHBJG) Number() protoreflect.EnumNumber {
+func (x SwordTrainingStatus) Number() protoreflect.EnumNumber {
 	return protoreflect.EnumNumber(x)
 }
 
-// Deprecated: Use FDFBKCOHBJG.Descriptor instead.
-func (FDFBKCOHBJG) EnumDescriptor() ([]byte, []int) {
-	return file_FDFBKCOHBJG_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use SwordTrainingStatus.Descriptor instead.
+func (SwordTrainingStatus) EnumDescriptor() ([]byte, []int) {
+	return file_SwordTrainingStatus_proto_rawDescGZIP(), []int{0}
 }
 
-var File_FDFBKCOHBJG_proto protoreflect.FileDescriptor
+var File_SwordTrainingStatus_proto protoreflect.FileDescriptor
 
-var file_FDFBKCOHBJG_proto_rawDesc = []byte{
-	0x0a, 0x11, 0x46, 0x44, 0x46, 0x42, 0x4b, 0x43, 0x4f, 0x48, 0x42, 0x4a, 0x47, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2a, 0xfa, 0x01, 0x0a, 0x0b, 0x46, 0x44, 0x46, 0x42, 0x4b, 0x43, 0x4f, 0x48,
-	0x42, 0x4a, 0x47, 0x12, 0x23, 0x0a, 0x1f, 0x53, 0x57, 0x4f, 0x52, 0x44, 0x5f, 0x54, 0x52, 0x41,
+var file_SwordTrainingStatus_proto_rawDesc = []byte{
+	0x0a, 0x19, 0x53, 0x77, 0x6f, 0x72, 0x64, 0x54, 0x72, 0x61, 0x69, 0x6e, 0x69, 0x6e, 0x67, 0x53,
+	0x74, 0x61, 0x74, 0x75, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2a, 0x82, 0x02, 0x0a, 0x13,
+	0x53, 0x77, 0x6f, 0x72, 0x64, 0x54, 0x72, 0x61, 0x69, 0x6e, 0x69, 0x6e, 0x67, 0x53, 0x74, 0x61,
+	0x74, 0x75, 0x73, 0x12, 0x23, 0x0a, 0x1f, 0x53, 0x57, 0x4f, 0x52, 0x44, 0x5f, 0x54, 0x52, 0x41,
 	0x49, 0x4e, 0x49, 0x4e, 0x47, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x54, 0x59, 0x50,
 	0x45, 0x5f, 0x4e, 0x4f, 0x4e, 0x45, 0x10, 0x00, 0x12, 0x24, 0x0a, 0x20, 0x53, 0x57, 0x4f, 0x52,
 	0x44, 0x5f, 0x54, 0x52, 0x41, 0x49, 0x4e, 0x49, 0x4e, 0x47, 0x5f, 0x53, 0x54, 0x41, 0x54, 0x55,
@@ -105,22 +106,22 @@ var file_FDFBKCOHBJG_proto_rawDesc = []byte{
 }
 
 var (
-	file_FDFBKCOHBJG_proto_rawDescOnce sync.Once
-	file_FDFBKCOHBJG_proto_rawDescData = file_FDFBKCOHBJG_proto_rawDesc
+	file_SwordTrainingStatus_proto_rawDescOnce sync.Once
+	file_SwordTrainingStatus_proto_rawDescData = file_SwordTrainingStatus_proto_rawDesc
 )
 
-func file_FDFBKCOHBJG_proto_rawDescGZIP() []byte {
-	file_FDFBKCOHBJG_proto_rawDescOnce.Do(func() {
-		file_FDFBKCOHBJG_proto_rawDescData = protoimpl.X.CompressGZIP(file_FDFBKCOHBJG_proto_rawDescData)
+func file_SwordTrainingStatus_proto_rawDescGZIP() []byte {
+	file_SwordTrainingStatus_proto_rawDescOnce.Do(func() {
+		file_SwordTrainingStatus_proto_rawDescData = protoimpl.X.CompressGZIP(file_SwordTrainingStatus_proto_rawDescData)
 	})
-	return file_FDFBKCOHBJG_proto_rawDescData
+	return file_SwordTrainingStatus_proto_rawDescData
 }
 
-var file_FDFBKCOHBJG_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_FDFBKCOHBJG_proto_goTypes = []interface{}{
-	(FDFBKCOHBJG)(0), // 0: FDFBKCOHBJG
+var file_SwordTrainingStatus_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_SwordTrainingStatus_proto_goTypes = []interface{}{
+	(SwordTrainingStatus)(0), // 0: SwordTrainingStatus
 }
-var file_FDFBKCOHBJG_proto_depIdxs = []int32{
+var file_SwordTrainingStatus_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -128,27 +129,27 @@ var file_FDFBKCOHBJG_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_FDFBKCOHBJG_proto_init() }
-func file_FDFBKCOHBJG_proto_init() {
-	if File_FDFBKCOHBJG_proto != nil {
+func init() { file_SwordTrainingStatus_proto_init() }
+func file_SwordTrainingStatus_proto_init() {
+	if File_SwordTrainingStatus_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_FDFBKCOHBJG_proto_rawDesc,
+			RawDescriptor: file_SwordTrainingStatus_proto_rawDesc,
 			NumEnums:      1,
 			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_FDFBKCOHBJG_proto_goTypes,
-		DependencyIndexes: file_FDFBKCOHBJG_proto_depIdxs,
-		EnumInfos:         file_FDFBKCOHBJG_proto_enumTypes,
+		GoTypes:           file_SwordTrainingStatus_proto_goTypes,
+		DependencyIndexes: file_SwordTrainingStatus_proto_depIdxs,
+		EnumInfos:         file_SwordTrainingStatus_proto_enumTypes,
 	}.Build()
-	File_FDFBKCOHBJG_proto = out.File
-	file_FDFBKCOHBJG_proto_rawDesc = nil
-	file_FDFBKCOHBJG_proto_goTypes = nil
-	file_FDFBKCOHBJG_proto_depIdxs = nil
+	File_SwordTrainingStatus_proto = out.File
+	file_SwordTrainingStatus_proto_rawDesc = nil
+	file_SwordTrainingStatus_proto_goTypes = nil
+	file_SwordTrainingStatus_proto_depIdxs = nil
 }

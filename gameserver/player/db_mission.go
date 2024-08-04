@@ -712,22 +712,9 @@ func (g *GamePlayer) AddFinishMainMission(finishMainList []uint32) []uint32 {
 		if conf == nil {
 			continue
 		}
-		rewardConf := gdconf.GetRewardDataById(conf.RewardID)
-		if rewardConf != nil {
-			pileItem := make([]*Material, 0)
-			pileItem = append(pileItem, &Material{
-				Tid: Hcoin,
-				Num: rewardConf.Hcoin,
-			})
-			for _, data := range rewardConf.Items {
-				materialList = append(materialList, data.ItemID)
-				pileItem = append(pileItem, &Material{
-					Tid: data.ItemID,
-					Num: data.Count,
-				})
-			}
-			g.AddItem(pileItem)
-		}
+		pileItem, material, _ := g.getRewardData(conf.RewardID)
+		g.AddItem(pileItem)
+		materialList = append(materialList, material...)
 	}
 	return materialList
 }
@@ -757,22 +744,9 @@ func (g *GamePlayer) AddFinishSubMission(finishSubList []uint32) []uint32 {
 		g.Send(cmd.StartFinishSubMissionScNotify,
 			&proto.StartFinishSubMissionScNotify{SubMissionId: subId})
 		// 奖励发放
-		rewardConf := gdconf.GetRewardDataById(conf.SubRewardID)
-		if rewardConf != nil {
-			pileItem := make([]*Material, 0)
-			pileItem = append(pileItem, &Material{
-				Tid: Hcoin,
-				Num: rewardConf.Hcoin,
-			})
-			for _, data := range rewardConf.Items {
-				materialList = append(materialList, data.ItemID)
-				pileItem = append(pileItem, &Material{
-					Tid: data.ItemID,
-					Num: data.Count,
-				})
-			}
-			g.AddItem(pileItem)
-		}
+		pileItem, material, _ := g.getRewardData(conf.SubRewardID)
+		g.AddItem(pileItem)
+		materialList = append(materialList, material...)
 		if isDel {
 			g.AutoServerMissionFinishAction(subId)
 		}

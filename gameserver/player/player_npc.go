@@ -8,7 +8,18 @@ import (
 )
 
 func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg pb.Message) {
-	g.Send(cmd.GetFirstTalkNpcScRsp, nil)
+	req := payloadMsg.(*proto.GetFirstTalkNpcCsReq)
+	rsp := &proto.GetFirstTalkNpcScRsp{
+		Retcode:           0,
+		NpcMeetStatusList: make([]*proto.FirstNpcTalkInfo, 0),
+	}
+	for _, seriesId := range req.SeriesIdList {
+		rsp.NpcMeetStatusList = append(rsp.NpcMeetStatusList, &proto.FirstNpcTalkInfo{
+			IsMeet:   false,
+			SeriesId: seriesId,
+		})
+	}
+	g.Send(cmd.GetFirstTalkNpcScRsp, rsp)
 }
 
 func (g *GamePlayer) GetNpcTakenRewardCsReq(payloadMsg pb.Message) {

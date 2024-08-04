@@ -3916,8 +3916,9 @@ type BlockBin struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	EntryId   uint32                `protobuf:"varint,1,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`                                                                                               // 地图
-	BlockList map[uint32]*BlockList `protobuf:"bytes,2,rep,name=block_list,json=blockList,proto3" json:"block_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 区块信息
+	EntryId        uint32                `protobuf:"varint,1,opt,name=entry_id,json=entryId,proto3" json:"entry_id,omitempty"`                                                                                               // 地图
+	BlockList      map[uint32]*BlockList `protobuf:"bytes,2,rep,name=block_list,json=blockList,proto3" json:"block_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 区块信息
+	FloorSavedData map[string]int32      `protobuf:"bytes,3,rep,name=floor_saved_data,json=floorSavedData,proto3" json:"floor_saved_data,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 }
 
 func (x *BlockBin) Reset() {
@@ -3962,6 +3963,13 @@ func (x *BlockBin) GetEntryId() uint32 {
 func (x *BlockBin) GetBlockList() map[uint32]*BlockList {
 	if x != nil {
 		return x.BlockList
+	}
+	return nil
+}
+
+func (x *BlockBin) GetFloorSavedData() map[string]int32 {
+	if x != nil {
+		return x.FloorSavedData
 	}
 	return nil
 }
@@ -4943,37 +4951,46 @@ var file_bin_server_proto_rawDesc = []byte{
 	0x64, 0x12, 0x33, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
 	0x0e, 0x32, 0x1b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67,
 	0x65, 0x53, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x06,
-	0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22, 0xb4, 0x01, 0x0a, 0x08, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
+	0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x22, 0xc6, 0x02, 0x0a, 0x08, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
 	0x42, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x79, 0x49, 0x64, 0x12, 0x3d,
 	0x0a, 0x0a, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03,
 	0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b,
 	0x42, 0x69, 0x6e, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x74,
-	0x72, 0x79, 0x52, 0x09, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x1a, 0x4e, 0x0a,
-	0x0e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12,
-	0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65,
-	0x79, 0x12, 0x26, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69,
-	0x73, 0x74, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0xb7, 0x01,
-	0x0a, 0x09, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x3b, 0x0a, 0x09, 0x70,
-	0x72, 0x6f, 0x70, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74,
-	0x2e, 0x50, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x08,
-	0x70, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x1f, 0x0a, 0x0b, 0x67, 0x72, 0x6f, 0x75,
-	0x70, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x0a, 0x67,
-	0x72, 0x6f, 0x75, 0x70, 0x53, 0x74, 0x61, 0x74, 0x65, 0x1a, 0x4c, 0x0a, 0x0d, 0x50, 0x72, 0x6f,
-	0x70, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65,
-	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x25, 0x0a, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05, 0x76, 0x61,
-	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x5b, 0x0a, 0x08, 0x50, 0x72, 0x6f, 0x70, 0x49,
-	0x6e, 0x66, 0x6f, 0x12, 0x17, 0x0a, 0x07, 0x69, 0x6e, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x69, 0x6e, 0x73, 0x74, 0x49, 0x64, 0x12, 0x17, 0x0a, 0x07,
-	0x70, 0x72, 0x6f, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x70,
-	0x72, 0x6f, 0x70, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x5f, 0x73, 0x74,
-	0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x72, 0x6f, 0x70, 0x53,
-	0x74, 0x61, 0x74, 0x65, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x79, 0x52, 0x09, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x4d, 0x0a,
+	0x10, 0x66, 0x6c, 0x6f, 0x6f, 0x72, 0x5f, 0x73, 0x61, 0x76, 0x65, 0x64, 0x5f, 0x64, 0x61, 0x74,
+	0x61, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x42, 0x69, 0x6e, 0x2e, 0x46, 0x6c, 0x6f, 0x6f, 0x72, 0x53, 0x61,
+	0x76, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0e, 0x66, 0x6c,
+	0x6f, 0x6f, 0x72, 0x53, 0x61, 0x76, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x1a, 0x4e, 0x0a, 0x0e,
+	0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10,
+	0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79,
+	0x12, 0x26, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x10, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73,
+	0x74, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x1a, 0x41, 0x0a, 0x13,
+	0x46, 0x6c, 0x6f, 0x6f, 0x72, 0x53, 0x61, 0x76, 0x65, 0x64, 0x44, 0x61, 0x74, 0x61, 0x45, 0x6e,
+	0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x05, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22,
+	0xb7, 0x01, 0x0a, 0x09, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x3b, 0x0a,
+	0x09, 0x70, 0x72, 0x6f, 0x70, 0x5f, 0x69, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x1e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x4c, 0x69,
+	0x73, 0x74, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x52, 0x08, 0x70, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x1f, 0x0a, 0x0b, 0x67, 0x72,
+	0x6f, 0x75, 0x70, 0x5f, 0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x0a, 0x67, 0x72, 0x6f, 0x75, 0x70, 0x53, 0x74, 0x61, 0x74, 0x65, 0x1a, 0x4c, 0x0a, 0x0d, 0x50,
+	0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03,
+	0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x25,
+	0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x50, 0x72, 0x6f, 0x70, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x05,
+	0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x5b, 0x0a, 0x08, 0x50, 0x72, 0x6f,
+	0x70, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x17, 0x0a, 0x07, 0x69, 0x6e, 0x73, 0x74, 0x5f, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x06, 0x69, 0x6e, 0x73, 0x74, 0x49, 0x64, 0x12, 0x17,
+	0x0a, 0x07, 0x70, 0x72, 0x6f, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52,
+	0x06, 0x70, 0x72, 0x6f, 0x70, 0x49, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x70, 0x72, 0x6f, 0x70, 0x5f,
+	0x73, 0x74, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x09, 0x70, 0x72, 0x6f,
+	0x70, 0x53, 0x74, 0x61, 0x74, 0x65, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4988,7 +5005,7 @@ func file_bin_server_proto_rawDescGZIP() []byte {
 	return file_bin_server_proto_rawDescData
 }
 
-var file_bin_server_proto_msgTypes = make([]protoimpl.MessageInfo, 93)
+var file_bin_server_proto_msgTypes = make([]protoimpl.MessageInfo, 94)
 var file_bin_server_proto_goTypes = []interface{}{
 	(*PlayerBasicCompBin)(nil),     // 0: proto.PlayerBasicCompBin
 	(*Activity)(nil),               // 1: proto.Activity
@@ -5082,23 +5099,24 @@ var file_bin_server_proto_goTypes = []interface{}{
 	nil,                            // 89: proto.TutorialDb.TutorialGuideEntry
 	nil,                            // 90: proto.MessageGroup.MessageSectionListEntry
 	nil,                            // 91: proto.BlockBin.BlockListEntry
-	nil,                            // 92: proto.BlockList.PropInfoEntry
-	(Gender)(0),                    // 93: proto.Gender
-	(ExtraLineupType)(0),           // 94: proto.ExtraLineupType
-	(LineAvatarType)(0),            // 95: proto.LineAvatarType
-	(BattleType)(0),                // 96: proto.BattleType
-	(RogueAreaStatus)(0),           // 97: proto.RogueAreaStatus
-	(RogueStatus)(0),               // 98: proto.RogueStatus
-	(RoomStatus)(0),                // 99: proto.RoomStatus
-	(RogueTalentStatus)(0),         // 100: proto.RogueTalentStatus
-	(RogueTournLayerStatus)(0),     // 101: proto.RogueTournLayerStatus
-	(RogueTournRoomStatus)(0),      // 102: proto.RogueTournRoomStatus
-	(ChallengeStatus)(0),           // 103: proto.ChallengeStatus
-	(RaidStatus)(0),                // 104: proto.RaidStatus
-	(MissionStatus)(0),             // 105: proto.MissionStatus
-	(TutorialStatus)(0),            // 106: proto.TutorialStatus
-	(MessageGroupStatus)(0),        // 107: proto.MessageGroupStatus
-	(MessageSectionStatus)(0),      // 108: proto.MessageSectionStatus
+	nil,                            // 92: proto.BlockBin.FloorSavedDataEntry
+	nil,                            // 93: proto.BlockList.PropInfoEntry
+	(Gender)(0),                    // 94: proto.Gender
+	(ExtraLineupType)(0),           // 95: proto.ExtraLineupType
+	(LineAvatarType)(0),            // 96: proto.LineAvatarType
+	(BattleType)(0),                // 97: proto.BattleType
+	(RogueAreaStatus)(0),           // 98: proto.RogueAreaStatus
+	(RogueStatus)(0),               // 99: proto.RogueStatus
+	(RoomStatus)(0),                // 100: proto.RoomStatus
+	(RogueTalentStatus)(0),         // 101: proto.RogueTalentStatus
+	(RogueTournLayerStatus)(0),     // 102: proto.RogueTournLayerStatus
+	(RogueTournRoomStatus)(0),      // 103: proto.RogueTournRoomStatus
+	(ChallengeStatus)(0),           // 104: proto.ChallengeStatus
+	(RaidStatus)(0),                // 105: proto.RaidStatus
+	(MissionStatus)(0),             // 106: proto.MissionStatus
+	(TutorialStatus)(0),            // 107: proto.TutorialStatus
+	(MessageGroupStatus)(0),        // 108: proto.MessageGroupStatus
+	(MessageSectionStatus)(0),      // 109: proto.MessageSectionStatus
 }
 var file_bin_server_proto_depIdxs = []int32{
 	1,   // 0: proto.PlayerBasicCompBin.activity:type_name -> proto.Activity
@@ -5122,7 +5140,7 @@ var file_bin_server_proto_depIdxs = []int32{
 	57,  // 18: proto.ChangeStory.change_story_info:type_name -> proto.ChangeStory.ChangeStoryInfoEntry
 	2,   // 19: proto.ChangeStoryInfo.scene:type_name -> proto.Scene
 	58,  // 20: proto.Avatar.avatar_list:type_name -> proto.Avatar.AvatarListEntry
-	93,  // 21: proto.Avatar.gender:type_name -> proto.Gender
+	94,  // 21: proto.Avatar.gender:type_name -> proto.Gender
 	59,  // 22: proto.Avatar.battle_avatar_list:type_name -> proto.Avatar.BattleAvatarListEntry
 	8,   // 23: proto.AvatarBin.sp_bar:type_name -> proto.AvatarSpBarInfo
 	60,  // 24: proto.AvatarBin.multi_path_avatar_info_list:type_name -> proto.AvatarBin.MultiPathAvatarInfoListEntry
@@ -5132,13 +5150,13 @@ var file_bin_server_proto_depIdxs = []int32{
 	63,  // 28: proto.LineUp.battle_line_list:type_name -> proto.LineUp.BattleLineListEntry
 	64,  // 29: proto.LineUp.story_line_list:type_name -> proto.LineUp.StoryLineListEntry
 	65,  // 30: proto.Line.avatar_id_list:type_name -> proto.Line.AvatarIdListEntry
-	94,  // 31: proto.Line.line_type:type_name -> proto.ExtraLineupType
-	95,  // 32: proto.LineAvatarList.line_avatar_type:type_name -> proto.LineAvatarType
+	95,  // 31: proto.Line.line_type:type_name -> proto.ExtraLineupType
+	96,  // 32: proto.LineAvatarList.line_avatar_type:type_name -> proto.LineAvatarType
 	66,  // 33: proto.Item.relic_map:type_name -> proto.Item.RelicMapEntry
 	67,  // 34: proto.Item.equipment_map:type_name -> proto.Item.EquipmentMapEntry
 	68,  // 35: proto.Item.material_map:type_name -> proto.Item.MaterialMapEntry
 	69,  // 36: proto.Relic.relic_affix:type_name -> proto.Relic.RelicAffixEntry
-	96,  // 37: proto.Battle.battle_type:type_name -> proto.BattleType
+	97,  // 37: proto.Battle.battle_type:type_name -> proto.BattleType
 	20,  // 38: proto.Battle.rogue:type_name -> proto.Rogue
 	31,  // 39: proto.Battle.challenge:type_name -> proto.Challenge
 	26,  // 40: proto.Battle.rogue_tourn:type_name -> proto.RogueTourn
@@ -5146,25 +5164,25 @@ var file_bin_server_proto_depIdxs = []int32{
 	70,  // 42: proto.Rogue.rogue_area:type_name -> proto.Rogue.RogueAreaEntry
 	22,  // 43: proto.Rogue.cur_rogue:type_name -> proto.CurRogue
 	71,  // 44: proto.Rogue.rogue_history_list:type_name -> proto.Rogue.RogueHistoryListEntry
-	97,  // 45: proto.RogueArea.rogue_area_status:type_name -> proto.RogueAreaStatus
+	98,  // 45: proto.RogueArea.rogue_area_status:type_name -> proto.RogueAreaStatus
 	72,  // 46: proto.CurRogue.rogue_room_map:type_name -> proto.CurRogue.RogueRoomMapEntry
 	73,  // 47: proto.CurRogue.buff_list:type_name -> proto.CurRogue.BuffListEntry
-	98,  // 48: proto.CurRogue.status:type_name -> proto.RogueStatus
-	99,  // 49: proto.RogueRoom.room_status:type_name -> proto.RoomStatus
+	99,  // 48: proto.CurRogue.status:type_name -> proto.RogueStatus
+	100, // 49: proto.RogueRoom.room_status:type_name -> proto.RoomStatus
 	74,  // 50: proto.RogueTourn.inspiration_circuit_info:type_name -> proto.RogueTourn.InspirationCircuitInfoEntry
 	28,  // 51: proto.RogueTourn.cur_rogue_tourn:type_name -> proto.CurRogueTourn
-	100, // 52: proto.InspirationCircuitInfo.status:type_name -> proto.RogueTalentStatus
+	101, // 52: proto.InspirationCircuitInfo.status:type_name -> proto.RogueTalentStatus
 	75,  // 53: proto.CurRogueTourn.cur_layer_list:type_name -> proto.CurRogueTourn.CurLayerListEntry
-	101, // 54: proto.LayerInfo.status:type_name -> proto.RogueTournLayerStatus
+	102, // 54: proto.LayerInfo.status:type_name -> proto.RogueTournLayerStatus
 	76,  // 55: proto.LayerInfo.rogue_tourn_room_list:type_name -> proto.LayerInfo.RogueTournRoomListEntry
-	102, // 56: proto.RogueTournRoomInfo.status:type_name -> proto.RogueTournRoomStatus
+	103, // 56: proto.RogueTournRoomInfo.status:type_name -> proto.RogueTournRoomStatus
 	77,  // 57: proto.Challenge.challenge_list:type_name -> proto.Challenge.ChallengeListEntry
 	78,  // 58: proto.Challenge.challenge_reward_list:type_name -> proto.Challenge.ChallengeRewardListEntry
 	33,  // 59: proto.Challenge.cur_challenge:type_name -> proto.CurChallenge
-	103, // 60: proto.CurChallenge.status:type_name -> proto.ChallengeStatus
+	104, // 60: proto.CurChallenge.status:type_name -> proto.ChallengeStatus
 	79,  // 61: proto.Raid.raid_map:type_name -> proto.Raid.RaidMapEntry
 	80,  // 62: proto.Raid.finish_raid_map:type_name -> proto.Raid.FinishRaidMapEntry
-	104, // 63: proto.RaidInfo.status:type_name -> proto.RaidStatus
+	105, // 63: proto.RaidInfo.status:type_name -> proto.RaidStatus
 	10,  // 64: proto.RaidInfo.pos:type_name -> proto.VectorBin
 	10,  // 65: proto.RaidInfo.rot:type_name -> proto.VectorBin
 	81,  // 66: proto.Gacha.gacha_map:type_name -> proto.Gacha.GachaMapEntry
@@ -5175,55 +5193,56 @@ var file_bin_server_proto_depIdxs = []int32{
 	85,  // 71: proto.MainMission.sub_mission_list:type_name -> proto.MainMission.SubMissionListEntry
 	86,  // 72: proto.MainMission.finish_main_mission_list:type_name -> proto.MainMission.FinishMainMissionListEntry
 	87,  // 73: proto.MainMission.finish_sub_mission_list:type_name -> proto.MainMission.FinishSubMissionListEntry
-	105, // 74: proto.MissionInfo.status:type_name -> proto.MissionStatus
+	106, // 74: proto.MissionInfo.status:type_name -> proto.MissionStatus
 	46,  // 75: proto.MissionInfo.mission_custom_value:type_name -> proto.MissionCustomValue
 	88,  // 76: proto.TutorialDb.Tutorial:type_name -> proto.TutorialDb.TutorialEntry
 	89,  // 77: proto.TutorialDb.TutorialGuide:type_name -> proto.TutorialDb.TutorialGuideEntry
-	106, // 78: proto.TutorialInfo.status:type_name -> proto.TutorialStatus
+	107, // 78: proto.TutorialInfo.status:type_name -> proto.TutorialStatus
 	90,  // 79: proto.MessageGroup.message_section_list:type_name -> proto.MessageGroup.MessageSectionListEntry
-	107, // 80: proto.MessageGroup.status:type_name -> proto.MessageGroupStatus
-	108, // 81: proto.MessageSection.status:type_name -> proto.MessageSectionStatus
+	108, // 80: proto.MessageGroup.status:type_name -> proto.MessageGroupStatus
+	109, // 81: proto.MessageSection.status:type_name -> proto.MessageSectionStatus
 	91,  // 82: proto.BlockBin.block_list:type_name -> proto.BlockBin.BlockListEntry
-	92,  // 83: proto.BlockList.prop_info:type_name -> proto.BlockList.PropInfoEntry
-	49,  // 84: proto.PlayerBasicCompBin.MessageGroupListEntry.value:type_name -> proto.MessageGroup
-	4,   // 85: proto.ChangeStory.ChangeStoryInfoEntry.value:type_name -> proto.ChangeStoryInfo
-	6,   // 86: proto.Avatar.AvatarListEntry.value:type_name -> proto.AvatarBin
-	6,   // 87: proto.Avatar.BattleAvatarListEntry.value:type_name -> proto.AvatarBin
-	7,   // 88: proto.AvatarBin.MultiPathAvatarInfoListEntry.value:type_name -> proto.MultiPathAvatarInfo
-	12,  // 89: proto.LineUp.LineUpListEntry.value:type_name -> proto.Line
-	12,  // 90: proto.LineUp.BattleLineListEntry.value:type_name -> proto.Line
-	12,  // 91: proto.LineUp.StoryLineListEntry.value:type_name -> proto.Line
-	13,  // 92: proto.Line.AvatarIdListEntry.value:type_name -> proto.LineAvatarList
-	15,  // 93: proto.Item.RelicMapEntry.value:type_name -> proto.Relic
-	17,  // 94: proto.Item.EquipmentMapEntry.value:type_name -> proto.Equipment
-	16,  // 95: proto.Relic.RelicAffixEntry.value:type_name -> proto.RelicAffix
-	21,  // 96: proto.Rogue.RogueAreaEntry.value:type_name -> proto.RogueArea
-	25,  // 97: proto.Rogue.RogueHistoryListEntry.value:type_name -> proto.RogueHistory
-	23,  // 98: proto.CurRogue.RogueRoomMapEntry.value:type_name -> proto.RogueRoom
-	24,  // 99: proto.CurRogue.BuffListEntry.value:type_name -> proto.RogueBuff
-	27,  // 100: proto.RogueTourn.InspirationCircuitInfoEntry.value:type_name -> proto.InspirationCircuitInfo
-	29,  // 101: proto.CurRogueTourn.CurLayerListEntry.value:type_name -> proto.LayerInfo
-	30,  // 102: proto.LayerInfo.RogueTournRoomListEntry.value:type_name -> proto.RogueTournRoomInfo
-	32,  // 103: proto.Challenge.ChallengeListEntry.value:type_name -> proto.ChallengeList
-	35,  // 104: proto.Raid.RaidMapEntry.value:type_name -> proto.RaidInfo
-	35,  // 105: proto.Raid.FinishRaidMapEntry.value:type_name -> proto.RaidInfo
-	37,  // 106: proto.Gacha.GachaMapEntry.value:type_name -> proto.GachaNum
-	40,  // 107: proto.Mail.MailListEntry.value:type_name -> proto.MailDts
-	42,  // 108: proto.PlayerFriend.FriendListEntry.value:type_name -> proto.Friend
-	45,  // 109: proto.MainMission.MainMissionListEntry.value:type_name -> proto.MissionInfo
-	45,  // 110: proto.MainMission.SubMissionListEntry.value:type_name -> proto.MissionInfo
-	45,  // 111: proto.MainMission.FinishMainMissionListEntry.value:type_name -> proto.MissionInfo
-	45,  // 112: proto.MainMission.FinishSubMissionListEntry.value:type_name -> proto.MissionInfo
-	48,  // 113: proto.TutorialDb.TutorialEntry.value:type_name -> proto.TutorialInfo
-	48,  // 114: proto.TutorialDb.TutorialGuideEntry.value:type_name -> proto.TutorialInfo
-	50,  // 115: proto.MessageGroup.MessageSectionListEntry.value:type_name -> proto.MessageSection
-	52,  // 116: proto.BlockBin.BlockListEntry.value:type_name -> proto.BlockList
-	53,  // 117: proto.BlockList.PropInfoEntry.value:type_name -> proto.PropInfo
-	118, // [118:118] is the sub-list for method output_type
-	118, // [118:118] is the sub-list for method input_type
-	118, // [118:118] is the sub-list for extension type_name
-	118, // [118:118] is the sub-list for extension extendee
-	0,   // [0:118] is the sub-list for field type_name
+	92,  // 83: proto.BlockBin.floor_saved_data:type_name -> proto.BlockBin.FloorSavedDataEntry
+	93,  // 84: proto.BlockList.prop_info:type_name -> proto.BlockList.PropInfoEntry
+	49,  // 85: proto.PlayerBasicCompBin.MessageGroupListEntry.value:type_name -> proto.MessageGroup
+	4,   // 86: proto.ChangeStory.ChangeStoryInfoEntry.value:type_name -> proto.ChangeStoryInfo
+	6,   // 87: proto.Avatar.AvatarListEntry.value:type_name -> proto.AvatarBin
+	6,   // 88: proto.Avatar.BattleAvatarListEntry.value:type_name -> proto.AvatarBin
+	7,   // 89: proto.AvatarBin.MultiPathAvatarInfoListEntry.value:type_name -> proto.MultiPathAvatarInfo
+	12,  // 90: proto.LineUp.LineUpListEntry.value:type_name -> proto.Line
+	12,  // 91: proto.LineUp.BattleLineListEntry.value:type_name -> proto.Line
+	12,  // 92: proto.LineUp.StoryLineListEntry.value:type_name -> proto.Line
+	13,  // 93: proto.Line.AvatarIdListEntry.value:type_name -> proto.LineAvatarList
+	15,  // 94: proto.Item.RelicMapEntry.value:type_name -> proto.Relic
+	17,  // 95: proto.Item.EquipmentMapEntry.value:type_name -> proto.Equipment
+	16,  // 96: proto.Relic.RelicAffixEntry.value:type_name -> proto.RelicAffix
+	21,  // 97: proto.Rogue.RogueAreaEntry.value:type_name -> proto.RogueArea
+	25,  // 98: proto.Rogue.RogueHistoryListEntry.value:type_name -> proto.RogueHistory
+	23,  // 99: proto.CurRogue.RogueRoomMapEntry.value:type_name -> proto.RogueRoom
+	24,  // 100: proto.CurRogue.BuffListEntry.value:type_name -> proto.RogueBuff
+	27,  // 101: proto.RogueTourn.InspirationCircuitInfoEntry.value:type_name -> proto.InspirationCircuitInfo
+	29,  // 102: proto.CurRogueTourn.CurLayerListEntry.value:type_name -> proto.LayerInfo
+	30,  // 103: proto.LayerInfo.RogueTournRoomListEntry.value:type_name -> proto.RogueTournRoomInfo
+	32,  // 104: proto.Challenge.ChallengeListEntry.value:type_name -> proto.ChallengeList
+	35,  // 105: proto.Raid.RaidMapEntry.value:type_name -> proto.RaidInfo
+	35,  // 106: proto.Raid.FinishRaidMapEntry.value:type_name -> proto.RaidInfo
+	37,  // 107: proto.Gacha.GachaMapEntry.value:type_name -> proto.GachaNum
+	40,  // 108: proto.Mail.MailListEntry.value:type_name -> proto.MailDts
+	42,  // 109: proto.PlayerFriend.FriendListEntry.value:type_name -> proto.Friend
+	45,  // 110: proto.MainMission.MainMissionListEntry.value:type_name -> proto.MissionInfo
+	45,  // 111: proto.MainMission.SubMissionListEntry.value:type_name -> proto.MissionInfo
+	45,  // 112: proto.MainMission.FinishMainMissionListEntry.value:type_name -> proto.MissionInfo
+	45,  // 113: proto.MainMission.FinishSubMissionListEntry.value:type_name -> proto.MissionInfo
+	48,  // 114: proto.TutorialDb.TutorialEntry.value:type_name -> proto.TutorialInfo
+	48,  // 115: proto.TutorialDb.TutorialGuideEntry.value:type_name -> proto.TutorialInfo
+	50,  // 116: proto.MessageGroup.MessageSectionListEntry.value:type_name -> proto.MessageSection
+	52,  // 117: proto.BlockBin.BlockListEntry.value:type_name -> proto.BlockList
+	53,  // 118: proto.BlockList.PropInfoEntry.value:type_name -> proto.PropInfo
+	119, // [119:119] is the sub-list for method output_type
+	119, // [119:119] is the sub-list for method input_type
+	119, // [119:119] is the sub-list for extension type_name
+	119, // [119:119] is the sub-list for extension extendee
+	0,   // [0:119] is the sub-list for field type_name
 }
 
 func init() { file_bin_server_proto_init() }
@@ -5888,7 +5907,7 @@ func file_bin_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_bin_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   93,
+			NumMessages:   94,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

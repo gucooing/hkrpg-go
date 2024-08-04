@@ -104,6 +104,8 @@ type GameDataConfig struct {
 	StroyLineTrialAvatarDataMap  map[uint32]*StroyLineTrialAvatarData            // 故事线剧情角色配置
 	StoryLineMap                 map[uint32]*StoryLine                           // 故事线配置
 	StoryLineFloorDataMap        map[uint32]*StoryLineFloorData
+	FarmElementConfigMap         map[uint32]*FarmElementConfig
+	ItemUseDataMap               map[uint32]*ItemUseData
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -258,6 +260,8 @@ func (g *GameDataConfig) load() {
 		g.loadStroyLineTrialAvatarData,  // 故事线剧情角色配置
 		g.loadStoryLine,                 // 故事线配置
 		g.loadStoryLineFloorData,
+		g.loadFarmElementConfig,
+		g.loadItemUseData,
 	}
 }
 

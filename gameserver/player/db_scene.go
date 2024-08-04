@@ -348,16 +348,6 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	}
 }
 
-func extractDigits(str string) uint32 {
-	var result strings.Builder
-	for _, char := range str {
-		if char >= '0' && char <= '9' {
-			result.WriteRune(char)
-		}
-	}
-	return alg.S2U32(result.String())
-}
-
 func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsLoaded bool) bool {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
 	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
@@ -372,7 +362,7 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 	if levelGroup.LoadCondition == nil &&
 		levelGroup.UnloadCondition == nil {
 		if levelGroup.Category == "Mission" && levelGroup.OwnerMainMissionID != 0 {
-			subMissionId := extractDigits(levelGroup.GroupName)
+			subMissionId := alg.ExtractDigits(levelGroup.GroupName)
 			if subMissionId == 0 || subMainMissionList[subMissionId] != nil {
 				return true
 			}
@@ -659,6 +649,22 @@ func (g *GamePlayer) SetGroupState(db *spb.BlockBin, groupId, groupState uint32)
 	db.BlockList[groupId].GroupState = groupState
 }
 
+func (g *GamePlayer) GetFloorSavedData(entryId uint32) map[string]int32 {
+	db := g.GetBlock(entryId)
+	if db.FloorSavedData == nil {
+		db.FloorSavedData = make(map[string]int32)
+	}
+	return db.FloorSavedData
+}
+
+func (g *GamePlayer) SetFloorSavedData(entryId uint32, key string, v int32) {
+	db := g.GetBlock(entryId)
+	if db.FloorSavedData == nil {
+		db.FloorSavedData = make(map[string]int32)
+	}
+	db.FloorSavedData[key] = v
+}
+
 func (g *GamePlayer) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
 	on := g.GetOnlineData()
 	on.blockMapLock.Lock()
@@ -734,6 +740,7 @@ func (g *GamePlayer) SetFloorSavedValue(conf *gdconf.SubMission, finishAction *g
 	floorId := alg.S2U32(finishAction.FinishActionParaString[1])
 	name := finishAction.FinishActionParaString[2]
 	state := alg.S2I32(finishAction.FinishActionParaString[3])
+	g.SetFloorSavedData(floorTentry(floorId), name, state)
 	notify := &proto.UpdateFloorSavedValueNotify{
 		SavedValue: map[string]int32{name: state},
 	}
@@ -984,6 +991,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
+		FloorSavedData:     g.GetFloorSavedData(entryId),
 		GameStoryLineId:    g.GameStoryLineId(),
 		// DimensionId:        g.GetDimensionId(),
 	}
@@ -1026,9 +1034,10 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 
 func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.LevelGroup) *proto.MissionStatusBySceneInfo {
 	info := &proto.MissionStatusBySceneInfo{
-		DisabledMainMissionIdList: make([]uint32, 0),
-		FinishedMainMissionIdList: make([]uint32, 0),
-		SubMissionStatusList:      make([]*proto.Mission, 0),
+		DisabledMainMissionIdList:   make([]uint32, 0),
+		FinishedMainMissionIdList:   make([]uint32, 0),
+		SubMissionStatusList:        make([]*proto.Mission, 0),
+		UnfinishedMainMissionIdList: make([]uint32, 0),
 	}
 	if foorMap == nil {
 		return info

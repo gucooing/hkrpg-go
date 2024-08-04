@@ -179,30 +179,10 @@ func (g *GamePlayer) RaidReward(raidID, hardLevel uint32) []*proto.Item {
 	default:
 		if !conf.SkipRewardOnFinish && conf.RewardList != nil {
 			for _, reward := range conf.RewardList {
-				rewardConf := gdconf.GetRewardDataById(reward)
-				if rewardConf == nil {
-					continue
-				}
-				allSync.MaterialList = append(allSync.MaterialList, Hcoin)
-				pileItem = append(pileItem, &Material{
-					Tid: Hcoin,
-					Num: rewardConf.Hcoin,
-				})
-				itemList = append(itemList, &proto.Item{
-					ItemId: Hcoin,
-					Num:    rewardConf.Hcoin,
-				})
-				for _, info := range rewardConf.Items {
-					allSync.MaterialList = append(allSync.MaterialList, info.ItemID)
-					pileItem = append(pileItem, &Material{
-						Tid: info.ItemID,
-						Num: info.Count,
-					})
-					itemList = append(itemList, &proto.Item{
-						ItemId: info.ItemID,
-						Num:    info.Count,
-					})
-				}
+				pile, material, item := g.getRewardData(reward)
+				pileItem = append(pileItem, pile...)
+				allSync.MaterialList = append(allSync.MaterialList, material...)
+				itemList = append(itemList, item...)
 			}
 		}
 	}
@@ -288,6 +268,9 @@ func (g *GamePlayer) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
+		FloorSavedData:     g.GetFloorSavedData(entryId),
+		GameStoryLineId:    g.GameStoryLineId(),
+		// DimensionId:        g.GetDimensionId(),
 	}
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)

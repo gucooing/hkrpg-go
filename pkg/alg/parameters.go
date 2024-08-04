@@ -87,3 +87,30 @@ func GetEveryDay4() time.Duration {
 	}
 	return nextExecution.Sub(currentTime)
 }
+
+// func ExtractDigits(str string) uint32 {
+// 	var result strings.Builder
+// 	for _, char := range str {
+// 		if char >= '0' && char <= '9' {
+// 			result.WriteRune(char)
+// 		}
+// 	}
+// 	return S2U32(result.String())
+// }
+
+func ExtractDigits(str string) uint32 {
+	parts := strings.Split(str, "_")
+	if len(parts) != 2 {
+		return 0
+	}
+	firstPart := parts[0]
+	secondPart := parts[1]
+	var thirdPart string
+	if len(secondPart) < 2 {
+		thirdPart = fmt.Sprintf("%02s", secondPart)
+	} else {
+		thirdPart = secondPart[len(secondPart)-2:]
+	}
+	result := firstPart + thirdPart
+	return S2U32(result)
+}

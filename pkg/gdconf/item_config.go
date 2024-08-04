@@ -29,6 +29,7 @@ type ItemConfig struct {
 	PurposeType         uint32               `json:"PurposeType"`
 	IsVisible           bool                 `json:"isVisible"`
 	PileLimit           uint32               `json:"PileLimit"`
+	UseDataID           uint32               `json:"UseDataID"`
 }
 
 func (g *GameDataConfig) loadItemConfig() {
