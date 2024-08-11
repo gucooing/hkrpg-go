@@ -33,9 +33,11 @@ func (g *GamePlayer) ChangeStoryLineFinishScNotify() {
 		CurStoryLineId: 0,
 		Action:         0,
 	}
-	if db := g.GetCurChangeStoryInfo();db != nil {
+	if db := g.GetCurChangeStoryInfo(); db != nil {
 		notify.CurStoryLineId = db.ChangeStoryId
-		notify.Action = proto.ChangeStoryLineAction_ChangeStoryLineAction_FinishAction
+		notify.Action = proto.ChangeStoryLineAction_ChangeStoryLineAction_Client
+	} else {
+		return
 	}
 	g.Send(cmd.ChangeStoryLineFinishScNotify, notify)
 }

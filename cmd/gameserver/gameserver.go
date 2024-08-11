@@ -12,8 +12,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/config"
-	"github.com/gucooing/hkrpg-go/gameserver/gs"
+	"github.com/gucooing/hkrpg-go/gameserver"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -22,10 +21,10 @@ import (
 func main() {
 	// 启动读取配置
 	confName := "gameserver.json"
-	err := config.LoadConfig(confName)
+	err := gameserver.LoadConfig(confName)
 	if err != nil {
-		if err == config.FileNotExist {
-			p, _ := json.MarshalIndent(config.DefaultConfig, "", "  ")
+		if err == gameserver.FileNotExist {
+			p, _ := json.MarshalIndent(gameserver.DefaultConfig, "", "  ")
 			cf, _ := os.Create("./conf/" + confName)
 			cf.Write(p)
 			cf.Close()
@@ -36,15 +35,15 @@ func main() {
 		}
 	}
 	appid := alg.GetAppId()
+	cfg := gameserver.GetConfig()
 	// 初始化日志
-	logger.InitLogger("gameserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("gameserver"+"["+appid+"]", strings.ToUpper(cfg.LogLevel))
 	logger.Info("hkrpg-go")
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	cfg := config.GetConfig()
 	// 初始化game
-	gameserver := gs.NewGameServer(cfg, appid)
-	if gameserver == nil {
+	gs := gameserver.NewGameServer(cfg, appid)
+	if gs == nil {
 		logger.Error("game初始化失败")
 		return
 	}
@@ -54,11 +53,11 @@ func main() {
 	}()
 
 	// 加载res
-	gdconf.InitGameDataConfig(config.GetConfig().GameDataConfigPath)
+	gdconf.InitGameDataConfig(gs.Config.GameDataConfigPath)
 
 	// 启动game
 	go func() {
-		if err = gameserver.StartGameServer(); err != nil {
+		if err = gs.StartGameServer(); err != nil {
 			logger.Error("无法启动game服务器")
 		}
 	}()
@@ -70,7 +69,7 @@ func main() {
 			defer cancel()
 
 			logger.Info("game服务正在关闭")
-			if err = gameserver.Close(); err != nil {
+			if err = gs.Close(); err != nil {
 				logger.Error("无法正常关闭game服务")
 			}
 			logger.Info("game服务已停止")

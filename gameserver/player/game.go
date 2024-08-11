@@ -5,15 +5,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
-	"gorm.io/gorm"
 )
 
 var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
@@ -25,7 +24,7 @@ type GamePlayer struct {
 	GameAppId     uint32
 	GateAppId     uint32
 	IsJumpMission bool
-	DB            *gorm.DB
+	Store         *database.GameStore
 	IsPE          bool
 	// 玩家数据
 	Platform       spb.PlatformType        // 登录设备
@@ -63,9 +62,10 @@ func getCurTime() uint64 {
 // 拉取账户数据
 func (g *GamePlayer) GetPlayerDateByDb() {
 	var err error
-	dbPlayer := database.QueryAccountUidByFieldPlayer(g.DB, g.Uid)
+	dbPlayer := database.GetPlayerDataByUid(g.Store.PlayerDataMysql,
+		g.Store.PeMysql, g.Uid)
 	if dbPlayer == nil || dbPlayer.BinData == nil {
-		dbPlayer = new(database.PlayerData)
+		dbPlayer = new(constant.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
 		g.BasicBin = g.NewBasicBin()
 		// 初始化完毕保存账号数据
@@ -84,7 +84,8 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			g.FinishAllTutorial()
 		}
 
-		err = database.AddDatePlayerFieldByFieldName(g.DB, dbPlayer)
+		err = database.AddPlayerDataByUid(g.Store.PlayerDataMysql,
+			g.Store.PeMysql, dbPlayer)
 		if err != nil {
 			logger.Error("账号数据储存失败,err:%s", err.Error())
 		}
@@ -105,8 +106,9 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 
 func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	var err error
+	// 验证状态
 	if !g.IsPE {
-		redisDb, ok := db.GetDb().GetPlayerStatus(strconv.Itoa(int(g.AccountId)))
+		redisDb, ok := database.GetPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
 		if !ok {
 			return false
 		}
@@ -114,7 +116,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 		err = pb.Unmarshal(redisDb, statu)
 		if err != nil {
 			logger.Error("PlayerStatusRedisData Unmarshal error")
-			db.GetDb().DistUnlockPlayerStatus(strconv.Itoa(int(g.AccountId)))
+			database.DelPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
 			return false
 		}
 		if statu.GameserverId != g.GameAppId && statu.DataVersion != g.GetDataVersion() {
@@ -125,7 +127,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	}
 	//  确认写入，更新数据版本
 	g.AddDataVersion()
-	dbDate := new(database.PlayerData)
+	dbDate := new(constant.PlayerData)
 	dbDate.Uid = g.Uid
 	dbDate.Level = g.GetLevel()
 	dbDate.Exp = g.GetMaterialById(Exp)
@@ -136,7 +138,8 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 		logger.Error("pb marshal error: %v", err)
 		return false
 	}
-	if err = database.UpdatePlayer(g.DB, dbDate); err != nil {
+	if err = database.UpPlayerDataByUid(g.Store.PlayerDataMysql,
+		g.Store.PeMysql, dbDate); err != nil {
 		logger.Error("Update Player error")
 		return false
 	}
@@ -170,15 +173,12 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 		logger.Error("pb marshal error: %v", err)
 		return false
 	}
-	if g.IsPE {
-		player := &database.PlayerBasic{
-			Uid:     g.Uid,
-			BinData: bin,
-		}
-		return database.UpdatePlayerBasic(g.DB, player)
-	} else {
-		return db.GetDb().SetPlayerPlayerBasicBriefData(g.Uid, bin)
+	player := &constant.PlayerBasic{
+		Uid:     g.Uid,
+		BinData: bin,
 	}
+	return database.UpdatePlayerBasic(g.Store.PlayerBriefDataRedis,
+		g.Store.PeMysql, player)
 }
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {

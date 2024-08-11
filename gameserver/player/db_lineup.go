@@ -424,21 +424,22 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 	}
 
 	lineupList := &proto.LineupInfo{
-		AvatarList:      avatarList,
-		Mp:              g.GetLineUpMp(),
-		IsVirtual:       false,
-		Index:           db.Index,
-		PlaneId:         0,
-		Name:            db.Name,
-		ExtraLineupType: proto.ExtraLineupType(db.LineType),
-		MaxMp:           MaxMp,
-		LeaderSlot:      db.LeaderSlot,
-		GameStoryLineId: 0,
-		Sus:             make([]uint32, 0),
+		AvatarList:            avatarList,
+		Mp:                    g.GetLineUpMp(),
+		IsVirtual:             false,
+		Index:                 db.Index,
+		PlaneId:               0,
+		Name:                  db.Name,
+		ExtraLineupType:       proto.ExtraLineupType(db.LineType),
+		MaxMp:                 MaxMp,
+		LeaderSlot:            db.LeaderSlot,
+		GameStoryLineId:       0,
+		StoryLineAvatarIdList: make([]uint32, 0),
+		Sus:                   make([]uint32, 0),
 	}
 	if changeStory := g.GetCurChangeStoryInfo(); changeStory != nil {
 		lineupList.GameStoryLineId = changeStory.ChangeStoryId
-		lineupList.Sus = []uint32{15}
+		// lineupList.Sus = []uint32{15}
 	}
 	return lineupList
 }

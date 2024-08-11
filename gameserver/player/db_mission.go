@@ -393,6 +393,7 @@ func (g *GamePlayer) EnterMapByEntrance(entryId uint32) {
 func (g *GamePlayer) MissionEnterFloor(id uint32) bool {
 	ifFinish := false
 	if entryId, groupID, anchorID, ok := gdconf.GetEntryId(id); ok {
+		g.SetCurEntryId(entryId)
 		g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
 		ifFinish = true
 	} else {
@@ -609,6 +610,7 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			entryId := finishAction.FinishActionPara[0]
 			groupID := finishAction.FinishActionPara[1]
 			anchorID := finishAction.FinishActionPara[2]
+			g.SetCurEntryId(entryId)
 			g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
 		case constant.SetFloorSavedValue: // 设置物品状态
 			g.SetFloorSavedValue(conf, finishAction)
@@ -619,6 +621,7 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32) {
 			entryId := finishAction.FinishActionPara[0]
 			groupID := finishAction.FinishActionPara[1]
 			anchorID := finishAction.FinishActionPara[2]
+			g.SetCurEntryId(entryId)
 			g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
 		case constant.SetGroupState: // 设置组状态
 			groupID := finishAction.FinishActionPara[0]

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/gucooing/hkrpg-go/muipserver/config"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/redis/go-redis/v9"
@@ -25,7 +26,7 @@ func NewStore(config *config.Config) *Store {
 	s := &Store{config: config}
 	mysqlPlayerDataConf := config.MysqlConf["player"]
 	s.PlayerDataMysql = database.NewMysql(mysqlPlayerDataConf.Dsn)
-	s.PlayerDataMysql.AutoMigrate(&database.PlayerData{})
+	s.PlayerDataMysql.AutoMigrate(&constant.PlayerData{})
 
 	redisLoginConf := config.RedisConf["player_login"]
 	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)

@@ -2,6 +2,7 @@ package db
 
 import (
 	"github.com/gucooing/hkrpg-go/multiserver/config"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/redis/go-redis/v9"
@@ -19,7 +20,7 @@ func NewStore(conf *config.Config) *Store {
 	s := new(Store)
 	confMysql := conf.MysqlConf["conf"]
 	s.ConfMysql = database.NewMysql(confMysql.Dsn)
-	s.ConfMysql.AutoMigrate(&database.Mail{})
+	s.ConfMysql.AutoMigrate(&constant.Mail{})
 
 	redisMailConf := conf.RedisConf["player_mail"]
 	s.MailRedis = database.NewRedis(redisMailConf.Addr, redisMailConf.Password, redisMailConf.DB)

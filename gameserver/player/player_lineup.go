@@ -35,6 +35,11 @@ func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg pb.Message) {
 		rsp.LineupList = append(rsp.LineupList, lineupList)
 	}
 
+	if changeStory := g.GetCurChangeStoryInfo(); changeStory != nil {
+		lineupList := g.GetLineUpPb(g.GetStoryLineById(changeStory.ChangeStoryId))
+		rsp.LineupList = append(rsp.LineupList, lineupList)
+	}
+
 	g.Send(cmd.GetAllLineupDataScRsp, rsp)
 }
 

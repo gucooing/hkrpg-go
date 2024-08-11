@@ -3,7 +3,6 @@ package player
 import (
 	"strconv"
 
-	base "github.com/gucooing/hkrpg-go/gameserver/db"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -53,10 +52,10 @@ func (g *GamePlayer) AddFriend(uid uint32) {
 // 获取好友申请每次都去redis里取
 func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 	friend := new(spb.ApplyFriend)
-	if g.IsPE {
+	if g.IsPE { // TODO pe需要额外处理这里
 		return friend.RecvApplyFriend
 	}
-	redisDb, ok := database.GetPlayerFriend(base.Db.PlayerBriefDataRedis, g.Uid)
+	redisDb, ok := database.GetPlayerFriend(g.Store.PlayerBriefDataRedis, g.Uid)
 	if !ok {
 		return make(map[uint32]*spb.ReceiveApply, 0)
 	}
@@ -69,7 +68,7 @@ func (g *GamePlayer) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 }
 
 func (g *GamePlayer) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefData {
-	if uid == 0 || g.IsPE {
+	if uid == 0 {
 		return &spb.PlayerBasicBriefData{
 			Nickname:          "hkrpg-go|game_server:" + strconv.Itoa(int(g.GameAppId)),
 			Level:             80,
@@ -83,12 +82,13 @@ func (g *GamePlayer) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefDa
 			Signature:         "欢迎来到免费私人服务器 hkrpg-go|game_server:" + strconv.Itoa(int(g.GameAppId)),
 		}
 	}
-	redisDb, ok := base.GetDb().GetPlayerPlayerBasicBriefData(uid)
+	bin, ok := database.GetPlayerBasic(g.Store.PlayerBriefDataRedis,
+		g.Store.PeMysql, uid)
 	if !ok {
 		return nil
 	}
 	friend := new(spb.PlayerBasicBriefData)
-	err := pb.Unmarshal(redisDb, friend)
+	err := pb.Unmarshal(bin, friend)
 	if err != nil {
 		logger.Error("player_brief_data Unmarshal error")
 		return nil
@@ -99,7 +99,7 @@ func (g *GamePlayer) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefDa
 // 将redis里的好友加入mysql里
 func (g *GamePlayer) InspectionRedisAcceptApplyFriend() {
 	friend := new(spb.AcceptApplyFriend)
-	redisDb, ok := database.GetAcceptApplyFriend(base.Db.PlayerBriefDataRedis, g.Uid)
+	redisDb, ok := database.GetAcceptApplyFriend(g.Store.PlayerBriefDataRedis, g.Uid)
 	if !ok {
 		return
 	}
@@ -114,7 +114,7 @@ func (g *GamePlayer) InspectionRedisAcceptApplyFriend() {
 		}
 	}
 	// TODO 处理完了要通知node删掉该信息(无所谓我自己删，覆写就覆写
-	database.DelAcceptApplyFriend(base.Db.PlayerBriefDataRedis, g.Uid)
+	database.DelAcceptApplyFriend(g.Store.PlayerBriefDataRedis, g.Uid)
 }
 
 /*******************************************接口*******************************************/

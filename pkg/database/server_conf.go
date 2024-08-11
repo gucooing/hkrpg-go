@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 	"gorm.io/gorm"
@@ -13,22 +14,22 @@ import (
 var DBCONF *DbConf
 
 type DbConf struct {
-	MailMap      map[uint32]*Mail
+	MailMap      map[uint32]*constant.Mail
 	mailMapLock  sync.Mutex
-	RogueMap     map[uint32]*RogueConf
+	RogueMap     map[uint32]*constant.RogueConf
 	rogueMapLock sync.Mutex
 }
 
 func GetDbConf(db *gorm.DB) {
 	dbConf := &DbConf{
-		MailMap:  make(map[uint32]*Mail),
-		RogueMap: make(map[uint32]*RogueConf),
+		MailMap:  make(map[uint32]*constant.Mail),
+		RogueMap: make(map[uint32]*constant.RogueConf),
 	}
 	DBCONF = dbConf
 	mailMap := GetDbAllMail(db)
 	for _, mail := range mailMap {
 		dbConf.MailMap[mail.Id] = mail
-		itemList := make([]*Item, 0)
+		itemList := make([]*constant.Item, 0)
 		err := hjson.Unmarshal([]byte(mail.Item), &itemList)
 		if err != nil {
 			// 如果你是在登录的时候看到了这个报错，并且你的配置没有问题，那就是这玩意空的没填报错了
@@ -47,8 +48,8 @@ func GetDbConf(db *gorm.DB) {
 	}
 }
 
-func GetAllMail() map[uint32]*Mail {
-	mailMap := make(map[uint32]*Mail, 0)
+func GetAllMail() map[uint32]*constant.Mail {
+	mailMap := make(map[uint32]*constant.Mail, 0)
 	DBCONF.mailMapLock.Lock()
 	for id, mail := range DBCONF.MailMap {
 		mailMap[id] = mail
@@ -57,13 +58,13 @@ func GetAllMail() map[uint32]*Mail {
 	return mailMap
 }
 
-func GetMailById(id uint32) *Mail {
+func GetMailById(id uint32) *constant.Mail {
 	DBCONF.mailMapLock.Lock()
 	defer DBCONF.mailMapLock.Unlock()
 	return DBCONF.MailMap[id]
 }
 
-func GetCurRogue() *RogueConf {
+func GetCurRogue() *constant.RogueConf {
 	DBCONF.rogueMapLock.Lock()
 	defer DBCONF.rogueMapLock.Unlock()
 	currentTime := time.Now()
@@ -80,7 +81,7 @@ type TimeInterval struct {
 	end   time.Time
 }
 
-func IsOverlapping(rogueMap []*RogueConf) bool {
+func IsOverlapping(rogueMap []*constant.RogueConf) bool {
 	var timeIntervals []TimeInterval
 	for _, rc := range rogueMap {
 		timeIntervals = append(timeIntervals, TimeInterval{start: rc.BeginTime.Time, end: rc.EndTime.Time})

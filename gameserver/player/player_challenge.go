@@ -1,6 +1,8 @@
 package player
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -332,4 +334,131 @@ func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg pb.Message) {
 	}
 
 	g.Send(cmd.EnterChallengeNextPhaseScRsp, rsp)
+}
+
+// 获取忘却之庭世界
+func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
+	curChallenge := g.GetCurChallenge()
+	leaderEntityId := g.GetNextGameObjectGuid()
+	lineUp := g.GetChallengesLineUp()
+	mazeGroupID := g.GetChallengesMazeGroupID()
+	configList := g.GetChallengesConfigList()
+	npcMonsterIDList := g.GetChallengesNpcMonsterIDList()
+	eventIDList := g.GetChallengesEventIDList()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return nil
+	}
+	mapEntrance := gdconf.GetMapEntranceById(challengeMazeConfig.MapEntranceID)
+	if mapEntrance == nil {
+		return nil
+	}
+	foorMap := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, mazeGroupID)
+	if foorMap == nil || lineUp == nil || len(npcMonsterIDList) != len(eventIDList) || len(eventIDList) != len(configList) {
+		return nil
+	}
+	pos, rot := g.GetChallengesAnchor(foorMap.AnchorList)
+	if pos == nil || rot == nil {
+		return nil
+	}
+	// 获取映射信息
+	worldId := gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID
+	if worldId == 100 {
+		worldId = 401
+	}
+	scene := &proto.SceneInfo{
+		ClientPosVersion:   0,
+		PlaneId:            mapEntrance.PlaneID,
+		FloorId:            mapEntrance.FloorID,
+		LeaderEntityId:     leaderEntityId,
+		WorldId:            worldId,
+		EntryId:            challengeMazeConfig.MapEntranceID,
+		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
+		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
+		EnvBuffList:        make([]*proto.BuffInfo, 0),
+		LevelGroupIdList:   make([]uint32, 0),
+		GroupStateList:     make([]*proto.SceneGroupState, 0),
+		LightenSectionList: []uint32{0},
+		EntityList:         make([]*proto.SceneEntityInfo, 0),
+	}
+
+	// 添加场景buff
+	if curChallenge.MazeBuffId != 0 {
+		scene.EnvBuffList = append(scene.EnvBuffList, &proto.BuffInfo{
+			Count:     4294967295,
+			LifeTime:  -1,
+			BuffId:    curChallenge.MazeBuffId,
+			AddTimeMs: uint64(time.Now().UnixMilli()),
+			Level:     1,
+		})
+	}
+	// 添加自选buff
+	if g.GetCurChallengeBuffId() != 0 {
+		scene.EnvBuffList = append(scene.EnvBuffList, &proto.BuffInfo{
+			Count:     4294967295,
+			LifeTime:  -1,
+			BuffId:    g.GetCurChallengeBuffId(),
+			AddTimeMs: uint64(time.Now().UnixMilli()),
+			Level:     1,
+		})
+	}
+	// 将进入场景的角色添加到实体列表里
+	entityGroup := &proto.SceneEntityGroupInfo{
+		GroupId:    0,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
+	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
+	// 添加怪物实体
+	monsterEntityGroup := &proto.SceneEntityGroupInfo{
+		GroupId:    mazeGroupID,
+		EntityList: make([]*proto.SceneEntityInfo, 0),
+	}
+	for id, config := range configList {
+		for _, monsterList := range foorMap.MonsterList {
+			if monsterList.ID != config {
+				continue
+			}
+			entityId := g.GetNextGameObjectGuid()
+			monsterPos := &proto.Vector{
+				X: int32(monsterList.PosX * 1000),
+				Y: int32(monsterList.PosY * 1000),
+				Z: int32(monsterList.PosZ * 1000),
+			}
+			monsterRot := &proto.Vector{
+				X: int32(monsterList.RotX * 1000),
+				Y: int32(monsterList.RotY * 1000),
+				Z: int32(monsterList.RotZ * 1000),
+			}
+			entityList := &proto.SceneEntityInfo{
+				GroupId:  mazeGroupID,
+				InstId:   monsterList.ID,
+				EntityId: entityId,
+				Motion: &proto.MotionInfo{
+					Pos: monsterPos,
+					Rot: monsterRot,
+				},
+				EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+					NpcMonster: &proto.SceneNpcMonsterInfo{
+						MonsterId: npcMonsterIDList[id],
+						EventId:   eventIDList[id],
+					},
+				},
+			}
+			// 添加怪物实体
+			g.AddEntity(mazeGroupID, &MonsterEntity{
+				Entity: Entity{
+					EntityId: entityId,
+					GroupId:  mazeGroupID,
+					Pos:      monsterPos,
+					Rot:      monsterRot,
+					InstId:   monsterList.ID,
+				},
+				EventID: eventIDList[id],
+			})
+			monsterEntityGroup.EntityList = append(monsterEntityGroup.EntityList, entityList)
+		}
+	}
+	scene.EntityGroupList = append(scene.EntityGroupList, monsterEntityGroup)
+	return scene
 }

@@ -78,11 +78,15 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, an
 		g.Send(cmd.EnterSceneByServerScNotify, rsp)
 		return
 	}
+	if db := g.GetCurChangeStoryInfo(); db != nil {
+		g.StoryLineInfoScNotify()
+		g.SyncLineupNotify(g.GetCurLineUp())
+		g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
+	}
 	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
-	g.SetCurEntryId(entryId)
 	g.EnterMapByEntrance(entryId) // 任务检查
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
-	// "2010101"
+	g.ChangeStoryLineFinishScNotify()
 }
 
 // 传送到指定位置
@@ -143,10 +147,10 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 					},
 					UnlockTeleportList: make([]uint32, 0),
 					DimensionId:        g.GetDimensionId(),
+					EntryStoryLineId:   req.EntryStoryLineId,
 					FloorSavedData:     g.GetFloorSavedData(entryId),
+					EntryId:            entryId,
 				}
-
-				mapList.EntryId = entryId
 
 				for i := uint32(0); i < 100; i++ {
 					mapList.LightenSectionList = append(mapList.LightenSectionList, i)
@@ -176,22 +180,25 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.EnterSceneCsReq)
-	rsp := &proto.GetEnteredSceneScRsp{
-		EnteredSceneInfoList: make([]*proto.EnteredSceneInfo, 0),
-		Retcode:              0,
+	rsp := &proto.EnterSceneScRsp{
+		ContentId:       req.ContentId,
+		GameStoryLineId: req.GameStoryLineId,
+		IsCloseMap:      req.IsCloseMap,
+		Retcode:         0,
+		IsOverMap:       false,
 	}
 	entryId := req.EntryId
 	teleportId := req.TeleportId
 	var groupId uint32 = 0
 	var anchorId uint32 = 0
 
-	changeStory := g.GetChangeStoryInfo(req.GameStoryLineId)
-
 	if conf := gdconf.GetStoryLine(req.GameStoryLineId); conf != nil {
+		changeStory := g.GetChangeStoryInfo(req.GameStoryLineId)
 		if changeStory == nil {
 			g.MissionAddChangeStoryLine([]uint32{req.GameStoryLineId, 0, 0, 0})
 			return
 		}
+		rsp.IsOverMap = true
 		db := g.GetChangeStory()
 		db.IsChangeStory = true
 		db.CurChangeStory = req.GameStoryLineId
@@ -199,15 +206,28 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
 		groupId = changeStory.Scene.GroupId
 		anchorId = changeStory.Scene.AnchorId
 		g.NewStoryLine(req.GameStoryLineId)
-	} else {
+	} else if req.GameStoryLineId == 0 {
 		db := g.GetChangeStory()
 		db.IsChangeStory = false
+		if entryId == 0 {
+			entryId = g.GetCurEntryId()
+		}
 	}
 
-	g.EnterSceneByServerScNotify(entryId, teleportId, groupId, anchorId)
+	if entryId != 0 &&
+		req.ContentId == 0 &&
+		req.GameStoryLineId == 0 {
+		g.SetCurEntryId(entryId)
+	}
+
+	if req.ContentId == 0 {
+		g.EnterSceneByServerScNotify(entryId, teleportId, groupId, anchorId)
+	} else {
+
+	}
 
 	g.Send(cmd.EnterSceneScRsp, rsp)
-	g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
+	// g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
 }
 
 func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {

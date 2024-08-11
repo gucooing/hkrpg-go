@@ -44,7 +44,7 @@ func (g *GameDataConfig) loadStoryLine() {
 		g.StoryLineMap[v.StoryLineID] = v
 	}
 
-	logger.Info("load %v StoryLine", len(g.StageConfigMap))
+	logger.Info("load %v StoryLine", len(g.StoryLineMap))
 }
 
 func GetStoryLine(storyLineID uint32) *StoryLine {

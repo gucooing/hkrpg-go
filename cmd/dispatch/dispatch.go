@@ -10,8 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/dispatch/config"
-	"github.com/gucooing/hkrpg-go/dispatch/sdk"
+	"github.com/gucooing/hkrpg-go/dispatch"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -19,10 +18,10 @@ import (
 func main() {
 	// 启动读取配置
 	confName := "dispatch.json"
-	err := config.LoadConfig(confName)
+	err := dispatch.LoadConfig(confName)
 	if err != nil {
-		if err == config.FileNotExist {
-			p, _ := json.MarshalIndent(config.DefaultConfig, "", "  ")
+		if err == dispatch.FileNotExist {
+			p, _ := json.MarshalIndent(dispatch.DefaultConfig, "", "  ")
 			cf, _ := os.Create("./conf/" + confName)
 			cf.Write(p)
 			cf.Close()
@@ -34,12 +33,12 @@ func main() {
 	}
 	appid := alg.GetAppId()
 	// 初始化日志
-	logger.InitLogger("discord"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
+	logger.InitLogger("discord"+"["+appid+"]", strings.ToUpper(dispatch.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
 
-	cfg := config.GetConfig()
+	cfg := dispatch.GetConfig()
 	// 初始化
-	newserver := sdk.NewServer(cfg, appid)
+	newserver := dispatch.NewServer(cfg, appid)
 	if newserver == nil {
 		logger.Error("服务器初始化失败")
 		return

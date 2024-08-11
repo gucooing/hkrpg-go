@@ -12,12 +12,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/dispatch"
-	"github.com/gucooing/hkrpg-go/dispatch/config"
-	"github.com/gucooing/hkrpg-go/dispatch/sdk"
-	"github.com/gucooing/hkrpg-go/gameserver/gs"
+	"github.com/gucooing/hkrpg-go/gameserver"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
-	"github.com/gucooing/hkrpg-go/gateserver/gate"
+	"github.com/gucooing/hkrpg-go/gateserver"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
@@ -39,16 +38,34 @@ var QPS int64
 type HkRpgGoServer struct {
 	config           *Config
 	db               *dispatch.Store
-	Dispatch         *sdk.Server
+	Dispatch         *dispatch.Server
 	kcpListener      *kcp.Listener
 	sessionIdCounter uint32
-	kcpEventChan     chan *gate.KcpEvent
+	kcpEventChan     chan *gateserver.KcpEvent
 	playerMap        map[uint32]*PlayerGame
 	playerMapLock    sync.Mutex // 玩家列表互斥锁
 	// 下面是定时器
 	everyDay4        *time.Ticker
 	autoUpDataPlayer *time.Ticker
 	CmdRouteManager  *CmdRouteManager
+}
+
+func newStorePE(cfg *Config) *dispatch.Store {
+	s := new(dispatch.Store)
+	s.AccountMysql = database.NewSqlite(cfg.SqlPath)
+	s.AccountMysql.AutoMigrate(
+		&constant.Account{},      // sdk账户
+		&constant.PlayerUid{},    // 映射表
+		&constant.PlayerData{},   // 玩家数据
+		&constant.BlockData{},    // 地图数据
+		&constant.RogueConf{},    // 模拟宇宙配置
+		&constant.ScheduleConf{}, // 忘记了
+		&constant.PlayerBasic{},  // 好友简要信息
+		&constant.Mail{},         // 邮件配置
+	)
+
+	logger.Info("数据库连接成功")
+	return s
 }
 
 // 初始化数据库步骤
@@ -59,20 +76,19 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// 初始化数据库
 	s.db = newStorePE(cfg)
-	database.GetDbConf(s.db.HkrpgGoPe)
+	database.GetDbConf(s.db.AccountMysql)
 	// 初始化dispatch
 	gin.SetMode(gin.ReleaseMode) // 初始化gin
-	dispatchList := make([]config.Dispatch, 0)
+	dispatchList := make([]dispatch.Dispatch, 0)
 	for _, d := range cfg.Dispatch.DispatchList {
-		dispatchList = append(dispatchList, config.Dispatch{
+		dispatchList = append(dispatchList, dispatch.Dispatch{
 			Name:        d.Name,
 			Title:       d.Title,
 			Type:        d.Type,
 			DispatchUrl: d.DispatchUrl,
 		})
 	}
-	s.Dispatch = &sdk.Server{
-		IsPe:         true,
+	s.Dispatch = &dispatch.Server{
 		Router:       gin.New(),
 		Ec2b:         alg.GetEc2b(),
 		IsAutoCreate: cfg.Dispatch.AutoCreate,
@@ -83,6 +99,7 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 		DispatchList: dispatchList,
 		KcpPort:      alg.S2U32(cfg.GameServer.Port),
 		KcpIp:        cfg.GameServer.OuterAddr,
+		IsPe:         true,
 	}
 	s.Dispatch.Router.Use(gin.Recovery())
 	// 启动kcp
@@ -100,7 +117,7 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	s.CmdRouteManager = NewCmdRouteManager()
 	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	// 开启game定时器
-	s.autoUpDataPlayer = time.NewTicker(gs.AutoUpDataPlayerTicker * time.Second)
+	s.autoUpDataPlayer = time.NewTicker(gameserver.AutoUpDataPlayerTicker * time.Second)
 	everyDay4 := alg.GetEveryDay4()
 	logger.Debug("离下一个刷新时间:%v", everyDay4)
 	s.everyDay4 = time.NewTicker(everyDay4)
@@ -303,9 +320,9 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg pb.Message)
 		}
 	}
 	accountUid := alg.S2U32(req.AccountUid)
-	account := database.QueryAccountByFieldAccountId(s.Dispatch.Store.HkrpgGoPe, accountUid)
+	playerUid := database.GetPlayerUidByAccountId(s.Dispatch.Store.AccountMysql, accountUid)
 	// token验证
-	if account.ComboToken != req.Token {
+	if playerUid.ComboToken != req.Token {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 		rsp.Msg = "token验证失败"
@@ -313,26 +330,24 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg pb.Message)
 		logger.Info("登录账号:%v,token验证失败", accountUid)
 		return
 	}
-	// 拉取ban数据
-	uidPlayer := database.GetPlayerUidByAccountId(s.Dispatch.Store.HkrpgGoPe, accountUid)
 	// 封禁验证
-	if uidPlayer.BanEndTime >= time.Now().Unix() {
+	if playerUid.BanEndTime >= time.Now().Unix() {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)
 		rsp.Msg = "该账号正处于封禁状态，暂时无法登录，详情可联系客服。"
 		p.SendHandle(cmd.PlayerGetTokenScRsp, rsp)
-		logger.Info("登录账号:%v,已被封禁,原因:%s", accountUid, uidPlayer.BanMsg)
+		logger.Info("登录账号:%v,已被封禁,原因:%s", accountUid, playerUid.BanMsg)
 		return
 	}
 	// 重复登录验证
-	if old := s.GetPlayer(uidPlayer.Uid); old != nil {
+	if old := s.GetPlayer(playerUid.Uid); old != nil {
 		old.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_BLACK})
 		s.killPlayer(old)
-		logger.Info("[UID:%v]重复登录", uidPlayer.Uid)
+		logger.Info("[UID:%v]重复登录", playerUid.Uid)
 	}
-	p.Uid = uidPlayer.Uid
+	p.Uid = playerUid.Uid
 	// 拉取玩家数据
-	p.GamePlayer = s.NewPlayer(uidPlayer.Uid, accountUid)
+	p.GamePlayer = s.NewPlayer(playerUid.Uid, accountUid)
 	p.LastActiveTime = time.Now().Unix()
 	go p.recvPlayer()
 	go p.GamePlayer.RecvMsg()
@@ -357,7 +372,7 @@ func (s *HkRpgGoServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g.RecvCtx, g.RecvCal = context.WithCancel(context.Background())
 	g.SendCtx, g.SendCal = context.WithCancel(context.Background())
 	g.IsJumpMission = s.config.GameServer.IsJumpMission
-	g.DB = s.db.HkrpgGoPe
+	g.Store = &database.GameStore{PeMysql: s.db.AccountMysql}
 	g.IsPE = true
 	g.RouteManager = player.NewRouteManager(g)
 	g.LastUpDataTime = time.Now().Unix()

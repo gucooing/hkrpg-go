@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -61,7 +62,7 @@ func (g *GamePlayer) DelMail(id uint32) {
 }
 
 // TODO 邮件奖励兑换方法（拓展此处以支持更多奖励物品
-func (g *GamePlayer) MailReadItem(itemList []*database.Item) bool {
+func (g *GamePlayer) MailReadItem(itemList []*constant.Item) bool {
 	allSync := &AllPlayerSync{
 		IsBasic:      true,
 		MaterialList: make([]uint32, 0),
@@ -70,10 +71,10 @@ func (g *GamePlayer) MailReadItem(itemList []*database.Item) bool {
 	pileItem := make([]*Material, 0)
 	for _, item := range itemList {
 		switch item.ItemType {
-		case database.MailAvatar:
+		case constant.MailAvatar:
 			allSync.AvatarList = append(allSync.AvatarList, item.ItemId)
 			g.AddAvatar(item.ItemId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
-		case database.MailMaterial:
+		case constant.MailMaterial:
 			allSync.MaterialList = append(allSync.MaterialList, item.ItemId)
 			pileItem = append(pileItem, &Material{
 				Tid: item.ItemId,
@@ -113,7 +114,7 @@ func (g *GamePlayer) GetAllMail() []*proto.ClientMail {
 	return mailList
 }
 
-func (g *GamePlayer) GetAttachment(itemList []*database.Item) []*proto.Item {
+func (g *GamePlayer) GetAttachment(itemList []*constant.Item) []*proto.Item {
 	ItemList := make([]*proto.Item, 0)
 	for _, item := range itemList {
 		Item := &proto.Item{

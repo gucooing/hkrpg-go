@@ -1,0 +1,220 @@
+package gateserver
+
+import (
+	"strconv"
+	"time"
+
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/database"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/random"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	pb "google.golang.org/protobuf/proto"
+)
+
+func getCurTime() uint64 {
+	return uint64(time.Now().UnixMilli())
+}
+
+// 玩家ping包处理
+func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.PlayerHeartBeatCsReq)
+	sTime := getCurTime()
+
+	rsp := new(proto.PlayerHeartBeatScRsp)
+	rsp.ServerTimeMs = sTime
+	rsp.ClientTimeMs = req.ClientTimeMs
+	p.LastActiveTime = sTime
+
+	p.GateToPlayer(cmd.PlayerHeartBeatScRsp, rsp)
+}
+
+func (p *PlayerGame) ApplyFriendCsReq(tcpMsg *alg.PackMsg) {
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.ApplyFriendCsReq)
+	// 发送到node
+	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
+		MsgType:  spb.PlayerMsgType_PMT_APPLYFRIEND,
+		ApplyUid: p.Uid,
+		SendUid:  req.Uid,
+	})
+	// 返回给玩家
+	p.GateToPlayer(cmd.ApplyFriendScRsp, &proto.ApplyFriendScRsp{Uid: req.Uid})
+}
+
+func (p *PlayerGame) HandleFriendCsReq(tcpMsg *alg.PackMsg) {
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.HandleFriendCsReq)
+	// 发送到node
+	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
+		MsgType:        spb.PlayerMsgType_PMT_ACCEPTFRIEND,
+		ApplyUid:       req.Uid,
+		SendUid:        p.Uid,
+		IsAcceptFriend: req.IsAccept,
+	})
+	if req.IsAccept {
+		// 发送到gameserver
+		go p.GateToGame(tcpMsg)
+	} else {
+		// 返回给玩家
+		p.GateToPlayer(cmd.HandleFriendScRsp, &proto.HandleFriendScRsp{Uid: req.Uid, IsAccept: req.IsAccept})
+	}
+}
+
+func (p *PlayerGame) SendMsgCsReq(tcpMsg *alg.PackMsg) {
+	msg := alg.DecodePayloadToProto(tcpMsg)
+	req := msg.(*proto.SendMsgCsReq)
+	for _, touid := range req.TargetList {
+		notify := &proto.RevcMsgScNotify{
+			TargetUid:   touid,
+			ExtraId:     req.ExtraId,
+			MessageType: req.MessageType,
+			SourceUid:   p.Uid,
+			MessageText: req.MessageText,
+			ChatType:    req.ChatType,
+		}
+		p.GateToPlayer(cmd.RevcMsgScNotify, notify)
+		if touid == 0 {
+			notify0 := &proto.RevcMsgScNotify{
+				TargetUid:   p.Uid,
+				ExtraId:     0,
+				MessageType: proto.MsgType_MSG_TYPE_CUSTOM_TEXT,
+				SourceUid:   touid,
+				MessageText: "欢迎来到免费私人服务器 hkrpg-go(tips:没有写chat指令",
+				ChatType:    proto.ChatType_CHAT_TYPE_PRIVATE,
+			}
+			p.GateToPlayer(cmd.RevcMsgScNotify, notify0)
+		}
+	}
+	p.GateToPlayer(cmd.SendMsgScRsp, nil)
+}
+
+/******************************************NewLogin***************************************/
+
+func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
+	req := new(proto.PlayerGetTokenCsReq)
+	pb.Unmarshal(playerMsg, req)
+	rsp := new(proto.PlayerGetTokenScRsp)
+	if req.Token == "" || req.AccountUid == "" {
+		return
+	}
+	// 人数验证
+	if GetConfig().MaxPlayer != -1 {
+		if CLIENT_CONN_NUM >= GetConfig().MaxPlayer {
+			rsp.Uid = 0
+			rsp.Retcode = uint32(proto.Retcode_RET_REACH_MAX_PLAYER_NUM)
+			rsp.Msg = "当前服务器人数过多，请稍后再试。"
+			p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
+			return
+		}
+	}
+
+	accountUid := alg.S2U32(req.AccountUid)
+	dbComboToken := database.GetComboTokenByAccountId(s.Store.LoginRedis, nil, accountUid)
+	// token验证
+	if dbComboToken != req.Token {
+		rsp.Uid = 0
+		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
+		rsp.Msg = "token验证失败"
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
+		logger.Info("登录账号:%v,token验证失败", accountUid)
+		return
+	}
+
+	// 登录分布式锁
+	if ok := database.LoginDistLockSync(s.Store.LoginRedis, req.AccountUid); !ok {
+		rsp.Uid = 0
+		rsp.Retcode = uint32(proto.Retcode_RET_REACH_MAX_PLAYER_NUM)
+		rsp.Msg = "重复登录，请稍后再试。"
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
+		return
+	}
+
+	// 拉取db数据
+	uidPlayer := database.GetPlayerUidByAccountId(s.Store.PlayerUidMysql, accountUid)
+	// 封禁验证
+	if uidPlayer.BanEndTime >= time.Now().Unix() {
+		rsp.Uid = 0
+		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)
+		rsp.Msg = "该账号正处于封禁状态，暂时无法登录，详情可联系客服。"
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
+		logger.Info("登录账号:%v,已被封禁,原因:%s", accountUid, uidPlayer.BanMsg)
+		database.LoginDistUnlock(s.Store.LoginRedis, req.AccountUid)
+		return
+	}
+
+	p.AccountId = accountUid
+	// 登录成功，拉取game
+	gs := s.getMinGsAppId()
+	if gs == nil {
+		rsp.Uid = p.AccountId
+		rsp.Retcode = uint32(proto.Retcode_RET_SYSTEM_BUSY)
+		rsp.Msg = "game未启动"
+		p.GateToPlayer(cmd.PlayerGetTokenScRsp, rsp)
+		logger.Error("game未启动")
+		database.LoginDistUnlock(s.Store.LoginRedis, req.AccountUid)
+		return
+	}
+	p.gs = gs
+
+	// 添加定时器
+	p.ticker = time.NewTimer(4 * time.Second)
+	p.stop = make(chan struct{})
+	go p.loginTicker()
+
+	// 生成seed
+	timeRand := random.GetTimeRand()
+	serverSeedUint64 := timeRand.Uint64()
+	p.Seed = serverSeedUint64
+	p.Uid = uidPlayer.Uid
+
+	logger.Info("[UID:%v][AccountId:%v]玩家登录中", p.Uid, accountUid)
+
+	// 保存玩家到临时登录列表中
+	if !s.addLoginPlayer(p.Uid, p) {
+		logger.Warn("[UID:%v][AccountId:%v]超出预期的玩家重复登录", p.Uid, accountUid)
+		return
+	}
+
+	// 下线重复登录的玩家
+	if bin, ok := database.GetPlayerStatus(s.Store.StatusRedis, strconv.Itoa(int(uidPlayer.Uid))); ok {
+		statu := new(spb.PlayerStatusRedisData)
+		err := pb.Unmarshal(bin, statu)
+		if err != nil {
+			logger.Error("PlayerStatusRedisData Unmarshal error")
+			return
+		}
+		oldGs := s.getGsByAppid(statu.GameserverId)
+		if oldGs != nil {
+			logoutReq := &spb.GetToGamePlayerLogoutReq{
+				Uid:             p.Uid,
+				AccountId:       accountUid,
+				OldGameServerId: statu.GameserverId,
+				NewGameServerId: p.gs.appid,
+			}
+
+			if statu.GateserverId == s.AppId {
+				logoutReq.Retcode = spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN // 同网关重复登录
+			} else {
+				logoutReq.Retcode = spb.Retcode_RET_PLAYER_REPEAT_LOGIN // 异网关重复登录
+			}
+			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, logoutReq)
+			logger.Info("[UID:%v][AccountId:%v]重复登录，下线旧玩家", p.Uid, accountUid)
+			return
+		} else {
+			database.LoginDistUnlock(s.Store.LoginRedis, req.AccountUid)
+			logger.Error("PlayerStatusRedisData uid error")
+		}
+	}
+
+	gs.playerLogin(p)
+}
+
+func (gs *gameServer) playerLogin(p *PlayerGame) {
+	// 通知game玩家登录
+	logger.Info("[UID:%v][AccountId:%v]玩家登录准备完成,正式登录", p.Uid, p.AccountId)
+	gs.GateGamePlayerLoginReq(p.Uid, p.AccountId)
+}

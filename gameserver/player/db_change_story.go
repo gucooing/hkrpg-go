@@ -94,9 +94,9 @@ func (g *GamePlayer) MissionAddChangeStoryLine(finishActionPara []uint32) {
 	} else {
 		return
 	}
-	g.StoryLineInfoScNotify() // 通知一次
-	g.SyncLineupNotify(g.GetCurLineUp())
-	g.ChangeStoryLineFinishScNotify()
+	// g.StoryLineInfoScNotify() // 通知一次
+	// g.SyncLineupNotify(g.GetCurLineUp())
+	// g.ChangeStoryLineFinishScNotify()
 	// 传送
 	g.EnterSceneByServerScNotify(entryId, 0, anchorGroup, anchorId)
 }
