@@ -182,6 +182,14 @@ func (s *GameServer) GlobalRotationEvent5s() {
 }
 
 func (s *GameServer) GlobalRotationEvent4h() {
+	playes := s.getAllPlayer()
+	for _, g := range playes {
+		if g.p.RecvChan != nil {
+			g.p.RecvChan <- player.Msg{
+				MsgType: player.DailyTask,
+			}
+		}
+	}
 	everyDay4 := alg.GetEveryDay4()
 	logger.Debug("离下一个刷新时间:%v", everyDay4)
 	s.everyDay4 = time.NewTicker(everyDay4)

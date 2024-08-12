@@ -46,6 +46,7 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		Mail:                 NewMail(),
 		Friend:               NewFriend(),
 		Mission:              newMission(),
+		Day:                  NewDays(),
 		DataVersion:          0,
 		LastDailyRefreshTime: 0,
 		Tutorial:             NewTutorialDb(),

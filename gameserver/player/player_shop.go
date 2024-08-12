@@ -106,19 +106,11 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.BuyGoodsCsReq)
 	var pileItem []*Material
 
-	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	allSync := &AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
 
 	rsp := &proto.BuyGoodsScRsp{
 		ReturnItemList: &proto.ItemList{
-			ItemList: []*proto.Item{{
-				ItemId:      req.ItemId,
-				Level:       0,
-				Num:         req.GoodsNum,
-				MainAffixId: 0,
-				Rank:        0,
-				Promotion:   0,
-				UniqueId:    0,
-			}},
+			ItemList: make([]*proto.Item, 0),
 		},
 		ShopId:        req.ShopId,                // 商店id
 		GoodsId:       req.GoodsId,               // 商品id
@@ -131,14 +123,25 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 		allSync.MaterialList = append(allSync.MaterialList, cost)
 		material = append(material, &Material{
 			Tid: cost,
-			Num: goodsConfig.CurrencyCostList[id],
+			Num: goodsConfig.CurrencyCostList[id] * req.GoodsNum,
 		})
 	}
 	g.DelMaterial(material)
+	num := goodsConfig.ItemCount * req.GoodsNum
 	pileItem = append(pileItem, &Material{
 		Tid: req.ItemId,
-		Num: req.GoodsNum,
+		Num: num,
 	})
+	rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList,
+		&proto.Item{
+			ItemId:      req.ItemId,
+			Promotion:   0,
+			MainAffixId: 0,
+			Rank:        0,
+			Level:       0,
+			Num:         num,
+			UniqueId:    0,
+		})
 	g.AddItem(pileItem)
 
 	allSync.MaterialList = append(allSync.MaterialList, req.ItemId)

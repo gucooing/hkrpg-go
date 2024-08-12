@@ -52,6 +52,7 @@ message PlayerBasicCompBin {
   string ip_country_code = 43; // ip国家代码
   string ip_region_name = 44; // ip区域名称
   Mission mission = 45;// 任务
+  map<int32,Days> day = 46; // 每日刷新
 }
 
 message Activity{
@@ -400,6 +401,11 @@ message MessageGroup {//NPC聊天信息
 message MessageSection {
   uint32 id = 1;
   MessageSectionStatus status = 2;
+}
+
+message Days {
+  uint32 daily_task = 1;// 每日任务
+  bool is_yk = 2;// 是否领取月卡
 }
 
 message BlockBin{// 地图配置

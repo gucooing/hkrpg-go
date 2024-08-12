@@ -88,15 +88,12 @@ func GetEveryDay4() time.Duration {
 	return nextExecution.Sub(currentTime)
 }
 
-// func ExtractDigits(str string) uint32 {
-// 	var result strings.Builder
-// 	for _, char := range str {
-// 		if char >= '0' && char <= '9' {
-// 			result.WriteRune(char)
-// 		}
-// 	}
-// 	return S2U32(result.String())
-// }
+func GetDaysSinceBaseline(currentTime time.Time) int32 {
+	baselineAt4 := time.Date(2024, 8, 1, 4, 0, 0, 0, currentTime.Location())
+	baselineAt4 = baselineAt4.AddDate(0, 0, -1)
+	daysSinceBaseline := int32(currentTime.Sub(baselineAt4).Hours() / 24)
+	return daysSinceBaseline
+}
 
 func ExtractDigits(str string) uint32 {
 	parts := strings.Split(str, "_")

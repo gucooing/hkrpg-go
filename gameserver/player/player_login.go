@@ -73,7 +73,8 @@ func (g *GamePlayer) LoginNotify() {
 	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
 	g.Send(cmd.SyncTurnFoodNotify, &proto.SyncTurnFoodNotify{})
 	g.StaminaInfoScNotify()
-	// g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{OMLECGGPKAB: []*proto.DailyTask{{MainMissionId: 3020104}}})
+	// g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{DailyTaskList: []*proto.DailyTask{{MainMissionId: 3020104}}})
+	g.DailyTaskNotify() // 每日刷新事务
 	g.DailyActiveInfoNotify()
 	g.Send(cmd.RaidInfoNotify, &proto.RaidInfoNotify{})
 	g.BattlePassInfoNotify()

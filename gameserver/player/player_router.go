@@ -241,7 +241,8 @@ func (g *GamePlayer) RecvMsg() {
 			case Client:
 				g.registerMessage(recvMsg.CmdId, recvMsg.PlayerMsg)
 			case Gm:
-
+			case DailyTask:
+				g.DailyTaskNotify()
 			}
 		case <-g.RecvCtx.Done():
 			g.IsClosed = true

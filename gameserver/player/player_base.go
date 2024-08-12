@@ -3,6 +3,7 @@ package player
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -411,7 +412,7 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg pb.Message) {
-	g.Send(cmd.PlayerLoginFinishScRsp, nil)
+	g.Send(cmd.PlayerLoginFinishScRsp, &proto.PlayerLoginFinishScRsp{})
 	g.ContentPackageSyncDataScNotify()
 }
 
@@ -509,4 +510,30 @@ func (g *GamePlayer) ReserveStaminaExchangeCsReq(payloadMsg pb.Message) {
 	g.StaminaInfoScNotify()
 
 	g.Send(cmd.ReserveStaminaExchangeScRsp, rsp)
+}
+
+func (g *GamePlayer) DailyTaskNotify() {
+	dailyDb := g.GetCurDay(alg.GetDaysSinceBaseline(time.Now()))
+	if dailyDb.IsYk {
+		g.Send(cmd.MonthCardRewardNotify, &proto.MonthCardRewardNotify{
+			Reward: &proto.ItemList{ItemList: []*proto.Item{{ItemId: Hcoin, Num: 120}}}})
+	}
+	g.DailyTaskDataScNotify(dailyDb.DailyTask)
+}
+
+func (g *GamePlayer) DailyTaskDataScNotify(missionId uint32) {
+	finishMainMission := g.GetFinishMainMissionList()
+	notify := &proto.DailyTaskDataScNotify{
+		FinishedNum:   0,
+		DailyTaskList: make([]*proto.DailyTask, 0),
+	}
+	dailyTask := &proto.DailyTask{
+		MainMissionId: missionId,
+		IsFinished:    false,
+	}
+	if finishMainMission[missionId] != nil {
+		dailyTask.IsFinished = true
+	}
+	notify.DailyTaskList = append(notify.DailyTaskList, dailyTask)
+	g.Send(cmd.DailyTaskDataScNotify, notify)
 }

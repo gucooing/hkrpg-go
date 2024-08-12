@@ -50,9 +50,10 @@ type Msg struct {
 type MsgType int
 
 const (
-	Server MsgType = 1
-	Client MsgType = 2
-	Gm     MsgType = 3
+	Server    MsgType = 1
+	Client    MsgType = 2
+	Gm        MsgType = 3
+	DailyTask MsgType = 4 // 每日刷新
 )
 
 func getCurTime() uint64 {
