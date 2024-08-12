@@ -11,12 +11,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 type Server struct {
@@ -27,7 +24,7 @@ type Server struct {
 	IsAutoCreate bool
 	node         *NodeService
 	Config       *Config
-	Store        *Store
+	Store        *database.DisaptchStore
 	Router       *gin.Engine
 	server       *http.Server
 	AutoCreate   sync.Mutex
@@ -38,26 +35,6 @@ type Server struct {
 	IsPe         bool
 	KcpIp        string
 	KcpPort      uint32
-}
-
-type Store struct {
-	config       *Config
-	AccountMysql *gorm.DB
-	LoginRedis   *redis.Client
-}
-
-// NewStore 创建一个新的 store。
-func NewStore(config *Config) *Store {
-	s := &Store{config: config}
-	accountMysqlConf := config.MysqlConf["account"]
-	s.AccountMysql = database.NewMysql(accountMysqlConf.Dsn)
-	s.AccountMysql.AutoMigrate(&constant.Account{})
-
-	redisLoginConf := config.RedisConf["player_login"]
-	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
-
-	logger.Info("数据库连接成功")
-	return s
 }
 
 // 初始化所有服务
@@ -75,9 +52,9 @@ func NewServer(cfg *Config, appid string) *Server {
 	s.Port = appConf.Port
 	s.InnerAddr = appConf.InnerAddr
 	s.OuterAddr = appConf.OuterAddr
-	s.Store = NewStore(s.Config) // 初始化数据库连接
-	gin.SetMode(gin.ReleaseMode) // 初始化gin
-	s.Router = gin.New()         // gin.Default()
+	s.Store = database.NewDisaptchStore(s.Config.MysqlConf, s.Config.RedisConf) // 初始化数据库连接
+	gin.SetMode(gin.ReleaseMode)                                                // 初始化gin
+	s.Router = gin.New()                                                        // gin.Default()
 	s.Router.Use(gin.Recovery())
 	s.Ec2b = alg.GetEc2b() // 读取ec2b密钥
 	s.DispatchList = cfg.Dispatch

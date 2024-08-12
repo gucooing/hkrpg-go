@@ -7,6 +7,51 @@ import (
 	"gorm.io/gorm"
 )
 
+/******************************disaptch*******************************/
+
+type DisaptchStore struct {
+	AccountMysql *gorm.DB
+	LoginRedis   *redis.Client
+}
+
+func NewDisaptchStore(mysqlList map[string]constant.MysqlConf, redisList map[string]constant.RedisConf) *DisaptchStore {
+	s := &DisaptchStore{}
+	accountMysqlConf := mysqlList["account"]
+	s.AccountMysql = NewMysql(accountMysqlConf.Dsn)
+	s.AccountMysql.AutoMigrate(&constant.Account{})
+
+	redisLoginConf := redisList["player_login"]
+	s.LoginRedis = NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
+
+	logger.Info("数据库连接成功")
+	return s
+}
+
+/******************************gateserver*******************************/
+
+type GateStore struct {
+	PlayerUidMysql *gorm.DB
+	LoginRedis     *redis.Client
+	StatusRedis    *redis.Client
+}
+
+func NewGateStore(mysqlList map[string]constant.MysqlConf, redisList map[string]constant.RedisConf) *GateStore {
+	s := &GateStore{}
+	playerUidMysqlConf := mysqlList["user"]
+	s.PlayerUidMysql = NewMysql(playerUidMysqlConf.Dsn)
+	s.PlayerUidMysql.AutoMigrate(&constant.PlayerUid{})
+
+	redisLoginConf := redisList["player_login"]
+	s.LoginRedis = NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
+	redisStatusConf := redisList["player_status"]
+	s.StatusRedis = NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
+
+	logger.Info("数据库连接成功")
+	return s
+}
+
+/******************************gameserver*******************************/
+
 var GSS *GameStore
 
 type GameStore struct {

@@ -37,7 +37,7 @@ var QPS int64
 
 type HkRpgGoServer struct {
 	config           *Config
-	db               *dispatch.Store
+	db               *database.DisaptchStore
 	Dispatch         *dispatch.Server
 	kcpListener      *kcp.Listener
 	sessionIdCounter uint32
@@ -50,8 +50,8 @@ type HkRpgGoServer struct {
 	CmdRouteManager  *CmdRouteManager
 }
 
-func newStorePE(cfg *Config) *dispatch.Store {
-	s := new(dispatch.Store)
+func newStorePE(cfg *Config) *database.DisaptchStore {
+	s := new(database.DisaptchStore)
 	s.AccountMysql = database.NewSqlite(cfg.SqlPath)
 	s.AccountMysql.AutoMigrate(
 		&constant.Account{},      // sdk账户

@@ -7,13 +7,10 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
-	"github.com/redis/go-redis/v9"
-	"gorm.io/gorm"
 )
 
 const (
@@ -30,7 +27,7 @@ type GateServer struct {
 	InnerAddr          string
 	OuterAddr          string
 	Config             *Config
-	Store              *Store
+	Store              *database.GateStore
 	snowflake          *alg.SnowflakeWorker // 雪花唯一id生成器
 	kcpListener        *kcp.Listener
 	node               *NodeService
@@ -53,34 +50,12 @@ type KcpEvent struct {
 	EventMessage any
 }
 
-type Store struct {
-	config         *Config
-	PlayerUidMysql *gorm.DB
-	LoginRedis     *redis.Client
-	StatusRedis    *redis.Client
-}
-
-func NewStore(config *Config) *Store {
-	s := &Store{config: config}
-	playerUidMysqlConf := config.MysqlConf["user"]
-	s.PlayerUidMysql = database.NewMysql(playerUidMysqlConf.Dsn)
-	s.PlayerUidMysql.AutoMigrate(&constant.PlayerUid{})
-
-	redisLoginConf := config.RedisConf["player_login"]
-	s.LoginRedis = database.NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
-	redisStatusConf := config.RedisConf["player_status"]
-	s.StatusRedis = database.NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
-
-	logger.Info("数据库连接成功")
-	return s
-}
-
 func NewGate(cfg *Config, appid string) *GateServer {
 	s := new(GateServer)
 
 	s.Ec2b = alg.GetEc2b()
 	s.Config = cfg
-	s.Store = NewStore(s.Config) // 初始化数据库连接
+	s.Store = database.NewGateStore(s.Config.MysqlConf, s.Config.RedisConf) // 初始化数据库连接
 	s.gsList = make(map[uint32]*gameServer)
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.WorkerId = 1

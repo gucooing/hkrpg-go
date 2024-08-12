@@ -4,17 +4,19 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 )
 
 type Config struct {
-	LogLevel   string               `json:"LogLevel"`
-	AutoCreate bool                 `json:"AutoCreate"`
-	Dispatch   []Dispatch           `json:"Dispatch"`
-	AppList    map[string]AppList   `json:"AppList"`
-	NetConf    map[string]string    `json:"NetConf"`
-	Email      *email               `json:"Email"`
-	MysqlConf  map[string]MysqlConf `json:"MysqlConf"`
-	RedisConf  map[string]RedisConf `json:"RedisConf"`
+	LogLevel   string                        `json:"LogLevel"`
+	AutoCreate bool                          `json:"AutoCreate"`
+	Dispatch   []Dispatch                    `json:"Dispatch"`
+	AppList    map[string]constant.AppList   `json:"AppList"`
+	NetConf    map[string]string             `json:"NetConf"`
+	Email      *email                        `json:"Email"`
+	MysqlConf  map[string]constant.MysqlConf `json:"MysqlConf"`
+	RedisConf  map[string]constant.RedisConf `json:"RedisConf"`
 }
 type Dispatch struct {
 	Name        string `json:"name"`
@@ -31,22 +33,6 @@ type email struct {
 	Addr     string `json:"addr"`
 	Host     string `json:"host"`
 	Identity string `json:"identity"`
-}
-type AppList struct {
-	App map[string]App `json:"app"`
-}
-type App struct {
-	Port      string `json:"port"`
-	InnerAddr string `json:"inner_addr"`
-	OuterAddr string `json:"outer_addr"`
-}
-type MysqlConf struct {
-	Dsn string `json:"dsn"`
-}
-type RedisConf struct {
-	Addr     string `json:"addr"`
-	Password string `json:"password"`
-	DB       int    `json:"db"`
 }
 
 var CONF *Config = nil
@@ -100,30 +86,30 @@ var DefaultConfig = &Config{
 			DispatchUrl: "/query_gateway_capture_cn",
 		},
 	},
-	AppList: map[string]AppList{
+	AppList: map[string]constant.AppList{
 		"9001.1.1.1": {
-			App: map[string]App{
+			App: map[string]constant.App{
 				"port_player": {
 					Port: "20041",
 				},
 			},
 		},
 		"9001.2.1.1": {
-			App: map[string]App{
+			App: map[string]constant.App{
 				"port_gt": {
 					Port: "20071",
 				},
 			},
 		},
 		"9001.3.1.1": {
-			App: map[string]App{
+			App: map[string]constant.App{
 				"port_service": {
 					Port: "20081",
 				},
 			},
 		},
 		"9001.4.1.1": {
-			App: map[string]App{
+			App: map[string]constant.App{
 				"port_http": {
 					Port:      "8080",
 					InnerAddr: "127.0.0.1",
@@ -132,14 +118,14 @@ var DefaultConfig = &Config{
 			},
 		},
 		"9001.5.1.1": {
-			App: map[string]App{
+			App: map[string]constant.App{
 				"port_service": {
 					Port: "20091",
 				},
 			},
 		},
 		"9001.6.1.1": {
-			App: map[string]App{
+			App: map[string]constant.App{
 				"port_http": {
 					Port: "20011",
 				},
@@ -149,7 +135,7 @@ var DefaultConfig = &Config{
 	NetConf: map[string]string{
 		"Node": "127.0.0.1:20081",
 	},
-	MysqlConf: map[string]MysqlConf{
+	MysqlConf: map[string]constant.MysqlConf{
 		"account": {
 			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-account?charset=utf8mb4&parseTime=True&loc=Local",
 		},
@@ -163,7 +149,7 @@ var DefaultConfig = &Config{
 			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-conf?charset=utf8mb4&parseTime=True&loc=Local",
 		},
 	},
-	RedisConf: map[string]RedisConf{
+	RedisConf: map[string]constant.RedisConf{
 		"player_login": {
 			Addr:     "127.0.0.1:6379",
 			Password: "password",
