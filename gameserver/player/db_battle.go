@@ -4,7 +4,6 @@ package player
 
 import (
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -127,12 +126,12 @@ func (g *GamePlayer) HandleAvatarSkill(entityId uint32) (bool, bool) {
 		if confBuff == nil {
 			continue
 		}
-		switch confBuff.UseType {
-		case "AddBattleBuff":
+		switch confBuff.MazeBuffType {
+		case "Character":
 			g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
 		}
-		if strings.Contains(confBuff.BuffEffect, "MazeBuffEffect") {
-			// isBattle = false
+		switch confBuff.UseType {
+		case "SummonUnit":
 			summonId := strconv.FormatUint(uint64(mazeSkillId), 10)[:4] + strconv.FormatUint(uint64(mazeSkillId), 10)[5:]
 			g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
 				GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(entityId, alg.S2U32(summonId), g.GetRotPb(), g.GetPosPb()),
@@ -637,9 +636,12 @@ func (g *GamePlayer) GetSceneBattleInfo(eventList, stageIDList []uint32, avatarM
 		monsterWaveList, stageId = g.GetSceneMonsterWave(eventList, worldLevel, battleBackup)
 	}
 	if len(stageIDList) != 0 {
-		for _, stage := range stageIDList {
-			bin := g.GetSceneMonsterWaveByStageID(stage, worldLevel, battleBackup)
+		for id, stage := range stageIDList {
+			bin := g.GetSceneMonsterWaveByStageID(stage, worldLevel, uint32(id+1), battleBackup)
 			monsterWaveList = append(monsterWaveList, bin...)
+			if id == 0 && stageId == 0 {
+				stageId = stage
+			}
 		}
 	}
 
@@ -673,7 +675,7 @@ func (g *GamePlayer) GetSceneMonsterWave(eventList []uint32, worldLevel uint32, 
 		if stage == nil {
 			continue
 		}
-		bin := g.GetSceneMonsterWaveByStageID(stage.StageID, worldLevel, battleBackup)
+		bin := g.GetSceneMonsterWaveByStageID(stage.StageID, worldLevel, uint32(id+1), battleBackup)
 		mWList = append(mWList, bin...)
 		if id == 0 {
 			stageID = stage.StageID // 阶段id
@@ -682,7 +684,7 @@ func (g *GamePlayer) GetSceneMonsterWave(eventList []uint32, worldLevel uint32, 
 	return mWList, stageID
 }
 
-func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID, worldLevel uint32, battleBackup *BattleBackup) []*proto.SceneMonsterWave {
+func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID, worldLevel, waveId uint32, battleBackup *BattleBackup) []*proto.SceneMonsterWave {
 	mWList := make([]*proto.SceneMonsterWave, 0)
 	stageConfig := gdconf.GetStageConfigById(stageID)
 	if stageConfig == nil {
@@ -692,7 +694,7 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID, worldLevel uint32, ba
 	for _, monsterListMap := range stageConfig.MonsterList {
 		monsterWaveList := &proto.SceneMonsterWave{
 			BattleStageId: stageID,
-			BattleWaveId:  1,
+			BattleWaveId:  waveId,
 			DropList:      make([]*proto.ItemList, 0),
 			MonsterList:   make([]*proto.SceneMonster, 0),
 			MonsterParam:  &proto.SceneMonsterWaveParam{},
@@ -736,6 +738,15 @@ func (g *GamePlayer) GetBattleBuff(buffList []*proto.BattleBuff) []*proto.Battle
 	if buffList == nil {
 		buffList = make([]*proto.BattleBuff, 0)
 	}
+	buffList = append(buffList, &proto.BattleBuff{
+		Id:              1000113,
+		Level:           1,
+		OwnerIndex:      4294967295,
+		TargetIndexList: []uint32{0},
+		DynamicValues: map[string]float32{
+			"SkillIndex": 1,
+		},
+	})
 	status := g.GetBattleStatus()
 	switch status {
 	case spb.BattleType_Battle_CHALLENGE:
