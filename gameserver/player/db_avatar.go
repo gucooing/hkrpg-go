@@ -243,7 +243,7 @@ func (g *GamePlayer) AddAvatarRank(rank uint32, db *spb.AvatarBin) {
 }
 
 // 战斗结束后更新角色状态
-func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus, battleBin *BattleBackup) {
+func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus) {
 	var deadAatarNum uint32 = 0
 re:
 	for _, avatarStt := range abi {
@@ -268,8 +268,6 @@ re:
 		}
 		avatarBin.Hp = hp
 		avatarBin.SpBar.CurSp = sp
-		// 添加经验
-		g.AvatarAddExp(avatarId, battleBin.AvatarExpReward)
 	}
 
 	switch g.GetBattleStatus() {

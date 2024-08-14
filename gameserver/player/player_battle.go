@@ -166,7 +166,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		DropData:         &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
 	// 更新角色状态
-	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus(), battleBin)
+	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
 
 	allSync := &AllPlayerSync{
 		IsBasic:       true,
@@ -190,6 +190,12 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 			g.UpBattleSubMission(req.BattleId)
 			if req.Stt.CustomValues != nil {
 				g.BattleCustomValues(req.Stt.CustomValues, battleBin.EventId)
+			}
+		}
+		// 参战角色经验添加
+		for _, avatar := range req.Stt.GetBattleAvatarList() {
+			if _, ok := g.AvatarAddExp(avatar.Id, battleBin.AvatarExpReward); ok {
+				allSync.AvatarList = append(allSync.AvatarList, avatar.Id)
 			}
 		}
 		// 获取奖励
