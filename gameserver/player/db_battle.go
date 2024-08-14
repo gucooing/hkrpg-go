@@ -121,24 +121,29 @@ func (g *GamePlayer) GetMazeBuffList() map[uint32]*OnLineAvatarBuff {
 	return db.MazeBuffList
 }
 
-func (g *GamePlayer) HandleAvatarSkill(entityId uint32) (bool, bool) {
+func (g *GamePlayer) HandleAvatarSkill(entityId, castEntityId uint32) bool {
 	avatar := g.GetAvatarEntity(entityId)
-	isBattle := true
-	isDelMp := false
+	isBattle := true // 这玩意有一票否决权
+	var delMPCost uint32 = 0
 	if avatar == nil {
-		return true, false
+		return true
 	}
 	confAvatar := gdconf.GetAdventurePlayerByAvatarId(avatar.AvatarId)
 	if confAvatar == nil {
-		return true, false
+		return true
 	}
 	for _, mazeSkillId := range confAvatar.MazeSkillIdList {
+		mazeSkillConf := gdconf.GetMazeSkill(mazeSkillId)
+		if mazeSkillConf == nil {
+			continue
+		}
+		delMPCost += mazeSkillConf.MPCost
 		confBuff := gdconf.GetAvatarMazeBuffById(mazeSkillId, 1)
 		if confBuff == nil {
 			continue
 		}
-		switch confBuff.MazeBuffType {
-		case "Character":
+		if confBuff.MazeBuffType == "Character" &&
+			confBuff.MazeBuffIconType != "Debuff" {
 			g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
 		}
 		switch confBuff.UseType {
@@ -148,12 +153,18 @@ func (g *GamePlayer) HandleAvatarSkill(entityId uint32) (bool, bool) {
 				GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(entityId, alg.S2U32(summonId), g.GetRotPb(), g.GetPosPb()),
 			})
 		}
-		if confBuff.InBattleBindingKey != "" {
-			isDelMp = true
-		}
 	}
 
-	return isBattle, isDelMp
+	if delMPCost > 0 {
+		g.DelLineUpMp(delMPCost)
+		g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
+			CastEntityId: castEntityId,
+			Mp:           g.GetLineUpMp(),
+		})
+		g.SyncLineupNotify(g.GetBattleLineUp())
+	}
+
+	return isBattle
 }
 
 func (g *GamePlayer) AddOnLineAvatarBuff(avatarID, buffId uint32) {

@@ -77,10 +77,9 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	rsp := &proto.SceneCastSkillScRsp{
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
-	isDelMp := false
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
-		_, isDelMp = g.HandleAvatarSkill(req.AttackedByEntityId)
+		g.HandleAvatarSkill(req.AttackedByEntityId, req.CastEntityId)
 	}
 	// 添加参与此次攻击的实体
 	mpem := &MPEM{
@@ -112,16 +111,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 			g.GetMem(req.HitTargetEntityIdList, mpem)
 		}
 	}
-
-	if isDelMp {
-		g.DelLineUpMp(1)
-		g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
-			CastEntityId: req.CastEntityId,
-			Mp:           g.GetLineUpMp(),
-		})
-	}
 	g.SceneCastSkillProp(mpem)                            // 物品效果
-	g.SyncLineupNotify(g.GetBattleLineUp())               // 队伍同步
 	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
@@ -313,16 +303,24 @@ func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
 /***********************************物品破坏处理***********************************/
 
 func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
+	var addMPCost uint32 = 0
+	allSync := &AllPlayerSync{AvatarList: make([]uint32, 0)}
 	for _, propId := range pem.PropId {
 		conf := gdconf.GetMazePropId(propId)
 		if conf == nil {
 			continue
 		}
 		if conf.RecoverMp {
-			g.AddLineUpMp(2) // 如果涉及到更新战斗中的队伍状态，这部分需要改
+			addMPCost += 2
 		}
 		if conf.RecoverHp {
 			g.AvatarRecoverPercent(pem.AvatarId, 0.3, 0)
+			allSync.AvatarList = append(allSync.AvatarList, pem.AvatarId)
 		}
 	}
+	if addMPCost > 0 {
+		g.AddLineUpMp(2) // 如果涉及到更新战斗中的队伍状态，这部分需要改
+		g.SyncLineupNotify(g.GetBattleLineUp())
+	}
+	g.AllPlayerSyncScNotify(allSync)
 }
