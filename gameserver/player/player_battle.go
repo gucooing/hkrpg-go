@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -21,11 +22,38 @@ func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneEnterStageCsReq)
-	battleInfo, battleBackup := g.GetSceneBattleInfo([]uint32{req.EventId}, g.GetBattleLineUp())
 	rsp := &proto.SceneEnterStageScRsp{
-		Retcode:    0,
-		BattleInfo: battleInfo,
+		Retcode: 0,
 	}
+	// 获取战斗角色
+	avatarMap := make(map[uint32]*BattleAvatar, 0)
+	stageConfig := gdconf.GetStageConfigById(req.EventId)
+	if stageConfig == nil {
+		rsp.Retcode = uint32(proto.Retcode_RET_BATTLE_STAGE_NOT_MATCH)
+		g.Send(cmd.SceneEnterStageScRsp, rsp)
+		return
+	}
+	if stageConfig.TrialAvatarList != nil {
+		for _, trial := range stageConfig.TrialAvatarList {
+			avatarMap[trial] = &BattleAvatar{
+				AvatarId:   trial,
+				AvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
+				AssistUid:  0,
+			}
+		}
+	}
+	if len(avatarMap) == 0 {
+		lineUp := g.GetBattleLineUp()
+		for _, avatar := range lineUp.AvatarIdList {
+			avatarMap[avatar.AvatarId] = &BattleAvatar{
+				AvatarId:   avatar.AvatarId,
+				AvatarType: avatar.LineAvatarType,
+				AssistUid:  0,
+			}
+		}
+	}
+	battleInfo, battleBackup := g.GetSceneBattleInfo([]uint32{req.EventId}, nil, avatarMap, g.GetWorldLevel(), 0)
+	rsp.BattleInfo = battleInfo
 	// 记录战斗
 	battleBackup.EventId = req.EventId
 	g.AddBattleBackup(battleBackup)
@@ -53,13 +81,19 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 		PropId:          make([]uint32, 0),
 	}
 	// 添加攻击发起者
-	if req.AssistMonsterEntityInfo != nil {
-		for _, info := range req.AssistMonsterEntityInfo {
-			g.GetMem(info.EntityIdList, mpem)
+	isAttacked := false
+	for _, info := range req.AssistMonsterEntityInfo {
+		g.GetMem(info.EntityIdList, mpem)
+		for _, entityId := range info.EntityIdList {
+			if entityId == req.AttackedByEntityId {
+				isAttacked = true
+			}
 		}
-	} else {
+	}
+	if !isAttacked {
 		g.GetMem([]uint32{req.AttackedByEntityId}, mpem)
 	}
+
 	// 添加被攻击者
 	if req.AssistMonsterEntityIdList != nil {
 		g.GetMem(req.AssistMonsterEntityIdList, mpem)
@@ -68,6 +102,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 			g.GetMem(req.HitTargetEntityIdList, mpem)
 		}
 	}
+
 	if isDelMp {
 		g.DelLineUpMp(1)
 		g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
@@ -81,7 +116,17 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
-	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MonsterId, g.GetBattleLineUp())
+	// 获取战斗角色
+	avatarMap := make(map[uint32]*BattleAvatar, 0)
+	lineUp := g.GetBattleLineUp()
+	for _, avatar := range lineUp.AvatarIdList {
+		avatarMap[avatar.AvatarId] = &BattleAvatar{
+			AvatarId:   avatar.AvatarId,
+			AvatarType: avatar.LineAvatarType,
+			AssistUid:  0,
+		}
+	}
+	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MonsterId, nil, avatarMap, g.GetWorldLevel(), 0)
 	// 记录战斗
 	battleBackup.monsterEntity = mpem.MonsterEntityId
 	battleBackup.AttackedByEntityId = req.AttackedByEntityId
@@ -111,7 +156,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		DropData:         &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
 	// 更新角色状态
-	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
+	g.BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus(), battleBin)
 
 	allSync := &AllPlayerSync{
 		IsBasic:       true,
@@ -136,6 +181,15 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 			if req.Stt.CustomValues != nil {
 				g.BattleCustomValues(req.Stt.CustomValues, battleBin.EventId)
 			}
+		}
+		// 获取奖励
+		addPileItem = append(addPileItem, battleBin.DisplayItemList...)
+		for _, displayItem := range battleBin.DisplayItemList {
+			allSync.MaterialList = append(allSync.MaterialList, displayItem.Tid)
+			rsp.DropData.ItemList = append(rsp.DropData.ItemList, &proto.Item{
+				ItemId: displayItem.Tid,
+				Num:    displayItem.Num,
+			})
 		}
 		if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
 			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
@@ -192,20 +246,40 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.StartCocoonStageCsReq)
-	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 设置战斗状态
-	battleInfo, battleBackup := g.GetCocoonBattleInfo(g.GetCurLineUp(), req)
-	if battleInfo == nil {
-		g.Send(cmd.StartCocoonStageScRsp, &proto.StartCocoonStageScRsp{Retcode: uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)})
-		return
-	}
 	rsp := &proto.StartCocoonStageScRsp{
 		PropEntityId: req.PropEntityId,
 		CocoonId:     req.CocoonId, // 关卡id
 		Retcode:      0,
 		Wave:         req.Wave,
-		BattleInfo:   battleInfo,
 	}
+	cocoonConfig := gdconf.GetCocoonConfigById(req.CocoonId, req.WorldLevel)
+	if cocoonConfig == nil {
+		logger.Warn("No Cocoon like this can be found,cocoonId:%v,worldLevel:%v", req.CocoonId, req.WorldLevel)
+		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+		g.Send(cmd.StartCocoonStageScRsp, rsp)
+		return
+	}
+	// 获取角色
+	avatarMap := make(map[uint32]*BattleAvatar, 0)
+	lineUp := g.GetBattleLineUp()
+	for _, avatar := range lineUp.AvatarIdList {
+		avatarMap[avatar.AvatarId] = &BattleAvatar{
+			AvatarId:   avatar.AvatarId,
+			AvatarType: avatar.LineAvatarType,
+			AssistUid:  0,
+		}
+	}
+	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 设置战斗状态
+	battleInfo, battleBackup := g.GetSceneBattleInfo(nil, cocoonConfig.StageIDList, avatarMap, req.WorldLevel, cocoonConfig.StageID)
+	if battleInfo == nil {
+		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+		g.Send(cmd.StartCocoonStageScRsp, rsp)
+		return
+	}
+	rsp.BattleInfo = battleInfo
 	// 储存战斗信息
+	battleBackup.CocoonId = req.CocoonId
+	battleBackup.WorldLevel = req.WorldLevel
 	g.AddBattleBackup(battleBackup)
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
 }

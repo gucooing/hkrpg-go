@@ -243,7 +243,7 @@ func (g *GamePlayer) AddAvatarRank(rank uint32, db *spb.AvatarBin) {
 }
 
 // 战斗结束后更新角色状态
-func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus) {
+func (g *GamePlayer) BattleUpAvatar(abi []*proto.AvatarBattleInfo, bt proto.BattleEndStatus, battleBin *BattleBackup) {
 	var deadAatarNum uint32 = 0
 re:
 	for _, avatarStt := range abi {
@@ -256,16 +256,6 @@ re:
 			break re
 		}
 		avatarId := avatarStt.Id
-		// if avatarStt.Id/1000 == 8 {
-		// 	avatarId = 8001
-		// }
-		// var avatarBin *spb.AvatarBin
-		// switch g.GetBattleStatus() {
-		// case spb.BattleType_Battle_NONE:
-		// 	avatarBin = g.GetAvatarById(avatarId)
-		// default:
-		// 	avatarBin = g.GetBattleAvatarBinById(avatarId)
-		// }
 		avatarBin := g.GetAvatarById(avatarId)
 		if avatarBin == nil {
 			continue
@@ -278,6 +268,8 @@ re:
 		}
 		avatarBin.Hp = hp
 		avatarBin.SpBar.CurSp = sp
+		// 添加经验
+		g.AvatarAddExp(avatarId, battleBin.AvatarExpReward)
 	}
 
 	switch g.GetBattleStatus() {
@@ -315,6 +307,21 @@ func (g *GamePlayer) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
 		return g.GetRelicById(v.EquipRelic[slot])
 	}
 	return nil
+}
+
+func (g *GamePlayer) AvatarAddExp(avatarId, exp uint32) (uint32, bool) {
+	conf := gdconf.GetAvatarDataById(avatarId)
+	dbAvatar := g.GetAvatarById(avatarId)
+	if conf == nil || dbAvatar == nil {
+		return 0, false
+	}
+	level, exp, newExp := gdconf.GetExpTypeByLevel(conf.ExpGroup, exp, dbAvatar.Level, dbAvatar.PromoteLevel, dbAvatar.AvatarId)
+	if level == 0 && exp == 0 {
+		return exp, false
+	}
+	dbAvatar.Exp = exp
+	dbAvatar.Level = level
+	return newExp, true
 }
 
 func (g *GamePlayer) AvatarRecover(avatarId uint32) {
@@ -408,6 +415,7 @@ func (g *GamePlayer) getAvatarEquiHp(avatarId uint32, baseHp float64) float64 {
 	return equiHp
 }
 
+// 恢复角色
 func (g *GamePlayer) AvatarRecoverPercent(avatarId uint32, Value, percent float64) {
 	avatarDb := g.GetAvatarById(avatarId)
 	if avatarDb == nil {

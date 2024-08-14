@@ -34,6 +34,8 @@ type BattleBackup struct {
 	EventId            uint32                   // 任务用的
 	AttackedByEntityId uint32                   // 发起攻击的实体id
 	// 奖励
+	AvatarExpReward uint32
+	DisplayItemList []*Material
 }
 
 func (g *GamePlayer) NewCurBattle() *CurBattle {
@@ -618,144 +620,74 @@ func (g *GamePlayer) getBattleDropData(mappingInfoID uint32, allSync *AllPlayerS
 /****************************************************功能***************************************************/
 
 // 场景战斗
-func (g *GamePlayer) GetSceneBattleInfo(mem []uint32, lineUp *spb.Line) (*proto.SceneBattleInfo, *BattleBackup) {
-	if mem == nil || lineUp == nil {
-		logger.Debug("[UID:%v]战斗获取失败", g.Uid)
+func (g *GamePlayer) GetSceneBattleInfo(eventList, stageIDList []uint32, avatarMap map[uint32]*BattleAvatar, worldLevel, stageId uint32) (*proto.SceneBattleInfo, *BattleBackup) {
+	if (len(eventList) == 0 && len(stageIDList) == 0) ||
+		len(avatarMap) == 0 {
 		return nil, nil
-	}
-	battleId := g.GetBattleIdGuid()
-	bAList := make(map[uint32]*BattleAvatar, 0)
-	for id, lp := range lineUp.AvatarIdList {
-		if lp.AvatarId == 0 {
-			continue
-		}
-		bA := &BattleAvatar{
-			AssistUid:  0,
-			AvatarId:   lp.AvatarId,
-			AvatarType: lp.LineAvatarType,
-		}
-		bAList[id] = bA
-	}
-	monsterWaveList, stageId, trialAvatarList := g.GetSceneMonsterWave(mem)
-	if trialAvatarList != nil && len(trialAvatarList) > 0 {
-		bAList = make(map[uint32]*BattleAvatar)
-		for id, avatarId := range trialAvatarList {
-			if avatarId == 0 {
-				continue
-			}
-			bA := &BattleAvatar{
-				AssistUid:  0,
-				AvatarId:   avatarId,
-				AvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
-			}
-			bAList[uint32(id)] = bA
-		}
-	}
-	battleAvatarList, buffList := g.GetProtoBattleAvatar(bAList)
-	battleInfo := &proto.SceneBattleInfo{
-		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
-		WorldLevel:       g.GetWorldLevel(),                       // 世界等级
-		BattleId:         battleId,                                // 战斗Id
-		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
-		MonsterWaveList:  monsterWaveList,                         // 怪物列表
-		StageId:          stageId,                                 // 起始战斗
-		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
-		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
-		RoundsLimit:      g.GetRoundsLimit(),                      // 回合限制
-		BuffList:         g.GetBattleBuff(buffList),               // Buff列表
 	}
 	// 记录此次战斗
+	battleId := g.GetBattleIdGuid()
 	battleBackup := &BattleBackup{
 		BattleId:         battleId,
-		BattleAvatarList: bAList,
+		BattleAvatarList: avatarMap,
 		monsterEntity:    make([]uint32, 0),
-	}
-
-	return battleInfo, battleBackup
-}
-
-// 副本战斗
-func (g *GamePlayer) GetCocoonBattleInfo(lineUp *spb.Line, req *proto.StartCocoonStageCsReq) (*proto.SceneBattleInfo, *BattleBackup) {
-	if lineUp == nil {
-		logger.Debug("[UID:%v]战斗获取失败", g.Uid)
-		return nil, nil
 	}
 	var monsterWaveList []*proto.SceneMonsterWave
-	bAList := make(map[uint32]*BattleAvatar, 0)
-	for _, lp := range lineUp.AvatarIdList {
-		bA := &BattleAvatar{
-			AssistUid:  0,
-			AvatarId:   lp.AvatarId,
-			AvatarType: lp.LineAvatarType,
+	if len(eventList) != 0 {
+		monsterWaveList, stageId = g.GetSceneMonsterWave(eventList, worldLevel, battleBackup)
+	}
+	if len(stageIDList) != 0 {
+		for _, stage := range stageIDList {
+			bin := g.GetSceneMonsterWaveByStageID(stage, worldLevel, battleBackup)
+			monsterWaveList = append(monsterWaveList, bin...)
 		}
-		bAList[lp.AvatarId] = bA
-	}
-	cocoonConfig := gdconf.GetCocoonConfigById(req.CocoonId, req.WorldLevel)
-	if cocoonConfig == nil {
-		logger.Warn("No Cocoon like this can be found,cocoonId:%v,worldLevel:%v", req.CocoonId, req.WorldLevel)
-		return nil, nil
-	}
-	// 添加怪物波列表
-	stageID := cocoonConfig.StageID
-	for _, stage := range cocoonConfig.StageIDList {
-		_, bin := g.GetSceneMonsterWaveByStageID(stage)
-		monsterWaveList = append(monsterWaveList, bin...)
-		if stageID == 0 {
-			stageID = stage
-		}
-	}
-	battleId := g.GetBattleIdGuid()
-	battleAvatarList, buffList := g.GetProtoBattleAvatar(bAList)
-	battleInfo := &proto.SceneBattleInfo{
-		LogicRandomSeed:  gdconf.GetLoadingDesc(),                 // 逻辑随机种子
-		WorldLevel:       req.GetWorldLevel(),                     // 关卡等级
-		BattleId:         battleId,                                // 战斗Id
-		StageId:          stageID,                                 // 起始战斗
-		BattleAvatarList: battleAvatarList,                        // 战斗角色列表
-		MonsterWaveList:  monsterWaveList,                         // 怪物列表
-		BattleTargetInfo: g.GetBattleTargetInfo(),                 // 战斗目标
-		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0), // 战斗信息？？？
-		RoundsLimit:      g.GetRoundsLimit(),                      // 回合限制
-		BuffList:         g.GetBattleBuff(buffList),               // Buff列表
-	}
-	// 记录此次战斗
-	battleBackup := &BattleBackup{
-		BattleId:         battleId,
-		BattleAvatarList: bAList,
-		monsterEntity:    make([]uint32, 0),
-		CocoonId:         req.CocoonId,
-		WorldLevel:       req.WorldLevel,
 	}
 
-	return battleInfo, battleBackup
+	battleAvatarList, buffList := g.GetProtoBattleAvatar(avatarMap)
+	info := &proto.SceneBattleInfo{
+		LogicRandomSeed:  gdconf.GetLoadingDesc(),
+		BattleAvatarList: battleAvatarList,
+		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0),
+		BuffList:         g.GetBattleBuff(buffList),
+		HEAMIJGFDMO:      nil,
+		StageId:          stageId,
+		FNLHAHFIGNC:      nil,
+		HKOOBMMLGME:      nil,
+		BattleTargetInfo: g.GetBattleTargetInfo(),
+		MOJLNCNDIOB:      false,
+		RoundsLimit:      g.GetRoundsLimit(),
+		MonsterWaveList:  monsterWaveList,
+		WorldLevel:       worldLevel,
+		BOJHPNCAKOP:      0,
+		BattleId:         battleId,
+	}
+
+	return info, battleBackup
 }
 
-func (g *GamePlayer) GetSceneMonsterWave(mem []uint32) ([]*proto.SceneMonsterWave, uint32, []uint32) {
+func (g *GamePlayer) GetSceneMonsterWave(eventList []uint32, worldLevel uint32, battleBackup *BattleBackup) ([]*proto.SceneMonsterWave, uint32) {
 	mWList := make([]*proto.SceneMonsterWave, 0)
 	var stageID uint32 = 0
-	var trialAvatarList []uint32
-	for id, meid := range mem {
-		stage := gdconf.GetPlaneEventById(meid, g.GetWorldLevel())
+	for id, meid := range eventList {
+		stage := gdconf.GetPlaneEventById(meid, worldLevel)
 		if stage == nil {
 			continue
 		}
-		list, bin := g.GetSceneMonsterWaveByStageID(stage.StageID)
+		bin := g.GetSceneMonsterWaveByStageID(stage.StageID, worldLevel, battleBackup)
 		mWList = append(mWList, bin...)
 		if id == 0 {
 			stageID = stage.StageID // 阶段id
 		}
-		if list != nil && len(list) > 0 {
-			trialAvatarList = list
-		}
 	}
-	return mWList, stageID, trialAvatarList
+	return mWList, stageID
 }
 
-func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) ([]uint32, []*proto.SceneMonsterWave) {
+func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID, worldLevel uint32, battleBackup *BattleBackup) []*proto.SceneMonsterWave {
 	mWList := make([]*proto.SceneMonsterWave, 0)
 	stageConfig := gdconf.GetStageConfigById(stageID)
 	if stageConfig == nil {
-		return nil, nil
+		logger.Warn("[UID:%v]get SceneMonsterWave error stageID:%v", g.Uid, stageID)
+		return nil
 	}
 	for _, monsterListMap := range stageConfig.MonsterList {
 		monsterWaveList := &proto.SceneMonsterWave{
@@ -770,11 +702,33 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID uint32) ([]uint32, []*
 				MonsterId: monsterId,
 			}
 			monsterWaveList.MonsterList = append(monsterWaveList.MonsterList, sceneMonster)
-			monsterWaveList.DropList = append(monsterWaveList.DropList, &proto.ItemList{})
+			// 添加战利品
+			monsterDrop := gdconf.GetMonsterDrop(monsterId, worldLevel)
+			itemList := make([]*proto.Item, 0)
+			if monsterDrop != nil {
+				battleBackup.AvatarExpReward += monsterDrop.AvatarExpReward
+				for _, item := range monsterDrop.DisplayItemList {
+					var num uint32 = 4
+					if item.ItemID == 2 {
+						num = 50
+					}
+					itemList = append(itemList, &proto.Item{
+						ItemId: item.ItemID,
+						Num:    num,
+					})
+					battleBackup.DisplayItemList = append(battleBackup.DisplayItemList, &Material{
+						Tid: item.ItemID,
+						Num: num,
+					})
+				}
+			}
+			monsterWaveList.DropList = append(monsterWaveList.DropList, &proto.ItemList{
+				ItemList: itemList,
+			})
 		}
 		mWList = append(mWList, monsterWaveList)
 	}
-	return stageConfig.TrialAvatarList, mWList
+	return mWList
 }
 
 // 根据战斗情况添加buff

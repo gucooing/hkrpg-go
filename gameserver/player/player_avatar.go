@@ -98,8 +98,6 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 		MaterialList: make([]uint32, 0),
 	}
 
-	gdconfAvatar := gdconf.GetAvatarDataById(avatarId)
-
 	// 遍历用来升级的材料
 	for _, pileList := range cost.GetItemList() {
 		// 如果没有则退出
@@ -125,8 +123,9 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 	// 计算添加后有多少经验
 	exp := addExp + dbAvatar.Exp
 	// 获取能升级到的等级和升级后经验
-	level, exp, newExp := gdconf.GetExpTypeByLevel(gdconfAvatar.ExpGroup, exp, dbAvatar.Level, dbAvatar.PromoteLevel, dbAvatar.AvatarId)
-	if level == 0 && exp == 0 {
+	newExp, is := g.AvatarAddExp(avatarId, exp)
+	if !is {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
@@ -165,9 +164,6 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 		})
 		g.AddMaterial(aPileItem)
 	}
-	// 更改角色状态
-	dbAvatar.Exp = exp
-	dbAvatar.Level = level
 	// 通知升级后角色消息
 	allSync.MaterialList = append(allSync.MaterialList, 2)
 	allSync.MaterialList = append(allSync.MaterialList, 211)

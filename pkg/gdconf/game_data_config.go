@@ -107,6 +107,7 @@ type GameDataConfig struct {
 	FarmElementConfigMap         map[uint32]*FarmElementConfig
 	ItemUseDataMap               map[uint32]*ItemUseData
 	DailyMissionDataMap          map[uint32]*DailyMissionData
+	MonsterDropMap               map[uint32]map[uint32]*MonsterDrop
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -264,6 +265,7 @@ func (g *GameDataConfig) load() {
 		g.loadFarmElementConfig,
 		g.loadItemUseData,
 		g.loadDailyMissionData,
+		g.loadMonsterDrop,
 	}
 }
 
