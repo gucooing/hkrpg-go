@@ -606,7 +606,20 @@ func (g *GamePlayer) getBattleDropData(mappingInfoID uint32, allSync *AllPlayerS
 		return nil
 	}
 	itemList := make([]*proto.Item, 0)
+	itemConf := gdconf.GetItemConfigMap()
 	for _, displayItem := range conf.DisplayItemList {
+		if itemConf.Equipment[displayItem.ItemID] != nil {
+			uniqueId := g.AddEquipment(displayItem.ItemID)
+			allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
+			itemList = append(itemList, g.GetEquipmentItem(uniqueId))
+			continue
+		}
+		if itemConf.Relic[displayItem.ItemID] != nil {
+			uniqueId := g.AddRelic(displayItem.ItemID)
+			allSync.RelicList = append(allSync.RelicList, uniqueId)
+			itemList = append(itemList, g.GetRelicItem(uniqueId))
+			continue
+		}
 		itemNum := displayItem.ItemNum
 		if displayItem.ItemID == Scoin {
 			itemNum = 1500 + worldLevel*300

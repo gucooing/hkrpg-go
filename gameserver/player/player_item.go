@@ -231,6 +231,12 @@ func (g *GamePlayer) RelicRecommendCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.RelicRecommendScRsp, rsp)
 }
 
+func (g *GamePlayer) RelicAvatarRecommendCsReq(payloadMsg pb.Message) {
+	// req := payloadMsg.(*proto.RelicRecommendCsReq)
+	rsp := &proto.RelicAvatarRecommendScRsp{}
+	g.Send(cmd.RelicAvatarRecommendScRsp, rsp)
+}
+
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DressRelicAvatarCsReq)
 	g.DressRelicAvatar(req.GetAvatarId(), req.GetSwitchList())

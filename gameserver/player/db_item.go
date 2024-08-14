@@ -613,6 +613,32 @@ func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 	}
 }
 
+func (g *GamePlayer) GetRelicItem(uniqueId uint32) *proto.Item {
+	db := g.GetRelicById(uniqueId)
+	return &proto.Item{
+		ItemId:      db.Tid,
+		Promotion:   0,
+		MainAffixId: db.MainAffixId,
+		Rank:        0,
+		Level:       db.Level,
+		Num:         1,
+		UniqueId:    db.UniqueId,
+	}
+}
+
+func (g *GamePlayer) GetEquipmentItem(uniqueId uint32) *proto.Item {
+	db := g.GetEquipmentById(uniqueId)
+	return &proto.Item{
+		ItemId:      db.Tid,
+		Promotion:   db.Promotion,
+		MainAffixId: 0,
+		Rank:        db.Rank,
+		Level:       db.Level,
+		Num:         1,
+		UniqueId:    db.UniqueId,
+	}
+}
+
 func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
