@@ -126,8 +126,8 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg pb.Message) {
 // 模拟宇宙攻击事件结算
 func (g *GamePlayer) RoguePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, monsterNum int) {
 	// // buff同步
-	battleDb := g.GetBattleBackupById(req.BattleId)
-	g.SyncEntityBuffChangeListScNotify(battleDb.AttackedByEntityId)
+	// battleDb := g.GetBattleBackupById(req.BattleId)
+	// g.SyncEntityBuffChangeListScNotify(battleDb.AttackedByEntityId)
 
 	curRoom := g.GetCurRogueRoom()
 	if len(curRoom.NextSiteIdList) == 0 {

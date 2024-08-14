@@ -177,10 +177,10 @@ func (g *GamePlayer) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
 	return info
 }
 
-func (g *GamePlayer) GetInspirationCircuitInfo() *proto.InspirationCircuitInfo {
-	info := &proto.InspirationCircuitInfo{
-		TalentInfoList: &proto.RogueTalentInfoList{TalentInfo: make([]*proto.RogueTalentInfo, 0)},
-		InspirationNum: g.GetMaterialById(Inspiration),
+func (g *GamePlayer) GetInspirationCircuitInfo() *proto.RogueTournPermanentTalentInfo {
+	info := &proto.RogueTournPermanentTalentInfo{
+		TalentInfoList:     &proto.RogueTalentInfoList{TalentInfo: make([]*proto.RogueTalentInfo, 0)},
+		TournTalentCoinNum: g.GetMaterialById(Inspiration),
 	}
 	for v, k := range gdconf.GetRogueTournPermanentTalentMap() {
 		status := proto.RogueTalentStatus_ROGUE_TALENT_STATUS_LOCK
@@ -225,7 +225,7 @@ func (g *GamePlayer) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
 		HandbookFormulaList:    make([]uint32, 0),
 		HandbookBuffList:       make([]uint32, 0),
 		ONPBIAFFJJK:            0,
-		TakeHandbookRewardList: make([]uint32, 0),
+		HandbookEventList:      make([]uint32, 0),
 		HandbookAvatarBaseList: make([]uint32, 0),
 		HandbookMiracleList:    make([]uint32, 0),
 	}

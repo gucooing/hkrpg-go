@@ -66,6 +66,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		// 战斗
 		cmd.SceneCastSkillCostMpCsReq: g.SceneCastSkillCostMpCsReq, // 技能使用
 		cmd.SceneCastSkillCsReq:       g.SceneCastSkillCsReq,       // 场景开启战斗
+		cmd.SetTurnFoodSwitchCsReq:    g.SetTurnFoodSwitchCsReq,    // 使用消耗品buff
 		cmd.PVEBattleResultCsReq:      g.PVEBattleResultCsReq,      // PVE战斗结算
 		cmd.StartCocoonStageCsReq:     g.StartCocoonStageCsReq,     // 副本/周本等
 		cmd.ActivateFarmElementCsReq:  g.ActivateFarmElementCsReq,  // 虚影战斗

@@ -15,7 +15,7 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 		RogueGetInfo: &proto.RogueTournInfo{
 			RogueTournSaveList:       make([]*proto.RogueTournSaveList, 0),
 			RogueTournAreaInfo:       g.GetRogueTournAreaInfo(),
-			InspirationCircuit:       g.GetInspirationCircuitInfo(),
+			PermanentInfo:            g.GetInspirationCircuitInfo(),
 			RogueSeasonInfo:          g.GetRogueTournSeasonInfo(),
 			ExtraScoreInfo:           g.GetExtraScoreInfo(),
 			RogueTournExpInfo:        g.GetRogueTournExpInfo(),
@@ -28,8 +28,8 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournGetPermanentTalentInfoScRsp{
-		InspirationCircuit: g.GetInspirationCircuitInfo(),
-		Retcode:            0,
+		PermanentInfo: g.GetInspirationCircuitInfo(),
+		Retcode:       0,
 	}
 	g.Send(cmd.RogueTournGetPermanentTalentInfoScRsp, rsp)
 }

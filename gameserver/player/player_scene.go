@@ -554,3 +554,29 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
+
+func (g *GamePlayer) SyncEntityBuffChangeListScNotify(buffList []uint32) {
+	notify := &proto.SyncEntityBuffChangeListScNotify{
+		EntityBuffChangeList: make([]*proto.SceneEntityBuffChange, 0),
+	}
+	mazeBuffMap := g.GetMazeBuffList()
+	for _, buffId := range buffList {
+		if info, ok := mazeBuffMap[buffId]; ok {
+			notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, &proto.SceneEntityBuffChange{
+				Reason:   0,
+				EntityId: 6293805,
+				BuffInfo: &proto.SceneEntityBuffChange_BuffChangeInfo{
+					BuffChangeInfo: &proto.BuffInfo{
+						Count:     info.LifeCount,
+						AddTimeMs: info.AddTime,
+						BuffId:    info.BuffId,
+						Level:     info.Level,
+						LifeTime:  -1,
+					},
+				},
+			})
+		}
+	}
+
+	g.Send(cmd.SyncEntityBuffChangeListScNotify, notify)
+}

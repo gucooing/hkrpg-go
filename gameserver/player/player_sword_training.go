@@ -62,9 +62,9 @@ func (g *GamePlayer) GetSwordTrainingDataCsReq(payloadMsg pb.Message) {
 				AOPBDFIBFPH: nil,
 				ABHNAFELEME: &proto.KKDCJKFPLMF_PCPAFLJBGDD{},
 			},
-			SkillPower:  1,
-			BNKLPFGAGPE: nil,
-			DPHNBKLJEHM: nil,
+			SkillPower:       1,
+			OptionResultInfo: nil,
+			DPHNBKLJEHM:      nil,
 			SwordTrainingActionInfo: &proto.SwordTrainingActionInfo{
 				ActionInfoList: []*proto.SwordActionInfo{
 					{
@@ -162,10 +162,10 @@ func (g *GamePlayer) SwordTrainingStartGameCsReq(payloadMsg pb.Message) {
 					},
 				},
 			},
-			PendingAction: nil,
-			SkillPower:    250,
-			BNKLPFGAGPE:   nil,
-			DPHNBKLJEHM:   nil,
+			PendingAction:    nil,
+			SkillPower:       250,
+			OptionResultInfo: nil,
+			DPHNBKLJEHM:      nil,
 			SwordTrainingActionInfo: &proto.SwordTrainingActionInfo{
 				ActionInfoList: []*proto.SwordActionInfo{
 					{

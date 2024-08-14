@@ -22,6 +22,7 @@ type CurBattle struct {
 	RogueInfoOnline    *RogueInfoOnline             // 模拟宇宙临时数据
 	AvatarBuff         map[uint32]*OnLineAvatarBuff // 角色在线buff
 	ActivityInfoOnline *ActivityInfoOnline          // 角色试用在线数据
+	MazeBuffList       map[uint32]*OnLineAvatarBuff // 其他buff
 }
 
 type BattleBackup struct {
@@ -85,11 +86,13 @@ func (g *GamePlayer) DelBattleBackupById(battleId uint32) {
 }
 
 type OnLineAvatarBuff struct {
-	AvatarId uint32 // 角色
-	BuffId   uint32 // buffid
-	Count    uint32 // 使用次数
-	AddTime  uint64 // 添加时间
-	LifeTime uint32 // 有效时间
+	AvatarId  uint32 // 角色
+	BuffId    uint32 // buffid
+	Level     uint32
+	Count     uint32 // 使用次数
+	LifeCount uint32 // 有效次数
+	AddTime   uint64 // 添加时间
+	LifeTime  uint32 // 有效时间
 }
 
 func (g *GamePlayer) NewOnLineAvatarBuff() {
@@ -108,6 +111,14 @@ func (g *GamePlayer) GetOnLineAvatarBuff() map[uint32]*OnLineAvatarBuff {
 func (g *GamePlayer) GetOnLineAvatarBuffById(id uint32) *OnLineAvatarBuff {
 	db := g.GetOnLineAvatarBuff()
 	return db[id]
+}
+
+func (g *GamePlayer) GetMazeBuffList() map[uint32]*OnLineAvatarBuff {
+	db := g.GetCurBattle()
+	if db.MazeBuffList == nil {
+		db.MazeBuffList = make(map[uint32]*OnLineAvatarBuff)
+	}
+	return db.MazeBuffList
 }
 
 func (g *GamePlayer) HandleAvatarSkill(entityId uint32) (bool, bool) {
@@ -738,6 +749,7 @@ func (g *GamePlayer) GetBattleBuff(buffList []*proto.BattleBuff) []*proto.Battle
 	if buffList == nil {
 		buffList = make([]*proto.BattleBuff, 0)
 	}
+	// 默认buff
 	buffList = append(buffList, &proto.BattleBuff{
 		Id:              1000113,
 		Level:           1,
@@ -747,6 +759,21 @@ func (g *GamePlayer) GetBattleBuff(buffList []*proto.BattleBuff) []*proto.Battle
 			"SkillIndex": 1,
 		},
 	})
+	// 添加物品buff
+	mazeBufflist := g.GetMazeBuffList()
+	for index, buff := range mazeBufflist {
+		if buff.Count < buff.LifeCount {
+			buff.Count++
+			buffList = append(buffList, &proto.BattleBuff{
+				Id:         buff.BuffId,
+				Level:      buff.Level,
+				OwnerIndex: buff.LifeTime,
+				WaveFlag:   4294967295,
+			})
+		} else {
+			delete(mazeBufflist, index)
+		}
+	}
 	status := g.GetBattleStatus()
 	switch status {
 	case spb.BattleType_Battle_CHALLENGE:
@@ -783,7 +810,6 @@ func (g *GamePlayer) GetCurChallengeBuff() []*proto.BattleBuff {
 			DynamicValues:   make(map[string]float32),
 		})
 	}
-	// TODO 添加角色buff
 	return buffList
 }
 

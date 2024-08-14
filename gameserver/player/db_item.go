@@ -3,6 +3,7 @@ package player
 import (
 	"math"
 	"math/rand"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -438,6 +439,18 @@ func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData, avatarId uint32) {
 	}
 	g.AddLineUpMp(conf.PreviewSkillPoint)
 	g.AvatarRecoverPercent(avatarId, conf.PreviewHPRecoveryValue, conf.PreviewHPRecoveryPercent)
+	if conf.MazeBuffID != 0 {
+		buffDb := g.GetMazeBuffList()
+		buffDb[conf.MazeBuffID] = &OnLineAvatarBuff{
+			BuffId:    conf.MazeBuffID,
+			Count:     0,
+			Level:     1,
+			LifeCount: conf.ActivityCount,
+			AddTime:   uint64(time.Now().UnixMilli()),
+			LifeTime:  4294967295,
+		}
+		g.SyncEntityBuffChangeListScNotify([]uint32{conf.MazeBuffID})
+	}
 }
 
 func (g *GamePlayer) itemSubTypeMaterial(useDataID, useItemCount uint32) []*proto.Item {

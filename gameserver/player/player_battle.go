@@ -11,6 +11,16 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+func (g *GamePlayer) SetTurnFoodSwitchCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SetTurnFoodSwitchCsReq)
+	rsp := &proto.SetTurnFoodSwitchScRsp{
+		Retcode:     0,
+		DGLLJFNEMOK: req.DGLLJFNEMOK,
+		LNEKBEGKACP: req.LNEKBEGKACP,
+	}
+	g.Send(cmd.SetTurnFoodSwitchScRsp, rsp)
+}
+
 func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneCastSkillCostMpCsReq)
 	rsp := &proto.SceneCastSkillCostMpScRsp{
@@ -309,14 +319,4 @@ func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
 			g.AvatarRecoverPercent(pem.AvatarId, 0.3, 0)
 		}
 	}
-}
-
-func (g *GamePlayer) SyncEntityBuffChangeListScNotify(entityId uint32) {
-	notify := &proto.SyncEntityBuffChangeListScNotify{
-		EntityBuffChangeList: make([]*proto.SceneEntityBuffChange, 0),
-	}
-	notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, &proto.SceneEntityBuffChange{
-		EntityId: entityId,
-	})
-	g.Send(cmd.SyncEntityBuffChangeListScNotify, notify)
 }

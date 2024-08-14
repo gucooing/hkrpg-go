@@ -998,6 +998,7 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		FloorSavedData:     g.GetFloorSavedData(entryId),
 		GameStoryLineId:    g.GameStoryLineId(),
 		// DimensionId:        g.GetDimensionId(), TODO
+		EntityBuffList: make([]*proto.EntityBuffInfo, 0),
 	}
 	for i := uint32(0); i < 100; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)
