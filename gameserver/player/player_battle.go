@@ -77,22 +77,23 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	rsp := &proto.SceneCastSkillScRsp{
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
+	isBattle := true
 	if req.SkillIndex != 0 {
 		// 这里的情况是角色释放技能
 		g.HandleAvatarSkill(req.AttackedByEntityId, req.CastEntityId)
 	}
 	// 添加参与此次攻击的实体
-	mpem := &MPEM{
-		IsAvatar:        false,
-		MonsterEntityId: make([]uint32, 0),
-		MonsterId:       make([]uint32, 0),
-		PropEntityId:    make([]uint32, 0),
-		PropId:          make([]uint32, 0),
+	sce := &SceneCastEntity{
+		IsAvatar:            false,
+		MonsterEntityIdList: make([]uint32, 0),
+		MonsterIdList:       make([]uint32, 0),
+		PropEntityIdList:    make([]uint32, 0),
+		PropIdList:          make([]uint32, 0),
 	}
 	// 添加攻击发起者
 	isAttacked := false
 	for _, info := range req.AssistMonsterEntityInfo {
-		g.GetMem(info.EntityIdList, mpem)
+		g.GetMem(info.EntityIdList, sce)
 		for _, entityId := range info.EntityIdList {
 			if entityId == req.AttackedByEntityId {
 				isAttacked = true
@@ -100,19 +101,19 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 		}
 	}
 	if !isAttacked {
-		g.GetMem([]uint32{req.AttackedByEntityId}, mpem)
+		g.GetMem([]uint32{req.AttackedByEntityId}, sce)
 	}
 
 	// 添加被攻击者
 	if req.AssistMonsterEntityIdList != nil {
-		g.GetMem(req.AssistMonsterEntityIdList, mpem)
+		g.GetMem(req.AssistMonsterEntityIdList, sce)
 	} else {
 		if req.HitTargetEntityIdList != nil {
-			g.GetMem(req.HitTargetEntityIdList, mpem)
+			g.GetMem(req.HitTargetEntityIdList, sce)
 		}
 	}
-	g.SceneCastSkillProp(mpem)                            // 物品效果
-	if !mpem.IsAvatar || len(mpem.MonsterEntityId) == 0 { // 是否满足战斗条件
+	g.SceneCastSkillProp(sce)                                             // 物品效果
+	if (!sce.IsAvatar || len(sce.MonsterEntityIdList) == 0) && isBattle { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
@@ -126,9 +127,9 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 			AssistUid:  0,
 		}
 	}
-	battleInfo, battleBackup := g.GetSceneBattleInfo(mpem.MonsterId, nil, avatarMap, g.GetWorldLevel(), 0)
+	battleInfo, battleBackup := g.GetSceneBattleInfo(sce.MonsterIdList, nil, avatarMap, g.GetWorldLevel(), 0)
 	// 记录战斗
-	battleBackup.monsterEntity = mpem.MonsterEntityId
+	battleBackup.monsterEntity = sce.MonsterEntityIdList
 	battleBackup.AttackedByEntityId = req.AttackedByEntityId
 	g.AddBattleBackup(battleBackup)
 	// 回复
@@ -302,10 +303,10 @@ func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
 
 /***********************************物品破坏处理***********************************/
 
-func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
+func (g *GamePlayer) SceneCastSkillProp(sce *SceneCastEntity) {
 	var addMPCost uint32 = 0
 	allSync := &AllPlayerSync{AvatarList: make([]uint32, 0)}
-	for _, propId := range pem.PropId {
+	for _, propId := range sce.PropIdList {
 		conf := gdconf.GetMazePropId(propId)
 		if conf == nil {
 			continue
@@ -314,8 +315,8 @@ func (g *GamePlayer) SceneCastSkillProp(pem *MPEM) {
 			addMPCost += 2
 		}
 		if conf.RecoverHp {
-			g.AvatarRecoverPercent(pem.AvatarId, 0.3, 0)
-			allSync.AvatarList = append(allSync.AvatarList, pem.AvatarId)
+			g.AvatarRecoverPercent(sce.AvatarId, 0.3, 0)
+			allSync.AvatarList = append(allSync.AvatarList, sce.AvatarId)
 		}
 	}
 	if addMPCost > 0 {

@@ -3,7 +3,6 @@
 package player
 
 import (
-	"strconv"
 	"sync"
 	"time"
 
@@ -146,13 +145,13 @@ func (g *GamePlayer) HandleAvatarSkill(entityId, castEntityId uint32) bool {
 			confBuff.MazeBuffIconType != "Debuff" {
 			g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
 		}
-		switch confBuff.UseType {
-		case "SummonUnit":
-			summonId := strconv.FormatUint(uint64(mazeSkillId), 10)[:4] + strconv.FormatUint(uint64(mazeSkillId), 10)[5:]
-			g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
-				GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(entityId, alg.S2U32(summonId), g.GetRotPb(), g.GetPosPb()),
-			})
-		}
+		// switch confBuff.UseType {
+		// case "SummonUnit":
+		// 	summonId := strconv.FormatUint(uint64(mazeSkillId), 10)[:4] + strconv.FormatUint(uint64(mazeSkillId), 10)[5:]
+		// 	g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+		// 		GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(entityId, alg.S2U32(summonId), g.GetRotPb(), g.GetPosPb()),
+		// 	})
+		// }
 	}
 
 	if delMPCost > 0 {
@@ -507,17 +506,17 @@ func (g *GamePlayer) AddChallengeDeadAvatar(deadNum uint32) {
 	db.DeadAvatar += deadNum
 }
 
-type MPEM struct {
-	IsAvatar        bool     // 是否有玩家参与
-	MonsterEntityId []uint32 // 怪物实体id
-	MonsterId       []uint32 // 怪物id
-	PropEntityId    []uint32 // 物品实体id
-	PropId          []uint32 // 怪物id
-	AvatarId        uint32   // 角色id
-	AvatarEntityId  uint32   // 角色实体id
+type SceneCastEntity struct {
+	IsAvatar            bool     // 是否有玩家参与
+	MonsterEntityIdList []uint32 // 怪物实体id
+	MonsterIdList       []uint32 // 怪物id
+	PropEntityIdList    []uint32 // 物品实体id
+	PropIdList          []uint32 // 物品id
+	AvatarId            uint32   // 角色id
+	AvatarEntityId      uint32   // 角色实体id
 }
 
-func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
+func (g *GamePlayer) GetMem(isMem []uint32, sce *SceneCastEntity) {
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
 		if entity == nil {
@@ -525,27 +524,27 @@ func (g *GamePlayer) GetMem(isMem []uint32, mpem *MPEM) {
 		}
 		switch entity.(type) {
 		case *AvatarEntity:
-			mpem.IsAvatar = true
-			mpem.AvatarId = entity.(*AvatarEntity).AvatarId
-			mpem.AvatarEntityId = id
+			sce.IsAvatar = true
+			sce.AvatarId = entity.(*AvatarEntity).AvatarId
+			sce.AvatarEntityId = id
 		case *MonsterEntity:
-			if mpem.MonsterEntityId == nil {
-				mpem.MonsterEntityId = make([]uint32, 0)
+			if sce.MonsterEntityIdList == nil {
+				sce.MonsterEntityIdList = make([]uint32, 0)
 			}
-			if mpem.MonsterId == nil {
-				mpem.MonsterId = make([]uint32, 0)
+			if sce.MonsterIdList == nil {
+				sce.MonsterIdList = make([]uint32, 0)
 			}
-			mpem.MonsterEntityId = append(mpem.MonsterEntityId, id)
-			mpem.MonsterId = append(mpem.MonsterId, entity.(*MonsterEntity).EventID)
+			sce.MonsterEntityIdList = append(sce.MonsterEntityIdList, id)
+			sce.MonsterIdList = append(sce.MonsterIdList, entity.(*MonsterEntity).EventID)
 		case *PropEntity:
-			if mpem.PropEntityId == nil {
-				mpem.PropEntityId = make([]uint32, 0)
+			if sce.PropEntityIdList == nil {
+				sce.PropEntityIdList = make([]uint32, 0)
 			}
-			if mpem.PropId == nil {
-				mpem.PropId = make([]uint32, 0)
+			if sce.PropIdList == nil {
+				sce.PropIdList = make([]uint32, 0)
 			}
-			mpem.PropEntityId = append(mpem.PropEntityId, id)
-			mpem.PropId = append(mpem.PropId, entity.(*PropEntity).PropId)
+			sce.PropEntityIdList = append(sce.PropEntityIdList, id)
+			sce.PropIdList = append(sce.PropIdList, entity.(*PropEntity).PropId)
 		case *NpcEntity:
 		default:
 			logger.Debug("[EntityId:%v]没有找到相关实体信息", id)

@@ -12,6 +12,8 @@ import (
 
 var CONF *GameDataConfig = nil
 
+const MaxWaitGroup = 5
+
 type loadFunc func()
 
 type GameDataConfig struct {
@@ -109,11 +111,13 @@ type GameDataConfig struct {
 	DailyMissionDataMap          map[uint32]*DailyMissionData
 	MonsterDropMap               map[uint32]map[uint32]*MonsterDrop
 	MazeSkillMap                 map[uint32]*MazeSkill
+	SummonUnitDataInfo           *SummonUnitDataInfo
 	// 下面是预处理
-	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
-	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
-	GoppMission    *GoppMission                                     // 预处理任务
-	RogueRoomMap   *RogueRoomMap                                    // 模拟宇宙地图配置表
+	ServerGroupMap         map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
+	Teleports              map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
+	GoppMission            *GoppMission                                     // 预处理任务
+	RogueRoomMap           *RogueRoomMap                                    // 模拟宇宙地图配置表
+	ConfigAdventureAbility *ConfigAdventureAbility                          // Ability
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {
@@ -162,11 +166,14 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.dataPrefix += "/"
 
 	g.load()
+	sem := make(chan struct{}, MaxWaitGroup)
 	g.wg.Add(len(g.loadFunc))
 	for _, fn := range g.loadFunc {
+		sem <- struct{}{}
 		go func() {
 			fn()
 			g.wg.Done()
+			func() { <-sem }()
 		}()
 	}
 	g.wg.Wait()
@@ -174,12 +181,15 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.gopp()
 	g.wg.Add(len(g.goppFunc))
 	for _, fn := range g.goppFunc {
+		sem <- struct{}{}
 		go func() {
 			fn()
 			g.wg.Done()
+			func() { <-sem }()
 		}()
 	}
 	g.wg.Wait()
+	close(sem)
 }
 
 func (g *GameDataConfig) load() {
@@ -268,6 +278,7 @@ func (g *GameDataConfig) load() {
 		g.loadDailyMissionData,
 		g.loadMonsterDrop,
 		g.loadMazeSkill,
+		g.loadSummonUnitData,
 	}
 }
 

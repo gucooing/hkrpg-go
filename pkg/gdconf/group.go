@@ -151,10 +151,11 @@ func (g *GameDataConfig) loadGroup() {
 	syncs := sync.Mutex{}
 	wg := sync.WaitGroup{}
 	floor := GetFloor()
-
+	sem := make(chan struct{}, MaxWaitGroup)
 	for planeId, floorList := range floor {
 		for floorId, floorInfo := range floorList {
 			for _, groupInfo := range floorInfo.GroupInstanceList {
+				sem <- struct{}{}
 				wg.Add(1)
 				go func() {
 					levelGroup := new(LevelGroup)
@@ -181,6 +182,7 @@ func (g *GameDataConfig) loadGroup() {
 					g.GroupMap[planeId][floorId][groupInfo.ID] = levelGroup
 					syncs.Unlock()
 					wg.Done()
+					func() { <-sem }()
 				}()
 			}
 		}

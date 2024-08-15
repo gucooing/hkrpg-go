@@ -9,13 +9,15 @@ import (
 )
 
 type AvatarData struct {
-	AvatarId       uint32        `json:"AvatarID"`       // 角色id
-	Rarity         string        `json:"Rarity"`         // 星级
-	RankIDList     []uint32      `json:"RankIDList"`     // 命座id
-	ExpGroup       uint32        `json:"ExpGroup"`       // 经验ID
-	RewardList     []*RewardList `json:"RewardList"`     // 重复获得角色奖励
-	AvatarBaseType string        `json:"AvatarBaseType"` // 角色类型
-	SkillList      []uint32      `json:"SkillList"`
+	AvatarId        uint32        `json:"AvatarID"` // 角色id
+	Rarity          string        `json:"Rarity"`   // 星级
+	JsonPath        string        `json:"JsonPath"`
+	ManikinJsonPath string        `json:"ManikinJsonPath"`
+	RankIDList      []uint32      `json:"RankIDList"`     // 命座id
+	ExpGroup        uint32        `json:"ExpGroup"`       // 经验ID
+	RewardList      []*RewardList `json:"RewardList"`     // 重复获得角色奖励
+	AvatarBaseType  string        `json:"AvatarBaseType"` // 角色类型
+	SkillList       []uint32      `json:"SkillList"`
 }
 
 type RewardList struct {
@@ -42,6 +44,7 @@ func (g *GameDataConfig) loadAvatarData() {
 		g.AvatarDataMap[v.AvatarId] = v
 	}
 	logger.Info("load %v AvatarConfig", len(g.AvatarDataMap))
+	g.loadConfigAdventureAbility()
 }
 
 func GetAvatarDataById(avatarId uint32) *AvatarData {
