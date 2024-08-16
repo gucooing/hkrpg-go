@@ -95,13 +95,14 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	// 添加攻击发起者
 	g.GetMem([]uint32{req.AttackedByEntityId}, sce)
 	// 添加被攻击者
-	if req.AssistMonsterEntityIdList != nil {
-		g.GetMem(req.AssistMonsterEntityIdList, sce)
-	} else {
+	if req.AssistMonsterEntityInfo != nil {
 		for _, info := range req.AssistMonsterEntityInfo {
 			g.GetMem(info.EntityIdList, sce)
 		}
+	} else {
+		g.GetMem(req.AssistMonsterEntityIdList, sce)
 	}
+
 	g.SceneCastSkillProp(sce) // 物品效果
 	var skill *gdconf.GoppMazeSkill
 	if req.SkillIndex != 0 {

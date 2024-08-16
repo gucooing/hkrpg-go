@@ -9,9 +9,9 @@ import (
 )
 
 type RelicExpType struct {
-	ExpType uint32 `json:"ExpType"`
-	Level   uint32 `json:"Level"`
-	Exp     uint32 `json:"Exp"`
+	TypeID uint32 `json:"TypeID"`
+	Level  uint32 `json:"Level"`
+	Exp    uint32 `json:"Exp"`
 }
 
 func (g *GameDataConfig) loadRelicExpType() {
@@ -30,10 +30,10 @@ func (g *GameDataConfig) loadRelicExpType() {
 		panic(info)
 	}
 	for _, v := range relicExpTypeMap {
-		if g.RelicExpTypeMap[v.ExpType] == nil {
-			g.RelicExpTypeMap[v.ExpType] = make(map[uint32]*RelicExpType)
+		if g.RelicExpTypeMap[v.TypeID] == nil {
+			g.RelicExpTypeMap[v.TypeID] = make(map[uint32]*RelicExpType)
 		}
-		g.RelicExpTypeMap[v.ExpType][v.Level] = v
+		g.RelicExpTypeMap[v.TypeID][v.Level] = v
 	}
 	logger.Info("load %v RelicExpType", len(g.RelicExpTypeMap))
 }
