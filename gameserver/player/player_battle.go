@@ -37,7 +37,13 @@ func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg pb.Message) {
 	}
 	// 获取战斗角色
 	avatarMap := make(map[uint32]*BattleAvatar, 0)
-	stageConfig := gdconf.GetStageConfigById(req.EventId)
+	planeEvent := gdconf.GetPlaneEventById(req.EventId, g.GetWorldLevel())
+	if planeEvent == nil {
+		rsp.Retcode = uint32(proto.Retcode_RET_BATTLE_STAGE_NOT_MATCH)
+		g.Send(cmd.SceneEnterStageScRsp, rsp)
+		return
+	}
+	stageConfig := gdconf.GetStageConfigById(planeEvent.StageID)
 	if stageConfig == nil {
 		rsp.Retcode = uint32(proto.Retcode_RET_BATTLE_STAGE_NOT_MATCH)
 		g.Send(cmd.SceneEnterStageScRsp, rsp)
@@ -89,17 +95,29 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	}
 	// HitTargetEntityIdList 被攻击目标
 	// AssistMonsterEntityIdList 击中列表
-	// AssistMonsterEntityInfo 击中敌人群
+	// AssistMonsterEntityInfo 战斗群
 	// AttackedByEntityId 攻击发起者
 
 	// 添加攻击发起者
 	g.GetMem([]uint32{req.AttackedByEntityId}, sce)
 	// 添加被攻击者
+	var isAttac = false
 	if req.AssistMonsterEntityInfo != nil {
 		for _, info := range req.AssistMonsterEntityInfo {
-			g.GetMem(info.EntityIdList, sce)
+			entityIdList := make([]uint32, 0)
+			for _, entityId := range info.EntityIdList {
+				if entityId == req.AttackedByEntityId {
+					isAttac = true
+					continue
+				}
+				entityIdList = append(entityIdList, entityId)
+			}
+			g.GetMem(entityIdList, sce)
 		}
 	} else {
+		isAttac = true
+	}
+	if isAttac {
 		g.GetMem(req.AssistMonsterEntityIdList, sce)
 	}
 
