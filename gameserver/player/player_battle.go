@@ -54,11 +54,12 @@ func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg pb.Message) {
 	}
 	if len(avatarMap) == 0 {
 		lineUp := g.GetBattleLineUp()
-		for _, avatar := range lineUp.AvatarIdList {
+		for index, avatar := range lineUp.AvatarIdList {
 			avatarMap[avatar.AvatarId] = &BattleAvatar{
 				AvatarId:   avatar.AvatarId,
 				AvatarType: avatar.LineAvatarType,
 				AssistUid:  0,
+				Index:      index,
 			}
 		}
 	}
@@ -77,11 +78,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	rsp := &proto.SceneCastSkillScRsp{
 		CastEntityId: req.CastEntityId, // 攻击唯一id
 	}
-	isBattle := true
-	if req.SkillIndex != 0 {
-		// 这里的情况是角色释放技能
-		g.HandleAvatarSkill(req.AttackedByEntityId, req.CastEntityId)
-	}
+	isBattle := false
 	// 添加参与此次攻击的实体
 	sce := &SceneCastEntity{
 		IsAvatar:            false,
@@ -90,41 +87,47 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 		PropEntityIdList:    make([]uint32, 0),
 		PropIdList:          make([]uint32, 0),
 	}
-	// 添加攻击发起者
-	isAttacked := false
-	for _, info := range req.AssistMonsterEntityInfo {
-		g.GetMem(info.EntityIdList, sce)
-		for _, entityId := range info.EntityIdList {
-			if entityId == req.AttackedByEntityId {
-				isAttacked = true
-			}
-		}
-	}
-	if !isAttacked {
-		g.GetMem([]uint32{req.AttackedByEntityId}, sce)
-	}
+	// HitTargetEntityIdList 被攻击目标
+	// AssistMonsterEntityIdList 击中列表
+	// AssistMonsterEntityInfo 击中敌人群
+	// AttackedByEntityId 攻击发起者
 
+	// 添加攻击发起者
+	g.GetMem([]uint32{req.AttackedByEntityId}, sce)
 	// 添加被攻击者
 	if req.AssistMonsterEntityIdList != nil {
 		g.GetMem(req.AssistMonsterEntityIdList, sce)
 	} else {
-		if req.HitTargetEntityIdList != nil {
-			g.GetMem(req.HitTargetEntityIdList, sce)
+		for _, info := range req.AssistMonsterEntityInfo {
+			g.GetMem(info.EntityIdList, sce)
 		}
 	}
-	g.SceneCastSkillProp(sce)                                             // 物品效果
-	if (!sce.IsAvatar || len(sce.MonsterEntityIdList) == 0) && isBattle { // 是否满足战斗条件
+	g.SceneCastSkillProp(sce) // 物品效果
+	var skill *gdconf.GoppMazeSkill
+	if req.SkillIndex != 0 {
+		skill = gdconf.GetGoppMazeSkill(sce.AvatarId, 2)
+		g.DelMp(sce.AvatarId, req.CastEntityId)
+	} else {
+		skill = gdconf.GetGoppMazeSkill(sce.AvatarId, 1)
+	}
+	if skill == nil {
+		g.Send(cmd.SceneCastSkillScRsp, rsp)
+		return
+	}
+	isBattle = g.sceneCastSkill(sce, skill, req)
+	if len(sce.MonsterIdList) == 0 || !isBattle { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
 	// 获取战斗角色
 	avatarMap := make(map[uint32]*BattleAvatar, 0)
 	lineUp := g.GetBattleLineUp()
-	for _, avatar := range lineUp.AvatarIdList {
+	for index, avatar := range lineUp.AvatarIdList {
 		avatarMap[avatar.AvatarId] = &BattleAvatar{
 			AvatarId:   avatar.AvatarId,
 			AvatarType: avatar.LineAvatarType,
 			AssistUid:  0,
+			Index:      index,
 		}
 	}
 	battleInfo, battleBackup := g.GetSceneBattleInfo(sce.MonsterIdList, nil, avatarMap, g.GetWorldLevel(), 0)
@@ -269,11 +272,12 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
 	// 获取角色
 	avatarMap := make(map[uint32]*BattleAvatar, 0)
 	lineUp := g.GetBattleLineUp()
-	for _, avatar := range lineUp.AvatarIdList {
+	for index, avatar := range lineUp.AvatarIdList {
 		avatarMap[avatar.AvatarId] = &BattleAvatar{
 			AvatarId:   avatar.AvatarId,
 			AvatarType: avatar.LineAvatarType,
 			AssistUid:  0,
+			Index:      index,
 		}
 	}
 	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 设置战斗状态

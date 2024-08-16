@@ -112,12 +112,13 @@ type GameDataConfig struct {
 	MonsterDropMap               map[uint32]map[uint32]*MonsterDrop
 	MazeSkillMap                 map[uint32]*MazeSkill
 	SummonUnitDataInfo           *SummonUnitDataInfo
+	ConfigAdventureAbility       *ConfigAdventureAbility // Ability
 	// 下面是预处理
-	ServerGroupMap         map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
-	Teleports              map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
-	GoppMission            *GoppMission                                     // 预处理任务
-	RogueRoomMap           *RogueRoomMap                                    // 模拟宇宙地图配置表
-	ConfigAdventureAbility *ConfigAdventureAbility                          // Ability
+	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
+	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
+	GoppMission    *GoppMission                                     // 预处理任务
+	RogueRoomMap   *RogueRoomMap                                    // 模拟宇宙地图配置表
+	GoppAbility    *GoppAbility
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {
@@ -288,5 +289,6 @@ func (g *GameDataConfig) gopp() {
 		g.goppTeleports,   // 预处理传送锚点
 		g.goppMainMission, // 预处理主线任务
 		g.goppRogueRoom,   // 预处理模拟宇宙地图配置表
+		g.goppAbility,
 	}
 }

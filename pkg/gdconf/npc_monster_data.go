@@ -24,6 +24,15 @@ type NPCMonsterData struct {
 	MappingInfoID    uint32   `json:"MappingInfoID"`
 }
 
+var RankMap = map[string]int{
+	"Unknow":     0,
+	"Minion":     1,
+	"MinionLv2":  2,
+	"Elite":      3,
+	"LittleBoss": 4,
+	"BigBoss":    5,
+}
+
 func (g *GameDataConfig) loadNPCMonsterData() {
 	g.NPCMonsterDataMap = make(map[uint32]*NPCMonsterData)
 	nPCMonsterDataMap := make([]*NPCMonsterData, 0)
@@ -48,4 +57,8 @@ func (g *GameDataConfig) loadNPCMonsterData() {
 
 func GetNPCMonsterId(id uint32) *NPCMonsterData {
 	return CONF.NPCMonsterDataMap[id]
+}
+
+func (n *NPCMonsterData) GetMonsterRank() int {
+	return RankMap[n.Rank]
 }

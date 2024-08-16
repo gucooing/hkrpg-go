@@ -1387,7 +1387,7 @@ func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId u
 			AddEntity: &proto.SceneEntityInfo{
 				Motion: &proto.MotionInfo{
 					Pos: pos,
-					Rot: &proto.Vector{Y: 139439},
+					Rot: rot, // &proto.Vector{Y: 139439},
 				},
 				EntityId: g.GetNextGameObjectGuid(),
 				EntityOneofCase: &proto.SceneEntityInfo_SummonUnit{

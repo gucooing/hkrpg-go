@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -17,11 +18,11 @@ import (
 var BattleBackupLock sync.Mutex // 战斗列表互斥锁
 
 type CurBattle struct {
-	BattleBackup       map[uint32]*BattleBackup     // 正在进行的战斗[战斗id]战斗细节
-	RogueInfoOnline    *RogueInfoOnline             // 模拟宇宙临时数据
-	AvatarBuff         map[uint32]*OnLineAvatarBuff // 角色在线buff
-	ActivityInfoOnline *ActivityInfoOnline          // 角色试用在线数据
-	MazeBuffList       map[uint32]*OnLineAvatarBuff // 其他buff
+	BattleBackup    map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
+	RogueInfoOnline *RogueInfoOnline         // 模拟宇宙临时数据
+	// AvatarBuff         map[uint32]*OnBuffMap // 角色在线buff
+	ActivityInfoOnline *ActivityInfoOnline   // 角色试用在线数据
+	MazeBuffList       map[uint32]*OnBuffMap // 所有buff
 }
 
 type BattleBackup struct {
@@ -84,7 +85,7 @@ func (g *GamePlayer) DelBattleBackupById(battleId uint32) {
 	delete(g.GetBattleBackup(), battleId)
 }
 
-type OnLineAvatarBuff struct {
+type OnBuffMap struct {
 	AvatarId  uint32 // 角色
 	BuffId    uint32 // buffid
 	Level     uint32
@@ -94,92 +95,87 @@ type OnLineAvatarBuff struct {
 	LifeTime  uint32 // 有效时间
 }
 
-func (g *GamePlayer) NewOnLineAvatarBuff() {
-	db := g.GetCurBattle()
-	db.AvatarBuff = make(map[uint32]*OnLineAvatarBuff)
-}
-
-func (g *GamePlayer) GetOnLineAvatarBuff() map[uint32]*OnLineAvatarBuff {
-	db := g.GetCurBattle()
-	if db.AvatarBuff == nil {
-		db.AvatarBuff = make(map[uint32]*OnLineAvatarBuff)
-	}
-	return db.AvatarBuff
-}
-
-func (g *GamePlayer) GetOnLineAvatarBuffById(id uint32) *OnLineAvatarBuff {
-	db := g.GetOnLineAvatarBuff()
-	return db[id]
-}
-
-func (g *GamePlayer) GetMazeBuffList() map[uint32]*OnLineAvatarBuff {
+func (g *GamePlayer) GetOnBuffMap() map[uint32]*OnBuffMap {
 	db := g.GetCurBattle()
 	if db.MazeBuffList == nil {
-		db.MazeBuffList = make(map[uint32]*OnLineAvatarBuff)
+		db.MazeBuffList = make(map[uint32]*OnBuffMap)
 	}
 	return db.MazeBuffList
 }
 
-func (g *GamePlayer) HandleAvatarSkill(entityId, castEntityId uint32) bool {
-	avatar := g.GetAvatarEntity(entityId)
-	isBattle := true // 这玩意有一票否决权
-	var delMPCost uint32 = 0
-	if avatar == nil {
-		return true
+func (g *GamePlayer) GetMazeBuffList() map[uint32]*OnBuffMap {
+	db := g.GetCurBattle()
+	if db.MazeBuffList == nil {
+		db.MazeBuffList = make(map[uint32]*OnBuffMap)
 	}
-	confAvatar := gdconf.GetAdventurePlayerByAvatarId(avatar.AvatarId)
+	return db.MazeBuffList
+}
+
+func (g *GamePlayer) AddOnLineAvatarBuff(avatarID, buffId uint32) {
+	db := g.GetMazeBuffList()
+	addTime := time.Now().Unix()
+	db[buffId] = &OnBuffMap{
+		AvatarId: avatarID,
+		BuffId:   buffId,
+		Count:    1,
+		AddTime:  uint64(addTime),
+		LifeTime: uint32(addTime + 15),
+	}
+}
+
+func (g *GamePlayer) DelOnLineAvatarBuff(buffId uint32) {
+	db := g.GetMazeBuffList()
+	delete(db, buffId)
+}
+
+func (g *GamePlayer) sceneCastSkill(sce *SceneCastEntity, skill *gdconf.GoppMazeSkill, req *proto.SceneCastSkillCsReq) bool {
+	battle := skill.TriggerBattle
+	for _, actions := range skill.ActionsList {
+		switch actions.Type {
+		case constant.AddMazeBuff:
+			g.AddOnLineAvatarBuff(sce.AvatarId, actions.Id)
+		case constant.SetMonsterDie:
+			for i := 0; i < len(sce.MonsterIdList); i++ {
+				monsterId := sce.MonsterIdList[i]
+				conf := gdconf.GetNPCMonsterId(monsterId)
+				if conf == nil || conf.GetMonsterRank() < 3 {
+					sce.MonsterIdList = append(sce.MonsterIdList[:i], sce.MonsterIdList[i+1:]...)
+					i--
+				}
+			}
+		case constant.AddTeamPlayerHP:
+		case constant.AddTeamPlayerSp:
+		case constant.SummonUnit:
+		}
+	}
+	return battle
+}
+
+func (g *GamePlayer) DelMp(avatarId, castEntityId uint32) {
+	isDelMp := false
+	confAvatar := gdconf.GetAdventurePlayerByAvatarId(avatarId)
 	if confAvatar == nil {
-		return true
+		return
 	}
 	for _, mazeSkillId := range confAvatar.MazeSkillIdList {
-		mazeSkillConf := gdconf.GetMazeSkill(mazeSkillId)
-		if mazeSkillConf == nil {
-			continue
-		}
-		delMPCost += mazeSkillConf.MPCost
 		confBuff := gdconf.GetAvatarMazeBuffById(mazeSkillId, 1)
 		if confBuff == nil {
 			continue
 		}
-		if confBuff.MazeBuffType == "Character" &&
-			confBuff.MazeBuffIconType != "Debuff" {
-			g.AddOnLineAvatarBuff(avatar.AvatarId, confBuff.ID)
+		if confBuff.InBattleBindingKey != "" {
+			isDelMp = true
 		}
-		// switch confBuff.UseType {
-		// case "SummonUnit":
-		// 	summonId := strconv.FormatUint(uint64(mazeSkillId), 10)[:4] + strconv.FormatUint(uint64(mazeSkillId), 10)[5:]
-		// 	g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
-		// 		GroupRefreshList: g.GetAddBuffSceneEntityRefreshInfo(entityId, alg.S2U32(summonId), g.GetRotPb(), g.GetPosPb()),
-		// 	})
-		// }
 	}
 
-	if delMPCost > 0 {
-		g.DelLineUpMp(delMPCost)
+	if isDelMp {
+		g.DelLineUpMp(1)
 		g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
 			CastEntityId: castEntityId,
 			Mp:           g.GetLineUpMp(),
 		})
 		g.SyncLineupNotify(g.GetBattleLineUp())
 	}
-
-	return isBattle
-}
-
-func (g *GamePlayer) AddOnLineAvatarBuff(avatarID, buffId uint32) {
-	db := g.GetOnLineAvatarBuff()
-	db[avatarID] = &OnLineAvatarBuff{
-		AvatarId: avatarID,
-		BuffId:   buffId,
-		Count:    1,
-		AddTime:  uint64(time.Now().Unix()),
-		LifeTime: 15,
-	}
-}
-
-func (g *GamePlayer) DelOnLineAvatarBuff(avatarID, buffId uint32) {
-	db := g.GetOnLineAvatarBuff()
-	delete(db, avatarID)
+	return
 }
 
 func NewBattle() *spb.Battle {
@@ -679,12 +675,11 @@ func (g *GamePlayer) GetSceneBattleInfo(eventList, stageIDList []uint32, avatarM
 		}
 	}
 
-	battleAvatarList, buffList := g.GetProtoBattleAvatar(avatarMap)
 	info := &proto.SceneBattleInfo{
 		LogicRandomSeed:  gdconf.GetLoadingDesc(),
-		BattleAvatarList: battleAvatarList,
+		BattleAvatarList: g.GetProtoBattleAvatar(avatarMap),
 		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0),
-		BuffList:         g.GetBattleBuff(buffList),
+		BuffList:         g.GetBattleBuff(avatarMap),
 		HEAMIJGFDMO:      nil,
 		StageId:          stageId,
 		FNLHAHFIGNC:      nil,
@@ -768,22 +763,37 @@ func (g *GamePlayer) GetSceneMonsterWaveByStageID(stageID, worldLevel, waveId ui
 }
 
 // 根据战斗情况添加buff
-func (g *GamePlayer) GetBattleBuff(buffList []*proto.BattleBuff) []*proto.BattleBuff {
-	if buffList == nil {
-		buffList = make([]*proto.BattleBuff, 0)
-	}
-	// 默认buff
-	buffList = append(buffList, &proto.BattleBuff{
-		Id:              1000113,
-		Level:           1,
-		OwnerIndex:      4294967295,
-		TargetIndexList: []uint32{0},
-		DynamicValues: map[string]float32{
-			"SkillIndex": 1,
-		},
-	})
-	// 添加物品buff
+func (g *GamePlayer) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.BattleBuff {
+	buffList := make([]*proto.BattleBuff, 0)
 	mazeBufflist := g.GetMazeBuffList()
+	// var targetIndex = 0
+	for _, buff := range mazeBufflist {
+		if buff.AvatarId != 0 { // add avatarBuff
+			avatarInfo := avatarMap[buff.AvatarId]
+			buffList = append(buffList, &proto.BattleBuff{
+				Id:              buff.BuffId,
+				Level:           1,
+				OwnerIndex:      avatarInfo.Index,
+				WaveFlag:        4294967295,
+				TargetIndexList: []uint32{avatarInfo.Index},
+				DynamicValues:   make(map[string]float32),
+			})
+			g.DelOnLineAvatarBuff(buff.BuffId)
+		}
+	}
+
+	// 默认buff
+	// buffList = append(buffList, &proto.BattleBuff{
+	// 	Id:              1000113,
+	// 	Level:           1,
+	// 	OwnerIndex:      4294967295,
+	// 	TargetIndexList: []uint32{0},
+	// 	DynamicValues: map[string]float32{
+	// 		"SkillIndex": 1,
+	// 	},
+	// })
+	// 添加物品buff
+
 	for index, buff := range mazeBufflist {
 		if buff.Count < buff.LifeCount {
 			buff.Count++

@@ -530,43 +530,29 @@ type BattleAvatar struct {
 	AvatarId   uint32             // 角色id
 	AvatarType spb.LineAvatarType // 角色类型
 	AssistUid  uint32             // 助战uid
+	Index      uint32
 }
 
 // 添加战斗角色列表
-func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) ([]*proto.BattleAvatar, []*proto.BattleBuff) {
+func (g *GamePlayer) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*proto.BattleAvatar {
 	battleAvatarList := make([]*proto.BattleAvatar, 0)
-	buffList := make([]*proto.BattleBuff, 0)
-	var index uint32 = 0
 	for _, bA := range bAList {
-		if bA.AvatarId == 0 || index > 3 {
+		if bA.AvatarId == 0 || bA.Index > 3 {
 			continue
 		}
 		switch bA.AvatarType {
 		case spb.LineAvatarType_LineAvatarType_MI:
-			battleAvatarList = append(battleAvatarList, g.GetBattleAvatar(bA.AvatarId, index))
+			battleAvatarList = append(battleAvatarList, g.GetBattleAvatar(bA.AvatarId, bA.Index))
 		case spb.LineAvatarType_LineAvatarType_TRIAL:
 			if ok, _ := g.SpecialMainAvatar(bA.AvatarId); !ok {
 				continue
 			}
-			battleAvatarList = append(battleAvatarList, g.GetTrialBattleAvatar(bA.AvatarId, index))
+			battleAvatarList = append(battleAvatarList, g.GetTrialBattleAvatar(bA.AvatarId, bA.Index))
 		default:
 			continue
 		}
-		// 添加该角色的buff
-		if info := g.GetOnLineAvatarBuffById(bA.AvatarId); info != nil {
-			buffList = append(buffList, &proto.BattleBuff{
-				Id:              info.BuffId,
-				Level:           1,
-				OwnerIndex:      index,
-				WaveFlag:        4294967295,
-				TargetIndexList: []uint32{index},
-				DynamicValues:   make(map[string]float32),
-			})
-			g.DelOnLineAvatarBuff(info.AvatarId, info.BuffId)
-		}
-		index++
 	}
-	return battleAvatarList, buffList
+	return battleAvatarList
 }
 
 // 角色

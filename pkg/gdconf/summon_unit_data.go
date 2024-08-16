@@ -117,6 +117,129 @@ type OnSummonerGroundMove struct {
 	FailedTaskList []FailedTaskList `json:"FailedTaskList"`
 	TaskEnabled    bool             `json:"TaskEnabled"`
 }
+type FailedTaskList struct {
+	Type                         string                       `json:"$type"`
+	TargetType                   TargetType                   `json:"TargetType"`
+	AnimLogicState               string                       `json:"AnimLogicState,omitempty"`
+	AnimStateName                string                       `json:"AnimStateName,omitempty"`
+	TransitionDuration           float64                      `json:"TransitionDuration,omitempty"`
+	StopWhenHitOthers            bool                         `json:"StopWhenHitOthers,omitempty"`
+	TaskEnabled                  bool                         `json:"TaskEnabled"`
+	IsClientOnly                 bool                         `json:"IsClientOnly"`
+	NormalizedTimeEnd            any                          `json:"NormalizedTimeEnd,omitempty"`
+	Active                       bool                         `json:"Active,omitempty"`
+	Duration                     any                          `json:"Duration,omitempty"`
+	BlurX                        float64                      `json:"BlurX,omitempty"`
+	BlurY                        float64                      `json:"BlurY,omitempty"`
+	BlurRadius                   float64                      `json:"BlurRadius,omitempty"`
+	Iteration                    int                          `json:"Iteration,omitempty"`
+	BlurStart                    float64                      `json:"BlurStart,omitempty"`
+	BlurFeather                  float64                      `json:"BlurFeather,omitempty"`
+	Projectile                   Projectile                   `json:"Projectile,omitempty"`
+	OnProjectileHit              []OnProjectileHit            `json:"OnProjectileHit,omitempty"`
+	OnProjectileLifetimeFinish   []OnProjectileLifetimeFinish `json:"OnProjectileLifetimeFinish,omitempty"`
+	PosTargetType                PosTargetType                `json:"PosTargetType,omitempty"`
+	EffectPath                   string                       `json:"EffectPath,omitempty"`
+	Scale                        Scale                        `json:"Scale,omitempty"`
+	ParamEntityUsage             string                       `json:"ParamEntityUsage,omitempty"`
+	TowardMaxPitchAngle          uint32                       `json:"TowardMaxPitchAngle,omitempty"`
+	MaxMutexCount                uint32                       `json:"MaxMutexCount,omitempty"`
+	TargetAlias                  TargetAlias                  `json:"TargetAlias,omitempty"`
+	ForceStart                   bool                         `json:"ForceStart,omitempty"`
+	NormalizedTransitionDuration float64                      `json:"NormalizedTransitionDuration,omitempty"`
+}
+type OnProjectileLifetimeFinish struct {
+	Type                  string               `json:"$type"`
+	AttackTargetType      AttackTargetType     `json:"AttackTargetType"`
+	AttackRootTargetType  AttackRootTargetType `json:"AttackRootTargetType"`
+	TriggerBattle         bool                 `json:"TriggerBattle"`
+	TriggerBattleDelay    float64              `json:"TriggerBattleDelay"`
+	AttackDetectConfig    AttackDetectConfig   `json:"AttackDetectConfig"`
+	HitConfig             HitConfig            `json:"HitConfig"`
+	IncludeProps          bool                 `json:"IncludeProps"`
+	AttackDetectCollision bool                 `json:"AttackDetectCollision"`
+	TaskEnabled           bool                 `json:"TaskEnabled"`
+	IsClientOnly          bool                 `json:"IsClientOnly"`
+}
+type OnProjectileHit struct {
+	Type                  string               `json:"$type"`
+	AttackTargetType      AttackTargetType     `json:"AttackTargetType"`
+	AttackRootTargetType  AttackRootTargetType `json:"AttackRootTargetType"`
+	TriggerBattle         bool                 `json:"TriggerBattle"`
+	TriggerBattleDelay    float64              `json:"TriggerBattleDelay"`
+	AttackDetectConfig    AttackDetectConfig   `json:"AttackDetectConfig"`
+	HitConfig             HitConfig            `json:"HitConfig"`
+	IncludeProps          bool                 `json:"IncludeProps"`
+	AttackDetectCollision bool                 `json:"AttackDetectCollision"`
+	TaskEnabled           bool                 `json:"TaskEnabled"`
+	IsClientOnly          bool                 `json:"IsClientOnly"`
+}
+type HitConfig struct {
+	HitAnimation string `json:"HitAnimation"`
+}
+type Normalized struct {
+	X            float64     `json:"x"`
+	Y            float64     `json:"y"`
+	Z            float64     `json:"z"`
+	Normalized   *Normalized `json:"normalized"`
+	Magnitude    float64     `json:"magnitude"`
+	SqrMagnitude float64     `json:"sqrMagnitude"`
+}
+type Predicate struct {
+	Type         string     `json:"$type"`
+	TargetType   TargetType `json:"TargetType"`
+	AnimZone     string     `json:"AnimZone"`
+	TaskEnabled  bool       `json:"TaskEnabled"`
+	IsClientOnly bool       `json:"IsClientOnly"`
+}
+type AttachOffset struct {
+	Y            float64    `json:"y"`
+	Normalized   Normalized `json:"normalized"`
+	Magnitude    float64    `json:"magnitude"`
+	SqrMagnitude float64    `json:"sqrMagnitude"`
+}
+type LinearPitchAngle struct {
+}
+type Projectile struct {
+	ColliderTemplate               string           `json:"ColliderTemplate"`
+	Behavior                       string           `json:"Behavior"`
+	FlySpeed                       int              `json:"FlySpeed"`
+	EnableRayCast                  bool             `json:"EnableRayCast"`
+	FlyTime                        int              `json:"FlyTime"`
+	Gravity                        float64          `json:"Gravity"`
+	MaxLifeTime                    float64          `json:"MaxLifeTime"`
+	AttachPoint                    string           `json:"AttachPoint"`
+	AttachOffset                   AttachOffset     `json:"AttachOffset"`
+	TargetAttachPoint              string           `json:"TargetAttachPoint"`
+	FlyEffect                      string           `json:"FlyEffect"`
+	HitEffect                      string           `json:"HitEffect"`
+	FlyEffectFadeOut               bool             `json:"FlyEffectFadeOut"`
+	LinearPitchAngle               LinearPitchAngle `json:"LinearPitchAngle"`
+	BoomerangEccentricity          float64          `json:"BoomerangEccentricity"`
+	TriggerHitCallback             bool             `json:"TriggerHitCallback"`
+	StaticProjectileCanPassAirWall bool             `json:"StaticProjectileCanPassAirWall"`
+	ParabolaUseWorldSpaceUp        bool             `json:"ParabolaUseWorldSpaceUp"`
+}
+type AttackTargetType struct {
+	Type  string `json:"$type"`
+	Alias string `json:"Alias"`
+}
+type AttackRootTargetType struct {
+	Type  string `json:"$type"`
+	Alias string `json:"Alias"`
+}
+type Offset struct {
+	Y            float64 `json:"y"`
+	Magnitude    float64 `json:"magnitude"`
+	SqrMagnitude float64 `json:"sqrMagnitude"`
+}
+type AttackDetectConfig struct {
+	Type      string  `json:"$type"`
+	MaxRadius float64 `json:"MaxRadius"`
+	FanAngle  int     `json:"FanAngle"`
+	Hight     int     `json:"Hight"`
+	Offset    Offset  `json:"Offset"`
+}
 type FootScale struct {
 	X            uint32     `json:"x"`
 	Y            uint32     `json:"y"`
@@ -256,4 +379,8 @@ func (g *GameDataConfig) loadSummonUnitData() {
 
 	logger.Info("load %v SummonUnitData", len(g.SummonUnitDataInfo.SummonUnitDataMap))
 	logger.Info("load %v SummonUnitDataJson", len(g.SummonUnitDataInfo.SummonUnitDataJsonMap))
+}
+
+func GetSummonUnitData(summonId uint32) *SummonUnitData {
+	return CONF.SummonUnitDataInfo.SummonUnitDataMap[summonId]
 }

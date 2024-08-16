@@ -441,7 +441,7 @@ func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData, avatarId uint32) {
 	g.AvatarRecoverPercent(avatarId, conf.PreviewHPRecoveryValue, conf.PreviewHPRecoveryPercent)
 	if conf.MazeBuffID != 0 {
 		buffDb := g.GetMazeBuffList()
-		buffDb[conf.MazeBuffID] = &OnLineAvatarBuff{
+		buffDb[conf.MazeBuffID] = &OnBuffMap{
 			BuffId:    conf.MazeBuffID,
 			Count:     0,
 			Level:     1,
