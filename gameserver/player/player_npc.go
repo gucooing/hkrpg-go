@@ -50,7 +50,7 @@ func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg pb.Message) {
 	}
 
 	for _, contactId := range req.ContactIdList {
-		db := g.GetMessageGroupByContactId(contactId)
+		db := g.GetPd().GetMessageGroupByContactId(contactId)
 		if db != nil {
 			messageGroup := &proto.MessageGroup{
 				Id:                 db.Id,
@@ -78,7 +78,15 @@ func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) FinishPerformSectionIdCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishPerformSectionIdCsReq)
 
-	g.FinishMessageGroup(req.SectionId)
+	contactId := g.GetPd().FinishMessageGroup(req.SectionId)
+
+	g.MessageGroupPlayerSyncScNotify(contactId)
+
+	// 任务检查
+	finishSubMission := g.GetPd().MessagePerformSectionFinish(req.SectionId)
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
 
 	rsp := &proto.FinishPerformSectionIdScRsp{
 		Reward:    &proto.ItemList{},
@@ -90,7 +98,7 @@ func (g *GamePlayer) FinishPerformSectionIdCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) MessageGroupPlayerSyncScNotify(contactId uint32) {
-	db := g.GetMessageGroupByContactId(contactId)
+	db := g.GetPd().GetMessageGroupByContactId(contactId)
 	if db == nil {
 		return
 	}
@@ -120,7 +128,7 @@ func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg pb.Message) {
 		NpcStatusList: make([]*proto.NpcStatus, 0),
 		Retcode:       0,
 	}
-	db := g.GetMessageGroup()
+	db := g.GetPd().GetMessageGroup()
 	if db != nil {
 		for _, info := range db {
 			isFinish := false

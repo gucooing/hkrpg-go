@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"strconv"
@@ -10,14 +10,13 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
 type EntityAll interface {
-	AddEntity(g *GamePlayer, groupID uint32)
+	AddEntity(g *PlayerData, groupID uint32)
 }
 
 type SceneMap struct {
@@ -40,11 +39,13 @@ type Entity struct {
 	GroupId  uint32 // 区域
 	Pos      *proto.Vector
 	Rot      *proto.Vector
+	BuffList map[uint32]*OnBuffMap // buff
 }
 
 type AvatarEntity struct {
 	Entity
-	AvatarId uint32 // 角色id
+	AvatarId   uint32 // 角色id
+	LineAvatar *spb.LineAvatarList
 }
 
 type MonsterEntity struct {
@@ -70,12 +71,12 @@ func NewSceneMap() *SceneMap { // 清空实体列表用的
 	return db
 }
 
-func (g *GamePlayer) UpSceneMap() {
+func (g *PlayerData) UpSceneMap() {
 	db := g.GetOnlineData()
 	db.SceneMap = NewSceneMap()
 }
 
-func (g *GamePlayer) GetSceneMap() *SceneMap {
+func (g *PlayerData) GetSceneMap() *SceneMap {
 	db := g.GetOnlineData()
 	if db.SceneMap == nil {
 		db.SceneMap = NewSceneMap()
@@ -83,7 +84,7 @@ func (g *GamePlayer) GetSceneMap() *SceneMap {
 	return db.SceneMap
 }
 
-func (g *GamePlayer) GetLoadedGroup() map[uint32]*GroupInfo {
+func (g *PlayerData) GetLoadedGroup() map[uint32]*GroupInfo {
 	db := g.GetSceneMap()
 	if db.LoadedGroup == nil {
 		db.LoadedGroup = make(map[uint32]*GroupInfo)
@@ -91,7 +92,7 @@ func (g *GamePlayer) GetLoadedGroup() map[uint32]*GroupInfo {
 	return db.LoadedGroup
 }
 
-func (g *GamePlayer) GetNoLoadedGroup() map[uint32]*GroupInfo {
+func (g *PlayerData) GetNoLoadedGroup() map[uint32]*GroupInfo {
 	db := g.GetSceneMap()
 	if db.NoLoadedGroup == nil {
 		db.NoLoadedGroup = make(map[uint32]*GroupInfo)
@@ -99,7 +100,7 @@ func (g *GamePlayer) GetNoLoadedGroup() map[uint32]*GroupInfo {
 	return db.NoLoadedGroup
 }
 
-func (g *GamePlayer) AddLoadedGroup(entryId, planeID, floorID, groupID uint32) {
+func (g *PlayerData) AddLoadedGroup(entryId, planeID, floorID, groupID uint32) {
 	db := g.GetLoadedGroup()
 	db[groupID] = &GroupInfo{
 		EntryId:   entryId,
@@ -110,7 +111,7 @@ func (g *GamePlayer) AddLoadedGroup(entryId, planeID, floorID, groupID uint32) {
 	}
 }
 
-func (g *GamePlayer) AddNoLoadedGroup(entryId, planeID, floorID, groupID uint32) {
+func (g *PlayerData) AddNoLoadedGroup(entryId, planeID, floorID, groupID uint32) {
 	db := g.GetNoLoadedGroup()
 	db[groupID] = &GroupInfo{
 		EntryId:   entryId,
@@ -121,7 +122,7 @@ func (g *GamePlayer) AddNoLoadedGroup(entryId, planeID, floorID, groupID uint32)
 	}
 }
 
-func (g *GamePlayer) GetGroupInfoByGroupID(groupID uint32) *GroupInfo {
+func (g *PlayerData) GetGroupInfoByGroupID(groupID uint32) *GroupInfo {
 	db := g.GetLoadedGroup()
 	if db[groupID] == nil {
 		db[groupID] = &GroupInfo{}
@@ -129,7 +130,7 @@ func (g *GamePlayer) GetGroupInfoByGroupID(groupID uint32) *GroupInfo {
 	return db[groupID]
 }
 
-func (g *GamePlayer) GetEntity(groupID uint32) map[uint32]EntityAll {
+func (g *PlayerData) GetEntity(groupID uint32) map[uint32]EntityAll {
 	db := g.GetGroupInfoByGroupID(groupID)
 	if db.EntityMap == nil {
 		db.EntityMap = make(map[uint32]EntityAll)
@@ -137,31 +138,31 @@ func (g *GamePlayer) GetEntity(groupID uint32) map[uint32]EntityAll {
 	return db.EntityMap
 }
 
-func (ae *AvatarEntity) AddEntity(g *GamePlayer, groupID uint32) {
+func (ae *AvatarEntity) AddEntity(g *PlayerData, groupID uint32) {
 	db := g.GetEntity(groupID)
 	db[ae.EntityId] = ae
 }
 
-func (me *MonsterEntity) AddEntity(g *GamePlayer, groupID uint32) {
+func (me *MonsterEntity) AddEntity(g *PlayerData, groupID uint32) {
 	db := g.GetEntity(groupID)
 	db[me.EntityId] = me
 }
 
-func (ne *NpcEntity) AddEntity(g *GamePlayer, groupID uint32) {
+func (ne *NpcEntity) AddEntity(g *PlayerData, groupID uint32) {
 	db := g.GetEntity(groupID)
 	db[ne.EntityId] = ne
 }
 
-func (pe *PropEntity) AddEntity(g *GamePlayer, groupID uint32) {
+func (pe *PropEntity) AddEntity(g *PlayerData, groupID uint32) {
 	db := g.GetEntity(groupID)
 	db[pe.EntityId] = pe
 }
 
-func (g *GamePlayer) AddEntity(groupID uint32, t EntityAll) {
+func (g *PlayerData) AddEntity(groupID uint32, t EntityAll) {
 	t.AddEntity(g, groupID)
 }
 
-func (g *GamePlayer) GetEntityById(id uint32) EntityAll { // 根据实体id拉取实体
+func (g *PlayerData) GetEntityById(id uint32) EntityAll { // 根据实体id拉取实体
 	db := g.GetLoadedGroup()
 	for _, info := range db {
 		if info.EntityMap != nil {
@@ -175,7 +176,7 @@ func (g *GamePlayer) GetEntityById(id uint32) EntityAll { // 根据实体id拉�
 	return nil
 }
 
-func (g *GamePlayer) GetEntryId(t EntityAll) uint32 {
+func (g *PlayerData) GetEntryId(t EntityAll) uint32 {
 	if t == nil {
 		return 0
 	}
@@ -191,7 +192,7 @@ func (g *GamePlayer) GetEntryId(t EntityAll) uint32 {
 	}
 }
 
-func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
+func (g *PlayerData) GetMonsterEntityById(id uint32) *MonsterEntity {
 	db := g.GetEntityById(id)
 	if db == nil {
 		return nil
@@ -203,7 +204,7 @@ func (g *GamePlayer) GetMonsterEntityById(id uint32) *MonsterEntity {
 	return nil
 }
 
-func (g *GamePlayer) GetPropEntityById(id uint32) *PropEntity {
+func (g *PlayerData) GetPropEntityById(id uint32) *PropEntity {
 	db := g.GetEntityById(id)
 	if db == nil {
 		return nil
@@ -215,7 +216,7 @@ func (g *GamePlayer) GetPropEntityById(id uint32) *PropEntity {
 	return nil
 }
 
-func (g *GamePlayer) GetPropEntity(groupId, instId uint32) *PropEntity {
+func (g *PlayerData) GetPropEntity(groupId, instId uint32) *PropEntity {
 	db := g.GetEntity(groupId)
 	for _, entity := range db {
 		switch entity.(type) {
@@ -228,7 +229,7 @@ func (g *GamePlayer) GetPropEntity(groupId, instId uint32) *PropEntity {
 	return nil
 }
 
-func (g *GamePlayer) GetAvatarEntity(id uint32) *AvatarEntity {
+func (g *PlayerData) GetAvatarEntity(id uint32) *AvatarEntity {
 	db := g.GetEntityById(id)
 	if db == nil {
 		return nil
@@ -240,7 +241,7 @@ func (g *GamePlayer) GetAvatarEntity(id uint32) *AvatarEntity {
 	return nil
 }
 
-func (g *GamePlayer) GetAllPropEntity() []*PropEntity {
+func (g *PlayerData) GetAllPropEntity() []*PropEntity {
 	peList := make([]*PropEntity, 0)
 	db := g.GetLoadedGroup()
 	for _, groupInfo := range db {
@@ -264,7 +265,7 @@ func NewScene() *spb.Scene {
 	}
 }
 
-func (g *GamePlayer) GetScene() *spb.Scene {
+func (g *PlayerData) GetScene() *spb.Scene {
 	db := g.BasicBin
 	if db.Scene == nil {
 		db.Scene = NewScene()
@@ -272,12 +273,12 @@ func (g *GamePlayer) GetScene() *spb.Scene {
 	return db.Scene
 }
 
-func (g *GamePlayer) GetCurEntryId() uint32 {
+func (g *PlayerData) GetCurEntryId() uint32 {
 	db := g.GetScene()
 	return db.EntryId
 }
 
-func (g *GamePlayer) SetCurEntryId(id uint32) {
+func (g *PlayerData) SetCurEntryId(id uint32) {
 	db := g.GetScene()
 	db.EntryId = id
 }
@@ -298,7 +299,7 @@ func NewRot() *spb.VectorBin {
 	}
 }
 
-func (g *GamePlayer) GetPos() *spb.VectorBin {
+func (g *PlayerData) GetPos() *spb.VectorBin {
 	db := g.GetScene()
 	if db.Pos == nil {
 		db.Pos = NewPos()
@@ -306,7 +307,7 @@ func (g *GamePlayer) GetPos() *spb.VectorBin {
 	return db.Pos
 }
 
-func (g *GamePlayer) GetRot() *spb.VectorBin {
+func (g *PlayerData) GetRot() *spb.VectorBin {
 	db := g.GetScene()
 	if db.Rot == nil {
 		db.Rot = NewRot()
@@ -314,21 +315,21 @@ func (g *GamePlayer) GetRot() *spb.VectorBin {
 	return db.Rot
 }
 
-func (g *GamePlayer) SetPos(x, y, z int32) {
+func (g *PlayerData) SetPos(x, y, z int32) {
 	db := g.GetPos()
 	db.X = x
 	db.Y = y
 	db.Z = z
 }
 
-func (g *GamePlayer) SetRot(x, y, z int32) {
+func (g *PlayerData) SetRot(x, y, z int32) {
 	db := g.GetRot()
 	db.X = x
 	db.Y = y
 	db.Z = z
 }
 
-func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
+func (g *PlayerData) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	if levelGroup.GroupName == "TrainVisitorDemo" {
 		return false
 	}
@@ -349,7 +350,7 @@ func (g *GamePlayer) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	}
 }
 
-func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsLoaded bool) bool {
+func (g *PlayerData) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsLoaded bool) bool {
 	finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
 	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
 	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
@@ -455,7 +456,7 @@ func (g *GamePlayer) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 }
 
 // 检查场景上是否有实体需要卸载/加载
-func (g *GamePlayer) AutoEntryGroup() {
+func (g *PlayerData) AutoEntryGroup() ([]*GroupInfo, []*GroupInfo) {
 	loadedGroup := g.GetLoadedGroup()        // 已加载区域
 	noLoadedGroup := g.GetNoLoadedGroup()    // 未加载区域
 	uninstallGroup := make([]*GroupInfo, 0)  // 卸载场景列表
@@ -488,14 +489,14 @@ func (g *GamePlayer) AutoEntryGroup() {
 	}
 
 	// 卸载/加载
-	g.UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList)
+	return uninstallGroup, loadedGroupList
 }
 
 func NewBlockMap() map[uint32]*spb.BlockBin {
 	return map[uint32]*spb.BlockBin{}
 }
 
-func (g *GamePlayer) GetBlockMap() map[uint32]*spb.BlockBin {
+func (g *PlayerData) GetBlockMap() map[uint32]*spb.BlockBin {
 	db := g.GetOnlineData()
 	if db.BlockMap == nil {
 		db.BlockMap = NewBlockMap()
@@ -503,7 +504,7 @@ func (g *GamePlayer) GetBlockMap() map[uint32]*spb.BlockBin {
 	return db.BlockMap
 }
 
-func (g *GamePlayer) GetAllBlockMap() map[uint32]*spb.BlockBin {
+func (g *PlayerData) GetAllBlockMap() map[uint32]*spb.BlockBin {
 	db := g.GetOnlineData()
 	if db.BlockMap == nil {
 		db.BlockMap = NewBlockMap()
@@ -518,7 +519,7 @@ func (g *GamePlayer) GetAllBlockMap() map[uint32]*spb.BlockBin {
 }
 
 // 从db拉取地图数据
-func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
+func (g *PlayerData) GetBlock(entryId uint32) *spb.BlockBin {
 	newEntryId := entryId
 	if entryId >= 10000000 {
 		newEntryId = alg.S2U32(strconv.Itoa(int(entryId))[:7])
@@ -531,8 +532,8 @@ func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
 	on.blockMapLock.Lock()
 	defer on.blockMapLock.Unlock()
 	if db[newEntryId] == nil {
-		bin := database.GetBlockData(g.Store.PlayerDataMysql,
-			g.Store.PeMysql, g.Uid, newEntryId)
+		bin := database.GetBlockData(database.GSS.PlayerDataMysql,
+			database.GSS.PeMysql, g.GetBasicBin().Uid, newEntryId)
 		block := new(spb.BlockBin)
 		if err := pb.Unmarshal(bin.BinData, block); err != nil {
 			logger.Debug("entryId:%v,block error", newEntryId)
@@ -545,7 +546,7 @@ func (g *GamePlayer) GetBlock(entryId uint32) *spb.BlockBin {
 }
 
 // 更新地图数据到数据库
-func (g *GamePlayer) UpdateBlock(block *spb.BlockBin) {
+func (g *PlayerData) UpdateBlock(block *spb.BlockBin) {
 	bin, err := pb.Marshal(block)
 	if err != nil {
 		return
@@ -558,18 +559,18 @@ func (g *GamePlayer) UpdateBlock(block *spb.BlockBin) {
 		newEntryId = block.EntryId
 	}
 	blockData := &constant.BlockData{
-		Uid:         g.Uid,
+		Uid:         g.GetBasicBin().Uid,
 		EntryId:     newEntryId,
 		DataVersion: 0, // TODO
 		BinData:     bin,
 	}
-	if err = database.UpdateBlockData(g.Store.PlayerDataMysql,
-		g.Store.PeMysql, blockData); err != nil {
+	if err = database.UpdateBlockData(database.GSS.PlayerDataMysql,
+		database.GSS.PeMysql, blockData); err != nil {
 		logger.Debug("updata block data error:%s", err.Error())
 	}
 }
 
-func (g *GamePlayer) GetPropState(db *spb.BlockBin, groupId, propId uint32, state string) uint32 {
+func (g *PlayerData) GetPropState(db *spb.BlockBin, groupId, propId uint32, state string) uint32 {
 	if db == nil {
 		return gdconf.GetStateValue(state)
 	}
@@ -597,7 +598,7 @@ func (g *GamePlayer) GetPropState(db *spb.BlockBin, groupId, propId uint32, stat
 	return db.BlockList[groupId].PropInfo[propId].PropState
 }
 
-func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
+func (g *PlayerData) UpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
 	on := g.GetOnlineData()
 	on.blockMapLock.Lock()
 	defer on.blockMapLock.Unlock()
@@ -622,7 +623,7 @@ func (g *GamePlayer) UpPropState(db *spb.BlockBin, groupId, propId, state uint32
 	}
 }
 
-func (g *GamePlayer) GetGroupState(db *spb.BlockBin, groupId uint32) uint32 {
+func (g *PlayerData) GetGroupState(db *spb.BlockBin, groupId uint32) uint32 {
 	on := g.GetOnlineData()
 	on.blockMapLock.Lock()
 	defer on.blockMapLock.Unlock()
@@ -637,7 +638,7 @@ func (g *GamePlayer) GetGroupState(db *spb.BlockBin, groupId uint32) uint32 {
 	return db.BlockList[groupId].GroupState
 }
 
-func (g *GamePlayer) SetGroupState(db *spb.BlockBin, groupId, groupState uint32) {
+func (g *PlayerData) SetGroupState(db *spb.BlockBin, groupId, groupState uint32) {
 	on := g.GetOnlineData()
 	on.blockMapLock.Lock()
 	defer on.blockMapLock.Unlock()
@@ -652,7 +653,7 @@ func (g *GamePlayer) SetGroupState(db *spb.BlockBin, groupId, groupState uint32)
 	db.BlockList[groupId].GroupState = groupState
 }
 
-func (g *GamePlayer) GetFloorSavedData(entryId uint32) map[string]int32 {
+func (g *PlayerData) GetFloorSavedData(entryId uint32) map[string]int32 {
 	db := g.GetBlock(entryId)
 	if db.FloorSavedData == nil {
 		db.FloorSavedData = make(map[string]int32)
@@ -660,7 +661,7 @@ func (g *GamePlayer) GetFloorSavedData(entryId uint32) map[string]int32 {
 	return db.FloorSavedData
 }
 
-func (g *GamePlayer) SetFloorSavedData(entryId uint32, key string, v int32) {
+func (g *PlayerData) SetFloorSavedData(entryId uint32, key string, v int32) {
 	db := g.GetBlock(entryId)
 	if db.FloorSavedData == nil {
 		db.FloorSavedData = make(map[string]int32)
@@ -668,7 +669,7 @@ func (g *GamePlayer) SetFloorSavedData(entryId uint32, key string, v int32) {
 	db.FloorSavedData[key] = v
 }
 
-func (g *GamePlayer) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
+func (g *PlayerData) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
 	on := g.GetOnlineData()
 	on.blockMapLock.Lock()
 	defer on.blockMapLock.Unlock()
@@ -691,7 +692,7 @@ func (g *GamePlayer) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId,
 	}
 }
 
-func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
+func (g *PlayerData) StageObjectCapture(prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
 	if db == nil {
 		return
 	}
@@ -722,7 +723,7 @@ func (g *GamePlayer) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 	}
 }
 
-func floorTentry(floorID uint32) uint32 {
+func FloorTentry(floorID uint32) uint32 {
 	if floorID < 10000000 {
 		return 1000001
 	}
@@ -734,35 +735,9 @@ func floorTentry(floorID uint32) uint32 {
 	return entryId
 }
 
-// 任务设置物品状态
-func (g *GamePlayer) SetFloorSavedValue(conf *gdconf.SubMission, finishAction *gdconf.FinishAction) {
-	if len(finishAction.FinishActionParaString) < 4 {
-		return
-	}
-	planeId := alg.S2U32(finishAction.FinishActionParaString[0])
-	floorId := alg.S2U32(finishAction.FinishActionParaString[1])
-	name := finishAction.FinishActionParaString[2]
-	state := alg.S2I32(finishAction.FinishActionParaString[3])
-	g.SetFloorSavedData(floorTentry(floorId), name, state)
-	notify := &proto.UpdateFloorSavedValueNotify{
-		SavedValue: map[string]int32{name: state},
-	}
-	g.Send(cmd.UpdateFloorSavedValueNotify, notify)
-
-	db := g.GetBlock(floorTentry(conf.WayPointFloorID))
-	groupID, instId := gdconf.GetSavedValue(planeId, floorId, name)
-	if groupID == 0 || instId == 0 {
-		return // TODO subMission 103030204
-	}
-	g.UpPropState(db, groupID, instId, uint32(state))
-	if enep := g.GetPropEntity(groupID, instId); enep != nil {
-		g.PropSceneGroupRefreshScNotify([]uint32{enep.EntityId}, db)
-	}
-}
-
 /****************************************************功能***************************************************/
 
-func (g *GamePlayer) GetPosPb() *proto.Vector {
+func (g *PlayerData) GetPosPb() *proto.Vector {
 	db := g.GetPos()
 	return &proto.Vector{
 		Y: db.Y,
@@ -771,7 +746,7 @@ func (g *GamePlayer) GetPosPb() *proto.Vector {
 	}
 }
 
-func (g *GamePlayer) GetRotPb() *proto.Vector {
+func (g *PlayerData) GetRotPb() *proto.Vector {
 	db := g.GetRot()
 	return &proto.Vector{
 		Y: db.Y,
@@ -780,7 +755,7 @@ func (g *GamePlayer) GetRotPb() *proto.Vector {
 	}
 }
 
-func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGroupInfo, lineUp *spb.Line, leaderEntityId uint32, pos, rot *proto.Vector) {
+func (g *PlayerData) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGroupInfo, lineUp *spb.Line, leaderEntityId uint32, pos, rot *proto.Vector) {
 	for sole, lineAvatar := range lineUp.AvatarIdList {
 		if lineAvatar.AvatarId == 0 {
 			continue
@@ -827,13 +802,14 @@ func (g *GamePlayer) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 				Pos:      pos,
 				Rot:      rot,
 			},
-			AvatarId: lineAvatar.AvatarId,
+			AvatarId:   actor.BaseAvatarId,
+			LineAvatar: lineAvatar,
 		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
 }
 
-func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
+func (g *PlayerData) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
 		g.StageObjectCapture(propList, sceneGroup.GroupId, db)
@@ -879,7 +855,7 @@ func (g *GamePlayer) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 	return entityGroupList
 }
 
-func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) *proto.SceneEntityGroupInfo {
+func (g *PlayerData) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) *proto.SceneEntityGroupInfo {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
@@ -924,7 +900,7 @@ func (g *GamePlayer) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 	return entityGroupList
 }
 
-func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) *proto.SceneEntityGroupInfo {
+func (g *PlayerData) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) *proto.SceneEntityGroupInfo {
 	for _, npcList := range sceneGroup.NPCList {
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
@@ -968,7 +944,7 @@ func (g *GamePlayer) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 	return entityGroupList
 }
 
-func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp *spb.Line) *proto.SceneInfo {
+func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp *spb.Line) *proto.SceneInfo {
 	leaderEntityId := g.GetNextGameObjectGuid()
 	mapEntrance := gdconf.GetMapEntranceById(entryId)
 	if mapEntrance == nil {
@@ -978,16 +954,20 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	if foorMap == nil {
 		return nil
 	}
-	worldId := gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID
+	mazePlane := gdconf.GetMazePlaneById(mapEntrance.PlaneID)
+	if mazePlane == nil {
+		return nil
+	}
+	worldId := mazePlane.WorldID
 	if worldId == 100 {
 		worldId = 401
 	}
 	scene := &proto.SceneInfo{
-		ClientPosVersion:   5,
+		ClientPosVersion:   0,
 		WorldId:            worldId,
 		LeaderEntityId:     leaderEntityId,
 		FloorId:            mapEntrance.FloorID,
-		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
+		GameModeType:       gdconf.GetPlaneType(mazePlane.PlaneType),
 		PlaneId:            mapEntrance.PlaneID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
@@ -997,10 +977,11 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
 		FloorSavedData:     g.GetFloorSavedData(entryId),
 		GameStoryLineId:    g.GameStoryLineId(),
-		// DimensionId:        g.GetDimensionId(), TODO
+		// DimensionId:        g.GetDimensionId(), // TODO
 		EntityBuffList: make([]*proto.EntityBuffInfo, 0),
 	}
-	for i := uint32(0); i < 100; i++ {
+	// scene.LightenSectionList = append(scene.LightenSectionList, 0)
+	for i := uint32(0); i < 7; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)
 	}
 	// 获取场景实体
@@ -1037,12 +1018,13 @@ func (g *GamePlayer) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	return scene
 }
 
-func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.LevelGroup) *proto.MissionStatusBySceneInfo {
+func (g *PlayerData) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.LevelGroup) *proto.MissionStatusBySceneInfo {
 	info := &proto.MissionStatusBySceneInfo{
 		DisabledMainMissionIdList:   make([]uint32, 0),
 		FinishedMainMissionIdList:   make([]uint32, 0),
 		SubMissionStatusList:        make([]*proto.Mission, 0),
 		UnfinishedMainMissionIdList: make([]uint32, 0),
+		MainMissionMcvList:          make([]*proto.MainMissionCustomValue, 0),
 	}
 	if foorMap == nil {
 		return info
@@ -1067,12 +1049,17 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 				}
 			}
 			if isAdd {
+				var mainMissionId uint32 = 0
 				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
 					info.DisabledMainMissionIdList = append(info.DisabledMainMissionIdList, groupInfo.OwnerMainMissionID)
 				}
 				if finishMainMissionList[groupInfo.OwnerMainMissionID] != nil {
+					mainMissionId = groupInfo.OwnerMainMissionID
 					info.FinishedMainMissionIdList = append(info.FinishedMainMissionIdList, groupInfo.OwnerMainMissionID)
 				}
+				info.MainMissionMcvList = append(info.MainMissionMcvList, &proto.MainMissionCustomValue{
+					MainMissionId: mainMissionId,
+				})
 			}
 		}
 		if groupInfo.AtmosphereCondition != nil {
@@ -1094,6 +1081,10 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 							Status:   proto.MissionStatus(db.Status),
 							Progress: db.Progress,
 							Id:       conditions.SubMissionID,
+						})
+					} else {
+						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
+							Id: conditions.SubMissionID,
 						})
 					}
 				}
@@ -1158,7 +1149,7 @@ func (g *GamePlayer) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 }
 
 // 删除怪物
-func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.GroupRefreshInfo {
+func (g *PlayerData) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.GroupRefreshInfo {
 	sceneGroupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
 	for _, id := range mem {
 		entity := g.GetMonsterEntityById(id)
@@ -1183,7 +1174,7 @@ func (g *GamePlayer) GetDelSceneGroupRefreshInfo(mem []uint32) []*proto.GroupRef
 }
 
 // 添加怪物
-func (g *GamePlayer) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monsterList map[uint32]*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
+func (g *PlayerData) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monsterList map[uint32]*gdconf.MonsterList) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, monster := range monsterList {
 		entityId := g.GetNextGameObjectGuid()
@@ -1234,7 +1225,7 @@ func (g *GamePlayer) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monste
 }
 
 // 添加Npc
-func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList map[uint32]*gdconf.NPCList) []*proto.SceneEntityRefreshInfo {
+func (g *PlayerData) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList map[uint32]*gdconf.NPCList) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, npc := range npcList {
 		entityId := g.GetNextGameObjectGuid()
@@ -1284,7 +1275,7 @@ func (g *GamePlayer) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList ma
 }
 
 // 添加物品实体
-func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
+func (g *PlayerData) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, prop := range propList {
 		g.StageObjectCapture(prop, mazeGroupID, db)
@@ -1336,7 +1327,7 @@ func (g *GamePlayer) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList 
 }
 
 // 添加角色
-func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.SceneEntityRefreshInfo {
+func (g *PlayerData) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, lineAvatar := range lineUp.AvatarIdList {
 		if lineAvatar.AvatarId == 0 {
@@ -1369,7 +1360,8 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 				Pos:      pos,
 				Rot:      rot,
 			},
-			AvatarId: lineAvatar.AvatarId,
+			AvatarId:   lineAvatar.AvatarId,
+			LineAvatar: lineAvatar,
 		})
 		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, entityList)
 	}
@@ -1377,7 +1369,7 @@ func (g *GamePlayer) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 }
 
 // 添加Buff
-func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId uint32, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
+func (g *PlayerData) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId uint32, pos *proto.Vector) []*proto.GroupRefreshInfo {
 	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
@@ -1387,7 +1379,7 @@ func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId u
 			AddEntity: &proto.SceneEntityInfo{
 				Motion: &proto.MotionInfo{
 					Pos: pos,
-					Rot: rot, // &proto.Vector{Y: 139439},
+					Rot: &proto.Vector{Y: 139439},
 				},
 				EntityId: g.GetNextGameObjectGuid(),
 				EntityOneofCase: &proto.SceneEntityInfo_SummonUnit{
@@ -1408,7 +1400,7 @@ func (g *GamePlayer) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId u
 	return groupRefreshInfo
 }
 
-func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
+func (g *PlayerData) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
 	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
@@ -1441,7 +1433,8 @@ func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 				Pos:      pos,
 				Rot:      rot,
 			},
-			AvatarId: lineAvatar.AvatarId,
+			AvatarId:   lineAvatar.AvatarId,
+			LineAvatar: lineAvatar,
 		})
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	}
@@ -1449,7 +1442,7 @@ func (g *GamePlayer) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 	return groupRefreshInfo
 }
 
-func (g *GamePlayer) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
+func (g *PlayerData) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
 	info := &proto.SpringRecoverConfig{
 		DefaultHp:     10000,
 		AutoRecoverHp: true,
@@ -1458,7 +1451,7 @@ func (g *GamePlayer) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
 	return info
 }
 
-func (g *GamePlayer) GetHealPoolInfo() *proto.HealPoolInfo {
+func (g *PlayerData) GetHealPoolInfo() *proto.HealPoolInfo {
 	info := &proto.HealPoolInfo{
 		RefreshTime: time.Now().Unix(),
 		HealPool:    23500,

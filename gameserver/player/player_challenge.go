@@ -3,6 +3,7 @@ package player
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -16,7 +17,7 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
 	rsp.ChallengeGroupList = make([]*proto.ChallengeGroup, 0)
-	for id, stars := range g.GetChallengeList() {
+	for id, stars := range g.GetPd().GetChallengeList() {
 		challenge := &proto.Challenge{
 			ChallengeId: id,
 			Star:        stars.Stars,
@@ -26,7 +27,7 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg pb.Message) {
 		}
 		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
 	}
-	for taken, id := range g.GetChallengeRewardList() {
+	for taken, id := range g.GetPd().GetChallengeRewardList() {
 		challengeGroup := &proto.ChallengeGroup{
 			TakenStarsCountReward: taken,
 			GroupId:               id,
@@ -40,10 +41,10 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetCurChallengeScRsp{
-		CurChallenge: g.GetChallengeInfo(),
+		CurChallenge: g.GetPd().GetChallengeInfo(),
 		LineupList: []*proto.LineupInfo{
-			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_1)),
-			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_2)),
+			g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.Challenge_1)),
+			g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.Challenge_2)),
 		},
 	}
 	g.Send(cmd.GetCurChallengeScRsp, rsp)
@@ -56,30 +57,30 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
 	// 设置战斗状态
 	storyInfo := req.GetPlayerInfo()
 	if storyInfo == nil {
-		g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE)
+		g.GetPd().SetBattleStatus(spb.BattleType_Battle_CHALLENGE)
 	} else {
-		g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE_Story)
+		g.GetPd().SetBattleStatus(spb.BattleType_Battle_CHALLENGE_Story)
 	}
 
 	// 设置队伍
 	if req.FirstLineup == nil {
-		g.SetBattleStatus(spb.BattleType_Battle_NONE)
+		g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE)
 		g.Send(cmd.StartChallengeScRsp, &proto.StartChallengeScRsp{})
 		return
 	}
 	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
-	g.SetBattleLineUp(Challenge_1, req.FirstLineup)
+	g.SetBattleLineUp(model.Challenge_1, req.FirstLineup)
 	if req.SecondLineup != nil {
-		g.SetBattleLineUp(Challenge_2, req.SecondLineup)
+		g.SetBattleLineUp(model.Challenge_2, req.SecondLineup)
 	}
 	// 设置当前战斗的忘却之庭
-	g.SetCurChallenge(req.ChallengeId, storyInfo)
+	g.GetPd().SetCurChallenge(req.ChallengeId, storyInfo)
 	rsp := &proto.StartChallengeScRsp{
-		CurChallenge: g.GetChallengeInfo(),
+		CurChallenge: g.GetPd().GetChallengeInfo(),
 		Scene:        g.GetChallengeScene(),
 		LineupList: []*proto.LineupInfo{
-			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_1)),
-			g.GetLineUpPb(g.GetBattleLineUpById(Challenge_2)),
+			g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.Challenge_1)),
+			g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.Challenge_2)),
 		},
 	}
 
@@ -89,7 +90,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
 // 忘却之庭战斗退出/结束
 
 func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
-	curChallenge := g.GetCurChallenge()
+	curChallenge := g.GetPd().GetCurChallenge()
 	if curChallenge == nil {
 		return
 	}
@@ -99,86 +100,89 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
 	g.ChallengeSettleNotify()
 	g.Send(cmd.LeaveChallengeScRsp, nil)
 
-	g.EnterSceneByServerScNotify(g.GetCurEntryId(), 0, 0, 0)
+	g.EnterSceneByServerScNotify(g.GetPd().GetCurEntryId(), 0, 0, 0)
 	// 设置战斗状态为空
-	g.SetBattleStatus(spb.BattleType_Battle_NONE)
+	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE)
 	// 清空忘却之庭
-	g.NewCurChallenge()
+	g.GetPd().NewCurChallenge()
 }
 
 // 忘却之庭世界战斗结算事件
 
 func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
-	db := g.GetCurChallenge()
+	db := g.GetPd().GetCurChallenge()
 	if db == nil {
 		return
 	}
 	stt := req.GetStt()
 	if stt != nil {
-		g.SetCurChallengeRoundCount(req.Stt.GetRoundCnt())  // 更新已使用回合数
-		g.SetCurChallengeScore(req.Stt.GetChallengeScore()) // 更新分数
+		g.GetPd().SetCurChallengeRoundCount(req.Stt.GetRoundCnt())  // 更新已使用回合数
+		g.GetPd().SetCurChallengeScore(req.Stt.GetChallengeScore()) // 更新分数
 	}
 	switch req.EndStatus {
 	case proto.BattleEndStatus_BATTLE_END_NONE:
 		return
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 战斗失败
-		if !g.ChallengeBattleEndLose() {
+		if !g.GetPd().ChallengeBattleEndLose() {
+			if !db.IsBoos {
+				g.ChallengeSettleNotify()
+			}
 			return
 		}
 	case proto.BattleEndStatus_BATTLE_END_QUIT: // 退出战斗
 		return
 	}
-	g.AddCurChallengeKillMonster(1) // TODO 默认一次战斗一个怪物
+	g.GetPd().AddCurChallengeKillMonster(1) // TODO 默认一次战斗一个怪物
 	// 场景上是否还有未处理敌人
-	if g.GetCurChallengeMonsterNum() > g.GetCurChallengeKillMonster() {
+	if g.GetPd().GetCurChallengeMonsterNum() > g.GetPd().GetCurChallengeKillMonster() {
 		return // 还有就不更新状态，继续进行
 	}
 	// 更新状态
-	g.SetCurChallengeKillMonster(0) // 切换关卡，标记为0
+	g.GetPd().SetCurChallengeKillMonster(0) // 切换关卡，标记为0
 	if db.IsBoos {
 		g.ChallengeBossPhaseSettleNotify(req.Stt.GetBattleTargetInfo())
 	}
 	// 回合处理
-	if g.IsNextChallenge() {
+	if g.GetPd().IsNextChallenge() {
 		// 还没结束
-		g.AddChallengeCurStage(1)
+		g.GetPd().AddChallengeCurStage(1)
 		// 添加怪物
 		g.ChallengeAddSceneGroupRefreshScNotify()
 		if !db.IsBoos {
 			// 添加角色
 			g.ChallengeAddAvatarSceneGroupRefreshScNotify()
 			// 更新新的队伍
-			g.SyncLineupNotify(g.GetBattleLineUpById(Challenge_2))
+			g.SyncLineupNotify(g.GetPd().GetBattleLineUpById(model.Challenge_2))
 		}
 	} else {
 		// 结算
-		g.ChallengeSettle()
+		g.GetPd().ChallengeSettle()
 		// 发送战斗胜利通知
 		if !db.IsBoos {
 			g.ChallengeSettleNotify()
 		}
 		// 将战斗结果储存到数据库
-		g.UpdateChallengeList(db)
+		g.GetPd().UpdateChallengeList(db)
 		// 更改状态
-		g.SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_FINISH)
+		g.GetPd().SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_FINISH)
 	}
 }
 
 func (g *GamePlayer) ChallengeSettleNotify() {
-	db := g.GetCurChallenge()
+	db := g.GetPd().GetCurChallenge()
 	notify := &proto.ChallengeSettleNotify{
-		Star:           db.Stars,               // 得分
-		Reward:         g.GetChallengeReward(), // 奖励
-		ChallengeId:    db.ChallengeId,         // 关卡id
-		IsWin:          db.IsWin,               // 是否赢
-		ScoreTwo:       db.ScoreTwo,            // 二层挑战得分
-		ChallengeScore: db.ScoreOne,            // 一层挑战得分
+		Star:           db.Stars,                       // 得分
+		Reward:         g.GetPd().GetChallengeReward(), // 奖励
+		ChallengeId:    db.ChallengeId,                 // 关卡id
+		IsWin:          db.IsWin,                       // 是否赢
+		ScoreTwo:       db.ScoreTwo,                    // 二层挑战得分
+		ChallengeScore: db.ScoreOne,                    // 一层挑战得分
 	}
 	g.Send(cmd.ChallengeSettleNotify, notify)
 }
 
 func (g *GamePlayer) ChallengeBossPhaseSettleNotify(targeList map[uint32]*proto.BattleTargetList) {
-	db := g.GetCurChallenge()
+	db := g.GetPd().GetCurChallenge()
 	notify := &proto.ChallengeBossPhaseSettleNotify{
 		IsRemainingAction: true,
 		Star:              7,
@@ -193,9 +197,9 @@ func (g *GamePlayer) ChallengeBossPhaseSettleNotify(targeList map[uint32]*proto.
 }
 
 func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
-	curChallenge := g.GetCurChallenge()
-	mazeGroupID := g.GetChallengesMazeGroupID()
-	lineUp := g.GetChallengesLineUp()
+	curChallenge := g.GetPd().GetCurChallenge()
+	mazeGroupID := g.GetPd().GetChallengesMazeGroupID()
+	lineUp := g.GetPd().GetChallengesLineUp()
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
 	if challengeMazeConfig == nil {
 		return
@@ -208,7 +212,7 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 	if foorMap == nil {
 		return
 	}
-	pos, rot := g.GetChallengesAnchor(foorMap.AnchorList)
+	pos, rot := g.GetPd().GetChallengesAnchor(foorMap.AnchorList)
 	if pos == nil || rot == nil {
 		return
 	}
@@ -217,7 +221,7 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
-		RefreshEntity: g.GetAddAvatarSceneEntityRefreshInfo(lineUp, pos, rot),
+		RefreshEntity: g.GetPd().GetAddAvatarSceneEntityRefreshInfo(lineUp, pos, rot),
 	}
 	notify.GroupRefreshList = append(notify.GroupRefreshList, sceneGroupRefreshInfo)
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
@@ -235,11 +239,11 @@ func (g *GamePlayer) ChallengeAddAvatarSceneGroupRefreshScNotify() {
 }
 
 func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
-	curChallenge := g.GetCurChallenge()
-	mazeGroupID := g.GetChallengesMazeGroupID()
-	configList := g.GetChallengesConfigList()
-	eventIDList := g.GetChallengesEventIDList()
-	npcMonsterIDList := g.GetChallengesNpcMonsterIDList()
+	curChallenge := g.GetPd().GetCurChallenge()
+	mazeGroupID := g.GetPd().GetChallengesMazeGroupID()
+	configList := g.GetPd().GetChallengesConfigList()
+	eventIDList := g.GetPd().GetChallengesEventIDList()
+	npcMonsterIDList := g.GetPd().GetChallengesNpcMonsterIDList()
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
 	if challengeMazeConfig == nil {
 		return
@@ -273,7 +277,7 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 			if monster.ID != config {
 				continue
 			}
-			entityId := g.GetNextGameObjectGuid()
+			entityId := g.GetPd().GetNextGameObjectGuid()
 			monsterPos := &proto.Vector{
 				X: int32(monster.PosX * 1000),
 				Y: int32(monster.PosY * 1000),
@@ -304,8 +308,8 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 				},
 			}
 			// 添加怪物实体
-			g.AddEntity(mazeGroupID, &MonsterEntity{
-				Entity: Entity{
+			g.GetPd().AddEntity(mazeGroupID, &model.MonsterEntity{
+				Entity: model.Entity{
 					EntityId: entityId,
 					GroupId:  mazeGroupID,
 					Pos:      monsterPos,
@@ -338,13 +342,13 @@ func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg pb.Message) {
 
 // 获取忘却之庭世界
 func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
-	curChallenge := g.GetCurChallenge()
-	leaderEntityId := g.GetNextGameObjectGuid()
-	lineUp := g.GetChallengesLineUp()
-	mazeGroupID := g.GetChallengesMazeGroupID()
-	configList := g.GetChallengesConfigList()
-	npcMonsterIDList := g.GetChallengesNpcMonsterIDList()
-	eventIDList := g.GetChallengesEventIDList()
+	curChallenge := g.GetPd().GetCurChallenge()
+	leaderEntityId := g.GetPd().GetNextGameObjectGuid()
+	lineUp := g.GetPd().GetChallengesLineUp()
+	mazeGroupID := g.GetPd().GetChallengesMazeGroupID()
+	configList := g.GetPd().GetChallengesConfigList()
+	npcMonsterIDList := g.GetPd().GetChallengesNpcMonsterIDList()
+	eventIDList := g.GetPd().GetChallengesEventIDList()
 	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
 	if challengeMazeConfig == nil {
 		return nil
@@ -357,7 +361,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	if foorMap == nil || lineUp == nil || len(npcMonsterIDList) != len(eventIDList) || len(eventIDList) != len(configList) {
 		return nil
 	}
-	pos, rot := g.GetChallengesAnchor(foorMap.AnchorList)
+	pos, rot := g.GetPd().GetChallengesAnchor(foorMap.AnchorList)
 	if pos == nil || rot == nil {
 		return nil
 	}
@@ -393,11 +397,11 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		})
 	}
 	// 添加自选buff
-	if g.GetCurChallengeBuffId() != 0 {
+	if g.GetPd().GetCurChallengeBuffId() != 0 {
 		scene.EnvBuffList = append(scene.EnvBuffList, &proto.BuffInfo{
 			Count:     4294967295,
 			LifeTime:  -1,
-			BuffId:    g.GetCurChallengeBuffId(),
+			BuffId:    g.GetPd().GetCurChallengeBuffId(),
 			AddTimeMs: uint64(time.Now().UnixMilli()),
 			Level:     1,
 		})
@@ -407,7 +411,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		GroupId:    0,
 		EntityList: make([]*proto.SceneEntityInfo, 0),
 	}
-	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
+	g.GetPd().GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
 	// 添加怪物实体
 	monsterEntityGroup := &proto.SceneEntityGroupInfo{
@@ -419,7 +423,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 			if monsterList.ID != config {
 				continue
 			}
-			entityId := g.GetNextGameObjectGuid()
+			entityId := g.GetPd().GetNextGameObjectGuid()
 			monsterPos := &proto.Vector{
 				X: int32(monsterList.PosX * 1000),
 				Y: int32(monsterList.PosY * 1000),
@@ -446,8 +450,8 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 				},
 			}
 			// 添加怪物实体
-			g.AddEntity(mazeGroupID, &MonsterEntity{
-				Entity: Entity{
+			g.GetPd().AddEntity(mazeGroupID, &model.MonsterEntity{
+				Entity: model.Entity{
 					EntityId: entityId,
 					GroupId:  mazeGroupID,
 					Pos:      monsterPos,

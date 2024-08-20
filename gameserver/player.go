@@ -96,7 +96,7 @@ func (s *GameServer) AddPlayerStatus(g *GamePlayer) error {
 		LoginRand:    0,
 		LoginTime:    time.Now().Unix(),
 		Uid:          g.p.Uid,
-		DataVersion:  g.p.GetDataVersion(),
+		DataVersion:  g.p.GetPd().GetDataVersion(),
 	}
 	value, err := pb.Marshal(bin)
 	if err != nil {

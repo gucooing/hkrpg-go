@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -20,19 +21,19 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
-	db := g.GetMaterialMap()
-	rsp.Stamina = db[Stamina] // 还有多久恢复下一个体力
+	db := g.GetPd().GetMaterialMap()
+	rsp.Stamina = db[model.Stamina] // 还有多久恢复下一个体力
 	rsp.ServerTimestampMs = uint64(time.Now().UnixMilli())
 	rsp.CurTimezone = 4 // 时区
 	rsp.BasicInfo = &proto.PlayerBasicInfo{
-		Nickname:   g.GetNickname(),
-		Level:      g.GetLevel(),
-		WorldLevel: g.GetWorldLevel(),
-		Hcoin:      db[Hcoin],
-		Scoin:      db[Scoin],
-		Mcoin:      db[Mcoin],
-		Stamina:    db[Stamina],
-		Exp:        db[Exp],
+		Nickname:   g.GetPd().GetNickname(),
+		Level:      g.GetPd().GetLevel(),
+		WorldLevel: g.GetPd().GetWorldLevel(),
+		Hcoin:      db[model.Hcoin],
+		Scoin:      db[model.Scoin],
+		Mcoin:      db[model.Mcoin],
+		Stamina:    db[model.Stamina],
+		Exp:        db[model.Exp],
 	}
 	g.LoginReady() // 登录准备工作
 	g.Send(cmd.PlayerLoginScRsp, rsp)
@@ -118,16 +119,15 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 2.任务检查
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
-	g.SetBattleStatus(spb.BattleType_Battle_NONE) // 取消掉战斗状态
+	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE) // 取消掉战斗状态
 	if !g.IsPE {
-		g.InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
+		g.GetPd().InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
 	}
 	// db := g.GetBasicBin()
 	// db.ChangeStory = NewChangeStory()
-	// g.AddMainMission([]uint32{1030302})
+	// g.AddMainMission([]uint32{2022003})
 	// g.DelMainMission([]uint32{2022003, 2022008})
 	// g.MissionAddChangeStoryLine([]uint32{0, 1020203, 1, 1})
 	// g.SetFloorSavedData(1020101, "FSV_SwordTrainingActivityEntry", 1)
-	g.LoginReadyMission()    // 任务检查
-	g.CheckUnlockMultiPath() // 命途解锁检查
+	g.LoginReadyMission() // 任务检查
 }

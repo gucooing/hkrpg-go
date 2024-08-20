@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"math/rand"
@@ -27,7 +27,7 @@ func newRogueTourn() *spb.RogueTourn {
 	return db
 }
 
-func (g *GamePlayer) GetRogueTourn() *spb.RogueTourn {
+func (g *PlayerData) GetRogueTourn() *spb.RogueTourn {
 	db := g.GetBattle()
 	if db.RogueTourn == nil {
 		db.RogueTourn = newRogueTourn()
@@ -35,12 +35,12 @@ func (g *GamePlayer) GetRogueTourn() *spb.RogueTourn {
 	return db.RogueTourn
 }
 
-func (g *GamePlayer) GetCurRogueTourn() *spb.CurRogueTourn {
+func (g *PlayerData) GetCurRogueTourn() *spb.CurRogueTourn {
 	db := g.GetRogueTourn()
 	return db.CurRogueTourn
 }
 
-func (g *GamePlayer) NewCurRogueTourn(areaId uint32) {
+func (g *PlayerData) NewCurRogueTourn(areaId uint32) {
 	db := g.GetRogueTourn()
 	curRogueTourn := new(spb.CurRogueTourn)
 	db.CurRogueTourn = curRogueTourn
@@ -84,7 +84,7 @@ func newRogueTournRoomInfoList(num int) map[uint32]*spb.RogueTournRoomInfo {
 	return list
 }
 
-func (g *GamePlayer) GetCurLayerInfo() *spb.LayerInfo {
+func (g *PlayerData) GetCurLayerInfo() *spb.LayerInfo {
 	db := g.GetCurRogueTourn()
 	if db == nil {
 		return nil
@@ -92,7 +92,7 @@ func (g *GamePlayer) GetCurLayerInfo() *spb.LayerInfo {
 	return db.CurLayerList[db.CurLayerIndex]
 }
 
-func (g *GamePlayer) GetCurRogueTournRoom() *spb.RogueTournRoomInfo {
+func (g *PlayerData) GetCurRogueTournRoom() *spb.RogueTournRoomInfo {
 	db := g.GetCurLayerInfo()
 	if db == nil {
 		return nil
@@ -100,7 +100,7 @@ func (g *GamePlayer) GetCurRogueTournRoom() *spb.RogueTournRoomInfo {
 	return db.RogueTournRoomList[db.CurRoomIndex]
 }
 
-func (g *GamePlayer) GetCurRogueTournFormula() []uint32 {
+func (g *PlayerData) GetCurRogueTournFormula() []uint32 {
 	db := g.GetCurRogueTourn()
 	if db == nil {
 		return make([]uint32, 0)
@@ -111,7 +111,7 @@ func (g *GamePlayer) GetCurRogueTournFormula() []uint32 {
 	return db.FormulaList
 }
 
-func (g *GamePlayer) AddCurRogueTournFormula(id uint32) {
+func (g *PlayerData) AddCurRogueTournFormula(id uint32) {
 	db := g.GetCurRogueTourn()
 	if db == nil {
 		return
@@ -122,11 +122,11 @@ func (g *GamePlayer) AddCurRogueTournFormula(id uint32) {
 	db.FormulaList = append(db.FormulaList, id)
 }
 
-func (g *GamePlayer) UpdateRogueTournEnterRoom(curRoomIndex, nextTypeId uint32) {
+func (g *PlayerData) UpdateRogueTournEnterRoom(curRoomIndex, nextTypeId uint32) (uint32, uint32) {
 	db := g.GetCurRogueTourn()
 	curLayer := g.GetCurLayerInfo()
 	if db == nil {
-		return
+		return 0, 0
 	}
 	curLayer.RogueTournRoomList[curLayer.CurRoomIndex].Status = spb.RogueTournRoomStatus_ROGUE_TOURN_ROOM_STATUS_FINISH
 	if curLayer.LayerId == 1101 && curRoomIndex == 4 || // 这两个情况是进入下一关
@@ -141,10 +141,10 @@ func (g *GamePlayer) UpdateRogueTournEnterRoom(curRoomIndex, nextTypeId uint32) 
 	newCurLayer.RogueTournRoomList[newCurLayer.CurRoomIndex].RoomId = gdconf.GetRogueTournRoomGenaByType(nextTypeId).RogueRoomID
 	newCurLayer.RogueTournRoomList[newCurLayer.CurRoomIndex].Status = spb.RogueTournRoomStatus_ROGUE_TOURN_ROOM_STATUS_PROCESSING
 
-	g.RogueTournLevelInfoUpdateScNotify(newCurLayer.LayerIndex, newCurLayer.CurRoomIndex)
+	return newCurLayer.LayerIndex, newCurLayer.CurRoomIndex
 }
 
-func (g *GamePlayer) GetNextRogueTournRoomType(curRoomIndex, curTypeId uint32) uint32 {
+func (g *PlayerData) GetNextRogueTournRoomType(curRoomIndex, curTypeId uint32) uint32 {
 	switch curTypeId {
 	case 1101:
 		if curRoomIndex == 3 {
@@ -169,7 +169,7 @@ func (g *GamePlayer) GetNextRogueTournRoomType(curRoomIndex, curTypeId uint32) u
 
 /****************************************************功能***************************************************/
 
-func (g *GamePlayer) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
+func (g *PlayerData) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
 	info := &proto.RogueTournSeasonInfo{
 		SubTournId:  1,
 		MainTournId: 1,
@@ -177,7 +177,7 @@ func (g *GamePlayer) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
 	return info
 }
 
-func (g *GamePlayer) GetInspirationCircuitInfo() *proto.RogueTournPermanentTalentInfo {
+func (g *PlayerData) GetInspirationCircuitInfo() *proto.RogueTournPermanentTalentInfo {
 	info := &proto.RogueTournPermanentTalentInfo{
 		TalentInfoList:     &proto.RogueTalentInfoList{TalentInfo: make([]*proto.RogueTalentInfo, 0)},
 		TournTalentCoinNum: g.GetMaterialById(Inspiration),
@@ -196,7 +196,7 @@ func (g *GamePlayer) GetInspirationCircuitInfo() *proto.RogueTournPermanentTalen
 	return info
 }
 
-func (g *GamePlayer) GetExtraScoreInfo() *proto.ExtraScoreInfo {
+func (g *PlayerData) GetExtraScoreInfo() *proto.ExtraScoreInfo {
 	conf := database.GetCurRogue()
 	if conf == nil {
 		return nil
@@ -210,7 +210,7 @@ func (g *GamePlayer) GetExtraScoreInfo() *proto.ExtraScoreInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournExpInfo() *proto.RogueTournExpInfo {
+func (g *PlayerData) GetRogueTournExpInfo() *proto.RogueTournExpInfo {
 	db := g.GetRogueTourn()
 	info := &proto.RogueTournExpInfo{
 		TakenLevelRewards: db.TakenLevelRewards,
@@ -220,7 +220,7 @@ func (g *GamePlayer) GetRogueTournExpInfo() *proto.RogueTournExpInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
+func (g *PlayerData) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
 	info := &proto.RogueTournHandbookInfo{
 		HandbookFormulaList:    make([]uint32, 0),
 		HandbookBuffList:       make([]uint32, 0),
@@ -236,7 +236,7 @@ func (g *GamePlayer) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournDifficultyInfo() []*proto.RogueTournDifficultyInfo {
+func (g *PlayerData) GetRogueTournDifficultyInfo() []*proto.RogueTournDifficultyInfo {
 	info := make([]*proto.RogueTournDifficultyInfo, 0)
 	for _, id := range []uint32{10101, 10102, 10103, 10104, 10105, 10106} {
 		info = append(info, &proto.RogueTournDifficultyInfo{
@@ -248,7 +248,7 @@ func (g *GamePlayer) GetRogueTournDifficultyInfo() []*proto.RogueTournDifficulty
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournAreaInfo() []*proto.RogueTournAreaInfo {
+func (g *PlayerData) GetRogueTournAreaInfo() []*proto.RogueTournAreaInfo {
 	info := make([]*proto.RogueTournAreaInfo, 0)
 	for _, id := range []uint32{101, 201, 202, 203, 204, 205, 1011, 1012, 1013, 1014, 1015} {
 		info = append(info, &proto.RogueTournAreaInfo{
@@ -262,7 +262,7 @@ func (g *GamePlayer) GetRogueTournAreaInfo() []*proto.RogueTournAreaInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
+func (g *PlayerData) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 	curRogueTourn := g.GetCurRogueTourn()
 	if curRogueTourn == nil {
 		return nil
@@ -300,7 +300,7 @@ func (g *GamePlayer) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournCurAreaInfo() *proto.RogueTournCurAreaInfo {
+func (g *PlayerData) GetRogueTournCurAreaInfo() *proto.RogueTournCurAreaInfo {
 	curRogueTourn := g.GetCurRogueTourn()
 	if curRogueTourn == nil {
 		return nil
@@ -312,7 +312,7 @@ func (g *GamePlayer) GetRogueTournCurAreaInfo() *proto.RogueTournCurAreaInfo {
 	return info
 }
 
-func (g *GamePlayer) GetKeywordUnlockInfo() *proto.KeywordUnlockValue {
+func (g *PlayerData) GetKeywordUnlockInfo() *proto.KeywordUnlockValue {
 	info := &proto.KeywordUnlockValue{KeywordUnlockMap: map[uint32]bool{
 		1615010: false,
 		1615110: false,
@@ -322,7 +322,7 @@ func (g *GamePlayer) GetKeywordUnlockInfo() *proto.KeywordUnlockValue {
 	return info
 }
 
-func (g *GamePlayer) GetChessRogueMiracleInfo() *proto.ChessRogueMiracleInfo {
+func (g *PlayerData) GetChessRogueMiracleInfo() *proto.ChessRogueMiracleInfo {
 	info := &proto.ChessRogueMiracleInfo{
 		ChessRogueMiracleInfo: &proto.ChessRogueMiracle{
 			MiracleList: make([]*proto.GameRogueMiracle, 0),
@@ -332,7 +332,7 @@ func (g *GamePlayer) GetChessRogueMiracleInfo() *proto.ChessRogueMiracleInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournLayerInfo() *proto.RogueTournLevelInfo {
+func (g *PlayerData) GetRogueTournLayerInfo() *proto.RogueTournLevelInfo {
 	curRogueTourn := g.GetCurRogueTourn()
 	curLayer := g.GetCurLayerInfo()
 	if curRogueTourn == nil || curLayer == nil {
@@ -365,7 +365,7 @@ func (g *GamePlayer) GetRogueTournLayerInfo() *proto.RogueTournLevelInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournBuffInfo() *proto.ChessRogueBuffInfo {
+func (g *PlayerData) GetRogueTournBuffInfo() *proto.ChessRogueBuffInfo {
 	info := &proto.ChessRogueBuffInfo{
 		ChessRogueBuffInfo: &proto.ChessRogueBuff{
 			BuffList: make([]*proto.RogueCommonBuff, 0),
@@ -374,7 +374,7 @@ func (g *GamePlayer) GetRogueTournBuffInfo() *proto.ChessRogueBuffInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
+func (g *PlayerData) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
 	db := g.GetCurRogueTournFormula()
 	info := &proto.RogueTournFormulaInfo{
 		FormulaTypeValue: &proto.FormulaTypeValue{
@@ -405,7 +405,7 @@ func (g *GamePlayer) GetRogueTournFormulaInfo() *proto.RogueTournFormulaInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueMapRotateInfo(roomId uint32) *proto.RogueMapRotateInfo {
+func (g *PlayerData) GetRogueMapRotateInfo(roomId uint32) *proto.RogueMapRotateInfo {
 	info := &proto.RogueMapRotateInfo{
 		RotaterDataList: make([]*proto.RotaterData, 0),
 		ChargerInfo:     make([]*proto.ChargerInfo, 0),
@@ -432,7 +432,7 @@ func (g *GamePlayer) GetRogueMapRotateInfo(roomId uint32) *proto.RogueMapRotateI
 	return info
 }
 
-func (g *GamePlayer) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
+func (g *PlayerData) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 	roomConf := gdconf.GetRogueTournRoomGenById(roomId)
 	if roomConf == nil {
 		return nil
@@ -514,7 +514,7 @@ func (g *GamePlayer) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 	return scene
 }
 
-func (g *GamePlayer) GetRogueTournNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, npcMonster map[uint32]*gdconf.RogueTournMonsterInfo) {
+func (g *PlayerData) GetRogueTournNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, npcMonster map[uint32]*gdconf.RogueTournMonsterInfo) {
 	for _, monsterList := range sceneGroup.MonsterList {
 		info := npcMonster[monsterList.ID]
 		if info == nil {
@@ -572,7 +572,7 @@ func (g *GamePlayer) GetRogueTournNPCMonsterByID(entityGroupList *proto.SceneEnt
 	}
 }
 
-func (g *GamePlayer) GetRogueTournPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) {
+func (g *PlayerData) GetRogueTournPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{

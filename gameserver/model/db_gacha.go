@@ -1,7 +1,6 @@
-package player
+package model
 
 import (
-	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
@@ -11,7 +10,7 @@ func NewGacha() *spb.Gacha {
 	}
 }
 
-func (g *GamePlayer) GetGacha() *spb.Gacha {
+func (g *PlayerData) GetGacha() *spb.Gacha {
 	db := g.GetBasicBin()
 	if db.Gacha == nil {
 		db.Gacha = NewGacha()
@@ -19,7 +18,7 @@ func (g *GamePlayer) GetGacha() *spb.Gacha {
 	return db.Gacha
 }
 
-func (g *GamePlayer) GetDbGacha(gachaId uint32) *spb.GachaNum {
+func (g *PlayerData) GetDbGacha(gachaId uint32) *spb.GachaNum {
 	gaCha := g.GetGacha()
 	if gaCha.GachaMap == nil {
 		gaCha.GachaMap = make(map[uint32]*spb.GachaNum)
@@ -35,7 +34,7 @@ func (g *GamePlayer) GetDbGacha(gachaId uint32) *spb.GachaNum {
 	return gaCha.GachaMap[gachaId]
 }
 
-func (g *GamePlayer) AddGachaItem(id uint32, allSync *AllPlayerSync) (bool, bool) {
+func (g *PlayerData) AddGachaItem(id uint32, allSync *AllPlayerSync) (bool, bool) {
 	var pileItem []*Material
 	if id >= 20000 {
 		uniqueId := g.AddEquipment(id)
@@ -57,7 +56,7 @@ func (g *GamePlayer) AddGachaItem(id uint32, allSync *AllPlayerSync) (bool, bool
 			return true, false
 		}
 		allSync.AvatarList = append(allSync.AvatarList, id)
-		g.AddAvatar(id, proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA)
+		g.AddAvatar(id)
 		return true, true
 	}
 }

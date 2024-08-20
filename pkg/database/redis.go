@@ -129,7 +129,7 @@ func getPlayerBasicRedis(rc *redis.Client, uid uint32) ([]byte, bool) {
 /**********************game*************************/
 
 // 获取玩家好友申请信息
-func GetPlayerFriend(rc *redis.Client, uid uint32) ([]byte, bool) {
+func getPlayerFriendRedis(rc *redis.Client, uid uint32) ([]byte, bool) {
 	key := "player_friend:" + strconv.Itoa(int(uid))
 	bin, err := rc.Get(ctx, key).Bytes()
 	if err == nil {
@@ -152,7 +152,7 @@ func SetPlayerFriend(rc *redis.Client, uid uint32, value []byte) bool {
 }
 
 // 获取玩家待加入数据库好友信息
-func GetAcceptApplyFriend(rc *redis.Client, uid uint32) ([]byte, bool) {
+func getAcceptApplyFriendRedis(rc *redis.Client, uid uint32) ([]byte, bool) {
 	key := "accept_apply_friend:" + strconv.Itoa(int(uid))
 	bin, err := rc.Get(ctx, key).Bytes()
 	if err == nil {
@@ -175,7 +175,7 @@ func SetAcceptApplyFriend(rc *redis.Client, uid uint32, value []byte) bool {
 }
 
 // 删除玩家待加入数据库好友信息
-func DelAcceptApplyFriend(rc *redis.Client, uid uint32) {
+func delAcceptApplyFriendRedis(rc *redis.Client, uid uint32) {
 	key := "accept_apply_friend:" + strconv.Itoa(int(uid))
 	rc.Del(ctx, key)
 }

@@ -69,7 +69,10 @@ func NewGameStore(mysqlList map[string]constant.MysqlConf, redisList map[string]
 	GSS = s
 	mysqlPlayerDataConf := mysqlList["player"]
 	s.PlayerDataMysql = NewMysql(mysqlPlayerDataConf.Dsn)
-	s.PlayerDataMysql.AutoMigrate(&constant.PlayerData{}, &constant.BlockData{})
+	s.PlayerDataMysql.AutoMigrate(&constant.PlayerData{},
+		&constant.BlockData{},
+		&constant.ApplyFriend{},
+		&constant.AcceptApplyFriend{})
 	mysqlServerConf := mysqlList["conf"]
 	s.ServerConf = NewMysql(mysqlServerConf.Dsn)
 	s.ServerConf.AutoMigrate(&constant.Mail{}, &constant.RogueConf{}, &constant.ScheduleConf{})

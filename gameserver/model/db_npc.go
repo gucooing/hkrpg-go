@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"time"
@@ -11,7 +11,7 @@ func NewMessageGroup() map[uint32]*spb.MessageGroup {
 	return make(map[uint32]*spb.MessageGroup)
 }
 
-func (g *GamePlayer) GetMessageGroup() map[uint32]*spb.MessageGroup {
+func (g *PlayerData) GetMessageGroup() map[uint32]*spb.MessageGroup {
 	db := g.GetBasicBin()
 	if db.MessageGroupList == nil {
 		db.MessageGroupList = NewMessageGroup()
@@ -19,17 +19,17 @@ func (g *GamePlayer) GetMessageGroup() map[uint32]*spb.MessageGroup {
 	return db.MessageGroupList
 }
 
-func (g *GamePlayer) GetMessageGroupByContactId(contactId uint32) *spb.MessageGroup {
+func (g *PlayerData) GetMessageGroupByContactId(contactId uint32) *spb.MessageGroup {
 	db := g.GetMessageGroup()
 	return db[contactId]
 }
 
-func (g *GamePlayer) AddMessageGroup(sectionId uint32) {
+func (g *PlayerData) AddMessageGroup(sectionId uint32) uint32 {
 	db := g.GetMessageGroup()
 	confMg := gdconf.GetMessageGroupConfigBySectionID(sectionId)
 	confMs := gdconf.GetMessageSectionConfig(sectionId)
 	if confMg == nil || confMs == nil {
-		return
+		return 0
 	}
 	contactId := confMg.MessageContactsID
 	db[contactId] = &spb.MessageGroup{
@@ -45,18 +45,17 @@ func (g *GamePlayer) AddMessageGroup(sectionId uint32) {
 			Status: spb.MessageSectionStatus_MESSAGE_SECTION_DOING,
 		}
 	}
-
-	g.MessageGroupPlayerSyncScNotify(contactId)
+	return contactId
 }
 
-func (g *GamePlayer) FinishMessageGroup(sectionId uint32) {
+func (g *PlayerData) FinishMessageGroup(sectionId uint32) uint32 {
 	conf := gdconf.GetMessageGroupConfigBySectionID(sectionId)
 	if conf == nil {
-		return
+		return 0
 	}
 	db := g.GetMessageGroupByContactId(conf.MessageContactsID)
 	if db == nil {
-		return
+		return 0
 	}
 	if db.MessageSectionList[sectionId] != nil {
 		db.MessageSectionList[sectionId].Status = spb.MessageSectionStatus_MESSAGE_SECTION_FINISH
@@ -70,6 +69,5 @@ func (g *GamePlayer) FinishMessageGroup(sectionId uint32) {
 	if isFinish {
 		db.Status = spb.MessageGroupStatus_MESSAGE_GROUP_FINISH
 	}
-	g.MessagePerformSectionFinish(sectionId)
-	g.MessageGroupPlayerSyncScNotify(db.ContactId)
+	return db.ContactId
 }

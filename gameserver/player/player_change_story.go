@@ -13,7 +13,7 @@ func (g *GamePlayer) StoryLineInfoScNotify() {
 		UnfinishedStoryLineIdList: []uint32{0},
 	}
 
-	if db := g.GetCurChangeStoryInfo(); db != nil {
+	if db := g.GetPd().GetCurChangeStoryInfo(); db != nil {
 		conf := gdconf.GetStroyLineTrialAvatarData(db.ChangeStoryId)
 		if conf != nil {
 			notify.CurStoryLineId = db.ChangeStoryId
@@ -21,8 +21,9 @@ func (g *GamePlayer) StoryLineInfoScNotify() {
 		}
 	}
 
-	for _, changeStory := range g.GetAllChangeStoryInfo() {
-		notify.UnfinishedStoryLineIdList = append(notify.UnfinishedStoryLineIdList, changeStory.ChangeStoryId)
+	for _, changeStory := range g.GetPd().GetAllChangeStoryInfo() {
+		notify.UnfinishedStoryLineIdList = append(notify.UnfinishedStoryLineIdList,
+			changeStory.ChangeStoryId)
 	}
 
 	g.Send(cmd.StoryLineInfoScNotify, notify)
@@ -33,7 +34,7 @@ func (g *GamePlayer) ChangeStoryLineFinishScNotify() {
 		CurStoryLineId: 0,
 		Action:         0,
 	}
-	if db := g.GetCurChangeStoryInfo(); db != nil {
+	if db := g.GetPd().GetCurChangeStoryInfo(); db != nil {
 		notify.CurStoryLineId = db.ChangeStoryId
 		notify.Action = proto.ChangeStoryLineAction_ChangeStoryLineAction_Client
 	} else {

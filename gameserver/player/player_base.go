@@ -3,6 +3,7 @@ package player
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -11,11 +12,11 @@ import (
 )
 
 func (g *GamePlayer) StaminaInfoScNotify() {
-	db := g.GetMaterialMap()
+	db := g.GetPd().GetMaterialMap()
 	notify := &proto.StaminaInfoScNotify{
 		NextRecoverTime: 0,
-		Stamina:         db[Stamina],
-		ReserveStamina:  db[RStamina],
+		Stamina:         db[model.Stamina],
+		ReserveStamina:  db[model.RStamina],
 	}
 	g.Send(cmd.StaminaInfoScNotify, notify)
 }
@@ -24,9 +25,9 @@ func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetBasicInfoScRsp)
 	rsp.CurDay = 1
 	rsp.NextRecoverTime = time.Now().Unix() + 94
-	rsp.GameplayBirthday = g.BasicBin.Birthday
+	rsp.GameplayBirthday = g.GetPd().GetBasicBin().Birthday
 	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
-	rsp.Gender = uint32(g.GetAvatar().Gender)
+	rsp.Gender = uint32(g.GetPd().GetAvatar().Gender)
 	// rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
 	// 	B1:                true,
 	// 	B2:                true,
@@ -50,7 +51,7 @@ func (g *GamePlayer) HandleGetArchiveDataCsReq(payloadMsg pb.Message) {
 		RelicList:                     make([]*proto.RelicList, 0),
 	}
 
-	for _, avatar := range g.GetAvatarList() {
+	for _, avatar := range g.GetPd().GetAvatarList() {
 		archiveData.ArchiveAvatarIdList = append(archiveData.ArchiveAvatarIdList, avatar.CurPath)
 	}
 
@@ -85,20 +86,34 @@ func (g *GamePlayer) GetUpdatedArchiveDataCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetPlayerBoardDataScRsp{
-		CurrentHeadIconId:    g.GetHeadIcon(),
+		CurrentHeadIconId:    g.GetPd().GetHeadIcon(),
 		UnlockedHeadIconList: make([]*proto.HeadIconData, 0),
-		Signature:            g.GetSignature(),
+		Signature:            g.GetPd().GetSignature(),
 		DisplayAvatarVec: &proto.DisplayAvatarVec{
 			DisplayAvatarList: make([]*proto.DisplayAvatarData, 0),
-			IsDisplay:         false,
+			IsDisplay:         true,
 		},
+		AssistAvatarIdList: make([]uint32, 0),
 	}
 
-	for _, avatar := range g.GetHeadIconList() {
+	// add UnlockedHeadIconList
+	for _, avatar := range g.GetPd().GetHeadIconList() {
 		headIcon := &proto.HeadIconData{
 			Id: avatar,
 		}
 		rsp.UnlockedHeadIconList = append(rsp.UnlockedHeadIconList, headIcon)
+	}
+	// add AssistAvatarIdList
+	for _, assistAvatarId := range g.GetPd().GetAssistAvatarList() {
+		rsp.AssistAvatarIdList = append(rsp.AssistAvatarIdList, assistAvatarId)
+	}
+	// add DisplayAvatarList
+	for pos, display := range g.GetPd().GetDisplayAvatarlist() {
+		rsp.DisplayAvatarVec.DisplayAvatarList = append(rsp.DisplayAvatarVec.DisplayAvatarList,
+			&proto.DisplayAvatarData{
+				AvatarId: display,
+				Pos:      pos,
+			})
 	}
 
 	g.Send(cmd.GetPlayerBoardDataScRsp, rsp)
@@ -107,7 +122,7 @@ func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) SetHeadIconCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetHeadIconCsReq)
 
-	g.BasicBin.HeadImageAvatarId = req.Id
+	g.GetPd().GetBasicBin().HeadImageAvatarId = req.Id
 
 	rsp := &proto.SetHeadIconScRsp{
 		CurrentHeadIconId: req.Id,
@@ -137,10 +152,10 @@ func (g *GamePlayer) SetAvatarPathCsReq(payloadMsg pb.Message) {
 	}
 	conf := gdconf.GetMultiplePathAvatarConfig(uint32(req.AvatarId))
 	if conf != nil {
-		db := g.GetAvatarById(conf.BaseAvatarID)
+		db := g.GetPd().GetAvatarById(conf.BaseAvatarID)
 		if db != nil {
 			db.CurPath = uint32(req.AvatarId)
-			g.AllPlayerSyncScNotify(&AllPlayerSync{AvatarList: []uint32{conf.BaseAvatarID}})
+			g.AllPlayerSyncScNotify(&model.AllPlayerSync{AvatarList: []uint32{conf.BaseAvatarID}})
 		}
 	}
 	g.Send(cmd.SetAvatarPathScRsp, rsp)
@@ -212,7 +227,7 @@ func (g *GamePlayer) GetTutorialCsReq(payloadMsg pb.Message) {
 		TutorialList: make([]*proto.Tutorial, 0),
 		Retcode:      0,
 	}
-	for _, db := range g.GetTutorial() {
+	for _, db := range g.GetPd().GetTutorial() {
 		rsp.TutorialList = append(rsp.TutorialList, &proto.Tutorial{
 			Id:     db.Id,
 			Status: proto.TutorialStatus(db.Status),
@@ -228,7 +243,7 @@ func (g *GamePlayer) GetTutorialGuideCsReq(payloadMsg pb.Message) {
 		TutorialGuideList: make([]*proto.TutorialGuide, 0),
 	}
 
-	for _, db := range g.GetTutorialGuide() {
+	for _, db := range g.GetPd().GetTutorialGuide() {
 		rsp.TutorialGuideList = append(rsp.TutorialGuideList, &proto.TutorialGuide{
 			Id:     db.Id,
 			Status: proto.TutorialStatus(db.Status),
@@ -236,13 +251,13 @@ func (g *GamePlayer) GetTutorialGuideCsReq(payloadMsg pb.Message) {
 	}
 
 	g.Send(cmd.GetTutorialGuideScRsp, rsp)
-	g.ClientDownloadDataScNotify()
+	// g.ClientDownloadDataScNotify()
 }
 
 func (g *GamePlayer) UnlockTutorialCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.UnlockTutorialCsReq)
 
-	g.UnlockTutorial(req.TutorialId)
+	g.GetPd().UnlockTutorial(req.TutorialId)
 	rsp := &proto.UnlockTutorialScRsp{
 		Retcode: 0,
 		Tutorial: &proto.Tutorial{
@@ -256,7 +271,7 @@ func (g *GamePlayer) UnlockTutorialCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) UnlockTutorialGuideCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.UnlockTutorialGuideCsReq)
 
-	g.UnlockTutorialGuide(req.GroupId)
+	g.GetPd().UnlockTutorialGuide(req.GroupId)
 	rsp := &proto.UnlockTutorialGuideScRsp{
 		Retcode: 0,
 		TutorialGuide: &proto.TutorialGuide{
@@ -270,7 +285,7 @@ func (g *GamePlayer) UnlockTutorialGuideCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) FinishTutorialCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishTutorialCsReq)
 
-	g.FinishTutorial(req.TutorialId)
+	g.GetPd().FinishTutorial(req.TutorialId)
 	rsp := &proto.FinishTutorialScRsp{
 		Retcode: 0,
 		Tutorial: &proto.Tutorial{
@@ -308,7 +323,7 @@ func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SetClientPausedCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.SetClientPausedScRsp)
-	dbOnl := g.GetOnlineData()
+	dbOnl := g.GetPd().GetOnlineData()
 	dbOnl.IsPaused = !dbOnl.IsPaused
 	rsp.Paused = dbOnl.IsPaused
 
@@ -342,8 +357,8 @@ func (g *GamePlayer) HandleGetPhoneDataCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SetNicknameCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetNicknameCsReq)
-	dbOnl := g.GetOnlineData()
-	dbBas := g.GetBasicBin()
+	dbOnl := g.GetPd().GetOnlineData()
+	dbBas := g.GetPd().GetBasicBin()
 
 	if dbOnl.IsNickName {
 		dbBas.Nickname = req.Nickname
@@ -357,7 +372,7 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetGameplayBirthdayCsReq)
-	dbBas := g.GetBasicBin()
+	dbBas := g.GetPd().GetBasicBin()
 	dbBas.Birthday = req.Birthday
 
 	rsp := &proto.SetGameplayBirthdayScRsp{Birthday: req.Birthday}
@@ -367,7 +382,7 @@ func (g *GamePlayer) SetGameplayBirthdayCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SetSignatureCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetSignatureCsReq)
-	dbBas := g.GetBasicBin()
+	dbBas := g.GetPd().GetBasicBin()
 	dbBas.Signature = req.Signature
 
 	rsp := &proto.SetSignatureScRsp{Signature: req.Signature}
@@ -435,18 +450,18 @@ func (g *GamePlayer) ContentPackageSyncDataScNotify() {
 
 func (g *GamePlayer) GetLevelRewardTakenListCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetLevelRewardTakenListScRsp{
-		LevelRewardTakenList: g.GetRewardTakenLevelList(),
+		LevelRewardTakenList: g.GetPd().GetRewardTakenLevelList(),
 	}
 	g.Send(cmd.GetLevelRewardTakenListScRsp, rsp)
 }
 
 func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetLevelRewardCsReq)
-	allSync := &AllPlayerSync{
+	allSync := &model.AllPlayerSync{
 		IsBasic:      true,
 		MaterialList: make([]uint32, 0),
 	}
-	pileItem := make([]*Material, 0)
+	pileItem := make([]*model.Material, 0)
 	rsp := &proto.GetLevelRewardScRsp{
 		Reward:  &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		Retcode: 0,
@@ -458,13 +473,12 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	pile, material, item := g.getRewardData(conf.LevelRewardID)
+	pile, _, item := g.GetPd().GetRewardData(conf.LevelRewardID)
 	pileItem = append(pileItem, pile...)
-	allSync.MaterialList = append(allSync.MaterialList, material...)
 	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
 
-	g.AddItem(pileItem)
-	g.AddRewardTakenLevelList(req.Level)
+	g.GetPd().AddItem(pileItem, allSync)
+	g.GetPd().AddRewardTakenLevelList(req.Level)
 	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.GetLevelRewardScRsp, rsp)
 }
@@ -472,16 +486,19 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) TakeBpRewardCsReq(payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.TakeBpRewardCsReq)
 	rsp := &proto.TakeBpRewardScRsp{
-		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: Hcoin, Num: 1000}}},
+		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: model.Hcoin, Num: 1000}}},
 		Retcode: 0,
 	}
-	g.AddItem([]*Material{{Tid: Hcoin, Num: 1000}})
-	g.AllPlayerSyncScNotify(&AllPlayerSync{IsBasic: true})
+	allSync := &model.AllPlayerSync{
+		IsBasic: true,
+	}
+	g.GetPd().AddItem([]*model.Material{{Tid: model.Hcoin, Num: 1000}}, allSync)
+	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.TakeBpRewardScRsp, rsp)
 }
 
 func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg pb.Message) {
-	allSync := &AllPlayerSync{
+	allSync := &model.AllPlayerSync{
 		IsBasic:       true,
 		AvatarList:    make([]uint32, 0),
 		MaterialList:  make([]uint32, 0),
@@ -490,7 +507,7 @@ func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg pb.Message) {
 	}
 	g.AllGive(allSync)
 	rsp := &proto.TakeAllRewardScRsp{
-		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: Mcoin, Num: 1000}}},
+		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: model.Mcoin, Num: 1000}}},
 		Retcode: 0,
 	}
 	g.AllPlayerSyncScNotify(allSync)
@@ -503,26 +520,30 @@ func (g *GamePlayer) ReserveStaminaExchangeCsReq(payloadMsg pb.Message) {
 		Num:     req.Num,
 		Retcode: 0,
 	}
-	if !g.DelMaterial([]*Material{{Tid: RStamina, Num: req.Num}}) {
+	if !g.GetPd().DelMaterial([]*model.Material{{Tid: model.RStamina, Num: req.Num}}) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 	}
-	g.AddItem([]*Material{{Tid: Stamina, Num: req.Num}})
+	allSync := &model.AllPlayerSync{
+		IsBasic: true,
+	}
+	g.GetPd().AddItem([]*model.Material{{Tid: model.Stamina, Num: req.Num}}, allSync)
 	g.StaminaInfoScNotify()
+	g.AllPlayerSyncScNotify(allSync)
 
 	g.Send(cmd.ReserveStaminaExchangeScRsp, rsp)
 }
 
 func (g *GamePlayer) DailyTaskNotify() {
-	dailyDb := g.GetCurDay(alg.GetDaysSinceBaseline(time.Now()))
+	dailyDb := g.GetPd().GetCurDay(alg.GetDaysSinceBaseline(time.Now()))
 	if dailyDb.IsYk {
 		g.Send(cmd.MonthCardRewardNotify, &proto.MonthCardRewardNotify{
-			Reward: &proto.ItemList{ItemList: []*proto.Item{{ItemId: Hcoin, Num: 120}}}})
+			Reward: &proto.ItemList{ItemList: []*proto.Item{{ItemId: model.Hcoin, Num: 120}}}})
 	}
 	g.DailyTaskDataScNotify(dailyDb.DailyTask)
 }
 
 func (g *GamePlayer) DailyTaskDataScNotify(missionId uint32) {
-	finishMainMission := g.GetFinishMainMissionList()
+	finishMainMission := g.GetPd().GetFinishMainMissionList()
 	notify := &proto.DailyTaskDataScNotify{
 		FinishedNum:   0,
 		DailyTaskList: make([]*proto.DailyTask, 0),

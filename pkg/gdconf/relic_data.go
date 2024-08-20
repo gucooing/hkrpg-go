@@ -23,6 +23,13 @@ type Relic struct {
 	CoinCost       uint32 `json:"CoinCost"`
 }
 
+var RelicRarity = map[string]uint32{
+	"CombatPowerRelicRarity2": 2,
+	"CombatPowerRelicRarity3": 3,
+	"CombatPowerRelicRarity4": 4,
+	"CombatPowerRelicRarity5": 5,
+}
+
 func (g *GameDataConfig) loadRelic() {
 	g.RelicMap = make(map[uint32]*Relic)
 	relicMap := make([]*Relic, 0)
@@ -54,16 +61,7 @@ func (g *GameDataConfig) loadRelic() {
 	relicMap = append(relicMap, relicMaps...)
 
 	for _, relic := range relicMap {
-		switch relic.MaxLevel {
-		case 6:
-			relic.Type = 2
-		case 9:
-			relic.Type = 3
-		case 12:
-			relic.Type = 4
-		case 15:
-			relic.Type = 5
-		}
+		relic.Type = RelicRarity[relic.Rarity]
 		if relic.ID == 0 {
 			g.RelicMap[relic.ItemID] = relic
 		} else {

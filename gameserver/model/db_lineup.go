@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
@@ -28,7 +28,7 @@ func NewLineUp() *spb.LineUp {
 	}
 }
 
-func (g *GamePlayer) GetLineUp() *spb.LineUp {
+func (g *PlayerData) GetLineUp() *spb.LineUp {
 	db := g.GetBasicBin()
 	if db.LineUp == nil {
 		db.LineUp = NewLineUp()
@@ -36,12 +36,12 @@ func (g *GamePlayer) GetLineUp() *spb.LineUp {
 	return db.LineUp
 }
 
-func (g *GamePlayer) GetLineUpMp() uint32 {
+func (g *PlayerData) GetLineUpMp() uint32 {
 	db := g.GetLineUp()
 	return db.Mp
 }
 
-func (g *GamePlayer) GetLineUpById(index uint32) *spb.Line {
+func (g *PlayerData) GetLineUpById(index uint32) *spb.Line {
 	db := g.GetLineUp()
 	if db.LineUpList == nil {
 		db.LineUpList = make(map[uint32]*spb.Line)
@@ -65,7 +65,7 @@ func (g *GamePlayer) GetLineUpById(index uint32) *spb.Line {
 	return db.LineUpList[index]
 }
 
-func (g *GamePlayer) GetBattleLineUpById(index uint32) *spb.Line {
+func (g *PlayerData) GetBattleLineUpById(index uint32) *spb.Line {
 	db := g.GetLineUp()
 	if db.BattleLineList == nil {
 		db.BattleLineList = make(map[uint32]*spb.Line)
@@ -79,7 +79,7 @@ func (g *GamePlayer) GetBattleLineUpById(index uint32) *spb.Line {
 	return db.BattleLineList[index]
 }
 
-func (g *GamePlayer) GetStoryLine() map[uint32]*spb.Line {
+func (g *PlayerData) GetStoryLine() map[uint32]*spb.Line {
 	db := g.GetLineUp()
 	if db.StoryLineList == nil {
 		db.StoryLineList = make(map[uint32]*spb.Line)
@@ -87,7 +87,7 @@ func (g *GamePlayer) GetStoryLine() map[uint32]*spb.Line {
 	return db.StoryLineList
 }
 
-func (g *GamePlayer) GetStoryLineById(index uint32) *spb.Line {
+func (g *PlayerData) GetStoryLineById(index uint32) *spb.Line {
 	db := g.GetLineUp()
 	if db.StoryLineList == nil {
 		db.StoryLineList = make(map[uint32]*spb.Line)
@@ -95,13 +95,14 @@ func (g *GamePlayer) GetStoryLineById(index uint32) *spb.Line {
 	if db.StoryLineList[index] == nil {
 		db.StoryLineList[index] = &spb.Line{
 			AvatarIdList: make(map[uint32]*spb.LineAvatarList, 4),
+			LineType:     spb.ExtraLineupType_LINEUP_STAGE_TRIAL,
 			LeaderSlot:   0,
 		}
 	}
 	return db.StoryLineList[index]
 }
 
-func (g *GamePlayer) NewStoryLine(storyLineID uint32) {
+func (g *PlayerData) NewStoryLine(storyLineID uint32) {
 	curLineup := g.GetCurLineUp()
 	db := g.GetLineUp()
 	if db.StoryLineList == nil {
@@ -129,7 +130,7 @@ func (g *GamePlayer) NewStoryLine(storyLineID uint32) {
 	db.StoryLineList[storyLineID] = storyLine
 }
 
-func (g *GamePlayer) NewTrialLine(trialList []uint32) {
+func (g *PlayerData) NewTrialLine(trialList []uint32) {
 	db := g.GetCurLineUp()
 	if len(trialList) < 5 {
 		return
@@ -160,51 +161,43 @@ func (g *GamePlayer) NewTrialLine(trialList []uint32) {
 	}
 }
 
-func (g *GamePlayer) GetTrialAvatar(trialAvatarId uint32) {
+func (g *PlayerData) GetTrialAvatar(trialAvatarId uint32) *spb.LineAvatarList {
 	db := g.GetBattleLineUp()
 	var lineAvatarType spb.LineAvatarType
-	isTrial := false
 	if g.GetAvatarById(trialAvatarId) != nil {
 		lineAvatarType = spb.LineAvatarType_LineAvatarType_MI
 	}
 	if gdconf.GetSpecialAvatarById(trialAvatarId) != nil {
-		isTrial = true
 		lineAvatarType = spb.LineAvatarType_LineAvatarType_TRIAL
+	}
+	lineAvatar := &spb.LineAvatarList{
+		AvatarId:       trialAvatarId,
+		LineAvatarType: lineAvatarType,
 	}
 	isUp := false
 	for i := 0; i < 4; i++ {
 		if db.AvatarIdList[uint32(i)] == nil {
-			db.AvatarIdList[uint32(i)] = &spb.LineAvatarList{
-				Slot:           uint32(i),
-				AvatarId:       trialAvatarId,
-				LineAvatarType: lineAvatarType,
-			}
+			lineAvatar.Slot = uint32(i)
+			db.AvatarIdList[uint32(i)] = lineAvatar
 			isUp = true
 			break
 		} else {
 			if db.AvatarIdList[uint32(i)].AvatarId == 0 {
-				db.AvatarIdList[uint32(i)] = &spb.LineAvatarList{
-					Slot:           uint32(i),
-					AvatarId:       trialAvatarId,
-					LineAvatarType: lineAvatarType,
-				}
+				lineAvatar.Slot = uint32(i)
+				db.AvatarIdList[uint32(i)] = lineAvatar
 				isUp = true
 				break
 			}
 		}
 	}
 	if !isUp {
-		db.AvatarIdList[3] = &spb.LineAvatarList{
-			Slot:           3,
-			AvatarId:       trialAvatarId,
-			LineAvatarType: lineAvatarType,
-		}
+		lineAvatar.Slot = 3
+		db.AvatarIdList[3] = lineAvatar
 	}
-	g.AddAvatarSceneGroupRefreshScNotify(trialAvatarId, isTrial, g.GetPosPb(), g.GetRotPb())
-	g.SyncLineupNotify(db)
+	return lineAvatar
 }
 
-func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
+func (g *PlayerData) DelTrialAvatar(trialAvatarId uint32) {
 	db := g.GetBattleLineUp()
 	isJh := false
 	for id, info := range db.AvatarIdList {
@@ -238,11 +231,9 @@ func (g *GamePlayer) DelTrialAvatar(trialAvatarId uint32) {
 			LineAvatarType: 0,
 		}
 	}
-	// g.GetAddAvatarSceneEntityRefreshInfo(db, g.GetPosPb(), g.GetRotPb())
-	g.SyncLineupNotify(db)
 }
 
-func (g *GamePlayer) GetCurLineUp() *spb.Line {
+func (g *PlayerData) GetCurLineUp() *spb.Line {
 	if g.IsChangeStory() {
 		db := g.GetChangeStory()
 		return g.GetStoryLineById(db.CurChangeStory)
@@ -251,7 +242,7 @@ func (g *GamePlayer) GetCurLineUp() *spb.Line {
 	return db
 }
 
-func (g *GamePlayer) GetSceneAvatarId() uint32 {
+func (g *PlayerData) GetSceneAvatarId() uint32 {
 	db := g.GetCurLineUp()
 	if db.AvatarIdList[db.LeaderSlot] == nil {
 		logger.Error("获取的角色不存在于队伍中")
@@ -262,24 +253,24 @@ func (g *GamePlayer) GetSceneAvatarId() uint32 {
 }
 
 // 队伍更新
-func (g *GamePlayer) UnDbLineUp(index uint32, Slot uint32, avatarId uint32) {
+func (g *PlayerData) UnDbLineUp(index uint32, Slot uint32, avatarId uint32) {
 	db := g.GetLineUpById(index)
 	db.AvatarIdList[Slot] = &spb.LineAvatarList{AvatarId: avatarId, Slot: Slot}
 	db.LeaderSlot = Slot
 }
 
-// 队伍更新
-func (g *GamePlayer) UnDbAvatarLineUp(db *spb.Line, avatarId, newAvatarId uint32) {
-	for _, info := range db.AvatarIdList {
-		if info.AvatarId == avatarId {
-			info.AvatarId = newAvatarId
-		}
-	}
-	g.SyncLineupNotify(db)
-}
+// // 队伍更新
+// func (g *PlayerData) UnDbAvatarLineUp(db *spb.Line, avatarId, newAvatarId uint32) {
+// 	for _, info := range db.AvatarIdList {
+// 		if info.AvatarId == avatarId {
+// 			info.AvatarId = newAvatarId
+// 		}
+// 	}
+// 	g.SyncLineupNotify(db)
+// }
 
 // 交换角色
-func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
+func (g *PlayerData) SwapLineup(index, src_slot, dst_slot uint32) {
 	db := g.GetLineUpById(index)
 	src := db.AvatarIdList[src_slot]
 	dst := db.AvatarIdList[dst_slot]
@@ -289,7 +280,7 @@ func (g *GamePlayer) SwapLineup(index, src_slot, dst_slot uint32) {
 	db.AvatarIdList[dst_slot] = src
 }
 
-func (g *GamePlayer) GetBattleLineUp() *spb.Line {
+func (g *PlayerData) GetBattleLineUp() *spb.Line {
 	if g.IsChangeStory() {
 		return g.GetCurLineUp()
 	}
@@ -315,7 +306,7 @@ func (g *GamePlayer) GetBattleLineUp() *spb.Line {
 	return g.GetCurLineUp() // 多余了
 }
 
-func (g *GamePlayer) GetChallengeLineUp() *spb.Line {
+func (g *PlayerData) GetChallengeLineUp() *spb.Line {
 	challengeStatus := g.GetCurChallenge()
 	switch challengeStatus.CurStage {
 	case 1:
@@ -323,65 +314,26 @@ func (g *GamePlayer) GetChallengeLineUp() *spb.Line {
 	case 2:
 		return g.GetBattleLineUpById(Challenge_2)
 	default:
-		logger.Debug("[UID:%v]没有此忘却之庭队伍id:%v", g.Uid, challengeStatus.CurStage)
+		logger.Debug("[UID:%v]没有此忘却之庭队伍id:%v", g.GetBasicBin().Uid, challengeStatus.CurStage)
 		return g.GetCurLineUp()
 	}
 }
 
-func (g *GamePlayer) AddLineUpMp(mp uint32) {
+func (g *PlayerData) AddLineUpMp(mp uint32) {
 	db := g.GetLineUp()
 	if db.Mp += mp; db.Mp > 5 {
 		db.Mp = 5
 	}
 }
 
-func (g *GamePlayer) DelLineUpMp(mp uint32) {
+func (g *PlayerData) DelLineUpMp(mp uint32) {
 	db := g.GetLineUp()
 	if db.Mp -= mp; db.Mp < 0 {
 		db.Mp = 0
 	}
 }
 
-func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
-	if avatarList == nil { // 没有传入角色
-		avatarList = make([]uint32, 0)
-		for _, info := range g.GetCurLineUp().AvatarIdList {
-			avatarList = append(avatarList, info.AvatarId)
-		}
-	}
-	var lineUpType spb.ExtraLineupType
-	switch index {
-	case Challenge_1:
-		lineUpType = spb.ExtraLineupType_LINEUP_CHALLENGE
-	case Challenge_2:
-		lineUpType = spb.ExtraLineupType_LINEUP_CHALLENGE_2
-	case Rogue:
-		lineUpType = spb.ExtraLineupType_LINEUP_ROGUE
-	case RogueTourn:
-		lineUpType = spb.ExtraLineupType_LINEUP_TOURN_ROGUE
-	case Activity:
-		lineUpType = spb.ExtraLineupType_LINEUP_STAGE_TRIAL
-	}
-	db := g.GetBattleLineUpById(index)
-	db.LeaderSlot = 0
-	db.LineType = lineUpType
-	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
-	var id uint32 = 0
-	for _, avatarId := range avatarList {
-		if ok, avatarType := g.SpecialMainAvatar(avatarId); ok {
-			db.AvatarIdList[id] = &spb.LineAvatarList{AvatarId: avatarId, Slot: id, LineAvatarType: avatarType}
-			id++
-		}
-	}
-	// 拷贝角色
-	for _, avatar := range avatarList {
-		avatarBin := g.GetAvatarBinById(avatar)
-		g.CopyBattleAvatar(avatarBin)
-	}
-	g.SyncLineupNotify(db)
-}
-
-func (g *GamePlayer) SpecialMainAvatar(trialAvatarId uint32) (bool, spb.LineAvatarType) {
+func (g *PlayerData) SpecialMainAvatar(trialAvatarId uint32) (bool, spb.LineAvatarType) {
 	conf := gdconf.GetSpecialAvatarById(trialAvatarId)
 	if conf == nil {
 		return true, spb.LineAvatarType_LineAvatarType_MI
@@ -404,7 +356,7 @@ func (g *GamePlayer) SpecialMainAvatar(trialAvatarId uint32) (bool, spb.LineAvat
 
 /*****************************************功能方法****************************/
 
-func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
+func (g *PlayerData) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 	if db == nil {
 		return nil
 	}
@@ -415,9 +367,15 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 	for slot, lineAvatar := range db.AvatarIdList {
 		switch lineAvatar.LineAvatarType {
 		case spb.LineAvatarType_LineAvatarType_MI:
-			avatarList = append(avatarList, g.GetLineupAvatar(lineAvatar.AvatarId, slot))
+			x := g.GetLineupAvatar(lineAvatar.AvatarId, slot)
+			if x == nil {
+				delete(db.AvatarIdList, slot)
+				continue
+			}
+			avatarList = append(avatarList, x)
 		case spb.LineAvatarType_LineAvatarType_TRIAL:
 			avatarList = append(avatarList, g.GetTrialLineupAvatar(lineAvatar.AvatarId, slot))
+			continue
 		default:
 			continue
 		}
@@ -444,7 +402,7 @@ func (g *GamePlayer) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 	return lineupList
 }
 
-func (g *GamePlayer) GetLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
+func (g *PlayerData) GetLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
 	db := g.GetAvatarBinById(avatarId)
 	if db == nil {
 		return nil
@@ -463,7 +421,7 @@ func (g *GamePlayer) GetLineupAvatar(avatarId, index uint32) *proto.LineupAvatar
 	return info
 }
 
-func (g *GamePlayer) GetTrialLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
+func (g *PlayerData) GetTrialLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
 	info := &proto.LineupAvatar{
 		Slot:    index,
 		Satiety: 0,
@@ -478,7 +436,7 @@ func (g *GamePlayer) GetTrialLineupAvatar(avatarId, index uint32) *proto.LineupA
 	return info
 }
 
-func (g *GamePlayer) GetLineupAvatarDataList(db *spb.Line) []*proto.LineupAvatarData {
+func (g *PlayerData) GetLineupAvatarDataList(db *spb.Line) []*proto.LineupAvatarData {
 	lADList := make([]*proto.LineupAvatarData, 0)
 	if db == nil {
 		return lADList
@@ -497,7 +455,7 @@ func (g *GamePlayer) GetLineupAvatarDataList(db *spb.Line) []*proto.LineupAvatar
 	return lADList
 }
 
-func (g *GamePlayer) GetLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
+func (g *PlayerData) GetLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
 	db := g.GetAvatarBinById(avatarId)
 	if db == nil {
 		return nil
@@ -510,7 +468,7 @@ func (g *GamePlayer) GetLineupAvatarData(avatarId, index uint32) *proto.LineupAv
 	return info
 }
 
-func (g *GamePlayer) GetTrialLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
+func (g *PlayerData) GetTrialLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
 	info := &proto.LineupAvatarData{
 		Hp:         10000,
 		Id:         avatarId,

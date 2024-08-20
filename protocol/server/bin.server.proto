@@ -8,9 +8,9 @@ option go_package = "./;proto";
 import "enum.server.proto";
 
 message PlayerBasicCompBin {
-  // uint32 uid = 1; // uid
+  uint32 uid = 1; // uid
   uint32 level = 2; // 等级
-  //uint32 exp = 3; // 经验
+  uint32 exp = 3; // 经验
   string nickname = 4; // 昵称
   uint32 world_level = 5; // 世界等级
   Activity activity = 6; // 活动
@@ -25,7 +25,7 @@ message PlayerBasicCompBin {
   Gacha gacha = 16; // 抽卡数据
   Battle battle = 17; // 战斗
   repeated uint32 reward_taken_level_list = 18; // 等级奖励领取级别列表
-  map<uint32, uint32> open_state_map = 19; // 地图开放状态
+  uint32 unique_id = 19; // 唯一id
   fixed32 register_time = 20; // 注册时间
   uint32 total_login_days = 21; // 登录天数
   uint32 total_game_time = 22; // 总游戏时长
@@ -45,8 +45,8 @@ message PlayerBasicCompBin {
   uint32 set_language_tag = 36; // 设置语言标签
   uint32 guid_seq_id = 37; // 序列号
   map<uint32, MessageGroup> message_group_list = 38; // NPC聊天信息
-  double pivot_client_time = 39; // 客户端时间
-  double pivot_unix_time = 40; // unix时间
+ // double pivot_client_time = 39; // 客户端时间
+  //double pivot_unix_time = 40; // unix时间
   uint64 player_stat_id = 41; // 玩家统计id
   ContentAuditBin nickname_audit_bin = 42; // 昵称审核bin
   string ip_country_code = 43; // ip国家代码
@@ -349,6 +349,8 @@ message MailDts {
 
 message PlayerFriend {
   map<uint32, Friend> friend_list = 1;// 好友列表
+  map<uint32,uint32> assist_avatar_list =2;// 展示角色
+  map<uint32,uint32> display_avatar_list =3;// 支援角色
 }
 
 message Friend {

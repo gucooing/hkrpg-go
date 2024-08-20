@@ -43,14 +43,17 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.PromoteAvatarCsReq:          g.PromoteAvatarCsReq,          // 角色突破
 		cmd.UnlockSkilltreeCsReq:        g.UnlockSkilltreeCsReq,        // 行迹升级
 		cmd.TakePromotionRewardCsReq:    g.TakePromotionRewardCsReq,    // 领取角色突破奖励
+		cmd.UnlockAvatarPathCsReq:       g.UnlockAvatarPathCsReq,       // 来自客户端的解锁命途要求
 		// 光锥
 		cmd.DressAvatarCsReq:      g.DressAvatarCsReq,      // 角色光锥装备
+		cmd.TakeOffEquipmentCsReq: g.TakeOffEquipmentCsReq, // 卸下光锥
 		cmd.ExpUpEquipmentCsReq:   g.ExpUpEquipmentCsReq,   // 光锥升级
 		cmd.RankUpEquipmentCsReq:  g.RankUpEquipmentCsReq,  // 光锥叠影
 		cmd.PromoteEquipmentCsReq: g.PromoteEquipmentCsReq, // 光锥突破
 		// 圣遗物
 		cmd.RelicRecommendCsReq:       g.RelicRecommendCsReq,       // 获取推荐圣遗物
 		cmd.DressRelicAvatarCsReq:     g.DressRelicAvatarCsReq,     // 圣遗物装备
+		cmd.TakeOffRelicCsReq:         g.TakeOffRelicCsReq,         // 卸下圣遗物
 		cmd.ExpUpRelicCsReq:           g.ExpUpRelicCsReq,           // 圣遗物升级
 		cmd.RelicAvatarRecommendCsReq: g.RelicAvatarRecommendCsReq, // 查看圣遗物推荐角色
 		// 场景
@@ -119,6 +122,8 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.BuyGoodsCsReq:               g.BuyGoodsCsReq,               // 商店交易
 		cmd.GetRollShopInfoCsReq:        g.GetRollShopInfoCsReq,        //
 		// 好友
+		cmd.SetDisplayAvatarCsReq:       g.SetDisplayAvatarCsReq,         // 设置展示角色
+		cmd.SetAssistAvatarCsReq:        g.SetAssistAvatarCsReq,          // 设置支援角色
 		cmd.GetFriendLoginInfoCsReq:     g.HandleGetFriendLoginInfoCsReq, // 获取好友信息列表
 		cmd.GetFriendListInfoCsReq:      g.GetFriendListInfoCsReq,        // 获取好友信息
 		cmd.GetPrivateChatHistoryCsReq:  g.GetPrivateChatHistoryCsReq,    // 获取私聊记录

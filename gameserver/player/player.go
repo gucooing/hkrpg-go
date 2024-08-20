@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -15,8 +15,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-var SNOWFLAKE *alg.SnowflakeWorker // 雪花唯一id生成器
-var LogMsgPlayer uint32 = 2
+var LogMsgPlayer uint32 = 5
 
 type GamePlayer struct {
 	Uid           uint32
@@ -27,12 +26,11 @@ type GamePlayer struct {
 	Store         *database.GameStore
 	IsPE          bool
 	// 玩家数据
-	Platform       spb.PlatformType        // 登录设备
-	OnlineData     *OnlineData             // 玩家在线数据
-	BasicBin       *spb.PlayerBasicCompBin // 玩家pb数据
-	RouteManager   *RouteManager           // 路由
-	SendChan       chan Msg                // 发送消息通道
-	RecvChan       chan Msg                // 接收消息通道
+	PlayerData     *model.PlayerData // 玩家内存
+	Platform       spb.PlatformType  // 登录设备
+	RouteManager   *RouteManager     // 路由
+	SendChan       chan Msg          // 发送消息通道
+	RecvChan       chan Msg          // 接收消息通道
 	SendCtx        context.Context
 	SendCal        context.CancelFunc
 	RecvCtx        context.Context
@@ -60,22 +58,30 @@ func getCurTime() uint64 {
 	return uint64(time.Now().UnixMilli())
 }
 
+func (g *GamePlayer) GetPd() *model.PlayerData {
+	if g.PlayerData == nil {
+		g.PlayerData = model.NewPlayerData()
+	}
+	return g.PlayerData
+}
+
 // 拉取账户数据
 func (g *GamePlayer) GetPlayerDateByDb() {
 	var err error
 	dbPlayer := database.GetPlayerDataByUid(g.Store.PlayerDataMysql,
 		g.Store.PeMysql, g.Uid)
+	g.PlayerData = new(model.PlayerData)
 	if dbPlayer == nil || dbPlayer.BinData == nil {
 		dbPlayer = new(constant.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
-		g.BasicBin = g.NewBasicBin()
+		g.PlayerData.BasicBin = model.NewBasicBin()
 		// 初始化完毕保存账号数据
 		dbPlayer.Uid = g.Uid
-		dbPlayer.Level = g.GetLevel()
-		dbPlayer.Exp = g.GetMaterialById(Exp)
-		dbPlayer.Nickname = g.GetNickname()
-		dbPlayer.BinData, err = pb.Marshal(g.BasicBin)
-		dbPlayer.DataVersion = g.GetDataVersion()
+		dbPlayer.Level = g.GetPd().GetLevel()
+		dbPlayer.Exp = g.GetPd().GetMaterialById(model.Exp)
+		dbPlayer.Nickname = g.GetPd().GetNickname()
+		dbPlayer.BinData, err = pb.Marshal(g.GetPd().BasicBin)
+		dbPlayer.DataVersion = g.GetPd().GetDataVersion()
 		if err != nil {
 			logger.Error("pb marshal error: %v", err)
 		}
@@ -91,14 +97,15 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			logger.Error("账号数据储存失败,err:%s", err.Error())
 		}
 	} else {
-		g.BasicBin = new(spb.PlayerBasicCompBin)
-		err = pb.Unmarshal(dbPlayer.BinData, g.BasicBin)
+		g.PlayerData.BasicBin = new(spb.PlayerBasicCompBin)
+		err = pb.Unmarshal(dbPlayer.BinData, g.PlayerData.BasicBin)
 		if err != nil {
 			logger.Error("unmarshal proto data err: %v", err)
-			g.BasicBin = g.NewBasicBin()
+			g.PlayerData.BasicBin = model.NewBasicBin()
 		}
 	}
-	if g.GetIsProficientPlayer() { // 是否是老玩家
+	g.PlayerData.BasicBin.Uid = g.Uid
+	if g.GetPd().GetIsProficientPlayer() { // 是否是老玩家
 
 	} else {
 
@@ -120,21 +127,21 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 			database.DelPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
 			return false
 		}
-		if statu.GameserverId != g.GameAppId && statu.DataVersion != g.GetDataVersion() {
+		if statu.GameserverId != g.GameAppId && statu.DataVersion != g.GetPd().GetDataVersion() {
 			// 脏数据
 			logger.Info("[UID:%v]数据过期，已丢弃", g.Uid)
 			return false
 		}
 	}
 	//  确认写入，更新数据版本
-	g.AddDataVersion()
+	g.GetPd().AddDataVersion()
 	dbDate := new(constant.PlayerData)
 	dbDate.Uid = g.Uid
-	dbDate.Level = g.GetLevel()
-	dbDate.Exp = g.GetMaterialById(Exp)
-	dbDate.Nickname = g.GetNickname()
-	dbDate.BinData, err = pb.Marshal(g.BasicBin)
-	dbDate.DataVersion = g.GetDataVersion()
+	dbDate.Level = g.GetPd().GetLevel()
+	dbDate.Exp = g.GetPd().GetMaterialById(model.Exp)
+	dbDate.Nickname = g.GetPd().GetNickname()
+	dbDate.BinData, err = pb.Marshal(g.GetPd().BasicBin)
+	dbDate.DataVersion = g.GetPd().GetDataVersion()
 	if err != nil {
 		logger.Error("pb marshal error: %v", err)
 		return false
@@ -148,8 +155,8 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 		logger.Error("[UID:%v]玩家简要信息保存失败", g.Uid)
 	}
 	// 保存地图数据
-	for _, block := range g.GetAllBlockMap() {
-		g.UpdateBlock(block)
+	for _, block := range g.GetPd().GetAllBlockMap() {
+		g.GetPd().UpdateBlock(block)
 	}
 
 	return true
@@ -157,16 +164,18 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 
 func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) bool {
 	playerBasicBrief := &spb.PlayerBasicBriefData{
-		Nickname:          g.GetNickname(),
-		Level:             g.GetLevel(),
-		WorldLevel:        g.GetWorldLevel(),
+		Nickname:          g.GetPd().GetNickname(),
+		Level:             g.GetPd().GetLevel(),
+		WorldLevel:        g.GetPd().GetWorldLevel(),
 		LastLoginTime:     time.Now().Unix(),
-		HeadImageAvatarId: g.GetHeadIcon(),
-		Exp:               g.GetMaterialById(Exp),
+		HeadImageAvatarId: g.GetPd().GetHeadIcon(),
+		Exp:               g.GetPd().GetMaterialById(model.Exp),
 		PlatformType:      g.Platform,
 		Uid:               g.Uid,
 		Status:            status,
-		Signature:         g.GetSignature(),
+		Signature:         g.GetPd().GetSignature(),
+		AssistAvatarList:  g.GetPd().GetAssistAvatarListSpb(g.GetPd().GetAssistAvatarList()),
+		DisplayAvatarList: g.GetPd().GetAssistAvatarListSpb(g.GetPd().GetDisplayAvatarlist()),
 	}
 
 	bin, err := pb.Marshal(playerBasicBrief)

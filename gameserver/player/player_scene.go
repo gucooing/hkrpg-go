@@ -3,6 +3,8 @@ package player
 import (
 	"strings"
 
+	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -14,7 +16,7 @@ import (
 // 通知客户端进入场景
 func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, anchorID uint32) {
 	if entryId == 0 {
-		entryId = g.GetCurEntryId()
+		entryId = g.GetPd().GetCurEntryId()
 	}
 	rsp := new(proto.EnterSceneByServerScNotify)
 	mapEntrance := gdconf.GetMapEntranceById(entryId)
@@ -35,8 +37,8 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, an
 	var rot *proto.Vector
 
 	// 获取队伍
-	curLine := g.GetCurLineUp()
-	rsp.Lineup = g.GetLineUpPb(curLine)
+	curLine := g.GetPd().GetCurLineUp()
+	rsp.Lineup = g.GetPd().GetLineUpPb(curLine)
 	// 获取坐标
 	var anchor *gdconf.AnchorList
 	if teleportsMap.Teleports[teleportId] != nil {
@@ -78,13 +80,16 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, an
 		g.Send(cmd.EnterSceneByServerScNotify, rsp)
 		return
 	}
-	if db := g.GetCurChangeStoryInfo(); db != nil {
+	if db := g.GetPd().GetCurChangeStoryInfo(); db != nil {
 		g.StoryLineInfoScNotify()
-		g.SyncLineupNotify(g.GetCurLineUp())
+		g.SyncLineupNotify(g.GetPd().GetCurLineUp())
 		g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
 	}
-	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
-	g.EnterMapByEntrance(entryId) // 任务检查
+	rsp.Scene = g.GetPd().GetSceneInfo(entryId, pos, rot, curLine)
+	finishSubMission := g.GetPd().EnterMapByEntrance(entryId) // 任务检查
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 	g.ChangeStoryLineFinishScNotify()
 }
@@ -93,16 +98,16 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, an
 func (g *GamePlayer) SceneByServerScNotify(entryId uint32, pos, rot *proto.Vector) {
 	rsp := new(proto.EnterSceneByServerScNotify)
 	// 获取队伍
-	curLine := g.GetCurLineUp()
-	rsp.Lineup = g.GetLineUpPb(curLine)
-	rsp.Scene = g.GetSceneInfo(entryId, pos, rot, curLine)
+	curLine := g.GetPd().GetCurLineUp()
+	rsp.Lineup = g.GetPd().GetLineUpPb(curLine)
+	rsp.Scene = g.GetPd().GetSceneInfo(entryId, pos, rot, curLine)
 
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
 
 func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetEnteredSceneScRsp)
-	db := g.GetScene()
+	db := g.GetPd().GetScene()
 	mapEntrance := gdconf.GetMapEntranceById(db.EntryId)
 	if mapEntrance == nil {
 		return
@@ -118,13 +123,13 @@ func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg pb.Message) {
 
 // 客户端登录需要的包，不是传送的通知包
 func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg pb.Message) {
-	pos := g.GetPosPb()
-	rot := g.GetRotPb()
-	dbScene := g.GetScene()
-	curLine := g.GetCurLineUp()
+	pos := g.GetPd().GetPosPb()
+	rot := g.GetPd().GetRotPb()
+	dbScene := g.GetPd().GetScene()
+	curLine := g.GetPd().GetCurLineUp()
 
 	rsp := new(proto.GetCurSceneInfoScRsp)
-	rsp.Scene = g.GetSceneInfo(dbScene.EntryId, pos, rot, curLine)
+	rsp.Scene = g.GetPd().GetSceneInfo(dbScene.EntryId, pos, rot, curLine)
 	g.Send(cmd.GetCurSceneInfoScRsp, rsp)
 }
 
@@ -136,7 +141,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 		mapEntrance := gdconf.GetMapEntranceById(entryId)
 		if mapEntrance != nil {
 			groupList := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
-			block := g.GetBlock(entryId)
+			block := g.GetPd().GetBlock(entryId)
 			if groupList != nil {
 				mapList := &proto.SceneMapInfo{
 					LightenSectionList: make([]uint32, 0),
@@ -146,9 +151,9 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 						{ChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_PUZZLE, OpenedNum: 1},
 					},
 					UnlockTeleportList: make([]uint32, 0),
-					DimensionId:        g.GetDimensionId(),
+					DimensionId:        g.GetPd().GetDimensionId(),
 					EntryStoryLineId:   req.EntryStoryLineId,
-					FloorSavedData:     g.GetFloorSavedData(entryId),
+					FloorSavedData:     g.GetPd().GetFloorSavedData(entryId),
 					EntryId:            entryId,
 				}
 
@@ -161,7 +166,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 					for _, prop := range group.PropList {
 						if prop.MappingInfoID != 0 {
 							mazeProp := &proto.MazePropState{
-								State:    g.GetPropState(block, group.GroupId, prop.ID, prop.State),
+								State:    g.GetPd().GetPropState(block, group.GroupId, prop.ID, prop.State),
 								GroupId:  group.GroupId,
 								ConfigId: prop.ID,
 							}
@@ -185,7 +190,7 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
 		GameStoryLineId: req.GameStoryLineId,
 		IsCloseMap:      req.IsCloseMap,
 		Retcode:         0,
-		IsOverMap:       false,
+		IsOverMap:       true,
 	}
 	entryId := req.EntryId
 	teleportId := req.TeleportId
@@ -193,31 +198,34 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
 	var anchorId uint32 = 0
 
 	if conf := gdconf.GetStoryLine(req.GameStoryLineId); conf != nil {
-		changeStory := g.GetChangeStoryInfo(req.GameStoryLineId)
+		changeStory := g.GetPd().GetChangeStoryInfo(req.GameStoryLineId)
 		if changeStory == nil {
-			g.MissionAddChangeStoryLine([]uint32{req.GameStoryLineId, 0, 0, 0})
+			entryIds, anchorGroups, anchorIds, ok := g.GetPd().MissionAddChangeStoryLine(
+				[]uint32{req.GameStoryLineId, 0, 0, 0})
+			if ok {
+				g.EnterSceneByServerScNotify(entryIds, 0, anchorGroups, anchorIds)
+			}
 			return
 		}
-		rsp.IsOverMap = true
-		db := g.GetChangeStory()
+		db := g.GetPd().GetChangeStory()
 		db.IsChangeStory = true
 		db.CurChangeStory = req.GameStoryLineId
 		entryId = changeStory.Scene.EntryId
 		groupId = changeStory.Scene.GroupId
 		anchorId = changeStory.Scene.AnchorId
-		g.NewStoryLine(req.GameStoryLineId)
+		g.GetPd().NewStoryLine(req.GameStoryLineId)
 	} else if req.GameStoryLineId == 0 {
-		db := g.GetChangeStory()
+		db := g.GetPd().GetChangeStory()
 		db.IsChangeStory = false
 		if entryId == 0 {
-			entryId = g.GetCurEntryId()
+			entryId = g.GetPd().GetCurEntryId()
 		}
 	}
 
 	if entryId != 0 &&
 		req.ContentId == 0 &&
 		req.GameStoryLineId == 0 {
-		g.SetCurEntryId(entryId)
+		g.GetPd().SetCurEntryId(entryId)
 	}
 
 	if req.ContentId == 0 {
@@ -237,14 +245,19 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 		PropState:    0,
 		PropEntityId: req.PropEntityId,
 	}
+	var pileItem []*model.Material
 	var propEntityIdList []uint32
+	allSync := &model.AllPlayerSync{
+		IsBasic:      true,
+		MaterialList: make([]uint32, 0),
+	}
 
-	pe := g.GetPropEntityById(req.PropEntityId)
+	pe := g.GetPd().GetPropEntityById(req.PropEntityId)
 	if pe == nil {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
 	}
-	blockBin := g.GetBlock(pe.EntryId)
+	blockBin := g.GetPd().GetBlock(pe.EntryId)
 	mapEntrance := gdconf.GetMapEntranceById(blockBin.EntryId)
 	if mapEntrance == nil {
 		g.Send(cmd.InteractPropScRsp, rsp)
@@ -260,7 +273,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.InteractPropScRsp, rsp)
 		return
 	}
-	oldState := g.GetPropState(blockBin, pe.GroupId, pe.InstId, confProp.State)
+	oldState := g.GetPd().GetPropState(blockBin, pe.GroupId, pe.InstId, confProp.State)
 	newState := gdconf.GetStateValue(confInteract.TargetState)
 	setState := newState
 	mazeProp := gdconf.GetMazePropId(pe.PropId)
@@ -271,10 +284,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 	switch mazeProp.PropType {
 	case gdconf.PROP_TREASURE_CHEST: // 宝箱
 		if oldState == 12 && newState == 13 {
-			g.AddMaterial([]*Material{{Tid: Mcoin, Num: 1000}})
-			g.AllPlayerSyncScNotify(&AllPlayerSync{
-				MaterialList: []uint32{Mcoin},
-			})
+			pileItem = append(pileItem, &model.Material{Tid: model.Mcoin, Num: 1000})
 		}
 	case gdconf.PROP_DESTRUCT: // 破坏物
 		if newState == 0 {
@@ -289,19 +299,25 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 
 	if confProp.GoppValue != nil {
 		for _, goppValue := range confProp.GoppValue {
-			if enep := g.GetPropEntity(goppValue.GroupId, goppValue.InstId); enep != nil {
-				g.UpPropState(blockBin, goppValue.GroupId, goppValue.InstId, 1) // 更新状态
+			if enep := g.GetPd().GetPropEntity(goppValue.GroupId, goppValue.InstId); enep != nil {
+				g.GetPd().UpPropState(blockBin, goppValue.GroupId, goppValue.InstId, 1) // 更新状态
 				propEntityIdList = append(propEntityIdList, enep.EntityId)
 			}
 		}
 	}
 
 	propEntityIdList = append(propEntityIdList, req.PropEntityId)
-	g.UpPropState(blockBin, pe.GroupId, pe.InstId, setState) // 更新地图
+	g.GetPd().UpPropState(blockBin, pe.GroupId, pe.InstId, setState) // 更新地图
 	rsp.PropState = setState
 	// 统一通知
+	g.GetPd().AddItem(pileItem, allSync)
+	g.AllPlayerSyncScNotify(allSync)
+	g.AllScenePlaneEventScNotify(pileItem)
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
-	g.UpInteractSubMission(blockBin)                            // 检查交互任务
+	finishSubMission := g.GetPd().UpInteractSubMission(blockBin)        // 检查交互任务
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 
@@ -312,7 +328,7 @@ func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg pb.Message) {
 		Retcode:        0,
 	}
 	if req.GroupStateInfo != nil {
-		blockBin := g.GetBlock(req.GroupStateInfo.EntryId)
+		blockBin := g.GetPd().GetBlock(req.GroupStateInfo.EntryId)
 		mapEntrance := gdconf.GetMapEntranceById(blockBin.EntryId)
 		if mapEntrance == nil {
 			g.Send(cmd.GroupStateChangeScRsp, rsp)
@@ -326,8 +342,8 @@ func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg pb.Message) {
 		var propEntityIdList []uint32
 		for _, prop := range confGroup.PropList {
 			if strings.Contains(prop.Name, "Console") {
-				if enep := g.GetPropEntity(confGroup.GroupId, prop.ID); enep != nil {
-					g.UpPropState(blockBin, confGroup.GroupId, prop.ID, 1) // 更新状态
+				if enep := g.GetPd().GetPropEntity(confGroup.GroupId, prop.ID); enep != nil {
+					g.GetPd().UpPropState(blockBin, confGroup.GroupId, prop.ID, 1) // 更新状态
 					propEntityIdList = append(propEntityIdList, enep.EntityId)
 				}
 			}
@@ -389,7 +405,7 @@ func (g *GamePlayer) SetGroupCustomSaveDataCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SpringRecoverSingleAvatarCsReq)
-	g.AvatarRecover(req.Id)
+	g.GetPd().AvatarRecover(req.Id)
 
 	rsp := &proto.SpringRecoverSingleAvatarScRsp{
 		Hp:         10000,
@@ -397,7 +413,7 @@ func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg pb.Message) {
 		AvatarType: req.AvatarType,
 		Id:         req.Id,
 	}
-	g.SyncLineupNotify(g.GetBattleLineUp())
+	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
 	g.Send(cmd.SpringRecoverSingleAvatarScRsp, rsp)
 }
 
@@ -407,7 +423,7 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
 	for _, propId := range propEntityIdList {
-		pe := g.GetPropEntityById(propId)
+		pe := g.GetPd().GetPropEntityById(propId)
 		if pe == nil {
 			continue
 		}
@@ -438,7 +454,7 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 					EntityOneofCase: &proto.SceneEntityInfo_Prop{
 						Prop: &proto.ScenePropInfo{
 							PropId:    pe.PropId, // PropID
-							PropState: g.GetPropState(db, pe.GroupId, pe.InstId, ""),
+							PropState: g.GetPd().GetPropState(db, pe.GroupId, pe.InstId, ""),
 						},
 					},
 				},
@@ -450,20 +466,20 @@ func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db
 }
 
 // 添加角色
-func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial bool, pos, rot *proto.Vector) {
+func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(lineAvatar *spb.LineAvatarList, pos, rot *proto.Vector) {
 	notify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
 	info := new(proto.GroupRefreshInfo)
 	actor := &proto.SceneActorInfo{
 		AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
-		BaseAvatarId: avatarId,
+		BaseAvatarId: lineAvatar.AvatarId,
 		MapLayer:     0,
 		Uid:          0,
 	}
-	entityId := g.GetNextGameObjectGuid()
-	if isTrial {
-		conf := gdconf.GetSpecialAvatarById(avatarId)
+	entityId := g.GetPd().GetNextGameObjectGuid()
+	if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
+		conf := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId)
 		if conf == nil {
 			return
 		}
@@ -487,14 +503,15 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial
 			},
 		},
 	})
-	g.AddEntity(0, &AvatarEntity{
-		Entity: Entity{
+	g.GetPd().AddEntity(0, &model.AvatarEntity{
+		Entity: model.Entity{
 			EntityId: entityId,
 			GroupId:  0,
 			Pos:      pos,
 			Rot:      rot,
 		},
-		AvatarId: actor.BaseAvatarId,
+		AvatarId:   actor.BaseAvatarId,
+		LineAvatar: lineAvatar,
 	})
 	notify.GroupRefreshList = append(notify.GroupRefreshList, info)
 
@@ -502,7 +519,7 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(avatarId uint32, isTrial
 }
 
 // 卸载/加载场景
-func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList []*GroupInfo) {
+func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList []*model.GroupInfo) {
 	notify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
@@ -512,16 +529,18 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 		if groupInfo.GroupID == 0 { // 不能卸载角色
 			continue
 		}
-		db := g.GetBlock(groupInfo.EntryId)
+		db := g.GetPd().GetBlock(groupInfo.EntryId)
 		groupRefreshInfo := &proto.GroupRefreshInfo{
 			GroupId:       groupInfo.GroupID,
 			RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
-			State:         g.GetGroupState(db, groupInfo.GroupID),
+			State:         g.GetPd().GetGroupState(db, groupInfo.GroupID),
 		}
 
 		for _, entify := range groupInfo.EntityMap {
-			groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, &proto.SceneEntityRefreshInfo{
-				Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{DeleteEntity: g.GetEntryId(entify)},
+			groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity,
+				&proto.SceneEntityRefreshInfo{
+				Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{
+					DeleteEntity: g.GetPd().GetEntryId(entify)},
 			})
 		}
 
@@ -536,18 +555,21 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 		if group == nil {
 			continue
 		}
-		db := g.GetBlock(groupInfo.EntryId)
+		db := g.GetPd().GetBlock(groupInfo.EntryId)
 		groupRefreshInfo := &proto.GroupRefreshInfo{
 			GroupId:       groupInfo.GroupID,
 			RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
-			State:         g.GetGroupState(db, groupInfo.GroupID),
+			State:         g.GetPd().GetGroupState(db, groupInfo.GroupID),
 		}
 		// 添加怪物
-		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddMonsterSceneEntityRefreshInfo(groupInfo.GroupID, group.MonsterList)...)
+		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity,
+			g.GetPd().AddMonsterSceneEntityRefreshInfo(groupInfo.GroupID, group.MonsterList)...)
 		// 添加npc
-		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddNpcSceneEntityRefreshInfo(groupInfo.GroupID, group.NPCList)...)
+		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity,
+			g.GetPd().AddNpcSceneEntityRefreshInfo(groupInfo.GroupID, group.NPCList)...)
 		// 添加实体
-		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity, g.AddPropSceneEntityRefreshInfo(groupInfo.GroupID, group.PropList, db)...)
+		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity,
+			g.GetPd().AddPropSceneEntityRefreshInfo(groupInfo.GroupID, group.PropList, db)...)
 		notify.GroupRefreshList = append(notify.GroupRefreshList, groupRefreshInfo)
 		// g.UpdateBlock(db)
 	}
@@ -559,7 +581,7 @@ func (g *GamePlayer) SyncEntityBuffChangeListScNotify(buffList []uint32) {
 	notify := &proto.SyncEntityBuffChangeListScNotify{
 		EntityBuffChangeList: make([]*proto.SceneEntityBuffChange, 0),
 	}
-	mazeBuffMap := g.GetMazeBuffList()
+	mazeBuffMap := g.GetPd().GetMazeBuffList()
 	for _, buffId := range buffList {
 		if info, ok := mazeBuffMap[buffId]; ok {
 			notify.EntityBuffChangeList = append(notify.EntityBuffChangeList, &proto.SceneEntityBuffChange{
@@ -579,4 +601,30 @@ func (g *GamePlayer) SyncEntityBuffChangeListScNotify(buffList []uint32) {
 	}
 
 	g.Send(cmd.SyncEntityBuffChangeListScNotify, notify)
+}
+
+// 任务设置物品状态
+func (g *GamePlayer) SetFloorSavedValue(conf *gdconf.SubMission, finishAction *gdconf.FinishAction) {
+	if len(finishAction.FinishActionParaString) < 4 {
+		return
+	}
+	planeId := alg.S2U32(finishAction.FinishActionParaString[0])
+	floorId := alg.S2U32(finishAction.FinishActionParaString[1])
+	name := finishAction.FinishActionParaString[2]
+	state := alg.S2I32(finishAction.FinishActionParaString[3])
+	g.GetPd().SetFloorSavedData(model.FloorTentry(floorId), name, state)
+	notify := &proto.UpdateFloorSavedValueNotify{
+		SavedValue: map[string]int32{name: state},
+	}
+	g.Send(cmd.UpdateFloorSavedValueNotify, notify)
+
+	db := g.GetPd().GetBlock(model.FloorTentry(conf.WayPointFloorID))
+	groupID, instId := gdconf.GetSavedValue(planeId, floorId, name)
+	if groupID == 0 || instId == 0 {
+		return // TODO subMission 103030204
+	}
+	g.GetPd().UpPropState(db, groupID, instId, uint32(state))
+	if enep := g.GetPd().GetPropEntity(groupID, instId); enep != nil {
+		g.PropSceneGroupRefreshScNotify([]uint32{enep.EntityId}, db)
+	}
 }

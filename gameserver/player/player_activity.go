@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -37,7 +38,7 @@ func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg pb.Message) {
 		LoginActivityList: make([]*proto.LoginActivityData, 0),
 	}
 
-	loginActivity := g.GetLoginActivity()
+	loginActivity := g.GetPd().GetLoginActivity()
 	idList := gdconf.GetActivityLoginListById()
 
 	for _, id := range idList {
@@ -59,8 +60,8 @@ func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeLoginActivityRewardCsReq)
-	var pileItem []*Material
-	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	var pileItem []*model.Material
+	allSync := &model.AllPlayerSync{MaterialList: make([]uint32, 0)}
 
 	rsp := &proto.TakeLoginActivityRewardScRsp{
 		TakeDays: req.TakeDays,
@@ -77,11 +78,11 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	pile, material, item := g.getRewardData(activityLoginConfig.RewardList[req.TakeDays-1])
+	pile, material, item := g.GetPd().GetRewardData(activityLoginConfig.RewardList[req.TakeDays-1])
 	pileItem = append(pileItem, pile...)
 	allSync.MaterialList = append(allSync.MaterialList, material...)
 	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
-	g.AddMaterial(pileItem)
+	g.GetPd().AddMaterial(pileItem)
 	g.AllPlayerSyncScNotify(allSync)
 
 	g.Send(cmd.TakeLoginActivityRewardScRsp, rsp)
@@ -92,7 +93,7 @@ func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg pb.Message) {
 		TrialActivityList: make([]*proto.TrialActivityInfo, 0),
 	}
 
-	for _, id := range g.GetTrialActivity() {
+	for _, id := range g.GetPd().GetTrialActivity() {
 		trialActivityInfo := &proto.TrialActivityInfo{StageId: id}
 		rsp.TrialActivityList = append(rsp.TrialActivityList, trialActivityInfo)
 	}
@@ -103,7 +104,7 @@ func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) TakeTrialActivityRewardCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeTrialActivityRewardCsReq)
-	var pileItem []*Material
+	var pileItem []*model.Material
 
 	rsp := &proto.TakeTrialActivityRewardScRsp{
 		StageId: req.StageId,
@@ -116,11 +117,11 @@ func (g *GamePlayer) TakeTrialActivityRewardCsReq(payloadMsg pb.Message) {
 		Num:    100,
 	}
 	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item)
-	pileItem = append(pileItem, &Material{
+	pileItem = append(pileItem, &model.Material{
 		Tid: 102,
 		Num: 100,
 	})
-	g.AddMaterial(pileItem)
+	g.GetPd().AddMaterial(pileItem)
 
 	g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
 }

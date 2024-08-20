@@ -49,7 +49,6 @@ func NewGameServer(cfg *Config, appid string) *GameServer {
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.gateList = make(map[uint32]*gateServer)
 	s.playerMap = make(map[uint32]*GamePlayer)
-	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	logger.Info("GameServer AppId:%s", appid)
 	// 开启tcp服务
 	appConf := s.Config.AppList[appid].App["port_gt"]

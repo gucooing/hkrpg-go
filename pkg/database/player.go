@@ -135,7 +135,9 @@ func GetPlayerBasic(rc *redis.Client, db *gorm.DB, uid uint32) ([]byte, bool) {
 	}
 	if db != nil {
 		playerBasic := getPlayerBasicMysql(db, uid)
-		return playerBasic.BinData, true
+		if playerBasic.Uid == uid {
+			return playerBasic.BinData, true
+		}
 	}
 	return nil, false
 }
@@ -144,4 +146,58 @@ func getPlayerBasicMysql(db *gorm.DB, uid uint32) *constant.PlayerBasic {
 	var playerBasic *constant.PlayerBasic
 	db.Where(&constant.PlayerBasic{Uid: uid}).First(&playerBasic)
 	return playerBasic
+}
+
+// 获取好友申请
+func GetApplyFriend(rc *redis.Client, db *gorm.DB, uid uint32) ([]byte, bool) {
+	if rc != nil {
+		return getPlayerFriendRedis(rc, uid)
+	}
+	if db != nil {
+		applyFriend := getApplyFriendMysql(db, uid)
+		if applyFriend.Uid == uid {
+			return applyFriend.ReceiveApply, true
+		}
+	}
+	return nil, false
+}
+
+func getApplyFriendMysql(db *gorm.DB, uid uint32) *constant.ApplyFriend {
+	var applyFriend *constant.ApplyFriend
+	db.Where(&constant.ApplyFriend{Uid: uid}).First(&applyFriend)
+	return applyFriend
+}
+
+// 获取待加入好友
+func GetAcceptApplyFriend(rc *redis.Client, db *gorm.DB, uid uint32) ([]byte, bool) {
+	if rc != nil {
+		return getAcceptApplyFriendRedis(rc, uid)
+	}
+	if db != nil {
+		acceptApplyFriend := getAcceptApplyFriendMysql(db, uid)
+		if acceptApplyFriend.Uid == uid {
+			return acceptApplyFriend.AcceptApplyFriend, true
+		}
+	}
+	return nil, false
+}
+
+func getAcceptApplyFriendMysql(db *gorm.DB, uid uint32) *constant.AcceptApplyFriend {
+	var acceptApplyFriend *constant.AcceptApplyFriend
+	db.Where(&constant.AcceptApplyFriend{Uid: uid}).First(&acceptApplyFriend)
+	return acceptApplyFriend
+}
+
+// 删除待加入好友
+func DelAcceptApplyFriend(rc *redis.Client, db *gorm.DB, uid uint32) {
+	if rc != nil {
+		delAcceptApplyFriendRedis(rc, uid)
+	}
+	if db != nil {
+		delAcceptApplyFriendMysql(db, uid)
+	}
+}
+
+func delAcceptApplyFriendMysql(db *gorm.DB, uid uint32) {
+	db.Delete(&constant.AcceptApplyFriend{Uid: uid})
 }

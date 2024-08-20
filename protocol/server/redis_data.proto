@@ -5,6 +5,7 @@ package proto;
 option go_package = "./;proto";
 
 import "enum.server.proto";
+import "bin.server.proto";
 
 message MailRedisData {
   MailBin mail_bin = 1; // 邮件内容
@@ -76,6 +77,19 @@ message PlayerBasicBriefData {// 玩家简要信息
   uint32 uid = 8; // 游戏uid
   PlayerStatusType status = 9; // 玩家状态
   string signature = 10; // 签名
+  map<uint32,AssistAvatar> assist_avatar_list = 11;// 展示角色
+  map<uint32,AssistAvatar>  display_avatar_list = 12; // 支援角色
+}
+
+message AssistAvatar {
+  uint32 avatar_id = 1; // ID
+  uint32 rank = 2;
+  uint32 level = 3; // 等级
+  uint32 exp = 4;
+  uint32 promote_level = 5; // 突破等级
+  Equipment equipment = 6; // 装备光锥
+  map<uint32, Relic> equip_relic = 7; // 装备圣遗物
+  repeated AvatarSkillBin skilltree_list = 8; // 技能库
 }
 
 message ApplyFriend {// 好友申请（仅有node有修改权限

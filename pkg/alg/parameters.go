@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -96,12 +97,15 @@ func GetDaysSinceBaseline(currentTime time.Time) int32 {
 }
 
 func ExtractDigits(str string) uint32 {
-	parts := strings.Split(str, "_")
+	re := regexp.MustCompile(`\d+`)
+	parts := re.FindAllString(str, -1)
+
 	if len(parts) != 2 {
 		return 0
 	}
 	firstPart := parts[0]
 	secondPart := parts[1]
+
 	var thirdPart string
 	if len(secondPart) < 2 {
 		thirdPart = fmt.Sprintf("%02s", secondPart)

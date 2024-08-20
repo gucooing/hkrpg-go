@@ -28,7 +28,6 @@ type GateServer struct {
 	OuterAddr          string
 	Config             *Config
 	Store              *database.GateStore
-	snowflake          *alg.SnowflakeWorker // 雪花唯一id生成器
 	kcpListener        *kcp.Listener
 	node               *NodeService
 	sessionIdCounter   uint32
@@ -59,7 +58,6 @@ func NewGate(cfg *Config, appid string) *GateServer {
 	s.gsList = make(map[uint32]*gameServer)
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.WorkerId = 1
-	s.snowflake = alg.NewSnowflakeWorker(s.WorkerId)
 	s.loginPlayerMap = make(map[uint32]*PlayerGame)
 	s.playerMap = make(map[uint32]*PlayerGame)
 	logger.Info("GateServer AppId:%s", appid)

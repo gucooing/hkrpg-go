@@ -13,19 +13,22 @@ func (g *GamePlayer) HandleQueryProductInfoCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneEntityMoveCsReq)
-	if g.GetBattleStatus() == spb.BattleType_Battle_NONE {
-		entityList := g.GetEntity(0)
+	if g.GetPd().IsChangeStory() {
+	} else if g.GetPd().GetBattleStatus() == spb.BattleType_Battle_RAID {
+	} else if g.GetPd().GetBattleStatus() == spb.BattleType_Battle_NONE {
+		entityList := g.GetPd().GetEntity(0)
 		if entityList == nil {
 			g.Send(cmd.SceneEntityMoveScRsp, &proto.SceneEntityMoveScRsp{})
 			return
 		}
 		for _, entry := range req.EntityMotionList {
 			if entityList[entry.EntityId] != nil {
-				g.SetPos(entry.Motion.Pos.X, entry.Motion.Pos.Y, entry.Motion.Pos.Z)
-				g.SetRot(entry.Motion.Rot.X, entry.Motion.Rot.Y, entry.Motion.Rot.Z)
+				g.GetPd().SetPos(entry.Motion.Pos.X, entry.Motion.Pos.Y, entry.Motion.Pos.Z)
+				g.GetPd().SetRot(entry.Motion.Rot.X, entry.Motion.Rot.Y, entry.Motion.Rot.Z)
 				break
 			}
 		}
 	}
+
 	g.Send(cmd.SceneEntityMoveScRsp, &proto.SceneEntityMoveScRsp{})
 }

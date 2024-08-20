@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
@@ -13,7 +13,7 @@ func NewMail() *spb.Mail {
 	}
 }
 
-func (g *GamePlayer) GetMail() *spb.Mail {
+func (g *PlayerData) GetMail() *spb.Mail {
 	db := g.GetBasicBin()
 	if db.Mail == nil {
 		db.Mail = NewMail()
@@ -29,7 +29,7 @@ func NewMailDts(id uint32) *spb.MailDts {
 	}
 }
 
-func (g *GamePlayer) GetMailList() map[uint32]*spb.MailDts {
+func (g *PlayerData) GetMailList() map[uint32]*spb.MailDts {
 	db := g.GetMail()
 	if db.MailList == nil {
 		db.MailList = make(map[uint32]*spb.MailDts)
@@ -37,7 +37,7 @@ func (g *GamePlayer) GetMailList() map[uint32]*spb.MailDts {
 	return db.MailList
 }
 
-func (g *GamePlayer) GetMailById(id uint32) *spb.MailDts {
+func (g *PlayerData) GetMailById(id uint32) *spb.MailDts {
 	db := g.GetMailList()
 	if db[id] == nil {
 		db[id] = NewMailDts(id)
@@ -45,7 +45,7 @@ func (g *GamePlayer) GetMailById(id uint32) *spb.MailDts {
 	return db[id]
 }
 
-func (g *GamePlayer) ReadMail(id uint32) {
+func (g *PlayerData) ReadMail(id uint32) {
 	if id == 0 {
 		return
 	}
@@ -53,7 +53,7 @@ func (g *GamePlayer) ReadMail(id uint32) {
 	db.IsRead = true
 }
 
-func (g *GamePlayer) DelMail(id uint32) {
+func (g *PlayerData) DelMail(id uint32) {
 	if id == 0 {
 		return
 	}
@@ -62,18 +62,13 @@ func (g *GamePlayer) DelMail(id uint32) {
 }
 
 // TODO 邮件奖励兑换方法（拓展此处以支持更多奖励物品
-func (g *GamePlayer) MailReadItem(itemList []*constant.Item) bool {
-	allSync := &AllPlayerSync{
-		IsBasic:      true,
-		MaterialList: make([]uint32, 0),
-		AvatarList:   make([]uint32, 0),
-	}
+func (g *PlayerData) MailReadItem(itemList []*constant.Item, allSync *AllPlayerSync) bool {
 	pileItem := make([]*Material, 0)
 	for _, item := range itemList {
 		switch item.ItemType {
 		case constant.MailAvatar:
 			allSync.AvatarList = append(allSync.AvatarList, item.ItemId)
-			g.AddAvatar(item.ItemId, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
+			g.AddAvatar(item.ItemId)
 		case constant.MailMaterial:
 			allSync.MaterialList = append(allSync.MaterialList, item.ItemId)
 			pileItem = append(pileItem, &Material{
@@ -83,11 +78,11 @@ func (g *GamePlayer) MailReadItem(itemList []*constant.Item) bool {
 		}
 	}
 	g.AddMaterial(pileItem)
-	g.AllPlayerSyncScNotify(allSync)
+
 	return true
 }
 
-func (g *GamePlayer) GetAllMail() []*proto.ClientMail {
+func (g *PlayerData) GetAllMail() []*proto.ClientMail {
 	mailList := make([]*proto.ClientMail, 0)
 	mailMap := database.GetAllMail()
 	for id, mail := range mailMap {
@@ -114,7 +109,7 @@ func (g *GamePlayer) GetAllMail() []*proto.ClientMail {
 	return mailList
 }
 
-func (g *GamePlayer) GetAttachment(itemList []*constant.Item) []*proto.Item {
+func (g *PlayerData) GetAttachment(itemList []*constant.Item) []*proto.Item {
 	ItemList := make([]*proto.Item, 0)
 	for _, item := range itemList {
 		Item := &proto.Item{

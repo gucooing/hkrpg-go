@@ -8,8 +8,39 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+func (g *GamePlayer) SetDisplayAvatarCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SetDisplayAvatarCsReq)
+	db := g.GetPd().GetFriend()
+	if db.DisplayAvatarList == nil {
+		db.DisplayAvatarList = make(map[uint32]uint32)
+	}
+	for _, display := range req.DisplayAvatarList {
+		db.DisplayAvatarList[display.Pos] = display.AvatarId
+	}
+	rsp := &proto.SetDisplayAvatarScRsp{
+		DisplayAvatarList: req.DisplayAvatarList,
+	}
+	g.Send(cmd.SetDisplayAvatarScRsp, rsp)
+}
+
+func (g *GamePlayer) SetAssistAvatarCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SetAssistAvatarCsReq)
+	db := g.GetPd().GetFriend()
+	if db.AssistAvatarList == nil {
+		db.AssistAvatarList = make(map[uint32]uint32)
+	}
+	for pos, avatarId := range req.AvatarIdList {
+		db.AssistAvatarList[uint32(pos)] = avatarId
+	}
+	rsp := &proto.SetAssistAvatarScRsp{
+		AvatarId:     req.AvatarId,
+		AvatarIdList: req.AvatarIdList,
+	}
+	g.Send(cmd.SetAssistAvatarScRsp, rsp)
+}
+
 func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg pb.Message) {
-	db := g.GetFriendList()
+	db := g.GetPd().GetFriendList()
 	rsp := &proto.GetFriendLoginInfoScRsp{
 		FriendUidList: make([]uint32, 0),
 		Retcode:       0,
@@ -23,8 +54,8 @@ func (g *GamePlayer) HandleGetFriendLoginInfoCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetFriendListInfoScRsp)
 	rsp.FriendList = make([]*proto.FriendSimpleInfo, 0)
-	for uid := range g.GetFriendList() {
-		rsp.FriendList = append(rsp.FriendList, g.GetFriendSimpleInfo(uid))
+	for uid := range g.GetPd().GetFriendList() {
+		rsp.FriendList = append(rsp.FriendList, g.GetPd().GetFriendSimpleInfo(uid))
 	}
 	g.Send(cmd.GetFriendListInfoScRsp, rsp)
 }
@@ -32,20 +63,20 @@ func (g *GamePlayer) GetFriendListInfoCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) GetPlayerDetailInfoCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetPlayerDetailInfoCsReq)
 	g.Send(cmd.GetPlayerDetailInfoScRsp, &proto.GetPlayerDetailInfoScRsp{
-		DetailInfo: g.GetPlayerDetailInfo(req.Uid),
+		DetailInfo: g.GetPd().GetPlayerDetailInfo(req.Uid),
 		Retcode:    0,
 	})
 }
 
 func (g *GamePlayer) GetFriendApplyListInfoCsReq(payloadMsg pb.Message) {
-	receiveApplyList := g.GetRecvApplyFriend()
+	receiveApplyList := g.GetPd().GetRecvApplyFriend()
 	rsp := &proto.GetFriendApplyListInfoScRsp{
 		SendApplyList:    make([]uint32, 0),
 		Retcode:          0,
 		ReceiveApplyList: make([]*proto.FriendApplyInfo, 0),
 	}
 	for _, receiveApply := range receiveApplyList {
-		bin := g.GetFriendApplyInfo(receiveApply)
+		bin := g.GetPd().GetFriendApplyInfo(receiveApply)
 		if bin == nil {
 			continue
 		}
@@ -75,7 +106,7 @@ func (g *GamePlayer) SearchPlayerCsReq(payloadMsg pb.Message) {
 		SimpleInfoList: make([]*proto.PlayerSimpleInfo, 0),
 	}
 	for _, uid := range req.UidList {
-		bin := g.GetPlayerSimpleInfo(uid)
+		bin := g.GetPd().GetPlayerSimpleInfo(uid)
 		if bin == nil {
 			continue
 		}
@@ -88,13 +119,13 @@ func (g *GamePlayer) SearchPlayerCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) HandleFriendCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.HandleFriendCsReq)
 	if req.IsAccept {
-		g.AddFriend(req.Uid)
+		g.GetPd().AddFriend(req.Uid)
 	}
 	rsp := &proto.HandleFriendScRsp{
 		IsAccept:   req.IsAccept,
 		Uid:        req.Uid,
 		Retcode:    0,
-		FriendInfo: g.GetFriendSimpleInfo(req.Uid),
+		FriendInfo: g.GetPd().GetFriendSimpleInfo(req.Uid),
 	}
 	g.Send(cmd.HandleFriendScRsp, rsp)
 }

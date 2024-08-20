@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
@@ -13,7 +13,7 @@ func NewChangeStory() *spb.ChangeStory {
 	}
 }
 
-func (g *GamePlayer) GetChangeStory() *spb.ChangeStory {
+func (g *PlayerData) GetChangeStory() *spb.ChangeStory {
 	db := g.GetBasicBin()
 	if db.ChangeStory == nil {
 		db.ChangeStory = NewChangeStory()
@@ -21,12 +21,12 @@ func (g *GamePlayer) GetChangeStory() *spb.ChangeStory {
 	return db.ChangeStory
 }
 
-func (g *GamePlayer) IsChangeStory() bool {
+func (g *PlayerData) IsChangeStory() bool {
 	db := g.GetChangeStory()
 	return db.IsChangeStory
 }
 
-func (g *GamePlayer) GetAllChangeStoryInfo() map[uint32]*spb.ChangeStoryInfo {
+func (g *PlayerData) GetAllChangeStoryInfo() map[uint32]*spb.ChangeStoryInfo {
 	db := g.GetChangeStory()
 	if db.ChangeStoryInfo == nil {
 		db.ChangeStoryInfo = make(map[uint32]*spb.ChangeStoryInfo)
@@ -34,7 +34,7 @@ func (g *GamePlayer) GetAllChangeStoryInfo() map[uint32]*spb.ChangeStoryInfo {
 	return db.ChangeStoryInfo
 }
 
-func (g *GamePlayer) GetChangeStoryInfo(id uint32) *spb.ChangeStoryInfo {
+func (g *PlayerData) GetChangeStoryInfo(id uint32) *spb.ChangeStoryInfo {
 	db := g.GetChangeStory()
 	if db.ChangeStoryInfo == nil {
 		db.ChangeStoryInfo = make(map[uint32]*spb.ChangeStoryInfo)
@@ -42,7 +42,7 @@ func (g *GamePlayer) GetChangeStoryInfo(id uint32) *spb.ChangeStoryInfo {
 	return db.ChangeStoryInfo[id]
 }
 
-func (g *GamePlayer) GetCurChangeStoryInfo() *spb.ChangeStoryInfo {
+func (g *PlayerData) GetCurChangeStoryInfo() *spb.ChangeStoryInfo {
 	db := g.GetChangeStory()
 	if !db.IsChangeStory {
 		return nil
@@ -55,9 +55,9 @@ func (g *GamePlayer) GetCurChangeStoryInfo() *spb.ChangeStoryInfo {
 	return g.GetChangeStoryInfo(db.CurChangeStory)
 }
 
-func (g *GamePlayer) MissionAddChangeStoryLine(finishActionPara []uint32) {
+func (g *PlayerData) MissionAddChangeStoryLine(finishActionPara []uint32) (uint32, uint32, uint32, bool) {
 	if len(finishActionPara) < 4 {
-		return
+		return 0, 0, 0, false
 	}
 	db := g.GetChangeStory()
 	storyLineId := finishActionPara[0]
@@ -68,7 +68,7 @@ func (g *GamePlayer) MissionAddChangeStoryLine(finishActionPara []uint32) {
 		delete(db.ChangeStoryInfo, db.CurChangeStory)
 		db.IsChangeStory = false
 		db.CurChangeStory = 0
-		return
+		return g.GetCurEntryId(), 0, 0, true
 	}
 	conf := gdconf.GetStoryLine(storyLineId)
 	if conf != nil {
@@ -92,16 +92,16 @@ func (g *GamePlayer) MissionAddChangeStoryLine(finishActionPara []uint32) {
 		}
 		db.IsChangeStory = true
 	} else {
-		return
+		return 0, 0, 0, false
 	}
 	// g.StoryLineInfoScNotify() // 通知一次
 	// g.SyncLineupNotify(g.GetCurLineUp())
 	// g.ChangeStoryLineFinishScNotify()
 	// 传送
-	g.EnterSceneByServerScNotify(entryId, 0, anchorGroup, anchorId)
+	return entryId, anchorGroup, anchorId, true
 }
 
-func (g *GamePlayer) GetDimensionId() uint32 {
+func (g *PlayerData) GetDimensionId() uint32 {
 	if db := g.GetCurChangeStoryInfo(); db != nil {
 		conf := gdconf.GetStoryLineFloorData(db.ChangeStoryId)
 		if conf != nil {
@@ -111,7 +111,7 @@ func (g *GamePlayer) GetDimensionId() uint32 {
 	return 0
 }
 
-func (g *GamePlayer) GameStoryLineId() uint32 {
+func (g *PlayerData) GameStoryLineId() uint32 {
 	if db := g.GetCurChangeStoryInfo(); db != nil {
 		return db.ChangeStoryId
 	}

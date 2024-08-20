@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -11,16 +12,16 @@ import (
 func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournQueryScRsp{
 		Retcode:           0,
-		RogueTournCurInfo: g.GetRogueTournCurInfo(),
+		RogueTournCurInfo: g.GetPd().GetRogueTournCurInfo(),
 		RogueGetInfo: &proto.RogueTournInfo{
 			RogueTournSaveList:       make([]*proto.RogueTournSaveList, 0),
-			RogueTournAreaInfo:       g.GetRogueTournAreaInfo(),
-			PermanentInfo:            g.GetInspirationCircuitInfo(),
-			RogueSeasonInfo:          g.GetRogueTournSeasonInfo(),
-			ExtraScoreInfo:           g.GetExtraScoreInfo(),
-			RogueTournExpInfo:        g.GetRogueTournExpInfo(),
-			RogueTournHandbook:       g.GetRogueTournHandbookInfo(),
-			RogueTournDifficultyInfo: g.GetRogueTournDifficultyInfo(),
+			RogueTournAreaInfo:       g.GetPd().GetRogueTournAreaInfo(),
+			PermanentInfo:            g.GetPd().GetInspirationCircuitInfo(),
+			RogueSeasonInfo:          g.GetPd().GetRogueTournSeasonInfo(),
+			ExtraScoreInfo:           g.GetPd().GetExtraScoreInfo(),
+			RogueTournExpInfo:        g.GetPd().GetRogueTournExpInfo(),
+			RogueTournHandbook:       g.GetPd().GetRogueTournHandbookInfo(),
+			RogueTournDifficultyInfo: g.GetPd().GetRogueTournDifficultyInfo(),
 		},
 	}
 	g.Send(cmd.RogueTournQueryScRsp, rsp)
@@ -28,7 +29,7 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournGetPermanentTalentInfoScRsp{
-		PermanentInfo: g.GetInspirationCircuitInfo(),
+		PermanentInfo: g.GetPd().GetInspirationCircuitInfo(),
 		Retcode:       0,
 	}
 	g.Send(cmd.RogueTournGetPermanentTalentInfoScRsp, rsp)
@@ -48,25 +49,25 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg pb.Message) {
 		return
 	}
 	// 更新队伍
-	g.SetBattleLineUp(RogueTourn, req.BaseAvatarIdList)
+	g.SetBattleLineUp(model.RogueTourn, req.BaseAvatarIdList)
 	// 更新db
-	g.SetBattleStatus(spb.BattleType_Battle_ROGUE_TOURN)
-	g.SetMaterialById(Cf, 100) // 将宇宙碎片重置成100个
-	g.NewCurRogueTourn(req.AreaId)
-	curRoom := g.GetCurRogueTournRoom()
+	g.GetPd().SetBattleStatus(spb.BattleType_Battle_ROGUE_TOURN)
+	g.GetPd().SetMaterialById(model.Cf, 100) // 将宇宙碎片重置成100个
+	g.GetPd().NewCurRogueTourn(req.AreaId)
+	curRoom := g.GetPd().GetCurRogueTournRoom()
 
 	rsp.RogueTournCurSceneInfo = &proto.RogueTournCurSceneInfo{
-		Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
-		RotateInfo: g.GetRogueMapRotateInfo(curRoom.RoomId),
-		Scene:      g.GetRogueTournScene(curRoom.RoomId),
+		Lineup:     g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.RogueTourn)),
+		RotateInfo: g.GetPd().GetRogueMapRotateInfo(curRoom.RoomId),
+		Scene:      g.GetPd().GetRogueTournScene(curRoom.RoomId),
 	}
-	rsp.RogueTournCurInfo = g.GetRogueTournCurInfo()
+	rsp.RogueTournCurInfo = g.GetPd().GetRogueTournCurInfo()
 
 	// 选择三个初始方程
-	g.AddRogueBuffNum()
+	g.GetPd().AddRogueBuffNum()
 	g.FormulaSyncRogueCommonPendingActionScNotify([]uint32{130204, 130408, 130307})
 	rsp.RogueTournCurInfo.RogueTournCurAreaInfo.PendingAction = &proto.RogueCommonPendingAction{
-		QueuePosition: g.GetRogueBuffNum(),
+		QueuePosition: g.GetPd().GetRogueBuffNum(),
 		RogueAction: &proto.RogueAction{
 			Action: &proto.RogueAction_RogueFormulaSelectInfo{
 				RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
@@ -80,13 +81,13 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg pb.Message) {
-	curRoom := g.GetCurRogueTournRoom()
+	curRoom := g.GetPd().GetCurRogueTournRoom()
 	rsp := &proto.RogueTournEnterScRsp{
-		RogueTournCurInfo: g.GetRogueTournCurInfo(),
+		RogueTournCurInfo: g.GetPd().GetRogueTournCurInfo(),
 		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
-			Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
-			RotateInfo: g.GetRogueMapRotateInfo(curRoom.RoomId),
-			Scene:      g.GetRogueTournScene(curRoom.RoomId),
+			Lineup:     g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.RogueTourn)),
+			RotateInfo: g.GetPd().GetRogueMapRotateInfo(curRoom.RoomId),
+			Scene:      g.GetPd().GetRogueTournScene(curRoom.RoomId),
 		},
 	}
 
@@ -98,21 +99,22 @@ func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg pb.Message) {
 		Retcode: 0,
 		// IOLFDOIPNKA:            nil,
 	}
-	db := g.GetRogueTourn()
+	db := g.GetPd().GetRogueTourn()
 	db.CurRogueTourn = nil
-	g.SetBattleStatus(spb.BattleType_Battle_NONE)
+	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE)
 	g.Send(cmd.RogueTournSettleScRsp, rsp)
 }
 
 func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.RogueTournEnterRoomCsReq)
-	g.UpdateRogueTournEnterRoom(req.CurRoomIndex, req.NextRoomType)
-	curRoom := g.GetCurRogueTournRoom()
+	layerIndex, curRoomIndex := g.GetPd().UpdateRogueTournEnterRoom(req.CurRoomIndex, req.NextRoomType)
+	g.RogueTournLevelInfoUpdateScNotify(layerIndex, curRoomIndex)
+	curRoom := g.GetPd().GetCurRogueTournRoom()
 	rsp := &proto.RogueTournEnterRoomScRsp{
 		RogueTournCurSceneInfo: &proto.RogueTournCurSceneInfo{
-			Lineup:     g.GetLineUpPb(g.GetBattleLineUpById(RogueTourn)),
-			RotateInfo: g.GetRogueMapRotateInfo(curRoom.RoomId),
-			Scene:      g.GetRogueTournScene(curRoom.RoomId),
+			Lineup:     g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.RogueTourn)),
+			RotateInfo: g.GetPd().GetRogueMapRotateInfo(curRoom.RoomId),
+			Scene:      g.GetPd().GetRogueTournScene(curRoom.RoomId),
 		},
 		Retcode: 0,
 	}
@@ -122,7 +124,7 @@ func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg pb.Message) {
 
 // 房间切换通知
 func (g *GamePlayer) RogueTournLevelInfoUpdateScNotify(layerIndex, roomIndex uint32) {
-	db := g.GetCurRogueTourn()
+	db := g.GetPd().GetCurRogueTourn()
 	layerInfo := db.CurLayerList[layerIndex]
 	roomInfo := layerInfo.RogueTournRoomList[roomIndex]
 	notify := &proto.RogueTournLevelInfoUpdateScNotify{
@@ -152,7 +154,7 @@ func (g *GamePlayer) FormulaSyncRogueCommonPendingActionScNotify(formulaList []u
 	notify := &proto.SyncRogueCommonPendingActionScNotify{
 		RogueSubMode: 301,
 		Action: &proto.RogueCommonPendingAction{
-			QueuePosition: g.GetRogueBuffNum(),
+			QueuePosition: g.GetPd().GetRogueBuffNum(),
 			RogueAction: &proto.RogueAction{
 				Action: &proto.RogueAction_RogueFormulaSelectInfo{
 					RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{

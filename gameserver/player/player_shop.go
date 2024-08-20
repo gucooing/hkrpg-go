@@ -3,6 +3,7 @@ package player
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -73,21 +74,21 @@ func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ExchangeHcoinCsReq)
-	var dPileItem []*Material
-	var aPileItem []*Material
+	var dPileItem []*model.Material
+	var aPileItem []*model.Material
 
-	dPileItem = append(dPileItem, &Material{
+	dPileItem = append(dPileItem, &model.Material{
 		Tid: 3,
 		Num: req.Num,
 	})
 
-	aPileItem = append(aPileItem, &Material{
+	aPileItem = append(aPileItem, &model.Material{
 		Tid: 1,
 		Num: req.Num,
 	})
 
-	g.DelMaterial(dPileItem)
-	g.AddMaterial(aPileItem)
+	g.GetPd().DelMaterial(dPileItem)
+	g.GetPd().AddMaterial(aPileItem)
 
 	g.PlayerPlayerSyncScNotify()
 
@@ -104,9 +105,9 @@ func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.BuyGoodsCsReq)
-	var pileItem []*Material
+	var pileItem []*model.Material
 
-	allSync := &AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
+	allSync := &model.AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
 
 	rsp := &proto.BuyGoodsScRsp{
 		ReturnItemList: &proto.ItemList{
@@ -117,18 +118,18 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 		GoodsBuyTimes: uint32(time.Now().Unix()), // 商品购买时间
 	}
 
-	var material []*Material
+	var material []*model.Material
 	goodsConfig := gdconf.GetShopGoodsConfigByGoodsID(req.ShopId, req.GoodsId)
 	for id, cost := range goodsConfig.CurrencyList {
 		allSync.MaterialList = append(allSync.MaterialList, cost)
-		material = append(material, &Material{
+		material = append(material, &model.Material{
 			Tid: cost,
 			Num: goodsConfig.CurrencyCostList[id] * req.GoodsNum,
 		})
 	}
-	g.DelMaterial(material)
+	g.GetPd().DelMaterial(material)
 	num := goodsConfig.ItemCount * req.GoodsNum
-	pileItem = append(pileItem, &Material{
+	pileItem = append(pileItem, &model.Material{
 		Tid: req.ItemId,
 		Num: num,
 	})
@@ -142,11 +143,13 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 			Num:         num,
 			UniqueId:    0,
 		})
-	g.AddItem(pileItem)
+	g.GetPd().AddItem(pileItem, allSync)
 
-	allSync.MaterialList = append(allSync.MaterialList, req.ItemId)
 	g.AllPlayerSyncScNotify(allSync)
-	g.MissionGetItem(req.ItemId) // 任务检查
+	finishSubMission := g.GetPd().MissionGetItem(req.ItemId) // 任务检查
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
 	g.Send(cmd.BuyGoodsScRsp, rsp)
 }
 

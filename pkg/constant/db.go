@@ -87,3 +87,13 @@ type PlayerUid struct {
 	BanEndTime   int64
 	BanMsg       string
 }
+
+type ApplyFriend struct {
+	Uid          uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	ReceiveApply []byte
+}
+
+type AcceptApplyFriend struct {
+	Uid               uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	AcceptApplyFriend []byte
+}

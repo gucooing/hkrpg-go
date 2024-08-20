@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"math/rand"
@@ -41,7 +41,7 @@ type RogueBuffRarity struct {
 	BuffList []uint32 // buff列表
 }
 
-func (g *GamePlayer) GetDbRogue() *spb.Rogue {
+func (g *PlayerData) GetDbRogue() *spb.Rogue {
 	db := g.GetBattle()
 	if db.Rogue == nil {
 		db.Rogue = &spb.Rogue{
@@ -51,7 +51,7 @@ func (g *GamePlayer) GetDbRogue() *spb.Rogue {
 	return db.Rogue
 }
 
-func (g *GamePlayer) GetRogueHistory() map[uint32]*spb.RogueHistory {
+func (g *PlayerData) GetRogueHistory() map[uint32]*spb.RogueHistory {
 	db := g.GetDbRogue()
 	if db.RogueHistoryList == nil {
 		db.RogueHistoryList = make(map[uint32]*spb.RogueHistory)
@@ -59,7 +59,7 @@ func (g *GamePlayer) GetRogueHistory() map[uint32]*spb.RogueHistory {
 	return db.RogueHistoryList
 }
 
-func (g *GamePlayer) GetRogueHistoryById(id uint32) (*spb.RogueHistory, bool) {
+func (g *PlayerData) GetRogueHistoryById(id uint32) (*spb.RogueHistory, bool) {
 	db := g.GetRogueHistory()
 	isPoolRefreshed := false
 	if db[id] == nil {
@@ -72,12 +72,12 @@ func (g *GamePlayer) GetRogueHistoryById(id uint32) (*spb.RogueHistory, bool) {
 	return db[id], isPoolRefreshed
 }
 
-func (g *GamePlayer) NewCurRogue() {
+func (g *PlayerData) NewCurRogue() {
 	db := g.GetDbRogue()
 	db.CurRogue = new(spb.CurRogue)
 }
 
-func (g *GamePlayer) GetCurRogue() *spb.CurRogue {
+func (g *PlayerData) GetCurRogue() *spb.CurRogue {
 	db := g.GetDbRogue()
 	if db.CurRogue == nil {
 		db.CurRogue = new(spb.CurRogue)
@@ -85,7 +85,7 @@ func (g *GamePlayer) GetCurRogue() *spb.CurRogue {
 	return db.CurRogue
 }
 
-func (g *GamePlayer) GetRogueRoom() map[uint32]*spb.RogueRoom {
+func (g *PlayerData) GetRogueRoom() map[uint32]*spb.RogueRoom {
 	db := g.GetCurRogue()
 	if db.RogueRoomMap == nil {
 		db.RogueRoomMap = make(map[uint32]*spb.RogueRoom)
@@ -93,7 +93,7 @@ func (g *GamePlayer) GetRogueRoom() map[uint32]*spb.RogueRoom {
 	return db.RogueRoomMap
 }
 
-func (g *GamePlayer) GetCurRogueRoom() *spb.RogueRoom {
+func (g *PlayerData) GetCurRogueRoom() *spb.RogueRoom {
 	db := g.GetCurRogue()
 	if db.RogueRoomMap == nil {
 		db.RogueRoomMap = make(map[uint32]*spb.RogueRoom)
@@ -101,14 +101,14 @@ func (g *GamePlayer) GetCurRogueRoom() *spb.RogueRoom {
 	return db.RogueRoomMap[db.CurSiteId]
 }
 
-func (g *GamePlayer) GetCurRogueRoomId() uint32 {
+func (g *PlayerData) GetCurRogueRoomId() uint32 {
 	db := g.GetCurRogueRoom()
 	if db == nil {
 		return 0
 	}
 	return db.RoomId
 }
-func (g *GamePlayer) GetRoomBySiteId(siteId uint32) *spb.RogueRoom {
+func (g *PlayerData) GetRoomBySiteId(siteId uint32) *spb.RogueRoom {
 	db := g.GetCurRogue()
 	if db.RogueRoomMap == nil {
 		db.RogueRoomMap = make(map[uint32]*spb.RogueRoom)
@@ -116,27 +116,24 @@ func (g *GamePlayer) GetRoomBySiteId(siteId uint32) *spb.RogueRoom {
 	return db.RogueRoomMap[siteId]
 }
 
-func (g *GamePlayer) FinishRogueRoom(siteId uint32) {
+func (g *PlayerData) FinishRogueRoom(siteId uint32) {
 	room := g.GetRoomBySiteId(siteId)
 	if room == nil {
 		return
 	}
 	room.RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_FINISH
-	g.SyncRogueMapRoomScNotify(siteId)
 }
 
-func (g *GamePlayer) UpCurRogueRoom(siteId uint32) {
+func (g *PlayerData) UpCurRogueRoom(siteId uint32) {
 	db := g.GetCurRogue()
 	if db.RogueRoomMap[siteId] == nil {
 		return
 	}
 	db.RogueRoomMap[siteId].RoomStatus = spb.RoomStatus_RogueRoomStatus_ROGUE_ROOM_STATUS_PLAY
 	db.CurSiteId = siteId
-	// 更新通知
-	g.SyncRogueMapRoomScNotify(siteId)
 }
 
-func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
+func (g *PlayerData) GetDbRogueArea(areaId uint32) *spb.RogueArea {
 	rogue := g.GetDbRogue()
 	if rogue.RogueArea == nil {
 		rogue.RogueArea = make(map[uint32]*spb.RogueArea)
@@ -150,7 +147,7 @@ func (g *GamePlayer) GetDbRogueArea(areaId uint32) *spb.RogueArea {
 	return rogue.RogueArea[areaId]
 }
 
-func (g *GamePlayer) GetRogueBuffNum() uint32 {
+func (g *PlayerData) GetRogueBuffNum() uint32 {
 	db := g.GetCurRogue()
 	if db == nil {
 		return 0
@@ -158,14 +155,14 @@ func (g *GamePlayer) GetRogueBuffNum() uint32 {
 	return db.BuffNum
 }
 
-func (g *GamePlayer) AddRogueBuffNum() {
+func (g *PlayerData) AddRogueBuffNum() {
 	db := g.GetCurRogue()
 	if db != nil {
 		db.BuffNum++
 	}
 }
 
-func (g *GamePlayer) GetRogueBuffList() map[uint32]*spb.RogueBuff {
+func (g *PlayerData) GetRogueBuffList() map[uint32]*spb.RogueBuff {
 	db := g.GetCurRogue()
 	if db.BuffList == nil {
 		db.BuffList = make(map[uint32]*spb.RogueBuff)
@@ -173,12 +170,12 @@ func (g *GamePlayer) GetRogueBuffList() map[uint32]*spb.RogueBuff {
 	return db.BuffList
 }
 
-func (g *GamePlayer) GetRogueBuffById(id uint32) *spb.RogueBuff {
+func (g *PlayerData) GetRogueBuffById(id uint32) *spb.RogueBuff {
 	db := g.GetRogueBuffList()
 	return db[id]
 }
 
-func (g *GamePlayer) AddRogueBuff(id uint32) {
+func (g *PlayerData) AddRogueBuff(id uint32) {
 	db := g.GetRogueBuffList()
 	conf := gdconf.GetBuffById(id)
 	if db[id] != nil {
@@ -196,7 +193,7 @@ func (g *GamePlayer) AddRogueBuff(id uint32) {
 
 /**************************************************Buff获取概率计算*******************************************/
 
-func (g *GamePlayer) GetRogueInfoOnline() *RogueInfoOnline {
+func (g *PlayerData) GetRogueInfoOnline() *RogueInfoOnline {
 	db := g.GetCurBattle()
 	if db.RogueInfoOnline == nil {
 		db.RogueInfoOnline = &RogueInfoOnline{}
@@ -204,7 +201,7 @@ func (g *GamePlayer) GetRogueInfoOnline() *RogueInfoOnline {
 	return db.RogueInfoOnline
 }
 
-func (g *GamePlayer) NewGetRogueBuffByType() {
+func (g *PlayerData) NewGetRogueBuffByType() {
 	db := g.GetRogueInfoOnline()
 	db.RogueBuffRarityOne = RogueBuffRarityOne
 	db.RogueBuffRarityTwo = RogueBuffRarityTwo
@@ -241,7 +238,7 @@ func (g *GamePlayer) NewGetRogueBuffByType() {
 	db.RogueBuffByType = rogueBuffByTypeList
 }
 
-func (g *GamePlayer) GetRogueBuffByType() map[uint32]*RogueBuffByType {
+func (g *PlayerData) GetRogueBuffByType() map[uint32]*RogueBuffByType {
 	db := g.GetRogueInfoOnline()
 	if db.RogueBuffByType == nil {
 		g.NewGetRogueBuffByType()
@@ -249,7 +246,7 @@ func (g *GamePlayer) GetRogueBuffByType() map[uint32]*RogueBuffByType {
 	return db.RogueBuffByType
 }
 
-func (g *GamePlayer) GetRogueBuff() uint32 {
+func (g *PlayerData) GetRogueBuff() uint32 {
 	db := g.GetRogueInfoOnline()
 	rogueBuffByTypeList := db.RogueBuffByType
 	var totalWeight int32 = 0
@@ -317,7 +314,7 @@ func (g *GamePlayer) GetRogueBuff() uint32 {
 
 /****************************************************功能***************************************************/
 
-func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
+func (g *PlayerData) GetRogueInfo() *proto.RogueInfo {
 	rogueInfo := &proto.RogueInfo{
 		RogueGetInfo: &proto.RogueGetInfo{
 			RogueSeasonInfo:      g.GetRogueSeasonInfo(),
@@ -331,7 +328,7 @@ func (g *GamePlayer) GetRogueInfo() *proto.RogueInfo {
 	return rogueInfo
 }
 
-func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
+func (g *PlayerData) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 	db := g.GetCurRogue()
 	info := &proto.RogueCurrentInfo{
 		RogueAeonInfo:   g.GetGameAeonInfo(),
@@ -349,7 +346,7 @@ func (g *GamePlayer) GetRogueCurrentInfo() *proto.RogueCurrentInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
+func (g *PlayerData) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
 	conf := database.GetCurRogue()
 	if conf == nil {
 		return nil
@@ -367,7 +364,7 @@ func (g *GamePlayer) GetRogueScoreRewardInfo() *proto.RogueScoreRewardInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
+func (g *PlayerData) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
 	conf := database.GetCurRogue()
 	if conf == nil {
 		return nil
@@ -380,7 +377,7 @@ func (g *GamePlayer) GetRogueSeasonInfo() *proto.RogueSeasonInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
+func (g *PlayerData) GetRogueAreaInfo() *proto.RogueAreaInfo {
 	info := &proto.RogueAreaInfo{
 		RogueAreaList: make([]*proto.RogueArea, 0),
 	}
@@ -408,7 +405,7 @@ func (g *GamePlayer) GetRogueAreaInfo() *proto.RogueAreaInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueAeonInfo() *proto.RogueAeonInfo {
+func (g *PlayerData) GetRogueAeonInfo() *proto.RogueAeonInfo {
 	info := &proto.RogueAeonInfo{
 		IsUnlocked:             true,
 		UnlockedAeonEnhanceNum: 3,
@@ -419,7 +416,7 @@ func (g *GamePlayer) GetRogueAeonInfo() *proto.RogueAeonInfo {
 	return info
 }
 
-func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
+func (g *PlayerData) GetGameAeonInfo() *proto.GameAeonInfo {
 	rogue := g.GetCurRogue()
 	info := &proto.GameAeonInfo{
 		IsUnlocked:             true,
@@ -429,7 +426,7 @@ func (g *GamePlayer) GetGameAeonInfo() *proto.GameAeonInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
+func (g *PlayerData) GetRogueMap() *proto.RogueMapInfo {
 	rogue := g.GetCurRogue()
 	roomMap := &proto.RogueMapInfo{
 		MapId:     rogue.RogueMapId,
@@ -450,7 +447,7 @@ func (g *GamePlayer) GetRogueMap() *proto.RogueMapInfo {
 	return roomMap
 }
 
-func (g *GamePlayer) GetRogueLineupInfo() *proto.RogueLineupInfo {
+func (g *PlayerData) GetRogueLineupInfo() *proto.RogueLineupInfo {
 	info := &proto.RogueLineupInfo{
 		BaseAvatarIdList: make([]uint32, 0),
 		ReviveInfo:       nil,
@@ -469,7 +466,7 @@ func (g *GamePlayer) GetRogueLineupInfo() *proto.RogueLineupInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
+func (g *PlayerData) GetRogueBuffInfo() *proto.RogueBuffInfo {
 	info := &proto.RogueBuffInfo{
 		MazeBuffList: make([]*proto.RogueBuff, 0),
 	}
@@ -482,7 +479,7 @@ func (g *GamePlayer) GetRogueBuffInfo() *proto.RogueBuffInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
+func (g *PlayerData) GetRogueVirtualItem() *proto.RogueVirtualItem {
 	info := &proto.RogueVirtualItem{
 		// Sus:        0,
 		// RogueMoney: g.GetMaterialById(Cf),
@@ -491,7 +488,7 @@ func (g *GamePlayer) GetRogueVirtualItem() *proto.RogueVirtualItem {
 	return info
 }
 
-func (g *GamePlayer) GetGameMiracleInfo() *proto.GameMiracleInfo {
+func (g *PlayerData) GetGameMiracleInfo() *proto.GameMiracleInfo {
 	info := &proto.GameMiracleInfo{
 		GameMiracleInfo: &proto.RogueMiracleInfo{
 			MiracleList: make([]*proto.RogueMiracle, 0),
@@ -501,7 +498,7 @@ func (g *GamePlayer) GetGameMiracleInfo() *proto.GameMiracleInfo {
 	return info
 }
 
-func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingAction {
+func (g *PlayerData) GetRogueCommonPendingAction() *proto.RogueCommonPendingAction {
 	info := &proto.RogueCommonPendingAction{
 		QueuePosition: 0,
 		RogueAction:   &proto.RogueAction{},
@@ -510,7 +507,7 @@ func (g *GamePlayer) GetRogueCommonPendingAction() *proto.RogueCommonPendingActi
 	return info
 }
 
-func (g *GamePlayer) GetCurRogueBuff() []*proto.BattleBuff {
+func (g *PlayerData) GetCurRogueBuff() []*proto.BattleBuff {
 	buffList := make([]*proto.BattleBuff, 0)
 	db := g.GetRogueBuffList()
 	for _, buff := range db {
@@ -527,7 +524,7 @@ func (g *GamePlayer) GetCurRogueBuff() []*proto.BattleBuff {
 	return buffList
 }
 
-func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
+func (g *PlayerData) GetRogueScene(roomId uint32) *proto.SceneInfo {
 	rogueRoom := gdconf.GetRogueRoomById(roomId)
 	if rogueRoom == nil {
 		return nil
@@ -605,7 +602,7 @@ func (g *GamePlayer) GetRogueScene(roomId uint32) *proto.SceneInfo {
 	return scene
 }
 
-func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, ida uint32) {
+func (g *PlayerData) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, ida uint32) {
 	for _, monsterList := range sceneGroup.MonsterList {
 		entityId := g.GetNextGameObjectGuid()
 		rogueMonsterID := gdconf.GetRogueMonsterGroupByGroupID(ida)
@@ -651,7 +648,7 @@ func (g *GamePlayer) GetRogueNPCMonsterByID(entityGroupList *proto.SceneEntityGr
 	}
 }
 
-func (g *GamePlayer) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) {
+func (g *PlayerData) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup) {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{

@@ -43,7 +43,8 @@ func GetApplyFriendByUid(uid uint32) *spb.ApplyFriend {
 		db.ApplyFriend = make(map[uint32]*spb.ApplyFriend)
 	}
 	if db.ApplyFriend[uid] == nil {
-		bin, ok := database.GetPlayerFriend(nodb.GetStore().PlayerBriefDataRedis, uid)
+		bin, ok := database.GetAcceptApplyFriend(nodb.GetStore().PlayerBriefDataRedis,
+			nil, uid)
 		if !ok {
 			friend = &spb.ApplyFriend{
 				Uid:             uid,
@@ -84,7 +85,8 @@ func GetAcceptApplyFriendByUid(uid uint32) *spb.AcceptApplyFriend {
 		db.AcceptApplyFriend = make(map[uint32]*spb.AcceptApplyFriend)
 	}
 	if db.AcceptApplyFriend[uid] == nil {
-		bin, ok := database.GetAcceptApplyFriend(nodb.GetStore().PlayerBriefDataRedis, uid)
+		bin, ok := database.GetAcceptApplyFriend(nodb.GetStore().PlayerBriefDataRedis,
+			nil, uid)
 		if !ok {
 			friend = &spb.AcceptApplyFriend{
 				Uid:             uid,

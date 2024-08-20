@@ -13,6 +13,7 @@ import (
 	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/dispatch"
 	"github.com/gucooing/hkrpg-go/gameserver"
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/gateserver"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -115,7 +116,6 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	go kcpNetInfo()
 	s.playerMap = make(map[uint32]*PlayerGame)
 	s.CmdRouteManager = NewCmdRouteManager()
-	player.SNOWFLAKE = alg.NewSnowflakeWorker(1)
 	// 开启game定时器
 	s.autoUpDataPlayer = time.NewTicker(gameserver.AutoUpDataPlayerTicker * time.Second)
 	everyDay4 := alg.GetEveryDay4()
@@ -275,7 +275,7 @@ func (p *PlayerGame) SendHandle(cmdId uint16, playerMsg pb.Message) {
 	}
 	if kcpMsg.CmdId == cmd.GetTutorialGuideScRsp {
 		binMsg2 := alg.EncodePayloadToBin(&alg.PackMsg{
-			CmdId:     player.NewM,
+			CmdId:     model.NewM,
 			HeadData:  make([]byte, 0),
 			ProtoData: gunet.GetGunetTcpConn(),
 		}, p.XorKey)
@@ -372,7 +372,8 @@ func (s *HkRpgGoServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g.RecvCtx, g.RecvCal = context.WithCancel(context.Background())
 	g.SendCtx, g.SendCal = context.WithCancel(context.Background())
 	g.IsJumpMission = s.config.GameServer.IsJumpMission
-	g.Store = &database.GameStore{PeMysql: s.db.AccountMysql}
+	database.GSS = &database.GameStore{PeMysql: s.db.AccountMysql}
+	g.Store = database.GSS // TODO
 	g.IsPE = true
 	g.RouteManager = player.NewRouteManager(g)
 	g.LastUpDataTime = time.Now().Unix()

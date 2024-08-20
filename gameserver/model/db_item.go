@@ -1,4 +1,4 @@
-package player
+package model
 
 import (
 	"math"
@@ -7,21 +7,21 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
 const (
-	Hcoin       uint32 = 1      // 星琼
-	Scoin       uint32 = 2      // 金钱
-	Mcoin       uint32 = 3      // 梦华
-	Stamina     uint32 = 11     // 体力
-	RStamina    uint32 = 12     // 后备体力
-	Exp         uint32 = 22     // 经验
-	Cf          uint32 = 31     // 宇宙碎片
-	NewM               = 53     // 新道具
-	Inspiration uint32 = 281018 // 灵感
+	Hcoin        uint32 = 1      // 星琼
+	Scoin        uint32 = 2      // 金钱
+	Mcoin        uint32 = 3      // 梦华
+	Stamina      uint32 = 11     // 体力
+	RStamina     uint32 = 12     // 后备体力
+	Exp          uint32 = 22     // 经验
+	Cf           uint32 = 31     // 宇宙碎片
+	NewM                = 53     // 新道具
+	RelicRemains        = 235    // 遗弃残骸
+	Inspiration  uint32 = 281018 // 灵感
 )
 
 type Material struct {
@@ -41,7 +41,7 @@ func NewItem() *spb.Item {
 	return item
 }
 
-func (g *GamePlayer) GetItem() *spb.Item {
+func (g *PlayerData) GetItem() *spb.Item {
 	db := g.GetBasicBin()
 	if db.Item == nil {
 		db.Item = NewItem()
@@ -49,7 +49,7 @@ func (g *GamePlayer) GetItem() *spb.Item {
 	return db.Item
 }
 
-func (g *GamePlayer) GetRelicMap() map[uint32]*spb.Relic {
+func (g *PlayerData) GetRelicMap() map[uint32]*spb.Relic {
 	db := g.GetItem()
 	if db.RelicMap == nil {
 		db.RelicMap = make(map[uint32]*spb.Relic)
@@ -57,12 +57,12 @@ func (g *GamePlayer) GetRelicMap() map[uint32]*spb.Relic {
 	return db.RelicMap
 }
 
-func (g *GamePlayer) GetRelicById(id uint32) *spb.Relic {
+func (g *PlayerData) GetRelicById(id uint32) *spb.Relic {
 	db := g.GetRelicMap()
 	return db[id]
 }
 
-func (g *GamePlayer) GetEquipmentMap() map[uint32]*spb.Equipment {
+func (g *PlayerData) GetEquipmentMap() map[uint32]*spb.Equipment {
 	db := g.GetItem()
 	if db.EquipmentMap == nil {
 		db.EquipmentMap = make(map[uint32]*spb.Equipment)
@@ -70,12 +70,12 @@ func (g *GamePlayer) GetEquipmentMap() map[uint32]*spb.Equipment {
 	return db.EquipmentMap
 }
 
-func (g *GamePlayer) GetEquipmentById(id uint32) *spb.Equipment {
+func (g *PlayerData) GetEquipmentById(id uint32) *spb.Equipment {
 	db := g.GetEquipmentMap()
 	return db[id]
 }
 
-func (g *GamePlayer) GetMaterialMap() map[uint32]uint32 {
+func (g *PlayerData) GetMaterialMap() map[uint32]uint32 {
 	db := g.GetItem()
 	if db.MaterialMap == nil {
 		db.MaterialMap = make(map[uint32]uint32)
@@ -83,17 +83,17 @@ func (g *GamePlayer) GetMaterialMap() map[uint32]uint32 {
 	return db.MaterialMap
 }
 
-func (g *GamePlayer) GetMaterialById(id uint32) uint32 {
+func (g *PlayerData) GetMaterialById(id uint32) uint32 {
 	db := g.GetMaterialMap()
 	return db[id]
 }
 
-func (g *GamePlayer) SetMaterialById(id, num uint32) {
+func (g *PlayerData) SetMaterialById(id, num uint32) {
 	db := g.GetMaterialMap()
 	db[id] = num
 }
 
-func (g *GamePlayer) GetUnlockFormulaList() []uint32 {
+func (g *PlayerData) GetUnlockFormulaList() []uint32 {
 	db := g.GetItem()
 	if db.UnlockFormulaList == nil {
 		db.UnlockFormulaList = make([]uint32, 0)
@@ -101,7 +101,7 @@ func (g *GamePlayer) GetUnlockFormulaList() []uint32 {
 	return db.UnlockFormulaList
 }
 
-func (g *GamePlayer) AddItem(pileItem []*Material) {
+func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
 	itemConf := gdconf.GetItemConfigMap()
 	materialList := make([]*Material, 0)
 	for _, itemInfo := range pileItem {
@@ -110,10 +110,12 @@ func (g *GamePlayer) AddItem(pileItem []*Material) {
 		}
 		if itemConf.Item[itemInfo.Tid] != nil {
 			materialList = append(materialList, itemInfo)
+			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
 			continue
 		}
 		if itemConf.Avatar[itemInfo.Tid] != nil {
-			g.AddAvatar(itemInfo.Tid, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
+			g.AddAvatar(itemInfo.Tid)
+			allSync.AvatarList = append(allSync.AvatarList, itemInfo.Tid)
 			continue
 		}
 		if itemConf.AvatarPlayerIcon[itemInfo.Tid] != nil {
@@ -122,22 +124,27 @@ func (g *GamePlayer) AddItem(pileItem []*Material) {
 		}
 		if itemConf.AvatarRank[itemInfo.Tid] != nil {
 			materialList = append(materialList, itemInfo)
+			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
 			continue
 		}
 		if itemConf.Book[itemInfo.Tid] != nil {
 			materialList = append(materialList, itemInfo)
+			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
 			continue
 		}
 		if itemConf.Disk[itemInfo.Tid] != nil {
 			materialList = append(materialList, itemInfo)
+			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
 			continue
 		}
 		if itemConf.Equipment[itemInfo.Tid] != nil {
 			g.AddEquipment(itemInfo.Tid)
+			allSync.EquipmentList = append(allSync.EquipmentList, itemInfo.Tid)
 			continue
 		}
 		if itemConf.Relic[itemInfo.Tid] != nil {
 			g.AddRelic(itemInfo.Tid)
+			allSync.RelicList = append(allSync.RelicList, itemInfo.Tid)
 			continue
 		}
 		logger.Debug("AddItemId:%v error", itemInfo.Tid)
@@ -147,7 +154,7 @@ func (g *GamePlayer) AddItem(pileItem []*Material) {
 	}
 }
 
-func isMateria(id uint32) bool {
+func IsMateria(id uint32) bool {
 	itemConf := gdconf.GetItemConfigMap()
 	if itemConf.Item[id] != nil ||
 		itemConf.AvatarRank[id] != nil ||
@@ -158,7 +165,7 @@ func isMateria(id uint32) bool {
 	return false
 }
 
-func (g *GamePlayer) AddMaterial(pileItem []*Material) {
+func (g *PlayerData) AddMaterial(pileItem []*Material) {
 	db := g.GetMaterialMap()
 	for _, material := range pileItem {
 		// 特殊物品处理
@@ -179,10 +186,9 @@ func (g *GamePlayer) AddMaterial(pileItem []*Material) {
 			db[material.Tid] += material.Num
 		}
 	}
-	g.ScenePlaneEventScNotify(pileItem)
 }
 
-func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {
+func (g *PlayerData) DelMaterial(pileItem []*Material) bool {
 	db := g.GetMaterialMap()
 	for _, item := range pileItem {
 		if db[item.Tid] < item.Num {
@@ -196,7 +202,7 @@ func (g *GamePlayer) DelMaterial(pileItem []*Material) bool {
 	return true
 }
 
-func (g *GamePlayer) GetHeadIconList() []uint32 {
+func (g *PlayerData) GetHeadIconList() []uint32 {
 	db := g.GetItem()
 	if db.HeadIcon == nil {
 		db.HeadIcon = make([]uint32, 0)
@@ -204,14 +210,14 @@ func (g *GamePlayer) GetHeadIconList() []uint32 {
 	return db.HeadIcon
 }
 
-func (g *GamePlayer) AddHeadIcon(headIconId uint32) {
+func (g *PlayerData) AddHeadIcon(headIconId uint32) {
 	db := g.GetHeadIconList()
 	db = append(db, headIconId)
 	// TODO
 	// g.ScenePlaneEventScNotify(headIconId, 1)
 }
 
-func (g *GamePlayer) AddUnlockFormulaList(formulaId uint32) {
+func (g *PlayerData) AddUnlockFormulaList(formulaId uint32) {
 	db := g.GetItem()
 	if db.UnlockFormulaList == nil {
 		db.UnlockFormulaList = make([]uint32, 0)
@@ -219,7 +225,7 @@ func (g *GamePlayer) AddUnlockFormulaList(formulaId uint32) {
 	db.UnlockFormulaList = append(db.UnlockFormulaList, formulaId)
 }
 
-func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
+func (g *PlayerData) GetEquipment(uniqueId uint32) *proto.Equipment {
 	equipmentDb := g.GetEquipmentById(uniqueId)
 	if equipmentDb == nil {
 		return nil
@@ -237,8 +243,8 @@ func (g *GamePlayer) GetEquipment(uniqueId uint32) *proto.Equipment {
 	return equipment
 }
 
-func (g *GamePlayer) AddEquipment(tid uint32) uint32 {
-	uniqueId := uint32(SNOWFLAKE.GenId())
+func (g *PlayerData) AddEquipment(tid uint32) uint32 {
+	uniqueId := g.GetUniqueId()
 	db := g.GetEquipmentMap()
 	db[uniqueId] = &spb.Equipment{
 		Tid:          tid,
@@ -253,7 +259,7 @@ func (g *GamePlayer) AddEquipment(tid uint32) uint32 {
 	return uniqueId
 }
 
-func (g *GamePlayer) SellDelEquipment(uniqueId uint32) []*Material {
+func (g *PlayerData) SellDelEquipment(uniqueId uint32) []*Material {
 	var material []*Material
 	db := g.GetEquipmentMap()
 	if db[uniqueId] == nil {
@@ -274,7 +280,7 @@ func (g *GamePlayer) SellDelEquipment(uniqueId uint32) []*Material {
 	return material
 }
 
-func (g *GamePlayer) GetRelic(uniqueId uint32) *proto.Relic {
+func (g *PlayerData) GetRelic(uniqueId uint32) *proto.Relic {
 	relicDb := g.GetRelicById(uniqueId)
 	if relicDb == nil {
 		return nil
@@ -300,8 +306,8 @@ func (g *GamePlayer) GetRelic(uniqueId uint32) *proto.Relic {
 	return relic
 }
 
-func (g *GamePlayer) AddRelic(tid uint32) uint32 {
-	uniqueId := uint32(SNOWFLAKE.GenId())
+func (g *PlayerData) AddRelic(tid uint32) uint32 {
+	uniqueId := g.GetUniqueId()
 	relicConf := gdconf.GetRelicById(tid)
 	if relicConf == nil {
 		return 0
@@ -327,11 +333,11 @@ func (g *GamePlayer) AddRelic(tid uint32) uint32 {
 	baseSubAffixes := math.Min(math.Max(float64(relicConf.Type-2), 0), 3)
 	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
 	relicAffix := make(map[uint32]*spb.RelicAffix)
-	g.addRelicAffix(&addRelicAffix{
-		addSubAffixes:     addSubAffixes,
-		mainAffixProperty: mainAffixConf.Property,
-		subAffixGroup:     relicConf.SubAffixGroup,
-		relicAffix:        relicAffix,
+	g.AddRelicAffix(&AddRelicAffix{
+		AddSubAffixes:     addSubAffixes,
+		MainAffixProperty: mainAffixConf.Property,
+		SubAffixGroup:     relicConf.SubAffixGroup,
+		RelicAffix:        relicAffix,
 	})
 	relic.RelicAffix = relicAffix
 
@@ -339,8 +345,8 @@ func (g *GamePlayer) AddRelic(tid uint32) uint32 {
 	return uniqueId
 }
 
-func (g *GamePlayer) AddBtRelic(tid uint32) uint32 {
-	uniqueId := uint32(SNOWFLAKE.GenId())
+func (g *PlayerData) AddBtRelic(tid uint32) uint32 {
+	uniqueId := g.GetUniqueId()
 	relicConf := gdconf.GetRelicById(tid)
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
 	db := g.GetRelicMap()
@@ -358,11 +364,11 @@ func (g *GamePlayer) AddBtRelic(tid uint32) uint32 {
 	}
 
 	relicAffix := make(map[uint32]*spb.RelicAffix)
-	g.addRelicAffix(&addRelicAffix{
-		addSubAffixes:     400,
-		mainAffixProperty: mainAffixConf.Property,
-		subAffixGroup:     relicConf.SubAffixGroup,
-		relicAffix:        relicAffix,
+	g.AddRelicAffix(&AddRelicAffix{
+		AddSubAffixes:     400,
+		MainAffixProperty: mainAffixConf.Property,
+		SubAffixGroup:     relicConf.SubAffixGroup,
+		RelicAffix:        relicAffix,
 	})
 	relic.RelicAffix = relicAffix
 
@@ -370,39 +376,39 @@ func (g *GamePlayer) AddBtRelic(tid uint32) uint32 {
 	return uniqueId
 }
 
-type addRelicAffix struct {
-	addSubAffixes     int                        // 添加词条数
-	mainAffixProperty string                     // 主词条效果
-	subAffixGroup     uint32                     // 副词条随机库id
-	relicAffix        map[uint32]*spb.RelicAffix // 副词条内存
+type AddRelicAffix struct {
+	AddSubAffixes     int                        // 添加词条数
+	MainAffixProperty string                     // 主词条效果
+	SubAffixGroup     uint32                     // 副词条随机库id
+	RelicAffix        map[uint32]*spb.RelicAffix // 副词条内存
 }
 
-func (g *GamePlayer) addRelicAffix(str *addRelicAffix) {
-	for i := 0; i < str.addSubAffixes; {
-		if len(str.relicAffix) >= 4 {
-			randIndex := rand.Intn(len(str.relicAffix))
+func (g *PlayerData) AddRelicAffix(str *AddRelicAffix) {
+	for i := 0; i < str.AddSubAffixes; {
+		if len(str.RelicAffix) >= 4 {
+			randIndex := rand.Intn(len(str.RelicAffix))
 			randKey := uint32(0)
-			for key := range str.relicAffix {
+			for key := range str.RelicAffix {
 				if randIndex == 0 {
 					randKey = key
 					break
 				}
 				randIndex--
 			}
-			str.relicAffix[randKey].Cnt++
+			str.RelicAffix[randKey].Cnt++
 			i++
 		} else {
-			affixConf := gdconf.GetRelicSubAffixConfigById(str.subAffixGroup)
+			affixConf := gdconf.GetRelicSubAffixConfigById(str.SubAffixGroup)
 			if affixConf == nil {
 				return
 			}
-			if affixConf.Property == str.mainAffixProperty {
+			if affixConf.Property == str.MainAffixProperty {
 				continue
 			}
-			if ra, ok := str.relicAffix[affixConf.AffixID]; ok {
+			if ra, ok := str.RelicAffix[affixConf.AffixID]; ok {
 				ra.Cnt++
 			} else {
-				str.relicAffix[affixConf.AffixID] = &spb.RelicAffix{
+				str.RelicAffix[affixConf.AffixID] = &spb.RelicAffix{
 					AffixId: affixConf.AffixID,
 					Cnt:     1,
 					Step:    0,
@@ -413,7 +419,7 @@ func (g *GamePlayer) addRelicAffix(str *addRelicAffix) {
 	}
 }
 
-func (g *GamePlayer) SellDelRelic(uniqueId uint32) []*Material {
+func (g *PlayerData) SellDelRelic(uniqueId uint32, isMaterial bool) []*Material {
 	var material []*Material
 	db := g.GetRelicMap()
 	if db[uniqueId] == nil {
@@ -423,17 +429,61 @@ func (g *GamePlayer) SellDelRelic(uniqueId uint32) []*Material {
 	if conf == nil {
 		return material
 	}
-
-	for _, itme := range conf.ReturnItemIDList {
-		material = append(material, &Material{
-			Tid: itme.ItemID,
-			Num: itme.ItemNum,
-		})
+	relicConf := gdconf.GetRelicById(db[uniqueId].Tid)
+	if relicConf == nil {
+		return material
 	}
+
+	if relicConf.Type == 5 && !isMaterial {
+		material = append(material, &Material{
+			Tid: RelicRemains,
+			Num: 10,
+		})
+	} else {
+		for _, itme := range conf.ReturnItemIDList {
+			material = append(material, &Material{
+				Tid: itme.ItemID,
+				Num: itme.ItemNum,
+			})
+		}
+	}
+
+	g.DelRelic([]uint32{uniqueId})
 	return material
 }
 
-func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData, avatarId uint32) {
+func (g *PlayerData) TakeOffRelic(avatarId uint32, relicTypeList []uint32, allSync *AllPlayerSync) {
+	curPath := g.GetCurMultiPathAvatar(avatarId)
+	if curPath == nil {
+		return
+	}
+	allSync.AvatarList = append(allSync.AvatarList, avatarId)
+	for _, t := range relicTypeList {
+		relicUniqueId := curPath.EquipRelic[t]
+		relicDb := g.GetRelicById(relicUniqueId)
+		if relicDb != nil {
+			relicDb.BaseAvatarId = 0
+			allSync.RelicList = append(allSync.RelicList, relicUniqueId)
+		}
+		curPath.EquipRelic[t] = 0
+	}
+}
+
+func (g *PlayerData) TakeOffEquipment(avatarId uint32, allSync *AllPlayerSync) {
+	curPath := g.GetCurMultiPathAvatar(avatarId)
+	if curPath == nil {
+		return
+	}
+	allSync.AvatarList = append(allSync.AvatarList, avatarId)
+	equipmentDb := g.GetEquipmentById(curPath.EquipmentUniqueId)
+	if equipmentDb != nil {
+		equipmentDb.BaseAvatarId = 0
+		allSync.EquipmentList = append(allSync.EquipmentList, equipmentDb.UniqueId)
+	}
+	curPath.EquipmentUniqueId = 0
+}
+
+func (g *PlayerData) UseItem(conf *gdconf.ItemUseBuffData, avatarId uint32, addBuffList []uint32) {
 	if conf == nil {
 		return
 	}
@@ -449,14 +499,13 @@ func (g *GamePlayer) useItem(conf *gdconf.ItemUseBuffData, avatarId uint32) {
 			AddTime:   uint64(time.Now().UnixMilli()),
 			LifeTime:  4294967295,
 		}
-		g.SyncEntityBuffChangeListScNotify([]uint32{conf.MazeBuffID})
+		addBuffList = append(addBuffList, conf.MazeBuffID)
 	}
 }
 
-func (g *GamePlayer) itemSubTypeMaterial(useDataID, useItemCount uint32) []*proto.Item {
+func (g *PlayerData) ItemSubTypeMaterial(useDataID, useItemCount uint32, allSync *AllPlayerSync) []*proto.Item {
 	conf := gdconf.GetItemUseData(useDataID)
 	itemList := make([]*proto.Item, 0)
-	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
 	pileItem := make([]*Material, 0)
 	if conf == nil {
 		return itemList
@@ -464,22 +513,18 @@ func (g *GamePlayer) itemSubTypeMaterial(useDataID, useItemCount uint32) []*prot
 	var i uint32 = 0
 	for i = 0; i < useItemCount; i++ {
 		for _, rewardId := range conf.UseParam {
-			pile, material, item := g.getRewardData(rewardId)
+			pile, _, item := g.GetRewardData(rewardId)
 			pileItem = append(pileItem, pile...)
-			allSync.MaterialList = append(allSync.MaterialList, material...)
 			itemList = append(itemList, item...)
 		}
 	}
-
-	g.AddItem(pileItem)
-	g.AllPlayerSyncScNotify(allSync)
+	g.AddItem(pileItem, allSync)
 	return itemList
 }
 
-func (g *GamePlayer) ItemSubTypeGift(useDataID, useItemCount uint32) []*proto.Item {
+func (g *PlayerData) ItemSubTypeGift(useDataID, useItemCount uint32, allSync *AllPlayerSync) []*proto.Item {
 	conf := gdconf.GetItemUseData(useDataID)
 	itemList := make([]*proto.Item, 0)
-	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
 	pileItem := make([]*Material, 0)
 	if conf == nil {
 		return itemList
@@ -487,19 +532,17 @@ func (g *GamePlayer) ItemSubTypeGift(useDataID, useItemCount uint32) []*proto.It
 	var i uint32 = 0
 	for i = 0; i < useItemCount; i++ {
 		for _, rewardId := range conf.UseParam {
-			pile, material, item := g.getRewardData(rewardId)
+			pile, _, item := g.GetRewardData(rewardId)
 			pileItem = append(pileItem, pile...)
-			allSync.MaterialList = append(allSync.MaterialList, material...)
 			itemList = append(itemList, item...)
 		}
 	}
 
-	g.AddItem(pileItem)
-	g.AllPlayerSyncScNotify(allSync)
+	g.AddItem(pileItem, allSync)
 	return itemList
 }
 
-func (g *GamePlayer) getRewardData(rewardID uint32) ([]*Material, []uint32, []*proto.Item) {
+func (g *PlayerData) GetRewardData(rewardID uint32) ([]*Material, []uint32, []*proto.Item) {
 	pileItem := make([]*Material, 0)
 	materialList := make([]uint32, 0)
 	itemList := make([]*proto.Item, 0)
@@ -525,7 +568,7 @@ func (g *GamePlayer) getRewardData(rewardID uint32) ([]*Material, []uint32, []*p
 	return pileItem, materialList, itemList
 }
 
-func (g *GamePlayer) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData) (proto.Retcode, *AllPlayerSync) {
+func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData) (proto.Retcode, *AllPlayerSync) {
 	// 扣除材料
 	var pileItem []*Material
 	allSync := &AllPlayerSync{
@@ -562,7 +605,7 @@ func (g *GamePlayer) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, c
 
 /*********************************************接口方法******************************************/
 
-func (g *GamePlayer) GetProtoRelicById(uniqueId uint32) *proto.Relic {
+func (g *PlayerData) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 	if relicDb, ok := g.GetItem().RelicMap[uniqueId]; !ok {
 		return nil
 	} else {
@@ -589,7 +632,7 @@ func (g *GamePlayer) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 	}
 }
 
-func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic {
+func (g *PlayerData) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic {
 	if relicDb, ok := g.GetItem().RelicMap[uniqueId]; !ok {
 		return nil
 	} else {
@@ -613,7 +656,7 @@ func (g *GamePlayer) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 	}
 }
 
-func (g *GamePlayer) GetRelicItem(uniqueId uint32) *proto.Item {
+func (g *PlayerData) GetRelicItem(uniqueId uint32) *proto.Item {
 	db := g.GetRelicById(uniqueId)
 	return &proto.Item{
 		ItemId:      db.Tid,
@@ -626,7 +669,7 @@ func (g *GamePlayer) GetRelicItem(uniqueId uint32) *proto.Item {
 	}
 }
 
-func (g *GamePlayer) GetEquipmentItem(uniqueId uint32) *proto.Item {
+func (g *PlayerData) GetEquipmentItem(uniqueId uint32) *proto.Item {
 	db := g.GetEquipmentById(uniqueId)
 	return &proto.Item{
 		ItemId:      db.Tid,
@@ -639,18 +682,8 @@ func (g *GamePlayer) GetEquipmentItem(uniqueId uint32) *proto.Item {
 	}
 }
 
-func (g *GamePlayer) AvatarPlayerSyncScNotify(avatarId uint32) {
-	notify := &proto.PlayerSyncScNotify{
-		AvatarSync: &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
-	}
-	avatar := g.GetProtoAvatarById(avatarId)
-	notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList, avatar)
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
 // 删除物品
-func (g *GamePlayer) DelEquipment(equipmentList []uint32) bool {
+func (g *PlayerData) DelEquipment(equipmentList []uint32) bool {
 	db := g.GetEquipmentMap()
 	for _, equipment := range equipmentList {
 		if db[equipment] == nil {
@@ -663,7 +696,7 @@ func (g *GamePlayer) DelEquipment(equipmentList []uint32) bool {
 	return true
 }
 
-func (g *GamePlayer) DelRelic(relicList []uint32) bool {
+func (g *PlayerData) DelRelic(relicList []uint32) bool {
 	db := g.GetRelicMap()
 	for _, relic := range relicList {
 		if db[relic] == nil {

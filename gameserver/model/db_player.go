@@ -1,11 +1,15 @@
-package player
+package model
 
 import (
 	"sync"
 
-	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
+
+type PlayerData struct {
+	OnlineData *OnlineData             // 玩家在线数据
+	BasicBin   *spb.PlayerBasicCompBin // 玩家pb数据
+}
 
 type OnlineData struct {
 	LoginToday            bool                     // 是否是今天第一次登录
@@ -19,8 +23,18 @@ type OnlineData struct {
 	CurBattle             *CurBattle               // 正在进行的战斗
 }
 
-func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
-	g.BasicBin = &spb.PlayerBasicCompBin{
+func NewPlayerData() *PlayerData {
+	g := new(PlayerData)
+	g.BasicBin = NewBasicBin()
+	// 添加默认数据
+	g.AddAvatar(1001)
+	g.AddAvatar(8001)
+	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
+	return g
+}
+
+func NewBasicBin() *spb.PlayerBasicCompBin {
+	basicBin := &spb.PlayerBasicCompBin{
 		Level:                1,
 		Nickname:             "hkrpg-go",
 		WorldLevel:           0,
@@ -36,7 +50,6 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		Gacha:                NewGacha(),
 		Battle:               NewBattle(),
 		RewardTakenLevelList: make([]uint32, 0),
-		OpenStateMap:         nil,
 		RegisterTime:         0,
 		TotalLoginDays:       0,
 		TotalGameTime:        0,
@@ -58,36 +71,28 @@ func (g *GamePlayer) NewBasicBin() *spb.PlayerBasicCompBin {
 		SetLanguageTag:       0,
 		GuidSeqId:            0,
 		MessageGroupList:     NewMessageGroup(),
-		PivotClientTime:      0,
-		PivotUnixTime:        0,
 		PlayerStatId:         0,
 		NicknameAuditBin:     nil,
 		IpCountryCode:        "",
 		IpRegionName:         "",
 	}
 
-	// 添加默认数据
-	g.AddAvatar(1001, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
-	g.AddAvatar(8001, proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE)
-	// g.AddHeroBasicTypeInfo(spb.HeroBasicType_BoyWarrior)
-	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
-
-	return g.BasicBin
+	return basicBin
 }
 
-func (g *GamePlayer) GetIsProficientPlayer() bool {
+func (g *PlayerData) GetIsProficientPlayer() bool {
 	db := g.GetBasicBin()
 	return db.IsProficientPlayer
 }
 
-func (g *GamePlayer) GetBasicBin() *spb.PlayerBasicCompBin {
+func (g *PlayerData) GetBasicBin() *spb.PlayerBasicCompBin {
 	if g.BasicBin == nil {
-		g.BasicBin = g.NewBasicBin()
+		g.BasicBin = NewBasicBin()
 	}
 	return g.BasicBin
 }
 
-func (g *GamePlayer) GetOnlineData() *OnlineData {
+func (g *PlayerData) GetOnlineData() *OnlineData {
 	if g.OnlineData == nil {
 		g.OnlineData = &OnlineData{
 			LoginToday:            false,
@@ -104,13 +109,13 @@ func (g *GamePlayer) GetOnlineData() *OnlineData {
 	return g.OnlineData
 }
 
-func (g *GamePlayer) GetNextGameObjectGuid() uint32 {
+func (g *PlayerData) GetNextGameObjectGuid() uint32 {
 	db := g.GetOnlineData()
 	db.GameObjectGuidCounter++
 	return 0 + db.GameObjectGuidCounter
 }
 
-func (g *GamePlayer) GetBattleIdGuid() uint32 {
+func (g *PlayerData) GetBattleIdGuid() uint32 {
 	db := g.GetOnlineData()
 	if db.BattleId <= 0 {
 		db.BattleId = 10000
@@ -119,12 +124,12 @@ func (g *GamePlayer) GetBattleIdGuid() uint32 {
 	return db.BattleId
 }
 
-func (g *GamePlayer) AddBattleIdGuid() {
+func (g *PlayerData) AddBattleIdGuid() {
 	db := g.GetOnlineData()
 	db.BattleId++
 }
 
-func (g *GamePlayer) GetNickname() string {
+func (g *PlayerData) GetNickname() string {
 	db := g.GetBasicBin()
 	if db.Nickname == "" {
 		db.Nickname = "hkrpg-go"
@@ -132,12 +137,12 @@ func (g *GamePlayer) GetNickname() string {
 	return db.Nickname
 }
 
-func (g *GamePlayer) SetNickname(name string) {
+func (g *PlayerData) SetNickname(name string) {
 	db := g.GetBasicBin()
 	db.Nickname = name
 }
 
-func (g *GamePlayer) GetLevel() uint32 {
+func (g *PlayerData) GetLevel() uint32 {
 	db := g.GetBasicBin()
 	if db.Level <= 0 {
 		db.Level = 1
@@ -145,7 +150,7 @@ func (g *GamePlayer) GetLevel() uint32 {
 	return db.Level
 }
 
-func (g *GamePlayer) GetWorldLevel() uint32 {
+func (g *PlayerData) GetWorldLevel() uint32 {
 	db := g.GetBasicBin()
 	if db.WorldLevel < 0 {
 		db.WorldLevel = 0
@@ -153,11 +158,11 @@ func (g *GamePlayer) GetWorldLevel() uint32 {
 	return db.WorldLevel
 }
 
-func (g *GamePlayer) AddWorldLevel(num uint32) {
+func (g *PlayerData) AddWorldLevel(num uint32) {
 	g.SetWorldLevel(g.GetWorldLevel() + num)
 }
 
-func (g *GamePlayer) SetWorldLevel(worldLevel uint32) {
+func (g *PlayerData) SetWorldLevel(worldLevel uint32) {
 	if worldLevel < 0 || worldLevel > 6 {
 		return
 	}
@@ -165,7 +170,7 @@ func (g *GamePlayer) SetWorldLevel(worldLevel uint32) {
 	db.WorldLevel = worldLevel
 }
 
-func (g *GamePlayer) GetHeadIcon() uint32 {
+func (g *PlayerData) GetHeadIcon() uint32 {
 	db := g.GetBasicBin()
 	if db.HeadImageAvatarId == 0 {
 		db.HeadImageAvatarId = 0
@@ -173,18 +178,18 @@ func (g *GamePlayer) GetHeadIcon() uint32 {
 	return db.HeadImageAvatarId
 }
 
-func (g *GamePlayer) GetDataVersion() uint32 {
+func (g *PlayerData) GetDataVersion() uint32 {
 	db := g.GetBasicBin()
 	return db.DataVersion
 }
 
-func (g *GamePlayer) AddDataVersion() uint32 {
+func (g *PlayerData) AddDataVersion() uint32 {
 	db := g.GetBasicBin()
 	db.DataVersion++
 	return db.DataVersion
 }
 
-func (g *GamePlayer) GetSignature() string {
+func (g *PlayerData) GetSignature() string {
 	db := g.GetBasicBin()
 	return db.Signature
 }
@@ -193,7 +198,7 @@ func NewTutorialDb() *spb.TutorialDb {
 	return new(spb.TutorialDb)
 }
 
-func (g *GamePlayer) GetTutorialDb() *spb.TutorialDb {
+func (g *PlayerData) GetTutorialDb() *spb.TutorialDb {
 	db := g.GetBasicBin()
 	if db.Tutorial == nil {
 		db.Tutorial = NewTutorialDb()
@@ -201,7 +206,7 @@ func (g *GamePlayer) GetTutorialDb() *spb.TutorialDb {
 	return db.Tutorial
 }
 
-func (g *GamePlayer) GetTutorial() map[uint32]*spb.TutorialInfo {
+func (g *PlayerData) GetTutorial() map[uint32]*spb.TutorialInfo {
 	db := g.GetTutorialDb()
 	if db.Tutorial == nil {
 		db.Tutorial = make(map[uint32]*spb.TutorialInfo)
@@ -209,7 +214,7 @@ func (g *GamePlayer) GetTutorial() map[uint32]*spb.TutorialInfo {
 	return db.Tutorial
 }
 
-func (g *GamePlayer) GetTutorialGuide() map[uint32]*spb.TutorialInfo {
+func (g *PlayerData) GetTutorialGuide() map[uint32]*spb.TutorialInfo {
 	db := g.GetTutorialDb()
 	if db.TutorialGuide == nil {
 		db.TutorialGuide = make(map[uint32]*spb.TutorialInfo)
@@ -217,7 +222,7 @@ func (g *GamePlayer) GetTutorialGuide() map[uint32]*spb.TutorialInfo {
 	return db.TutorialGuide
 }
 
-func (g *GamePlayer) UnlockTutorial(id uint32) {
+func (g *PlayerData) UnlockTutorial(id uint32) {
 	db := g.GetTutorial()
 	db[id] = &spb.TutorialInfo{
 		Id:     id,
@@ -225,14 +230,14 @@ func (g *GamePlayer) UnlockTutorial(id uint32) {
 	}
 }
 
-func (g *GamePlayer) FinishTutorial(id uint32) {
+func (g *PlayerData) FinishTutorial(id uint32) {
 	db := g.GetTutorial()
 	if db[id] != nil {
 		db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
 	}
 }
 
-func (g *GamePlayer) UnlockTutorialGuide(id uint32) {
+func (g *PlayerData) UnlockTutorialGuide(id uint32) {
 	db := g.GetTutorialGuide()
 	db[id] = &spb.TutorialInfo{
 		Id:     id,
@@ -240,14 +245,14 @@ func (g *GamePlayer) UnlockTutorialGuide(id uint32) {
 	}
 }
 
-func (g *GamePlayer) FinishTutorialGuide(id uint32) {
+func (g *PlayerData) FinishTutorialGuide(id uint32) {
 	db := g.GetTutorialGuide()
 	if db[id] != nil {
 		db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
 	}
 }
 
-func (g *GamePlayer) GetRewardTakenLevelList() []uint32 {
+func (g *PlayerData) GetRewardTakenLevelList() []uint32 {
 	db := g.GetBasicBin()
 	if db.RewardTakenLevelList == nil {
 		db.RewardTakenLevelList = make([]uint32, 0)
@@ -255,7 +260,7 @@ func (g *GamePlayer) GetRewardTakenLevelList() []uint32 {
 	return db.RewardTakenLevelList
 }
 
-func (g *GamePlayer) AddRewardTakenLevelList(id uint32) {
+func (g *PlayerData) AddRewardTakenLevelList(id uint32) {
 	db := g.GetRewardTakenLevelList()
 	isAdd := true
 	for _, level := range db {
