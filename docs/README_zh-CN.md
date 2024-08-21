@@ -1,6 +1,6 @@
 ![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
 
-[EN](../README.md) | [简中](./docs/README_zh-CN.md) | [繁中](./docs/README_zh-CN.md) | [JP](./docs/README_zh-CN.md) | [RU](./docs/README_zh-CN.md) | [FR](./docs/README_zh-CN.md) | [KR](./docs/README_zh-CN.md) | [VI](./docs/README_zh-CN.md)
+[EN](../README.md) | [简中](./README_zh-CN.md) | [繁中](./README_zh-CN.md) | [JP](./README_zh-CN.md) | [RU](./README_zh-CN.md) | [FR](./README_zh-CN.md) | [KR](./README_zh-CN.md) | [VI](./README_zh-CN.md)
  
 # **欢迎加入我们的 [Discord](https://discord.gg/222yVp6pUq)**
 
@@ -9,10 +9,10 @@
 # 请不要在生产环境中使用
 
 ### 文档：
-* [简易教程](./docs/tutorial/zh-CN.md)
-* [config解析](./docs/conf/zh-CN.md)
-* [api使用方法](./docs/command/zh-CN.md)
-* [详细完善内容](./docs/progress/zh-CN.md)
+* [简易教程](./tutorial/zh-CN.md)
+* [config解析](./conf/zh-CN.md)
+* [api使用方法](./command/zh-CN.md)
+* [详细完善内容](./progress/zh-CN.md)
 
 ### 注：
 * 如果你想帮助此项目，欢迎提交

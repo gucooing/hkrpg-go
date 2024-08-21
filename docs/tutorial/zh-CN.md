@@ -1,3 +1,5 @@
+[EN](./zh-CN.md) | [简中](./zh-CN.md) | [繁中](./zh-CN.md) | [JP](./zh-CN.md) | [RU](./zh-CN.md) | [FR](./zh-CN.md) | [KR](./zh-CN.md) | [VI](./zh-CN.md)
+
 # 准备环境
 1. golang >= 1.22.1
 2. mysql
