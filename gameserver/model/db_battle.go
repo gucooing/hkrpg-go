@@ -779,14 +779,16 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 	for _, buff := range mazeBufflist {
 		if buff.AvatarId != 0 { // add avatarBuff
 			avatarInfo := avatarMap[buff.AvatarId]
-			buffList = append(buffList, &proto.BattleBuff{
-				Id:              buff.BuffId,
-				Level:           1,
-				OwnerIndex:      avatarInfo.Index,
-				WaveFlag:        4294967295,
-				TargetIndexList: []uint32{avatarInfo.Index},
-				DynamicValues:   make(map[string]float32),
-			})
+			if avatarInfo != nil {
+				buffList = append(buffList, &proto.BattleBuff{
+					Id:              buff.BuffId,
+					Level:           1,
+					OwnerIndex:      avatarInfo.Index,
+					WaveFlag:        4294967295,
+					TargetIndexList: []uint32{avatarInfo.Index},
+					DynamicValues:   make(map[string]float32),
+				})
+			}
 			g.DelOnLineAvatarBuff(buff.BuffId)
 			continue
 		}
@@ -806,6 +808,7 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 			}
 		}
 	}
+	g.DelSummonUnitInfo()
 
 	// 默认buff
 	// buffList = append(buffList, &proto.BattleBuff{
@@ -817,8 +820,8 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 	// 		"SkillIndex": 1,
 	// 	},
 	// })
-	// 添加物品buff
 
+	// 添加物品buff
 	for index, buff := range mazeBufflist {
 		if buff.Count < buff.LifeCount {
 			buff.Count++

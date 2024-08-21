@@ -650,6 +650,6 @@ func (g *GamePlayer) AddSummonUnitSceneGroupRefreshScNotify() {
 				}},
 			}},
 		})
-		db = new(model.SummonUnitInfo)
+		g.GetPd().DelSummonUnitInfo()
 	}()
 }

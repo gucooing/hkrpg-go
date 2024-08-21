@@ -102,6 +102,11 @@ func (g *PlayerData) GetSummonUnitInfo() *SummonUnitInfo {
 	return db.SummonUnitInfo
 }
 
+func (g *PlayerData) DelSummonUnitInfo() {
+	db := g.GetSceneMap()
+	db.SummonUnitInfo = new(SummonUnitInfo)
+}
+
 func (g *PlayerData) GetLoadedGroup() map[uint32]*GroupInfo {
 	db := g.GetSceneMap()
 	if db.LoadedGroup == nil {
