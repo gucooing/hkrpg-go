@@ -248,7 +248,8 @@ func (g *GamePlayer) RecvMsg() {
 			switch recvMsg.MsgType {
 			case Client:
 				g.registerMessage(recvMsg.CmdId, recvMsg.PlayerMsg)
-			case Gm:
+			case GmReq:
+				g.EnterCommand(recvMsg)
 			case DailyTask:
 				g.DailyTaskNotify()
 			}
@@ -266,6 +267,20 @@ func (g *GamePlayer) SendMsg(cmdId uint16, playerMsg pb.Message) {
 			CmdId:     cmdId,
 			MsgType:   Server,
 			PlayerMsg: playerMsg,
+		}
+		if g.IsClosed {
+			close(g.SendChan)
+		}
+	}
+}
+
+// 发包
+func (g *GamePlayer) SendCommand(commandId int64, commandRsp string) {
+	if g.SendChan != nil {
+		g.SendChan <- Msg{
+			CommandId:  commandId,
+			MsgType:    GmRsp,
+			CommandRsp: commandRsp,
 		}
 		if g.IsClosed {
 			close(g.SendChan)

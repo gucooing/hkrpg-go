@@ -21,7 +21,7 @@ func (s *Server) InitRouter() {
 
 	// 登录
 	s.Router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)
-	Global := s.Router.Group("/hkrpg_global")
+	Global := s.Router.Group("/hkrpg_:type")
 	{
 		Global.GET("/combo/granter/api/getConfig", s.ComboGranterApiGetConfigHandler) // 获取服务器配置
 		Global.POST("/combo/granter/api/compareProtocolVersion", s.compareProtocolVersion)
@@ -30,16 +30,6 @@ func (s *Server) InitRouter() {
 		Global.GET("/mdk/shield/api/loadConfig", s.loadConfig)
 		Global.POST("/combo/granter/login/v2/login", s.V2LoginRequestHandler) // 获取combo token
 		Global.GET("/mdk/agreement/api/getAgreementInfos", s.GetAgreementInfos)
-	}
-	Cn := s.Router.Group("/hkrpg_cn")
-	{
-		Cn.GET("/combo/granter/api/getConfig", s.ComboGranterApiGetConfigHandler) // 获取服务器配置
-		Cn.POST("/combo/granter/api/compareProtocolVersion", s.compareProtocolVersion)
-		Cn.POST("/mdk/shield/api/login", s.LoginRequestHandler)   // 账号登录
-		Cn.POST("/mdk/shield/api/verify", s.VerifyRequestHandler) // token登录
-		Cn.GET("/mdk/shield/api/loadConfig", s.loadConfig)
-		Cn.POST("/combo/granter/login/v2/login", s.V2LoginRequestHandler) // 获取combo token
-		Cn.GET("/mdk/agreement/api/getAgreementInfos", s.GetAgreementInfos)
 	}
 	// 杂
 	s.Router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)

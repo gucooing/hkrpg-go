@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/muipserver/api"
 )
 
 func (a *Api) InitRouter() {
@@ -19,26 +19,12 @@ func (a *Api) HandleDefault(c *gin.Context) {
 }
 
 func (a *Api) CmdIdInitRouter(c *gin.Context) {
-	cmdId := uint16(alg.S2U32(c.Query("cmd")))
-	switch cmdId {
-	case 1001:
-		a.WorldLevel(c)
-	case 1002:
-		a.PlayerDb(c)
-	case 1003:
-		a.MaxCurAvatar(c)
-	case 1004:
-		a.GmMission(c)
-	case 1006:
-		a.DelItem(c)
-	case 1101:
-		a.State(c)
-	case 1127:
-		a.Give(c)
-	default:
+	ok, _ := api.ApiInitRouter(c)
+	if !ok {
 		c.JSON(404, gin.H{
 			"code": -1,
 		})
+		return
 	}
 }
 

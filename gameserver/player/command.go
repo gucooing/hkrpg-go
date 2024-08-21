@@ -1,11 +1,46 @@
 package player
 
 import (
+	"fmt"
+
 	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
+
+type commHandlerFunc func(g *GamePlayer, parameter []string) string
+
+var commandMap = map[string]commHandlerFunc{
+	"world_level": setWorldLevel,
+}
+
+func (g *GamePlayer) EnterCommand(msg Msg) {
+	var rspSt string
+	if len(msg.CommandList) <= 0 {
+		rspSt = "Command Not enough parameters"
+	} else {
+		commFunc, ok := commandMap[msg.CommandList[0]]
+		if !ok {
+			rspSt = "Unknown command"
+		} else {
+			rspSt = commFunc(g, msg.CommandList[1:])
+		}
+	}
+	logger.Debug("[UID%v]执行指令:%s|响应:%s", g.Uid, msg.CommandList, rspSt)
+	if msg.CommandId != 0 {
+		g.SendCommand(msg.CommandId, rspSt)
+	}
+}
+
+// 设置世界等级
+func setWorldLevel(g *GamePlayer, parameter []string) string {
+	g.GetPd().SetWorldLevel(alg.S2U32(parameter[0]))
+	g.AllPlayerSyncScNotify(&model.AllPlayerSync{IsBasic: true})
+	return fmt.Sprintf("set world_level:%s ok", parameter[0])
+}
 
 // 添加物品
 func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
@@ -79,14 +114,6 @@ func (g *GamePlayer) AllGive(allSync *model.AllPlayerSync) {
 		allSync.RelicList = append(allSync.RelicList, uniqueId)
 	}
 	g.GetPd().AddItem(pileItem, allSync)
-}
-
-// 设置世界等级
-func (g *GamePlayer) GmWorldLevel(payloadMsg pb.Message) {
-	req := payloadMsg.(*spb.GmWorldLevel)
-	g.GetPd().SetWorldLevel(req.WorldLevel)
-	// 账号状态通知
-	g.PlayerPlayerSyncScNotify()
 }
 
 // 清空背包

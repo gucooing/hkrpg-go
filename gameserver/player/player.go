@@ -43,6 +43,10 @@ type Msg struct {
 	CmdId     uint16
 	MsgType   MsgType
 	PlayerMsg pb.Message
+	// command
+	CommandList []string
+	CommandId   int64
+	CommandRsp  string
 }
 
 type MsgType int
@@ -50,8 +54,9 @@ type MsgType int
 const (
 	Server    MsgType = 1
 	Client    MsgType = 2
-	Gm        MsgType = 3
-	DailyTask MsgType = 4 // 每日刷新
+	GmReq     MsgType = 3
+	GmRsp     MsgType = 4
+	DailyTask MsgType = 5 // 每日刷新
 )
 
 func getCurTime() uint64 {

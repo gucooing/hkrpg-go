@@ -12,6 +12,7 @@ type Config struct {
 	SqlPath            string      `json:"SqlPath"`
 	Dispatch           *Dispatch   `json:"Dispatch"`
 	GameServer         *GameServer `json:"GameServer"`
+	Gm                 *Gm         `json:"Gm"`
 }
 
 type Dispatch struct {
@@ -34,6 +35,11 @@ type GameServer struct {
 	Port          string `json:"Port"`
 	OuterAddr     string `json:"OuterAddr"`
 	IsJumpMission bool   `json:"IsJumpMission"`
+}
+type Gm struct {
+	SignKey string `json:"SignKey"`
+	Addr    string `json:"Addr"`
+	Port    string `json:"Port"`
 }
 
 var CONF *Config = nil
@@ -98,5 +104,10 @@ var DefaultConfig = &Config{
 		Port:          "20041",
 		OuterAddr:     "127.0.0.1",
 		IsJumpMission: true,
+	},
+	Gm: &Gm{
+		SignKey: "",
+		Addr:    "0.0.0.0",
+		Port:    "20011",
 	},
 }

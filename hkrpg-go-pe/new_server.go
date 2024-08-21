@@ -39,6 +39,7 @@ var QPS int64
 type HkRpgGoServer struct {
 	config           *Config
 	db               *database.DisaptchStore
+	apiRouter        *gin.Engine // http api
 	Dispatch         *dispatch.Server
 	kcpListener      *kcp.Listener
 	sessionIdCounter uint32
@@ -116,6 +117,8 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	go kcpNetInfo()
 	s.playerMap = make(map[uint32]*PlayerGame)
 	s.CmdRouteManager = NewCmdRouteManager()
+	// 启动http api
+	go s.newHttpApi()
 	// 开启game定时器
 	s.autoUpDataPlayer = time.NewTicker(gameserver.AutoUpDataPlayerTicker * time.Second)
 	everyDay4 := alg.GetEveryDay4()
@@ -408,6 +411,8 @@ func (p *PlayerGame) recvPlayer() {
 			switch bin.MsgType {
 			case player.Server:
 				p.SendHandle(bin.CmdId, bin.PlayerMsg)
+			case player.GmRsp:
+				// TODO 这边直接发给node就行了
 			}
 		case <-p.GamePlayer.SendCtx.Done():
 			p.GamePlayer.IsClosed = true

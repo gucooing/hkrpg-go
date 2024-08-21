@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -49,14 +48,6 @@ func main() {
 	go func() {
 		if err = s.RunGameServer(); err != nil {
 			logger.Error("无法启动gameserver服务器")
-		}
-	}()
-
-	// 开启一个goroutine监听控制台输入
-	scanner := bufio.NewScanner(os.Stdin)
-	go func() {
-		for scanner.Scan() {
-			s.EnterCommand(scanner.Text())
 		}
 	}()
 

@@ -2,6 +2,14 @@ syntax = "proto3";
 
 option go_package = "./;proto";
 
+message CommAndReq {
+
+}
+
+message CommAndRsp {
+
+}
+
 message GmGive {
   uint32 player_uid = 1;
   uint32 item_id = 2;
