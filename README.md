@@ -1,6 +1,6 @@
 ![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
 
-[EN](../README.md) | [简中](./docs/README_zh-CN.md) | [繁中](./docs/README_zh-CN.md) | [JP](./docs/README_zh-CN.md) | [RU](./docs/README_zh-CN.md) | [FR](./docs/README_zh-CN.md) | [KR](./docs/README_zh-CN.md) | [VI](./docs/README_zh-CN.md)
+[EN](./README.md) | [简中](./docs/README_zh-CN.md) | [繁中](./docs/README_zh-CN.md) | [JP](./docs/README_zh-CN.md) | [RU](./docs/README_zh-CN.md) | [FR](./docs/README_zh-CN.md) | [KR](./docs/README_zh-CN.md) | [VI](./docs/README_zh-CN.md)
  
 # **欢迎加入我们的 [Discord](https://discord.gg/222yVp6pUq)**
 
