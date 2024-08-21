@@ -2,6 +2,7 @@ package player
 
 import (
 	"strings"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -313,8 +314,8 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 	g.GetPd().AddItem(pileItem, allSync)
 	g.AllPlayerSyncScNotify(allSync)
 	g.AllScenePlaneEventScNotify(pileItem)
-	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin) // 通知状态更改
-	finishSubMission := g.GetPd().UpInteractSubMission(blockBin)        // 检查交互任务
+	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin)  // 通知状态更改
+	finishSubMission := g.GetPd().UpInteractSubMission(blockBin) // 检查交互任务
 	if len(finishSubMission) != 0 {
 		g.InspectMission(finishSubMission)
 	}
@@ -539,9 +540,9 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 		for _, entify := range groupInfo.EntityMap {
 			groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity,
 				&proto.SceneEntityRefreshInfo{
-				Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{
-					DeleteEntity: g.GetPd().GetEntryId(entify)},
-			})
+					Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{
+						DeleteEntity: g.GetPd().GetEntryId(entify)},
+				})
 		}
 
 		notify.GroupRefreshList = append(notify.GroupRefreshList, groupRefreshInfo)
@@ -627,4 +628,28 @@ func (g *GamePlayer) SetFloorSavedValue(conf *gdconf.SubMission, finishAction *g
 	if enep := g.GetPd().GetPropEntity(groupID, instId); enep != nil {
 		g.PropSceneGroupRefreshScNotify([]uint32{enep.EntityId}, db)
 	}
+}
+
+/****************************************************领域管理***************************************************/
+
+func (g *GamePlayer) AddSummonUnitSceneGroupRefreshScNotify() {
+	db := g.GetPd().GetSummonUnitInfo()
+	g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+		GroupRefreshList: g.GetPd().GetAddBuffSceneEntityRefreshInfo(
+			db.AttachEntityId, db.SummonUnitId, db.EntityId, db.Pos),
+	})
+	go func() {
+		time.Sleep(20 * time.Second)
+		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+			GroupRefreshList: []*proto.GroupRefreshInfo{{
+				RefreshType: proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_UNLOAD,
+				RefreshEntity: []*proto.SceneEntityRefreshInfo{{
+					Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{
+						DeleteEntity: db.EntityId,
+					},
+				}},
+			}},
+		})
+		db = new(model.SummonUnitInfo)
+	}()
 }

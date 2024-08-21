@@ -3,7 +3,9 @@ package gdconf
 import (
 	"fmt"
 	"os"
+	"strings"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -25,8 +27,9 @@ type SummonUnitData struct {
 }
 
 type SummonUnitDataJson struct {
-	AttachPoint   string              `json:"AttachPoint"`
-	TriggerConfig *SummonUnitTriggers `json:"TriggerConfig"`
+	AttachPoint   string                        `json:"AttachPoint"`
+	TriggerConfig *SummonUnitTriggers           `json:"TriggerConfig"`
+	Actions       map[string][]*MazeSkillAction `json:"-"`
 }
 
 type SummonUnitTriggers struct {
@@ -68,6 +71,12 @@ func (g *GameDataConfig) loadSummonUnitData() {
 			logger.Error("parse file error: %v", err)
 			continue
 		}
+		jsonData.Actions = make(map[string][]*MazeSkillAction)
+		if jsonData.TriggerConfig != nil && jsonData.TriggerConfig.CustomTriggers != nil {
+			for _, customTrigger := range jsonData.TriggerConfig.CustomTriggers {
+				jsonData.Actions[customTrigger.TriggerName] = BuildSummonUnitMazeSkillActions(customTrigger)
+			}
+		}
 		g.SummonUnitDataInfo.SummonUnitDataJsonMap[v.ID] = jsonData
 		g.SummonUnitDataInfo.SummonUnitDataMap[v.ID] = v
 	}
@@ -78,4 +87,27 @@ func (g *GameDataConfig) loadSummonUnitData() {
 
 func GetSummonUnitData(summonId uint32) *SummonUnitData {
 	return CONF.SummonUnitDataInfo.SummonUnitDataMap[summonId]
+}
+
+func BuildSummonUnitMazeSkillActions(customTriggers *SummonUnitCustomTrigger) []*MazeSkillAction {
+	actionList := make([]*MazeSkillAction, 0)
+	for _, task := range customTriggers.OnTriggerEnter {
+		if strings.Contains(task.Type, "AddMazeBuff") {
+			actionList = append(actionList, &MazeSkillAction{
+				Type: constant.AddMazeBuff,
+				Id:   task.ID,
+			})
+		} else if strings.Contains(task.Type, "TriggerHitProp") {
+
+		}
+	}
+	return actionList
+}
+
+func GetSummonUnitMazeSkillAction(summonId uint32, triggerName string) []*MazeSkillAction {
+	if CONF.SummonUnitDataInfo.SummonUnitDataJsonMap[summonId] == nil ||
+		CONF.SummonUnitDataInfo.SummonUnitDataJsonMap[summonId].Actions == nil {
+		return nil
+	}
+	return CONF.SummonUnitDataInfo.SummonUnitDataJsonMap[summonId].Actions[triggerName]
 }

@@ -15,7 +15,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-var LogMsgPlayer uint32 = 5
+var LogMsgPlayer uint32 = 2
 
 type GamePlayer struct {
 	Uid           uint32

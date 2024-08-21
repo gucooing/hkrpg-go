@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -148,10 +149,13 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	g.GetPd().SceneCastSkill(battleBackup, skill, req)
 	// summonun
 	if battleBackup.SummonUnitId != 0 {
-		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
-			GroupRefreshList: g.GetPd().GetAddBuffSceneEntityRefreshInfo(
-				battleBackup.Sce.AvatarEntityId, battleBackup.SummonUnitId, req.TargetMotion.Rot),
-		})
+		db := g.GetPd().GetSummonUnitInfo()
+		db.AvatarId = battleBackup.Sce.AvatarId
+		db.AttachEntityId = battleBackup.Sce.AvatarEntityId
+		db.EntityId = g.GetPd().GetNextGameObjectGuid()
+		db.SummonUnitId = battleBackup.SummonUnitId
+		db.Pos = req.TargetMotion.Pos
+		g.AddSummonUnitSceneGroupRefreshScNotify()
 	}
 	if len(battleBackup.Sce.EvenIdList) == 0 || !battleBackup.IsBattle { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
@@ -349,6 +353,40 @@ func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
 		EntityId:   req.EntityId,
 	}
 	g.Send(cmd.ActivateFarmElementScRsp, rsp)
+}
+
+func (g *GamePlayer) RefreshTriggerByClientCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RefreshTriggerByClientCsReq)
+	db := g.GetPd().GetSummonUnitInfo()
+	if db.EntityId == req.TriggerEntityId {
+		conf := gdconf.GetSummonUnitMazeSkillAction(db.SummonUnitId, req.TriggerName)
+		if conf != nil {
+			for _, action := range conf {
+				if action.Type == constant.AddMazeBuff {
+					if db.BuffList == nil {
+						db.BuffList = make([]*model.OnBuffMap, 0)
+					}
+					db.BuffList = append(db.BuffList, &model.OnBuffMap{
+						AvatarId:  0,
+						BuffId:    action.Id,
+						Level:     1,
+						Count:     0,
+						LifeCount: 0,
+						AddTime:   0,
+						LifeTime:  0,
+					})
+				}
+			}
+		}
+	}
+
+	rsp := &proto.RefreshTriggerByClientScRsp{
+		RefreshTrigger:  true,
+		Retcode:         0,
+		TriggerName:     req.TriggerName,
+		TriggerEntityId: req.TriggerEntityId,
+	}
+	g.Send(cmd.RefreshTriggerByClientScRsp, rsp)
 }
 
 /***********************************物品破坏处理***********************************/

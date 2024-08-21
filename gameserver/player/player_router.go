@@ -68,16 +68,17 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartWolfBroGameCsReq:       g.StartWolfBroGameCsReq,      // 变身
 		cmd.SetGroupCustomSaveDataCsReq: g.SetGroupCustomSaveDataCsReq,
 		// 战斗
-		cmd.SceneCastSkillCostMpCsReq: g.SceneCastSkillCostMpCsReq, // 技能使用
-		cmd.SceneCastSkillCsReq:       g.SceneCastSkillCsReq,       // 场景开启战斗
-		cmd.SetTurnFoodSwitchCsReq:    g.SetTurnFoodSwitchCsReq,    // 使用消耗品buff
-		cmd.PVEBattleResultCsReq:      g.PVEBattleResultCsReq,      // PVE战斗结算
-		cmd.StartCocoonStageCsReq:     g.StartCocoonStageCsReq,     // 副本/周本等
-		cmd.ActivateFarmElementCsReq:  g.ActivateFarmElementCsReq,  // 虚影战斗
-		cmd.SceneEnterStageCsReq:      g.SceneEnterStageCsReq,      // 场景直接发起战斗
-		cmd.GetRaidInfoCsReq:          g.GetRaidInfoCsReq,          // 获取raid
-		cmd.StartRaidCsReq:            g.StartRaidCsReq,            // 拓境探游
-		cmd.LeaveRaidCsReq:            g.LeaveRaidCsReq,            // 退出拓境探游
+		cmd.SceneCastSkillCostMpCsReq:   g.SceneCastSkillCostMpCsReq,   // 技能使用
+		cmd.SceneCastSkillCsReq:         g.SceneCastSkillCsReq,         // 场景开启战斗
+		cmd.SetTurnFoodSwitchCsReq:      g.SetTurnFoodSwitchCsReq,      // 使用消耗品buff
+		cmd.RefreshTriggerByClientCsReq: g.RefreshTriggerByClientCsReq, // 领域buff
+		cmd.PVEBattleResultCsReq:        g.PVEBattleResultCsReq,        // PVE战斗结算
+		cmd.StartCocoonStageCsReq:       g.StartCocoonStageCsReq,       // 副本/周本等
+		cmd.ActivateFarmElementCsReq:    g.ActivateFarmElementCsReq,    // 虚影战斗
+		cmd.SceneEnterStageCsReq:        g.SceneEnterStageCsReq,        // 场景直接发起战斗
+		cmd.GetRaidInfoCsReq:            g.GetRaidInfoCsReq,            // 获取raid
+		cmd.StartRaidCsReq:              g.StartRaidCsReq,              // 拓境探游
+		cmd.LeaveRaidCsReq:              g.LeaveRaidCsReq,              // 退出拓境探游
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期

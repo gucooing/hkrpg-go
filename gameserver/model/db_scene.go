@@ -20,8 +20,18 @@ type EntityAll interface {
 }
 
 type SceneMap struct {
-	LoadedGroup   map[uint32]*GroupInfo // 已加载场景
-	NoLoadedGroup map[uint32]*GroupInfo // 未加载场景
+	LoadedGroup    map[uint32]*GroupInfo // 已加载场景
+	NoLoadedGroup  map[uint32]*GroupInfo // 未加载场景
+	SummonUnitInfo *SummonUnitInfo       // 领域
+}
+
+type SummonUnitInfo struct {
+	EntityId       uint32
+	AvatarId       uint32
+	AttachEntityId uint32
+	SummonUnitId   uint32
+	Pos            *proto.Vector
+	BuffList       []*OnBuffMap
 }
 
 type GroupInfo struct {
@@ -82,6 +92,14 @@ func (g *PlayerData) GetSceneMap() *SceneMap {
 		db.SceneMap = NewSceneMap()
 	}
 	return db.SceneMap
+}
+
+func (g *PlayerData) GetSummonUnitInfo() *SummonUnitInfo {
+	db := g.GetSceneMap()
+	if db.SummonUnitInfo == nil {
+		db.SummonUnitInfo = new(SummonUnitInfo)
+	}
+	return db.SummonUnitInfo
 }
 
 func (g *PlayerData) GetLoadedGroup() map[uint32]*GroupInfo {
@@ -1368,38 +1386,6 @@ func (g *PlayerData) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 	return sceneEntityRefreshInfo
 }
 
-// 添加Buff
-func (g *PlayerData) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId uint32, pos *proto.Vector) []*proto.GroupRefreshInfo {
-	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
-	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
-		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
-	}
-	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
-		Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
-			AddEntity: &proto.SceneEntityInfo{
-				Motion: &proto.MotionInfo{
-					Pos: pos,
-					Rot: &proto.Vector{Y: 139439},
-				},
-				EntityId: g.GetNextGameObjectGuid(),
-				EntityOneofCase: &proto.SceneEntityInfo_SummonUnit{
-					SummonUnit: &proto.SceneSummonUnitInfo{
-						CasterEntityId:  casterEntityId,
-						AttachEntityId:  casterEntityId,
-						SummonUnitId:    summonId,
-						CreateTimeMs:    uint64(time.Now().UnixMilli()),
-						TriggerNameList: make([]string, 0),
-						LifeTimeMs:      -1,
-					},
-				},
-			},
-		},
-	}
-	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
-	groupRefreshInfo = append(groupRefreshInfo, sceneGroupRefreshInfo)
-	return groupRefreshInfo
-}
-
 func (g *PlayerData) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot *proto.Vector) []*proto.GroupRefreshInfo {
 	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
@@ -1438,6 +1424,38 @@ func (g *PlayerData) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 		})
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	}
+	groupRefreshInfo = append(groupRefreshInfo, sceneGroupRefreshInfo)
+	return groupRefreshInfo
+}
+
+// 添加领域
+func (g *PlayerData) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId, entityId uint32, pos *proto.Vector) []*proto.GroupRefreshInfo {
+	groupRefreshInfo := make([]*proto.GroupRefreshInfo, 0)
+	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
+		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
+	}
+	sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
+		Refresh: &proto.SceneEntityRefreshInfo_AddEntity{
+			AddEntity: &proto.SceneEntityInfo{
+				Motion: &proto.MotionInfo{
+					Pos: pos,
+					Rot: &proto.Vector{Y: 139439},
+				},
+				EntityId: entityId,
+				EntityOneofCase: &proto.SceneEntityInfo_SummonUnit{
+					SummonUnit: &proto.SceneSummonUnitInfo{
+						CasterEntityId:  casterEntityId,
+						AttachEntityId:  casterEntityId,
+						SummonUnitId:    summonId,
+						CreateTimeMs:    uint64(time.Now().UnixMilli()),
+						TriggerNameList: make([]string, 0),
+						LifeTimeMs:      -1,
+					},
+				},
+			},
+		},
+	}
+	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	groupRefreshInfo = append(groupRefreshInfo, sceneGroupRefreshInfo)
 	return groupRefreshInfo
 }

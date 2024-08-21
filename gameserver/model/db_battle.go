@@ -774,6 +774,7 @@ func (g *PlayerData) GetSceneMonsterWaveByStageID(stageID, worldLevel, waveId ui
 func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.BattleBuff {
 	buffList := make([]*proto.BattleBuff, 0)
 	mazeBufflist := g.GetMazeBuffList()
+	summonUnitInfo := g.GetSummonUnitInfo()
 	// var targetIndex = 0
 	for _, buff := range mazeBufflist {
 		if buff.AvatarId != 0 { // add avatarBuff
@@ -788,6 +789,21 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 			})
 			g.DelOnLineAvatarBuff(buff.BuffId)
 			continue
+		}
+	}
+	// add SummonUnitBuff
+	var waveFlagMap = make(map[uint32]uint32)
+	for _, avatarInfo := range avatarMap {
+		if avatarInfo.AvatarId == summonUnitInfo.AvatarId {
+			for _, buff := range summonUnitInfo.BuffList {
+				waveFlagMap[buff.BuffId]++
+				buffList = append(buffList, &proto.BattleBuff{
+					Id:         buff.BuffId,
+					Level:      1,
+					OwnerIndex: avatarInfo.Index,
+					WaveFlag:   waveFlagMap[buff.BuffId],
+				})
+			}
 		}
 	}
 
