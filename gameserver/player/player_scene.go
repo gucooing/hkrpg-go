@@ -185,6 +185,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
+	g.ContentPackageSyncDataScNotify()
 	req := payloadMsg.(*proto.EnterSceneCsReq)
 	rsp := &proto.EnterSceneScRsp{
 		ContentId:       req.ContentId,
@@ -634,9 +635,10 @@ func (g *GamePlayer) SetFloorSavedValue(conf *gdconf.SubMission, finishAction *g
 
 func (g *GamePlayer) AddSummonUnitSceneGroupRefreshScNotify() {
 	db := g.GetPd().GetSummonUnitInfo()
+	entityId := db.EntityId
 	g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
 		GroupRefreshList: g.GetPd().GetAddBuffSceneEntityRefreshInfo(
-			db.AttachEntityId, db.SummonUnitId, db.EntityId, db.Pos),
+			db.AttachEntityId, db.SummonUnitId, entityId, db.Pos),
 	})
 	go func() {
 		time.Sleep(20 * time.Second)
@@ -645,7 +647,7 @@ func (g *GamePlayer) AddSummonUnitSceneGroupRefreshScNotify() {
 				RefreshType: proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_UNLOAD,
 				RefreshEntity: []*proto.SceneEntityRefreshInfo{{
 					Refresh: &proto.SceneEntityRefreshInfo_DeleteEntity{
-						DeleteEntity: db.EntityId,
+						DeleteEntity: entityId,
 					},
 				}},
 			}},

@@ -16,6 +16,7 @@ var ApiMap = map[int]ApiFunc{
 	constant.GetPlayerDb:   getPlayerPb,
 	constant.Status:        status,
 	constant.Give:          give,
+	constant.GiveRelic:     giveRelic,
 }
 
 func ApiInitRouter(c *gin.Context) (bool, string, bool) {

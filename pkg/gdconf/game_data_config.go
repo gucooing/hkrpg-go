@@ -36,7 +36,7 @@ type GameDataConfig struct {
 	EquipmentExpTypeMap          map[uint32]map[uint32]*EquipmentExp             // 光锥经验配置
 	EquipmentPromotionConfigMap  map[uint32]map[uint32]*EquipmentPromotionConfig // 光锥突破配置
 	EquipmentSkillConfigMap      map[uint32]map[uint32]*EquipmentSkillConfig     // 光锥效果配置
-	RelicMap                     map[uint32]*Relic                               // 遗器
+	RelicConf                    *RelicConf                                      // 遗器
 	RelicMainAffixConfigMap      map[uint32]map[uint32]*RelicMainAffixConfig     // 圣遗物主属性配置
 	RelicSubAffixConfigMap       map[uint32]map[uint32]*RelicSubAffixConfig      // 圣遗物副属性配置
 	RelicExpTypeMap              map[uint32]map[uint32]*RelicExpType             // 圣遗物经验配置
@@ -113,6 +113,9 @@ type GameDataConfig struct {
 	MazeSkillMap                 map[uint32]*MazeSkill
 	SummonUnitDataInfo           *SummonUnitDataInfo
 	ConfigAdventureAbility       *ConfigAdventureAbility // Ability
+	ChatBubbleConfigMap          map[uint32]*ChatBubbleConfig
+	PhoneThemeConfigMap          map[uint32]*PhoneThemeConfig
+	ContentPackageConfigMap      map[uint32]*ContentPackageConfig
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -280,6 +283,9 @@ func (g *GameDataConfig) load() {
 		g.loadMonsterDrop,
 		g.loadMazeSkill,
 		g.loadSummonUnitData,
+		g.loadChatBubbleConfig,
+		g.loadPhoneThemeConfig,
+		g.loadContentPackageConfig,
 	}
 }
 

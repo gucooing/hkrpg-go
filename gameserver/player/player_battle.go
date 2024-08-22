@@ -2,6 +2,7 @@ package player
 
 import (
 	"strconv"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
@@ -252,7 +253,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		}
 		if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
 			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
-				g.GetPd().GetBattleDropData(conf.MappingInfoID, addPileItem, battleBin.WorldLevel)...)
+				g.GetPd().GetBattleDropData(conf.MappingInfoID, addPileItem, battleBin.WorldLevel, allSync)...)
 			finishSubMission := g.GetPd().FinishCocoon(battleBin.CocoonId)
 			if len(finishSubMission) != 0 {
 				g.InspectMission(finishSubMission)
@@ -264,7 +265,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		}
 		if conf := gdconf.GetFarmElementConfig(req.StageId); conf != nil {
 			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
-				g.GetPd().GetBattleDropData(conf.MappingInfoID, addPileItem, battleBin.WorldLevel)...)
+				g.GetPd().GetBattleDropData(conf.MappingInfoID, addPileItem, battleBin.WorldLevel, allSync)...)
 			delPileItem = append(delPileItem, &model.Material{
 				Tid: model.Stamina,
 				Num: conf.StaminaCost,
@@ -299,7 +300,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 	g.GetPd().AddItem(addPileItem, allSync)
 	g.StaminaInfoScNotify()
 	g.AllPlayerSyncScNotify(allSync)
-	g.AllScenePlaneEventScNotify(addPileItem)
+	// g.AllScenePlaneEventScNotify(addPileItem)
 
 	g.GetPd().DelBattleBackupById(req.BattleId)
 	g.Send(cmd.PVEBattleResultScRsp, rsp)
@@ -372,8 +373,8 @@ func (g *GamePlayer) RefreshTriggerByClientCsReq(payloadMsg pb.Message) {
 						Level:     1,
 						Count:     0,
 						LifeCount: 0,
-						AddTime:   0,
-						LifeTime:  0,
+						AddTime:   uint64(time.Now().Unix()),
+						LifeTime:  20,
 					})
 				}
 			}

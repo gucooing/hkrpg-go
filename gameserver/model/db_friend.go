@@ -138,7 +138,7 @@ func (g *PlayerData) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
 		return nil
 	}
 	simpleInfo := &proto.PlayerSimpleInfo{
-		ChatBubbleId:     220000,
+		ChatBubbleId:     friend.ChatBubbleId,
 		IsBanned:         false,
 		HeadIcon:         friend.HeadImageAvatarId,
 		Signature:        friend.Signature,

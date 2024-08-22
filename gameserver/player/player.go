@@ -181,6 +181,7 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 		Signature:         g.GetPd().GetSignature(),
 		AssistAvatarList:  g.GetPd().GetAssistAvatarListSpb(g.GetPd().GetAssistAvatarList()),
 		DisplayAvatarList: g.GetPd().GetAssistAvatarListSpb(g.GetPd().GetDisplayAvatarlist()),
+		ChatBubbleId:      g.GetPd().GetPhoneData().CurChatBubble,
 	}
 
 	bin, err := pb.Marshal(playerBasicBrief)

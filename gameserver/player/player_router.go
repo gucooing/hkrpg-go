@@ -19,7 +19,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.QueryProductInfoCsReq: g.HandleQueryProductInfoCsReq,
 		cmd.GetChatEmojiListCsReq: g.HandleGetChatEmojiListCsReq, // 获取聊天表情
 		cmd.GetJukeboxDataCsReq:   g.HandleGetJukeboxDataCsReq,   // 点歌？
-		cmd.GetPhoneDataCsReq:     g.HandleGetPhoneDataCsReq,     // 获取手机信息?
 		cmd.TextJoinQueryCsReq:    g.TextJoinQueryCsReq,          //
 		// 登录
 		cmd.PlayerLoginCsReq:       g.HandlePlayerLoginCsReq,       // 玩家登录请求 第二个登录包
@@ -116,6 +115,8 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.UseItemCsReq:              g.UseItemCsReq,              // 物品使用
 		cmd.ComposeItemCsReq:          g.ComposeItemCsReq,          // 合成
 		cmd.ComposeSelectedRelicCsReq: g.ComposeSelectedRelicCsReq, // 遗器合成
+		cmd.LockRelicCsReq:            g.LockRelicCsReq,            // 圣遗物上锁
+		cmd.LockEquipmentCsReq:        g.LockEquipmentCsReq,        // 光锥上锁
 		// 交易
 		cmd.GetShopListCsReq:            g.GetShopListCsReq,            // 获取商店物品列表
 		cmd.ExchangeHcoinCsReq:          g.ExchangeHcoinCsReq,          // 梦华兑换
@@ -170,6 +171,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		// cmd.SwordTrainingLearnSkillCsReq:g.SwordTrainingLearnSkillCsReq,// 领悟剑招请求
 		// cmd.SwordTrainingTurnActionCsReq:g.SwordTrainingTurnActionCsReq,// 开始日常训练
 		// 基础
+		cmd.GetPhoneDataCsReq:              g.HandleGetPhoneDataCsReq,        // 获取手机信息
 		cmd.SetClientPausedCsReq:           g.SetClientPausedCsReq,           // 客户端暂停请求
 		cmd.SyncClientResVersionCsReq:      g.SyncClientResVersionCsReq,      // 版本同步
 		cmd.GetAssistHistoryCsReq:          g.HandleGetAssistHistoryCsReq,    // 漫游签证
@@ -195,6 +197,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.TakeBpRewardCsReq:              g.TakeBpRewardCsReq,              // 战令奖励领取
 		cmd.TakeAllRewardCsReq:             g.TakeAllRewardCsReq,             // 领取全部战令奖励
 		cmd.ReserveStaminaExchangeCsReq:    g.ReserveStaminaExchangeCsReq,    // 取出体力
+		cmd.SelectChatBubbleCsReq:          g.SelectChatBubbleCsReq,          // 设置聊天主题
+		cmd.SelectPhoneThemeCsReq:          g.SelectPhoneThemeCsReq,          // 设置手机壁纸
+		cmd.PlayBackGroundMusicCsReq:       g.PlayBackGroundMusicCsReq,       // 设置车厢音乐
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集
@@ -233,7 +238,9 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 	}
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
+		if g.Uid == LogMsgPlayer {
+			logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
+		}
 		return
 	}
 	handlerFunc(payloadMsg)

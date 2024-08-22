@@ -6,4 +6,5 @@ const (
 	GetPlayerDb   = 1002
 	Status        = 1003
 	Give          = 1004
+	GiveRelic     = 1005
 )

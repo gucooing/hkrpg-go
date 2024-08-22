@@ -155,7 +155,7 @@ func (g *PlayerData) RaidReward(raidID, hardLevel uint32, allSync *AllPlayerSync
 	default:
 		if !conf.SkipRewardOnFinish && conf.RewardList != nil {
 			for _, reward := range conf.RewardList {
-				pile, _, item := g.GetRewardData(reward)
+				pile, item := g.GetRewardData(reward)
 				pileItem = append(pileItem, pile...)
 				itemList = append(itemList, item...)
 			}

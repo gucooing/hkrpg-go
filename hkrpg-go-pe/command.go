@@ -22,6 +22,7 @@ func (s *HkRpgGoServer) newHttpApi() {
 	s.apiRouter.Use(timeoutMiddleware())
 	s.initRouter()
 	addr := fmt.Sprintf("%s:%s", s.config.Gm.Addr, s.config.Gm.Port)
+	logger.Info("api监听地址:%s", addr)
 	server := &http.Server{Addr: addr, Handler: s.apiRouter}
 	server.ListenAndServe()
 }

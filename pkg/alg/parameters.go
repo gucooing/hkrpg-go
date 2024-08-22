@@ -80,6 +80,27 @@ func S2I32(msg string) int32 {
 	return int32(ms)
 }
 
+func S2I(msg string) int {
+	if msg == "" {
+		return 0
+	}
+	ms, _ := strconv.ParseUint(msg, 10, 32)
+	return int(ms)
+}
+
+func GetRelicSub(sub string) map[uint32]uint32 {
+	re := regexp.MustCompile(`\[(\d+):(\d+)\]`)
+	matches := re.FindAllStringSubmatch(sub, -1)
+
+	result := make(map[uint32]uint32)
+	for _, match := range matches {
+		key := S2U32(match[1])
+		value := S2U32(match[2])
+		result[key] = value
+	}
+	return result
+}
+
 func GetEveryDay4() time.Duration {
 	currentTime := time.Now()
 	nextExecution := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 4, 0, 0, 0, currentTime.Location())

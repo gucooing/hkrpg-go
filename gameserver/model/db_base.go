@@ -95,3 +95,19 @@ func (g *PlayerData) GetDailyTask() uint32 {
 	}
 	return unlockList[rand.Intn(len(unlockList))]
 }
+
+func newPhoneData() *spb.PhoneData {
+	return &spb.PhoneData{
+		CurPhoneTheme:  221000,
+		CurChatBubble:  220000,
+		CurrentMusicId: 210000,
+	}
+}
+
+func (g *PlayerData) GetPhoneData() *spb.PhoneData {
+	db := g.GetBasicBin()
+	if db.PhoneData == nil {
+		db.PhoneData = newPhoneData()
+	}
+	return db.PhoneData
+}

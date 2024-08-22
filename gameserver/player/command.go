@@ -16,6 +16,7 @@ type commHandlerFunc func(g *GamePlayer, parameter []string) string
 var commandMap = map[string]commHandlerFunc{
 	"world_level": setWorldLevel,
 	"give":        give,
+	"give_relic":  giveRelic,
 }
 
 func (g *GamePlayer) EnterCommand(msg Msg) {
@@ -43,13 +44,14 @@ func setWorldLevel(g *GamePlayer, parameter []string) string {
 	}
 	g.GetPd().SetWorldLevel(alg.S2U32(parameter[0]))
 	g.AllPlayerSyncScNotify(&model.AllPlayerSync{IsBasic: true})
-	return fmt.Sprintf("set world_level:%s ok", parameter[0])
+	return fmt.Sprintf("set world_level ok")
 }
 
 func give(g *GamePlayer, parameter []string) string {
 	if len(parameter) < 3 {
 		return "Command Not enough parameters"
 	}
+	var pileItem []*model.Material
 	allSync := &model.AllPlayerSync{
 		IsBasic:       true,
 		AvatarList:    make([]uint32, 0),
@@ -59,20 +61,21 @@ func give(g *GamePlayer, parameter []string) string {
 	}
 	all := alg.S2U32(parameter[0])
 	if all == 1 {
-		g.allGive(allSync)
+		g.allGive(allSync, pileItem)
 	} else {
-		pileItem := []*model.Material{{
+		pileItem = append(pileItem, &model.Material{
 			Tid: alg.S2U32(parameter[1]),
 			Num: alg.S2U32(parameter[2]),
-		}}
-		g.GetPd().AddItem(pileItem, allSync)
+		})
+
 	}
+	g.GetPd().AddItem(pileItem, allSync)
 	g.AllPlayerSyncScNotify(allSync)
-	return fmt.Sprintf("%s ok", parameter)
+	g.AllScenePlaneEventScNotify(pileItem)
+	return fmt.Sprintf("ok")
 }
 
-func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) {
-	var pileItem []*model.Material
+func (g *GamePlayer) allGive(allSync *model.AllPlayerSync, pileItem []*model.Material) {
 	itemConf := gdconf.GetItemConfigMap()
 	avatarConf := gdconf.GetAvatarDataMap()
 	// add avatar
@@ -111,15 +114,37 @@ func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) {
 	}
 	// add relic
 	for _, relic := range itemConf.Relic {
-		uniqueId := g.GetPd().AddRelic(relic.ID)
+		uniqueId := g.GetPd().AddRelic(relic.ID, 0, nil)
 		allSync.RelicList = append(allSync.RelicList, uniqueId)
 	}
-	// add bt relic
-	for _, relic := range itemConf.Relic {
-		uniqueId := g.GetPd().AddBtRelic(relic.ID)
-		allSync.RelicList = append(allSync.RelicList, uniqueId)
+}
+
+func giveRelic(g *GamePlayer, parameter []string) string {
+	if len(parameter) < 5 {
+		return "Command Not enough parameters"
 	}
-	g.GetPd().AddItem(pileItem, allSync)
+	allSync := &model.AllPlayerSync{
+		RelicList: make([]uint32, 0),
+	}
+	all := alg.S2U32(parameter[0])
+	if all == 1 {
+		itemConf := gdconf.GetItemConfigMap()
+		for _, relic := range itemConf.Relic {
+			uniqueId := g.GetPd().AddRelic(relic.ID, 0, nil)
+			allSync.RelicList = append(allSync.RelicList, uniqueId)
+		}
+	} else {
+		id := alg.S2U32(parameter[1])
+		num := alg.S2I(parameter[2])
+		main := alg.S2U32(parameter[3])
+		sub := parameter[4]
+		for i := 0; i < num; i++ {
+			uniqueId := g.GetPd().AddRelic(id, main, alg.GetRelicSub(sub))
+			allSync.RelicList = append(allSync.RelicList, uniqueId)
+		}
+	}
+	g.AllPlayerSyncScNotify(allSync)
+	return fmt.Sprintf("ok")
 }
 
 /**********************************分割线*******************************/
@@ -236,7 +261,7 @@ func (g *GamePlayer) FinishAllTutorial() {
 		}
 	}
 	gDb := g.GetPd().GetTutorialGuide()
-	for id := range gdconf.GetTutorialGuideGroup() {
+	for id := range gdconf.GetTutorialGuideGroupMap() {
 		gDb[id] = &spb.TutorialInfo{
 			Id:     id,
 			Status: spb.TutorialStatus_TUTORIAL_FINISH,

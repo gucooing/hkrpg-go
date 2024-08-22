@@ -143,7 +143,7 @@ func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
 			continue
 		}
 		if itemConf.Relic[itemInfo.Tid] != nil {
-			g.AddRelic(itemInfo.Tid)
+			g.AddRelic(itemInfo.Tid, 0, nil)
 			allSync.RelicList = append(allSync.RelicList, itemInfo.Tid)
 			continue
 		}
@@ -306,74 +306,91 @@ func (g *PlayerData) GetRelic(uniqueId uint32) *proto.Relic {
 	return relic
 }
 
-func (g *PlayerData) AddRelic(tid uint32) uint32 {
-	uniqueId := g.GetUniqueId()
+// 指定属性new
+func (g *PlayerData) AddRelic(tid uint32, mainAffix uint32, subAffix map[uint32]uint32) uint32 {
 	relicConf := gdconf.GetRelicById(tid)
 	if relicConf == nil {
+		logger.Warn("relic:%v,error", tid)
 		return 0
 	}
-	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+	var mainAffixConf *gdconf.RelicMainAffixConfig
+	if mainAffix == 0 {
+		mainAffixConf = gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+	} else {
+		mainAffixConf = gdconf.GetRelicMainAffixConfig(relicConf.MainAffixGroup, mainAffix)
+	}
 	if mainAffixConf == nil {
+		logger.Warn("relic:%v,mainAffixId:%v,error", tid, mainAffix)
 		return 0
 	}
+	if len(subAffix) == 0 {
+		subAffix = newRelicAffix(relicConf, mainAffixConf.Property)
+	}
+	uniqueId := g.GetUniqueId()
 	db := g.GetRelicMap()
-
 	relic := &spb.Relic{
 		Tid:               tid,
 		UniqueId:          uniqueId,
 		Exp:               0,
 		Level:             0,
 		MainAffixId:       mainAffixConf.AffixID,
-		RelicAffix:        make(map[uint32]*spb.RelicAffix),
+		RelicAffix:        GetRelicAffix(subAffix),
 		BaseAvatarId:      0,
 		IsProtected:       false,
 		MainAffixProperty: mainAffixConf.Property,
 	}
-
-	baseSubAffixes := math.Min(math.Max(float64(relicConf.Type-2), 0), 3)
-	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
-	relicAffix := make(map[uint32]*spb.RelicAffix)
-	g.AddRelicAffix(&AddRelicAffix{
-		AddSubAffixes:     addSubAffixes,
-		MainAffixProperty: mainAffixConf.Property,
-		SubAffixGroup:     relicConf.SubAffixGroup,
-		RelicAffix:        relicAffix,
-	})
-	relic.RelicAffix = relicAffix
 
 	db[uniqueId] = relic
 	return uniqueId
 }
 
-func (g *PlayerData) AddBtRelic(tid uint32) uint32 {
-	uniqueId := g.GetUniqueId()
-	relicConf := gdconf.GetRelicById(tid)
-	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
-	db := g.GetRelicMap()
-
-	relic := &spb.Relic{
-		Tid:               tid,
-		UniqueId:          uniqueId,
-		Exp:               0,
-		Level:             0,
-		MainAffixId:       mainAffixConf.AffixID,
-		RelicAffix:        make(map[uint32]*spb.RelicAffix),
-		BaseAvatarId:      0,
-		IsProtected:       false,
-		MainAffixProperty: mainAffixConf.Property,
+func newRelicAffix(relicConf *gdconf.Relic, mainProperty string) map[uint32]uint32 {
+	subAffix := make(map[uint32]uint32)
+	baseSubAffixes := math.Min(math.Max(float64(relicConf.Type-2), 0), 3)
+	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
+	var addNum = 0
+	for {
+		if len(subAffix) >= 4 {
+			randIndex := rand.Intn(len(subAffix))
+			randKey := uint32(0)
+			for key := range subAffix {
+				if randIndex == 0 {
+					randKey = key
+					break
+				}
+				randIndex--
+			}
+			subAffix[randKey]++
+		} else {
+			affixConf := gdconf.GetRelicSubAffixConfigById(relicConf.SubAffixGroup)
+			if uint32(len(subAffix)) < relicConf.Type-2 &&
+				subAffix[affixConf.AffixID] != 0 {
+				continue
+			}
+			if affixConf.Property != mainProperty {
+				subAffix[affixConf.AffixID]++
+			} else {
+				continue
+			}
+		}
+		addNum++
+		if addSubAffixes <= addNum {
+			break
+		}
 	}
+	return subAffix
+}
 
+func GetRelicAffix(subAffix map[uint32]uint32) map[uint32]*spb.RelicAffix {
 	relicAffix := make(map[uint32]*spb.RelicAffix)
-	g.AddRelicAffix(&AddRelicAffix{
-		AddSubAffixes:     400,
-		MainAffixProperty: mainAffixConf.Property,
-		SubAffixGroup:     relicConf.SubAffixGroup,
-		RelicAffix:        relicAffix,
-	})
-	relic.RelicAffix = relicAffix
-
-	db[uniqueId] = relic
-	return uniqueId
+	for affixID, cnt := range subAffix {
+		relicAffix[affixID] = &spb.RelicAffix{
+			AffixId: affixID,
+			Cnt:     cnt,
+			Step:    uint32(rand.Intn(3)),
+		}
+	}
+	return relicAffix
 }
 
 type AddRelicAffix struct {
@@ -411,7 +428,7 @@ func (g *PlayerData) AddRelicAffix(str *AddRelicAffix) {
 				str.RelicAffix[affixConf.AffixID] = &spb.RelicAffix{
 					AffixId: affixConf.AffixID,
 					Cnt:     1,
-					Step:    0,
+					Step:    uint32(rand.Intn(3)),
 				}
 			}
 			i++
@@ -513,7 +530,7 @@ func (g *PlayerData) ItemSubTypeMaterial(useDataID, useItemCount uint32, allSync
 	var i uint32 = 0
 	for i = 0; i < useItemCount; i++ {
 		for _, rewardId := range conf.UseParam {
-			pile, _, item := g.GetRewardData(rewardId)
+			pile, item := g.GetRewardData(rewardId)
 			pileItem = append(pileItem, pile...)
 			itemList = append(itemList, item...)
 		}
@@ -532,7 +549,7 @@ func (g *PlayerData) ItemSubTypeGift(useDataID, useItemCount uint32, allSync *Al
 	var i uint32 = 0
 	for i = 0; i < useItemCount; i++ {
 		for _, rewardId := range conf.UseParam {
-			pile, _, item := g.GetRewardData(rewardId)
+			pile, item := g.GetRewardData(rewardId)
 			pileItem = append(pileItem, pile...)
 			itemList = append(itemList, item...)
 		}
@@ -542,9 +559,8 @@ func (g *PlayerData) ItemSubTypeGift(useDataID, useItemCount uint32, allSync *Al
 	return itemList
 }
 
-func (g *PlayerData) GetRewardData(rewardID uint32) ([]*Material, []uint32, []*proto.Item) {
+func (g *PlayerData) GetRewardData(rewardID uint32) ([]*Material, []*proto.Item) {
 	pileItem := make([]*Material, 0)
-	materialList := make([]uint32, 0)
 	itemList := make([]*proto.Item, 0)
 	if rewardConf := gdconf.GetRewardDataById(rewardID); rewardConf != nil {
 		if rewardConf.Hcoin != 0 {
@@ -552,9 +568,12 @@ func (g *PlayerData) GetRewardData(rewardID uint32) ([]*Material, []uint32, []*p
 				Tid: Hcoin,
 				Num: rewardConf.Hcoin,
 			})
+			itemList = append(itemList, &proto.Item{
+				ItemId: Hcoin,
+				Num:    rewardConf.Hcoin,
+			})
 		}
 		for _, data := range rewardConf.Items {
-			materialList = append(materialList, data.ItemID)
 			pileItem = append(pileItem, &Material{
 				Tid: data.ItemID,
 				Num: data.Count,
@@ -565,7 +584,7 @@ func (g *PlayerData) GetRewardData(rewardID uint32) ([]*Material, []uint32, []*p
 			})
 		}
 	}
-	return pileItem, materialList, itemList
+	return pileItem, itemList
 }
 
 func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData) (proto.Retcode, *AllPlayerSync) {

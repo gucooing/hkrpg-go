@@ -621,22 +621,28 @@ func (g *PlayerData) ChallengeBattleEndLose() bool {
 
 /*************奖励*************/
 
-func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, addPileItem []*Material, worldLevel uint32) []*proto.Item {
+func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, addPileItem []*Material, worldLevel uint32, allSync *AllPlayerSync) []*proto.Item {
 	conf := gdconf.GetMappingInfoById(mappingInfoID, worldLevel)
 	if conf == nil {
 		return nil
 	}
 	itemList := make([]*proto.Item, 0)
-	itemConf := gdconf.GetItemConfigMap()
+	itemConfMap := gdconf.GetItemConfigMap()
 	for _, displayItem := range conf.DisplayItemList {
-		if itemConf.Equipment[displayItem.ItemID] != nil {
-			uniqueId := g.AddEquipment(displayItem.ItemID)
-			itemList = append(itemList, g.GetEquipmentItem(uniqueId))
+		itemConf := itemConfMap.Item[displayItem.ItemID]
+		if itemConf == nil {
 			continue
 		}
-		if itemConf.Relic[displayItem.ItemID] != nil {
-			uniqueId := g.AddRelic(displayItem.ItemID)
-			itemList = append(itemList, g.GetRelicItem(uniqueId))
+		switch itemConf.ItemSubType {
+		case constant.ItemSubTypeRelicSetShowOnly:
+			for _, id := range itemConf.CustomDataList {
+				relicConf := gdconf.GetRelicBySetID(id, itemConf.Rarity)
+				if relicConf != nil {
+					uniqueId := g.AddRelic(relicConf.ID, 0, nil)
+					itemList = append(itemList, g.GetRelicItem(uniqueId))
+					allSync.RelicList = append(allSync.RelicList, uniqueId)
+				}
+			}
 			continue
 		}
 		itemNum := displayItem.ItemNum

@@ -222,6 +222,7 @@ func (g *GamePlayer) AllScenePlaneEventScNotify(addPileItem []*model.Material) {
 			Num:    item.Num,
 		})
 	}
+	notify.GetItemList.ItemList = itemList
 
 	g.Send(cmd.ScenePlaneEventScNotify, notify)
 }

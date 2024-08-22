@@ -86,6 +86,7 @@ func (g *GamePlayer) LoginNotify() {
 	// g.ServerAnnounceNotify()
 	// g.ClientDownloadDataScNotify()
 	g.StoryLineInfoScNotify() // 故事线通知包
+	g.ContentPackageSyncDataScNotify()
 }
 
 // 飘窗通知

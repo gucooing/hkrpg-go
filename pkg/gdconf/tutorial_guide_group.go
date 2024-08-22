@@ -39,6 +39,10 @@ func (g *GameDataConfig) loadTutorialGuideGroup() {
 	logger.Info("load %v TutorialGuideGroup", len(g.TutorialGuideGroupMap))
 }
 
-func GetTutorialGuideGroup() map[uint32]*TutorialGuideGroup {
+func GetTutorialGuideGroupMap() map[uint32]*TutorialGuideGroup {
 	return CONF.TutorialGuideGroupMap
+}
+
+func GetTutorialGuideGroup(groupID uint32) *TutorialGuideGroup {
+	return CONF.TutorialGuideGroupMap[groupID]
 }

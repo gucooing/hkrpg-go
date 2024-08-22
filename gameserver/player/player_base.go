@@ -298,12 +298,13 @@ func (g *GamePlayer) FinishTutorialCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) FinishTutorialGuideCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishTutorialGuideCsReq)
-
-	// g.FinishTutorial(req.TutorialId)
+	allSync := &model.AllPlayerSync{MaterialList: make([]uint32, 0)}
+	itemList := g.GetPd().FinishTutorialGuide(req.GroupId, allSync)
+	g.AllPlayerSyncScNotify(allSync)
 	rsp := &proto.FinishTutorialGuideScRsp{
 		Retcode: 0,
 		Reward: &proto.ItemList{
-			ItemList: make([]*proto.Item, 0),
+			ItemList: itemList,
 		},
 		TutorialGuide: &proto.TutorialGuide{
 			Id:     req.GroupId,
@@ -318,7 +319,7 @@ func (g *GamePlayer) HandleGetChatEmojiListCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) HandleGetAssistHistoryCsReq(payloadMsg pb.Message) {
-	g.Send(cmd.GetAssistHistoryScRsp, nil)
+	g.Send(cmd.GetAssistHistoryScRsp, &proto.GetAssistHistoryScRsp{})
 }
 
 func (g *GamePlayer) SetClientPausedCsReq(payloadMsg pb.Message) {
@@ -331,9 +332,12 @@ func (g *GamePlayer) SetClientPausedCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) HandleGetJukeboxDataCsReq(payloadMsg pb.Message) {
-	rsp := new(proto.GetJukeboxDataScRsp)
-	rsp.CurrentMusicId = 210000
-	rsp.UnlockedMusicList = make([]*proto.MusicData, 0)
+	db := g.GetPd().GetPhoneData()
+	rsp := &proto.GetJukeboxDataScRsp{
+		CurrentMusicId:    db.CurrentMusicId,
+		Retcode:           0,
+		UnlockedMusicList: make([]*proto.MusicData, 0),
+	}
 	for _, backMusicList := range gdconf.GetBackGroundMusicMap() {
 		musicList := &proto.MusicData{
 			GroupId:  backMusicList.GroupID,
@@ -346,13 +350,60 @@ func (g *GamePlayer) HandleGetJukeboxDataCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) HandleGetPhoneDataCsReq(payloadMsg pb.Message) {
-	rsp := new(proto.GetPhoneDataScRsp)
-	rsp.CurChatBubble = 220000
-	rsp.CurPhoneTheme = 221000
-	rsp.OwnedChatBubbles = []uint32{220002, 220000, 220001}
-	rsp.OwnedPhoneThemes = []uint32{221000, 221001, 221002, 221003}
+	db := g.GetPd().GetPhoneData()
+	rsp := &proto.GetPhoneDataScRsp{
+		CurPhoneTheme:    db.CurPhoneTheme,
+		OwnedPhoneThemes: make([]uint32, 0),
+		CurChatBubble:    db.CurChatBubble,
+		OwnedChatBubbles: make([]uint32, 0),
+	}
+	for _, conf := range gdconf.GetChatBubbleConfigMap() {
+		rsp.OwnedChatBubbles = append(rsp.OwnedChatBubbles, conf.ID)
+	}
+	for _, conf := range gdconf.GetPhoneThemeConfigMap() {
+		rsp.OwnedPhoneThemes = append(rsp.OwnedPhoneThemes, conf.ID)
+	}
 
 	g.Send(cmd.GetPhoneDataScRsp, rsp)
+}
+
+func (g *GamePlayer) SelectChatBubbleCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SelectChatBubbleCsReq)
+	db := g.GetPd().GetPhoneData()
+	db.CurChatBubble = req.BubbleId
+	rsp := &proto.SelectChatBubbleScRsp{
+		// BDDJODIMMGO:   0,
+		Retcode:       0,
+		CurChatBubble: db.CurChatBubble,
+	}
+
+	g.Send(cmd.SelectChatBubbleScRsp, rsp)
+}
+
+func (g *GamePlayer) SelectPhoneThemeCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SelectPhoneThemeCsReq)
+	db := g.GetPd().GetPhoneData()
+	db.CurPhoneTheme = req.ThemeId
+	rsp := &proto.SelectPhoneThemeScRsp{
+		Retcode:       0,
+		CurPhoneTheme: db.CurPhoneTheme,
+		// NNKFBKLCDDF:   0,
+	}
+
+	g.Send(cmd.SelectPhoneThemeScRsp, rsp)
+}
+
+func (g *GamePlayer) PlayBackGroundMusicCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.PlayBackGroundMusicCsReq)
+	db := g.GetPd().GetPhoneData()
+	db.CurrentMusicId = req.PlayMusicId
+	rsp := &proto.PlayBackGroundMusicScRsp{
+		PlayMusicId:    db.CurrentMusicId,
+		CurrentMusicId: db.CurrentMusicId,
+		Retcode:        0,
+	}
+
+	g.Send(cmd.PlayBackGroundMusicScRsp, rsp)
 }
 
 func (g *GamePlayer) SetNicknameCsReq(payloadMsg pb.Message) {
@@ -391,14 +442,16 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) TextJoinQueryCsReq(payloadMsg pb.Message) {
-	rsp := new(proto.TextJoinQueryScRsp)
-	// for _, textJoin := range gdconf.GetTextJoinConfigMap() {
-	// 	textJoinList := &proto.TextJoinInfo{
-	// 		TextItemId:       textJoin.TextJoinID,
-	// 		TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
-	// 	}
-	// 	rsp.TextJoinInfoList = append(rsp.TextJoinInfoList, textJoinList)
-	// }
+	rsp := &proto.TextJoinQueryScRsp{
+		TextJoinList: make([]*proto.TextJoinInfo, 0),
+	}
+	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
+		textJoinList := &proto.TextJoinInfo{
+			TextItemId:       textJoin.TextJoinID,
+			TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
+		}
+		rsp.TextJoinList = append(rsp.TextJoinList, textJoinList)
+	}
 
 	g.Send(cmd.TextJoinQueryScRsp, rsp)
 }
@@ -428,20 +481,20 @@ func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) HandlePlayerLoginFinishCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.PlayerLoginFinishScRsp, &proto.PlayerLoginFinishScRsp{})
-	g.ContentPackageSyncDataScNotify()
 }
 
 func (g *GamePlayer) ContentPackageSyncDataScNotify() {
 	notify := &proto.ContentPackageSyncDataScNotify{
 		Data: &proto.ContentPackageData{
+			CurContentId:       0,
 			ContentPackageList: make([]*proto.ContentPackageInfo, 0),
 		},
 	}
 
-	for _, id := range []uint32{200001, 200002} { // TODO ContentPackageConfig.json
+	for _, conf := range gdconf.GetContentPackageConfigMap() {
 		notify.Data.ContentPackageList = append(notify.Data.ContentPackageList, &proto.ContentPackageInfo{
-			ContentId: id,
-			Status:    proto.ContentPackageStatus_ContentPackageStatus_Finished,
+			ContentId: conf.ContentID,
+			Status:    proto.ContentPackageStatus_ContentPackageStatus_Release,
 		})
 	}
 
@@ -473,7 +526,7 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	pile, _, item := g.GetPd().GetRewardData(conf.LevelRewardID)
+	pile, item := g.GetPd().GetRewardData(conf.LevelRewardID)
 	pileItem = append(pileItem, pile...)
 	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
 
@@ -505,7 +558,9 @@ func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg pb.Message) {
 		EquipmentList: make([]uint32, 0),
 		RelicList:     make([]uint32, 0),
 	}
-	g.allGive(allSync)
+	var pileItem []*model.Material
+	g.allGive(allSync, pileItem)
+	g.GetPd().AddItem(pileItem, allSync)
 	rsp := &proto.TakeAllRewardScRsp{
 		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: model.Mcoin, Num: 1000}}},
 		Retcode: 0,

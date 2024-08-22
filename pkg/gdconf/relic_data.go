@@ -2,11 +2,17 @@ package gdconf
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
+
+type RelicConf struct {
+	RelicMap        map[uint32]*Relic
+	RelicMapBySetID map[uint32]map[uint32][]*Relic // map[set][type][]
+}
 
 type Relic struct {
 	ID             uint32 `json:"ID"`
@@ -30,8 +36,18 @@ var RelicRarity = map[string]uint32{
 	"CombatPowerRelicRarity5": 5,
 }
 
+var Rarity = map[string]uint32{
+	"NotNormal": 2,
+	"Rare":      3,
+	"VeryRare":  4,
+	"SuperRare": 5,
+}
+
 func (g *GameDataConfig) loadRelic() {
-	g.RelicMap = make(map[uint32]*Relic)
+	g.RelicConf = &RelicConf{
+		RelicMap:        make(map[uint32]*Relic),
+		RelicMapBySetID: make(map[uint32]map[uint32][]*Relic),
+	}
 	relicMap := make([]*Relic, 0)
 	relicMaps := make([]*Relic, 0)
 	playerElementsFilePath := g.excelPrefix + "RelicConfig.json"
@@ -63,25 +79,42 @@ func (g *GameDataConfig) loadRelic() {
 	for _, relic := range relicMap {
 		relic.Type = RelicRarity[relic.Rarity]
 		if relic.ID == 0 {
-			g.RelicMap[relic.ItemID] = relic
+			g.RelicConf.RelicMap[relic.ItemID] = relic
 		} else {
-			g.RelicMap[relic.ID] = relic
+			if g.RelicConf.RelicMapBySetID[relic.SetID] == nil {
+				g.RelicConf.RelicMapBySetID[relic.SetID] = make(map[uint32][]*Relic)
+			}
+			if g.RelicConf.RelicMapBySetID[relic.SetID][relic.Type] == nil {
+				g.RelicConf.RelicMapBySetID[relic.SetID][relic.Type] = make([]*Relic, 0)
+			}
+			g.RelicConf.RelicMapBySetID[relic.SetID][relic.Type] = append(g.RelicConf.RelicMapBySetID[relic.SetID][relic.Type], relic)
+			g.RelicConf.RelicMap[relic.ID] = relic
 		}
 	}
 
-	logger.Info("load %v RelicConfig", len(g.RelicMap))
-
+	logger.Info("load %v RelicConfig", len(g.RelicConf.RelicMap))
 }
 
 func GetRelicById(ID uint32) *Relic {
-	return CONF.RelicMap[ID]
+	return CONF.RelicConf.RelicMap[ID]
 }
 
 func GetRelicMap() map[uint32]*Relic {
-	return CONF.RelicMap
+	return CONF.RelicConf.RelicMap
 }
 
 func GetRelicMaxLevel(relicId uint32) uint32 {
-	promotionConfig := CONF.RelicMap[relicId]
+	promotionConfig := CONF.RelicConf.RelicMap[relicId]
 	return promotionConfig.MaxLevel
+}
+
+func GetRelicBySetID(setID uint32, rarity string) *Relic {
+	if CONF.RelicConf.RelicMapBySetID[setID] == nil {
+		return nil
+	}
+	list := CONF.RelicConf.RelicMapBySetID[setID][Rarity[rarity]]
+	if list == nil || len(list) == 0 {
+		return nil
+	}
+	return list[rand.Intn(len(list))]
 }

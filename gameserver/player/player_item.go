@@ -45,9 +45,13 @@ func (g *GamePlayer) HandleGetBagCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) DestroyItemCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DestroyItemCsReq)
 	db := g.GetPd().GetMaterialById(req.ItemId)
+	allSync := &model.AllPlayerSync{
+		MaterialList: []uint32{req.ItemId},
+	}
 	if db == req.CurItemCount {
 		g.GetPd().DelMaterial([]*model.Material{{Tid: req.ItemId, Num: req.ItemCount}})
 	}
+	g.AllPlayerSyncScNotify(allSync)
 	rsp := &proto.DestroyItemScRsp{CurItemCount: g.GetPd().GetMaterialById(req.ItemId)}
 	g.Send(cmd.DestroyItemScRsp, rsp)
 }
@@ -116,7 +120,7 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	}
 	if req.OptionalRewardId != 0 {
-		pile, _, item := g.GetPd().GetRewardData(req.OptionalRewardId)
+		pile, item := g.GetPd().GetRewardData(req.OptionalRewardId)
 		g.GetPd().AddItem(pile, allSync)
 		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	}
@@ -185,7 +189,7 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 	}
 
 	for i := 0; i < int(req.Count); i++ {
-		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId)
+		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, req.MainAffixId, nil)
 		allSync.RelicList = append(allSync.RelicList, uniqueId)
 		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
 			ItemId:   req.ComposeRelicId,
@@ -210,6 +214,21 @@ func (g *GamePlayer) RelicAvatarRecommendCsReq(payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.RelicRecommendCsReq)
 	rsp := &proto.RelicAvatarRecommendScRsp{}
 	g.Send(cmd.RelicAvatarRecommendScRsp, rsp)
+}
+
+func (g *GamePlayer) LockRelicCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.LockRelicCsReq)
+	allSync := &model.AllPlayerSync{
+		RelicList: make([]uint32, 0),
+	}
+	for _, uniqueId := range req.RelicUniqueIdList {
+		db := g.GetPd().GetRelicById(uniqueId)
+		db.IsProtected = req.IsProtected
+		allSync.RelicList = append(allSync.RelicList, uniqueId)
+	}
+	g.AllPlayerSyncScNotify(allSync)
+	rsp := &proto.LockRelicScRsp{}
+	g.Send(cmd.LockRelicScRsp, rsp)
 }
 
 func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg pb.Message) {
@@ -272,9 +291,9 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg pb.Message) {
 	}
 
 	var pileItem []*model.Material // 需要删除的升级材料
-	var delScoin uint32      // 扣除的信用点
-	var addExp uint32        // 增加的经验
-	var oldLevel uint32      // 升级前等级
+	var delScoin uint32            // 扣除的信用点
+	var addExp uint32              // 增加的经验
+	var oldLevel uint32            // 升级前等级
 	allSync := &model.AllPlayerSync{
 		IsBasic:      true,
 		MaterialList: make([]uint32, 0),
@@ -386,6 +405,21 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg pb.Message) {
 
 /***************************equipment*************************************/
 
+func (g *GamePlayer) LockEquipmentCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.LockEquipmentCsReq)
+	allSync := &model.AllPlayerSync{
+		EquipmentList: make([]uint32, 0),
+	}
+	for _, uniqueId := range req.EquipmentIdList {
+		db := g.GetPd().GetEquipmentById(uniqueId)
+		db.IsProtected = req.IsProtected
+		allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
+	}
+	g.AllPlayerSyncScNotify(allSync)
+	rsp := &proto.LockEquipmentScRsp{}
+	g.Send(cmd.LockEquipmentScRsp, rsp)
+}
+
 func (g *GamePlayer) DressAvatarCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DressAvatarCsReq)
 	g.DressAvatar(req.GetAvatarId(), req.GetEquipmentUniqueId())
@@ -458,8 +492,8 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg pb.Message) {
 	}
 
 	var pileItem []*model.Material // 需要删除的升级材料
-	var delScoin uint32      // 扣除的信用点
-	var addExp uint32        // 增加的经验
+	var delScoin uint32            // 扣除的信用点
+	var addExp uint32              // 增加的经验
 	allSync := &model.AllPlayerSync{
 		IsBasic:          true,
 		MaterialList:     make([]uint32, 0),
@@ -635,7 +669,7 @@ func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PromoteEquipmentCsReq)
 	rsp := new(proto.GetChallengeScRsp)
 	var pileItem []*model.Material // 需要删除的突破材料
-	var delScoin uint32      // 扣除的信用点
+	var delScoin uint32            // 扣除的信用点
 	allSync := &model.AllPlayerSync{
 		MaterialList:     make([]uint32, 0),
 		EquipmentList:    make([]uint32, 0),
