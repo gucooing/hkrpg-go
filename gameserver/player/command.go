@@ -15,6 +15,7 @@ type commHandlerFunc func(g *GamePlayer, parameter []string) string
 
 var commandMap = map[string]commHandlerFunc{
 	"world_level": setWorldLevel,
+	"give":        give,
 }
 
 func (g *GamePlayer) EnterCommand(msg Msg) {
@@ -37,14 +38,18 @@ func (g *GamePlayer) EnterCommand(msg Msg) {
 
 // 设置世界等级
 func setWorldLevel(g *GamePlayer, parameter []string) string {
+	if len(parameter) < 1 {
+		return "Command Not enough parameters"
+	}
 	g.GetPd().SetWorldLevel(alg.S2U32(parameter[0]))
 	g.AllPlayerSyncScNotify(&model.AllPlayerSync{IsBasic: true})
 	return fmt.Sprintf("set world_level:%s ok", parameter[0])
 }
 
-// 添加物品
-func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
-	req := payloadMsg.(*spb.GmGive)
+func give(g *GamePlayer, parameter []string) string {
+	if len(parameter) < 3 {
+		return "Command Not enough parameters"
+	}
 	allSync := &model.AllPlayerSync{
 		IsBasic:       true,
 		AvatarList:    make([]uint32, 0),
@@ -52,20 +57,21 @@ func (g *GamePlayer) GmGive(payloadMsg pb.Message) {
 		EquipmentList: make([]uint32, 0),
 		RelicList:     make([]uint32, 0),
 	}
-
-	if req.GiveAll {
-		g.AllGive(allSync)
+	all := alg.S2U32(parameter[0])
+	if all == 1 {
+		g.allGive(allSync)
 	} else {
-		g.GetPd().AddItem([]*model.Material{{
-			Tid: req.ItemId,
-			Num: req.ItemCount,
-		}}, allSync)
+		pileItem := []*model.Material{{
+			Tid: alg.S2U32(parameter[1]),
+			Num: alg.S2U32(parameter[2]),
+		}}
+		g.GetPd().AddItem(pileItem, allSync)
 	}
-	// 同步通知
 	g.AllPlayerSyncScNotify(allSync)
+	return fmt.Sprintf("%s ok", parameter)
 }
 
-func (g *GamePlayer) AllGive(allSync *model.AllPlayerSync) {
+func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) {
 	var pileItem []*model.Material
 	itemConf := gdconf.GetItemConfigMap()
 	avatarConf := gdconf.GetAvatarDataMap()
@@ -115,6 +121,8 @@ func (g *GamePlayer) AllGive(allSync *model.AllPlayerSync) {
 	}
 	g.GetPd().AddItem(pileItem, allSync)
 }
+
+/**********************************分割线*******************************/
 
 // 清空背包
 func (g *GamePlayer) DelItem(payloadMsg pb.Message) {

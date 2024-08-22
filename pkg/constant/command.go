@@ -5,4 +5,5 @@ const (
 	SetWorldLevel = 1001
 	GetPlayerDb   = 1002
 	Status        = 1003
+	Give          = 1004
 )

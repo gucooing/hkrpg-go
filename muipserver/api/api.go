@@ -15,6 +15,7 @@ var ApiMap = map[int]ApiFunc{
 	constant.SetWorldLevel: worldLevel,
 	constant.GetPlayerDb:   getPlayerPb,
 	constant.Status:        status,
+	constant.Give:          give,
 }
 
 func ApiInitRouter(c *gin.Context) (bool, string, bool) {

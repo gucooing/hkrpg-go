@@ -106,7 +106,7 @@ var DefaultConfig = &Config{
 		IsJumpMission: true,
 	},
 	Gm: &Gm{
-		SignKey: "",
+		SignKey: "123456",
 		Addr:    "0.0.0.0",
 		Port:    "20011",
 	},

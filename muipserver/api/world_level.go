@@ -23,6 +23,14 @@ func status(c *gin.Context) (bool, string, bool) {
 	return true, "status", false
 }
 
+func give(c *gin.Context) (bool, string, bool) {
+	all := c.Query("all")
+	id := c.Query("id")
+	num := c.Query("num")
+
+	return true, fmt.Sprintf("give %s %s %s", all, id, num), true
+}
+
 // func (a *muip.Api) MaxCurAvatar(c *gin.Context) {
 // 	uid := alg.S2U32(c.Query("uid"))
 // 	avatarId := alg.S2U32(c.Query("avatar_id"))

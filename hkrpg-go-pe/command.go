@@ -95,7 +95,7 @@ func (s *HkRpgGoServer) ApiInitRouter(c *gin.Context) {
 }
 
 func (s *HkRpgGoServer) SignKey(signKey string) bool {
-	if signKey == "" {
+	if s.config.Gm.SignKey == "" {
 		return true
 	}
 	if signKey != s.config.Gm.SignKey {
@@ -213,16 +213,10 @@ func give(parameter []string, s *HkRpgGoServer) {
 		return
 	}
 	switch parameter[2] {
-	case "all":
-		p.GamePlayer.GmGive(&spb.GmGive{GiveAll: true})
 	case "maxavatar":
 		p.GamePlayer.GmMaxCurAvatar(&spb.MaxCurAvatar{All: true})
 	default:
 		if index >= 4 {
-			p.GamePlayer.GmGive(&spb.GmGive{
-				ItemId:    alg.S2U32(parameter[2]),
-				ItemCount: alg.S2U32(parameter[3]),
-			})
 		}
 	}
 }
