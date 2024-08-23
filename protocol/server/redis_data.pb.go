@@ -605,7 +605,7 @@ type PlayerBasicBriefData struct {
 	Signature         string                   `protobuf:"bytes,10,opt,name=signature,proto3" json:"signature,omitempty"`                                                                                                                                     // 签名
 	AssistAvatarList  map[uint32]*AssistAvatar `protobuf:"bytes,11,rep,name=assist_avatar_list,json=assistAvatarList,proto3" json:"assist_avatar_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`    // 展示角色
 	DisplayAvatarList map[uint32]*AssistAvatar `protobuf:"bytes,12,rep,name=display_avatar_list,json=displayAvatarList,proto3" json:"display_avatar_list,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"` // 支援角色
-	ChatBubbleId      uint32                   `protobuf:"varint,13,opt,name=chat_bubble_id,json=chatBubbleId,proto3" json:"chat_bubble_id,omitempty"`                                                                                                        //主题
+	ChatBubbleId      uint32                   `protobuf:"varint,13,opt,name=chat_bubble_id,json=chatBubbleId,proto3" json:"chat_bubble_id,omitempty"`                                                                                                        //聊天主题
 }
 
 func (x *PlayerBasicBriefData) Reset() {

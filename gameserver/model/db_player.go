@@ -41,6 +41,7 @@ func NewBasicBin() *spb.PlayerBasicCompBin {
 		Nickname:             "hkrpg-go",
 		WorldLevel:           0,
 		Activity:             NewActivity(),
+		PojokNostalgia:       newPojokNostalgia(),
 		Signature:            "",
 		HeadImageAvatarId:    0,
 		Birthday:             0,

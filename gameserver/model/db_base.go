@@ -111,3 +111,16 @@ func (g *PlayerData) GetPhoneData() *spb.PhoneData {
 	}
 	return db.PhoneData
 }
+
+func (g *PlayerData) GetTextJoinPBList() map[uint32]*spb.TextJoin {
+	db := g.GetPhoneData()
+	if db.TextJoin == nil {
+		db.TextJoin = make(map[uint32]*spb.TextJoin)
+	}
+	return db.TextJoin
+}
+
+func (g *PlayerData) GetTextJoinPBById(id uint32) *spb.TextJoin {
+	db := g.GetPhoneData()
+	return db.TextJoin[id]
+}

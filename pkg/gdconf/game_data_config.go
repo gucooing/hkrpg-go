@@ -116,6 +116,10 @@ type GameDataConfig struct {
 	ChatBubbleConfigMap          map[uint32]*ChatBubbleConfig
 	PhoneThemeConfigMap          map[uint32]*PhoneThemeConfig
 	ContentPackageConfigMap      map[uint32]*ContentPackageConfig
+	AetherDividePassiveSkillMap  map[uint32]*AetherDividePassiveSkill
+	AetherDivideSpiritMap        map[uint32]*AetherDivideSpirit
+	AetherDivideSpiritTrialMap   map[uint32]*AetherDivideSpiritTrial
+	AetherDivideChallengeListMap map[uint32]*AetherDivideChallengeList
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -286,6 +290,10 @@ func (g *GameDataConfig) load() {
 		g.loadChatBubbleConfig,
 		g.loadPhoneThemeConfig,
 		g.loadContentPackageConfig,
+		g.loadAetherDividePassiveSkill,
+		g.loadAetherDivideSpirit,
+		g.loadAetherDivideSpiritTrial,
+		g.loadAetherDivideChallengeList,
 	}
 }
 

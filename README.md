@@ -29,6 +29,7 @@
 - **忘却之庭等衍生内容**
 - **模拟宇宙**
 - **差分宇宙**
+- **常时传略(部分**
 
 ### 与客户端（Fiddler）连接
 1. 安装并运行 [Fiddler Classic](https://www.telerik.com/fiddler)。
@@ -40,14 +41,24 @@ import System;
 import System.Windows.Forms;
 import Fiddler;
 import System.Text.RegularExpressions;
-
 class Handlers
 {
     static function OnBeforeRequest(oS: Session) {
-        if (oS.host.EndsWith(".starrails.com") || oS.host.EndsWith(".hoyoverse.com") || oS.host.EndsWith(".mihoyo.com") || oS.host.EndsWith(".bhsr.com")) {
-            oS.host = "localhost"; // 这也可以替换为其他IP地址。
-        }
+    if(
+        oS.host.EndsWith(".yuanshen.com") ||
+        oS.host.EndsWith(".hoyoverse.com") ||
+        oS.host.EndsWith(".mihoyo.com") ||
+        oS.host.EndsWith(".zenlesszonezero.com") ||
+        oS.host.EndsWith(".honkaiimpact3.com") ||
+        oS.host.EndsWith(".bhsr.com") ||
+        oS.host.EndsWith(".starrails.com") ||
+        oS.uriContains("http://overseauspider.yuanshen.com:8888/log")
+    ) {
+        var newUrl = "http://" + oS.host + oS.PathAndQuery;
+        oS.fullUrl = newUrl;
+        oS.host = "127.0.0.1:8080";
     }
+}
 };
 ```
 

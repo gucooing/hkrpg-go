@@ -5,6 +5,7 @@ package proto;
 
 option go_package = "./;proto";
 
+import "pojok.nostalgia.proto";
 import "enum.server.proto";
 
 message PlayerBasicCompBin {
@@ -45,7 +46,8 @@ message PlayerBasicCompBin {
   uint32 set_language_tag = 36; // 设置语言标签
   uint32 guid_seq_id = 37; // 序列号
   map<uint32, MessageGroup> message_group_list = 38; // NPC聊天信息
-  PhoneData phone_data = 39;
+  PhoneData phone_data = 39; // 手机信息
+  PojokNostalgia pojok_nostalgia = 40; // 常时传略
   uint64 player_stat_id = 41; // 玩家统计id
   ContentAuditBin nickname_audit_bin = 42; // 昵称审核bin
   string ip_country_code = 43; // ip国家代码
@@ -73,6 +75,12 @@ message PhoneData {
    uint32 cur_phone_theme = 1;
    uint32 cur_chat_bubble = 2;
    uint32 current_music_id = 3;
+  map<uint32,TextJoin> TextJoin = 47;//自定义文本
+}
+
+message TextJoin {
+ uint32 text_join_id = 1;
+ uint32 text_join_item_id = 2;
 }
 
 message ChangeStory {

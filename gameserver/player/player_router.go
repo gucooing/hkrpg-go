@@ -19,7 +19,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.QueryProductInfoCsReq: g.HandleQueryProductInfoCsReq,
 		cmd.GetChatEmojiListCsReq: g.HandleGetChatEmojiListCsReq, // 获取聊天表情
 		cmd.GetJukeboxDataCsReq:   g.HandleGetJukeboxDataCsReq,   // 点歌？
-		cmd.TextJoinQueryCsReq:    g.TextJoinQueryCsReq,          //
 		// 登录
 		cmd.PlayerLoginCsReq:       g.HandlePlayerLoginCsReq,       // 玩家登录请求 第二个登录包
 		cmd.PlayerLoginFinishCsReq: g.HandlePlayerLoginFinishCsReq, // 登录完成包
@@ -165,6 +164,12 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartTrialActivityCsReq:        g.StartTrialActivityCsReq,              // 角色试用
 		cmd.TakeLoginActivityRewardCsReq:   g.TakeLoginActivityRewardCsReq,         // 领取登录活动奖励
 		cmd.TakeTrialActivityRewardCsReq:   g.TakeTrialActivityRewardCsReq,         // 角色试用奖励领取
+		// 以太战线
+		cmd.GetAetherDivideInfoCsReq:              g.GetAetherDivideInfoCsReq,              // 获取以太战线信息
+		cmd.GetAetherDivideChallengeInfoCsReq:     g.GetAetherDivideChallengeInfoCsReq,     // 获取以太通关信息
+		cmd.SetAetherDivideLineUpCsReq:            g.SetAetherDivideLineUpCsReq,            // 设置队伍
+		cmd.EquipAetherDividePassiveSkillCsReq:    g.EquipAetherDividePassiveSkillCsReq,    // 装备道具
+		cmd.StartAetherDivideChallengeBattleCsReq: g.StartAetherDivideChallengeBattleCsReq, // 开始战斗！
 		// 练剑游戏
 		cmd.GetSwordTrainingDataCsReq:   g.GetSwordTrainingDataCsReq,   // 获取练剑游戏信息
 		cmd.SwordTrainingStartGameCsReq: g.SwordTrainingStartGameCsReq, // 开始练剑游戏请求
@@ -200,6 +205,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SelectChatBubbleCsReq:          g.SelectChatBubbleCsReq,          // 设置聊天主题
 		cmd.SelectPhoneThemeCsReq:          g.SelectPhoneThemeCsReq,          // 设置手机壁纸
 		cmd.PlayBackGroundMusicCsReq:       g.PlayBackGroundMusicCsReq,       // 设置车厢音乐
+		cmd.TextJoinQueryCsReq:             g.TextJoinQueryCsReq,             // 获取车厢音乐
+		cmd.TextJoinSaveCsReq:              g.TextJoinSaveCsReq,              // 保存自定义文本
+		cmd.TextJoinBatchSaveCsReq:         g.TextJoinBatchSaveCsReq,         // 批量保存自定义文本
 		// 成就
 		cmd.GetArchiveDataCsReq:        g.HandleGetArchiveDataCsReq,  // 获取收集
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集

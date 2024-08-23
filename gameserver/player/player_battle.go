@@ -237,6 +237,13 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 				}
 			}
 		}
+		// 以太战线任务判断
+		if battleBin.AetherDivideId != 0 {
+			finishSubMission := g.GetPd().AetherDivideCertainFinishHyperlinkDuel(battleBin.AetherDivideId)
+			if len(finishSubMission) != 0 {
+				g.InspectMission(finishSubMission)
+			}
+		}
 		// 参战角色经验添加
 		for _, avatar := range req.Stt.GetBattleAvatarList() {
 			if _, ok := g.GetPd().AvatarAddExp(avatar.Id, battleBin.AvatarExpReward); ok {

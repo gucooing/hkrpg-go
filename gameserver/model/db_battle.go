@@ -33,6 +33,7 @@ type BattleBackup struct {
 	StageID          uint32                   // cocoon
 	StageIDList      []uint32                 // cocoon
 	EventId          uint32                   // 任务用的
+	AetherDivideId   uint32                   // 以太战线id
 	Sce              *SceneCastEntity         // 参与实体
 	// Skill
 	SummonUnitId uint32 // 领域

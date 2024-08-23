@@ -107,6 +107,24 @@ func (g *PlayerData) UpKillMonsterSubMission(me *MonsterEntity) []uint32 {
 	return finishSubMission
 }
 
+// 以太战线战斗完成
+func (g *PlayerData) AetherDivideCertainFinishHyperlinkDuel(aetherDivideId uint32) []uint32 {
+	finishSubMission := make([]uint32, 0)
+	for id := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		switch conf.FinishType {
+		case constant.AetherDivideCertainFinishHyperlinkDuel:
+			if conf.ParamInt1 == aetherDivideId {
+				finishSubMission = append(finishSubMission, id)
+			}
+		}
+	}
+	return finishSubMission
+}
+
 // 处理交互任务
 func (g *PlayerData) UpInteractSubMission(db *spb.BlockBin) []uint32 {
 	finishSubMission := make([]uint32, 0)

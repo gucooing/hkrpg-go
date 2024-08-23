@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -156,6 +157,11 @@ func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
 
 func IsMateria(id uint32) bool {
 	itemConf := gdconf.GetItemConfigMap()
+	if conf := itemConf.Item[id]; conf != nil {
+		if conf.ItemSubType == constant.ItemSubTypeAetherSkill {
+			return false
+		}
+	}
 	if itemConf.Item[id] != nil ||
 		itemConf.AvatarRank[id] != nil ||
 		itemConf.Book[id] != nil ||

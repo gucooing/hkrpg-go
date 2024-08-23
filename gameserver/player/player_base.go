@@ -8,6 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -441,21 +442,6 @@ func (g *GamePlayer) SetSignatureCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.SetSignatureScRsp, rsp)
 }
 
-func (g *GamePlayer) TextJoinQueryCsReq(payloadMsg pb.Message) {
-	rsp := &proto.TextJoinQueryScRsp{
-		TextJoinList: make([]*proto.TextJoinInfo, 0),
-	}
-	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
-		textJoinList := &proto.TextJoinInfo{
-			TextItemId:       textJoin.TextJoinID,
-			TextItemConfigId: textJoin.TextJoinItemList[len(textJoin.TextJoinItemList)-1],
-		}
-		rsp.TextJoinList = append(rsp.TextJoinList, textJoinList)
-	}
-
-	g.Send(cmd.TextJoinQueryScRsp, rsp)
-}
-
 func (g *GamePlayer) GetUnlockTeleportCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetUnlockTeleportCsReq)
 	rsp := &proto.GetUnlockTeleportScRsp{
@@ -612,4 +598,49 @@ func (g *GamePlayer) DailyTaskDataScNotify(missionId uint32) {
 	}
 	notify.DailyTaskList = append(notify.DailyTaskList, dailyTask)
 	g.Send(cmd.DailyTaskDataScNotify, notify)
+}
+
+func (g *GamePlayer) TextJoinQueryCsReq(payloadMsg pb.Message) {
+	rsp := &proto.TextJoinQueryScRsp{
+		TextJoinList: make([]*proto.TextJoinInfo, 0),
+	}
+	for _, textJoin := range gdconf.GetTextJoinConfigMap() {
+		info := &proto.TextJoinInfo{
+			TextItemId:       textJoin.TextJoinID,
+			TextItemConfigId: textJoin.DefaultItem,
+		}
+		if db := g.GetPd().GetTextJoinPBById(textJoin.TextJoinID); db != nil {
+			info.TextJoinItemId = db.TextJoinItemId
+		}
+		rsp.TextJoinList = append(rsp.TextJoinList, info)
+	}
+
+	g.Send(cmd.TextJoinQueryScRsp, rsp)
+}
+
+func (g *GamePlayer) TextJoinBatchSaveCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TextJoinBatchSaveCsReq)
+	db := g.GetPd().GetTextJoinPBList()
+	for _, v := range req.TextJoinList {
+		db[v.TextItemConfigId] = &spb.TextJoin{
+			TextJoinId:     v.TextItemConfigId,
+			TextJoinItemId: v.TextJoinItemId,
+		}
+	}
+	rsp := &proto.TextJoinBatchSaveScRsp{
+		TextJoinList: req.TextJoinList,
+		Retcode:      0,
+	}
+	g.Send(cmd.TextJoinBatchSaveScRsp, rsp)
+}
+
+func (g *GamePlayer) TextJoinSaveCsReq(payloadMsg pb.Message) {
+	// req := payloadMsg.(*proto.TextJoinSaveCsReq)
+	// rsp := &proto.TextJoinSaveScRsp{
+	// 	TextItemId:       req.TextItemId,
+	// 	Retcode:          0,
+	// 	CFCJDNAKCNA:      req.CFCJDNAKCNA,
+	// 	TextItemConfigId: "",
+	// }
+	// g.Send(cmd.TextJoinSaveScRsp, rsp)
 }
