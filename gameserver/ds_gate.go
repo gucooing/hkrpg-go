@@ -241,8 +241,6 @@ func (ge *gateServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g.RecvChan = make(chan player.Msg, 10)
 	g.SendCtx, g.SendCal = context.WithCancel(context.Background())
 	g.RecvCtx, g.RecvCal = context.WithCancel(context.Background())
-	g.GameAppId = ge.game.AppId
-	g.GateAppId = ge.appid
 	g.IsJumpMission = ge.game.Config.IsJumpMission
 	g.Store = ge.game.Store
 

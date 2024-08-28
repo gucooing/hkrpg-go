@@ -215,7 +215,7 @@ func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg pb.Message) {
 			},
 			{
 				Type: proto.SecretKeyType_SECRET_KEY_BATTLE_TIME,
-				Key:  "632897685",
+				Key:  "3450822937",
 			},
 		},
 		Retcode: 0,
@@ -348,6 +348,28 @@ func (g *GamePlayer) HandleGetJukeboxDataCsReq(payloadMsg pb.Message) {
 		rsp.UnlockedMusicList = append(rsp.UnlockedMusicList, musicList)
 	}
 	g.Send(cmd.GetJukeboxDataScRsp, rsp)
+}
+
+func (g *GamePlayer) UnlockBackGroundMusicCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.UnlockBackGroundMusicCsReq)
+
+	rsp := &proto.UnlockBackGroundMusicScRsp{
+		Retcode:           0,
+		UnlockedMusicList: make([]*proto.MusicData, 0),
+		UnlockIds:         make([]uint32, 0),
+	}
+	for _, unlockId := range req.UnlockIds {
+		conf := gdconf.GetBackGroundMusicById(unlockId)
+		if conf == nil {
+			continue
+		}
+		musicList := &proto.MusicData{
+			GroupId: conf.GroupID,
+			Id:      conf.ID,
+		}
+		rsp.UnlockedMusicList = append(rsp.UnlockedMusicList, musicList)
+	}
+	g.Send(cmd.UnlockBackGroundMusicScRsp, rsp)
 }
 
 func (g *GamePlayer) HandleGetPhoneDataCsReq(payloadMsg pb.Message) {

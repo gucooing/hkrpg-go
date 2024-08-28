@@ -571,7 +571,7 @@ func (g *GamePlayer) UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList
 			g.GetPd().AddNpcSceneEntityRefreshInfo(groupInfo.GroupID, group.NPCList)...)
 		// 添加实体
 		groupRefreshInfo.RefreshEntity = append(groupRefreshInfo.RefreshEntity,
-			g.GetPd().AddPropSceneEntityRefreshInfo(groupInfo.GroupID, group.PropList, db)...)
+			g.GetPd().AddPropSceneEntityRefreshInfo(group, groupInfo.GroupID, group.PropList, db)...)
 		notify.GroupRefreshList = append(notify.GroupRefreshList, groupRefreshInfo)
 		// g.UpdateBlock(db)
 	}

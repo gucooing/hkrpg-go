@@ -17,24 +17,49 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
 	rsp.ChallengeGroupList = make([]*proto.ChallengeGroup, 0)
-	for id, stars := range g.GetPd().GetChallengeList() {
-		challenge := &proto.Challenge{
-			ChallengeId: id,
-			Star:        stars.Stars,
-			ScoreId:     stars.ScoreOne,
-			ScoreTwo:    stars.ScoreTwo,
-			TakenReward: 0,
-		}
-		rsp.ChallengeList = append(rsp.ChallengeList, challenge)
-	}
-	for taken, id := range g.GetPd().GetChallengeRewardList() {
+	for groupId, infoList := range g.GetPd().GetChallengeGroupList() {
 		challengeGroup := &proto.ChallengeGroup{
-			TakenStarsCountReward: taken,
-			GroupId:               id,
+			TakenStarsCountReward: infoList.ChallengeReward,
+			GroupId:               groupId,
 		}
 		rsp.ChallengeGroupList = append(rsp.ChallengeGroupList, challengeGroup)
+		for _, info := range infoList.ChallengeInfoList {
+			challenge := &proto.Challenge{
+				ChallengeId: info.ChallengeId,
+				Star:        info.Stars,
+				ScoreId:     info.ScoreOne,
+				ScoreTwo:    info.ScoreTwo,
+				TakenReward: 0,
+			}
+			rsp.ChallengeList = append(rsp.ChallengeList, challenge)
+		}
 	}
 	g.Send(cmd.GetChallengeScRsp, rsp)
+}
+
+func (g *GamePlayer) TakeChallengeRewardCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TakeChallengeRewardCsReq)
+	rsp := &proto.TakeChallengeRewardScRsp{
+		TakenRewardList: make([]*proto.TakenChallengeRewardInfo, 0),
+		GroupId:         req.GroupId,
+		Retcode:         0,
+	}
+	g.Send(cmd.TakeChallengeRewardScRsp, rsp)
+}
+
+func (g *GamePlayer) GetChallengeGroupStatisticsCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetChallengeGroupStatisticsCsReq)
+	rsp := &proto.GetChallengeGroupStatisticsScRsp{
+		GroupId: req.GroupId,
+		Retcode: 0,
+	}
+	switch req.GroupId / 1000 {
+	case 1:
+	case 2:
+		rsp.Challenge = g.GetPd().GetChallengeGroupStatisticsChallengeStory(req.GroupId)
+	case 3:
+	}
+	g.Send(cmd.GetChallengeGroupStatisticsScRsp, rsp)
 }
 
 // 获取状态
@@ -74,7 +99,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
 		g.SetBattleLineUp(model.Challenge_2, req.SecondLineup)
 	}
 	// 设置当前战斗的忘却之庭
-	g.GetPd().SetCurChallenge(req.ChallengeId, storyInfo)
+	g.GetPd().SetCurChallenge(req)
 	rsp := &proto.StartChallengeScRsp{
 		CurChallenge: g.GetPd().GetChallengeInfo(),
 		Scene:        g.GetChallengeScene(),
@@ -98,7 +123,7 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.QuitBattleScNotify, nil) // 战斗没结束就退出是主动退出
 	}
 	g.ChallengeSettleNotify()
-	g.Send(cmd.LeaveChallengeScRsp, nil)
+	g.Send(cmd.LeaveChallengeScRsp, &proto.LeaveChallengeScRsp{})
 
 	g.EnterSceneByServerScNotify(g.GetPd().GetCurEntryId(), 0, 0, 0)
 	// 设置战斗状态为空
@@ -112,6 +137,10 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
 	db := g.GetPd().GetCurChallenge()
 	if db == nil {
+		return
+	}
+	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
+	if conf == nil {
 		return
 	}
 	stt := req.GetStt()
@@ -140,58 +169,71 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	// 更新状态
 	g.GetPd().SetCurChallengeKillMonster(0) // 切换关卡，标记为0
 	if db.IsBoos {
+		// 结算
+		g.GetPd().ChallengeSettle()
 		g.ChallengeBossPhaseSettleNotify(req.Stt.GetBattleTargetInfo())
 	}
 	// 回合处理
 	if g.GetPd().IsNextChallenge() {
 		// 还没结束
 		g.GetPd().AddChallengeCurStage(1)
-		// 添加怪物
-		g.ChallengeAddSceneGroupRefreshScNotify()
 		if !db.IsBoos {
+			// 添加怪物
+			g.ChallengeAddSceneGroupRefreshScNotify()
 			// 添加角色
 			g.ChallengeAddAvatarSceneGroupRefreshScNotify()
 			// 更新新的队伍
 			g.SyncLineupNotify(g.GetPd().GetBattleLineUpById(model.Challenge_2))
 		}
 	} else {
-		// 结算
-		g.GetPd().ChallengeSettle()
 		// 发送战斗胜利通知
 		if !db.IsBoos {
+			// 结算
+			g.GetPd().ChallengeSettle()
 			g.ChallengeSettleNotify()
 		}
 		// 将战斗结果储存到数据库
-		g.GetPd().UpdateChallengeList(db)
+		g.GetPd().UpdateChallengeList(conf.GroupID, db)
 		// 更改状态
 		g.GetPd().SetCurChallengeStatus(spb.ChallengeStatus_CHALLENGE_FINISH)
 	}
 }
 
 func (g *GamePlayer) ChallengeSettleNotify() {
-	db := g.GetPd().GetCurChallenge()
+	allSync := &model.AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
+	cur := g.GetPd().GetCurChallenge()
+	db := g.GetPd().GetChallengeInfoById(cur.GroupId, cur.ChallengeId)
+	var itemList *proto.ItemList
+	if !db.IsReward {
+		itemList = g.GetPd().GetChallengeReward(allSync)
+		db.IsReward = true
+		g.AllPlayerSyncScNotify(allSync)
+	}
+
 	notify := &proto.ChallengeSettleNotify{
-		Star:           db.Stars,                       // 得分
-		Reward:         g.GetPd().GetChallengeReward(), // 奖励
-		ChallengeId:    db.ChallengeId,                 // 关卡id
-		IsWin:          db.IsWin,                       // 是否赢
-		ScoreTwo:       db.ScoreTwo,                    // 二层挑战得分
-		ChallengeScore: db.ScoreOne,                    // 一层挑战得分
+		Star:           cur.Stars,       // 得分
+		Reward:         itemList,        // 奖励
+		ChallengeId:    cur.ChallengeId, // 关卡id
+		IsWin:          cur.IsWin,       // 是否赢
+		ScoreTwo:       cur.ScoreTwo,    // 二层挑战得分
+		ChallengeScore: cur.ScoreOne,    // 一层挑战得分
 	}
 	g.Send(cmd.ChallengeSettleNotify, notify)
 }
 
 func (g *GamePlayer) ChallengeBossPhaseSettleNotify(targeList map[uint32]*proto.BattleTargetList) {
-	db := g.GetPd().GetCurChallenge()
+	cur := g.GetPd().GetCurChallenge()
+	db := g.GetPd().GetChallengeInfoById(cur.GroupId, cur.ChallengeId)
 	notify := &proto.ChallengeBossPhaseSettleNotify{
 		IsRemainingAction: true,
-		Star:              7,
-		Phase:             db.CurStage,
-		ChallengeScore:    db.ScoreOne,
-		ScoreTwo:          db.ScoreTwo,
-		IsWin:             true,
+		Star:              cur.Stars,
+		Phase:             cur.CurStage,
+		ChallengeScore:    cur.ScoreOne,
+		ScoreTwo:          cur.ScoreTwo,
+		IsWin:             cur.IsWin,
 		BattleTargetList:  targeList[1].BattleTargetList,
-		ChallengeId:       db.ChallengeId,
+		ChallengeId:       cur.ChallengeId,
+		IsReward:          db.IsReward,
 	}
 	g.Send(cmd.ChallengeBossPhaseSettleNotify, notify)
 }
@@ -338,6 +380,12 @@ func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg pb.Message) {
 	}
 
 	g.Send(cmd.EnterChallengeNextPhaseScRsp, rsp)
+}
+
+func (g *GamePlayer) GetFriendChallengeLineupCsReq(payloadMsg pb.Message) {
+	rsp := &proto.GetFriendChallengeLineupScRsp{}
+
+	g.Send(cmd.GetFriendChallengeLineupScRsp, rsp)
 }
 
 // 获取忘却之庭世界

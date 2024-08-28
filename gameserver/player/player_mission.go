@@ -131,9 +131,7 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg pb.Message) {
 		MainMissionMcvList:          make([]*proto.MainMissionCustomValue, 0),
 	}
 	if g.IsJumpMission {
-		for _, id := range req.MainMissionIdList {
-			rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, id)
-		}
+		rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, req.MainMissionIdList...)
 		for _, id := range req.SubMissionIdList {
 			rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
 				Id:     id,
@@ -414,6 +412,9 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 			break
 		case constant.UseSelectedItem: // 使用消耗品
 			ifFinish = true
+			break
+		case constant.AetherDivideCollectSpiritType: // 以太战线获得新角色
+			ifFinish = true // 直接完成
 			break
 		}
 		if ifFinish {

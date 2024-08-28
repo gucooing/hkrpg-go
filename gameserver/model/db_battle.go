@@ -34,6 +34,7 @@ type BattleBackup struct {
 	StageIDList      []uint32                 // cocoon
 	EventId          uint32                   // 任务用的
 	AetherDivideId   uint32                   // 以太战线id
+	AetherAvatarList []*AetherAvatar          // 以太战线战斗角色
 	Sce              *SceneCastEntity         // 参与实体
 	// Skill
 	SummonUnitId uint32 // 领域
@@ -166,6 +167,10 @@ func (g *PlayerData) setMonsterDie(eventID uint32) bool {
 	if stageConfig == nil {
 		return true
 	}
+	switch stageConfig.StageType {
+	case "Challenge":
+		return false
+	}
 	for _, monsterListMap := range stageConfig.MonsterList {
 		for _, monsterId := range monsterListMap {
 			conf := gdconf.GetNPCMonsterId(monsterId)
@@ -228,43 +233,65 @@ func (g *PlayerData) GetChallenge() *spb.Challenge {
 	db := g.GetBattle()
 	if db.Challenge == nil {
 		db.Challenge = &spb.Challenge{
-			ChallengeList:       make(map[uint32]*spb.ChallengeList),
-			ChallengeRewardList: make(map[uint64]uint32),
-			CurChallenge:        &spb.CurChallenge{},
+			ChallengeGroupList: make(map[uint32]*spb.ChallengeGroupInfo),
+			CurChallenge:       &spb.CurChallenge{},
 		}
 	}
 	return db.Challenge
 }
 
-func (g *PlayerData) GetChallengeList() map[uint32]*spb.ChallengeList {
+func (g *PlayerData) GetChallengeGroupList() map[uint32]*spb.ChallengeGroupInfo {
 	db := g.GetChallenge()
-	if db.ChallengeList == nil {
-		db.ChallengeList = make(map[uint32]*spb.ChallengeList)
+	if db.ChallengeGroupList == nil {
+		db.ChallengeGroupList = make(map[uint32]*spb.ChallengeGroupInfo)
 	}
-	return db.ChallengeList
+	return db.ChallengeGroupList
 }
 
-func (g *PlayerData) GetChallengeRewardList() map[uint64]uint32 {
-	db := g.GetChallenge()
-	if db.ChallengeRewardList == nil {
-		db.ChallengeRewardList = make(map[uint64]uint32)
+func (g *PlayerData) GetChallengeGroupInfoById(groupId uint32) *spb.ChallengeGroupInfo {
+	db := g.GetChallengeGroupList()
+	if db[groupId] == nil {
+		db[groupId] = &spb.ChallengeGroupInfo{}
 	}
-	return db.ChallengeRewardList
+	return db[groupId]
 }
 
-func (g *PlayerData) GetChallengeById(id uint32) *spb.ChallengeList {
-	db := g.GetChallengeList()
-	if db[id] == nil {
-		db[id] = &spb.ChallengeList{}
+func (g *PlayerData) GetChallengeInfoById(groupId, challengeId uint32) *spb.ChallengeInfo {
+	db := g.GetChallengeGroupInfoById(groupId)
+	if db.ChallengeInfoList == nil {
+		db.ChallengeInfoList = make(map[uint32]*spb.ChallengeInfo)
 	}
-	return db[id]
+	if db.ChallengeInfoList[challengeId] == nil {
+		db.ChallengeInfoList[challengeId] = &spb.ChallengeInfo{
+			ChallengeId: challengeId,
+		}
+	}
+	return db.ChallengeInfoList[challengeId]
 }
 
-func (g *PlayerData) UpdateChallengeList(curChallenge *spb.CurChallenge) {
-	db := g.GetChallengeById(curChallenge.ChallengeId)
-	db.Stars = alg.MaxUin32(db.Stars, curChallenge.Stars)
-	db.ScoreOne = alg.MaxUin32(db.ScoreOne, curChallenge.ScoreOne)
-	db.ScoreTwo = alg.MaxUin32(db.ScoreTwo, curChallenge.ScoreTwo)
+func (g *PlayerData) UpdateChallengeList(groupId uint32, curChallenge *spb.CurChallenge) {
+	group := g.GetChallengeGroupInfoById(groupId)
+	group.RecordId++
+	group.MaxChallengeId = alg.MaxUin32(group.MaxChallengeId, curChallenge.ChallengeId)
+	db := g.GetChallengeInfoById(groupId, curChallenge.ChallengeId)
+	db.RecordId++
+	if db.Stars < curChallenge.Stars ||
+		db.ScoreOne+db.ScoreTwo < curChallenge.ScoreOne+curChallenge.ScoreTwo {
+		newDb := &spb.ChallengeInfo{
+			Stars:       curChallenge.Stars,
+			ScoreOne:    curChallenge.ScoreOne,
+			ScoreTwo:    curChallenge.ScoreTwo,
+			ChallengeId: curChallenge.ChallengeId,
+			IsReward:    false,
+			RecordId:    db.RecordId,
+			BuffOne:     curChallenge.BuffOne,
+			BuffTwo:     curChallenge.BuffTwo,
+			LineupList:  curChallenge.LineupList,
+			Floor:       curChallenge.Floor,
+		}
+
+		group.ChallengeInfoList[curChallenge.ChallengeId] = newDb
+	}
 }
 
 // 这玩意是用来清空当前忘却之庭战斗的
@@ -273,8 +300,9 @@ func (g *PlayerData) NewCurChallenge() {
 	db.CurChallenge = nil
 }
 
-func (g *PlayerData) SetCurChallenge(challengeId uint32, storyInfo *proto.ChallengeBuffInfo) *spb.CurChallenge {
+func (g *PlayerData) SetCurChallenge(req *proto.StartChallengeCsReq) *spb.CurChallenge {
 	db := g.GetChallenge()
+	storyInfo := req.GetPlayerInfo()
 	var buffOne uint32 = 0
 	var buffTwe uint32 = 0
 	var isBoos = false
@@ -288,9 +316,9 @@ func (g *PlayerData) SetCurChallenge(challengeId uint32, storyInfo *proto.Challe
 			buffTwe = storyInfo.GetStoryBuffInfo().GetBuffTwo()
 		}
 	}
-	conf := gdconf.GetChallengeMazeConfigById(challengeId)
+	conf := gdconf.GetChallengeMazeConfigById(req.ChallengeId)
 	db.CurChallenge = &spb.CurChallenge{
-		ChallengeId: challengeId,
+		ChallengeId: req.ChallengeId,
 		StageNum:    conf.StageNum,
 		CurStage:    1,
 		Status:      spb.ChallengeStatus_CHALLENGE_DOING,
@@ -299,8 +327,39 @@ func (g *PlayerData) SetCurChallenge(challengeId uint32, storyInfo *proto.Challe
 		BuffTwo:     buffTwe,
 		MazeBuffId:  conf.MazeBuffID,
 		IsBoos:      isBoos,
+		GroupId:     conf.GroupID,
+		Floor:       conf.Floor,
+		LineupList:  make([]*spb.ChallengeLineup, 0),
+	}
+	db.CurChallenge.LineupList = append(db.CurChallenge.LineupList,
+		g.GetSpbChallengeLineup(g.GetBattleLineUpById(Challenge_1)))
+	if req.SecondLineup != nil {
+		db.CurChallenge.LineupList = append(db.CurChallenge.LineupList,
+			g.GetSpbChallengeLineup(g.GetBattleLineUpById(Challenge_2)))
 	}
 	return db.CurChallenge
+}
+
+func (g *PlayerData) GetSpbChallengeLineup(line *spb.Line) *spb.ChallengeLineup {
+	info := &spb.ChallengeLineup{
+		AvatarList: make([]*spb.ChallengeAvatar, 0),
+	}
+	if line == nil {
+		return info
+	}
+	for _, avatar := range line.AvatarIdList {
+		db := g.GetAvatarBinById(avatar.AvatarId)
+		if db == nil {
+			continue
+		}
+		info.AvatarList = append(info.AvatarList, &spb.ChallengeAvatar{
+			AvatarId: avatar.AvatarId,
+			Level:    db.Level,
+			Index:    avatar.Slot,
+			Type:     spb.AvatarType(db.AvatarType),
+		})
+	}
+	return info
 }
 
 func (g *PlayerData) GetCurChallenge() *spb.CurChallenge {
@@ -572,7 +631,6 @@ func (g *PlayerData) ChallengeSettle() {
 	if conf == nil {
 		return
 	}
-	db.IsWin = true
 	// 正式得分计算
 	for _, tagId := range conf.ChallengeTargetID {
 		tagConf := gdconf.GetChallengeTargetConfigById(tagId)
@@ -593,12 +651,15 @@ func (g *PlayerData) ChallengeSettle() {
 			}
 		}
 	}
-	// 额外得分计算
-	if db.ScoreOne+db.ScoreTwo >= 30000 {
-		db.Stars++
-	}
-	if db.IsBoos {
-		db.Stars++
+	if !g.IsNextChallenge() {
+		db.IsWin = true
+		// 额外得分计算
+		if db.ScoreOne+db.ScoreTwo >= 30000 {
+			db.Stars++
+		}
+		if db.IsBoos {
+			db.Stars++
+		}
 	}
 }
 
@@ -901,6 +962,7 @@ func (g *PlayerData) GetChallengeInfo() *proto.CurChallenge {
 		RoundCount:      db.RoundCount,                    // 已使用回合数
 		ScoreId:         db.ScoreOne,                      // 第一层得分
 		ScoreTwo:        db.ScoreTwo,                      // 第二层得分
+		KillMonsterList: make([]*proto.KillMonster, 0),
 	}
 	return challengeInfo
 }
@@ -1001,11 +1063,72 @@ func (g *PlayerData) GetBattleTargetInfo() map[uint32]*proto.BattleTargetList {
 	return battleTargetInfoList
 }
 
-// todo 忘却之庭奖励获取
-func (g *PlayerData) GetChallengeReward() *proto.ItemList {
+func (g *PlayerData) GetChallengeReward(allSync *AllPlayerSync) *proto.ItemList {
 	itemList := &proto.ItemList{
 		ItemList: make([]*proto.Item, 0),
 	}
+	db := g.GetCurChallenge()
+	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
+	if conf == nil {
+		return itemList
+	}
+	if db.IsWin {
+		pile, item := g.GetRewardData(conf.RewardID)
+		itemList.ItemList = item
+		g.AddItem(pile, allSync)
+	}
 
 	return itemList
+}
+func (g *PlayerData) GetChallengeGroupStatisticsChallengeStory(groupId uint32) *proto.GetChallengeGroupStatisticsScRsp_ChallengeStory {
+	group := g.GetChallengeGroupInfoById(groupId)
+	var db *spb.ChallengeInfo
+	if group.ChallengeInfoList != nil {
+		db = group.ChallengeInfoList[group.MaxChallengeId]
+	}
+	info := &proto.GetChallengeGroupStatisticsScRsp_ChallengeStory{
+		ChallengeStory: &proto.ChallengeStoryStatistics{
+			RecordId:       group.RecordId,
+			StageTertinggi: g.GetChallengeStoryStageTertinggi(db),
+		},
+	}
+	return info
+}
+
+func (g *PlayerData) GetChallengeStoryStageTertinggi(db *spb.ChallengeInfo) *proto.ChallengeStoryStageTertinggi {
+	if db == nil {
+		return nil
+	}
+	info := &proto.ChallengeStoryStageTertinggi{
+		LineupList:  g.GetChallengeLineupList(db.LineupList),
+		DKFHAHHJILF: 0,
+		Level:       db.Floor,
+		BuffTwo:     db.BuffTwo,
+		BuffOne:     db.BuffOne,
+		ScoreId:     db.ScoreOne + db.ScoreTwo,
+	}
+	return info
+}
+
+func (g *PlayerData) GetChallengeLineupList(db []*spb.ChallengeLineup) []*proto.ChallengeLineupList {
+	list := make([]*proto.ChallengeLineupList, 0)
+	if db == nil {
+		return list
+	}
+	for _, avatarList := range db {
+		info := &proto.ChallengeLineupList{
+			AvatarList: make([]*proto.ChallengeAvatarInfo, 0),
+		}
+		for _, avatar := range avatarList.AvatarList {
+			info.AvatarList = append(info.AvatarList, &proto.ChallengeAvatarInfo{
+				Id:         avatar.AvatarId,
+				AvatarType: proto.AvatarType(avatar.Type),
+				Index:      avatar.Index,
+				Level:      avatar.Level,
+			})
+		}
+		list = append(list, info)
+	}
+
+	return list
 }

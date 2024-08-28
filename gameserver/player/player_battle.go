@@ -224,6 +224,12 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 			if len(finishSubMission) != 0 {
 				g.InspectMission(finishSubMission)
 			}
+			entity := g.GetPd().GetTriggerBattleString(battleBin.EventId)
+			if entity != nil {
+				blockBin := g.GetPd().GetBlock(g.GetPd().GetCurEntryId())
+				g.GetPd().UpPropState(blockBin, entity.GroupId, entity.InstId, 1)    // 更新状态
+				g.PropSceneGroupRefreshScNotify([]uint32{entity.EntityId}, blockBin) // 通知状态更改
+			}
 		}
 		// 任务判断二
 		if sce != nil {

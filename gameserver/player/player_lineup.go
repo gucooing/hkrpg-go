@@ -2,6 +2,7 @@ package player
 
 import (
 	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -212,6 +213,9 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 		lineUpType = spb.ExtraLineupType_LINEUP_TOURN_ROGUE
 	case model.Activity:
 		lineUpType = spb.ExtraLineupType_LINEUP_STAGE_TRIAL
+	default:
+		logger.Warn("未知的队伍类型:%v", index)
+		return
 	}
 	db := g.GetPd().GetBattleLineUpById(index)
 	db.LeaderSlot = 0
@@ -229,5 +233,6 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 		avatarBin := g.GetPd().GetAvatarBinById(avatar)
 		g.GetPd().CopyBattleAvatar(avatarBin)
 	}
+	g.GetPd().AddLineUpMp(5)
 	g.SyncLineupNotify(db)
 }

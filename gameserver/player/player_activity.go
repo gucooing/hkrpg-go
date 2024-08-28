@@ -8,6 +8,11 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+func (g *GamePlayer) GetTreasureDungeonActivityDataCsReq(payloadMsg pb.Message) {
+	rsp := &proto.GetTreasureDungeonActivityDataScRsp{}
+	g.Send(cmd.GetTreasureDungeonActivityDataScRsp, rsp)
+}
+
 func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
 	rsp.ScheduleData = make([]*proto.ActivityScheduleData, 0)

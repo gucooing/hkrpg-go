@@ -154,3 +154,13 @@ func (g *GamePlayer) FinishItemIdCsReq(payloadMsg pb.Message) {
 	}
 	g.Send(cmd.FinishItemIdScRsp, rsp)
 }
+
+func (g *GamePlayer) FinishFirstTalkByPerformanceNpcCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.FinishFirstTalkByPerformanceNpcCsReq)
+	rsp := &proto.FinishFirstTalkByPerformanceNpcScRsp{
+		PerformanceId: req.PerformanceId,
+		Reward:        nil,
+		Retcode:       0,
+	}
+	g.Send(cmd.FinishFirstTalkByPerformanceNpcScRsp, rsp)
+}

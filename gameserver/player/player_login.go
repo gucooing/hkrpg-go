@@ -35,7 +35,6 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 		Stamina:    db[model.Stamina],
 		Exp:        db[model.Exp],
 	}
-	g.LoginReady() // 登录准备工作
 	g.Send(cmd.PlayerLoginScRsp, rsp)
 	g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE) // 更新一次数据
 	go g.LoginNotify()
@@ -70,23 +69,38 @@ func (g *GamePlayer) BattlePassInfoNotify() {
 
 // 登录通知包
 func (g *GamePlayer) LoginNotify() {
-	g.Send(cmd.UpdateFeatureSwitchScNotify, &proto.UpdateFeatureSwitchScNotify{})
-	g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
-	g.Send(cmd.SyncTurnFoodNotify, &proto.SyncTurnFoodNotify{})
-	g.StaminaInfoScNotify()
-	// g.Send(cmd.DailyTaskDataScNotify, &proto.DailyTaskDataScNotify{DailyTaskList: []*proto.DailyTask{{MainMissionId: 3020104}}})
+	g.LoginReady() // 登录准备工作
+	g.Send(cmd.UpdateFeatureSwitchScNotify,
+		&proto.UpdateFeatureSwitchScNotify{})
 	g.DailyTaskNotify() // 每日刷新事务
-	g.DailyActiveInfoNotify()
 	g.Send(cmd.RaidInfoNotify, &proto.RaidInfoNotify{})
 	g.BattlePassInfoNotify()
-	// g.Send(cmd.ComposeLimitNumCompleteNotify, &proto.ComposeLimitNumCompleteNotify{})
-	// g.Send(cmd.GeneralVirtualItemDataNotify, &proto.GeneralVirtualItemDataNotify{})
-	// g.Send(cmd.NewMailScNotify, nil)
-	// g.Send(cmd.NewAssistHistoryNotify, nil)
-	// g.ServerAnnounceNotify()
-	// g.ClientDownloadDataScNotify()
+	g.StaminaInfoScNotify()
+	g.Send(cmd.GeneralVirtualItemDataNotify,
+		&proto.GeneralVirtualItemDataNotify{})
 	g.StoryLineInfoScNotify() // 故事线通知包
 	g.ContentPackageSyncDataScNotify()
+
+	// g.Send(cmd.SyncServerSceneChangeNotify, &proto.SyncServerSceneChangeNotify{})
+	// g.Send(cmd.SyncTurnFoodNotify, &proto.SyncTurnFoodNotify{})
+	// g.Send(cmd.ComposeLimitNumCompleteNotify, &proto.ComposeLimitNumCompleteNotify{})
+	// g.Send(cmd.NewMailScNotify, &proto.NewMailScNotify{})
+	// g.Send(cmd.NewAssistHistoryNotify, &proto.NewAssistHistoryNotify{})
+
+	// g.ServerAnnounceNotify()
+	// g.ClientDownloadDataScNotify()
+}
+
+func (g *GamePlayer) PlayerKickOutScNotify(kickType proto.KickType) {
+	g.Send(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{
+		BlackInfo: &proto.BlackInfo{
+			// BeginTime:  time.Now().Unix(),
+			// EndTime:    time.Now().Unix() + 10,
+			// LimitLevel: 0,
+			// BanType:    0,
+		},
+		KickType: kickType,
+	})
 }
 
 // 飘窗通知

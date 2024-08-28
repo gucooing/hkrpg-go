@@ -15,13 +15,11 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-var LogMsgPlayer uint32 = 5
+var LogMsgPlayer uint32 = 2
 
 type GamePlayer struct {
 	Uid           uint32
 	AccountId     uint32
-	GameAppId     uint32
-	GateAppId     uint32
 	IsJumpMission bool
 	Store         *database.GameStore
 	IsPE          bool
@@ -132,7 +130,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 			database.DelPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
 			return false
 		}
-		if statu.GameserverId != g.GameAppId && statu.DataVersion != g.GetPd().GetDataVersion() {
+		if /*statu.GameserverId != g.GameAppId &&*/ statu.DataVersion != g.GetPd().GetDataVersion() {
 			// 脏数据
 			logger.Info("[UID:%v]数据过期，已丢弃", g.Uid)
 			return false

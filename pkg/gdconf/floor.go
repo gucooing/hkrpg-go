@@ -37,7 +37,8 @@ type SavedValue struct {
 	ID            uint32   `json:"ID"`
 	Name          string   `json:"Name"`
 	AllowedValues []uint32 `json:"AllowedValues"`
-	MaxValue      uint32   `json:"MaxValue"`
+	DefaultValue  int32    `json:"DefaultValue"`
+	MaxValue      int32    `json:"MaxValue"`
 }
 
 func (g *GameDataConfig) loadFloor() {

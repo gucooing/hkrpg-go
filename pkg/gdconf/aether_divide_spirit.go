@@ -46,3 +46,7 @@ func (g *GameDataConfig) loadAetherDivideSpirit() {
 func GetAetherDivideSpiritMap() map[uint32]*AetherDivideSpirit {
 	return CONF.AetherDivideSpiritMap
 }
+
+func GetAetherDivideSpirit(id uint32) *AetherDivideSpirit {
+	return CONF.AetherDivideSpiritMap[id]
+}

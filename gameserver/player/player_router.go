@@ -16,9 +16,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
 		cmd.GetBasicInfoCsReq:     g.HandleGetBasicInfoCsReq,
 		cmd.GetEnteredSceneCsReq:  g.HandleGetEnteredSceneCsReq,
-		cmd.QueryProductInfoCsReq: g.HandleQueryProductInfoCsReq,
 		cmd.GetChatEmojiListCsReq: g.HandleGetChatEmojiListCsReq, // 获取聊天表情
-		cmd.GetJukeboxDataCsReq:   g.HandleGetJukeboxDataCsReq,   // 点歌？
 		// 登录
 		cmd.PlayerLoginCsReq:       g.HandlePlayerLoginCsReq,       // 玩家登录请求 第二个登录包
 		cmd.PlayerLoginFinishCsReq: g.HandlePlayerLoginFinishCsReq, // 登录完成包
@@ -100,13 +98,16 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.RogueTournSettleCsReq:                 g.RogueTournSettleCsReq,                 // 结束并结算
 		cmd.RogueTournEnterRoomCsReq:              g.RogueTournEnterRoomCsReq,              // 差分宇宙进入下一场景
 		// 忘却之庭
-		cmd.GetChallengeCsReq:    g.HandleGetChallengeCsReq, // 获取忘却之庭挑战完成信息
-		cmd.StartChallengeCsReq:  g.StartChallengeCsReq,     // 忘却之庭,启动!
-		cmd.GetCurChallengeCsReq: g.GetCurChallengeCsReq,    // 获取忘却之庭状态
-		cmd.LeaveChallengeCsReq:  g.LeaveChallengeCsReq,     // 退出忘却之庭
+		cmd.GetChallengeGroupStatisticsCsReq: g.GetChallengeGroupStatisticsCsReq, // 获取忘却之庭状态
+		cmd.GetChallengeCsReq:                g.HandleGetChallengeCsReq,          // 获取忘却之庭挑战完成信息
+		cmd.StartChallengeCsReq:              g.StartChallengeCsReq,              // 忘却之庭,启动!
+		cmd.GetCurChallengeCsReq:             g.GetCurChallengeCsReq,             // 获取忘却之庭状态
+		cmd.LeaveChallengeCsReq:              g.LeaveChallengeCsReq,              // 退出忘却之庭
+		cmd.TakeChallengeRewardCsReq:         g.TakeChallengeRewardCsReq,         // 忘却之庭领取奖励
 		// 末日之影
-		cmd.StartPartialChallengeCsReq:   g.StartPartialChallengeCsReq,   // 末日幻影,二次启动!
-		cmd.EnterChallengeNextPhaseCsReq: g.EnterChallengeNextPhaseCsReq, // 前往下一节点
+		cmd.StartPartialChallengeCsReq:    g.StartPartialChallengeCsReq,    // 末日幻影,二次启动!
+		cmd.EnterChallengeNextPhaseCsReq:  g.EnterChallengeNextPhaseCsReq,  // 前往下一节点
+		cmd.GetFriendChallengeLineupCsReq: g.GetFriendChallengeLineupCsReq, // 获取好友通关阵容
 		// 背包
 		cmd.GetBagCsReq:               g.HandleGetBagCsReq,         // 获取背包物品
 		cmd.DestroyItemCsReq:          g.DestroyItemCsReq,          // 销毁物品
@@ -117,6 +118,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.LockRelicCsReq:            g.LockRelicCsReq,            // 圣遗物上锁
 		cmd.LockEquipmentCsReq:        g.LockEquipmentCsReq,        // 光锥上锁
 		// 交易
+		cmd.QueryProductInfoCsReq:       g.QueryProductInfoCsReq,       // 获取交易信息
 		cmd.GetShopListCsReq:            g.GetShopListCsReq,            // 获取商店物品列表
 		cmd.ExchangeHcoinCsReq:          g.ExchangeHcoinCsReq,          // 梦华兑换
 		cmd.ExchangeRogueRewardKeyCsReq: g.ExchangeRogueRewardKeyCsReq, // 储存沉浸器
@@ -157,19 +159,25 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,             // 对话选项
 		cmd.UpdateTrackMainMissionIdCsReq:  g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
 		// 活动
-		cmd.HeliobusActivityDataCsReq:      g.HeliobusActivityDataCsReq,            // 活动数据
-		cmd.GetActivityScheduleConfigCsReq: g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
-		cmd.GetLoginActivityCsReq:          g.GetLoginActivityCsReq,                // 登录活动完成情况
-		cmd.GetTrialActivityDataCsReq:      g.GetTrialActivityDataCsReq,            // 角色试用完成情况
-		cmd.StartTrialActivityCsReq:        g.StartTrialActivityCsReq,              // 角色试用
-		cmd.TakeLoginActivityRewardCsReq:   g.TakeLoginActivityRewardCsReq,         // 领取登录活动奖励
-		cmd.TakeTrialActivityRewardCsReq:   g.TakeTrialActivityRewardCsReq,         // 角色试用奖励领取
+		cmd.HeliobusActivityDataCsReq:           g.HeliobusActivityDataCsReq,            // 活动数据
+		cmd.GetActivityScheduleConfigCsReq:      g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
+		cmd.GetLoginActivityCsReq:               g.GetLoginActivityCsReq,                // 登录活动完成情况
+		cmd.GetTrialActivityDataCsReq:           g.GetTrialActivityDataCsReq,            // 角色试用完成情况
+		cmd.StartTrialActivityCsReq:             g.StartTrialActivityCsReq,              // 角色试用
+		cmd.TakeLoginActivityRewardCsReq:        g.TakeLoginActivityRewardCsReq,         // 领取登录活动奖励
+		cmd.TakeTrialActivityRewardCsReq:        g.TakeTrialActivityRewardCsReq,         // 角色试用奖励领取
+		cmd.GetTreasureDungeonActivityDataCsReq: g.GetTreasureDungeonActivityDataCsReq,  // 抽象
 		// 以太战线
 		cmd.GetAetherDivideInfoCsReq:              g.GetAetherDivideInfoCsReq,              // 获取以太战线信息
 		cmd.GetAetherDivideChallengeInfoCsReq:     g.GetAetherDivideChallengeInfoCsReq,     // 获取以太通关信息
 		cmd.SetAetherDivideLineUpCsReq:            g.SetAetherDivideLineUpCsReq,            // 设置队伍
 		cmd.EquipAetherDividePassiveSkillCsReq:    g.EquipAetherDividePassiveSkillCsReq,    // 装备道具
+		cmd.ClearAetherDividePassiveSkillCsReq:    g.ClearAetherDividePassiveSkillCsReq,    // 卸载装备
+		cmd.AetherDivideTakeChallengeRewardCsReq:  g.AetherDivideTakeChallengeRewardCsReq,  // 领取对决奖励
 		cmd.StartAetherDivideChallengeBattleCsReq: g.StartAetherDivideChallengeBattleCsReq, // 开始战斗！
+		cmd.StartAetherDivideSceneBattleCsReq:     g.StartAetherDivideSceneBattleCsReq,     // 场景开启战斗
+		cmd.StartAetherDivideStageBattleCsReq:     g.StartAetherDivideStageBattleCsReq,     // 路人挑衅进入战斗
+		cmd.LeaveAetherDivideSceneCsReq:           g.LeaveAetherDivideSceneCsReq,           // 退出以太战线
 		// 练剑游戏
 		cmd.GetSwordTrainingDataCsReq:   g.GetSwordTrainingDataCsReq,   // 获取练剑游戏信息
 		cmd.SwordTrainingStartGameCsReq: g.SwordTrainingStartGameCsReq, // 开始练剑游戏请求
@@ -205,7 +213,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SelectChatBubbleCsReq:          g.SelectChatBubbleCsReq,          // 设置聊天主题
 		cmd.SelectPhoneThemeCsReq:          g.SelectPhoneThemeCsReq,          // 设置手机壁纸
 		cmd.PlayBackGroundMusicCsReq:       g.PlayBackGroundMusicCsReq,       // 设置车厢音乐
-		cmd.TextJoinQueryCsReq:             g.TextJoinQueryCsReq,             // 获取车厢音乐
+		cmd.GetJukeboxDataCsReq:            g.HandleGetJukeboxDataCsReq,      // 获取车厢音乐
+		cmd.UnlockBackGroundMusicCsReq:     g.UnlockBackGroundMusicCsReq,     // 解锁车厢音乐
+		cmd.TextJoinQueryCsReq:             g.TextJoinQueryCsReq,             // 获取自定义文本
 		cmd.TextJoinSaveCsReq:              g.TextJoinSaveCsReq,              // 保存自定义文本
 		cmd.TextJoinBatchSaveCsReq:         g.TextJoinBatchSaveCsReq,         // 批量保存自定义文本
 		// 成就
@@ -213,14 +223,16 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集
 		cmd.GetQuestDataCsReq:          g.GetQuestDataCsReq,          // 获取成就信息
 		// NPC
-		cmd.GetFirstTalkNpcCsReq:              g.GetFirstTalkNpcCsReq,
-		cmd.GetNpcTakenRewardCsReq:            g.GetNpcTakenRewardCsReq,            // NPC对话
-		cmd.GetFirstTalkByPerformanceNpcCsReq: g.GetFirstTalkByPerformanceNpcCsReq, // NPC商店
-		cmd.GetNpcMessageGroupCsReq:           g.GetNpcMessageGroupCsReq,           // 获取npc聊天信息
-		cmd.FinishPerformSectionIdCsReq:       g.FinishPerformSectionIdCsReq,       // 完成npc聊天
-		cmd.GetNpcStatusCsReq:                 g.GetNpcStatusCsReq,                 // 获取npc聊天状态
+		cmd.GetFirstTalkNpcCsReq:                 g.GetFirstTalkNpcCsReq,
+		cmd.GetNpcTakenRewardCsReq:               g.GetNpcTakenRewardCsReq,               // NPC对话
+		cmd.GetFirstTalkByPerformanceNpcCsReq:    g.GetFirstTalkByPerformanceNpcCsReq,    // NPC商店
+		cmd.GetNpcMessageGroupCsReq:              g.GetNpcMessageGroupCsReq,              // 获取npc聊天信息
+		cmd.FinishPerformSectionIdCsReq:          g.FinishPerformSectionIdCsReq,          // 完成npc聊天
+		cmd.GetNpcStatusCsReq:                    g.GetNpcStatusCsReq,                    // 获取npc聊天状态
+		cmd.FinishFirstTalkByPerformanceNpcCsReq: g.FinishFirstTalkByPerformanceNpcCsReq, // 完成对话
 		// 乱七八糟
-		cmd.GetAuthkeyCsReq: g.GetAuthkeyCsReq, // 兑换码
+		cmd.GetAuthkeyCsReq: g.GetAuthkeyCsReq,
+		// cmd.ClockParkGetInfoCsReq: g.ClockParkGetInfoCsReq, // 获取皮诺康妮时钟广场信息
 	}
 }
 
@@ -246,9 +258,9 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 	}
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		if g.Uid == LogMsgPlayer {
-			logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
-		}
+		// if g.Uid == LogMsgPlayer {
+		logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
+		// }
 		return
 	}
 	handlerFunc(payloadMsg)

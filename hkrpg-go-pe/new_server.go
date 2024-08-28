@@ -445,14 +445,7 @@ func (s *HkRpgGoServer) getAllPlayer() map[uint32]*PlayerGame {
 }
 
 func (s *HkRpgGoServer) killPlayer(p *PlayerGame) {
-	p.KcpConn.SendEnetNotifyToPeer(&kcp.Enet{
-		Addr:      p.KcpConn.RemoteAddr().String(),
-		SessionId: p.KcpConn.GetSessionId(),
-		Conv:      p.KcpConn.GetConv(),
-		ConnType:  kcp.ConnEnetFin,
-		EnetType:  kcp.EnetTimeout,
-	})
-	p.KcpConn.Close() // 断开kcp连接
+	p.KcpConn.CloseConn(0) // 断开kcp连接
 	if p.GamePlayer.SendCal != nil {
 		p.GamePlayer.SendCal()
 	}
@@ -475,6 +468,7 @@ func (s *HkRpgGoServer) killAutoUpDataPlayer() {
 		if g.Uid == 0 {
 			continue
 		}
+		g.GamePlayer.PlayerKickOutScNotify(proto.KickType_KICK_BY_GM)
 		s.killPlayer(g)
 		num++
 	}

@@ -704,9 +704,16 @@ func (l *Listener) EnetHandle() {
 				if enetNotify.EnetType != EnetClientConnectKey {
 					continue
 				}
-				sessionId := atomic.AddUint32(&l.sessionIdCounter, 1)
 				var conv uint32
-				_ = binary.Read(rand.Reader, binary.LittleEndian, &conv)
+				var sessionId uint32
+				// relogin := false
+				if enetNotify.Conv != 0 {
+					conv = enetNotify.Conv
+					// relogin = true
+				} else {
+					_ = binary.Read(rand.Reader, binary.LittleEndian, &conv)
+				}
+				sessionId = atomic.AddUint32(&l.sessionIdCounter, 1)
 				l.SendEnetNotifyToPeer(&Enet{
 					Addr:      enetNotify.Addr,
 					SessionId: sessionId,

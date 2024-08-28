@@ -45,18 +45,19 @@ type GranterApiGetConfig struct {
 	Retcode any                      `json:"retcode"`
 }
 type GranterApiGetConfigData struct {
-	Protocol               bool          `json:"protocol"`
-	QrEnabled              bool          `json:"qr_enabled"`
-	LogLevel               string        `json:"log_level"`
-	AnnounceURL            string        `json:"announce_url"`
-	PushAliasType          int           `json:"push_alias_type"`
-	DisableYsdkGuard       bool          `json:"disable_ysdk_guard"`
-	EnableAnnouncePicPopup bool          `json:"enable_announce_pic_popup"`
-	AppName                string        `json:"app_name"`
-	QrEnabledApps          QrEnabledApps `json:"qr_enabled_apps"`
-	QrAppIcons             QrAppIcons    `json:"qr_app_icons"`
-	QrCloudDisplayName     string        `json:"qr_cloud_display_name"`
-	EnableUserCenter       bool          `json:"enable_user_center"`
+	Protocol                bool          `json:"protocol"`
+	QrEnabled               bool          `json:"qr_enabled"`
+	LogLevel                string        `json:"log_level"`
+	AnnounceURL             string        `json:"announce_url"`
+	PushAliasType           int           `json:"push_alias_type"`
+	DisableYsdkGuard        bool          `json:"disable_ysdk_guard"`
+	EnableAnnouncePicPopup  bool          `json:"enable_announce_pic_popup"`
+	AppName                 string        `json:"app_name"`
+	QrEnabledApps           QrEnabledApps `json:"qr_enabled_apps"`
+	QrAppIcons              QrAppIcons    `json:"qr_app_icons"`
+	QrCloudDisplayName      string        `json:"qr_cloud_display_name"`
+	EnableUserCenter        bool          `json:"enable_user_center"`
+	FunctionalSwitchConfigs []string      `json:"functional_switch_configs"`
 }
 type QrEnabledApps struct {
 	Bbs   bool `json:"bbs"`

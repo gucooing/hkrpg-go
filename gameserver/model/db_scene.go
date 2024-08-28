@@ -70,7 +70,8 @@ type NpcEntity struct {
 
 type PropEntity struct {
 	Entity
-	PropId uint32 // 物品id
+	PropId              uint32 // 物品id
+	TriggerBattleString uint32 // id
 }
 
 func NewSceneMap() *SceneMap { // 清空实体列表用的
@@ -278,6 +279,21 @@ func (g *PlayerData) GetAllPropEntity() []*PropEntity {
 		}
 	}
 	return peList
+}
+
+func (g *PlayerData) GetTriggerBattleString(eventId uint32) *PropEntity {
+	db := g.GetLoadedGroup()
+	for _, group := range db {
+		for _, entity := range group.EntityMap {
+			switch entity.(type) {
+			case *PropEntity:
+				if entity.(*PropEntity).TriggerBattleString == eventId {
+					return entity.(*PropEntity)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func NewScene() *spb.Scene {
@@ -681,6 +697,19 @@ func (g *PlayerData) GetFloorSavedData(entryId uint32) map[string]int32 {
 	if db.FloorSavedData == nil {
 		db.FloorSavedData = make(map[string]int32)
 	}
+	mapEntrance := gdconf.GetMapEntranceById(entryId)
+	if mapEntrance == nil {
+		return db.FloorSavedData
+	}
+	foorMap := gdconf.GetFloorById(mapEntrance.PlaneID, mapEntrance.FloorID)
+	if foorMap == nil {
+		return db.FloorSavedData
+	}
+	for _, savedValue := range foorMap.SavedValues {
+		if db.FloorSavedData[savedValue.Name] == 0 {
+			db.FloorSavedData[savedValue.Name] = savedValue.DefaultValue
+		}
+	}
 	return db.FloorSavedData
 }
 
@@ -715,17 +744,26 @@ func (g *PlayerData) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId,
 	}
 }
 
-func (g *PlayerData) StageObjectCapture(prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
+func (g *PlayerData) StageObjectCapture(sceneGroup *gdconf.GoppLevelGroup, prop *gdconf.PropList, groupId uint32, db *spb.BlockBin) {
 	if db == nil {
 		return
 	}
 	if strings.Contains(prop.Name, "Elevator0") {
 		g.ObjectCaptureUpPropState(db, groupId, prop.ID, 15)
+		return
+	}
+	if strings.Contains(prop.Name, "Door") {
+		g.ObjectCaptureUpPropState(db, groupId, prop.ID, 1)
+		return
 	}
 	if prop.ValueSource != nil {
 		for _, v := range prop.ValueSource.Values {
 			if v.Key == "IsAutoDoor" {
 				g.ObjectCaptureUpPropState(db, groupId, prop.ID, 1)
+				break
+			}
+			if strings.Contains(v.Key, "ElevatorLock") {
+				g.ObjectCaptureUpPropState(db, groupId, prop.ID, 15)
 				break
 			}
 		}
@@ -736,6 +774,10 @@ func (g *PlayerData) StageObjectCapture(prop *gdconf.PropList, groupId uint32, d
 			g.ObjectCaptureUpPropState(db, groupId, prop.ID, 1)
 			break
 		}
+	}
+	if sceneGroup.GroupName == "Rouge" && gdconf.GetStateValue(prop.State) == 0 {
+		g.ObjectCaptureUpPropState(db, groupId, prop.ID, 1)
+		return
 	}
 	if conf := gdconf.GetSpecialProp(db.EntryId); conf != nil {
 		if spGroup := conf.GroupList[groupId]; spGroup != nil {
@@ -835,7 +877,7 @@ func (g *PlayerData) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 func (g *PlayerData) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sceneGroup *gdconf.GoppLevelGroup, db *spb.BlockBin, entryId uint32) *proto.SceneEntityGroupInfo {
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
-		g.StageObjectCapture(propList, sceneGroup.GroupId, db)
+		g.StageObjectCapture(sceneGroup, propList, sceneGroup.GroupId, db)
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
 			Y: int32(propList.PosY * 1000),
@@ -871,7 +913,8 @@ func (g *PlayerData) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 				Pos:      pos,
 				Rot:      rot,
 			},
-			PropId: propList.PropID,
+			PropId:              propList.PropID,
+			TriggerBattleString: propList.TriggerBattleString,
 		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
@@ -1298,10 +1341,10 @@ func (g *PlayerData) AddNpcSceneEntityRefreshInfo(mazeGroupID uint32, npcList ma
 }
 
 // 添加物品实体
-func (g *PlayerData) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
+func (g *PlayerData) AddPropSceneEntityRefreshInfo(group *gdconf.GoppLevelGroup, mazeGroupID uint32, propList map[uint32]*gdconf.PropList, db *spb.BlockBin) []*proto.SceneEntityRefreshInfo {
 	sceneEntityRefreshInfo := make([]*proto.SceneEntityRefreshInfo, 0)
 	for _, prop := range propList {
-		g.StageObjectCapture(prop, mazeGroupID, db)
+		g.StageObjectCapture(group, prop, mazeGroupID, db)
 		entityId := g.GetNextGameObjectGuid()
 		pos := &proto.Vector{
 			X: int32(prop.PosX * 1000),
@@ -1342,7 +1385,8 @@ func (g *PlayerData) AddPropSceneEntityRefreshInfo(mazeGroupID uint32, propList 
 				Pos:      pos,
 				Rot:      rot,
 			},
-			PropId: prop.PropID,
+			PropId:              prop.PropID,
+			TriggerBattleString: prop.TriggerBattleString,
 		})
 		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
 	}

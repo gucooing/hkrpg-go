@@ -163,3 +163,38 @@ func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg pb.Message) {
 	}
 	g.Send(cmd.GetRollShopInfoScRsp, rsp)
 }
+
+func (g *GamePlayer) QueryProductInfoCsReq(payloadMsg pb.Message) {
+	rsp := &proto.QueryProductInfoScRsp{
+		DHDAENPMKOO: make([]*proto.Product, 0),
+		OGLKEBKFNNK: 3,
+		ANMKBJHMKGC: 0,
+		BDDKLNCEJOE: 0,
+		Retcode:     0,
+	}
+	rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
+		KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_COIN,
+		JGOFENPOJJI: "Tier_60",
+		JBEFEAHCJDM: 0,
+		PDLIGIAGJLJ: "rpgchncoin6480tier60",
+		PNFMFLEHKFG: 0,
+		AFIPAJBMBGL: true,
+	})
+	rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
+		KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_POINT_CARD,
+		JGOFENPOJJI: "Tier_1",
+		JBEFEAHCJDM: 0,
+		PDLIGIAGJLJ: "rpgglbpointcardtierx",
+		PNFMFLEHKFG: 0,
+		AFIPAJBMBGL: false,
+	})
+	rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
+		KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_MONTH_CARD,
+		JGOFENPOJJI: "Tier_5",
+		JBEFEAHCJDM: 0,
+		PDLIGIAGJLJ: "rpgglbmonthcardtier5",
+		PNFMFLEHKFG: 0,
+		AFIPAJBMBGL: false,
+	})
+	g.Send(cmd.QueryProductInfoScRsp, rsp)
+}

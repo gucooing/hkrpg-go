@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -78,7 +79,8 @@ type PropList struct {
 	State                    string              `json:"State"`
 	StageObjectCapture       *StageObjectCapture `json:"StageObjectCapture"`
 	ValueSource              *ValueSource        `json:"ValueSource"`
-	GoppValue                []*GoppValue        `json:"_"`
+	GoppValue                []*GoppValue        `json:"-"`
+	TriggerBattleString      uint32              `json:"-"`
 }
 type ValueSource struct {
 	Values []*Values `json:"Values"`
@@ -243,8 +245,8 @@ func GetStateValue(state string) uint32 {
 		"Elevator2":         15,
 		"Elevator3":         16,
 		"WaitActive":        17,
-		"EventClose":        18,
-		"EventOpen":         19,
+		"EventClose":        18, // 事件结束
+		"EventOpen":         19, // 事件开始
 		"Hidden":            20,
 		"TeleportGate0":     21,
 		"TeleportGate1":     22,
@@ -328,6 +330,9 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 								InstId:  instId,
 							})
 						}
+					}
+					if strings.Contains(value.Key, "TriggerBattleString") {
+						prop.TriggerBattleString = alg.S2U32(valueStr)
 					}
 				}
 			}

@@ -11,6 +11,7 @@ import (
 type ChallengeMazeConfig struct {
 	ID                 uint32                     `json:"ID"` // 关卡id
 	GroupID            uint32                     `json:"GroupID"`
+	Floor              uint32                     `json:"Floor"`
 	MapEntranceID      uint32                     `json:"MapEntranceID"` // 地图
 	PreLevel           uint32                     `json:"PreLevel"`
 	PreChallengeMazeID uint32                     `json:"PreChallengeMazeID"`

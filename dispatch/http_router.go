@@ -30,6 +30,11 @@ func (s *Server) InitRouter() {
 		Global.GET("/mdk/shield/api/loadConfig", s.loadConfig)
 		Global.POST("/combo/granter/login/v2/login", s.V2LoginRequestHandler) // 获取combo token
 		Global.GET("/mdk/agreement/api/getAgreementInfos", s.GetAgreementInfos)
+		Global.POST("/combo/granter/login/beforeVerify", s.beforeVerify)
+		Global.POST("/combo/red_dot/list", s.redDotList)
+		Global.POST("/mdk/shopwindow/shopwindow/listPriceTier", s.listPriceTier)
+		Global.POST("/mdk/shopwindow/shopwindow/listPriceTierV2", s.listPriceTier)
+		Global.GET("/mdk/shopwindow/shopwindow/listPriceTierV2", s.listPriceTier)
 	}
 	// 杂
 	s.Router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)

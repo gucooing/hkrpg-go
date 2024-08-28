@@ -7,10 +7,6 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandleQueryProductInfoCsReq(payloadMsg pb.Message) {
-	g.Send(cmd.QueryProductInfoScRsp, nil)
-}
-
 func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneEntityMoveCsReq)
 	if g.GetPd().IsChangeStory() {
