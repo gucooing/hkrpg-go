@@ -51,7 +51,10 @@ func GetConfig() *Config {
 var FileNotExist = errors.New("config file not found")
 
 func LoadConfig(confName string) error {
-	filePath := "./" + confName
+	if _, err := os.Stat("./conf"); os.IsNotExist(err) {
+		os.MkdirAll("./conf", 0644)
+	}
+	filePath := "./conf/" + confName
 	f, err := os.Open(filePath)
 	if err != nil {
 		return FileNotExist
@@ -71,7 +74,7 @@ func LoadConfig(confName string) error {
 var DefaultConfig = &Config{
 	LogLevel:           "Info",
 	GameDataConfigPath: "resources",
-	SqlPath:            "hkrpg-go-pe.db",
+	SqlPath:            "./conf/hkrpg-go-pe.db",
 	Dispatch: &Dispatch{
 		AutoCreate: true,
 		Addr:       "0.0.0.0",
