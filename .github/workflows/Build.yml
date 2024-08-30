@@ -1,0 +1,72 @@
+name: Build
+on:
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sync HKRPG-Go
+      uses: actions/checkout@v3
+      with:
+        repository: gucooing/hkrpg-go
+        ref: "dev"
+        path: go/hkrpg
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.22.1"
+        check-latest: true
+
+    - name: Go Tidy
+      run: cd go/hkrpg
+
+    - name: Build
+      run: cd go/hkrpg && bash build.sh
+
+    - name: Package
+      run: |
+        zip -r go/hkrpg/build/data.zip go/hkrpg/data/*
+        zip -r go/hkrpg/linux-amd64.zip go/hkrpg/build/*
+
+    - name: Upload Linux Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-amd64.zip
+        path: go/hkrpg/linux-amd64.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Sync HKRPG-Go
+      uses: actions/checkout@v3
+      with:
+        repository: gucooing/hkrpg-go
+        ref: "dev"
+        path: go/hkrpg
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.22.1"
+        check-latest: true
+
+    - name: Go Tidy
+      run: cd go/hkrpg
+
+    - name: Build
+      run: cd go/hkrpg && .\build.bat
+
+    - name: Package
+      run: |
+        Compress-Archive -Path go/hkrpg\data\* -DestinationPath go/hkrpg\build\data.zip
+        Compress-Archive -Path go/hkrpg\build\* -DestinationPath go/hkrpg\windows-amd64.zip
+
+    - name: Upload Windows Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-amd64.zip
+        path: go/hkrpg/windows-amd64.zip

@@ -1,7 +1,6 @@
 FROM golang:1.23-alpine as builder
 LABEL authors="gucooing"
 
-# linux build
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories
 RUN apk add --no-cache gcc musl-dev linux-headers
 WORKDIR /usr/hkrpg
@@ -13,8 +12,6 @@ ENV CGO_ENABLED=1
 RUN go mod download && go mod verify
 COPY . .
 RUN go build -tags netgo -o /usr/hkrpg/hkrpg-go ./cmd/hkrpg-go-pe/main.go
-
-# windows build
 
 FROM alpine:latest
 WORKDIR /usr/hkrpg

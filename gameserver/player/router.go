@@ -223,11 +223,12 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetUpdatedArchiveDataCsReq: g.GetUpdatedArchiveDataCsReq, // 更新收集
 		cmd.GetQuestDataCsReq:          g.GetQuestDataCsReq,          // 获取成就信息
 		// NPC
-		cmd.GetFirstTalkNpcCsReq:                 g.GetFirstTalkNpcCsReq,
-		cmd.GetNpcTakenRewardCsReq:               g.GetNpcTakenRewardCsReq,               // NPC对话
-		cmd.GetFirstTalkByPerformanceNpcCsReq:    g.GetFirstTalkByPerformanceNpcCsReq,    // NPC商店
-		cmd.GetNpcMessageGroupCsReq:              g.GetNpcMessageGroupCsReq,              // 获取npc聊天信息
-		cmd.FinishPerformSectionIdCsReq:          g.FinishPerformSectionIdCsReq,          // 完成npc聊天
+		cmd.GetFirstTalkNpcCsReq:              g.GetFirstTalkNpcCsReq,
+		cmd.GetNpcTakenRewardCsReq:            g.GetNpcTakenRewardCsReq,            // NPC对话
+		cmd.GetFirstTalkByPerformanceNpcCsReq: g.GetFirstTalkByPerformanceNpcCsReq, // NPC商店
+		cmd.GetNpcMessageGroupCsReq:           g.GetNpcMessageGroupCsReq,           // 获取npc聊天信息
+		cmd.FinishPerformSectionIdCsReq:       g.FinishPerformSectionIdCsReq,       // 完成npc聊天
+		// cmd.FinishSectionIdCsReq:                 g.FinishSectionIdCsReq,                 // npc聊天任务完成
 		cmd.GetNpcStatusCsReq:                    g.GetNpcStatusCsReq,                    // 获取npc聊天状态
 		cmd.FinishFirstTalkByPerformanceNpcCsReq: g.FinishFirstTalkByPerformanceNpcCsReq, // 完成对话
 		// 乱七八糟

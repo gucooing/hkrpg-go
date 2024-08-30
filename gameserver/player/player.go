@@ -89,11 +89,6 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			logger.Error("pb marshal error: %v", err)
 		}
 
-		if g.IsJumpMission {
-			g.FinishAllMission()
-			g.FinishAllTutorial()
-		}
-
 		err = database.AddPlayerDataByUid(g.Store.PlayerDataMysql,
 			g.Store.PeMysql, dbPlayer)
 		if err != nil {
@@ -106,6 +101,11 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			logger.Error("unmarshal proto data err: %v", err)
 			g.PlayerData.BasicBin = model.NewBasicBin()
 		}
+	}
+	if g.IsJumpMission && !g.GetPd().GetIsProficientPlayer() {
+		g.FinishAllMission()
+		g.FinishAllTutorial()
+		g.GetPd().GetBasicBin().IsProficientPlayer = true
 	}
 	g.PlayerData.BasicBin.Uid = g.Uid
 	if g.GetPd().GetIsProficientPlayer() { // 是否是老玩家
