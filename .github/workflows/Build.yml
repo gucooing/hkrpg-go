@@ -11,7 +11,6 @@ jobs:
       with:
         repository: gucooing/hkrpg-go
         ref: "dev"
-        path: go/hkrpg
         fetch-depth: 0
 
     - name: Set up Go
@@ -21,18 +20,18 @@ jobs:
         check-latest: true
 
     - name: Build
-      run: cd go/hkrpg && bash build.sh
+      run: bash build.sh
 
     - name: Package
       run: |
-        zip -r go/hkrpg/build/data.zip go/hkrpg/data/*
-        zip -r go/hkrpg/linux-amd64.zip go/hkrpg/build/*
+        zip -r build/data.zip data/*
+        zip -r linux-amd64.zip build/*
 
     - name: Upload Linux Artifact
       uses: actions/upload-artifact@v4
       with:
         name: linux-amd64.zip
-        path: go/hkrpg/linux-amd64.zip
+        path: linux-amd64.zip
 
   build-windows:
     runs-on: windows-latest

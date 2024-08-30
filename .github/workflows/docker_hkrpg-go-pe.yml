@@ -1,0 +1,30 @@
+name: Docker hkrpg-go-pe
+
+on:
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sync HKRPG-Go
+        uses: actions/checkout@v3
+        with:
+          repository: gucooing/hkrpg-go
+          ref: "dev"
+          fetch-depth: 0
+
+      - name: Docker login
+        uses: docker/login-action@v1.8.0
+        with:
+          username: "${{ secrets.DOCKERHUB_USERNAME }}"
+          password: "${{ secrets.DOCKERHUB_PASSWORD }}"
+
+      - name: Build the Docker image
+        run: |
+          docker build --file Dockerfile --tag gucooing/hkrpg-go-pe:0.0.1
+          docker push gucooing/hkrpg-go-pe:0.0.1
+          

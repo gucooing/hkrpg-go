@@ -1,23 +1,32 @@
 [EN](./zh-CN.md) | [简中](./zh-CN.md) | [繁中](./zh-CN.md) | [JP](./zh-CN.md) | [RU](./zh-CN.md) | [FR](./zh-CN.md) | [KR](./zh-CN.md) | [VI](./zh-CN.md)
 
 # 准备环境
-1. golang >= 1.22.1
+1. golang >= 1.22.4
 2. mysql
 3. redis
 4. bash(使用build.sh时才需要)
 
 ## 编译
+> 注:建议自行在运行服务器上进行编译,否则可能出现意外情况
 1. 安装依赖
 `go mod tidy`
 2. 开始编译
-#### 脚本编译
-在bash环境下直接执行bulid.sh即可，脚本执行结束后可在文件夹 ./build 里看到各平台的可执行文件
 #### 自行编译
-> 此处不交流交叉编译
+- 安装golang且版本不低于1.22.4
+- linux下安装gcc环境，然后执行
+```bash
+bash ./build.sh
+```
 
-进入./ cmd文件夹中，可看到各个服务的文件夹，进入每一个文件夹执行 `go build xxxx.go` 即可
+- windows下执行
+```bash
+.\build.bat
+```
+
+- 脚本运行完毕后可在build文件夹中看到编译后的可执行文件
+
 ### 不想编译
-前往[Build-dev](https://github.com/gucooing/hkrpg-go-public/actions/workflows/HKRPG-Go-Publish.yml)下载
+前往[Build-dev](https://github.com/gucooing/hkrpg-go/actions/workflows/Build.yml)下载
 
 ## 运行
 ### 1.准备资源：
@@ -70,4 +79,4 @@ resources的准备:
 
 ## 想测试但不想配置复杂的环境
 
-1.前往[Build-dev](https://github.com/gucooing/hkrpg-go-public/actions/workflows/HKRPG-Go-Publish.yml)下载hkrpg-pe-go文件
+1.前往[Build-dev](https://github.com/gucooing/hkrpg-go/actions/workflows/Build.yml)下载hkrpg-pe可执行文件
