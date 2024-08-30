@@ -59,8 +59,8 @@ jobs:
 
     - name: Build
       run: |
-      cd go/hkrpg
-      .\build.bat
+        cd go/hkrpg
+        .\build.bat
 
     - name: Package
       run: |
