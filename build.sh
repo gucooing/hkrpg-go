@@ -7,7 +7,7 @@ else
     exit 1
 fi
 
-go env CGO_ENABLED=1
+set CGO_ENABLED=1
 go mod download
 go mod verify
 
