@@ -42,7 +42,6 @@ jobs:
       with:
         repository: gucooing/hkrpg-go
         ref: "dev"
-        path: go/hkrpg
         fetch-depth: 0
 
     - name: Set up Go
@@ -53,17 +52,16 @@ jobs:
 
     - name: Build
       run: |
-        cmd
-        cd go/hkrpg
-        build.bat
+        cd hkrpg-go
+        .\build.bat
 
     - name: Package
       run: |
-        Compress-Archive -Path go/hkrpg\data\* -DestinationPath go/hkrpg\build\data.zip
-        Compress-Archive -Path go/hkrpg\build\* -DestinationPath go/hkrpg\windows-amd64.zip
+        Compress-Archive -Path hkrpg-go\data\* -DestinationPath hkrpg-go\build\data.zip
+        Compress-Archive -Path hkrpg-go\build\* -DestinationPath hkrpg-go\windows-amd64.zip
 
     - name: Upload Windows Artifact
       uses: actions/upload-artifact@v4
       with:
         name: windows-amd64.zip
-        path: go/hkrpg/windows-amd64.zip
+        path: hkrpg-go\windows-amd64.zip
