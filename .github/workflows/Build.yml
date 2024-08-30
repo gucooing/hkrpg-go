@@ -53,7 +53,7 @@ jobs:
     - name: Build
       run: |
         dir
-        build.bat
+        .\build.bat
 
     - name: Package
       run: |
