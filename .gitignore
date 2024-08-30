@@ -5,7 +5,7 @@
 *.dylib
 *.test
 *.out
-*.bat
+
 protocol/*.py
 bulid
 go.work
