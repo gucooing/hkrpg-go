@@ -120,7 +120,7 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	}
 	if req.OptionalRewardId != 0 {
-		pile, item := g.GetPd().GetRewardData(req.OptionalRewardId)
+		pile, item := model.GetRewardData(req.OptionalRewardId)
 		g.GetPd().AddItem(pile, allSync)
 		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	}

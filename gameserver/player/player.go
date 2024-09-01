@@ -77,7 +77,7 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 	if dbPlayer == nil || dbPlayer.BinData == nil {
 		dbPlayer = new(constant.PlayerData)
 		logger.Info("新账号登录，进入初始化流程")
-		g.PlayerData.BasicBin = model.NewBasicBin()
+		g.PlayerData = model.NewPlayerData()
 		// 初始化完毕保存账号数据
 		dbPlayer.Uid = g.Uid
 		dbPlayer.Level = g.GetPd().GetLevel()
@@ -99,7 +99,7 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 		err = pb.Unmarshal(dbPlayer.BinData, g.PlayerData.BasicBin)
 		if err != nil {
 			logger.Error("unmarshal proto data err: %v", err)
-			g.PlayerData.BasicBin = model.NewBasicBin()
+			g.PlayerData = model.NewPlayerData()
 		}
 	}
 	if g.IsJumpMission && !g.GetPd().GetIsProficientPlayer() {

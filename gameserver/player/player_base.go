@@ -534,7 +534,7 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	pile, item := g.GetPd().GetRewardData(conf.LevelRewardID)
+	pile, item := model.GetRewardData(conf.LevelRewardID)
 	pileItem = append(pileItem, pile...)
 	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
 

@@ -536,7 +536,7 @@ func (g *PlayerData) ItemSubTypeMaterial(useDataID, useItemCount uint32, allSync
 	var i uint32 = 0
 	for i = 0; i < useItemCount; i++ {
 		for _, rewardId := range conf.UseParam {
-			pile, item := g.GetRewardData(rewardId)
+			pile, item := GetRewardData(rewardId)
 			pileItem = append(pileItem, pile...)
 			itemList = append(itemList, item...)
 		}
@@ -555,7 +555,7 @@ func (g *PlayerData) ItemSubTypeGift(useDataID, useItemCount uint32, allSync *Al
 	var i uint32 = 0
 	for i = 0; i < useItemCount; i++ {
 		for _, rewardId := range conf.UseParam {
-			pile, item := g.GetRewardData(rewardId)
+			pile, item := GetRewardData(rewardId)
 			pileItem = append(pileItem, pile...)
 			itemList = append(itemList, item...)
 		}
@@ -565,7 +565,7 @@ func (g *PlayerData) ItemSubTypeGift(useDataID, useItemCount uint32, allSync *Al
 	return itemList
 }
 
-func (g *PlayerData) GetRewardData(rewardID uint32) ([]*Material, []*proto.Item) {
+func GetRewardData(rewardID uint32) ([]*Material, []*proto.Item) {
 	pileItem := make([]*Material, 0)
 	itemList := make([]*proto.Item, 0)
 	if rewardConf := gdconf.GetRewardDataById(rewardID); rewardConf != nil {

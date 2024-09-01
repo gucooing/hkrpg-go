@@ -44,6 +44,36 @@ func (g *GamePlayer) TakeChallengeRewardCsReq(payloadMsg pb.Message) {
 		GroupId:         req.GroupId,
 		Retcode:         0,
 	}
+
+	allSync := &model.AllPlayerSync{MaterialList: make([]uint32, 0)}
+	db := g.GetPd().GetChallengeGroupInfoById(req.GroupId)
+	conf := gdconf.GetChallengeGroupConfig(req.GroupId)
+	if conf == nil {
+		g.Send(cmd.TakeChallengeRewardScRsp, rsp)
+		return
+	}
+	var start uint32
+	for _, v := range db.ChallengeInfoList {
+		start += model.GetChallengeStars(v.Stars)
+	}
+	curStart := model.GetTakenRewards(db.ChallengeReward)
+	for curStart < start {
+		curStart++
+		rewardID := gdconf.GetChallengeRewardLineRewardID(conf.RewardLineGroupID, curStart)
+		if rewardID == 0 {
+			continue
+		}
+		pile, item := model.GetRewardData(rewardID)
+		g.GetPd().AddItem(pile, allSync)
+		rsp.TakenRewardList = append(rsp.TakenRewardList, &proto.TakenChallengeRewardInfo{
+			StarCount: curStart,
+			Reward: &proto.ItemList{
+				ItemList: item,
+			},
+		})
+		db.ChallengeReward = model.SetTakenReward(db.ChallengeReward, curStart)
+	}
+	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.TakeChallengeRewardScRsp, rsp)
 }
 

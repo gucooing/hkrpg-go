@@ -27,7 +27,7 @@ type OnlineData struct {
 
 func NewPlayerData() *PlayerData {
 	g := new(PlayerData)
-	g.BasicBin = NewBasicBin()
+	g.BasicBin = newBasicBin()
 	// 添加默认数据
 	g.AddAvatar(1001)
 	g.AddAvatar(8001)
@@ -35,7 +35,7 @@ func NewPlayerData() *PlayerData {
 	return g
 }
 
-func NewBasicBin() *spb.PlayerBasicCompBin {
+func newBasicBin() *spb.PlayerBasicCompBin {
 	basicBin := &spb.PlayerBasicCompBin{
 		Level:                1,
 		Nickname:             "hkrpg-go",
@@ -90,7 +90,7 @@ func (g *PlayerData) GetIsProficientPlayer() bool {
 
 func (g *PlayerData) GetBasicBin() *spb.PlayerBasicCompBin {
 	if g.BasicBin == nil {
-		g.BasicBin = NewBasicBin()
+		g.BasicBin = newBasicBin()
 	}
 	return g.BasicBin
 }
@@ -256,7 +256,7 @@ func (g *PlayerData) FinishTutorialGuide(id uint32, allSync *AllPlayerSync) []*p
 	}
 	db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
 	conf := gdconf.GetTutorialGuideGroup(id)
-	pile, item := g.GetRewardData(conf.RewardID)
+	pile, item := GetRewardData(conf.RewardID)
 	g.AddItem(pile, allSync)
 	return item
 }

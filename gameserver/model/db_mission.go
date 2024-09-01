@@ -488,7 +488,7 @@ func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, allSync *AllP
 		if conf == nil {
 			continue
 		}
-		pileItem, _ = g.GetRewardData(conf.RewardID)
+		pileItem, _ = GetRewardData(conf.RewardID)
 	}
 }
 
@@ -512,7 +512,7 @@ func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, allSync *AllPla
 			Status:    spb.MissionStatus_MISSION_FINISH,
 		}
 		// 奖励发放
-		pileItem, _ = g.GetRewardData(conf.SubRewardID)
+		pileItem, _ = GetRewardData(conf.SubRewardID)
 	}
 }
 

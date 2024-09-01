@@ -663,6 +663,32 @@ func (g *PlayerData) ChallengeSettle() {
 	}
 }
 
+func GetChallengeStars(stars uint32) uint32 {
+	total := 0
+	for i := 0; i < 3; i++ {
+		if stars&(1<<i) != 0 {
+			total++
+		}
+	}
+	return uint32(total)
+}
+
+func GetTakenRewards(takenStars uint64) uint32 {
+	bitMask := takenStars
+	var index uint32 = 0
+	for bitMask > 0 {
+		bitMask >>= 1
+		index++
+	}
+
+	return index
+}
+
+func SetTakenReward(takenStars uint64, star uint32) uint64 {
+	takenStars |= 1 << star
+	return takenStars
+}
+
 // 忘却之庭战斗失败处理
 func (g *PlayerData) ChallengeBattleEndLose() bool {
 	db := g.GetCurChallenge()
@@ -1073,7 +1099,7 @@ func (g *PlayerData) GetChallengeReward(allSync *AllPlayerSync) *proto.ItemList 
 		return itemList
 	}
 	if db.IsWin {
-		pile, item := g.GetRewardData(conf.RewardID)
+		pile, item := GetRewardData(conf.RewardID)
 		itemList.ItemList = item
 		g.AddItem(pile, allSync)
 	}

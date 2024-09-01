@@ -83,7 +83,7 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	pile, item := g.GetPd().GetRewardData(activityLoginConfig.RewardList[req.TakeDays-1])
+	pile, item := model.GetRewardData(activityLoginConfig.RewardList[req.TakeDays-1])
 	pileItem = append(pileItem, pile...)
 	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
 	g.GetPd().AddItem(pileItem, allSync)

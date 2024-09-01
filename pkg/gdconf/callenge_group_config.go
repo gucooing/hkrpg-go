@@ -67,5 +67,8 @@ func (g *GameDataConfig) loadChallengeGroupConfig() {
 	}
 
 	logger.Info("load %v ChallengeGroupConfig", len(g.ChallengeGroupConfigMap))
+}
 
+func GetChallengeGroupConfig(guid uint32) *ChallengeGroupConfig {
+	return CONF.ChallengeGroupConfigMap[guid]
 }
