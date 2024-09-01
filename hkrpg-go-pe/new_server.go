@@ -99,13 +99,13 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 		Port:         cfg.Dispatch.Port,
 		OuterAddr:    cfg.Dispatch.OuterAddr,
 		DispatchList: dispatchList,
-		KcpPort:      alg.S2U32(cfg.GameServer.Port),
+		KcpPort:      alg.S2U32(cfg.GameServer.OuterPort),
 		KcpIp:        cfg.GameServer.OuterAddr,
 		IsPe:         true,
 	}
 	s.Dispatch.Router.Use(gin.Recovery())
 	// 启动kcp
-	addr := cfg.GameServer.InnerAddr + ":" + cfg.GameServer.Port
+	addr := cfg.GameServer.InnerAddr + ":" + cfg.GameServer.InnerPort
 	logger.Info("KCP监听地址:%s", addr)
 	kcpListener, err := kcp.ListenWithOptions(addr)
 	if err != nil {

@@ -32,8 +32,9 @@ type DispatchList struct {
 type GameServer struct {
 	MaxPlayer     int32  `json:"MaxPlayer"`
 	InnerAddr     string `json:"InnerAddr"`
-	Port          string `json:"Port"`
+	InnerPort     string `json:"InnerPort"`
 	OuterAddr     string `json:"OuterAddr"`
+	OuterPort     string `json:"OuterPort"`
 	IsJumpMission bool   `json:"IsJumpMission"`
 }
 type Gm struct {
@@ -104,8 +105,9 @@ var DefaultConfig = &Config{
 	GameServer: &GameServer{
 		MaxPlayer:     -1,
 		InnerAddr:     "0.0.0.0",
-		Port:          "20041",
+		InnerPort:     "20041",
 		OuterAddr:     "127.0.0.1",
+		OuterPort:     "20041",
 		IsJumpMission: true,
 	},
 	Gm: &Gm{
