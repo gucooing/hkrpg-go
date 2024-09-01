@@ -57,7 +57,7 @@ func newBasicBin() *spb.PlayerBasicCompBin {
 		TotalLoginDays:       0,
 		TotalGameTime:        0,
 		LastLoginTime:        0,
-		LastLoginPlatform:    0,
+		LastStaminaTime:      0,
 		LastLogoutTime:       0,
 		Mail:                 NewMail(),
 		Friend:               NewFriend(),

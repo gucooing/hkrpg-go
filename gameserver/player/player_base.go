@@ -15,7 +15,7 @@ import (
 func (g *GamePlayer) StaminaInfoScNotify() {
 	db := g.GetPd().GetMaterialMap()
 	notify := &proto.StaminaInfoScNotify{
-		NextRecoverTime: 0,
+		NextRecoverTime: g.GetPd().GetNextRecoverTime(),
 		Stamina:         db[model.Stamina],
 		ReserveStamina:  db[model.RStamina],
 	}
@@ -23,12 +23,22 @@ func (g *GamePlayer) StaminaInfoScNotify() {
 }
 
 func (g *GamePlayer) HandleGetBasicInfoCsReq(payloadMsg pb.Message) {
-	rsp := new(proto.GetBasicInfoScRsp)
-	rsp.CurDay = 1
-	rsp.NextRecoverTime = time.Now().Unix() + 94
-	rsp.GameplayBirthday = g.GetPd().GetBasicBin().Birthday
-	rsp.WeekCocoonFinishedCount = 0 // 周本完成计数
-	rsp.Gender = uint32(g.GetPd().GetAvatar().Gender)
+	// 检查
+	if g.GetPd().CheckStamina() {
+		g.StaminaInfoScNotify()
+	}
+	rsp := &proto.GetBasicInfoScRsp{
+		NextRecoverTime:         g.GetPd().GetNextRecoverTime(),
+		Gender:                  uint32(g.GetPd().GetAvatar().Gender),
+		GameplayBirthday:        g.GetPd().GetBasicBin().Birthday,
+		CurDay:                  1,
+		WeekCocoonFinishedCount: 0, // 周本完成计数
+		LastSetNicknameTime:     0,
+		PlayerSettingInfo:       nil,
+		ExchangeTimes:           0,
+		IsGenderSet:             false,
+		Retcode:                 0,
+	}
 	// rsp.PlayerSettingInfo = &proto.PlayerSettingInfo{
 	// 	B1:                true,
 	// 	B2:                true,

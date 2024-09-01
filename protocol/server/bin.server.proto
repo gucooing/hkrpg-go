@@ -31,7 +31,7 @@ message PlayerBasicCompBin {
   uint32 total_login_days = 21; // 登录天数
   uint32 total_game_time = 22; // 总游戏时长
   fixed32 last_login_time = 23; // 上次登录时间
-  uint32 last_login_platform = 24; // 最后登录平台
+  int64 last_stamina_time = 24; // 上次体力增加时间
   fixed32 last_logout_time = 25; // 最后退出时间
   Mail mail = 26; // 邮件
   PlayerFriend friend = 27; // 好友

@@ -203,7 +203,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		RelicList:     nil,
 	}
 	addPileItem := make([]*model.Material, 0)
-	delPileItem := make([]*model.Material, 0)
 
 	// 根据不同结算状态处理
 	switch req.EndStatus {
@@ -271,18 +270,12 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 			if len(finishSubMission) != 0 {
 				g.InspectMission(finishSubMission)
 			}
-			delPileItem = append(delPileItem, &model.Material{
-				Tid: model.Stamina,
-				Num: conf.StaminaCost,
-			})
+			g.GetPd().DelStamina(conf.StaminaCost)
 		}
 		if conf := gdconf.GetFarmElementConfig(req.StageId); conf != nil {
 			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
 				g.GetPd().GetBattleDropData(conf.MappingInfoID, addPileItem, battleBin.WorldLevel, allSync)...)
-			delPileItem = append(delPileItem, &model.Material{
-				Tid: model.Stamina,
-				Num: conf.StaminaCost,
-			})
+			g.GetPd().DelStamina(conf.StaminaCost)
 		}
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
 		teleportToAnchor = true
@@ -309,7 +302,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		g.EnterSceneByServerScNotify(g.GetPd().GetCurEntryId(), 0, 0, 0)
 	}
 
-	g.GetPd().DelMaterial(delPileItem)
 	g.GetPd().AddItem(addPileItem, allSync)
 	g.StaminaInfoScNotify()
 	g.AllPlayerSyncScNotify(allSync)

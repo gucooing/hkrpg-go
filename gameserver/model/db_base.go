@@ -2,9 +2,15 @@ package model
 
 import (
 	"math/rand"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
+)
+
+const (
+	ReserveStaminaTime  = 360  // 单体力回复所需时间 s
+	RReserveStaminaTime = 1080 // 单体力回复所需时间 s
 )
 
 type AllPlayerSync struct {
@@ -123,4 +129,77 @@ func (g *PlayerData) GetTextJoinPBList() map[uint32]*spb.TextJoin {
 func (g *PlayerData) GetTextJoinPBById(id uint32) *spb.TextJoin {
 	db := g.GetPhoneData()
 	return db.TextJoin[id]
+}
+
+func (g *PlayerData) GetNextRecoverTime() int64 {
+	if g.GetMaterialById(Stamina) < 240 {
+		if g.GetBasicBin().LastStaminaTime == 0 {
+			g.GetBasicBin().LastStaminaTime = time.Now().Unix()
+		}
+		return g.GetBasicBin().LastStaminaTime + ReserveStaminaTime
+	} else {
+		if g.GetMaterialById(RStamina) < 2400 {
+			if g.GetBasicBin().LastStaminaTime == 0 {
+				g.GetBasicBin().LastStaminaTime = time.Now().Unix()
+			}
+			return g.GetBasicBin().LastStaminaTime + RReserveStaminaTime
+		}
+	}
+	return 0
+}
+
+func (g *PlayerData) DelStamina(num uint32) {
+	curStamina := g.GetMaterialById(Stamina)
+	if curStamina == 240 {
+		g.GetBasicBin().LastStaminaTime = 0
+	}
+	g.DelMaterial([]*Material{{
+		Tid: Stamina,
+		Num: num,
+	}})
+}
+
+func (g *PlayerData) CheckStamina() bool {
+	curStamina := g.GetMaterialById(Stamina)
+	curTime := time.Now().Unix()
+	notify := false
+	if curStamina == 240 {
+		// 检查后备体力恢复情况
+		if g.GetMaterialById(RStamina) < 2400 {
+			if g.GetBasicBin().LastStaminaTime == 0 {
+				g.GetBasicBin().LastStaminaTime = curTime
+			}
+			diff := curTime - g.GetBasicBin().LastStaminaTime
+			reSt := diff / RReserveStaminaTime
+			if reSt > 0 {
+				g.AddMaterial([]*Material{{
+					Tid: RStamina,
+					Num: uint32(reSt),
+				}})
+				g.GetBasicBin().LastStaminaTime = curTime
+				notify = true
+			}
+			if g.GetMaterialById(RStamina) == 2400 {
+				g.GetBasicBin().LastStaminaTime = 0
+			}
+		}
+	} else {
+		if g.GetBasicBin().LastStaminaTime == 0 {
+			g.GetBasicBin().LastStaminaTime = curTime
+		}
+		diff := curTime - g.GetBasicBin().LastStaminaTime
+		reSt := diff / ReserveStaminaTime
+		if reSt > 0 {
+			g.AddMaterial([]*Material{{
+				Tid: Stamina,
+				Num: uint32(reSt),
+			}})
+			g.GetBasicBin().LastStaminaTime = curTime
+			notify = true
+		}
+		if g.GetMaterialById(Stamina) == 240 {
+			g.GetBasicBin().LastStaminaTime = 0
+		}
+	}
+	return notify
 }
