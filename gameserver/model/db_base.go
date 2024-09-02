@@ -176,7 +176,7 @@ func (g *PlayerData) CheckStamina() bool {
 					Tid: RStamina,
 					Num: uint32(reSt),
 				}})
-				g.GetBasicBin().LastStaminaTime = curTime
+				g.GetBasicBin().LastStaminaTime = curTime - (diff - reSt*RReserveStaminaTime)
 				notify = true
 			}
 			if g.GetMaterialById(RStamina) == 2400 {
@@ -194,7 +194,7 @@ func (g *PlayerData) CheckStamina() bool {
 				Tid: Stamina,
 				Num: uint32(reSt),
 			}})
-			g.GetBasicBin().LastStaminaTime = curTime
+			g.GetBasicBin().LastStaminaTime = curTime - (diff - reSt*ReserveStaminaTime)
 			notify = true
 		}
 		if g.GetMaterialById(Stamina) == 240 {

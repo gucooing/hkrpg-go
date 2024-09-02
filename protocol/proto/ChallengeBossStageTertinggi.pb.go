@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.28.1
 // 	protoc        v5.26.0
-// source: ABKDOGOIPBJ.proto
+// source: ChallengeBossStageTertinggi.proto
 
 package proto
 
@@ -20,7 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ABKDOGOIPBJ struct {
+type ChallengeBossStageTertinggi struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -33,23 +33,23 @@ type ABKDOGOIPBJ struct {
 	Level       uint32                 `protobuf:"varint,2,opt,name=level,proto3" json:"level,omitempty"`
 }
 
-func (x *ABKDOGOIPBJ) Reset() {
-	*x = ABKDOGOIPBJ{}
+func (x *ChallengeBossStageTertinggi) Reset() {
+	*x = ChallengeBossStageTertinggi{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_ABKDOGOIPBJ_proto_msgTypes[0]
+		mi := &file_ChallengeBossStageTertinggi_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
 }
 
-func (x *ABKDOGOIPBJ) String() string {
+func (x *ChallengeBossStageTertinggi) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ABKDOGOIPBJ) ProtoMessage() {}
+func (*ChallengeBossStageTertinggi) ProtoMessage() {}
 
-func (x *ABKDOGOIPBJ) ProtoReflect() protoreflect.Message {
-	mi := &file_ABKDOGOIPBJ_proto_msgTypes[0]
+func (x *ChallengeBossStageTertinggi) ProtoReflect() protoreflect.Message {
+	mi := &file_ChallengeBossStageTertinggi_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -60,60 +60,62 @@ func (x *ABKDOGOIPBJ) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ABKDOGOIPBJ.ProtoReflect.Descriptor instead.
-func (*ABKDOGOIPBJ) Descriptor() ([]byte, []int) {
-	return file_ABKDOGOIPBJ_proto_rawDescGZIP(), []int{0}
+// Deprecated: Use ChallengeBossStageTertinggi.ProtoReflect.Descriptor instead.
+func (*ChallengeBossStageTertinggi) Descriptor() ([]byte, []int) {
+	return file_ChallengeBossStageTertinggi_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ABKDOGOIPBJ) GetLineupList() []*ChallengeLineupList {
+func (x *ChallengeBossStageTertinggi) GetLineupList() []*ChallengeLineupList {
 	if x != nil {
 		return x.LineupList
 	}
 	return nil
 }
 
-func (x *ABKDOGOIPBJ) GetDKFHAHHJILF() uint32 {
+func (x *ChallengeBossStageTertinggi) GetDKFHAHHJILF() uint32 {
 	if x != nil {
 		return x.DKFHAHHJILF
 	}
 	return 0
 }
 
-func (x *ABKDOGOIPBJ) GetScoreId() uint32 {
+func (x *ChallengeBossStageTertinggi) GetScoreId() uint32 {
 	if x != nil {
 		return x.ScoreId
 	}
 	return 0
 }
 
-func (x *ABKDOGOIPBJ) GetBuffOne() uint32 {
+func (x *ChallengeBossStageTertinggi) GetBuffOne() uint32 {
 	if x != nil {
 		return x.BuffOne
 	}
 	return 0
 }
 
-func (x *ABKDOGOIPBJ) GetBuffTwo() uint32 {
+func (x *ChallengeBossStageTertinggi) GetBuffTwo() uint32 {
 	if x != nil {
 		return x.BuffTwo
 	}
 	return 0
 }
 
-func (x *ABKDOGOIPBJ) GetLevel() uint32 {
+func (x *ChallengeBossStageTertinggi) GetLevel() uint32 {
 	if x != nil {
 		return x.Level
 	}
 	return 0
 }
 
-var File_ABKDOGOIPBJ_proto protoreflect.FileDescriptor
+var File_ChallengeBossStageTertinggi_proto protoreflect.FileDescriptor
 
-var file_ABKDOGOIPBJ_proto_rawDesc = []byte{
-	0x0a, 0x11, 0x41, 0x42, 0x4b, 0x44, 0x4f, 0x47, 0x4f, 0x49, 0x50, 0x42, 0x4a, 0x2e, 0x70, 0x72,
+var file_ChallengeBossStageTertinggi_proto_rawDesc = []byte{
+	0x0a, 0x21, 0x43, 0x68, 0x61, 0x6c, 0x6c, 0x65, 0x6e, 0x67, 0x65, 0x42, 0x6f, 0x73, 0x73, 0x53,
+	0x74, 0x61, 0x67, 0x65, 0x54, 0x65, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x67, 0x69, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x43, 0x68, 0x61, 0x6c, 0x6c, 0x65, 0x6e, 0x67, 0x65, 0x4c, 0x69,
-	0x6e, 0x65, 0x75, 0x70, 0x4c, 0x69, 0x73, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xcd,
-	0x01, 0x0a, 0x0b, 0x41, 0x42, 0x4b, 0x44, 0x4f, 0x47, 0x4f, 0x49, 0x50, 0x42, 0x4a, 0x12, 0x35,
+	0x6e, 0x65, 0x75, 0x70, 0x4c, 0x69, 0x73, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xdd,
+	0x01, 0x0a, 0x1b, 0x43, 0x68, 0x61, 0x6c, 0x6c, 0x65, 0x6e, 0x67, 0x65, 0x42, 0x6f, 0x73, 0x73,
+	0x53, 0x74, 0x61, 0x67, 0x65, 0x54, 0x65, 0x72, 0x74, 0x69, 0x6e, 0x67, 0x67, 0x69, 0x12, 0x35,
 	0x0a, 0x0b, 0x6c, 0x69, 0x6e, 0x65, 0x75, 0x70, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x0a, 0x20,
 	0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x43, 0x68, 0x61, 0x6c, 0x6c, 0x65, 0x6e, 0x67, 0x65, 0x4c,
 	0x69, 0x6e, 0x65, 0x75, 0x70, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x0a, 0x6c, 0x69, 0x6e, 0x65, 0x75,
@@ -133,24 +135,24 @@ var file_ABKDOGOIPBJ_proto_rawDesc = []byte{
 }
 
 var (
-	file_ABKDOGOIPBJ_proto_rawDescOnce sync.Once
-	file_ABKDOGOIPBJ_proto_rawDescData = file_ABKDOGOIPBJ_proto_rawDesc
+	file_ChallengeBossStageTertinggi_proto_rawDescOnce sync.Once
+	file_ChallengeBossStageTertinggi_proto_rawDescData = file_ChallengeBossStageTertinggi_proto_rawDesc
 )
 
-func file_ABKDOGOIPBJ_proto_rawDescGZIP() []byte {
-	file_ABKDOGOIPBJ_proto_rawDescOnce.Do(func() {
-		file_ABKDOGOIPBJ_proto_rawDescData = protoimpl.X.CompressGZIP(file_ABKDOGOIPBJ_proto_rawDescData)
+func file_ChallengeBossStageTertinggi_proto_rawDescGZIP() []byte {
+	file_ChallengeBossStageTertinggi_proto_rawDescOnce.Do(func() {
+		file_ChallengeBossStageTertinggi_proto_rawDescData = protoimpl.X.CompressGZIP(file_ChallengeBossStageTertinggi_proto_rawDescData)
 	})
-	return file_ABKDOGOIPBJ_proto_rawDescData
+	return file_ChallengeBossStageTertinggi_proto_rawDescData
 }
 
-var file_ABKDOGOIPBJ_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
-var file_ABKDOGOIPBJ_proto_goTypes = []interface{}{
-	(*ABKDOGOIPBJ)(nil),         // 0: ABKDOGOIPBJ
-	(*ChallengeLineupList)(nil), // 1: ChallengeLineupList
+var file_ChallengeBossStageTertinggi_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
+var file_ChallengeBossStageTertinggi_proto_goTypes = []interface{}{
+	(*ChallengeBossStageTertinggi)(nil), // 0: ChallengeBossStageTertinggi
+	(*ChallengeLineupList)(nil),         // 1: ChallengeLineupList
 }
-var file_ABKDOGOIPBJ_proto_depIdxs = []int32{
-	1, // 0: ABKDOGOIPBJ.lineup_list:type_name -> ChallengeLineupList
+var file_ChallengeBossStageTertinggi_proto_depIdxs = []int32{
+	1, // 0: ChallengeBossStageTertinggi.lineup_list:type_name -> ChallengeLineupList
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -158,15 +160,15 @@ var file_ABKDOGOIPBJ_proto_depIdxs = []int32{
 	0, // [0:1] is the sub-list for field type_name
 }
 
-func init() { file_ABKDOGOIPBJ_proto_init() }
-func file_ABKDOGOIPBJ_proto_init() {
-	if File_ABKDOGOIPBJ_proto != nil {
+func init() { file_ChallengeBossStageTertinggi_proto_init() }
+func file_ChallengeBossStageTertinggi_proto_init() {
+	if File_ChallengeBossStageTertinggi_proto != nil {
 		return
 	}
 	file_ChallengeLineupList_proto_init()
 	if !protoimpl.UnsafeEnabled {
-		file_ABKDOGOIPBJ_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ABKDOGOIPBJ); i {
+		file_ChallengeBossStageTertinggi_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ChallengeBossStageTertinggi); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -182,18 +184,18 @@ func file_ABKDOGOIPBJ_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_ABKDOGOIPBJ_proto_rawDesc,
+			RawDescriptor: file_ChallengeBossStageTertinggi_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_ABKDOGOIPBJ_proto_goTypes,
-		DependencyIndexes: file_ABKDOGOIPBJ_proto_depIdxs,
-		MessageInfos:      file_ABKDOGOIPBJ_proto_msgTypes,
+		GoTypes:           file_ChallengeBossStageTertinggi_proto_goTypes,
+		DependencyIndexes: file_ChallengeBossStageTertinggi_proto_depIdxs,
+		MessageInfos:      file_ChallengeBossStageTertinggi_proto_msgTypes,
 	}.Build()
-	File_ABKDOGOIPBJ_proto = out.File
-	file_ABKDOGOIPBJ_proto_rawDesc = nil
-	file_ABKDOGOIPBJ_proto_goTypes = nil
-	file_ABKDOGOIPBJ_proto_depIdxs = nil
+	File_ChallengeBossStageTertinggi_proto = out.File
+	file_ChallengeBossStageTertinggi_proto_rawDesc = nil
+	file_ChallengeBossStageTertinggi_proto_goTypes = nil
+	file_ChallengeBossStageTertinggi_proto_depIdxs = nil
 }

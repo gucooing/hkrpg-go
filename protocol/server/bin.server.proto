@@ -154,6 +154,7 @@ message Line {
   uint32 index = 3; // 第几个队伍
   uint32 leader_slot = 4; // 当前角色是第几个
   ExtraLineupType line_type = 5;// 队伍类型
+  uint32 mp = 6; // 能量
 }
 
 message LineAvatarList {

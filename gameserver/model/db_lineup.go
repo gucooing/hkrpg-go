@@ -37,8 +37,39 @@ func (g *PlayerData) GetLineUp() *spb.LineUp {
 }
 
 func (g *PlayerData) GetLineUpMp() uint32 {
-	db := g.GetLineUp()
-	return db.Mp
+	db := g.GetBattleLineUp()
+	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
+		return db.Mp
+	}
+	return g.GetLineUp().Mp
+}
+
+func (g *PlayerData) AddLineUpMp(mp uint32) {
+	db := g.GetBattleLineUp()
+	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
+		if db.Mp += mp; db.Mp > 5 {
+			db.Mp = 5
+		}
+	} else {
+		lineUp := g.GetLineUp()
+		if lineUp.Mp += mp; lineUp.Mp > 5 {
+			lineUp.Mp = 5
+		}
+	}
+}
+
+func (g *PlayerData) DelLineUpMp(mp uint32) {
+	db := g.GetBattleLineUp()
+	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
+		if db.Mp -= mp; db.Mp < 0 {
+			db.Mp = 0
+		}
+	} else {
+		lineUp := g.GetLineUp()
+		if lineUp.Mp -= mp; lineUp.Mp < 0 {
+			lineUp.Mp = 0
+		}
+	}
 }
 
 func (g *PlayerData) GetLineUpById(index uint32) *spb.Line {
@@ -316,20 +347,6 @@ func (g *PlayerData) GetChallengeLineUp() *spb.Line {
 	default:
 		logger.Debug("[UID:%v]没有此忘却之庭队伍id:%v", g.GetBasicBin().Uid, challengeStatus.CurStage)
 		return g.GetCurLineUp()
-	}
-}
-
-func (g *PlayerData) AddLineUpMp(mp uint32) {
-	db := g.GetLineUp()
-	if db.Mp += mp; db.Mp > 5 {
-		db.Mp = 5
-	}
-}
-
-func (g *PlayerData) DelLineUpMp(mp uint32) {
-	db := g.GetLineUp()
-	if db.Mp -= mp; db.Mp < 0 {
-		db.Mp = 0
 	}
 }
 

@@ -1110,6 +1110,9 @@ func (g *PlayerData) GetChallengeReward(allSync *AllPlayerSync) *proto.ItemList 
 
 	return itemList
 }
+
+/****************************忘却之庭获取挑战信息(明明一模一样还分成三个proto*******************************/
+
 func (g *PlayerData) GetChallengeGroupStatisticsChallengeStory(groupId uint32) *proto.GetChallengeGroupStatisticsScRsp_ChallengeStory {
 	group := g.GetChallengeGroupInfoById(groupId)
 	var db *spb.ChallengeInfo
@@ -1130,6 +1133,64 @@ func (g *PlayerData) GetChallengeStoryStageTertinggi(db *spb.ChallengeInfo) *pro
 		return nil
 	}
 	info := &proto.ChallengeStoryStageTertinggi{
+		LineupList:  g.GetChallengeLineupList(db.LineupList),
+		DKFHAHHJILF: 0,
+		Level:       db.Floor,
+		BuffTwo:     db.BuffTwo,
+		BuffOne:     db.BuffOne,
+		ScoreId:     db.ScoreOne + db.ScoreTwo,
+	}
+	return info
+}
+
+func (g *PlayerData) GetChallengeGroupStatisticsChallengeDefault(groupId uint32) *proto.GetChallengeGroupStatisticsScRsp_ChallengeDefault {
+	group := g.GetChallengeGroupInfoById(groupId)
+	var db *spb.ChallengeInfo
+	if group.ChallengeInfoList != nil {
+		db = group.ChallengeInfoList[group.MaxChallengeId]
+	}
+	info := &proto.GetChallengeGroupStatisticsScRsp_ChallengeDefault{
+		ChallengeDefault: &proto.ChallengeStatistics{
+			StageTertinggi: g.GetChallengeStageTertinggi(db),
+			RecordId:       group.RecordId,
+		},
+	}
+	return info
+}
+
+func (g *PlayerData) GetChallengeStageTertinggi(db *spb.ChallengeInfo) *proto.ChallengeStageTertinggi {
+	if db == nil {
+		return nil
+	}
+	info := &proto.ChallengeStageTertinggi{
+		LineupList:  g.GetChallengeLineupList(db.LineupList),
+		DKFHAHHJILF: 0,
+		Level:       db.Floor,
+		RoundCount:  db.RecordId,
+	}
+	return info
+}
+
+func (g *PlayerData) GetChallengeGroupStatisticsChallengeBoss(groupId uint32) *proto.GetChallengeGroupStatisticsScRsp_ChallengeBoss {
+	group := g.GetChallengeGroupInfoById(groupId)
+	var db *spb.ChallengeInfo
+	if group.ChallengeInfoList != nil {
+		db = group.ChallengeInfoList[group.MaxChallengeId]
+	}
+	info := &proto.GetChallengeGroupStatisticsScRsp_ChallengeBoss{
+		ChallengeBoss: &proto.ChallengeBossStatistics{
+			RecordId:       group.RecordId,
+			StageTertinggi: g.GetChallengeBossStageTertinggi(db),
+		},
+	}
+	return info
+}
+
+func (g *PlayerData) GetChallengeBossStageTertinggi(db *spb.ChallengeInfo) *proto.ChallengeBossStageTertinggi {
+	if db == nil {
+		return nil
+	}
+	info := &proto.ChallengeBossStageTertinggi{
 		LineupList:  g.GetChallengeLineupList(db.LineupList),
 		DKFHAHHJILF: 0,
 		Level:       db.Floor,

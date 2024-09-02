@@ -7,4 +7,5 @@ const (
 	Status        = 1003
 	Give          = 1004
 	GiveRelic     = 1005
+	AddMail       = 1006
 )

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -85,9 +86,13 @@ func (g *GamePlayer) GetChallengeGroupStatisticsCsReq(payloadMsg pb.Message) {
 	}
 	switch req.GroupId / 1000 {
 	case 1:
+		rsp.Challenge = g.GetPd().GetChallengeGroupStatisticsChallengeDefault(req.GroupId)
 	case 2:
 		rsp.Challenge = g.GetPd().GetChallengeGroupStatisticsChallengeStory(req.GroupId)
 	case 3:
+		rsp.Challenge = g.GetPd().GetChallengeGroupStatisticsChallengeBoss(req.GroupId)
+	default:
+		logger.Warn("challenge error")
 	}
 	g.Send(cmd.GetChallengeGroupStatisticsScRsp, rsp)
 }

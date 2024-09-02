@@ -169,7 +169,7 @@ func (g *GamePlayer) ChangeLineupLeaderCsReq(payloadMsg pb.Message) {
 
 	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
 
-	db := g.GetPd().GetCurLineUp()
+	db := g.GetPd().GetBattleLineUp()
 	db.LeaderSlot = req.Slot
 
 	g.Send(cmd.ChangeLineupLeaderScRsp, rsp)
@@ -233,6 +233,6 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 		avatarBin := g.GetPd().GetAvatarBinById(avatar)
 		g.GetPd().CopyBattleAvatar(avatarBin)
 	}
-	g.GetPd().AddLineUpMp(5)
+	db.Mp = 5
 	g.SyncLineupNotify(db)
 }
