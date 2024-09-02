@@ -44,6 +44,13 @@ func (g *PlayerData) GetLineUpMp() uint32 {
 	return g.GetLineUp().Mp
 }
 
+func (g *PlayerData) GetLineupDbMp(db *spb.Line) uint32 {
+	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
+		return db.Mp
+	}
+	return g.GetLineUp().Mp
+}
+
 func (g *PlayerData) AddLineUpMp(mp uint32) {
 	db := g.GetBattleLineUp()
 	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
@@ -400,7 +407,7 @@ func (g *PlayerData) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 
 	lineupList := &proto.LineupInfo{
 		AvatarList:            avatarList,
-		Mp:                    g.GetLineUpMp(),
+		Mp:                    g.GetLineupDbMp(db),
 		IsVirtual:             false,
 		Index:                 db.Index,
 		PlaneId:               0,
