@@ -107,6 +107,7 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	// 启动kcp
 	addr := cfg.GameServer.InnerAddr + ":" + cfg.GameServer.InnerPort
 	logger.Info("KCP监听地址:%s", addr)
+	logger.Info("KCP对外地址:%s", cfg.GameServer.OuterAddr+":"+cfg.GameServer.OuterPort)
 	kcpListener, err := kcp.ListenWithOptions(addr)
 	if err != nil {
 		log.Printf("listen kcp err: %v\n", err)

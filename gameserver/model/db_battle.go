@@ -718,36 +718,40 @@ func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, addPileItem []*Mate
 	itemConfMap := gdconf.GetItemConfigMap()
 	for _, displayItem := range conf.DisplayItemList {
 		itemConf := itemConfMap.Item[displayItem.ItemID]
-		if itemConf == nil {
-			continue
-		}
-		switch itemConf.ItemSubType {
-		case constant.ItemSubTypeRelicSetShowOnly:
-			for _, id := range itemConf.CustomDataList {
-				relicConf := gdconf.GetRelicBySetID(id, itemConf.Rarity)
-				if relicConf != nil {
-					uniqueId := g.AddRelic(relicConf.ID, 0, nil)
-					itemList = append(itemList, g.GetRelicItem(uniqueId))
-					allSync.RelicList = append(allSync.RelicList, uniqueId)
+		if itemConf != nil {
+			switch itemConf.ItemSubType {
+			case constant.ItemSubTypeRelicSetShowOnly:
+				for _, id := range itemConf.CustomDataList {
+					relicConf := gdconf.GetRelicBySetID(id, itemConf.Rarity)
+					if relicConf != nil {
+						uniqueId := g.AddRelic(relicConf.ID, 0, nil)
+						itemList = append(itemList, g.GetRelicItem(uniqueId))
+						allSync.RelicList = append(allSync.RelicList, uniqueId)
+					}
 				}
+				continue
 			}
+			itemNum := displayItem.ItemNum
+			if displayItem.ItemID == Scoin {
+				itemNum = 1500 + worldLevel*300
+			}
+			if itemNum == 0 {
+				itemNum = 1 + worldLevel
+			}
+			addPileItem = append(addPileItem, &Material{
+				Tid: displayItem.ItemID,
+				Num: itemNum,
+			})
+			itemList = append(itemList, &proto.Item{
+				ItemId: displayItem.ItemID,
+				Num:    itemNum,
+			})
 			continue
+		} else if itemConfMap.Equipment[displayItem.ItemID] != nil {
+			uniqueId := g.AddEquipment(displayItem.ItemID)
+			itemList = append(itemList, g.GetEquipmentItem(uniqueId))
+			allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
 		}
-		itemNum := displayItem.ItemNum
-		if displayItem.ItemID == Scoin {
-			itemNum = 1500 + worldLevel*300
-		}
-		if itemNum == 0 {
-			itemNum = 1 + worldLevel
-		}
-		addPileItem = append(addPileItem, &Material{
-			Tid: displayItem.ItemID,
-			Num: itemNum,
-		})
-		itemList = append(itemList, &proto.Item{
-			ItemId: displayItem.ItemID,
-			Num:    itemNum,
-		})
 	}
 	return itemList
 }

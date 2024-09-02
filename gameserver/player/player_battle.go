@@ -285,9 +285,9 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 
 	switch g.GetPd().GetBattleStatus() {
 	case spb.BattleType_Battle_CHALLENGE:
-		g.ChallengePVEBattleResultCsReq(req)
+		g.ChallengePVEBattleResultCsReq(req, battleBin)
 	case spb.BattleType_Battle_CHALLENGE_Story:
-		g.ChallengePVEBattleResultCsReq(req)
+		g.ChallengePVEBattleResultCsReq(req, battleBin)
 	case spb.BattleType_Battle_ROGUE:
 		teleportToAnchor = false
 		g.RoguePVEBattleResultCsReq(req, sce)

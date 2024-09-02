@@ -12,6 +12,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	rand2 "math/rand"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -706,10 +707,8 @@ func (l *Listener) EnetHandle() {
 				}
 				var conv uint32
 				var sessionId uint32
-				// relogin := false
 				if enetNotify.Conv != 0 {
 					conv = enetNotify.Conv
-					// relogin = true
 				} else {
 					_ = binary.Read(rand.Reader, binary.LittleEndian, &conv)
 				}
@@ -953,6 +952,7 @@ func serveConn(conn net.PacketConn, ownConn bool) (*Listener, error) {
 	l.die = make(chan struct{})
 	l.chSocketReadError = make(chan struct{})
 	l.enetNotifyChan = make(chan *Enet, 1000)
+	l.sessionIdCounter = uint32(rand2.Intn(1000) + 1)
 
 	if _, ok := l.conn.(*net.UDPConn); ok {
 		addr, err := net.ResolveUDPAddr("udp", l.conn.LocalAddr().String())

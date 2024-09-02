@@ -164,7 +164,7 @@ func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
 
 // 忘却之庭世界战斗结算事件
 
-func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq) {
+func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsReq, battleBin *model.BattleBackup) {
 	db := g.GetPd().GetCurChallenge()
 	if db == nil {
 		return
@@ -191,7 +191,9 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 	case proto.BattleEndStatus_BATTLE_END_QUIT: // 退出战斗
 		return
 	}
-	g.GetPd().AddCurChallengeKillMonster(1) // TODO 默认一次战斗一个怪物
+	if battleBin != nil && battleBin.Sce != nil {
+		g.GetPd().AddCurChallengeKillMonster(uint32(len(battleBin.Sce.MonsterEntityIdList)))
+	}
 	// 场景上是否还有未处理敌人
 	if g.GetPd().GetCurChallengeMonsterNum() > g.GetPd().GetCurChallengeKillMonster() {
 		return // 还有就不更新状态，继续进行
