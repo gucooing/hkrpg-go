@@ -9,7 +9,7 @@
 ## Please don't use it in a production environment
 
 ### Documentation:
-* [easy-tutorial](./docs/tutorial/zh-cn.md)
+* [easy-tutorial](./docs/tutorial/zh-CN.md)
 * [config parsing](./docs/conf/zh-CN.md)
 * [api usage](./docs/command/zh-CN.md)
 * [Details](./docs/progress/zh-CN.md)
