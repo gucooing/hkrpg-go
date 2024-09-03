@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
-	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -61,6 +60,14 @@ func (g *PlayerData) DelMail(id uint32) {
 	db.IsDel = true
 }
 
+func (g *PlayerData) DelPlayerMail(id uint32) {
+	db := g.GetMailList()
+	if db[id] != nil {
+		delete(db, id)
+	}
+	// TODO 删数据库
+}
+
 // TODO 邮件奖励兑换方法（拓展此处以支持更多奖励物品
 func (g *PlayerData) MailReadItem(itemList []*constant.Item, allSync *AllPlayerSync) bool {
 	pileItem := make([]*Material, 0)
@@ -82,9 +89,8 @@ func (g *PlayerData) MailReadItem(itemList []*constant.Item, allSync *AllPlayerS
 	return true
 }
 
-func (g *PlayerData) GetAllMail() []*proto.ClientMail {
+func (g *PlayerData) GetAllMail(mailMap map[uint32]*constant.Mail) []*proto.ClientMail {
 	mailList := make([]*proto.ClientMail, 0)
-	mailMap := database.GetAllMail()
 	for id, mail := range mailMap {
 		db := g.GetMailById(id)
 		if db.IsDel {
@@ -100,9 +106,10 @@ func (g *PlayerData) GetAllMail() []*proto.ClientMail {
 			},
 			Title:    mail.Title,
 			Sender:   mail.Sender,
-			ParaList: nil, // 参数
+			ParaList: make([]string, 0), // 参数
 			Id:       mail.Id,
 			Content:  mail.Content,
+			MailType: proto.MailType_MAIL_TYPE_NORMAL,
 		}
 		mailList = append(mailList, pbMail)
 	}

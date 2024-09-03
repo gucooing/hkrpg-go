@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gucooing/gunet"
+	"github.com/gucooing/hkrpg-go/dbconf"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
@@ -46,6 +47,7 @@ func NewGameServer(cfg *Config, appid string) *GameServer {
 	s := new(GameServer)
 	s.Config = cfg
 	s.Store = database.NewGameStore(s.Config.MysqlConf, s.Config.RedisConf) // 初始化数据库连接
+	dbconf.GameServer(s.Store.ServerConf)
 	s.AppId = alg.GetAppIdUint32(appid)
 	s.gateList = make(map[uint32]*gateServer)
 	s.playerMap = make(map[uint32]*GamePlayer)

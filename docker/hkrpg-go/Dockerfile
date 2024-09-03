@@ -8,7 +8,7 @@ ADD go.sum .
 ENV CGO_ENABLED=1
 RUN go mod download && go mod verify
 COPY . .
-RUN go build -tags netgo -o /usr/hkrpg/hkrpg-go ./cmd/hkrpg-go-pe/hkrpg-go.go
+RUN go build -tags netgo -o /usr/hkrpg/hkrpg-go ./cmd/hkrpg-go/hkrpg-go.go
 
 FROM alpine:latest
 RUN apk add --no-cache git bash

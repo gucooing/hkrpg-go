@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"strings"
 
-	"github.com/gucooing/hkrpg-go/pkg/database"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/dbconf"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
@@ -197,7 +197,7 @@ func (g *PlayerData) GetInspirationCircuitInfo() *proto.RogueTournPermanentTalen
 }
 
 func (g *PlayerData) GetExtraScoreInfo() *proto.ExtraScoreInfo {
-	conf := database.GetCurRogue()
+	conf := dbconf.GetCurRogue()
 	if conf == nil {
 		return nil
 	}

@@ -57,9 +57,10 @@ var GSS *GameStore
 type GameStore struct {
 	PlayerDataMysql      *gorm.DB
 	ServerConf           *gorm.DB
-	LoginRedis           *redis.Client
-	StatusRedis          *redis.Client
+	LoginRedis           *redis.Client // 登录锁
+	StatusRedis          *redis.Client // 状态锁
 	PlayerBriefDataRedis *redis.Client // 玩家简要信息
+	PlayerMail           *redis.Client // 玩家邮件
 	// pe
 	PeMysql *gorm.DB
 }
@@ -83,8 +84,9 @@ func NewGameStore(mysqlList map[string]constant.MysqlConf, redisList map[string]
 	s.StatusRedis = NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
 	playerBriefDataRedis := redisList["player_brief_data"]
 	s.PlayerBriefDataRedis = NewRedis(playerBriefDataRedis.Addr, playerBriefDataRedis.Password, playerBriefDataRedis.DB)
+	playerMail := redisList["player_mail"]
+	s.PlayerMail = NewRedis(playerMail.Addr, playerMail.Password, playerMail.DB)
 
 	logger.Info("数据库连接成功")
-	GetDbConf(s.ServerConf) // 初始化数据库配置表
 	return s
 }

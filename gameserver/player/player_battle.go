@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -176,12 +176,6 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PVEBattleResultCsReq)
-	battleBin := g.GetPd().GetBattleBackupById(req.BattleId)
-	if battleBin == nil {
-		return
-	}
-	sce := battleBin.Sce
-	var teleportToAnchor = false
 	rsp := &proto.PVEBattleResultScRsp{
 		BattleAvatarList: make([]*proto.BattleAvatar, 0),
 		BattleId:         req.BattleId,
@@ -192,6 +186,13 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		ResVersion:       strconv.Itoa(int(req.ClientVersion)), // 版本验证
 		DropData:         &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
+	battleBin := g.GetPd().GetBattleBackupById(req.BattleId)
+	if battleBin == nil {
+		g.Send(cmd.PVEBattleResultScRsp, rsp)
+		return
+	}
+	sce := battleBin.Sce
+	var teleportToAnchor = false
 	// 更新角色状态
 	g.GetPd().BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
 	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())

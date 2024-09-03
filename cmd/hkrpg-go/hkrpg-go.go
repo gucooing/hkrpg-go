@@ -10,16 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/hkrpg-go-pe"
+	hkrpggo "github.com/gucooing/hkrpg-go/hkrpg-go"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 
 func main() {
 	confName := "hkrpg-go-pe.json"
-	err := hkrpg_go_pe.LoadConfig(confName)
+	err := hkrpggo.LoadConfig(confName)
 	if err != nil {
-		if err == hkrpg_go_pe.FileNotExist {
-			p, _ := json.MarshalIndent(hkrpg_go_pe.DefaultConfig, "", "  ")
+		if err == hkrpggo.FileNotExist {
+			p, _ := json.MarshalIndent(hkrpggo.DefaultConfig, "", "  ")
 			cf, _ := os.Create("./conf/" + confName)
 			cf.Write(p)
 			cf.Close()
@@ -29,14 +29,14 @@ func main() {
 			panic(err)
 		}
 	}
-	cfg := hkrpg_go_pe.GetConfig()
+	cfg := hkrpggo.GetConfig()
 	// 初始化日志
 	logger.InitLogger("hkrpg_go_pe", strings.ToUpper(cfg.LogLevel))
 	logger.Info("hkrpg_go_pe")
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	// 初始化服务器
-	s := hkrpg_go_pe.NewServer(cfg)
+	s := hkrpggo.NewServer(cfg)
 
 	// 启动SDK服务
 	go func() {

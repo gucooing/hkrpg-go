@@ -1,6 +1,8 @@
 package player
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	pb "google.golang.org/protobuf/proto"
@@ -272,7 +274,10 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 func (g *GamePlayer) RecvMsg() {
 	for {
 		select {
-		case recvMsg := <-g.RecvChan:
+		case recvMsg, ok := <-g.RecvChan:
+			if !ok {
+				return
+			}
 			switch recvMsg.MsgType {
 			case Client:
 				g.registerMessage(recvMsg.CmdId, recvMsg.PlayerMsg)
@@ -290,28 +295,20 @@ func (g *GamePlayer) RecvMsg() {
 
 // 发包
 func (g *GamePlayer) SendMsg(cmdId uint16, playerMsg pb.Message) {
-	if g.SendChan != nil {
-		g.SendChan <- Msg{
-			CmdId:     cmdId,
-			MsgType:   Server,
-			PlayerMsg: playerMsg,
-		}
-		if g.IsClosed {
-			close(g.SendChan)
-		}
+	if g.SendChan == nil {
+		return
 	}
-}
-
-// 发包
-func (g *GamePlayer) SendCommand(commandId int64, commandRsp string) {
-	if g.SendChan != nil {
-		g.SendChan <- Msg{
-			CommandId:  commandId,
-			MsgType:    GmRsp,
-			CommandRsp: commandRsp,
-		}
+	timeout := time.After(2 * time.Second)
+	select {
+	case g.SendChan <- Msg{
+		CmdId:     cmdId,
+		MsgType:   Server,
+		PlayerMsg: playerMsg,
+	}:
 		if g.IsClosed {
 			close(g.SendChan)
 		}
+	case <-timeout:
+		return
 	}
 }

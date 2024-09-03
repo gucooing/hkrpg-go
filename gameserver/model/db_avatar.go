@@ -3,8 +3,8 @@ package model
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -488,13 +488,17 @@ func (g *PlayerData) GetBattleAvatarMap(lineUp *spb.Line) map[uint32]*BattleAvat
 			}
 			baseAvatarId = conf.AvatarID
 		}
-		avatarMap[baseAvatarId] = &BattleAvatar{
+		info := &BattleAvatar{
 			AvatarId:     avatar.AvatarId,
 			BaseAvatarId: baseAvatarId,
 			AvatarType:   avatar.LineAvatarType,
 			AssistUid:    0,
 			Index:        index,
 		}
+		if lineUp.LeaderSlot == avatar.Slot {
+			info.IsCur = true
+		}
+		avatarMap[baseAvatarId] = info
 	}
 	return avatarMap
 }
@@ -552,6 +556,7 @@ type BattleAvatar struct {
 	AvatarType   spb.LineAvatarType // 角色类型
 	AssistUid    uint32             // 助战uid
 	Index        uint32
+	IsCur        bool
 }
 
 // 添加战斗角色列表

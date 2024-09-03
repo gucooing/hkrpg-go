@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 

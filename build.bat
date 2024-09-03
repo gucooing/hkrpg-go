@@ -15,7 +15,7 @@ echo GOENV !GOENV!
 
 set "OUT_DIR=./build"
 
-set "PE_PATH=.\cmd\hkrpg-go-pe\hkrpg-go.go"
+set "PE_PATH=.\cmd\hkrpg-go\hkrpg-go.go"
 set "DISPATCH_PATH=.\cmd\dispatch\dispatch.go"
 set "GAMESERVER_PATH=.\cmd\gameserver\gameserver.go"
 set "GATE_PATH=.\cmd\gateserver\gateserver.go"

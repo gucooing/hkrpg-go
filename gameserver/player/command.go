@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 	pb "google.golang.org/protobuf/proto"
@@ -31,10 +31,7 @@ func (g *GamePlayer) EnterCommand(msg Msg) {
 			rspSt = commFunc(g, msg.CommandList[1:])
 		}
 	}
-	logger.Debug("[UID%v]执行指令:%s|响应:%s", g.Uid, msg.CommandList, rspSt)
-	if msg.CommandId != 0 {
-		g.SendCommand(msg.CommandId, rspSt)
-	}
+	logger.Info("[UID%v]执行指令:%s|响应:%s", g.Uid, msg.CommandList, rspSt)
 }
 
 // 设置世界等级

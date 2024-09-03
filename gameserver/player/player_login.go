@@ -91,18 +91,6 @@ func (g *GamePlayer) LoginNotify() {
 	// g.ClientDownloadDataScNotify()
 }
 
-func (g *GamePlayer) PlayerKickOutScNotify(kickType proto.KickType) {
-	g.Send(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{
-		BlackInfo: &proto.BlackInfo{
-			// BeginTime:  time.Now().Unix(),
-			// EndTime:    time.Now().Unix() + 10,
-			// LimitLevel: 0,
-			// BanType:    0,
-		},
-		KickType: kickType,
-	})
-}
-
 // 飘窗通知
 func (g *GamePlayer) ServerAnnounceNotify() {
 	notify := &proto.ServerAnnounceNotify{AnnounceDataList: make([]*proto.AnnounceData, 0)}

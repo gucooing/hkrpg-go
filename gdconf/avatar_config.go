@@ -13,7 +13,8 @@ type AvatarData struct {
 	Rarity          string        `json:"Rarity"`   // 星级
 	JsonPath        string        `json:"JsonPath"`
 	ManikinJsonPath string        `json:"ManikinJsonPath"`
-	RankIDList      []uint32      `json:"RankIDList"`     // 命座id
+	RankIDList      []uint32      `json:"RankIDList"` // 命座id
+	DamageType      string        `json:"DamageType"`
 	ExpGroup        uint32        `json:"ExpGroup"`       // 经验ID
 	RewardList      []*RewardList `json:"RewardList"`     // 重复获得角色奖励
 	AvatarBaseType  string        `json:"AvatarBaseType"` // 角色类型
@@ -53,6 +54,24 @@ func GetAvatarDataById(avatarId uint32) *AvatarData {
 
 func GetAvatarDataMap() map[uint32]*AvatarData {
 	return CONF.AvatarDataMap
+}
+
+var damageTypeEnum = map[string]uint32{
+	"Physical":  1000111,
+	"Fire":      1000112,
+	"Ice":       1000113,
+	"Thunder":   1000114,
+	"Wind":      1000115,
+	"Quantum":   1000116,
+	"Imaginary": 1000117,
+}
+
+func GetAvatarDamage(id uint32) uint32 {
+	conf := CONF.AvatarDataMap[id]
+	if conf == nil {
+		return 0
+	}
+	return damageTypeEnum[conf.DamageType]
 }
 
 func GetAvatarList() []uint32 {

@@ -95,16 +95,7 @@ func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	case cmd.GameToNodePingRsp:
 		n.GameToNodePingRsp(serviceMsg)
 	// 下面是gm
-	case cmd.GmGive:
-		n.game.GmGive(serviceMsg) // 获取物品
-	case cmd.GmWorldLevel:
-		n.game.GmWorldLevel(serviceMsg) // 设置世界等级
-	case cmd.DelItem:
-		n.game.DelItem(serviceMsg) // 清空背包
-	case cmd.MaxCurAvatar:
-		n.game.GmMaxCurAvatar(serviceMsg)
-	case cmd.GmMission:
-		n.game.GmMission(serviceMsg)
+
 	default:
 		logger.Info("node -> game error cmdid:%v", cmdId)
 	}

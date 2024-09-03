@@ -2,6 +2,8 @@ package database
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/hjson/hjson-go/v4"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
@@ -201,3 +203,50 @@ func DelAcceptApplyFriend(rc *redis.Client, db *gorm.DB, uid uint32) {
 func delAcceptApplyFriendMysql(db *gorm.DB, uid uint32) {
 	db.Delete(&constant.AcceptApplyFriend{Uid: uid})
 }
+
+var PlayerMailId uint32 = 100000000 // 玩家邮件ID基数
+
+// 获取玩家邮件
+func GetAllPlayerMail(rc *redis.Client, dsn *gorm.DB, uid uint32) map[uint32]*constant.Mail {
+	list := make(map[uint32]*constant.Mail)
+	var db []*constant.PlayerMail
+	if rc != nil {
+		db = getAllPlayerMailRedis(rc, uid)
+	}
+	if dsn != nil {
+		db = getAllPlayerMailMysql(dsn, uid)
+	}
+
+	for _, v := range db {
+		itemList := make([]*constant.Item, 0)
+		if v.Item != "" {
+			err := hjson.Unmarshal([]byte(v.Item), &itemList)
+			if err != nil {
+				logger.Error("mail item error: %v", err)
+			}
+		}
+		mail := &constant.Mail{
+			Id:        v.Id + PlayerMailId,
+			Title:     v.Title,
+			Sender:    v.Sender,
+			BeginTime: v.BeginTime,
+			EndTime:   v.EndTime,
+			Content:   v.Content,
+			Item:      v.Item,
+			ItemList:  itemList,
+		}
+		list[v.Id] = mail
+	}
+
+	return list
+}
+
+func getAllPlayerMailMysql(dsn *gorm.DB, uid uint32) []*constant.PlayerMail {
+	var playerMail []*constant.PlayerMail
+	dsn.Where("uid = ?", uid).Find(&playerMail)
+	return playerMail
+}
+
+// 根据Id获取玩家邮件
+// 删除玩家邮件
+// 添加玩家邮件

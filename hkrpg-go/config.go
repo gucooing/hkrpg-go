@@ -1,4 +1,4 @@
-package hkrpg_go_pe
+package hkrpg_go
 
 import (
 	"encoding/json"

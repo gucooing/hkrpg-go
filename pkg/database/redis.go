@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/hjson/hjson-go/v4"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -178,4 +180,21 @@ func SetAcceptApplyFriend(rc *redis.Client, uid uint32, value []byte) bool {
 func delAcceptApplyFriendRedis(rc *redis.Client, uid uint32) {
 	key := "accept_apply_friend:" + strconv.Itoa(int(uid))
 	rc.Del(ctx, key)
+}
+
+// 获取玩家邮件数据
+func getAllPlayerMailRedis(rc *redis.Client, uid uint32) []*constant.PlayerMail {
+	var playerMail []*constant.PlayerMail
+	key := "player_mail:" + strconv.Itoa(int(uid))
+	db := rc.HGetAll(ctx, key).Val()
+	for _, v := range db {
+		mail := &constant.PlayerMail{}
+		err := hjson.Unmarshal([]byte(v), &mail)
+		if err != nil {
+			logger.Error("get player mail error: %v", err)
+			continue
+		}
+		playerMail = append(playerMail, mail)
+	}
+	return playerMail
 }

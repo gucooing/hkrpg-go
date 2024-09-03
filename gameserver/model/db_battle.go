@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -878,14 +878,15 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 		if buff.AvatarId != 0 { // add avatarBuff
 			avatarInfo := avatarMap[buff.AvatarId]
 			if avatarInfo != nil {
-				buffList = append(buffList, &proto.BattleBuff{
+				info := &proto.BattleBuff{
 					Id:              buff.BuffId,
 					Level:           1,
 					OwnerIndex:      avatarInfo.Index,
 					WaveFlag:        4294967295,
 					TargetIndexList: []uint32{avatarInfo.Index},
 					DynamicValues:   make(map[string]float32),
-				})
+				}
+				buffList = append(buffList, info)
 			}
 			g.DelOnLineAvatarBuff(buff.BuffId)
 			continue
@@ -905,19 +906,23 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 				})
 			}
 		}
+		if avatarInfo.IsCur {
+			id := gdconf.GetAvatarDamage(avatarInfo.BaseAvatarId)
+			if id != 0 {
+				buffList = append(buffList, &proto.BattleBuff{
+					Id:              id,
+					Level:           1,
+					OwnerIndex:      avatarInfo.Index,
+					WaveFlag:        4294967295,
+					TargetIndexList: []uint32{avatarInfo.Index},
+					DynamicValues: map[string]float32{
+						"SkillIndex": float32(avatarInfo.Index),
+					},
+				})
+			}
+		}
 	}
 	g.DelSummonUnitInfo()
-
-	// 默认buff
-	// buffList = append(buffList, &proto.BattleBuff{
-	// 	Id:              1000113,
-	// 	Level:           1,
-	// 	OwnerIndex:      4294967295,
-	// 	TargetIndexList: []uint32{0},
-	// 	DynamicValues: map[string]float32{
-	// 		"SkillIndex": 1,
-	// 	},
-	// })
 
 	// 添加物品buff
 	for index, buff := range mazeBufflist {

@@ -17,7 +17,7 @@ echo "GOENV $GOENV"
 
 OUT_DIR=./build
 
-PE_PATH=./cmd/hkrpg-go-pe/hkrpg-go.go
+PE_PATH=./cmd/hkrpg-go/hkrpg-go.go
 DISPATCH_PATH=./cmd/dispatch/dispatch.go
 GAMESERVER_PATH=./cmd/gameserver/gameserver.go
 GATE_PATH=./cmd/gateserver/gateserver.go

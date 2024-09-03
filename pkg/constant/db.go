@@ -31,6 +31,19 @@ type Mail struct {
 	ItemList  []*Item      `gorm:"-"`
 }
 
+// 玩家邮件
+type PlayerMail struct {
+	Uid       uint32       `gorm:"primarykey;AUTO_INCREMENT"` // uid
+	Id        uint32       `gorm:"primarykey;AUTO_INCREMENT"` // 邮件id
+	Title     string       // 邮件标题
+	Sender    string       // 发件人
+	BeginTime sql.NullTime // 开始时间
+	EndTime   sql.NullTime // 结束时间
+	Content   string       // 内容
+	Item      string       // 邮件附件
+	ItemList  []*Item      `gorm:"-"`
+}
+
 type Item struct { // 邮件奖励模板
 	ItemType uint32 // 类型
 	ItemId   uint32 // id

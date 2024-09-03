@@ -1,8 +1,8 @@
 package model
 
 import (
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -348,6 +348,22 @@ func (g *PlayerData) MissionGetItem(itemId uint32) []uint32 {
 	return finishSubMission
 }
 
+// 忘却之庭关卡挑战任务
+func (g *PlayerData) ChallengeFinishCnt(challengeId uint32) []uint32 {
+	finishSubMission := make([]uint32, 0)
+	subMissionList := g.GetSubMainMissionList()
+	for _, info := range subMissionList {
+		conf := gdconf.GetSubMainMissionById(info.MissionId)
+		if conf == nil {
+			continue
+		}
+		if conf.FinishType == constant.ChallengeFinishCnt {
+			finishSubMission = append(finishSubMission, info.MissionId)
+		}
+	}
+	return finishSubMission
+}
+
 /*****************************服务端检查FinishType**************************/
 
 // 完成列表中的主任务即可
@@ -467,13 +483,17 @@ func (g *PlayerData) AddSubMission(acceptSubList []uint32) {
 	}
 }
 
-func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, allSync *AllPlayerSync, pileItem []*Material) {
+func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, pileItem []*Material) {
 	if finishMainList == nil {
 		return
 	}
 	mainMissionList := g.GetMainMissionList()
 	finishMainMissionList := g.GetFinishMainMissionList()
 	for _, id := range finishMainList {
+		conf := gdconf.GetMainMissionById(id)
+		if conf == nil {
+			continue
+		}
 		finishMainMissionList[id] = &spb.MissionInfo{
 			MissionId: id,
 			Progress:  1,
@@ -484,15 +504,50 @@ func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, allSync *AllP
 			delete(mainMissionList, id)
 		}
 		// 奖励发放
-		conf := gdconf.GetMainMissionById(id)
-		if conf == nil {
-			continue
-		}
 		pileItem, _ = GetRewardData(conf.RewardID)
+		// 完成全部子任务
 	}
 }
 
-func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, allSync *AllPlayerSync, pileItem []*Material) {
+// 将已完成的主任务下还没有完成的子任务全部完成
+func (g *PlayerData) CheckMainMission(finishMainList []uint32) []uint32 {
+	finishSubList := g.GetFinishSubMainMissionList()
+	finishSubMission := make([]uint32, 0)
+	for _, mainId := range finishMainList {
+		conf := gdconf.GetGoppMainMissionById(mainId)
+		if conf == nil {
+			continue
+		}
+		for _, subInfo := range conf.SubMissionList {
+			if finishSubList[subInfo.ID] == nil {
+				finishSubMission = append(finishSubMission, subInfo.ID)
+			}
+		}
+	}
+
+	return finishSubMission
+}
+
+// 全局检查将已完成的主任务下还没有完成的子任务全部完成
+func (g *PlayerData) AllCheckMainMission() []uint32 {
+	finishSubList := g.GetFinishSubMainMissionList()
+	finishSubMission := make([]uint32, 0)
+	for mainId := range g.GetFinishMainMissionList() {
+		conf := gdconf.GetGoppMainMissionById(mainId)
+		if conf == nil {
+			continue
+		}
+		for _, subInfo := range conf.SubMissionList {
+			if finishSubList[subInfo.ID] == nil {
+				finishSubMission = append(finishSubMission, subInfo.ID)
+			}
+		}
+	}
+
+	return finishSubMission
+}
+
+func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, pileItem []*Material) {
 	if finishSubList == nil {
 		return
 	}

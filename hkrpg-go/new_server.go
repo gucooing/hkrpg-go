@@ -1,4 +1,4 @@
-package hkrpg_go_pe
+package hkrpg_go
 
 import (
 	"context"
@@ -10,16 +10,15 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gucooing/gunet"
+	"github.com/gucooing/hkrpg-go/dbconf"
 	"github.com/gucooing/hkrpg-go/dispatch"
 	"github.com/gucooing/hkrpg-go/gameserver"
-	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/gateserver"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
@@ -64,6 +63,7 @@ func newStorePE(cfg *Config) *database.DisaptchStore {
 		&constant.ScheduleConf{}, // 忘记了
 		&constant.PlayerBasic{},  // 好友简要信息
 		&constant.Mail{},         // 邮件配置
+		&constant.PlayerMail{},   // 玩家邮件配置
 	)
 
 	logger.Info("数据库连接成功")
@@ -78,7 +78,8 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// 初始化数据库
 	s.db = newStorePE(cfg)
-	database.GetDbConf(s.db.AccountMysql)
+	dbconf.GameServer(s.db.AccountMysql)
+	database.GSS = &database.GameStore{PeMysql: s.db.AccountMysql}
 	// 初始化dispatch
 	gin.SetMode(gin.ReleaseMode) // 初始化gin
 	dispatchList := make([]dispatch.Dispatch, 0)
@@ -150,6 +151,7 @@ func (s *HkRpgGoServer) AutoUpDataPlayer() {
 			continue
 		}
 		if g.LastActiveTime+50 < timestamp {
+			logger.Info("[UID:%v]玩家长时间无响应离线", g.Uid)
 			s.killPlayer(g)
 			continue
 		}
@@ -241,6 +243,11 @@ func (s *HkRpgGoServer) recvHandle(p *PlayerGame) {
 				logger.Warn("[UID:%v]DecodePayloadToProto error", p.Uid)
 				continue
 			}
+			if msg.CmdId == cmd.PlayerLogoutCsReq {
+				logger.Info("[UID:%v]玩家主动离线", p.Uid)
+				s.killPlayer(p)
+				return
+			}
 			if p.IsLogin {
 				s.RegisterMessage(p, msg.CmdId, playerMsg)
 			} else {
@@ -256,7 +263,7 @@ func (s *HkRpgGoServer) recvHandle(p *PlayerGame) {
 
 // 发送事件处理
 func (p *PlayerGame) SendHandle(cmdId uint16, playerMsg pb.Message) {
-	if p.GamePlayer.IsClosed {
+	if p.KcpConn == nil {
 		return
 	}
 	rspMsg := new(alg.ProtoMsg)
@@ -276,14 +283,6 @@ func (p *PlayerGame) SendHandle(cmdId uint16, playerMsg pb.Message) {
 	if err != nil {
 		logger.Debug("exit send loop, conn write err: %v", err)
 		return
-	}
-	if kcpMsg.CmdId == cmd.GetTutorialGuideScRsp {
-		binMsg2 := alg.EncodePayloadToBin(&alg.PackMsg{
-			CmdId:     model.NewM,
-			HeadData:  make([]byte, 0),
-			ProtoData: gunet.GetGunetTcpConn(),
-		}, p.XorKey)
-		_, err = p.KcpConn.Write(binMsg2)
 	}
 }
 
@@ -311,6 +310,7 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg pb.Message)
 	req := playerMsg.(*proto.PlayerGetTokenCsReq)
 	rsp := new(proto.PlayerGetTokenScRsp)
 	if req.Token == "" || req.AccountUid == "" {
+		logger.Info("异常的登录请求 Token:%v AccountUid:%s", req.Token, req.AccountUid)
 		return
 	}
 	// 人数验证
@@ -338,15 +338,20 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg pb.Message)
 	if playerUid.BanEndTime >= time.Now().Unix() {
 		rsp.Uid = 0
 		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)
-		rsp.Msg = "该账号正处于封禁状态，暂时无法登录，详情可联系客服。"
+		rsp.Msg = playerUid.BanMsg
+		rsp.BlackInfo = &proto.BlackInfo{
+			BeginTime:  playerUid.BanBeginTime,
+			EndTime:    playerUid.BanEndTime,
+			LimitLevel: 0,
+			BanType:    第三方辅助,
+		}
 		p.SendHandle(cmd.PlayerGetTokenScRsp, rsp)
 		logger.Info("登录账号:%v,已被封禁,原因:%s", accountUid, playerUid.BanMsg)
 		return
 	}
 	// 重复登录验证
 	if old := s.GetPlayer(playerUid.Uid); old != nil {
-		old.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{KickType: proto.KickType_KICK_BLACK})
-		s.killPlayer(old)
+		s.takeKillPlayer(old, spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN)
 		logger.Info("[UID:%v]重复登录", playerUid.Uid)
 	}
 	p.Uid = playerUid.Uid
@@ -376,7 +381,6 @@ func (s *HkRpgGoServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g.RecvCtx, g.RecvCal = context.WithCancel(context.Background())
 	g.SendCtx, g.SendCal = context.WithCancel(context.Background())
 	g.IsJumpMission = s.config.GameServer.IsJumpMission
-	database.GSS = &database.GameStore{PeMysql: s.db.AccountMysql}
 	g.Store = database.GSS // TODO
 	g.IsPE = true
 	g.RouteManager = player.NewRouteManager(g)
@@ -387,33 +391,34 @@ func (s *HkRpgGoServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 
 func (s *HkRpgGoServer) RegisterMessage(p *PlayerGame, cmdId uint16, payloadMsg pb.Message) {
 	p.LastActiveTime = time.Now().Unix()
-	switch cmdId {
-	case cmd.PlayerLogoutCsReq:
-		logger.Info("[UID:%v]玩家主动离线", p.Uid)
-		s.killPlayer(p)
+	if p.GamePlayer.RecvChan == nil {
 		return
 	}
-	if p.GamePlayer.RecvChan != nil {
-		p.GamePlayer.RecvChan <- player.Msg{
-			CmdId:     cmdId,
-			MsgType:   player.Client,
-			PlayerMsg: payloadMsg,
-		}
+	timeout := time.After(2 * time.Second)
+	select {
+	case p.GamePlayer.RecvChan <- player.Msg{
+		CmdId:     cmdId,
+		MsgType:   player.Client,
+		PlayerMsg: payloadMsg,
+	}:
 		if p.GamePlayer.IsClosed {
 			close(p.GamePlayer.RecvChan)
 		}
+	case <-timeout:
+		return
 	}
 }
 
 func (p *PlayerGame) recvPlayer() {
 	for {
 		select {
-		case bin := <-p.GamePlayer.SendChan:
+		case bin, ok := <-p.GamePlayer.SendChan:
+			if !ok {
+				return
+			}
 			switch bin.MsgType {
 			case player.Server:
 				p.SendHandle(bin.CmdId, bin.PlayerMsg)
-			case player.GmRsp:
-				// TODO 这边直接发给node就行了
 			}
 		case <-p.GamePlayer.SendCtx.Done():
 			p.GamePlayer.IsClosed = true
@@ -457,6 +462,39 @@ func (s *HkRpgGoServer) killPlayer(p *PlayerGame) {
 	delete(s.playerMap, p.Uid)
 }
 
+func (s *HkRpgGoServer) takeKillPlayer(p *PlayerGame, status spb.PlayerOfflineReason) {
+	var kickType proto.KickType
+	switch status {
+	case spb.PlayerOfflineReason_OFFLINE_GAME_ERROR:
+		kickType = proto.KickType_KICK_BY_GM
+	case spb.PlayerOfflineReason_OFFLINE_REPEAT_LOGIN:
+		kickType = proto.KickType_KICK_BLACK // KickType_KICK_SQUEEZED
+	}
+	s.PlayerKickOutScNotify(p, kickType, 使用外挂)
+	s.killPlayer(p)
+}
+
+const (
+	违反用户协议 = 0
+	使用外挂   = 1
+	第三方辅助  = 2
+	发布违规信息 = 3
+	登录存在异常 = 4
+	账号异常   = 5
+)
+
+func (s *HkRpgGoServer) PlayerKickOutScNotify(p *PlayerGame, kickType proto.KickType, banType uint32) {
+	p.SendHandle(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{
+		BlackInfo: &proto.BlackInfo{
+			BeginTime:  time.Now().Unix(),
+			EndTime:    4294967295,
+			LimitLevel: 0,
+			BanType:    banType,
+		},
+		KickType: kickType,
+	})
+}
+
 func (s *HkRpgGoServer) Close() {
 	s.killAutoUpDataPlayer() // 保存玩家数据
 }
@@ -466,11 +504,7 @@ func (s *HkRpgGoServer) killAutoUpDataPlayer() {
 	var num int
 	playerList := s.getAllPlayer()
 	for _, g := range playerList {
-		if g.Uid == 0 {
-			continue
-		}
-		g.GamePlayer.PlayerKickOutScNotify(proto.KickType_KICK_BY_GM)
-		s.killPlayer(g)
+		s.takeKillPlayer(g, spb.PlayerOfflineReason_OFFLINE_GAME_ERROR)
 		num++
 	}
 	logger.Info("保存玩家数据结束,保存玩家数量:%v", num)

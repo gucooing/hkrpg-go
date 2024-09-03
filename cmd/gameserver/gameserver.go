@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
 

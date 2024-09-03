@@ -1,4 +1,4 @@
-package hkrpg_go_pe
+package hkrpg_go
 
 import (
 	"fmt"
@@ -82,9 +82,28 @@ func (s *HkRpgGoServer) ApiInitRouter(c *gin.Context) {
 			})
 			return
 		}
-		p.GamePlayer.RecvChan <- player.Msg{
+		if p.GamePlayer.RecvChan == nil {
+			c.JSON(404, gin.H{
+				"code": -1,
+				"msg":  "player recvchan close",
+			})
+			return
+		}
+		timeout2 := time.After(2 * time.Second)
+		select {
+		case p.GamePlayer.RecvChan <- player.Msg{
 			CommandList: commandList,
 			MsgType:     player.GmReq,
+		}:
+			if p.GamePlayer.IsClosed {
+				close(p.GamePlayer.RecvChan)
+			}
+		case <-timeout2:
+			c.JSON(404, gin.H{
+				"code": -1,
+				"msg":  "player recvchan timeout",
+			})
+			return
 		}
 		c.JSON(200, gin.H{
 			"code": 0,

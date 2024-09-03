@@ -2,7 +2,7 @@ package player
 
 import (
 	"github.com/gucooing/hkrpg-go/gameserver/model"
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
@@ -305,7 +305,7 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg pb.Message) {
 	rsp := &proto.LeaveRogueScRsp{
 		RogueInfo: g.GetPd().GetRogueInfo(),
 		Lineup:    g.GetPd().GetLineUpPb(curLine),
-		Scene:     g.GetPd().GetSceneInfo(
+		Scene: g.GetPd().GetSceneInfo(
 			g.GetPd().GetScene().EntryId, g.GetPd().GetPosPb(), g.GetPd().GetRotPb(), curLine),
 	}
 
