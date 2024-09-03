@@ -37,27 +37,27 @@
 3. Скопируйте и вставьте следующий код во вкладку Fiddlerscript в Fiddler  Классический:
 
 ```javascript
-импорт System; импорт System.
-импорт System.Windows.Forms;
-импорт Fiddler; импорт System.
-импорт System.Windows.Forms; импорт Fiddler; импорт System.Text.
-импорт System.Text.RegularExpressions; класс Handlers
-статическая функция OnBeforeRequest(oS: Session) {
-статическая функция OnBeforeRequest(oS: Session) {
-if(
-oS.host.EndsWith(".yuanshen.com") ||
-oS.host.EndsWith(".hoyoverse.com") ||
-oS.host.EndsWith(".mihoyo.com") ||
-oS.host.EndsWith(".zenlesszonezero.com") ||
-oS.host.EndsWith(".honkaiimpact3.com") ||
- oS.host.EndsWith(".bhsr.com") ||
-oS.host.EndsWith(".starrails.com") ||
-oS.uriContains("http://overseauspider.yuanshen.com:8888/log")
-) {
-var newUrl = "http://" + oS.host + oS.PathAndQuery;
-oS.fullUrl = newUrl;
-oS.host = "127.0.0.1:8080";
-}
+import System;
+import System.Windows.Forms;
+import Fiddler;
+import System.Text.RegularExpressions;
+class Handlers
+{
+    static function OnBeforeRequest(oS: Session) {
+    if(
+        oS.host.EndsWith(".yuanshen.com") ||
+        oS.host.EndsWith(".hoyoverse.com") ||
+        oS.host.EndsWith(".mihoyo.com") ||
+        oS.host.EndsWith(".zenlesszonezero.com") ||
+        oS.host.EndsWith(".honkaiimpact3.com") ||
+        oS.host.EndsWith(".bhsr.com") ||
+        oS.host.EndsWith(".starrails.com") ||
+        oS.uriContains("http://overseauspider.yuanshen.com:8888/log")
+    ) {
+        var newUrl = "http://" + oS.host + oS.PathAndQuery;
+        oS.fullUrl = newUrl;
+        oS.host = "127.0.0.1:8080";
+    }
 }
 };
 ```
