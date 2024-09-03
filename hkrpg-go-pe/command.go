@@ -1,4 +1,4 @@
-package hkrpg_go
+package hkrpg_go_pe
 
 import (
 	"fmt"
