@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "../../nodeserver/api;proto";
+
+// 节点服务器注册发现服务
+service NodeDiscovery {
+  // 测试
+  rpc Test (TestReq) returns (TestRsp) {}
+  // 获取全部gate mq
+  rpc GetAllGateServerMq (GetAllGateServerMqReq) returns (GetAllGateServerMqRsp) {}
+}
+
+message TestReq {
+  string msg = 1;
+}
+
+message TestRsp {
+ string req_msg = 2;
+}
+
+message GetAllGateServerMqReq {
+  string game_version = 1;
+}
+
+message GetAllGateServerMqRsp {
+   repeated  GateServerMq server_list= 1;
+}
+
+message GateServerMq {
+  uint32 app_id = 1;
+  string mq_addr = 2;
+}

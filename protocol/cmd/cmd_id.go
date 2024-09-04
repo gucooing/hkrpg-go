@@ -1561,20 +1561,21 @@ const (
 )
 
 const (
-	ServiceConnectionReq = 10000
-	ServiceConnectionRsp = 10100
-	GateLoginGameRsp     = 10001
-	GateLoginGameReq     = 10101
-	GateToGameMsgNotify  = 10002
-	GameToGateMsgNotify  = 10102
-	GetAllServiceGateReq = 10003
-	GetAllServiceGateRsp = 10103
-	MultiToNodePingReq   = 10004
-	MultiToNodePingRsp   = 10104
-	MuipToNodePingReq    = 10005
-	MuipToNodePingRsp    = 10105
-	// GetAllServiceGameReq     = 10006
-	// GetAllServiceGameRsp     = 10106
+	GateTcpMqHandshakeReq = 10006
+	GateTcpMqHandshakeRsp = 10106
+
+	ServiceConnectionReq     = 10000
+	ServiceConnectionRsp     = 10100
+	GateLoginGameRsp         = 10001
+	GateLoginGameReq         = 10101
+	GateToGameMsgNotify      = 10002
+	GameToGateMsgNotify      = 10102
+	GetAllServiceGateReq     = 10003
+	GetAllServiceGateRsp     = 10103
+	MultiToNodePingReq       = 10004
+	MultiToNodePingRsp       = 10104
+	MuipToNodePingReq        = 10005
+	MuipToNodePingRsp        = 10105
 	GameToNodePingReq        = 10007
 	GameToNodePingRsp        = 10107
 	GateGamePingReq          = 10008
@@ -3147,6 +3148,9 @@ func (c *CmdProtoMap) registerAllMessage() {
 	c.regMsg(WolfBroGameActivateBulletCsReq, func() any { return new(proto.WolfBroGameActivateBulletCsReq) })
 	c.regMsg(RestoreWolfBroGameArchiveScRsp, func() any { return new(proto.RestoreWolfBroGameArchiveScRsp) })
 	// seever
+	c.regMsg(GateTcpMqHandshakeReq, func() any { return new(spb.GateTcpMqHandshakeReq) })
+	c.regMsg(GateTcpMqHandshakeRsp, func() any { return new(spb.GateTcpMqHandshakeRsp) })
+
 	c.regMsg(GmGive, func() any { return new(spb.GmGive) })
 	c.regMsg(GmWorldLevel, func() any { return new(spb.GmWorldLevel) })
 	c.regMsg(DelItem, func() any { return new(spb.DelItem) })

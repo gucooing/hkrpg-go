@@ -183,3 +183,14 @@ message PlayerMsgNodeToGameNotify{// node将处理后的玩家操作转发给gam
 message ChatMsg {
   repeated uint32 msg_to_uid_list = 2;// 消息发送目标列表
 }
+
+message GateTcpMqHandshakeReq {
+  ServerType type = 1; // 服务类型
+  uint32 app_id = 2; // app_id
+}
+
+message GateTcpMqHandshakeRsp {
+  Retcode ret_code = 1; // 状态
+  ServerType type = 2; // 服务类型
+  uint32 app_id = 3; // app_id
+}

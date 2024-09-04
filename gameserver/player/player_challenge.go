@@ -256,7 +256,7 @@ func (g *GamePlayer) ChallengeSettleNotify() {
 		ChallengeScore: cur.ScoreOne,    // 一层挑战得分
 	}
 	if cur.IsWin {
-		finishSubMission := g.GetPd().ChallengeFinishCnt(cur.ChallengeId)
+		finishSubMission := g.GetPd().ChallengeFinishCnt()
 		if len(finishSubMission) != 0 {
 			g.InspectMission(finishSubMission)
 		}

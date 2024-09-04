@@ -90,3 +90,16 @@ func NewGameStore(mysqlList map[string]constant.MysqlConf, redisList map[string]
 	logger.Info("数据库连接成功")
 	return s
 }
+
+/******************************node*******************************/
+
+var NODE *nodeStore
+
+type nodeStore struct {
+}
+
+func NewNodeStore(mysqlList map[string]constant.MysqlConf, redisList map[string]constant.RedisConf) {
+	NODE = &nodeStore{}
+
+	logger.Info("数据库连接成功")
+}

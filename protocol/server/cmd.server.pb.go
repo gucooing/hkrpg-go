@@ -1858,6 +1858,124 @@ func (x *ChatMsg) GetMsgToUidList() []uint32 {
 	return nil
 }
 
+type GateTcpMqHandshakeReq struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Type  ServerType `protobuf:"varint,1,opt,name=type,proto3,enum=proto.ServerType" json:"type,omitempty"` // 服务类型
+	AppId uint32     `protobuf:"varint,2,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`        // app_id
+}
+
+func (x *GateTcpMqHandshakeReq) Reset() {
+	*x = GateTcpMqHandshakeReq{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[31]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GateTcpMqHandshakeReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GateTcpMqHandshakeReq) ProtoMessage() {}
+
+func (x *GateTcpMqHandshakeReq) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[31]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GateTcpMqHandshakeReq.ProtoReflect.Descriptor instead.
+func (*GateTcpMqHandshakeReq) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *GateTcpMqHandshakeReq) GetType() ServerType {
+	if x != nil {
+		return x.Type
+	}
+	return ServerType_SERVICE_NONE
+}
+
+func (x *GateTcpMqHandshakeReq) GetAppId() uint32 {
+	if x != nil {
+		return x.AppId
+	}
+	return 0
+}
+
+type GateTcpMqHandshakeRsp struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	RetCode Retcode    `protobuf:"varint,1,opt,name=ret_code,json=retCode,proto3,enum=proto.Retcode" json:"ret_code,omitempty"` // 状态
+	Type    ServerType `protobuf:"varint,2,opt,name=type,proto3,enum=proto.ServerType" json:"type,omitempty"`                   // 服务类型
+	AppId   uint32     `protobuf:"varint,3,opt,name=app_id,json=appId,proto3" json:"app_id,omitempty"`                          // app_id
+}
+
+func (x *GateTcpMqHandshakeRsp) Reset() {
+	*x = GateTcpMqHandshakeRsp{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_cmd_server_proto_msgTypes[32]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GateTcpMqHandshakeRsp) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GateTcpMqHandshakeRsp) ProtoMessage() {}
+
+func (x *GateTcpMqHandshakeRsp) ProtoReflect() protoreflect.Message {
+	mi := &file_cmd_server_proto_msgTypes[32]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GateTcpMqHandshakeRsp.ProtoReflect.Descriptor instead.
+func (*GateTcpMqHandshakeRsp) Descriptor() ([]byte, []int) {
+	return file_cmd_server_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *GateTcpMqHandshakeRsp) GetRetCode() Retcode {
+	if x != nil {
+		return x.RetCode
+	}
+	return Retcode_RET_SUCC
+}
+
+func (x *GateTcpMqHandshakeRsp) GetType() ServerType {
+	if x != nil {
+		return x.Type
+	}
+	return ServerType_SERVICE_NONE
+}
+
+func (x *GateTcpMqHandshakeRsp) GetAppId() uint32 {
+	if x != nil {
+		return x.AppId
+	}
+	return 0
+}
+
 var File_cmd_server_proto protoreflect.FileDescriptor
 
 var file_cmd_server_proto_rawDesc = []byte{
@@ -2090,9 +2208,22 @@ var file_cmd_server_proto_rawDesc = []byte{
 	0x4d, 0x73, 0x67, 0x52, 0x07, 0x63, 0x68, 0x61, 0x74, 0x4d, 0x73, 0x67, 0x22, 0x30, 0x0a, 0x07,
 	0x43, 0x68, 0x61, 0x74, 0x4d, 0x73, 0x67, 0x12, 0x25, 0x0a, 0x0f, 0x6d, 0x73, 0x67, 0x5f, 0x74,
 	0x6f, 0x5f, 0x75, 0x69, 0x64, 0x5f, 0x6c, 0x69, 0x73, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0d,
-	0x52, 0x0c, 0x6d, 0x73, 0x67, 0x54, 0x6f, 0x55, 0x69, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x0a,
-	0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x52, 0x0c, 0x6d, 0x73, 0x67, 0x54, 0x6f, 0x55, 0x69, 0x64, 0x4c, 0x69, 0x73, 0x74, 0x22, 0x55,
+	0x0a, 0x15, 0x47, 0x61, 0x74, 0x65, 0x54, 0x63, 0x70, 0x4d, 0x71, 0x48, 0x61, 0x6e, 0x64, 0x73,
+	0x68, 0x61, 0x6b, 0x65, 0x52, 0x65, 0x71, 0x12, 0x25, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x65,
+	0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x12, 0x15,
+	0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x05,
+	0x61, 0x70, 0x70, 0x49, 0x64, 0x22, 0x80, 0x01, 0x0a, 0x15, 0x47, 0x61, 0x74, 0x65, 0x54, 0x63,
+	0x70, 0x4d, 0x71, 0x48, 0x61, 0x6e, 0x64, 0x73, 0x68, 0x61, 0x6b, 0x65, 0x52, 0x73, 0x70, 0x12,
+	0x29, 0x0a, 0x08, 0x72, 0x65, 0x74, 0x5f, 0x63, 0x6f, 0x64, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0e, 0x32, 0x0e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x52, 0x65, 0x74, 0x63, 0x6f, 0x64,
+	0x65, 0x52, 0x07, 0x72, 0x65, 0x74, 0x43, 0x6f, 0x64, 0x65, 0x12, 0x25, 0x0a, 0x04, 0x74, 0x79,
+	0x70, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x11, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2e, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x54, 0x79, 0x70, 0x65, 0x52, 0x04, 0x74, 0x79, 0x70,
+	0x65, 0x12, 0x15, 0x0a, 0x06, 0x61, 0x70, 0x70, 0x5f, 0x69, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0d, 0x52, 0x05, 0x61, 0x70, 0x70, 0x49, 0x64, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2107,7 +2238,7 @@ func file_cmd_server_proto_rawDescGZIP() []byte {
 	return file_cmd_server_proto_rawDescData
 }
 
-var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 32)
+var file_cmd_server_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
 var file_cmd_server_proto_goTypes = []interface{}{
 	(*ServiceConnectionReq)(nil),         // 0: proto.ServiceConnectionReq
 	(*ServiceConnectionRsp)(nil),         // 1: proto.ServiceConnectionRsp
@@ -2140,39 +2271,44 @@ var file_cmd_server_proto_goTypes = []interface{}{
 	(*PlayerMsgGateToNodeNotify)(nil),    // 28: proto.PlayerMsgGateToNodeNotify
 	(*PlayerMsgNodeToGameNotify)(nil),    // 29: proto.PlayerMsgNodeToGameNotify
 	(*ChatMsg)(nil),                      // 30: proto.ChatMsg
-	nil,                                  // 31: proto.MuipToNodePingRsp.ServiceListEntry
-	(ServerType)(0),                      // 32: proto.ServerType
-	(Retcode)(0),                         // 33: proto.Retcode
-	(PlayerMsgType)(0),                   // 34: proto.PlayerMsgType
+	(*GateTcpMqHandshakeReq)(nil),        // 31: proto.GateTcpMqHandshakeReq
+	(*GateTcpMqHandshakeRsp)(nil),        // 32: proto.GateTcpMqHandshakeRsp
+	nil,                                  // 33: proto.MuipToNodePingRsp.ServiceListEntry
+	(ServerType)(0),                      // 34: proto.ServerType
+	(Retcode)(0),                         // 35: proto.Retcode
+	(PlayerMsgType)(0),                   // 36: proto.PlayerMsgType
 }
 var file_cmd_server_proto_depIdxs = []int32{
-	32, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
-	32, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
-	32, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
+	34, // 0: proto.ServiceConnectionReq.server_type:type_name -> proto.ServerType
+	34, // 1: proto.ServiceConnectionRsp.server_type:type_name -> proto.ServerType
+	34, // 2: proto.GetAllServiceGateReq.service_type:type_name -> proto.ServerType
 	4,  // 3: proto.GetAllServiceGateRsp.gate_service_list:type_name -> proto.ServiceAll
-	32, // 4: proto.ServiceAll.service_type:type_name -> proto.ServerType
-	32, // 5: proto.GateToNodePingReq.service_type:type_name -> proto.ServerType
+	34, // 4: proto.ServiceAll.service_type:type_name -> proto.ServerType
+	34, // 5: proto.GateToNodePingReq.service_type:type_name -> proto.ServerType
 	4,  // 6: proto.GateToNodePingRsp.multi_service:type_name -> proto.ServiceAll
 	4,  // 7: proto.GateToNodePingRsp.game_service_list:type_name -> proto.ServiceAll
-	32, // 8: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
-	33, // 9: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
-	33, // 10: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
-	33, // 11: proto.GetToGamePlayerLogoutReq.retcode:type_name -> proto.Retcode
-	33, // 12: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
+	34, // 8: proto.GateLoginGameReq.server_type:type_name -> proto.ServerType
+	35, // 9: proto.GateLoginGameRsp.retcode:type_name -> proto.Retcode
+	35, // 10: proto.GateGamePlayerLoginRsp.retcode:type_name -> proto.Retcode
+	35, // 11: proto.GetToGamePlayerLogoutReq.retcode:type_name -> proto.Retcode
+	35, // 12: proto.GetToGamePlayerLogoutRsp.retcode:type_name -> proto.Retcode
 	4,  // 13: proto.MultiToNodePingRsp.game_service_list:type_name -> proto.ServiceAll
-	32, // 14: proto.GateLoginMultiReq.server_type:type_name -> proto.ServerType
-	33, // 15: proto.GateLoginMultiRsp.retcode:type_name -> proto.Retcode
-	31, // 16: proto.MuipToNodePingRsp.service_list:type_name -> proto.MuipToNodePingRsp.ServiceListEntry
+	34, // 14: proto.GateLoginMultiReq.server_type:type_name -> proto.ServerType
+	35, // 15: proto.GateLoginMultiRsp.retcode:type_name -> proto.Retcode
+	33, // 16: proto.MuipToNodePingRsp.service_list:type_name -> proto.MuipToNodePingRsp.ServiceListEntry
 	4,  // 17: proto.MuipServiceAll.service_list:type_name -> proto.ServiceAll
-	34, // 18: proto.PlayerMsgGateToNodeNotify.msg_type:type_name -> proto.PlayerMsgType
-	34, // 19: proto.PlayerMsgNodeToGameNotify.msg_type:type_name -> proto.PlayerMsgType
+	36, // 18: proto.PlayerMsgGateToNodeNotify.msg_type:type_name -> proto.PlayerMsgType
+	36, // 19: proto.PlayerMsgNodeToGameNotify.msg_type:type_name -> proto.PlayerMsgType
 	30, // 20: proto.PlayerMsgNodeToGameNotify.chat_msg:type_name -> proto.ChatMsg
-	27, // 21: proto.MuipToNodePingRsp.ServiceListEntry.value:type_name -> proto.MuipServiceAll
-	22, // [22:22] is the sub-list for method output_type
-	22, // [22:22] is the sub-list for method input_type
-	22, // [22:22] is the sub-list for extension type_name
-	22, // [22:22] is the sub-list for extension extendee
-	0,  // [0:22] is the sub-list for field type_name
+	34, // 21: proto.GateTcpMqHandshakeReq.type:type_name -> proto.ServerType
+	35, // 22: proto.GateTcpMqHandshakeRsp.ret_code:type_name -> proto.Retcode
+	34, // 23: proto.GateTcpMqHandshakeRsp.type:type_name -> proto.ServerType
+	27, // 24: proto.MuipToNodePingRsp.ServiceListEntry.value:type_name -> proto.MuipServiceAll
+	25, // [25:25] is the sub-list for method output_type
+	25, // [25:25] is the sub-list for method input_type
+	25, // [25:25] is the sub-list for extension type_name
+	25, // [25:25] is the sub-list for extension extendee
+	0,  // [0:25] is the sub-list for field type_name
 }
 
 func init() { file_cmd_server_proto_init() }
@@ -2554,6 +2690,30 @@ func file_cmd_server_proto_init() {
 				return nil
 			}
 		}
+		file_cmd_server_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GateTcpMqHandshakeReq); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_cmd_server_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GateTcpMqHandshakeRsp); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -2561,7 +2721,7 @@ func file_cmd_server_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cmd_server_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   32,
+			NumMessages:   34,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

@@ -4,29 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 )
 
 type Config struct {
-	LogLevel  string               `json:"LogLevel"`
-	AppList   map[string]AppList   `json:"AppList"`
-	MysqlConf map[string]MysqlConf `json:"MysqlConf"`
-	RedisConf map[string]RedisConf `json:"RedisConf"`
-}
-type AppList struct {
-	App map[string]App `json:"app"`
-}
-type App struct {
-	Port      string `json:"port"`
-	InnerAddr string `json:"inner_addr"`
-	OuterAddr string `json:"outer_addr"`
-}
-type MysqlConf struct {
-	Dsn string `json:"dsn"`
-}
-type RedisConf struct {
-	Addr     string `json:"addr"`
-	Password string `json:"password"`
-	DB       int    `json:"db"`
+	LogLevel  string                        `json:"LogLevel"`
+	AppList   map[string]constant.AppList   `json:"AppList"`
+	MysqlConf map[string]constant.MysqlConf `json:"MysqlConf"`
+	RedisConf map[string]constant.RedisConf `json:"RedisConf"`
 }
 
 var CONF *Config = nil
@@ -60,52 +46,17 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel: "Info",
-	AppList: map[string]AppList{
-		"9001.1.1.1": {
-			App: map[string]App{
-				"port_player": {
-					Port: "20041",
-				},
-			},
-		},
-		"9001.2.1.1": {
-			App: map[string]App{
-				"port_gt": {
-					Port: "20071",
-				},
-			},
-		},
+	AppList: map[string]constant.AppList{
 		"9001.3.1.1": {
-			App: map[string]App{
+			App: map[string]constant.App{
 				"port_service": {
 					Port:      "20081",
 					OuterAddr: "127.0.0.1",
 				},
 			},
 		},
-		"9001.4.1.1": {
-			App: map[string]App{
-				"port_http": {
-					Port: "8080",
-				},
-			},
-		},
-		"9001.5.1.1": {
-			App: map[string]App{
-				"port_service": {
-					Port: "20091",
-				},
-			},
-		},
-		"9001.6.1.1": {
-			App: map[string]App{
-				"port_http": {
-					Port: "20011",
-				},
-			},
-		},
 	},
-	MysqlConf: map[string]MysqlConf{
+	MysqlConf: map[string]constant.MysqlConf{
 		"account": {
 			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-account?charset=utf8mb4&parseTime=True&loc=Local",
 		},
@@ -119,7 +70,7 @@ var DefaultConfig = &Config{
 			Dsn: "root:password@tcp(127.0.0.1:3306)/hkrpg-go-conf?charset=utf8mb4&parseTime=True&loc=Local",
 		},
 	},
-	RedisConf: map[string]RedisConf{
+	RedisConf: map[string]constant.RedisConf{
 		"player_login": {
 			Addr:     "127.0.0.1:6379",
 			Password: "password",

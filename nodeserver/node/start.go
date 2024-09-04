@@ -13,10 +13,6 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server"
 )
 
-const (
-	PacketMaxLen = 343 * 1024 // 最大应用层包长度
-)
-
 var NODE *Node = nil
 
 type Node struct {
