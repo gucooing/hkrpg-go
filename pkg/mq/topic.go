@@ -1,7 +1,7 @@
 package mq
 
 import (
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 func (m *MessageQueue) SendToGate(appid uint32, msg *NetMsg) {

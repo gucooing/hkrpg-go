@@ -20,7 +20,13 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	NodeDiscovery_Test_FullMethodName               = "/proto.NodeDiscovery/Test"
+	NodeDiscovery_RegisterServer_FullMethodName     = "/proto.NodeDiscovery/RegisterServer"
+	NodeDiscovery_CloseServer_FullMethodName        = "/proto.NodeDiscovery/CloseServer"
+	NodeDiscovery_NodeStreamMessages_FullMethodName = "/proto.NodeDiscovery/NodeStreamMessages"
 	NodeDiscovery_GetAllGateServerMq_FullMethodName = "/proto.NodeDiscovery/GetAllGateServerMq"
+	NodeDiscovery_GetAllRegionInfo_FullMethodName   = "/proto.NodeDiscovery/GetAllRegionInfo"
+	NodeDiscovery_GetRegionAllGate_FullMethodName   = "/proto.NodeDiscovery/GetRegionAllGate"
+	NodeDiscovery_GetRegionAllGame_FullMethodName   = "/proto.NodeDiscovery/GetRegionAllGame"
 )
 
 // NodeDiscoveryClient is the client API for NodeDiscovery service.
@@ -31,8 +37,20 @@ const (
 type NodeDiscoveryClient interface {
 	// 测试
 	Test(ctx context.Context, in *TestReq, opts ...grpc.CallOption) (*TestRsp, error)
+	// 向node注册服务
+	RegisterServer(ctx context.Context, in *RegisterServerReq, opts ...grpc.CallOption) (*RegisterServerRsp, error)
+	// 离线取消注册
+	CloseServer(ctx context.Context, in *CloseServerReq, opts ...grpc.CallOption) (*CloseServerRsp, error)
+	// 持续接收来自node的消息
+	NodeStreamMessages(ctx context.Context, in *NodeStreamMessagesReq, opts ...grpc.CallOption) (grpc.ServerStreamingClient[NodeStreamMessagesRsp], error)
 	// 获取全部gate mq
 	GetAllGateServerMq(ctx context.Context, in *GetAllGateServerMqReq, opts ...grpc.CallOption) (*GetAllGateServerMqRsp, error)
+	// 获取全部区服信息
+	GetAllRegionInfo(ctx context.Context, in *GetAllRegionInfoReq, opts ...grpc.CallOption) (*GetAllRegionInfoRsp, error)
+	// 获取该区服下的所有已注册的网关信息
+	GetRegionAllGate(ctx context.Context, in *GetRegionAllGateReq, opts ...grpc.CallOption) (*GetRegionAllGateRsp, error)
+	// 获取该区服下的所有已注册的GS信息
+	GetRegionAllGame(ctx context.Context, in *GetRegionAllGameReq, opts ...grpc.CallOption) (*GetRegionAllGameRsp, error)
 }
 
 type nodeDiscoveryClient struct {
@@ -53,10 +71,79 @@ func (c *nodeDiscoveryClient) Test(ctx context.Context, in *TestReq, opts ...grp
 	return out, nil
 }
 
+func (c *nodeDiscoveryClient) RegisterServer(ctx context.Context, in *RegisterServerReq, opts ...grpc.CallOption) (*RegisterServerRsp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RegisterServerRsp)
+	err := c.cc.Invoke(ctx, NodeDiscovery_RegisterServer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeDiscoveryClient) CloseServer(ctx context.Context, in *CloseServerReq, opts ...grpc.CallOption) (*CloseServerRsp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CloseServerRsp)
+	err := c.cc.Invoke(ctx, NodeDiscovery_CloseServer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeDiscoveryClient) NodeStreamMessages(ctx context.Context, in *NodeStreamMessagesReq, opts ...grpc.CallOption) (grpc.ServerStreamingClient[NodeStreamMessagesRsp], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &NodeDiscovery_ServiceDesc.Streams[0], NodeDiscovery_NodeStreamMessages_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[NodeStreamMessagesReq, NodeStreamMessagesRsp]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type NodeDiscovery_NodeStreamMessagesClient = grpc.ServerStreamingClient[NodeStreamMessagesRsp]
+
 func (c *nodeDiscoveryClient) GetAllGateServerMq(ctx context.Context, in *GetAllGateServerMqReq, opts ...grpc.CallOption) (*GetAllGateServerMqRsp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetAllGateServerMqRsp)
 	err := c.cc.Invoke(ctx, NodeDiscovery_GetAllGateServerMq_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeDiscoveryClient) GetAllRegionInfo(ctx context.Context, in *GetAllRegionInfoReq, opts ...grpc.CallOption) (*GetAllRegionInfoRsp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAllRegionInfoRsp)
+	err := c.cc.Invoke(ctx, NodeDiscovery_GetAllRegionInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeDiscoveryClient) GetRegionAllGate(ctx context.Context, in *GetRegionAllGateReq, opts ...grpc.CallOption) (*GetRegionAllGateRsp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRegionAllGateRsp)
+	err := c.cc.Invoke(ctx, NodeDiscovery_GetRegionAllGate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeDiscoveryClient) GetRegionAllGame(ctx context.Context, in *GetRegionAllGameReq, opts ...grpc.CallOption) (*GetRegionAllGameRsp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetRegionAllGameRsp)
+	err := c.cc.Invoke(ctx, NodeDiscovery_GetRegionAllGame_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -71,8 +158,20 @@ func (c *nodeDiscoveryClient) GetAllGateServerMq(ctx context.Context, in *GetAll
 type NodeDiscoveryServer interface {
 	// 测试
 	Test(context.Context, *TestReq) (*TestRsp, error)
+	// 向node注册服务
+	RegisterServer(context.Context, *RegisterServerReq) (*RegisterServerRsp, error)
+	// 离线取消注册
+	CloseServer(context.Context, *CloseServerReq) (*CloseServerRsp, error)
+	// 持续接收来自node的消息
+	NodeStreamMessages(*NodeStreamMessagesReq, grpc.ServerStreamingServer[NodeStreamMessagesRsp]) error
 	// 获取全部gate mq
 	GetAllGateServerMq(context.Context, *GetAllGateServerMqReq) (*GetAllGateServerMqRsp, error)
+	// 获取全部区服信息
+	GetAllRegionInfo(context.Context, *GetAllRegionInfoReq) (*GetAllRegionInfoRsp, error)
+	// 获取该区服下的所有已注册的网关信息
+	GetRegionAllGate(context.Context, *GetRegionAllGateReq) (*GetRegionAllGateRsp, error)
+	// 获取该区服下的所有已注册的GS信息
+	GetRegionAllGame(context.Context, *GetRegionAllGameReq) (*GetRegionAllGameRsp, error)
 	mustEmbedUnimplementedNodeDiscoveryServer()
 }
 
@@ -86,8 +185,26 @@ type UnimplementedNodeDiscoveryServer struct{}
 func (UnimplementedNodeDiscoveryServer) Test(context.Context, *TestReq) (*TestRsp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Test not implemented")
 }
+func (UnimplementedNodeDiscoveryServer) RegisterServer(context.Context, *RegisterServerReq) (*RegisterServerRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RegisterServer not implemented")
+}
+func (UnimplementedNodeDiscoveryServer) CloseServer(context.Context, *CloseServerReq) (*CloseServerRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CloseServer not implemented")
+}
+func (UnimplementedNodeDiscoveryServer) NodeStreamMessages(*NodeStreamMessagesReq, grpc.ServerStreamingServer[NodeStreamMessagesRsp]) error {
+	return status.Errorf(codes.Unimplemented, "method NodeStreamMessages not implemented")
+}
 func (UnimplementedNodeDiscoveryServer) GetAllGateServerMq(context.Context, *GetAllGateServerMqReq) (*GetAllGateServerMqRsp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllGateServerMq not implemented")
+}
+func (UnimplementedNodeDiscoveryServer) GetAllRegionInfo(context.Context, *GetAllRegionInfoReq) (*GetAllRegionInfoRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllRegionInfo not implemented")
+}
+func (UnimplementedNodeDiscoveryServer) GetRegionAllGate(context.Context, *GetRegionAllGateReq) (*GetRegionAllGateRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRegionAllGate not implemented")
+}
+func (UnimplementedNodeDiscoveryServer) GetRegionAllGame(context.Context, *GetRegionAllGameReq) (*GetRegionAllGameRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRegionAllGame not implemented")
 }
 func (UnimplementedNodeDiscoveryServer) mustEmbedUnimplementedNodeDiscoveryServer() {}
 func (UnimplementedNodeDiscoveryServer) testEmbeddedByValue()                       {}
@@ -128,6 +245,53 @@ func _NodeDiscovery_Test_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeDiscovery_RegisterServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterServerReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeDiscoveryServer).RegisterServer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeDiscovery_RegisterServer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeDiscoveryServer).RegisterServer(ctx, req.(*RegisterServerReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeDiscovery_CloseServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloseServerReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeDiscoveryServer).CloseServer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeDiscovery_CloseServer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeDiscoveryServer).CloseServer(ctx, req.(*CloseServerReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeDiscovery_NodeStreamMessages_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(NodeStreamMessagesReq)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(NodeDiscoveryServer).NodeStreamMessages(m, &grpc.GenericServerStream[NodeStreamMessagesReq, NodeStreamMessagesRsp]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type NodeDiscovery_NodeStreamMessagesServer = grpc.ServerStreamingServer[NodeStreamMessagesRsp]
+
 func _NodeDiscovery_GetAllGateServerMq_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAllGateServerMqReq)
 	if err := dec(in); err != nil {
@@ -146,6 +310,60 @@ func _NodeDiscovery_GetAllGateServerMq_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeDiscovery_GetAllRegionInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllRegionInfoReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeDiscoveryServer).GetAllRegionInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeDiscovery_GetAllRegionInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeDiscoveryServer).GetAllRegionInfo(ctx, req.(*GetAllRegionInfoReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeDiscovery_GetRegionAllGate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRegionAllGateReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeDiscoveryServer).GetRegionAllGate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeDiscovery_GetRegionAllGate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeDiscoveryServer).GetRegionAllGate(ctx, req.(*GetRegionAllGateReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _NodeDiscovery_GetRegionAllGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRegionAllGameReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeDiscoveryServer).GetRegionAllGame(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeDiscovery_GetRegionAllGame_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeDiscoveryServer).GetRegionAllGame(ctx, req.(*GetRegionAllGameReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NodeDiscovery_ServiceDesc is the grpc.ServiceDesc for NodeDiscovery service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -158,10 +376,36 @@ var NodeDiscovery_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _NodeDiscovery_Test_Handler,
 		},
 		{
+			MethodName: "RegisterServer",
+			Handler:    _NodeDiscovery_RegisterServer_Handler,
+		},
+		{
+			MethodName: "CloseServer",
+			Handler:    _NodeDiscovery_CloseServer_Handler,
+		},
+		{
 			MethodName: "GetAllGateServerMq",
 			Handler:    _NodeDiscovery_GetAllGateServerMq_Handler,
 		},
+		{
+			MethodName: "GetAllRegionInfo",
+			Handler:    _NodeDiscovery_GetAllRegionInfo_Handler,
+		},
+		{
+			MethodName: "GetRegionAllGate",
+			Handler:    _NodeDiscovery_GetRegionAllGate_Handler,
+		},
+		{
+			MethodName: "GetRegionAllGame",
+			Handler:    _NodeDiscovery_GetRegionAllGame_Handler,
+		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "NodeStreamMessages",
+			Handler:       _NodeDiscovery_NodeStreamMessages_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "node.proto",
 }

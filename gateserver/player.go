@@ -10,7 +10,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -20,7 +20,7 @@ func getCurTime() uint64 {
 
 // 玩家ping包处理
 func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
-	msg := alg.DecodePayloadToProto(tcpMsg)
+	msg := cmd.DecodePayloadToProto(tcpMsg)
 	req := msg.(*proto.PlayerHeartBeatCsReq)
 	sTime := getCurTime()
 
@@ -33,7 +33,7 @@ func (p *PlayerGame) HandlePlayerHeartBeatCsReq(tcpMsg *alg.PackMsg) {
 }
 
 func (p *PlayerGame) ApplyFriendCsReq(tcpMsg *alg.PackMsg) {
-	msg := alg.DecodePayloadToProto(tcpMsg)
+	msg := cmd.DecodePayloadToProto(tcpMsg)
 	req := msg.(*proto.ApplyFriendCsReq)
 	// 发送到node
 	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
@@ -46,7 +46,7 @@ func (p *PlayerGame) ApplyFriendCsReq(tcpMsg *alg.PackMsg) {
 }
 
 func (p *PlayerGame) HandleFriendCsReq(tcpMsg *alg.PackMsg) {
-	msg := alg.DecodePayloadToProto(tcpMsg)
+	msg := cmd.DecodePayloadToProto(tcpMsg)
 	req := msg.(*proto.HandleFriendCsReq)
 	// 发送到node
 	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
@@ -65,7 +65,7 @@ func (p *PlayerGame) HandleFriendCsReq(tcpMsg *alg.PackMsg) {
 }
 
 func (p *PlayerGame) SendMsgCsReq(tcpMsg *alg.PackMsg) {
-	msg := alg.DecodePayloadToProto(tcpMsg)
+	msg := cmd.DecodePayloadToProto(tcpMsg)
 	req := msg.(*proto.SendMsgCsReq)
 	for _, touid := range req.TargetList {
 		notify := &proto.RevcMsgScNotify{

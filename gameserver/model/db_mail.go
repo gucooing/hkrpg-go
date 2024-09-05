@@ -3,7 +3,7 @@ package model
 import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 func NewMail() *spb.Mail {

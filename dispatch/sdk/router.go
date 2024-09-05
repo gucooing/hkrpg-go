@@ -1,27 +1,26 @@
-package dispatch
+package sdk
 
 import (
 	"github.com/gin-gonic/gin"
 )
 
-func (s *Server) InitRouter() {
-	s.Router.Use(clientIPMiddleware())
-	s.Router.Any("/", s.HandleDefault)
-	s.Router.Any("/index.html", s.HandleDefault)
-	s.Router.Any("/sdk/dataUpload", s.SdkDataUploadHandler)
-	s.Router.POST("/apm/dataUpload", s.apmdataUpload)
-	s.Router.POST("/common/h5log/log/batch", s.commonh5log)
+func (s *Server) GetSdkRouter(router *gin.Engine) {
+	router.Any("/", s.HandleDefault)
+	router.Any("/index.html", s.HandleDefault)
+	router.Any("/sdk/dataUpload", s.SdkDataUploadHandler)
+	router.POST("/apm/dataUpload", s.apmdataUpload)
+	router.POST("/common/h5log/log/batch", s.commonh5log)
 
 	// 调度
-	s.Router.GET("/query_dispatch", s.QueryDispatchHandler)
-	s.Router.GET("/query_dispatch/gucooing/az", s.QueryDispatchHandler)
-	s.Router.GET("/query_gateway", s.QueryGatewayHandler)
-	s.Router.GET("/query_gateway_capture", s.QueryGatewayHandlerCapture)
-	s.Router.GET("/query_gateway_capture_cn", s.QueryGatewayHandlerCaptureCn)
+	router.GET("/query_dispatch", s.QueryDispatchHandler)
+	router.GET("/query_dispatch/gucooing/az", s.QueryDispatchHandler)
+	router.GET("/query_gateway/:regionName", s.QueryGatewayHandler)
+	// router.GET("/query_gateway_capture", s.QueryGatewayHandlerCapture)
+	// router.GET("/query_gateway_capture_cn", s.QueryGatewayHandlerCaptureCn)
 
 	// 登录
-	s.Router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)
-	Global := s.Router.Group("/hkrpg_:type")
+	router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)
+	Global := router.Group("/hkrpg_:type")
 	{
 		Global.GET("/combo/granter/api/getConfig", s.ComboGranterApiGetConfigHandler) // 获取服务器配置
 		Global.POST("/combo/granter/api/compareProtocolVersion", s.compareProtocolVersion)
@@ -37,8 +36,8 @@ func (s *Server) InitRouter() {
 		Global.GET("/mdk/shopwindow/shopwindow/listPriceTierV2", s.listPriceTier)
 	}
 	// 杂
-	s.Router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)
-	s.Router.GET("/common/apicdkey/api/exchangeCdkey", s.ExchangeCdkey)
+	router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)
+	router.GET("/common/apicdkey/api/exchangeCdkey", s.ExchangeCdkey)
 }
 
 func (s *Server) HandleDefault(c *gin.Context) {

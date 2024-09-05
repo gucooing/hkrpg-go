@@ -14,7 +14,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 const (
@@ -114,7 +114,7 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
-			serviceMsg := alg.DecodePayloadToProto(msg)
+			serviceMsg := cmd.DecodePayloadToProto(msg)
 			switch msg.CmdId {
 			case cmd.GateLoginGameReq:
 				rsp := serviceMsg.(*spb.GateLoginGameReq)

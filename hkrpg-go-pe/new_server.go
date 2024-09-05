@@ -24,7 +24,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -64,6 +64,7 @@ func newStorePE(cfg *Config) *database.DisaptchStore {
 		&constant.PlayerBasic{},  // 好友简要信息
 		&constant.Mail{},         // 邮件配置
 		&constant.PlayerMail{},   // 玩家邮件配置
+		&constant.RegionConf{},   // 区服配置
 	)
 
 	logger.Info("数据库连接成功")
@@ -238,7 +239,7 @@ func (s *HkRpgGoServer) recvHandle(p *PlayerGame) {
 		kcpMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &kcpMsgList, p.XorKey)
 		for _, msg := range kcpMsgList {
-			playerMsg := alg.DecodePayloadToProto(msg)
+			playerMsg := cmd.DecodePayloadToProto(msg)
 			if playerMsg == nil {
 				logger.Warn("[UID:%v]DecodePayloadToProto error", p.Uid)
 				continue
@@ -266,10 +267,10 @@ func (p *PlayerGame) SendHandle(cmdId uint16, playerMsg pb.Message) {
 	if p.KcpConn == nil {
 		return
 	}
-	rspMsg := new(alg.ProtoMsg)
+	rspMsg := new(cmd.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
-	kcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	kcpMsg := cmd.EncodeProtoToPayload(rspMsg)
 	binMsg := alg.EncodePayloadToBin(kcpMsg, p.XorKey)
 	// 密钥交换
 	if kcpMsg.CmdId == cmd.PlayerGetTokenScRsp {

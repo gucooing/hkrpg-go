@@ -2,14 +2,15 @@ package mq
 
 import (
 	"context"
+	"io"
 	"time"
 
 	"github.com/gucooing/gunet"
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/rpc"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	smd "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 const (
@@ -22,6 +23,7 @@ var ctx = context.TODO()
 type MessageQueue struct {
 	appId                  uint32
 	serverType             spb.ServerType
+	regionName             string                   // 区服配置
 	netMsgInput            chan *NetMsg             // 发包
 	netMsgOutput           chan *NetMsg             // 收包
 	gateTcpMqEventChan     chan *GateTcpMqEvent     // 连接管理
@@ -40,7 +42,8 @@ type GateTcpMqInst struct {
 	appId      uint32
 }
 
-func NewMessageQueue(serverType spb.ServerType, appId uint32, discoveryClient *rpc.NodeDiscoveryClient, gateAddr string) (r *MessageQueue) {
+func NewMessageQueue(serverType spb.ServerType, appId uint32,
+	discoveryClient *rpc.NodeDiscoveryClient, gateAddr, regionName string) (r *MessageQueue) {
 	if discoveryClient == nil {
 		logger.Error("discoveryClient error")
 		return nil
@@ -48,6 +51,7 @@ func NewMessageQueue(serverType spb.ServerType, appId uint32, discoveryClient *r
 	r = new(MessageQueue)
 	r.appId = appId
 	r.serverType = serverType
+	r.regionName = regionName
 	r.discoveryClient = discoveryClient
 	r.netMsgInput = make(chan *NetMsg, 100)
 	r.netMsgOutput = make(chan *NetMsg, 100)
@@ -62,6 +66,7 @@ func NewMessageQueue(serverType spb.ServerType, appId uint32, discoveryClient *r
 		serverType == spb.ServerType_SERVICE_MULTI {
 		go r.runGateTcpMqClient()
 	}
+	go r.nodeGrpcRecvHandle()
 	go r.sendHandler()
 	return
 }
@@ -110,7 +115,7 @@ func (m *MessageQueue) gateTcpMqHandshake(conn *gunet.TcpConn) {
 		appId:      0,
 	}
 	netMsg := DecodeBinToPayload(bin)
-	if netMsg.CmdId != cmd.GateTcpMqHandshakeReq {
+	if netMsg.CmdId != smd.GateTcpMqHandshakeReq {
 		logger.Error("tcp mq handshake error: %v", conn.RemoteAddr().String())
 		return
 	}
@@ -121,6 +126,14 @@ func (m *MessageQueue) gateTcpMqHandshake(conn *gunet.TcpConn) {
 	switch req.Type {
 	case spb.ServerType_SERVICE_DISPATCH:
 		inst.serverType = spb.ServerType_SERVICE_DISPATCH
+	case spb.ServerType_SERVICE_GATE:
+		inst.serverType = spb.ServerType_SERVICE_GATE
+	case spb.ServerType_SERVICE_MUIP:
+		inst.serverType = spb.ServerType_SERVICE_MUIP
+	case spb.ServerType_SERVICE_MULTI:
+		inst.serverType = spb.ServerType_SERVICE_MULTI
+	case spb.ServerType_SERVICE_GAME:
+		inst.serverType = spb.ServerType_SERVICE_GAME
 	default:
 		logger.Error("unknown gate tcp mq handshake req: %v", req.Type)
 		return
@@ -217,8 +230,39 @@ func (m *MessageQueue) gateTcpMqRecvHandle(inst *GateTcpMqInst) {
 	}
 }
 
+func (m *MessageQueue) nodeGrpcRecvHandle() {
+	stream, err := m.discoveryClient.NodeStreamMessages(ctx, &nodeapi.NodeStreamMessagesReq{})
+	if err != nil {
+		logger.Error("node grpc receive error: %v", err)
+	}
+	for {
+		rsp, err := stream.Recv()
+		if err == io.EOF {
+			logger.Info("node grpc server closed")
+			return
+		}
+		if err != nil {
+			logger.Error("node grpc receive error: %v", err)
+			return
+		}
+		logger.Info("", rsp) // TODO
+		netMsg := &NetMsg{
+			ServerType:        0,
+			AppId:             0,
+			OriginServerType:  0,
+			OriginServerAppId: 0,
+			MsgType:           NodeMsg,
+			Uid:               0,
+			CmdId:             0,
+			ServiceMsgByte:    nil,
+			ServiceMsg:        nil,
+		}
+		m.netMsgOutput <- netMsg
+	}
+}
+
 func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
-	rsp, err := m.discoveryClient.GetAllGateServerMq(ctx, &nodeapi.GetAllGateServerMqReq{GameVersion: "0.0.1"})
+	rsp, err := m.discoveryClient.GetAllGateServerMq(ctx, &nodeapi.GetAllGateServerMqReq{RegionName: m.regionName})
 	if err != nil {
 		logger.Error("gate tcp mq get gate list error: %v", err)
 		return
@@ -227,7 +271,7 @@ func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
 		_, exist := gateServerConnAddrMap[server.MqAddr]
 		// GATE连接已存在
 		if exist {
-			logger.Info("gate tcp mq conn already exist addr: %v", server.MqAddr)
+			logger.Debug("gate tcp mq conn already exist addr: %v", server.MqAddr)
 			continue
 		}
 
@@ -236,7 +280,7 @@ func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
 			continue
 		}
 		netMsg := &NetMsg{
-			CmdId: cmd.GateTcpMqHandshakeReq,
+			CmdId: smd.GateTcpMqHandshakeReq,
 			ServiceMsg: &spb.GateTcpMqHandshakeReq{
 				Type:  spb.ServerType_SERVICE_DISPATCH,
 				AppId: 2,

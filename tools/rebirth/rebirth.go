@@ -155,7 +155,7 @@ func handlePlayerGetTokenScRspPacket(playerMsg []byte) {
 }
 
 func playerRegisterMessage(msg *alg.PackMsg, conv uint64) {
-	protoObj := alg.DecodePayloadToProto(msg)
+	protoObj := cmd.DecodePayloadToProto(msg)
 	playerBinRegisterMessage(protoObj, msg.CmdId, conv)
 	// data := protojson.Format(protoObj)
 	// log.Printf("NAME: %s KcpMsg: \n%s\n\n", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(msg.CmdId), data)

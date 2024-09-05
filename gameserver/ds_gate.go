@@ -11,7 +11,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -76,7 +76,7 @@ func (ge *gateServer) recvGate() {
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
-			serviceMsg := alg.DecodePayloadToProto(msg)
+			serviceMsg := cmd.DecodePayloadToProto(msg)
 			go ge.gateRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
@@ -100,10 +100,10 @@ func (ge *gateServer) gateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 }
 
 func (ge *gateServer) seedGate(cmdId uint16, payloadMsg pb.Message) {
-	rspMsg := new(alg.ProtoMsg)
+	rspMsg := new(cmd.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = payloadMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	tcpMsg := cmd.EncodeProtoToPayload(rspMsg)
 	if tcpMsg.CmdId == 0 {
 		logger.Error("cmdid error")
 		return
@@ -179,10 +179,10 @@ func (ge *gateServer) sendPlayer(p *player.GamePlayer, cmdId uint16, playerMsg p
 	if p.IsClosed {
 		return
 	}
-	rspMsg := new(alg.ProtoMsg)
+	rspMsg := new(cmd.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
-	kcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	kcpMsg := cmd.EncodeProtoToPayload(rspMsg)
 	// logger.Debug("[UID:%v]game->gate:%s", p.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
 	ge.GameToGateMsgNotify(&spb.GameToGateMsgNotify{
 		Uid:   p.Uid,
@@ -253,7 +253,7 @@ func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 	if paler != nil {
 		// logger.Debug("[UID:%v]gate->game:%s", paler.p.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(uint16(notify.CmdId)))
 		paler.lastActiveTime = time.Now().Unix()
-		playerMsg := alg.DecodePayloadToProto(&alg.PackMsg{
+		playerMsg := cmd.DecodePayloadToProto(&alg.PackMsg{
 			CmdId:     uint16(notify.CmdId),
 			HeadData:  make([]byte, 0),
 			ProtoData: notify.Msg,

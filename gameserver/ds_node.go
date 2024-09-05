@@ -8,7 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -82,7 +82,7 @@ func (n *NodeService) recvNode() {
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
-			serviceMsg := alg.DecodePayloadToProto(msg)
+			serviceMsg := cmd.DecodePayloadToProto(msg)
 			n.nodeRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
@@ -103,10 +103,10 @@ func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 
 // 发送到node
 func (n *NodeService) sendNode(cmdId uint16, playerMsg pb.Message) {
-	rspMsg := new(alg.ProtoMsg)
+	rspMsg := new(cmd.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	tcpMsg := cmd.EncodeProtoToPayload(rspMsg)
 	if tcpMsg.CmdId == 0 {
 		logger.Error("cmdId error")
 	}

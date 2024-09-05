@@ -1,4 +1,4 @@
-package dispatch
+package sdk
 
 import (
 	"io/ioutil"
@@ -15,7 +15,7 @@ func (s *Server) ComboGranterApiGetConfigHandler(c *gin.Context) {
 		Protocol:                true,
 		QrEnabled:               true,
 		LogLevel:                "INFO",
-		AnnounceURL:             s.OuterAddr,
+		AnnounceURL:             "https://127.0.0.1",
 		PushAliasType:           0,
 		DisableYsdkGuard:        true,
 		EnableAnnouncePicPopup:  true,

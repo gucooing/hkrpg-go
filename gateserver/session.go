@@ -8,7 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -108,10 +108,10 @@ func testsMsg(cmdId uint16, payloadMsg []byte) {
 
 // 将消息发送给客户端
 func (p *PlayerGame) GateToPlayer(cmdId uint16, playerMsg pb.Message) {
-	rspMsg := new(alg.ProtoMsg)
+	rspMsg := new(cmd.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = playerMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	tcpMsg := cmd.EncodeProtoToPayload(rspMsg)
 	SendHandle(p, tcpMsg)
 }
 

@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 func NewMessageGroup() map[uint32]*spb.MessageGroup {

@@ -8,8 +8,20 @@ option go_package = "../../nodeserver/api;proto";
 service NodeDiscovery {
   // 测试
   rpc Test (TestReq) returns (TestRsp) {}
+  // 向node注册服务
+  rpc  RegisterServer(RegisterServerReq) returns (RegisterServerRsp) {}
+  // 离线取消注册
+  rpc CloseServer(CloseServerReq) returns (CloseServerRsp) {}
+  // 持续接收来自node的消息
+  rpc  NodeStreamMessages(NodeStreamMessagesReq) returns (stream NodeStreamMessagesRsp) {}
   // 获取全部gate mq
   rpc GetAllGateServerMq (GetAllGateServerMqReq) returns (GetAllGateServerMqRsp) {}
+  // 获取全部区服信息
+  rpc GetAllRegionInfo (GetAllRegionInfoReq)returns (GetAllRegionInfoRsp) {}
+  // 获取该区服下的所有已注册的网关信息
+  rpc GetRegionAllGate (GetRegionAllGateReq)returns (GetRegionAllGateRsp) {}
+  // 获取该区服下的所有已注册的GS信息
+  rpc GetRegionAllGame (GetRegionAllGameReq)returns (GetRegionAllGameRsp) {}
 }
 
 message TestReq {
@@ -17,18 +29,117 @@ message TestReq {
 }
 
 message TestRsp {
- string req_msg = 2;
+  string req_msg = 2;
+}
+
+message RegisterServerReq{
+  ServerType type = 1; // 服务类型
+  string app_version = 2; // 服务版本
+  string region_name = 3; // 区服
+  string game_version = 4; // 支持的游戏协议列表
+  uint32 app_id = 5 ; // app id
+  string mq_addr = 6;
+  string outer_port = 7;
+  string outer_addr = 8;
+}
+
+message RegisterServerRsp{
+  Retcode ret_code = 1; // 状态
+}
+
+message CloseServerReq {
+  ServerType type = 1; // 服务类型
+  uint32 app_id = 2 ; // app id
+  string region_name = 3; // 区服
+}
+
+message CloseServerRsp {
+
+}
+
+message NodeStreamMessagesReq {
+
+}
+
+message NodeStreamMessagesRsp {
+
 }
 
 message GetAllGateServerMqReq {
-  string game_version = 1;
+  string region_name = 1;
 }
 
 message GetAllGateServerMqRsp {
-   repeated  GateServerMq server_list= 1;
+  repeated  GateServerMq server_list = 1;
 }
 
 message GateServerMq {
   uint32 app_id = 1;
   string mq_addr = 2;
+}
+
+message GetAllRegionInfoReq {
+
+}
+
+message GetAllRegionInfoRsp {
+  map<string, RegionInfo> region_info_list = 1;
+}
+
+message RegionInfo {
+  string name = 1;
+  string title = 2;
+  uint32 type = 3;
+  bytes client_secret_key = 4;
+  bool auto_create = 5;
+}
+
+message GetRegionAllGateReq {
+  string region_name = 1;
+}
+
+message GetRegionAllGateRsp {
+  repeated GateInfo server_list = 1;
+}
+
+message GateInfo {
+  uint32 app_id = 1;
+  uint32 player_num = 2;
+  ServerStatus status = 3;
+}
+
+message GetRegionAllGameReq {
+  string region_name = 1;
+}
+
+message GetRegionAllGameRsp{
+  repeated GameInfo server_list = 1;
+}
+
+message GameInfo {
+  uint32 app_id = 1;
+  uint32 player_num = 2;
+  ServerStatus status = 3;
+}
+
+enum Retcode {
+  RET_SUCC = 0; // 成功
+}
+
+enum ServerType {// 服务分类
+  SERVICE_NONE = 0;
+  SERVICE_NODE = 1;
+  SERVICE_GAME = 2;
+  SERVICE_GATE = 3;
+  SERVICE_DISPATCH = 4;
+  SERVICE_MULTI = 5;
+  SERVICE_MUIP = 6;
+}
+
+enum ServerStatus {
+  ServerStatus_None = 0;
+  ServerStatus_Normal = 1; // 正常
+  ServerStatus_Crowded = 2; // 拥挤 // 不建议参与分发
+  ServerStatus_Full = 3; // 爆满 // 禁止参与分发
+  ServerStatus_Rotation = 4; // 被轮替 // 禁止参与分发
 }

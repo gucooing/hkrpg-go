@@ -1,7 +1,7 @@
 package model
 
 import (
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 func NewActivity() *spb.Activity {

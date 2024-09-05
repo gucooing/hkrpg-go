@@ -48,10 +48,10 @@ var DefaultConfig = &Config{
 	LogLevel: "Info",
 	AppList: map[string]constant.AppList{
 		"9001.3.1.1": {
-			App: map[string]constant.App{
+			App: map[string]constant.AppNet{
 				"port_service": {
-					Port:      "20081",
-					OuterAddr: "127.0.0.1",
+					InnerPort: "20081",
+					InnerAddr: "127.0.0.1",
 				},
 			},
 		},

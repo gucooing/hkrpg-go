@@ -9,22 +9,24 @@ import (
 
 /******************************disaptch*******************************/
 
+var DISPATCH *DisaptchStore
+
 type DisaptchStore struct {
 	AccountMysql *gorm.DB
 	LoginRedis   *redis.Client
 }
 
 func NewDisaptchStore(mysqlList map[string]constant.MysqlConf, redisList map[string]constant.RedisConf) *DisaptchStore {
-	s := &DisaptchStore{}
+	DISPATCH = &DisaptchStore{}
 	accountMysqlConf := mysqlList["account"]
-	s.AccountMysql = NewMysql(accountMysqlConf.Dsn)
-	s.AccountMysql.AutoMigrate(&constant.Account{})
+	DISPATCH.AccountMysql = NewMysql(accountMysqlConf.Dsn)
+	DISPATCH.AccountMysql.AutoMigrate(&constant.Account{})
 
 	redisLoginConf := redisList["player_login"]
-	s.LoginRedis = NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
+	DISPATCH.LoginRedis = NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
 
 	logger.Info("数据库连接成功")
-	return s
+	return DISPATCH
 }
 
 /******************************gateserver*******************************/
@@ -96,10 +98,13 @@ func NewGameStore(mysqlList map[string]constant.MysqlConf, redisList map[string]
 var NODE *nodeStore
 
 type nodeStore struct {
+	ServerConf *gorm.DB
 }
 
 func NewNodeStore(mysqlList map[string]constant.MysqlConf, redisList map[string]constant.RedisConf) {
 	NODE = &nodeStore{}
-
+	mysqlServerConf := mysqlList["conf"]
+	NODE.ServerConf = NewMysql(mysqlServerConf.Dsn)
+	NODE.ServerConf.AutoMigrate(&constant.Mail{}, &constant.RegionConf{})
 	logger.Info("数据库连接成功")
 }

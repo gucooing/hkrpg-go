@@ -4,8 +4,8 @@ import (
 	"encoding/binary"
 	"log"
 
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	smd "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -29,6 +29,7 @@ var err error
 const (
 	GameServer MsgType = 1 // 玩家消息转发
 	ServerMsg  MsgType = 2 // 服务消息
+	NodeMsg    MsgType = 3 // 来自node推送的消息
 )
 
 func DecodeBinToPayload(data []byte) *NetMsg {
@@ -81,7 +82,7 @@ func EncodePayloadToBin(netMsg *NetMsg) (bin []byte) {
 }
 
 func DecodePayloadToProto(netMsg *NetMsg) bool {
-	protoObj := cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(netMsg.CmdId)
+	protoObj := smd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(netMsg.CmdId)
 	if protoObj == nil {
 		log.Println("get new proto object is nil")
 		return false

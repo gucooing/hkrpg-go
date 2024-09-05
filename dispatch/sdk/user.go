@@ -1,4 +1,4 @@
-package dispatch
+package sdk
 
 import (
 	"encoding/base64"
@@ -31,7 +31,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 
 	s.AutoCreate.Lock()
 	var account *constant.Account
-	account = database.QueryAccountByFieldUsername(s.Store.AccountMysql, requestData.Account)
+	account = database.QueryAccountByFieldUsername(database.DISPATCH.AccountMysql, requestData.Account)
 	if account.Username == "" {
 		logger.Warn("在数据库中没有找到登录的账号")
 		if s.IsAutoCreate {
@@ -44,7 +44,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 			}
 
 			var accountid uint32
-			accountid, err = database.AddAccountFieldByFieldName(s.Store.AccountMysql, account)
+			accountid, err = database.AddAccountFieldByFieldName(database.DISPATCH.AccountMysql, account)
 			if err != nil {
 				logger.Error("自动注册账号添加失败:%s", err)
 				loginrsq.Data = nil
@@ -116,7 +116,7 @@ func (s *Server) VerifyRequestHandler(c *gin.Context) {
 		return
 	}
 	var account *constant.Account
-	account = database.GetAccountByFieldAccountId(s.Store.AccountMysql, uint32(uid))
+	account = database.GetAccountByFieldAccountId(database.DISPATCH.AccountMysql, uint32(uid))
 	if account.Username == "" {
 		logger.Error("查询不到此账户,uid: %s", requestData.Uid)
 		c.Header("Content-type", "application/json")
@@ -176,7 +176,7 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 	accountId := alg.S2U32(loginData.Uid)
 	responseData := new(constant.ComboTokenRsp)
 	var account *constant.Account
-	account = database.GetAccountByFieldAccountId(s.Store.AccountMysql, accountId)
+	account = database.GetAccountByFieldAccountId(database.DISPATCH.AccountMysql, accountId)
 	if account.AccountId != accountId {
 		logger.Warn("查询不到此账户,uid: %s", loginData.Uid)
 		c.Header("Content-type", "application/json")
@@ -185,7 +185,7 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 	} else {
 		if account.Token == loginData.Token {
 			comboToken := random.GetRandomByteHexStr(20)
-			database.UpComboTokenByAccountId(s.Store.LoginRedis, s.Store.AccountMysql, account.AccountId, comboToken)
+			database.UpComboTokenByAccountId(database.DISPATCH.LoginRedis, database.DISPATCH.AccountMysql, account.AccountId, comboToken)
 			responseData.Retcode = 0
 			responseData.Message = "OK"
 			responseData.Data = &constant.ComboTokenRspLoginData{

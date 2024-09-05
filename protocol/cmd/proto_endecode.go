@@ -1,9 +1,9 @@
-package alg
+package cmd
 
 import (
 	"log"
 
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -12,8 +12,8 @@ type ProtoMsg struct {
 	PayloadMessage pb.Message
 }
 
-func DecodePayloadToProto(msg *PackMsg) (protoObj pb.Message) {
-	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(msg.CmdId)
+func DecodePayloadToProto(msg *alg.PackMsg) (protoObj pb.Message) {
+	protoObj = GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(msg.CmdId)
 	if protoObj == nil {
 		log.Println("get new proto object is nil")
 		return nil
@@ -26,8 +26,8 @@ func DecodePayloadToProto(msg *PackMsg) (protoObj pb.Message) {
 	return protoObj
 }
 
-func EncodeProtoToPayload(protoMsg *ProtoMsg) (serviceMsg *PackMsg) {
-	rspMsg := new(PackMsg)
+func EncodeProtoToPayload(protoMsg *ProtoMsg) (serviceMsg *alg.PackMsg) {
+	rspMsg := new(alg.PackMsg)
 	var err error
 	rspMsg.CmdId = protoMsg.CmdId
 	rspMsg.ProtoData, err = pb.Marshal(protoMsg.PayloadMessage)

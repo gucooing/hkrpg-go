@@ -5,7 +5,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -67,7 +67,7 @@ func (s *Multi) recvGate(conn *gunet.TcpConn, appid uint32) {
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
-			serviceMsg := alg.DecodePayloadToProto(msg)
+			serviceMsg := cmd.DecodePayloadToProto(msg)
 			go ge.gateRegisterMessage(msg.CmdId, serviceMsg)
 		}
 	}
@@ -81,10 +81,10 @@ func (ge *gateServer) gateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 }
 
 func (ge *gateServer) seedGate(cmdId uint16, payloadMsg pb.Message) {
-	rspMsg := new(alg.ProtoMsg)
+	rspMsg := new(cmd.ProtoMsg)
 	rspMsg.CmdId = cmdId
 	rspMsg.PayloadMessage = payloadMsg
-	tcpMsg := alg.EncodeProtoToPayload(rspMsg)
+	tcpMsg := cmd.EncodeProtoToPayload(rspMsg)
 	if tcpMsg.CmdId == 0 {
 		logger.Error("cmdid error")
 		return

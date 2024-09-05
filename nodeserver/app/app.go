@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
+	"time"
 
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
@@ -13,36 +15,49 @@ import (
 	"google.golang.org/grpc"
 )
 
-func Run(ctx context.Context, cfg *config.Config, appid string) error {
-	appInfi, ok := cfg.AppList[appid]
+func Run(done chan os.Signal, cfg *config.Config, appid string) error {
+	appInfo, ok := cfg.AppList[appid]
 	if !ok {
 		return fmt.Errorf("app not exist")
 	}
-	netInfo, ok := appInfi.App["port_service"]
+	netInfo, ok := appInfo.App["port_service"]
 	if !ok {
 		return fmt.Errorf("app not exist")
 	}
 	// new grpc
-	rpcAddr := fmt.Sprintf("%s:%s", netInfo.OuterAddr, netInfo.Port)
+	rpcAddr := fmt.Sprintf("%s:%s", netInfo.InnerAddr, netInfo.InnerPort)
 	lis, err := net.Listen("tcp", rpcAddr)
 	if err != nil {
 		return err
 	}
-	var opts grpc.ServerOption
-	grpcServer := grpc.NewServer(opts)
-	nodeapi.RegisterNodeDiscoveryServer(grpcServer, new(service.NodeDiscoveryService))
-	err = grpcServer.Serve(lis)
-	if err != nil {
-		return err
-	}
-	logger.Info("grpc server start!:%s", rpcAddr)
+	optss := make([]grpc.ServerOption, 0)
+	grpcServer := grpc.NewServer(optss...)
+	node := new(service.NodeDiscoveryService)
+	nodeapi.RegisterNodeDiscoveryServer(grpcServer, node)
+	go func() {
+		err = grpcServer.Serve(lis)
+		if err != nil {
+			logger.Error("grpc server start error: %v", err)
+			return
+		}
+	}()
+
+	logger.Info("grpc server start addr:%s", rpcAddr)
 	defer grpcServer.GracefulStop()
 	// new db
 	database.NewNodeStore(cfg.MysqlConf, cfg.RedisConf)
+	// new node
+	service.NewNodeService(node)
+	logger.Info("node service start")
 
 	// stop
 	select {
-	case <-ctx.Done():
+	case <-done:
+		_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+		defer cancel()
+		logger.Info("node server服务正在关闭")
+		logger.Info("node server服务已停止")
+		logger.CloseLogger()
 		return nil
 	}
 }
