@@ -39,13 +39,12 @@ func Run(done chan os.Signal, cfg *dispatch.Config, appid string) error {
 	}
 	// 注册到node
 	_, err = discoveryClient.RegisterServer(context.TODO(), &nodeapi.RegisterServerReq{
-		Type:        nodeapi.ServerType_SERVICE_DISPATCH,
-		AppVersion:  pkg.GetAppVersion(),
-		GameVersion: pkg.GetGameVersion(),
-		RegionName:  appInfo.RegionName,
-		AppId:       alg.GetAppIdUint32(appid),
-		OuterPort:   netInfo.OuterPort,
-		OuterAddr:   netInfo.OuterAddr,
+		Type:       nodeapi.ServerType_SERVICE_DISPATCH,
+		AppVersion: pkg.GetAppVersion(),
+		RegionName: appInfo.RegionName,
+		AppId:      alg.GetAppIdUint32(appid),
+		OuterPort:  netInfo.OuterPort,
+		OuterAddr:  netInfo.OuterAddr,
 	})
 	if err != nil {
 		return fmt.Errorf("register server error: %v ", err)
@@ -69,6 +68,10 @@ func Run(done chan os.Signal, cfg *dispatch.Config, appid string) error {
 	database.NewDisaptchStore(cfg.MysqlConf, cfg.RedisConf)
 	// new sdk
 	d := service.NewDispatch(discoveryClient, messageQueue)
+	d.AppId = alg.GetAppIdUint32(appid)
+	d.RegionName = appInfo.RegionName
+	d.OuterPort = netInfo.OuterPort
+	d.OuterAddr = netInfo.OuterAddr
 	d.Server.IsAutoCreate = true
 	d.Server.OuterAddr = fmt.Sprintf("http://%s:%s", netInfo.OuterAddr, netInfo.OuterPort)
 	d.Server.UpstreamServerList = cfg.UpstreamServerList

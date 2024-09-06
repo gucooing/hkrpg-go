@@ -2,6 +2,7 @@ package hkrpg_go_pe
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math/rand"
 	"os"
@@ -11,7 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/dbconf"
-	"github.com/gucooing/hkrpg-go/dispatch"
+	"github.com/gucooing/hkrpg-go/dispatch/sdk"
 	"github.com/gucooing/hkrpg-go/gameserver"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/gateserver"
@@ -26,6 +27,7 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
+	"gorm.io/gorm"
 )
 
 const (
@@ -37,9 +39,10 @@ var QPS int64
 
 type HkRpgGoServer struct {
 	config           *Config
-	db               *database.DisaptchStore
+	db               *gorm.DB
+	ec2b             *random.Ec2b
 	apiRouter        *gin.Engine // http api
-	Dispatch         *dispatch.Server
+	Dispatch         *sdk.Server
 	kcpListener      *kcp.Listener
 	sessionIdCounter uint32
 	kcpEventChan     chan *gateserver.KcpEvent
@@ -51,10 +54,9 @@ type HkRpgGoServer struct {
 	CmdRouteManager  *CmdRouteManager
 }
 
-func newStorePE(cfg *Config) *database.DisaptchStore {
-	s := new(database.DisaptchStore)
-	s.AccountMysql = database.NewSqlite(cfg.SqlPath)
-	s.AccountMysql.AutoMigrate(
+func newStorePE(cfg *Config) *gorm.DB {
+	db := database.NewSqlite(cfg.SqlPath)
+	db.AutoMigrate(
 		&constant.Account{},      // sdk账户
 		&constant.PlayerUid{},    // 映射表
 		&constant.PlayerData{},   // 玩家数据
@@ -68,44 +70,56 @@ func newStorePE(cfg *Config) *database.DisaptchStore {
 	)
 
 	logger.Info("数据库连接成功")
-	return s
+	return db
 }
 
 // 初始化数据库步骤
 func NewServer(cfg *Config) *HkRpgGoServer {
 	s := new(HkRpgGoServer)
 	s.config = cfg
+	s.ec2b = alg.GetEc2b()
 	// 加载res
 	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// 初始化数据库
 	s.db = newStorePE(cfg)
-	dbconf.GameServer(s.db.AccountMysql)
-	database.GSS = &database.GameStore{PeMysql: s.db.AccountMysql}
+	dbconf.GameServer(s.db)
+	database.GSS = &database.GameStore{PeMysql: s.db}
 	// 初始化dispatch
-	gin.SetMode(gin.ReleaseMode) // 初始化gin
-	dispatchList := make([]dispatch.Dispatch, 0)
+	database.DISPATCH = &database.DisaptchStore{
+		AccountMysql: s.db,
+	}
+	s.Dispatch = &sdk.Server{
+		IsAutoCreate: cfg.Dispatch.AutoCreate,
+		OuterAddr:    fmt.Sprintf("http://%s:%s", cfg.Dispatch.OuterAddr, cfg.Dispatch.OuterPort),
+		RegionInfo:   make(map[string]*sdk.RegionInfo),
+	}
 	for _, d := range cfg.Dispatch.DispatchList {
-		dispatchList = append(dispatchList, dispatch.Dispatch{
+		s.Dispatch.RegionInfo[d.Name] = &sdk.RegionInfo{
 			Name:        d.Name,
 			Title:       d.Title,
-			Type:        d.Type,
-			DispatchUrl: d.DispatchUrl,
-		})
+			Type:        alg.S2U32(d.Type),
+			Ec2b:        s.ec2b,
+			MinGateAddr: cfg.GameServer.OuterAddr,
+			MinGatePort: alg.S2U32(cfg.GameServer.OuterPort),
+		}
 	}
-	s.Dispatch = &dispatch.Server{
-		Router:       gin.New(),
-		Ec2b:         alg.GetEc2b(),
-		IsAutoCreate: cfg.Dispatch.AutoCreate,
-		Store:        s.db,
-		InnerAddr:    cfg.Dispatch.Addr,
-		Port:         cfg.Dispatch.Port,
-		OuterAddr:    cfg.Dispatch.OuterAddr,
-		DispatchList: dispatchList,
-		KcpPort:      alg.S2U32(cfg.GameServer.OuterPort),
-		KcpIp:        cfg.GameServer.OuterAddr,
-		IsPe:         true,
-	}
-	s.Dispatch.Router.Use(gin.Recovery())
+	gin.SetMode(gin.ReleaseMode) // 初始化gin
+	sdkRouter := gin.New()
+	sdkRouter.Use(gin.Recovery())
+	s.Dispatch.GetSdkRouter(sdkRouter) // 初始化路由
+	go s.Dispatch.UpUpstreamServer()
+	go func() {
+		err := alg.NewHttp(constant.AppNet{
+			InnerAddr: cfg.Dispatch.InnerAddr,
+			InnerPort: cfg.Dispatch.InnerPort,
+			OuterAddr: cfg.Dispatch.OuterAddr,
+			OuterPort: cfg.Dispatch.OuterPort,
+		}, sdkRouter)
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
+	}()
 	// 启动kcp
 	addr := cfg.GameServer.InnerAddr + ":" + cfg.GameServer.InnerPort
 	logger.Info("KCP监听地址:%s", addr)
@@ -301,7 +315,7 @@ func (s *HkRpgGoServer) NewGame(kcpConn *kcp.UDPSession) *PlayerGame {
 	pg := &PlayerGame{
 		IsLogin: false,
 		Seed:    0,
-		XorKey:  s.Dispatch.Ec2b.XorKey(),
+		XorKey:  s.ec2b.XorKey(),
 		KcpConn: kcpConn,
 	}
 	return pg
@@ -325,7 +339,7 @@ func (s *HkRpgGoServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg pb.Message)
 		}
 	}
 	accountUid := alg.S2U32(req.AccountUid)
-	playerUid := database.GetPlayerUidByAccountId(s.Dispatch.Store.AccountMysql, accountUid)
+	playerUid := database.GetPlayerUidByAccountId(s.db, accountUid)
 	// token验证
 	if playerUid.ComboToken != req.Token {
 		rsp.Uid = 0

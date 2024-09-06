@@ -69,12 +69,12 @@ func (p *PlayerGame) nilProto(tcpMsg *alg.PackMsg) {
 // 将玩家消息转发到game
 func (p *PlayerGame) GateToGame(tcpMsg *alg.PackMsg) {
 	// logger.Debug("[UID:%v]gate->game:%s", p.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(tcpMsg.CmdId))
-	msg := &spb.GateToGameMsgNotify{
-		Uid:   p.Uid,
-		CmdId: int32(tcpMsg.CmdId),
-		Msg:   tcpMsg.ProtoData,
-	}
-	p.gs.sendGame(cmd.GateToGameMsgNotify, msg)
+	// msg := &spb.GateToGameMsgNotify{
+	// 	Uid:   p.Uid,
+	// 	CmdId: int32(tcpMsg.CmdId),
+	// 	Msg:   tcpMsg.ProtoData,
+	// }
+	// p.gs.sendGame(cmd.GateToGameMsgNotify, msg)
 }
 
 func testMsg(cmdId uint16, B64Msg string) {
@@ -240,12 +240,12 @@ func (p *PlayerGame) isChannelClosed() bool {
 func (s *GateServer) ttiPlayerKill(p *PlayerGame, code spb.Retcode) {
 	p.Status = spb.PlayerStatus_PlayerStatus_Logout_Wait
 	p.KcpConn.Close()
-	p.gs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
-		Retcode:         code,
-		Uid:             p.Uid,
-		AccountId:       p.AccountId,
-		OldGameServerId: p.gs.appid,
-	})
+	// p.gs.sendGame(cmd.GetToGamePlayerLogoutReq, &spb.GetToGamePlayerLogoutReq{
+	// 	Retcode:         code,
+	// 	Uid:             p.Uid,
+	// 	AccountId:       p.AccountId,
+	// 	OldGameServerId: p.gs.appid,
+	// })
 	logger.Debug("[UID:%v]玩家主动离线中,原因:%s", p.Uid, code.String())
 }
 
@@ -267,10 +267,10 @@ func (s *GateServer) passPlayerKill(p *PlayerGame, code spb.Retcode) {
 	s.delPlayerByUid(p.Uid)
 	switch code {
 	case spb.Retcode_RET_PLAYER_SYSTEM_ERROR: // 系统 异常下线
-		p.gs.sendGame(cmd.GateToGamePlayerLogoutNotify, &spb.GateToGamePlayerLogoutNotify{
-			Uid:       p.Uid,
-			AccountId: p.AccountId,
-		})
+		// p.gs.sendGame(cmd.GateToGamePlayerLogoutNotify, &spb.GateToGamePlayerLogoutNotify{
+		// 	Uid:       p.Uid,
+		// 	AccountId: p.AccountId,
+		// })
 	case spb.Retcode_RET_PLAYER_GAME_LOGIN: // game通知下线
 	case spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN: // 同网关下线
 

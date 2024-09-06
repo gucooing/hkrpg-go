@@ -38,12 +38,6 @@ func main() {
 	// 初始化服务器
 	s := hkrpg_go_pe.NewServer(cfg)
 
-	// 启动SDK服务
-	go func() {
-		if err = s.Dispatch.Start(); err != nil {
-			logger.Error("无法启动dispatch服务器")
-		}
-	}()
 	// 启动GameServer服务
 	go func() {
 		if err = s.RunGameServer(); err != nil {

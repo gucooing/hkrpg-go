@@ -12,14 +12,14 @@ service NodeDiscovery {
   rpc  RegisterServer(RegisterServerReq) returns (RegisterServerRsp) {}
   // 离线取消注册
   rpc CloseServer(CloseServerReq) returns (CloseServerRsp) {}
+  // 服务器在线心跳保持
+  rpc KeepaliveServer (KeepaliveServerReq) returns (KeepaliveServerRsp) {}
   // 持续接收来自node的消息
   rpc  NodeStreamMessages(NodeStreamMessagesReq) returns (stream NodeStreamMessagesRsp) {}
   // 获取全部gate mq
   rpc GetAllGateServerMq (GetAllGateServerMqReq) returns (GetAllGateServerMqRsp) {}
   // 获取全部区服信息
   rpc GetAllRegionInfo (GetAllRegionInfoReq)returns (GetAllRegionInfoRsp) {}
-  // 获取该区服下的所有已注册的网关信息
-  rpc GetRegionAllGate (GetRegionAllGateReq)returns (GetRegionAllGateRsp) {}
   // 获取该区服下的所有已注册的GS信息
   rpc GetRegionAllGame (GetRegionAllGameReq)returns (GetRegionAllGameRsp) {}
 }
@@ -36,11 +36,10 @@ message RegisterServerReq{
   ServerType type = 1; // 服务类型
   string app_version = 2; // 服务版本
   string region_name = 3; // 区服
-  string game_version = 4; // 支持的游戏协议列表
-  uint32 app_id = 5 ; // app id
-  string mq_addr = 6;
-  string outer_port = 7;
-  string outer_addr = 8;
+  uint32 app_id = 4 ; // app id
+  string mq_addr = 5;
+  string outer_port = 6;
+  string outer_addr = 7;
 }
 
 message RegisterServerRsp{
@@ -55,6 +54,21 @@ message CloseServerReq {
 
 message CloseServerRsp {
 
+}
+
+message KeepaliveServerReq {
+  ServerType type = 1; // 服务类型
+  string app_version = 2; // 服务版本
+  string region_name = 3; // 区服
+  uint32 app_id = 4 ; // app id
+  string mq_addr = 5;
+  string outer_port = 6;
+  string outer_addr = 7;
+  int64 load_count = 8;
+}
+
+message KeepaliveServerRsp {
+  Retcode ret_code = 1; // 状态
 }
 
 message NodeStreamMessagesReq {
@@ -92,20 +106,9 @@ message RegionInfo {
   uint32 type = 3;
   bytes client_secret_key = 4;
   bool auto_create = 5;
-}
-
-message GetRegionAllGateReq {
-  string region_name = 1;
-}
-
-message GetRegionAllGateRsp {
-  repeated GateInfo server_list = 1;
-}
-
-message GateInfo {
-  uint32 app_id = 1;
-  uint32 player_num = 2;
-  ServerStatus status = 3;
+  string min_gate_addr = 6;
+  string min_gate_port = 7;
+  uint32 min_gate_app_id = 8;
 }
 
 message GetRegionAllGameReq {
@@ -124,6 +127,7 @@ message GameInfo {
 
 enum Retcode {
   RET_SUCC = 0; // 成功
+  RET_Reconnect = 1; // 重连
 }
 
 enum ServerType {// 服务分类

@@ -13,7 +13,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
@@ -54,11 +53,11 @@ func NewGameServer(cfg *Config, appid string) *GameServer {
 	logger.Info("GameServer AppId:%s", appid)
 	// 开启tcp服务
 	appConf := s.Config.AppList[appid].App["port_gt"]
-	if appConf.Port == "" {
+	if appConf.InnerPort == "" {
 		log.Println("GameServer Port error")
 		os.Exit(0)
 	}
-	s.Port = appConf.Port
+	s.Port = appConf.InnerPort
 	s.InnerAddr = appConf.InnerAddr
 	s.OuterAddr = appConf.OuterAddr
 	addr := s.InnerAddr + ":" + s.Port
@@ -114,11 +113,11 @@ func (s *GameServer) recvNil(conn *gunet.TcpConn) {
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
-			serviceMsg := cmd.DecodePayloadToProto(msg)
+			// serviceMsg := cmd.DecodePayloadToProto(msg)
 			switch msg.CmdId {
-			case cmd.GateLoginGameReq:
-				rsp := serviceMsg.(*spb.GateLoginGameReq)
-				go s.newGate(conn, rsp.AppId)
+			// case cmd.GateLoginGameReq:
+			// 	rsp := serviceMsg.(*spb.GateLoginGameReq)
+			// 	go s.newGate(conn, rsp.AppId)
 			}
 			return
 		}

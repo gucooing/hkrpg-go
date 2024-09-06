@@ -2,19 +2,27 @@ package service
 
 import (
 	"context"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/dispatch/sdk"
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
+	"github.com/gucooing/hkrpg-go/pkg"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/mq"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/pkg/rpc"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 type Dispatch struct {
 	DiscoveryClient *rpc.NodeDiscoveryClient
 	MessageQueue    *mq.MessageQueue
 	Server          *sdk.Server
+	AppId           uint32
+	RegionName      string
+	OuterPort       string
+	OuterAddr       string
 }
 
 func NewDispatch(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.MessageQueue) *Dispatch {
@@ -24,8 +32,37 @@ func NewDispatch(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Mess
 		Server:          new(sdk.Server),
 	}
 	d.getRegionInfo()
+	go d.keepaliveServer()
 
 	return d
+}
+
+// 心跳
+func (d *Dispatch) keepaliveServer() {
+	ticker := time.NewTicker(time.Second * 15)
+	gateTicker := time.NewTicker(time.Second * 30)
+	for {
+		select {
+		case <-ticker.C:
+			rsp, err := d.DiscoveryClient.KeepaliveServer(context.TODO(), &nodeapi.KeepaliveServerReq{
+				Type:       nodeapi.ServerType_SERVICE_DISPATCH,
+				AppVersion: pkg.GetAppVersion(),
+				RegionName: d.RegionName,
+				AppId:      d.AppId,
+				OuterPort:  d.OuterPort,
+				OuterAddr:  d.OuterAddr,
+				LoadCount:  0,
+			})
+			if err != nil {
+				logger.Error("keepalive error: %v", err)
+			}
+			if rsp.RetCode == nodeapi.Retcode_RET_Reconnect {
+				// TODO 代表是重连
+			}
+		case <-gateTicker.C:
+			d.getRegionInfo()
+		}
+	}
 }
 
 func (d *Dispatch) getRegionInfo() { // 拉取区服信息
@@ -40,6 +77,10 @@ func (d *Dispatch) getRegionInfo() { // 拉取区服信息
 			Name:  info.Name,
 			Title: info.Title,
 			Type:  info.Type,
+		}
+		if d.MessageQueue.GetGateTcpMqInst(spb.ServerType_SERVICE_GATE, info.MinGateAppId) != nil {
+			regionInfo.MinGateAddr = info.MinGateAddr
+			regionInfo.MinGatePort = alg.S2U32(info.MinGatePort)
 		}
 		ec2b, _ := random.LoadEc2bKey(info.ClientSecretKey)
 		regionInfo.Ec2b = ec2b

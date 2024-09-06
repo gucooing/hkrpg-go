@@ -56,46 +56,12 @@ var DefaultConfig = &Config{
 	AutoCreate: true,
 	AppList: map[string]constant.AppList{
 		"9001.1.1.1": {
-			App: map[string]constant.App{
+			App: map[string]constant.AppNet{
 				"port_player": {
-					Port:      "20041",
 					InnerAddr: "0.0.0.0",
+					InnerPort: "20041",
 					OuterAddr: "127.0.0.1",
-				},
-			},
-		},
-		"9001.2.1.1": {
-			App: map[string]constant.App{
-				"port_gt": {
-					Port: "20071",
-				},
-			},
-		},
-		"9001.3.1.1": {
-			App: map[string]constant.App{
-				"port_service": {
-					Port: "20081",
-				},
-			},
-		},
-		"9001.4.1.1": {
-			App: map[string]constant.App{
-				"port_http": {
-					Port: "8080",
-				},
-			},
-		},
-		"9001.5.1.1": {
-			App: map[string]constant.App{
-				"port_service": {
-					Port: "20091",
-				},
-			},
-		},
-		"9001.6.1.1": {
-			App: map[string]constant.App{
-				"port_http": {
-					Port: "20011",
+					OuterPort: "20041",
 				},
 			},
 		},

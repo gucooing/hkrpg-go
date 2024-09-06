@@ -161,7 +161,7 @@ func getPlayerPb(s *HkRpgGoServer, parameter []string) any {
 		return p.GamePlayer.GetPd().GetBasicBin()
 	} else {
 		dbPlayer := database.GetPlayerDataByUid(nil,
-			s.db.AccountMysql, uid)
+			s.db, uid)
 		if dbPlayer == nil || dbPlayer.BinData == nil {
 			return "Player Not Found"
 		}

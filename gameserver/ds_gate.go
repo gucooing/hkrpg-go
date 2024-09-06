@@ -46,9 +46,9 @@ func (s *GameServer) newGate(conn *gunet.TcpConn, appid uint32) {
 		conn:  conn,
 	}
 	s.addGeList(ge)
-	ge.seedGate(cmd.GateLoginGameRsp, &spb.GateLoginGameRsp{
-		Retcode: 0,
-	})
+	// ge.seedGate(cmd.GateLoginGameRsp, &spb.GateLoginGameRsp{
+	// 	Retcode: 0,
+	// })
 	logger.Info("gate:[%v]在game注册成功", appid)
 	ge.recvGate()
 }
@@ -84,16 +84,16 @@ func (ge *gateServer) recvGate() {
 
 func (ge *gateServer) gateRegisterMessage(cmdId uint16, payloadMsg pb.Message) {
 	switch cmdId {
-	case cmd.GateGamePingReq:
-		ge.GateGamePingReq(payloadMsg) // 来自gate的ping包
-	case cmd.GateGamePlayerLoginReq:
-		ge.GateGamePlayerLoginReq(payloadMsg) // 来自gate的玩家登录请求
-	case cmd.GetToGamePlayerLogoutReq:
-		ge.GetToGamePlayerLogoutReq(payloadMsg) // gate直接向目标game申请下线玩家请求
-	case cmd.GateToGamePlayerLogoutNotify:
-		ge.GateToGamePlayerLogoutNotify(payloadMsg)
-	case cmd.GateToGameMsgNotify:
-		ge.GateToGameMsgNotify(payloadMsg) // gate转发客户端消息到gs
+	// case cmd.GateGamePingReq:
+	// 	ge.GateGamePingReq(payloadMsg) // 来自gate的ping包
+	// case cmd.GateGamePlayerLoginReq:
+	// 	ge.GateGamePlayerLoginReq(payloadMsg) // 来自gate的玩家登录请求
+	// case cmd.GetToGamePlayerLogoutReq:
+	// 	ge.GetToGamePlayerLogoutReq(payloadMsg) // gate直接向目标game申请下线玩家请求
+	// case cmd.GateToGamePlayerLogoutNotify:
+	// 	ge.GateToGamePlayerLogoutNotify(payloadMsg)
+	// case cmd.GateToGameMsgNotify:
+	// 	ge.GateToGameMsgNotify(payloadMsg) // gate转发客户端消息到gs
 	default:
 		logger.Error("gate -> game cmdid error: %v", cmdId)
 	}
@@ -117,13 +117,13 @@ func (ge *gateServer) seedGate(cmdId uint16, payloadMsg pb.Message) {
 }
 
 func (ge *gateServer) GateGamePingReq(payloadMsg pb.Message) {
-	req := payloadMsg.(*spb.GateGamePingReq)
-	rsp := &spb.GateGamePingRsp{
-		GateServerTime: req.GateServerTime,
-		GameServerTime: time.Now().Unix(),
-		PlayerNum:      ge.game.GetPlayerNum(),
-	}
-	ge.seedGate(cmd.GateGamePingRsp, rsp)
+	// req := payloadMsg.(*spb.GateGamePingReq)
+	// rsp := &spb.GateGamePingRsp{
+	// 	GateServerTime: req.GateServerTime,
+	// 	GameServerTime: time.Now().Unix(),
+	// 	PlayerNum:      ge.game.GetPlayerNum(),
+	// }
+	// ge.seedGate(cmd.GateGamePingRsp, rsp)
 }
 
 func (ge *gateServer) GateGamePlayerLoginReq(payloadMsg pb.Message) {
@@ -192,7 +192,7 @@ func (ge *gateServer) sendPlayer(p *player.GamePlayer, cmdId uint16, playerMsg p
 }
 
 func (ge *gateServer) GateGamePlayerLoginRsp(rsp *spb.GateGamePlayerLoginRsp) {
-	ge.seedGate(cmd.GateGamePlayerLoginRsp, rsp)
+	// ge.seedGate(cmd.GateGamePlayerLoginRsp, rsp)
 }
 
 func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
@@ -208,9 +208,9 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	logger.Info("[UID:%v][AccountId:%v]下线玩家,原因:%s", req.Uid, req.AccountId, req.Retcode.String())
 	switch req.Retcode {
 	case spb.Retcode_RET_PLAYER_REPEAT_LOGIN: // 异网关重复登录
-		play.gate.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
-			Uid: play.p.Uid,
-		})
+		// play.gate.seedGate(cmd.GameToGatePlayerLogoutNotify, &spb.GameToGatePlayerLogoutNotify{
+		// 	Uid: play.p.Uid,
+		// })
 		ge.playerRepeatLogin(req)
 	case spb.Retcode_RET_PLAYER_GATE_REPEAT_LOGIN: // 同网关重复登录
 		ge.playerRepeatLogin(req)
@@ -225,12 +225,12 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 
 // 玩家重复登录处理
 func (ge *gateServer) playerRepeatLogin(req *spb.GetToGamePlayerLogoutReq) {
-	rsp := &spb.GetToGamePlayerLogoutRsp{
-		Retcode:         spb.Retcode_RET_SUCC,
-		Uid:             req.Uid,
-		NewGameServerId: req.NewGameServerId,
-	}
-	ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
+	// rsp := &spb.GetToGamePlayerLogoutRsp{
+	// 	Retcode:         spb.Retcode_RET_SUCC,
+	// 	Uid:             req.Uid,
+	// 	NewGameServerId: req.NewGameServerId,
+	// }
+	// ge.seedGate(cmd.GetToGamePlayerLogoutRsp, rsp)
 }
 
 func (ge *gateServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
@@ -275,7 +275,7 @@ func (ge *gateServer) GateToGameMsgNotify(payloadMsg pb.Message) {
 }
 
 func (ge *gateServer) GameToGateMsgNotify(payloadMsg pb.Message) {
-	ge.seedGate(cmd.GameToGateMsgNotify, payloadMsg)
+	// ge.seedGate(cmd.GameToGateMsgNotify, payloadMsg)
 }
 
 func (ge *gateServer) GateToGamePlayerLogoutNotify(payloadMsg pb.Message) {

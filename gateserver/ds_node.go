@@ -69,14 +69,14 @@ func (n *NodeService) nodeTicler(tickerCtx context.Context) {
 
 // 向node注册
 func (n *NodeService) ServiceConnectionReq() {
-	req := &spb.ServiceConnectionReq{
-		ServerType: spb.ServerType_SERVICE_GATE,
-		AppId:      n.gate.AppId,
-		Addr:       n.gate.OuterAddr,
-		Port:       n.gate.Port,
-	}
-
-	n.sendNode(cmd.ServiceConnectionReq, req)
+	// req := &spb.ServiceConnectionReq{
+	// 	ServerType: spb.ServerType_SERVICE_GATE,
+	// 	AppId:      n.gate.AppId,
+	// 	Addr:       n.gate.OuterAddr,
+	// 	Port:       n.gate.Port,
+	// }
+	//
+	// n.sendNode(cmd.ServiceConnectionReq, req)
 }
 
 // 从node接收消息
@@ -99,10 +99,10 @@ func (n *NodeService) recvNode() {
 
 func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.ServiceConnectionRsp:
-		n.ServiceConnectionRsp(serviceMsg) // 注册包
-	case cmd.GateToNodePingRsp:
-		n.GateToNodePingRsp(serviceMsg) // 心跳包
+	// case cmd.ServiceConnectionRsp:
+	// 	n.ServiceConnectionRsp(serviceMsg) // 注册包
+	// case cmd.GateToNodePingRsp:
+	// 	n.GateToNodePingRsp(serviceMsg) // 心跳包
 	default:
 		logger.Info("nodeRegister error cmdid:%v", cmdId)
 	}
@@ -133,13 +133,13 @@ func (n *NodeService) ServiceConnectionRsp(serviceMsg pb.Message) {
 }
 
 func (n *NodeService) GateToNodePingReq() {
-	// 心跳包
-	req := &spb.GateToNodePingReq{
-		ServiceType: spb.ServerType_SERVICE_GATE,
-		GateTime:    time.Now().UnixNano() / 1e6,
-		PlayerNum:   int64(CLIENT_CONN_NUM),
-	}
-	n.sendNode(cmd.GateToNodePingReq, req)
+	// // 心跳包
+	// req := &spb.GateToNodePingReq{
+	// 	ServiceType: spb.ServerType_SERVICE_GATE,
+	// 	GateTime:    time.Now().UnixNano() / 1e6,
+	// 	PlayerNum:   int64(CLIENT_CONN_NUM),
+	// }
+	// n.sendNode(cmd.GateToNodePingReq, req)
 }
 
 func (n *NodeService) GateToNodePingRsp(serviceMsg pb.Message) {

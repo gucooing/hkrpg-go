@@ -17,16 +17,16 @@ type Config struct {
 
 type Dispatch struct {
 	AutoCreate   bool           `json:"AutoCreate"`
-	Addr         string         `json:"Addr"`
-	Port         string         `json:"Port"`
+	InnerAddr    string         `json:"InnerAddr"`
+	InnerPort    string         `json:"InnerPort"`
 	OuterAddr    string         `json:"OuterAddr"`
+	OuterPort    string         `json:"OuterPort"`
 	DispatchList []DispatchList `json:"DispatchList"`
 }
 type DispatchList struct {
-	Name        string `json:"name"`
-	Title       string `json:"title"`
-	Type        string `json:"type"`
-	DispatchUrl string `json:"dispatchUrl"`
+	Name  string `json:"name"`
+	Title string `json:"title"`
+	Type  string `json:"type"`
 }
 
 type GameServer struct {
@@ -78,27 +78,15 @@ var DefaultConfig = &Config{
 	SqlPath:            "./conf/hkrpg-go-pe.db",
 	Dispatch: &Dispatch{
 		AutoCreate: true,
-		Addr:       "0.0.0.0",
-		Port:       "8080",
-		OuterAddr:  "http://127.0.0.1:8080",
+		InnerAddr:  "0.0.0.0",
+		InnerPort:  "8080",
+		OuterAddr:  "127.0.0.1",
+		OuterPort:  "8080",
 		DispatchList: []DispatchList{
 			{
-				Name:        "hkrpg-go",
-				Title:       "os_usa",
-				Type:        "2",
-				DispatchUrl: "/query_gateway",
-			},
-			{
-				Name:        "hkrpg-official_os",
-				Title:       "os_usa",
-				Type:        "2",
-				DispatchUrl: "/query_gateway_capture",
-			},
-			{
-				Name:        "hkrpg-official_cn",
-				Title:       "os_usa",
-				Type:        "2",
-				DispatchUrl: "/query_gateway_capture_cn",
+				Name:  "hkrpg-go",
+				Title: "os_usa",
+				Type:  "2",
 			},
 		},
 	},

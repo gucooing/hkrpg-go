@@ -22,10 +22,10 @@ const (
 	NodeDiscovery_Test_FullMethodName               = "/proto.NodeDiscovery/Test"
 	NodeDiscovery_RegisterServer_FullMethodName     = "/proto.NodeDiscovery/RegisterServer"
 	NodeDiscovery_CloseServer_FullMethodName        = "/proto.NodeDiscovery/CloseServer"
+	NodeDiscovery_KeepaliveServer_FullMethodName    = "/proto.NodeDiscovery/KeepaliveServer"
 	NodeDiscovery_NodeStreamMessages_FullMethodName = "/proto.NodeDiscovery/NodeStreamMessages"
 	NodeDiscovery_GetAllGateServerMq_FullMethodName = "/proto.NodeDiscovery/GetAllGateServerMq"
 	NodeDiscovery_GetAllRegionInfo_FullMethodName   = "/proto.NodeDiscovery/GetAllRegionInfo"
-	NodeDiscovery_GetRegionAllGate_FullMethodName   = "/proto.NodeDiscovery/GetRegionAllGate"
 	NodeDiscovery_GetRegionAllGame_FullMethodName   = "/proto.NodeDiscovery/GetRegionAllGame"
 )
 
@@ -41,14 +41,14 @@ type NodeDiscoveryClient interface {
 	RegisterServer(ctx context.Context, in *RegisterServerReq, opts ...grpc.CallOption) (*RegisterServerRsp, error)
 	// 离线取消注册
 	CloseServer(ctx context.Context, in *CloseServerReq, opts ...grpc.CallOption) (*CloseServerRsp, error)
+	// 服务器在线心跳保持
+	KeepaliveServer(ctx context.Context, in *KeepaliveServerReq, opts ...grpc.CallOption) (*KeepaliveServerRsp, error)
 	// 持续接收来自node的消息
 	NodeStreamMessages(ctx context.Context, in *NodeStreamMessagesReq, opts ...grpc.CallOption) (grpc.ServerStreamingClient[NodeStreamMessagesRsp], error)
 	// 获取全部gate mq
 	GetAllGateServerMq(ctx context.Context, in *GetAllGateServerMqReq, opts ...grpc.CallOption) (*GetAllGateServerMqRsp, error)
 	// 获取全部区服信息
 	GetAllRegionInfo(ctx context.Context, in *GetAllRegionInfoReq, opts ...grpc.CallOption) (*GetAllRegionInfoRsp, error)
-	// 获取该区服下的所有已注册的网关信息
-	GetRegionAllGate(ctx context.Context, in *GetRegionAllGateReq, opts ...grpc.CallOption) (*GetRegionAllGateRsp, error)
 	// 获取该区服下的所有已注册的GS信息
 	GetRegionAllGame(ctx context.Context, in *GetRegionAllGameReq, opts ...grpc.CallOption) (*GetRegionAllGameRsp, error)
 }
@@ -85,6 +85,16 @@ func (c *nodeDiscoveryClient) CloseServer(ctx context.Context, in *CloseServerRe
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CloseServerRsp)
 	err := c.cc.Invoke(ctx, NodeDiscovery_CloseServer_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *nodeDiscoveryClient) KeepaliveServer(ctx context.Context, in *KeepaliveServerReq, opts ...grpc.CallOption) (*KeepaliveServerRsp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(KeepaliveServerRsp)
+	err := c.cc.Invoke(ctx, NodeDiscovery_KeepaliveServer_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -130,16 +140,6 @@ func (c *nodeDiscoveryClient) GetAllRegionInfo(ctx context.Context, in *GetAllRe
 	return out, nil
 }
 
-func (c *nodeDiscoveryClient) GetRegionAllGate(ctx context.Context, in *GetRegionAllGateReq, opts ...grpc.CallOption) (*GetRegionAllGateRsp, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetRegionAllGateRsp)
-	err := c.cc.Invoke(ctx, NodeDiscovery_GetRegionAllGate_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *nodeDiscoveryClient) GetRegionAllGame(ctx context.Context, in *GetRegionAllGameReq, opts ...grpc.CallOption) (*GetRegionAllGameRsp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetRegionAllGameRsp)
@@ -162,14 +162,14 @@ type NodeDiscoveryServer interface {
 	RegisterServer(context.Context, *RegisterServerReq) (*RegisterServerRsp, error)
 	// 离线取消注册
 	CloseServer(context.Context, *CloseServerReq) (*CloseServerRsp, error)
+	// 服务器在线心跳保持
+	KeepaliveServer(context.Context, *KeepaliveServerReq) (*KeepaliveServerRsp, error)
 	// 持续接收来自node的消息
 	NodeStreamMessages(*NodeStreamMessagesReq, grpc.ServerStreamingServer[NodeStreamMessagesRsp]) error
 	// 获取全部gate mq
 	GetAllGateServerMq(context.Context, *GetAllGateServerMqReq) (*GetAllGateServerMqRsp, error)
 	// 获取全部区服信息
 	GetAllRegionInfo(context.Context, *GetAllRegionInfoReq) (*GetAllRegionInfoRsp, error)
-	// 获取该区服下的所有已注册的网关信息
-	GetRegionAllGate(context.Context, *GetRegionAllGateReq) (*GetRegionAllGateRsp, error)
 	// 获取该区服下的所有已注册的GS信息
 	GetRegionAllGame(context.Context, *GetRegionAllGameReq) (*GetRegionAllGameRsp, error)
 	mustEmbedUnimplementedNodeDiscoveryServer()
@@ -191,6 +191,9 @@ func (UnimplementedNodeDiscoveryServer) RegisterServer(context.Context, *Registe
 func (UnimplementedNodeDiscoveryServer) CloseServer(context.Context, *CloseServerReq) (*CloseServerRsp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseServer not implemented")
 }
+func (UnimplementedNodeDiscoveryServer) KeepaliveServer(context.Context, *KeepaliveServerReq) (*KeepaliveServerRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KeepaliveServer not implemented")
+}
 func (UnimplementedNodeDiscoveryServer) NodeStreamMessages(*NodeStreamMessagesReq, grpc.ServerStreamingServer[NodeStreamMessagesRsp]) error {
 	return status.Errorf(codes.Unimplemented, "method NodeStreamMessages not implemented")
 }
@@ -199,9 +202,6 @@ func (UnimplementedNodeDiscoveryServer) GetAllGateServerMq(context.Context, *Get
 }
 func (UnimplementedNodeDiscoveryServer) GetAllRegionInfo(context.Context, *GetAllRegionInfoReq) (*GetAllRegionInfoRsp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllRegionInfo not implemented")
-}
-func (UnimplementedNodeDiscoveryServer) GetRegionAllGate(context.Context, *GetRegionAllGateReq) (*GetRegionAllGateRsp, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetRegionAllGate not implemented")
 }
 func (UnimplementedNodeDiscoveryServer) GetRegionAllGame(context.Context, *GetRegionAllGameReq) (*GetRegionAllGameRsp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRegionAllGame not implemented")
@@ -281,6 +281,24 @@ func _NodeDiscovery_CloseServer_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeDiscovery_KeepaliveServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KeepaliveServerReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeDiscoveryServer).KeepaliveServer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeDiscovery_KeepaliveServer_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeDiscoveryServer).KeepaliveServer(ctx, req.(*KeepaliveServerReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _NodeDiscovery_NodeStreamMessages_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(NodeStreamMessagesReq)
 	if err := stream.RecvMsg(m); err != nil {
@@ -328,24 +346,6 @@ func _NodeDiscovery_GetAllRegionInfo_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _NodeDiscovery_GetRegionAllGate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRegionAllGateReq)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(NodeDiscoveryServer).GetRegionAllGate(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: NodeDiscovery_GetRegionAllGate_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(NodeDiscoveryServer).GetRegionAllGate(ctx, req.(*GetRegionAllGateReq))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _NodeDiscovery_GetRegionAllGame_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRegionAllGameReq)
 	if err := dec(in); err != nil {
@@ -384,16 +384,16 @@ var NodeDiscovery_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _NodeDiscovery_CloseServer_Handler,
 		},
 		{
+			MethodName: "KeepaliveServer",
+			Handler:    _NodeDiscovery_KeepaliveServer_Handler,
+		},
+		{
 			MethodName: "GetAllGateServerMq",
 			Handler:    _NodeDiscovery_GetAllGateServerMq_Handler,
 		},
 		{
 			MethodName: "GetAllRegionInfo",
 			Handler:    _NodeDiscovery_GetAllRegionInfo_Handler,
-		},
-		{
-			MethodName: "GetRegionAllGate",
-			Handler:    _NodeDiscovery_GetRegionAllGate_Handler,
 		},
 		{
 			MethodName: "GetRegionAllGame",

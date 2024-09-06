@@ -3,6 +3,7 @@ package mq
 import (
 	"context"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/gucooing/gunet"
@@ -29,6 +30,8 @@ type MessageQueue struct {
 	gateTcpMqEventChan     chan *GateTcpMqEvent     // 连接管理
 	gateTcpMqDeadEventChan chan string              // gate 管理
 	discoveryClient        *rpc.NodeDiscoveryClient // 和node连接的rpc
+	gateTcpMqInstMap       map[spb.ServerType]map[uint32]*GateTcpMqInst
+	gateTcpMqSync          sync.RWMutex // 读写锁
 }
 
 type GateTcpMqEvent struct {
@@ -164,9 +167,23 @@ func (m *MessageQueue) runGateTcpMqClient() {
 	}
 }
 
+func (m *MessageQueue) GetGateTcpMqInst(serverType spb.ServerType, appId uint32) *GateTcpMqInst {
+	m.gateTcpMqSync.RLock()
+	defer m.gateTcpMqSync.RUnlock()
+	instMap, exist := m.gateTcpMqInstMap[serverType]
+	if !exist {
+		return nil
+	}
+	inst, exist := instMap[appId]
+	if !exist {
+		return nil
+	}
+	return inst
+}
+
 // 发信
 func (m *MessageQueue) sendHandler() {
-	gateTcpMqInstMap := map[spb.ServerType]map[uint32]*GateTcpMqInst{
+	m.gateTcpMqInstMap = map[spb.ServerType]map[uint32]*GateTcpMqInst{
 		spb.ServerType_SERVICE_GATE:     make(map[uint32]*GateTcpMqInst),
 		spb.ServerType_SERVICE_DISPATCH: make(map[uint32]*GateTcpMqInst),
 		spb.ServerType_SERVICE_GAME:     make(map[uint32]*GateTcpMqInst),
@@ -177,13 +194,9 @@ func (m *MessageQueue) sendHandler() {
 		select {
 		case netMsg := <-m.netMsgInput:
 			logger.Info("", netMsg)
-			instMap, exist := gateTcpMqInstMap[netMsg.ServerType]
-			if !exist {
+			inst := m.GetGateTcpMqInst(netMsg.ServerType, netMsg.AppId)
+			if inst == nil {
 				logger.Error("unknown server type: %v", netMsg.ServerType)
-				continue
-			}
-			inst, exist := instMap[netMsg.AppId]
-			if !exist {
 				continue
 			}
 			if !EncodeProtoToPayload(netMsg) {
@@ -200,10 +213,14 @@ func (m *MessageQueue) sendHandler() {
 			switch event.event {
 			case EventConnect: // 创建连接
 				logger.Info("gate tcp mq connect, addr: %v, server type: %v, appid: %v", inst.conn.RemoteAddr().String(), inst.serverType, inst.appId)
-				gateTcpMqInstMap[inst.serverType][inst.appId] = inst
+				m.gateTcpMqSync.Lock()
+				m.gateTcpMqInstMap[inst.serverType][inst.appId] = inst
+				m.gateTcpMqSync.Unlock()
 			case EventDisconnect: // 删除连接
 				logger.Info("gate tcp mq disconnect, addr: %v, server type: %v, appid: %v", inst.conn.RemoteAddr().String(), inst.serverType, inst.appId)
-				delete(gateTcpMqInstMap[inst.serverType], inst.appId)
+				m.gateTcpMqSync.Lock()
+				delete(m.gateTcpMqInstMap[inst.serverType], inst.appId)
+				m.gateTcpMqSync.Unlock()
 				m.gateTcpMqDeadEventChan <- inst.conn.RemoteAddr().String()
 			}
 		}

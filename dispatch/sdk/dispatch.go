@@ -46,7 +46,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	logger.Info("[ADDR:%s][regionName:%s]query_gateway", c.Request.RemoteAddr, regionName)
 	regionList := s.GetRegionInfo()
 	info := regionList[regionName]
-	if regionList == nil || info == nil {
+	if regionList == nil || info == nil || info.MinGateAddr == "" {
 		s.ErrorGate(c)
 		return
 	}
@@ -55,13 +55,11 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	seed := c.Query("dispatch_seed")
 	url := s.GetUpstreamServer(version, seed)
 
-	ip := "127.0.0.1"
-	var port uint32 = 20041
 	queryGateway := new(proto.GateServer)
 	queryGateway.Msg = "OK"
-	queryGateway.Ip = ip
+	queryGateway.Ip = info.MinGateAddr
 	queryGateway.RegionName = info.Name
-	queryGateway.Port = port
+	queryGateway.Port = info.MinGatePort
 	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(info.Ec2b.Bytes())
 	queryGateway.Unk1 = true
 	queryGateway.Unk2 = true

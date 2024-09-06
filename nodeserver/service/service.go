@@ -130,7 +130,6 @@ func (s *NodeDiscoveryService) AddService(info *Service) bool {
 		list.serviceMap[info.serverType] = make(map[uint32]*Service)
 	}
 	if _, ok := list.serviceMap[info.serverType][info.appId]; ok {
-		logger.Error("add repeatedly service app id:%v", info.appId)
 		return false
 	}
 	list.serviceMap[info.serverType][info.appId] = info
@@ -172,6 +171,36 @@ func (s *NodeDiscoveryService) GetService(regionName string, st nodeapi.ServerTy
 	return list[appId]
 }
 
+func (s *NodeDiscoveryService) GetMinGate(regionName string) *Service {
+	region := s.GetRegion(regionName)
+	if region == nil {
+		return nil
+	}
+	region.serviceMapLock.RLock()
+	defer region.serviceMapLock.RUnlock()
+	if region.serviceMap == nil {
+		region.serviceMap = make(map[nodeapi.ServerType]map[uint32]*Service)
+	}
+	list := region.serviceMap[nodeapi.ServerType_SERVICE_GATE]
+	if list == nil {
+		return nil
+	}
+	var minNum int64 = 0
+	var minAppid uint32 = 0
+	for _, service := range list {
+		if minAppid == 0 {
+			minAppid = service.appId
+			minNum = service.playerNum
+			continue
+		}
+		if service.playerNum < minNum {
+			minNum = service.playerNum
+			minAppid = service.appId
+		}
+	}
+	return list[minAppid]
+}
+
 func (s *NodeDiscoveryService) Test(ctx context.Context, req *nodeapi.TestReq) (*nodeapi.TestRsp, error) {
 	return &nodeapi.TestRsp{
 		ReqMsg: req.Msg,
@@ -195,6 +224,7 @@ func (s *NodeDiscoveryService) RegisterServer(ctx context.Context, req *nodeapi.
 		logger.Info("add service:%s regionName:%s appId:%v", req.Type, req.RegionName, req.AppId)
 		return rsp, nil
 	} else {
+		logger.Error("add repeatedly service:%s regionName:%s appId:%v", req.Type, req.RegionName, req.AppId)
 		return rsp, errors.New("add service failed")
 	}
 }
@@ -207,9 +237,34 @@ func (s *NodeDiscoveryService) CloseServer(ctx context.Context, req *nodeapi.Clo
 		serverType: req.Type,
 		regionName: req.RegionName,
 	}
-	// TODO 如果是gs则需要通知给全部gate
+	switch req.Type {
+	case nodeapi.ServerType_SERVICE_GATE:
+		// TODO 通知gs保存玩家数据
+	case nodeapi.ServerType_SERVICE_GAME:
+		// TODO 通知gate下线玩家
+	}
 	s.DelService(info)
 	return &nodeapi.CloseServerRsp{}, nil
+}
+
+// 心跳
+func (s *NodeDiscoveryService) KeepaliveServer(ctx context.Context, req *nodeapi.KeepaliveServerReq) (*nodeapi.KeepaliveServerRsp, error) {
+	info := &Service{
+		appId:         req.AppId,
+		serverType:    req.Type,
+		regionName:    req.RegionName,
+		mqAddr:        req.MqAddr,
+		playerNum:     req.LoadCount,
+		lastAliveTime: time.Now().Unix(),
+		outerPort:     req.OuterPort,
+		outerAddr:     req.OuterAddr,
+	}
+	rsp := &nodeapi.KeepaliveServerRsp{}
+	if s.AddService(info) {
+		logger.Info("reconnect service:%s regionName:%s appId:%v", req.Type, req.RegionName, req.AppId)
+		rsp.RetCode = nodeapi.Retcode_RET_Reconnect
+	}
+	return rsp, nil
 }
 
 // 获取全部gate的消息队列
@@ -239,13 +294,20 @@ func (s *NodeDiscoveryService) GetAllRegionInfo(ctx context.Context, req *nodeap
 	regionMap := s.GetRegionMap()
 	s.regionMapLock.RLock()
 	for name, region := range regionMap {
-		rsp.RegionInfoList[name] = &nodeapi.RegionInfo{
+		minGate := s.GetMinGate(name)
+		info := &nodeapi.RegionInfo{
 			Name:            region.Name,
 			Title:           region.Title,
 			Type:            region.Type,
 			ClientSecretKey: region.ClientSecretKey.Bytes(),
 			AutoCreate:      region.AutoCreate,
 		}
+		if minGate != nil {
+			info.MinGateAddr = minGate.outerAddr
+			info.MinGatePort = minGate.outerPort
+			info.MinGateAppId = minGate.appId
+		}
+		rsp.RegionInfoList[name] = info
 	}
 	s.regionMapLock.RUnlock()
 	return rsp, nil

@@ -63,11 +63,8 @@ func NewGate(cfg *Config, appid string) *GateServer {
 	logger.Info("GateServer AppId:%s", appid)
 	// 开启kcp服务
 	appConf := s.Config.AppList[appid].App["port_player"]
-	if appConf.Port == "" {
-		log.Println("GateServer Port error")
-		os.Exit(0)
-	}
-	s.Port = appConf.Port
+
+	s.Port = appConf.InnerPort
 	s.InnerAddr = appConf.InnerAddr
 	s.OuterAddr = appConf.OuterAddr
 

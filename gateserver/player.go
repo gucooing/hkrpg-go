@@ -36,11 +36,11 @@ func (p *PlayerGame) ApplyFriendCsReq(tcpMsg *alg.PackMsg) {
 	msg := cmd.DecodePayloadToProto(tcpMsg)
 	req := msg.(*proto.ApplyFriendCsReq)
 	// 发送到node
-	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
-		MsgType:  spb.PlayerMsgType_PMT_APPLYFRIEND,
-		ApplyUid: p.Uid,
-		SendUid:  req.Uid,
-	})
+	// p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
+	// 	MsgType:  spb.PlayerMsgType_PMT_APPLYFRIEND,
+	// 	ApplyUid: p.Uid,
+	// 	SendUid:  req.Uid,
+	// })
 	// 返回给玩家
 	p.GateToPlayer(cmd.ApplyFriendScRsp, &proto.ApplyFriendScRsp{Uid: req.Uid})
 }
@@ -49,12 +49,12 @@ func (p *PlayerGame) HandleFriendCsReq(tcpMsg *alg.PackMsg) {
 	msg := cmd.DecodePayloadToProto(tcpMsg)
 	req := msg.(*proto.HandleFriendCsReq)
 	// 发送到node
-	p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
-		MsgType:        spb.PlayerMsgType_PMT_ACCEPTFRIEND,
-		ApplyUid:       req.Uid,
-		SendUid:        p.Uid,
-		IsAcceptFriend: req.IsAccept,
-	})
+	// p.ga.sendNode(cmd.PlayerMsgGateToNodeNotify, &spb.PlayerMsgGateToNodeNotify{
+	// 	MsgType:        spb.PlayerMsgType_PMT_ACCEPTFRIEND,
+	// 	ApplyUid:       req.Uid,
+	// 	SendUid:        p.Uid,
+	// 	IsAcceptFriend: req.IsAccept,
+	// })
 	if req.IsAccept {
 		// 发送到gameserver
 		go p.GateToGame(tcpMsg)
@@ -201,7 +201,7 @@ func (s *GateServer) PlayerGetTokenCsReq(p *PlayerGame, playerMsg []byte) {
 			} else {
 				logoutReq.Retcode = spb.Retcode_RET_PLAYER_REPEAT_LOGIN // 异网关重复登录
 			}
-			oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, logoutReq)
+			// oldGs.sendGame(cmd.GetToGamePlayerLogoutReq, logoutReq)
 			logger.Info("[UID:%v][AccountId:%v]重复登录，下线旧玩家", p.Uid, accountUid)
 			return
 		} else {

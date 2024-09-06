@@ -60,14 +60,14 @@ func (n *NodeService) nodeTicler(tickerCtx context.Context) {
 
 // 向node注册
 func (n *NodeService) ServiceConnectionReq() {
-	req := &spb.ServiceConnectionReq{
-		ServerType: spb.ServerType_SERVICE_GAME,
-		AppId:      n.game.AppId,
-		Addr:       n.game.OuterAddr,
-		Port:       n.game.Port,
-	}
-
-	n.sendNode(cmd.ServiceConnectionReq, req)
+	// req := &spb.ServiceConnectionReq{
+	// 	ServerType: spb.ServerType_SERVICE_GAME,
+	// 	AppId:      n.game.AppId,
+	// 	Addr:       n.game.OuterAddr,
+	// 	Port:       n.game.Port,
+	// }
+	//
+	// n.sendNode(cmd.ServiceConnectionReq, req)
 }
 
 // 从node接收消息
@@ -90,10 +90,10 @@ func (n *NodeService) recvNode() {
 
 func (n *NodeService) nodeRegisterMessage(cmdId uint16, serviceMsg pb.Message) {
 	switch cmdId {
-	case cmd.ServiceConnectionRsp:
-		n.ServiceConnectionRsp(serviceMsg)
-	case cmd.GameToNodePingRsp:
-		n.GameToNodePingRsp(serviceMsg)
+	// case cmd.ServiceConnectionRsp:
+	// 	n.ServiceConnectionRsp(serviceMsg)
+	// case cmd.GameToNodePingRsp:
+	// 	n.GameToNodePingRsp(serviceMsg)
 	// 下面是gm
 
 	default:
@@ -128,12 +128,12 @@ func (n *NodeService) ServiceConnectionRsp(serviceMsg pb.Message) {
 
 func (n *NodeService) GameToNodePingReq() {
 	// 心跳包
-	req := &spb.GameToNodePingReq{
-		GameServerId:   n.game.AppId,
-		GameServerTime: time.Now().UnixNano() / 1e6,
-		PlayerNum:      n.game.GetPlayerNum(),
-	}
-	n.sendNode(cmd.GameToNodePingReq, req)
+	// req := &spb.GameToNodePingReq{
+	// 	GameServerId:   n.game.AppId,
+	// 	GameServerTime: time.Now().UnixNano() / 1e6,
+	// 	PlayerNum:      n.game.GetPlayerNum(),
+	// }
+	// n.sendNode(cmd.GameToNodePingReq, req)
 }
 
 func (n *NodeService) GameToNodePingRsp(serviceMsg pb.Message) {

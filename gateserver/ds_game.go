@@ -37,10 +37,10 @@ func (s *GateServer) newGs(addr string, appid uint32) {
 	}
 	s.addGsList(gs)
 	go gs.recvGame()
-	gs.sendGame(cmd.GateLoginGameReq, &spb.GateLoginGameReq{
-		ServerType: spb.ServerType_SERVICE_GATE,
-		AppId:      s.AppId,
-	})
+	// gs.sendGame(cmd.GateLoginGameReq, &spb.GateLoginGameReq{
+	// 	ServerType: spb.ServerType_SERVICE_GATE,
+	// 	AppId:      s.AppId,
+	// })
 }
 
 // 从game接收消息
@@ -105,18 +105,18 @@ func (gs *gameServer) gsTicker(tickerCtx context.Context) {
 
 func (gs *gameServer) gameRegisterMessage(cmdId uint16, playerMsg pb.Message) {
 	switch cmdId {
-	case cmd.GateLoginGameRsp:
-		gs.GateLoginGameRsp(playerMsg) // gate在game注册回复包
-	case cmd.GateGamePingRsp:
-		gs.GateGamePingRsp(playerMsg) // gate发送给gs的ping回复包
-	case cmd.GateGamePlayerLoginRsp:
-		gs.GateGamePlayerLoginRsp(playerMsg) // game玩家登录成功通知
-	case cmd.GetToGamePlayerLogoutRsp:
-		gs.GetToGamePlayerLogoutRsp(playerMsg) // gate直接向目标game申请下线玩家回复
-	case cmd.GameToGatePlayerLogoutNotify:
-		gs.GameToGatePlayerLogoutNotify(playerMsg) // game告知gate玩家要下线了
-	case cmd.GameToGateMsgNotify:
-		gs.GameToGateMsgNotify(playerMsg)
+	// case cmd.GateLoginGameRsp:
+	// 	gs.GateLoginGameRsp(playerMsg) // gate在game注册回复包
+	// case cmd.GateGamePingRsp:
+	// 	gs.GateGamePingRsp(playerMsg) // gate发送给gs的ping回复包
+	// case cmd.GateGamePlayerLoginRsp:
+	// 	gs.GateGamePlayerLoginRsp(playerMsg) // game玩家登录成功通知
+	// case cmd.GetToGamePlayerLogoutRsp:
+	// 	gs.GetToGamePlayerLogoutRsp(playerMsg) // gate直接向目标game申请下线玩家回复
+	// case cmd.GameToGatePlayerLogoutNotify:
+	// 	gs.GameToGatePlayerLogoutNotify(playerMsg) // game告知gate玩家要下线了
+	// case cmd.GameToGateMsgNotify:
+	// 	gs.GameToGateMsgNotify(playerMsg)
 	default:
 		logger.Error("game -> gate register error, cmdId:%v", cmdId)
 	}
@@ -183,10 +183,10 @@ func (s *GateServer) delGsList(appid uint32) {
 
 // gs ping 请求
 func (gs *gameServer) GateGamePingReq() {
-	req := &spb.GateGamePingReq{
-		GateServerTime: time.Now().Unix(),
-	}
-	gs.sendGame(cmd.GateGamePingReq, req)
+	// req := &spb.GateGamePingReq{
+	// 	GateServerTime: time.Now().Unix(),
+	// }
+	// gs.sendGame(cmd.GateGamePingReq, req)
 }
 
 // gs ping 回复
@@ -198,11 +198,11 @@ func (gs *gameServer) GateGamePingRsp(playerMsg pb.Message) {
 // 玩家在gs注册请求
 func (gs *gameServer) GateGamePlayerLoginReq(uid, accountId uint32) {
 	logger.Debug("[UID:%v][AccountId:%v]向GS发送登录通知", uid, accountId)
-	req := &spb.GateGamePlayerLoginReq{
-		Uid:       uid,
-		AccountId: accountId,
-	}
-	gs.sendGame(cmd.GateGamePlayerLoginReq, req)
+	// req := &spb.GateGamePlayerLoginReq{
+	// 	Uid:       uid,
+	// 	AccountId: accountId,
+	// }
+	// gs.sendGame(cmd.GateGamePlayerLoginReq, req)
 }
 
 // 玩家在gs注册回复
