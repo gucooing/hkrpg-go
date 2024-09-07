@@ -1,4 +1,4 @@
-[EN](./zh-CN.md) | [简中](./zh-CN.md) | [繁中](./zh-CN.md) | [JP](./zh-CN.md) | [RU](./zh-CN.md) | [FR](./zh-CN.md) | [KR](./zh-CN.md) | [VI](./zh-CN.md)
+[EN](./EN.md) | [简中](./zh-CN.md) | [繁中](./zh-TW.md) | [JP](./JP.md) | [RU](./RU.md) | [FR](./FR.md) | [KR](./KR.md) | [VI](./VI.md)
 
 # API
 - 示例参数均以 uid = 1 | sign_key = 123456 进行
