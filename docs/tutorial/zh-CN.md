@@ -1,4 +1,4 @@
-[EN](./zh-CN.md) | [简中](./zh-CN.md) | [繁中](./zh-CN.md) | [JP](./zh-CN.md) | [RU](./zh-CN.md) | [FR](./zh-CN.md) | [KR](./zh-CN.md) | [VI](./zh-CN.md)
+[EN](./EN.md) | [简中](./zh-CN.md) | [繁中](./zh-TW.md) | [JP](./JP.md) | [RU](./RU.md) | [FR](./FR.md) | [KR](./KR.md) | [VI](./VI.md)
 
 # 准备环境
 1. golang >= 1.22.4
@@ -10,10 +10,13 @@
 > 注:建议自行在运行服务器上进行编译,否则可能出现意外情况
 1. 安装依赖
 `go mod tidy`
+
 2. 开始编译
+
 #### 自行编译
 - 安装golang且版本不低于1.22.4
 - linux下安装gcc环境，然后执行
+
 ```bash
 bash ./build.sh
 ```
@@ -29,15 +32,20 @@ bash ./build.sh
 前往[Build-dev](https://github.com/gucooing/hkrpg-go/actions/workflows/Build.yml)下载
 
 ## 运行
+
 ### 1.准备资源：
 data resources，data使用仓库的data即可，但资源文件夹需要给予读写权限。
 
 resources的准备:
 1. 下载[StarRailData](https://github.com/Dimbreath/StarRailData)
+
 2. 下载补充文件（任务文件）[DanhengServer-Resources](https://github.com/EggLinks/DanhengServer-Resources)
+
 3. 先将StarRailData解压到resources中，然后用DanhengServer-Resources覆盖一次(只覆盖更新Config即可，不要覆盖ExcelOutput不兼容)
+
 ### 2.运行，
 运行时需要携带启动参数 -i appid ， 其中appid格式为ipv4格式，如：9001.1.1.1 其中含义：
+
 ```bash
 9001: 区服id;
 1:    服务id; 
@@ -45,11 +53,14 @@ resources的准备:
 1:    本次启动服务id;
 ```
 了解到了appid的组成含义后你可以先不携带参数启动一次，使其生成各个服务的配置文件，生成的配置文件在conf文件夹里，然后根据你自己定义的appid更改默认配置文件中的appid(虽然服务采用发现形式添加新服务，但是还是推荐每一个配置文件中的appid配置表都相同)，然后根据自己的想法更改配置文件中的其他参数。
+
 ### 3.数据库的准备，
 安装mysql，mysql中新建数据库：hkrpg-go-account && hkrpg-go-user && hkrpg-go-player && hkrpg-go-conf (utf8mb4),然后更改配置文件中的账户和密码，安装redis，更改配置文件中的密码（本服务可采用分表分库形式，但同一张表一定要是同一个数据库）
+
 ### 4.启动，
 前期的准备工作已经全部完成了到了启动的时候了，推荐的启动顺序为：
 > 下面示例的启动方法为默认配置文件的启动参数
+
 ```bash
 ./nodeserver -i 9001.3.1.1
 ./gameserver -i 9001.2.1.1
@@ -61,10 +72,15 @@ resources的准备:
 
 ## 各服务功能
 ### nodeserver 节点服务器（有状态，不可集群），服务发现，服务管理
+
 ### dispatch 登录服务器（无状态，可集群）
+
 ### gateserver 网关服务器（有状态，可集群），内部网络与外界唯一交互口
+
 ### gameserver 逻辑服务器（有状态，可集群），处理业务逻辑
+
 ### multiserver 多人服务器（有状态，不可集群）没有用的服务
+
 ### muipserver 目前仅负责api
 
 ## 进阶操作
