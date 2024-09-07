@@ -4,26 +4,29 @@
 
 ### LogLevel：日志等级
 
-### MaxPlayer：本gameserver最大玩家数
+### MaxPlayer：单进程最大支持玩家数量（仅gateserver和gameserver有效
 
-### AutoCreate：是否自动注册
+### AutoCreate：仅sdk有效
 
 ### AppList：
-
     格式：appid[配置]
     port_player：用于gateserver，代表对外连接端口，即kcp端口
     port_gt：用于gameserver，代表与gateserver构成连接所使用的端口
     port_service：代表本服务接受其他服务连接的端口
     port_http：在这个端口上启动一个http服务器
+    MqAddr: gate的消息队列服务地址
+    RegionName: 区服名称
 
-### App:
-    Port:监听端口
-    InnerAddr:外部地址
-    OuterAddr:监听地址
+### AppNet:
+    InnerAddr: 外部地址
+    InnerPort: 监听端口
+    OuterAddr: 监听地址
+    OuterPort: 外部监听端口
 
 ### NetConf：
     格式：服务[地址]
     Node：表示nodeserver的连接地址
+    仅Node一个地址
 
 ### MysqlConf:
     格式：表[地址]
@@ -33,8 +36,11 @@
     格式：表[连接配置]
     各个需要的redis连接配置
 
-### Dispatch:(dispatch专用)
-    格式：[]各个节点服务器地址
-    当有多个不互通的服务器时，修改此配置可连接
-    
+
+### RedisConf:
+    Name: 区服名称
+    AutoCreate: 是否自动注册
+    Title: 地区
+    Type:s dk类型
+    ClientSecretKey: 不需要填写
 ### GameDataConfigPath:(gameserver专用)填写配置表路径（以程序启动目录为准）
