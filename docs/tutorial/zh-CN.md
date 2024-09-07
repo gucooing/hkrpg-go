@@ -26,6 +26,8 @@ bash ./build.sh
 .\build.bat
 ```
 
+- 脚本运行完毕后可在build文件夹中看到编译后的可执行文件
+  
 - docker下执行
   目前仅支持pe版本
 
@@ -41,8 +43,6 @@ bash ./build.sh
 
   如需拉取指定commit版本，可将标签改成此次commit的sha
 
-
-- 脚本运行完毕后可在build文件夹中看到编译后的可执行文件
 
 ### 不想编译
 前往[Build-dev](https://github.com/gucooing/hkrpg-go/actions/workflows/Build.yml)下载
