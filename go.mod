@@ -5,15 +5,15 @@ go 1.22.1
 require (
 	github.com/gin-contrib/timeout v1.0.1
 	github.com/gin-gonic/gin v1.10.0
-	github.com/go-resty/resty/v2 v2.13.1
+	github.com/go-resty/resty/v2 v2.14.0
 	github.com/goccy/go-json v0.10.3
 	github.com/google/gopacket v1.1.19
-	github.com/gucooing/gunet v0.1.0
+	github.com/gucooing/gunet v0.1.2
 	github.com/hjson/hjson-go/v4 v4.4.0
-	github.com/redis/go-redis/v9 v9.5.3
+	github.com/redis/go-redis/v9 v9.6.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
-	golang.org/x/net v0.26.0
-	golang.org/x/sys v0.21.0
+	golang.org/x/net v0.27.0
+	golang.org/x/sys v0.25.0
 	google.golang.org/grpc v1.66.0
 	google.golang.org/protobuf v1.34.1
 	gorm.io/driver/mysql v1.5.7
@@ -51,7 +51,7 @@ require (
 	github.com/ugorji/go/codec v1.2.12 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	golang.org/x/arch v0.8.0 // indirect
-	golang.org/x/crypto v0.24.0 // indirect
+	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240604185151-ef581f913117 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

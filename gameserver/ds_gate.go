@@ -2,7 +2,6 @@ package gameserver
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/gucooing/gunet"
@@ -200,7 +199,7 @@ func (ge *gateServer) GetToGamePlayerLogoutReq(payloadMsg pb.Message) {
 	play := ge.game.getPlayerByUid(req.Uid)
 	if play == nil {
 		logger.Info("[UID:%v]没有找到此玩家", req.Uid)
-		database.DelPlayerStatus(ge.game.Store.StatusRedis, strconv.Itoa(int(req.Uid)))
+		database.DelPlayerStatus(ge.game.Store.StatusRedis, req.Uid)
 		ge.playerRepeatLogin(req)
 		return
 	}
@@ -236,7 +235,6 @@ func (ge *gateServer) playerRepeatLogin(req *spb.GetToGamePlayerLogoutReq) {
 func (ge *gateServer) NewPlayer(uid, accountId uint32) *player.GamePlayer {
 	g := new(player.GamePlayer)
 	g.Uid = uid
-	g.AccountId = accountId
 	g.SendChan = make(chan player.Msg, 10)
 	g.RecvChan = make(chan player.Msg, 10)
 	g.SendCtx, g.SendCal = context.WithCancel(context.Background())

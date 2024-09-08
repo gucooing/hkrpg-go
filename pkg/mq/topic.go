@@ -11,3 +11,11 @@ func (m *MessageQueue) SendToGate(appid uint32, msg *NetMsg) {
 	msg.OriginServerType = m.serverType
 	m.netMsgInput <- msg
 }
+
+func (m *MessageQueue) SendToGame(appid uint32, msg *NetMsg) {
+	msg.ServerType = spb.ServerType_SERVICE_GAME
+	msg.AppId = appid
+	msg.OriginServerAppId = m.appId
+	msg.OriginServerType = m.serverType
+	m.netMsgInput <- msg
+}

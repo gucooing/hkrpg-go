@@ -1,6 +1,7 @@
 package database
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"time"
@@ -61,8 +62,8 @@ func LoginDistUnlock(rc *redis.Client, accountId string) {
 /**********************status*************************/
 
 // 获取玩家状态
-func GetPlayerStatus(rc *redis.Client, uid string) ([]byte, bool) {
-	key := "player_status_lock:" + uid
+func GetPlayerStatus(rc *redis.Client, uid uint32) ([]byte, bool) {
+	key := fmt.Sprintf("player_status_lock:%v", uid)
 	bin, err := rc.Get(ctx, key).Bytes()
 	if err == nil {
 		return bin, true
@@ -74,9 +75,9 @@ func GetPlayerStatus(rc *redis.Client, uid string) ([]byte, bool) {
 }
 
 // 标记玩家状态
-func AddPlayerStatus(rc *redis.Client, uid string, value []byte) bool {
+func AddPlayerStatus(rc *redis.Client, uid uint32, value []byte) bool {
 	var err error = nil
-	key := "player_status_lock:" + uid
+	key := fmt.Sprintf("player_status_lock:%v", uid)
 	err = rc.Set(ctx,
 		key,
 		value,
@@ -90,10 +91,10 @@ func AddPlayerStatus(rc *redis.Client, uid string, value []byte) bool {
 }
 
 // 删除玩家状态
-func DelPlayerStatus(rc *redis.Client, uid string) {
+func DelPlayerStatus(rc *redis.Client, uid uint32) {
 	var result int64 = 0
 	var err error = nil
-	key := "player_status_lock:" + uid
+	key := fmt.Sprintf("player_status_lock:%v", uid)
 	result, err = rc.Del(ctx, key).Result()
 	if err != nil {
 		logger.Error("redis lock del error: %v", err)

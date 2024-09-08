@@ -14,14 +14,14 @@ service NodeDiscovery {
   rpc CloseServer(CloseServerReq) returns (CloseServerRsp) {}
   // 服务器在线心跳保持
   rpc KeepaliveServer (KeepaliveServerReq) returns (KeepaliveServerRsp) {}
-  // 持续接收来自node的消息
-  rpc  NodeStreamMessages(NodeStreamMessagesReq) returns (stream NodeStreamMessagesRsp) {}
   // 获取全部gate mq
   rpc GetAllGateServerMq (GetAllGateServerMqReq) returns (GetAllGateServerMqRsp) {}
-  // 获取全部区服信息
-  rpc GetAllRegionInfo (GetAllRegionInfoReq)returns (GetAllRegionInfoRsp) {}
-  // 获取该区服下的所有已注册的GS信息
-  rpc GetRegionAllGame (GetRegionAllGameReq)returns (GetRegionAllGameRsp) {}
+  // dispatch获取全部区服信息
+  rpc GetAllRegionInfo (GetAllRegionInfoReq) returns (GetAllRegionInfoRsp) {}
+  // 获取区服负载最小game
+  rpc GetRegionMinGame (GetRegionMinGameReq) returns (GetRegionMinGameRsp) {}
+  // 获取区服密钥
+  rpc GetRegionKey (GetRegionKeyReq) returns (GetRegionKeyRsp) {}
 }
 
 message TestReq {
@@ -71,14 +71,6 @@ message KeepaliveServerRsp {
   Retcode ret_code = 1; // 状态
 }
 
-message NodeStreamMessagesReq {
-
-}
-
-message NodeStreamMessagesRsp {
-
-}
-
 message GetAllGateServerMqReq {
   string region_name = 1;
 }
@@ -111,18 +103,20 @@ message RegionInfo {
   uint32 min_gate_app_id = 8;
 }
 
-message GetRegionAllGameReq {
+message GetRegionMinGameReq {
   string region_name = 1;
 }
 
-message GetRegionAllGameRsp{
-  repeated GameInfo server_list = 1;
+message GetRegionMinGameRsp {
+  uint32 min_gs_app_id = 1;
 }
 
-message GameInfo {
-  uint32 app_id = 1;
-  uint32 player_num = 2;
-  ServerStatus status = 3;
+message GetRegionKeyReq{
+  string region_name = 1;
+}
+
+message GetRegionKeyRsp{
+  bytes client_secret_key = 1;
 }
 
 enum Retcode {

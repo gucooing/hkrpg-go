@@ -31,25 +31,26 @@ func NewDisaptchStore(mysqlList map[string]constant.MysqlConf, redisList map[str
 
 /******************************gateserver*******************************/
 
+var GATE *GateStore
+
 type GateStore struct {
 	PlayerUidMysql *gorm.DB
 	LoginRedis     *redis.Client
 	StatusRedis    *redis.Client
 }
 
-func NewGateStore(mysqlList map[string]constant.MysqlConf, redisList map[string]constant.RedisConf) *GateStore {
-	s := &GateStore{}
+func NewGateStore(mysqlList map[string]constant.MysqlConf, redisList map[string]constant.RedisConf) {
+	GATE = &GateStore{}
 	playerUidMysqlConf := mysqlList["user"]
-	s.PlayerUidMysql = NewMysql(playerUidMysqlConf.Dsn)
-	s.PlayerUidMysql.AutoMigrate(&constant.PlayerUid{})
+	GATE.PlayerUidMysql = NewMysql(playerUidMysqlConf.Dsn)
+	GATE.PlayerUidMysql.AutoMigrate(&constant.PlayerUid{})
 
 	redisLoginConf := redisList["player_login"]
-	s.LoginRedis = NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
+	GATE.LoginRedis = NewRedis(redisLoginConf.Addr, redisLoginConf.Password, redisLoginConf.DB)
 	redisStatusConf := redisList["player_status"]
-	s.StatusRedis = NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
+	GATE.StatusRedis = NewRedis(redisStatusConf.Addr, redisStatusConf.Password, redisStatusConf.DB)
 
 	logger.Info("数据库连接成功")
-	return s
 }
 
 /******************************gameserver*******************************/

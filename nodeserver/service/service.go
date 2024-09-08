@@ -10,7 +10,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
-	"google.golang.org/grpc"
 )
 
 type NodeDiscoveryService struct {
@@ -90,7 +89,7 @@ func (s *NodeDiscoveryService) GetRegion(regionName string) *RegionInfo {
 		// 没有配置,那就去数据库拉取
 		regionConf, err := database.GetRegionConf(database.NODE.ServerConf, regionName)
 		if err != nil {
-			logger.Error("拉取区服配置失败:%s", err.Error())
+			logger.Error("regionName:%s|拉取区服配置失败:%s", regionName, err.Error())
 			s.regionMapLock.Unlock()
 			return nil
 		}
@@ -171,7 +170,7 @@ func (s *NodeDiscoveryService) GetService(regionName string, st nodeapi.ServerTy
 	return list[appId]
 }
 
-func (s *NodeDiscoveryService) GetMinGate(regionName string) *Service {
+func (s *NodeDiscoveryService) GetMinService(regionName string, serverType nodeapi.ServerType) *Service {
 	region := s.GetRegion(regionName)
 	if region == nil {
 		return nil
@@ -181,7 +180,7 @@ func (s *NodeDiscoveryService) GetMinGate(regionName string) *Service {
 	if region.serviceMap == nil {
 		region.serviceMap = make(map[nodeapi.ServerType]map[uint32]*Service)
 	}
-	list := region.serviceMap[nodeapi.ServerType_SERVICE_GATE]
+	list := region.serviceMap[serverType]
 	if list == nil {
 		return nil
 	}
@@ -294,7 +293,7 @@ func (s *NodeDiscoveryService) GetAllRegionInfo(ctx context.Context, req *nodeap
 	regionMap := s.GetRegionMap()
 	s.regionMapLock.RLock()
 	for name, region := range regionMap {
-		minGate := s.GetMinGate(name)
+		service := s.GetMinService(name, nodeapi.ServerType_SERVICE_GATE)
 		info := &nodeapi.RegionInfo{
 			Name:            region.Name,
 			Title:           region.Title,
@@ -302,10 +301,10 @@ func (s *NodeDiscoveryService) GetAllRegionInfo(ctx context.Context, req *nodeap
 			ClientSecretKey: region.ClientSecretKey.Bytes(),
 			AutoCreate:      region.AutoCreate,
 		}
-		if minGate != nil {
-			info.MinGateAddr = minGate.outerAddr
-			info.MinGatePort = minGate.outerPort
-			info.MinGateAppId = minGate.appId
+		if service != nil {
+			info.MinGateAddr = service.outerAddr
+			info.MinGatePort = service.outerPort
+			info.MinGateAppId = service.appId
 		}
 		rsp.RegionInfoList[name] = info
 	}
@@ -313,14 +312,26 @@ func (s *NodeDiscoveryService) GetAllRegionInfo(ctx context.Context, req *nodeap
 	return rsp, nil
 }
 
-// 持续接收来自node的消息
-func (s *NodeDiscoveryService) NodeStreamMessages(req *nodeapi.NodeStreamMessagesReq, stream grpc.ServerStreamingServer[nodeapi.NodeStreamMessagesRsp]) error {
-	// for {
-	// 	err := stream.Send(&nodeapi.NodeStreamMessagesRsp{})
-	// 	if err != nil {
-	// 		logger.Warn("Send error:%v", err)
-	// 		return err
-	// 	}
-	// }
-	return nil
+// 获取区服负载最小game
+func (s *NodeDiscoveryService) GetRegionMinGame(ctx context.Context, req *nodeapi.GetRegionMinGameReq) (*nodeapi.GetRegionMinGameRsp, error) {
+	rsp := &nodeapi.GetRegionMinGameRsp{}
+	service := s.GetMinService(req.RegionName, nodeapi.ServerType_SERVICE_GAME)
+	if service == nil {
+		return rsp, errors.New("get region min game failed")
+	} else {
+		rsp.MinGsAppId = service.appId
+		return rsp, nil
+	}
+}
+
+// 获取区服密钥
+func (s *NodeDiscoveryService) GetRegionKey(ctx context.Context, req *nodeapi.GetRegionKeyReq) (*nodeapi.GetRegionKeyRsp, error) {
+	region := s.GetRegion(req.RegionName)
+	if region == nil {
+		return nil, errors.New("get region failed")
+	} else {
+		return &nodeapi.GetRegionKeyRsp{
+			ClientSecretKey: region.ClientSecretKey.Bytes(),
+		}, nil
+	}
 }

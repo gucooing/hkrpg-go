@@ -8,6 +8,7 @@ import (
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
 	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/mq"
 	"github.com/gucooing/hkrpg-go/pkg/random"
@@ -25,10 +26,15 @@ type Dispatch struct {
 	OuterAddr       string
 }
 
-func NewDispatch(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.MessageQueue) *Dispatch {
+func NewDispatch(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.MessageQueue,
+	netInfo constant.AppNet, appInfo constant.AppList, appId uint32) *Dispatch {
 	d := &Dispatch{
 		DiscoveryClient: discoveryClient,
 		MessageQueue:    messageQueue,
+		RegionName:      appInfo.RegionName,
+		AppId:           appId,
+		OuterAddr:       netInfo.OuterAddr,
+		OuterPort:       netInfo.OuterPort,
 		Server:          new(sdk.Server),
 	}
 	d.getRegionInfo()
@@ -55,6 +61,7 @@ func (d *Dispatch) keepaliveServer() {
 			})
 			if err != nil {
 				logger.Error("keepalive error: %v", err)
+				continue
 			}
 			if rsp.RetCode == nodeapi.Retcode_RET_Reconnect {
 				// TODO 代表是重连

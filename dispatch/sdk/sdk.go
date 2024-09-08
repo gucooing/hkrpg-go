@@ -35,6 +35,8 @@ type RegionInfo struct {
 
 type UrlList struct {
 	Version        string
+	MdkResVersion  string
+	IfixVersion    string
 	IfixUrl        string
 	LuaUrl         string
 	ExResourceUrl  string
@@ -92,6 +94,8 @@ func (s *Server) handleGateServerResponse(url string, seed string, version strin
 	}
 	s.UpstreamServer[seed] = &UrlList{
 		Version:        version,
+		MdkResVersion:  dispatch.MdkResVersion,
+		IfixVersion:    dispatch.IfixVersion,
 		IfixUrl:        dispatch.IfixUrl,
 		LuaUrl:         dispatch.LuaUrl,
 		ExResourceUrl:  dispatch.ExResourceUrl,

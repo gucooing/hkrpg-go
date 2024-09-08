@@ -4,7 +4,7 @@
 1. golang >= 1.22.4
 2. mysql
 3. redis
-4. bash(使用build.sh时才需要)
+4. linux:GCC / windows:MinGW
 
 ## 编译
 > 注:建议自行在运行服务器上进行编译,否则可能出现意外情况
@@ -14,21 +14,23 @@
 2. 开始编译
 
 #### 自行编译
-- 安装golang且版本不低于1.22.4
-- 启用cgo
+1. 安装golang且版本不低于1.22.4
+2. 启用cgo
+3. 运行编译脚本
 
+linux:
 ```bash
 bash ./build.sh
 ```
 
-- windows下执行
-```bash
+windows:
+```bat
 .\build.bat
 ```
 
 - 脚本运行完毕后可在build文件夹中看到编译后的可执行文件
   
-- docker下执行
+- 使用docker运行
   目前仅支持pe版本
 
   镜像名：gucooing/hkrpg-go-pe:latest
@@ -37,9 +39,13 @@ bash ./build.sh
 
   api暴露端口：tpc 20011
 
-  需挂载容器目录/usr/hkrpg/conf到本机，作为conf配置和数据库的保存，挂载容器目录/usr/hkrpg/log到本机作为log查询（可选
+  容器目录/usr/hkrpg/conf为conf和数据库目录
+  
+  容器目录/usr/hkrpg/log为log目录
 
-  如resources拉取速度过慢/想使用自己的resources，可挂载/usr/hkrpg/resources到自己的resources本机目录，推荐的[hkrpg-go-Resources](https://github.com/gucooing/hkrpg-go-Resources)下载地址，不推荐的[hkrpg-go-Resources](ttps://github.alsl.xyz/https://github.com/gucooing/hkrpg-go-Resources)下载地址
+  容器启动时会自动下载resources，想使用自己的resources，可挂载/usr/hkrpg/resources
+  
+  推荐的[hkrpg-go-Resources](https://github.com/gucooing/hkrpg-go-Resources)
 
   如需拉取指定commit版本，可将标签改成此次commit的sha
 
@@ -55,7 +61,7 @@ data resources，data使用仓库的data即可，但资源文件夹需要给予�
 resources的准备:
 1. 下载[hkrpg-go-Resources](https://github.com/gucooing/hkrpg-go-Resources)
 
-2. 先将hkrpg-go-Resources解压到resources中即可
+2. 将hkrpg-go-Resources解压到resources中即可
 
 ### 2.运行：
 运行时需要携带启动参数 -i appid ， 其中appid格式为ipv4格式，如：9001.1.1.1 其中含义：
@@ -72,30 +78,6 @@ resources的准备:
   安装mysql，mysql中新建数据库：hkrpg-go-account && hkrpg-go-user && hkrpg-go-player && hkrpg-go-conf (utf8mb4),然后更改配置文件中的账户和密码，安装redis，更改配置文件中的密码（本服务可采用分表分库形式，但同一张表一定要是同一个数据库）
 
   在mysql数据库`hkrpg-go-conf`的表`region_conf`中配置相应的区服信息，默认的区服信息为`hkrpg_rel`
-
-  ```bash
-mail：为全服邮件配置（推荐从1开始）
-
-player_mail：玩家邮件配置（仅pe）
-
-RogueConf：模拟宇宙配置，推荐配置：SeasonId = 79
-
-邮件附件物品配置：
-[
-    {
-        "ItemType":2,
-        "ItemId":3,
-        "Num":9999999
-    },
-    {
-        "ItemType":1,
-        "ItemId":1309,
-        "Num":1
-    }
-] 
-    ItemType：MailAvatar= 1 // 角色
-    MailMaterial=2 // 材料
-```
 
 ### 4.启动：
 前期的准备工作已经全部完成了到了启动的时候了，推荐的启动顺序为：

@@ -38,13 +38,6 @@ func main() {
 	// 初始化服务器
 	s := hkrpg_go_pe.NewServer(cfg)
 
-	// 启动GameServer服务
-	go func() {
-		if err = s.RunGameServer(); err != nil {
-			logger.Error("无法启动gameserver服务器")
-		}
-	}()
-
 	go func() {
 		select {
 		case <-done:

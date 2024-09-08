@@ -27,9 +27,10 @@ type MsgType int
 var err error
 
 const (
-	GameServer MsgType = 1 // 玩家消息转发
-	ServerMsg  MsgType = 2 // 服务消息
-	NodeMsg    MsgType = 3 // 来自node推送的消息
+	GameServer   MsgType = 1 // 玩家消息转发
+	ServerMsg    MsgType = 2 // 服务消息
+	PlayerLogin  MsgType = 3 // 玩家登录
+	PlayerLogout MsgType = 4 // 玩家下线
 )
 
 func DecodeBinToPayload(data []byte) *NetMsg {
@@ -62,8 +63,9 @@ func DecodeBinToPayload(data []byte) *NetMsg {
 		MsgType:           MsgType(msgType),
 		Uid:               uid,
 		CmdId:             cmdId,
-		ServiceMsgByte:    serviceMsgByte,
+		ServiceMsgByte:    make([]byte, protoLen),
 	}
+	copy(netMsg.ServiceMsgByte, serviceMsgByte)
 	return netMsg
 }
 

@@ -1,7 +1,6 @@
 package gameserver
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/player"
@@ -29,7 +28,7 @@ type GamePlayer struct {
 // 这个kill玩家不会通知给gate
 func (s *GameServer) killPlayer(p *GamePlayer) {
 	p.p.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
-	database.DelPlayerStatus(s.Store.StatusRedis, strconv.Itoa(int(p.p.Uid)))
+	database.DelPlayerStatus(s.Store.StatusRedis, p.p.Uid)
 	s.delPlayerMap(p.p.Uid)
 	logger.Info("[UID:%v]玩家下线成功", p.p.Uid)
 	if p.p.SendCal != nil {
@@ -104,7 +103,7 @@ func (s *GameServer) AddPlayerStatus(g *GamePlayer) error {
 		return err
 	}
 
-	if ok := database.AddPlayerStatus(s.Store.StatusRedis, strconv.Itoa(int(g.p.Uid)), value); !ok {
+	if ok := database.AddPlayerStatus(s.Store.StatusRedis, g.p.Uid, value); !ok {
 		logger.Info("玩家状态锁加锁失败")
 	}
 	return err

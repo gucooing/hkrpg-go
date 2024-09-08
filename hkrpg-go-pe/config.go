@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 )
 
 type Config struct {
@@ -16,12 +18,9 @@ type Config struct {
 }
 
 type Dispatch struct {
-	AutoCreate   bool           `json:"AutoCreate"`
-	InnerAddr    string         `json:"InnerAddr"`
-	InnerPort    string         `json:"InnerPort"`
-	OuterAddr    string         `json:"OuterAddr"`
-	OuterPort    string         `json:"OuterPort"`
-	DispatchList []DispatchList `json:"DispatchList"`
+	AutoCreate   bool            `json:"AutoCreate"`
+	AppNet       constant.AppNet `json:"AppNet"`
+	DispatchList []DispatchList  `json:"DispatchList"`
 }
 type DispatchList struct {
 	Name  string `json:"name"`
@@ -30,12 +29,9 @@ type DispatchList struct {
 }
 
 type GameServer struct {
-	MaxPlayer     int32  `json:"MaxPlayer"`
-	InnerAddr     string `json:"InnerAddr"`
-	InnerPort     string `json:"InnerPort"`
-	OuterAddr     string `json:"OuterAddr"`
-	OuterPort     string `json:"OuterPort"`
-	IsJumpMission bool   `json:"IsJumpMission"`
+	MaxPlayer     int32           `json:"MaxPlayer"`
+	AppNet        constant.AppNet `json:"AppNet"`
+	IsJumpMission bool            `json:"IsJumpMission"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
@@ -78,10 +74,12 @@ var DefaultConfig = &Config{
 	SqlPath:            "./conf/hkrpg-go-pe.db",
 	Dispatch: &Dispatch{
 		AutoCreate: true,
-		InnerAddr:  "0.0.0.0",
-		InnerPort:  "8080",
-		OuterAddr:  "127.0.0.1",
-		OuterPort:  "8080",
+		AppNet: constant.AppNet{
+			InnerAddr: "0.0.0.0",
+			InnerPort: "8080",
+			OuterAddr: "127.0.0.1",
+			OuterPort: "8080",
+		},
 		DispatchList: []DispatchList{
 			{
 				Name:  "hkrpg-go",
@@ -91,11 +89,13 @@ var DefaultConfig = &Config{
 		},
 	},
 	GameServer: &GameServer{
-		MaxPlayer:     -1,
-		InnerAddr:     "0.0.0.0",
-		InnerPort:     "20041",
-		OuterAddr:     "127.0.0.1",
-		OuterPort:     "20041",
+		MaxPlayer: -1,
+		AppNet: constant.AppNet{
+			InnerAddr: "0.0.0.0",
+			InnerPort: "20041",
+			OuterAddr: "127.0.0.1",
+			OuterPort: "20041",
+		},
 		IsJumpMission: true,
 	},
 	Gm: &Gm{

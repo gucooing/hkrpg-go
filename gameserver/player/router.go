@@ -256,14 +256,14 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 			return
 		}
 	}()
-	if g.Uid == LogMsgPlayer {
-		LogMsgRecv(cmdId, payloadMsg)
-	}
+	// if g.Uid == LogMsgPlayer {
+	// 	LogMsgRecv(cmdId, payloadMsg)
+	// }
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		// if g.Uid == LogMsgPlayer {
-		logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
-		// }
+		if g.Uid == LogMsgPlayer {
+			logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
+		}
 		return
 	}
 	handlerFunc(payloadMsg)

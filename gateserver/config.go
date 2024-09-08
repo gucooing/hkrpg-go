@@ -9,13 +9,12 @@ import (
 )
 
 type Config struct {
-	LogLevel   string                        `json:"LogLevel"`
-	MaxPlayer  int32                         `json:"MaxPlayer"`
-	AutoCreate bool                          `json:"AutoCreate"`
-	AppList    map[string]constant.AppList   `json:"AppList"`
-	NetConf    map[string]string             `json:"NetConf"`
-	MysqlConf  map[string]constant.MysqlConf `json:"MysqlConf"`
-	RedisConf  map[string]constant.RedisConf `json:"RedisConf"`
+	LogLevel  string                        `json:"LogLevel"`
+	MaxPlayer int32                         `json:"MaxPlayer"`
+	AppList   map[string]constant.AppList   `json:"AppList"`
+	NetConf   map[string]string             `json:"NetConf"`
+	MysqlConf map[string]constant.MysqlConf `json:"MysqlConf"`
+	RedisConf map[string]constant.RedisConf `json:"RedisConf"`
 }
 
 type NetConf struct {
@@ -51,11 +50,12 @@ func LoadConfig(confName string) error {
 }
 
 var DefaultConfig = &Config{
-	LogLevel:   "Info",
-	MaxPlayer:  -1,
-	AutoCreate: true,
+	LogLevel:  "Info",
+	MaxPlayer: -1,
 	AppList: map[string]constant.AppList{
 		"9001.1.1.1": {
+			RegionName: "hkrpg_rel",
+			MqAddr:     "127.0.0.1:20051",
 			App: map[string]constant.AppNet{
 				"port_player": {
 					InnerAddr: "0.0.0.0",

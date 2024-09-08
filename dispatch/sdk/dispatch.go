@@ -67,6 +67,8 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.Unk4 = true
 	queryGateway.Unk5 = true
 	queryGateway.Unk6 = true
+	queryGateway.MdkResVersion = url.MdkResVersion
+	queryGateway.IfixVersion = url.IfixVersion
 	queryGateway.IfixUrl = url.IfixUrl
 	queryGateway.LuaUrl = url.LuaUrl
 	queryGateway.ExResourceUrl = url.ExResourceUrl

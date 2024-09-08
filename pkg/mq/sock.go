@@ -2,7 +2,6 @@ package mq
 
 import (
 	"context"
-	"io"
 	"sync"
 	"time"
 
@@ -56,10 +55,10 @@ func NewMessageQueue(serverType spb.ServerType, appId uint32,
 	r.serverType = serverType
 	r.regionName = regionName
 	r.discoveryClient = discoveryClient
-	r.netMsgInput = make(chan *NetMsg, 100)
-	r.netMsgOutput = make(chan *NetMsg, 100)
-	r.gateTcpMqEventChan = make(chan *GateTcpMqEvent, 100)
-	r.gateTcpMqDeadEventChan = make(chan string, 100)
+	r.netMsgInput = make(chan *NetMsg, 1000)
+	r.netMsgOutput = make(chan *NetMsg, 1000)
+	r.gateTcpMqEventChan = make(chan *GateTcpMqEvent, 1000)
+	r.gateTcpMqDeadEventChan = make(chan string, 1000)
 
 	if serverType == spb.ServerType_SERVICE_GATE {
 		go r.runGateTcpMqServer(gateAddr)
@@ -69,7 +68,6 @@ func NewMessageQueue(serverType spb.ServerType, appId uint32,
 		serverType == spb.ServerType_SERVICE_MULTI {
 		go r.runGateTcpMqClient()
 	}
-	go r.nodeGrpcRecvHandle()
 	go r.sendHandler()
 	return
 }
@@ -247,37 +245,6 @@ func (m *MessageQueue) gateTcpMqRecvHandle(inst *GateTcpMqInst) {
 	}
 }
 
-func (m *MessageQueue) nodeGrpcRecvHandle() {
-	stream, err := m.discoveryClient.NodeStreamMessages(ctx, &nodeapi.NodeStreamMessagesReq{})
-	if err != nil {
-		logger.Error("node grpc receive error: %v", err)
-	}
-	for {
-		rsp, err := stream.Recv()
-		if err == io.EOF {
-			logger.Info("node grpc server closed")
-			return
-		}
-		if err != nil {
-			logger.Error("node grpc receive error: %v", err)
-			return
-		}
-		logger.Info("", rsp) // TODO
-		netMsg := &NetMsg{
-			ServerType:        0,
-			AppId:             0,
-			OriginServerType:  0,
-			OriginServerAppId: 0,
-			MsgType:           NodeMsg,
-			Uid:               0,
-			CmdId:             0,
-			ServiceMsgByte:    nil,
-			ServiceMsg:        nil,
-		}
-		m.netMsgOutput <- netMsg
-	}
-}
-
 func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
 	rsp, err := m.discoveryClient.GetAllGateServerMq(ctx, &nodeapi.GetAllGateServerMqReq{RegionName: m.regionName})
 	if err != nil {
@@ -299,8 +266,8 @@ func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
 		netMsg := &NetMsg{
 			CmdId: smd.GateTcpMqHandshakeReq,
 			ServiceMsg: &spb.GateTcpMqHandshakeReq{
-				Type:  spb.ServerType_SERVICE_DISPATCH,
-				AppId: 2,
+				Type:  m.serverType,
+				AppId: m.appId,
 			},
 		}
 		if !EncodeProtoToPayload(netMsg) {

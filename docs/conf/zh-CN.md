@@ -18,10 +18,10 @@
     RegionName: 区服名称
 
 ### AppNet:
-    InnerAddr: 外部地址
-    InnerPort: 监听端口
-    OuterAddr: 监听地址
-    OuterPort: 外部监听端口
+    InnerAddr: 启动地址
+    InnerPort: 启动端口
+    OuterAddr: 暴露地址
+    OuterPort: 暴露端口
 
 ### NetConf：
     格式：服务[地址]
@@ -41,6 +41,6 @@
     Name: 区服名称
     AutoCreate: 是否自动注册
     Title: 地区
-    Type:s dk类型
-    ClientSecretKey: 不需要填写
+    Type: sdk类型
+    ClientSecretKey: 不需要填写（由nodeserver启动时自动生成
 ### GameDataConfigPath:(gameserver专用)填写配置表路径（以程序启动目录为准）

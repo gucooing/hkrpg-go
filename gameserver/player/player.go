@@ -2,7 +2,6 @@ package player
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
@@ -19,7 +18,6 @@ var LogMsgPlayer uint32 = 5
 
 type GamePlayer struct {
 	Uid           uint32
-	AccountId     uint32
 	IsJumpMission bool
 	Store         *database.GameStore
 	IsPE          bool
@@ -119,7 +117,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	var err error
 	// 验证状态
 	if !g.IsPE {
-		redisDb, ok := database.GetPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
+		redisDb, ok := database.GetPlayerStatus(g.Store.StatusRedis, g.Uid)
 		if !ok {
 			return false
 		}
@@ -127,7 +125,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 		err = pb.Unmarshal(redisDb, statu)
 		if err != nil {
 			logger.Error("PlayerStatusRedisData Unmarshal error")
-			database.DelPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
+			database.DelPlayerStatus(g.Store.StatusRedis, g.Uid)
 			return false
 		}
 		if /*statu.GameserverId != g.GameAppId &&*/ statu.DataVersion != g.GetPd().GetDataVersion() {
@@ -196,9 +194,9 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 }
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
-	if g.Uid == LogMsgPlayer {
-		LogMsgSeed(cmdId, playerMsg)
-	}
+	// if g.Uid == LogMsgPlayer {
+	// 	LogMsgSeed(cmdId, playerMsg)
+	// }
 	g.SendMsg(cmdId, playerMsg)
 }
 
