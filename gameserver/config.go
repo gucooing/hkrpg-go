@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	LogLevel           string                        `json:"LogLevel"`
+	MaxPlayer          int32                         `json:"MaxPlayer"`
 	GameDataConfigPath string                        `json:"GameDataConfigPath"`
 	IsJumpMission      bool                          `json:"IsJumpMission"`
 	AppList            map[string]constant.AppList   `json:"AppList"`
@@ -52,10 +53,12 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel:           "Info",
+	MaxPlayer:          -1,
 	GameDataConfigPath: "resources",
 	IsJumpMission:      false,
 	AppList: map[string]constant.AppList{
 		"9001.2.1.1": {
+			RegionName: "hkrpg_rel",
 			App: map[string]constant.AppNet{
 				"port_gt": {
 					InnerPort: "20071",

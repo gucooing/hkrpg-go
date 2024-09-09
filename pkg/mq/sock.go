@@ -7,6 +7,7 @@ import (
 
 	"github.com/gucooing/gunet"
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/rpc"
 	smd "github.com/gucooing/hkrpg-go/protocol/server"
@@ -30,7 +31,7 @@ type MessageQueue struct {
 	gateTcpMqDeadEventChan chan string              // gate 管理
 	discoveryClient        *rpc.NodeDiscoveryClient // 和node连接的rpc
 	gateTcpMqInstMap       map[spb.ServerType]map[uint32]*GateTcpMqInst
-	gateTcpMqSync          sync.RWMutex // 读写锁
+	gateTcpMqSync          *sync.RWMutex // 读写锁
 }
 
 type GateTcpMqEvent struct {
@@ -59,6 +60,7 @@ func NewMessageQueue(serverType spb.ServerType, appId uint32,
 	r.netMsgOutput = make(chan *NetMsg, 1000)
 	r.gateTcpMqEventChan = make(chan *GateTcpMqEvent, 1000)
 	r.gateTcpMqDeadEventChan = make(chan string, 1000)
+	r.gateTcpMqSync = new(sync.RWMutex)
 
 	if serverType == spb.ServerType_SERVICE_GATE {
 		go r.runGateTcpMqServer(gateAddr)
@@ -120,10 +122,14 @@ func (m *MessageQueue) gateTcpMqHandshake(conn *gunet.TcpConn) {
 		logger.Error("tcp mq handshake error: %v", conn.RemoteAddr().String())
 		return
 	}
-	if !DecodePayloadToProto(netMsg) {
+	protoObj := smd.DecodePayloadToProto(&alg.PackMsg{
+		CmdId:     netMsg.CmdId,
+		ProtoData: netMsg.ServiceMsgByte,
+	})
+	if protoObj == nil {
 		return
 	}
-	req := netMsg.ServiceMsg.(*spb.GateTcpMqHandshakeReq)
+	req := protoObj.(*spb.GateTcpMqHandshakeReq)
 	switch req.Type {
 	case spb.ServerType_SERVICE_DISPATCH:
 		inst.serverType = spb.ServerType_SERVICE_DISPATCH
@@ -153,6 +159,7 @@ func (m *MessageQueue) gateTcpMqHandshake(conn *gunet.TcpConn) {
 
 func (m *MessageQueue) runGateTcpMqClient() {
 	gateServerConnAddrMap := make(map[string]bool)
+	m.gateTcpMqConn(gateServerConnAddrMap)
 	ticker := time.NewTicker(time.Minute)
 	for {
 		select {
@@ -191,13 +198,9 @@ func (m *MessageQueue) sendHandler() {
 	for {
 		select {
 		case netMsg := <-m.netMsgInput:
-			logger.Info("", netMsg)
 			inst := m.GetGateTcpMqInst(netMsg.ServerType, netMsg.AppId)
 			if inst == nil {
 				logger.Error("unknown server type: %v", netMsg.ServerType)
-				continue
-			}
-			if !EncodeProtoToPayload(netMsg) {
 				continue
 			}
 			bin := EncodePayloadToBin(netMsg)
@@ -239,9 +242,7 @@ func (m *MessageQueue) gateTcpMqRecvHandle(inst *GateTcpMqInst) {
 			return
 		}
 		netMsg := DecodeBinToPayload(bin)
-		if DecodePayloadToProto(netMsg) {
-			m.netMsgOutput <- netMsg
-		}
+		m.netMsgOutput <- netMsg
 	}
 }
 
@@ -265,13 +266,14 @@ func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
 		}
 		netMsg := &NetMsg{
 			CmdId: smd.GateTcpMqHandshakeReq,
-			ServiceMsg: &spb.GateTcpMqHandshakeReq{
-				Type:  m.serverType,
-				AppId: m.appId,
-			},
-		}
-		if !EncodeProtoToPayload(netMsg) {
-			continue
+			ServiceMsgByte: smd.EncodeProtoToPayload(
+				&smd.ProtoMsg{
+					CmdId: smd.GateTcpMqHandshakeReq,
+					PayloadMessage: &spb.GateTcpMqHandshakeReq{
+						Type:  m.serverType,
+						AppId: m.appId,
+					},
+				}),
 		}
 		bin := EncodePayloadToBin(netMsg)
 		_, err = conn.Write(bin)

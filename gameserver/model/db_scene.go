@@ -572,7 +572,7 @@ func (g *PlayerData) GetBlock(entryId uint32) *spb.BlockBin {
 	defer on.blockMapLock.Unlock()
 	if db[newEntryId] == nil {
 		bin := database.GetBlockData(database.GSS.PlayerDataMysql,
-			database.GSS.PeMysql, g.GetBasicBin().Uid, newEntryId)
+			g.GetBasicBin().Uid, newEntryId)
 		block := new(spb.BlockBin)
 		if err := pb.Unmarshal(bin.BinData, block); err != nil {
 			logger.Debug("entryId:%v,block error", newEntryId)
@@ -604,7 +604,7 @@ func (g *PlayerData) UpdateBlock(block *spb.BlockBin) {
 		BinData:     bin,
 	}
 	if err = database.UpdateBlockData(database.GSS.PlayerDataMysql,
-		database.GSS.PeMysql, blockData); err != nil {
+		blockData); err != nil {
 		logger.Debug("updata block data error:%s", err.Error())
 	}
 }

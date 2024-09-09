@@ -47,6 +47,7 @@ func NewGateServer(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Me
 		MqAddr:          appInfo.MqAddr,
 		AppId:           appId,
 		SessionMap:      make(map[uint32]*session.Session),
+		SessionMapMutex: new(sync.RWMutex),
 	}
 	k, err := session.NewKcpConn(netInfo)
 	if err != nil {
@@ -78,7 +79,7 @@ func (g *GateServer) keepaliveServer() {
 				OuterPort:  g.OuterPort,
 				OuterAddr:  g.OuterAddr,
 				MqAddr:     g.MqAddr,
-				LoadCount:  0,
+				LoadCount:  session.CLIENT_CONN_NUM,
 			})
 			if err != nil {
 				logger.Error("keepalive error: %v", err)
@@ -156,7 +157,7 @@ func (g *GateServer) loginSessionManagement() {
 			delete(loginSessionMap, s.SessionId)
 		case netMsg := <-g.MessageQueue.GetNetMsg():
 			switch netMsg.MsgType {
-			case mq.GameServer:
+			case mq.GameServer: // 玩家消息转发
 				go g.gameMsgHandle(netMsg)
 			case mq.ServerMsg:
 				go g.serverMsgHandle(netMsg)
@@ -167,11 +168,13 @@ func (g *GateServer) loginSessionManagement() {
 
 func (g *GateServer) gameMsgHandle(netMsg *mq.NetMsg) {
 	s := g.GetSession(netMsg.Uid)
-	if s != nil {
-		s.SendChan <- &alg.PackMsg{
-			CmdId:     netMsg.CmdId,
-			ProtoData: netMsg.ServiceMsgByte,
-		}
+	if s == nil ||
+		s.SessionState != session.SessionActivity {
+		return
+	}
+	s.SendChan <- &alg.PackMsg{
+		CmdId:     netMsg.CmdId,
+		ProtoData: netMsg.ServiceMsgByte,
 	}
 }
 
@@ -183,7 +186,7 @@ func (g *GateServer) sessionMsg(s *session.Session) {
 	for {
 		select {
 		case packMsg, ok := <-s.RecvChan:
-			if !ok || s.SessionState == session.SessionClose {
+			if !ok {
 				return
 			}
 			switch s.SessionState {
@@ -202,11 +205,7 @@ func (g *GateServer) sessionMsg(s *session.Session) {
 					g.AddSession(s)
 					s.SessionState = session.SessionActivity
 					s.GameAppId = g.MinGsAppId
-					g.MessageQueue.SendToGame(s.GameAppId, &mq.NetMsg{ // 通知GS上线
-						MsgType: mq.PlayerLogin,
-						Uid:     s.Uid,
-					})
-					atomic.AddInt32(&session.CLIENT_CONN_NUM, 1)
+					atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
 				}
 				s.SendChan <- &alg.PackMsg{
 					CmdId:     cmd.PlayerGetTokenScRsp,
@@ -219,19 +218,20 @@ func (g *GateServer) sessionMsg(s *session.Session) {
 						MsgType: mq.PlayerLogout,
 						Uid:     s.Uid,
 					})
-					s.Close() // 关闭session
+					g.DelSession(s)
 					return
 				}
-				g.MessageQueue.SendToGame(s.GameAppId, &mq.NetMsg{
+				netMsg := &mq.NetMsg{
 					MsgType:        mq.GameServer,
 					Uid:            s.Uid,
 					CmdId:          packMsg.CmdId,
 					ServiceMsgByte: packMsg.ProtoData,
-				})
+				}
+				g.MessageQueue.SendToGame(s.GameAppId, netMsg)
 			case session.SessionFreeze:
 				continue
 			case session.SessionClose:
-				return
+				continue
 			}
 		case <-timeout:
 			if s.SessionState == session.SessionLogin {

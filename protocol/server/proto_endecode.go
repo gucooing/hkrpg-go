@@ -26,13 +26,11 @@ func DecodePayloadToProto(msg *alg.PackMsg) (protoObj pb.Message) {
 	return protoObj
 }
 
-func EncodeProtoToPayload(protoMsg *ProtoMsg) (serviceMsg *alg.PackMsg) {
-	rspMsg := new(alg.PackMsg)
-	var err error
-	rspMsg.CmdId = protoMsg.CmdId
-	rspMsg.ProtoData, err = pb.Marshal(protoMsg.PayloadMessage)
+func EncodeProtoToPayload(protoMsg *ProtoMsg) (protoData []byte) {
+	protoData, err := pb.Marshal(protoMsg.PayloadMessage)
 	if err != nil {
 		log.Printf("pb marshal error: %v\n", err)
+		return nil
 	}
-	return rspMsg
+	return protoData
 }

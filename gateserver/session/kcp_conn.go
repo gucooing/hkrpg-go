@@ -11,8 +11,8 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 
-var CLIENT_CONN_NUM int32 = 0       // 当前客户端连接数
-var MAX_CLIENT__CONN_NUM int32 = -1 // 最大客户端连接数
+var CLIENT_CONN_NUM int64 = 0       // 当前客户端连接数
+var MAX_CLIENT__CONN_NUM int64 = -1 // 最大客户端连接数
 var QPS int64
 
 type KcpConn struct {
@@ -82,7 +82,7 @@ func kcpNetInfo() {
 		logger.Debug("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
 		logger.Debug("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
 		logger.Debug("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
-		clientConnNum := atomic.LoadInt32(&CLIENT_CONN_NUM)
+		clientConnNum := atomic.LoadInt64(&CLIENT_CONN_NUM)
 		logger.Debug("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
 		logger.Debug("QPS: %v /s", QPS/60)
 		QPS = 0

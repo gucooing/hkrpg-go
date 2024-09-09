@@ -67,7 +67,7 @@ func (g *PlayerData) GetDisplayAvatarlist() map[uint32]uint32 {
 func (g *PlayerData) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 	friend := new(spb.ApplyFriend)
 	redisDb, ok := database.GetApplyFriend(database.GSS.PlayerBriefDataRedis,
-		database.GSS.PeMysql, g.GetBasicBin().Uid)
+		database.PE, g.GetBasicBin().Uid)
 	if !ok {
 		return make(map[uint32]*spb.ReceiveApply, 0)
 	}
@@ -95,7 +95,7 @@ func (g *PlayerData) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefDa
 		}
 	}
 	bin, ok := database.GetPlayerBasic(database.GSS.PlayerBriefDataRedis,
-		database.GSS.PeMysql, uid)
+		database.PE, uid)
 	if !ok {
 		return nil
 	}
@@ -112,7 +112,7 @@ func (g *PlayerData) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefDa
 func (g *PlayerData) InspectionRedisAcceptApplyFriend() {
 	friend := new(spb.AcceptApplyFriend)
 	redisDb, ok := database.GetAcceptApplyFriend(database.GSS.PlayerBriefDataRedis,
-		database.GSS.PeMysql, g.GetBasicBin().Uid)
+		database.PE, g.GetBasicBin().Uid)
 	if !ok {
 		return
 	}
@@ -127,7 +127,7 @@ func (g *PlayerData) InspectionRedisAcceptApplyFriend() {
 		}
 	}
 	database.DelAcceptApplyFriend(database.GSS.PlayerBriefDataRedis,
-		database.GSS.PeMysql, g.GetBasicBin().Uid)
+		database.PE, g.GetBasicBin().Uid)
 }
 
 /*******************************************接口*******************************************/

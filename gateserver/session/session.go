@@ -2,6 +2,7 @@ package session
 
 import (
 	"sync/atomic"
+	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
@@ -39,8 +40,8 @@ func NewSession(kcpConn *kcp.UDPSession, xorKey []byte) *Session {
 	s.kcpConn = kcpConn
 	s.SessionId = kcpConn.GetSessionId()
 	s.SessionState = SessionLogin
-	s.RecvChan = make(chan *alg.PackMsg)
-	s.SendChan = make(chan *alg.PackMsg)
+	s.RecvChan = make(chan *alg.PackMsg, 100)
+	s.SendChan = make(chan *alg.PackMsg, 100)
 
 	return s
 }
@@ -59,6 +60,9 @@ func (s *Session) recvHandle() {
 		kcpMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &kcpMsgList, s.XorKey)
 		for _, v := range kcpMsgList {
+			if s.SessionState == SessionClose {
+				return
+			}
 			s.RecvChan <- v
 		}
 	}
@@ -69,7 +73,7 @@ func (s *Session) sendHandle() {
 	for {
 		packMsg, ok := <-s.SendChan
 		if !ok {
-			logger.Debug("exit send loop, send chan close, sessionId: %v", s.Uid)
+			logger.Debug("exit send loop, send chan close, sessionId: %v", s.SessionId)
 			// TODO KILL
 			return
 		}
@@ -97,6 +101,14 @@ func (s *Session) Close() {
 		return
 	}
 	s.SessionState = SessionClose
+	// 等待所有待发送的消息发送完毕
+	for {
+		if len(s.SendChan) == 0 {
+			time.Sleep(time.Millisecond * 100)
+			break
+		}
+		time.Sleep(time.Millisecond * 100)
+	}
 	// 通知客户端下线
 	protoData, err := pb.Marshal(&proto.PlayerKickOutScNotify{
 		BlackInfo: &proto.BlackInfo{},
@@ -116,5 +128,6 @@ func (s *Session) Close() {
 	close(s.RecvChan)
 	close(s.SendChan)
 
-	atomic.AddInt32(&CLIENT_CONN_NUM, -1)
+	logger.Info("[UID:%v]下线GATE", s.Uid)
+	atomic.AddInt64(&CLIENT_CONN_NUM, -1)
 }

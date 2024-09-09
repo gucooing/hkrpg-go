@@ -10,7 +10,7 @@ import (
 
 type Config struct {
 	LogLevel  string                        `json:"LogLevel"`
-	MaxPlayer int32                         `json:"MaxPlayer"`
+	MaxPlayer int64                         `json:"MaxPlayer"`
 	AppList   map[string]constant.AppList   `json:"AppList"`
 	NetConf   map[string]string             `json:"NetConf"`
 	MysqlConf map[string]constant.MysqlConf `json:"MysqlConf"`

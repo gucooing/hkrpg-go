@@ -4,9 +4,7 @@ import (
 	"encoding/binary"
 	"log"
 
-	smd "github.com/gucooing/hkrpg-go/protocol/server"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type NetMsg struct {
@@ -19,7 +17,6 @@ type NetMsg struct {
 	Uid               uint32         // 玩家id // 4
 	CmdId             uint16         // cmd id // 2
 	ServiceMsgByte    []byte         // 消息
-	ServiceMsg        pb.Message     // 消息
 }
 
 type MsgType int
@@ -27,8 +24,9 @@ type MsgType int
 var err error
 
 const (
-	GameServer   MsgType = 1 // 玩家消息转发
-	ServerMsg    MsgType = 2 // 服务消息
+	GameServer MsgType = 1 // 玩家消息转发
+	ServerMsg  MsgType = 2 // 服务消息
+	// 玩家事件
 	PlayerLogin  MsgType = 3 // 玩家登录
 	PlayerLogout MsgType = 4 // 玩家下线
 )
@@ -81,28 +79,4 @@ func EncodePayloadToBin(netMsg *NetMsg) (bin []byte) {
 	binary.BigEndian.PutUint16(bin[25:27], netMsg.CmdId)
 	copy(bin[27:], netMsg.ServiceMsgByte)
 	return bin
-}
-
-func DecodePayloadToProto(netMsg *NetMsg) bool {
-	protoObj := smd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(netMsg.CmdId)
-	if protoObj == nil {
-		log.Println("get new proto object is nil")
-		return false
-	}
-	err := pb.Unmarshal(netMsg.ServiceMsgByte, protoObj)
-	if err != nil {
-		log.Printf("unmarshal proto data err: %v\n", err)
-		return false
-	}
-	netMsg.ServiceMsg = protoObj
-	return true
-}
-
-func EncodeProtoToPayload(netMsg *NetMsg) bool {
-	netMsg.ServiceMsgByte, err = pb.Marshal(netMsg.ServiceMsg)
-	if err != nil {
-		log.Printf("pb marshal error: %v\n", err)
-		return false
-	}
-	return true
 }

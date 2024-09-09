@@ -160,8 +160,7 @@ func getPlayerPb(s *HkRpgGoServer, parameter []string) any {
 	if p := s.GetPlayer(uid); p != nil {
 		return p.GamePlayer.GetPd().GetBasicBin()
 	} else {
-		dbPlayer := database.GetPlayerDataByUid(nil,
-			s.db, uid)
+		dbPlayer := database.GetPlayerDataByUid(database.PE, uid)
 		if dbPlayer == nil || dbPlayer.BinData == nil {
 			return "Player Not Found"
 		}

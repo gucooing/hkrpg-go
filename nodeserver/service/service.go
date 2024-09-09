@@ -224,7 +224,7 @@ func (s *NodeDiscoveryService) RegisterServer(ctx context.Context, req *nodeapi.
 		return rsp, nil
 	} else {
 		logger.Error("add repeatedly service:%s regionName:%s appId:%v", req.Type, req.RegionName, req.AppId)
-		return rsp, errors.New("add service failed")
+		return rsp, nil
 	}
 }
 

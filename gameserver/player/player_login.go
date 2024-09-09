@@ -123,7 +123,7 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
 	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE) // 取消掉战斗状态
-	if !g.IsPE {
+	if !ISPE {
 		g.GetPd().InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
 	}
 	// db := g.GetBasicBin()

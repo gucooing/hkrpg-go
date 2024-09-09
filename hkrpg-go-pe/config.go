@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	LogLevel           string      `json:"LogLevel"`
+	MaxPlayer          int64       `json:"MaxPlayer"`
 	GameDataConfigPath string      `json:"GameDataConfigPath"`
 	SqlPath            string      `json:"SqlPath"`
 	Dispatch           *Dispatch   `json:"Dispatch"`
@@ -29,7 +30,6 @@ type DispatchList struct {
 }
 
 type GameServer struct {
-	MaxPlayer     int32           `json:"MaxPlayer"`
 	AppNet        constant.AppNet `json:"AppNet"`
 	IsJumpMission bool            `json:"IsJumpMission"`
 }
@@ -70,6 +70,7 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel:           "Info",
+	MaxPlayer:          -1,
 	GameDataConfigPath: "resources",
 	SqlPath:            "./conf/hkrpg-go-pe.db",
 	Dispatch: &Dispatch{
@@ -89,7 +90,6 @@ var DefaultConfig = &Config{
 		},
 	},
 	GameServer: &GameServer{
-		MaxPlayer: -1,
 		AppNet: constant.AppNet{
 			InnerAddr: "0.0.0.0",
 			InnerPort: "20041",

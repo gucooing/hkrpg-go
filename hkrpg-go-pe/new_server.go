@@ -1,7 +1,6 @@
 package hkrpg_go_pe
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -11,12 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/dbconf"
 	"github.com/gucooing/hkrpg-go/dispatch/sdk"
-	"github.com/gucooing/hkrpg-go/gameserver"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/gateserver/session"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
@@ -24,7 +21,11 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
-	"gorm.io/gorm"
+)
+
+const (
+	Ticker                 = 5   // 定时器间隔时间 / s
+	AutoUpDataPlayerTicker = 120 // 定时执行玩家数据保存间隔时间 / s
 )
 
 type HkRpgGoServer struct {
@@ -33,9 +34,8 @@ type HkRpgGoServer struct {
 	Sdk           *sdk.Server
 	KcpConn       *session.KcpConn
 	playerMap     map[uint32]*PlayerGame
-	playerMapLock sync.RWMutex // 读写锁
+	playerMapLock *sync.RWMutex // 读写锁
 
-	db        *gorm.DB
 	apiRouter *gin.Engine // http api
 
 	// 下面是定时器
@@ -50,39 +50,20 @@ type PlayerGame struct {
 	LastActiveTime int64              // 最近一次的活跃时间
 }
 
-func newStorePE(cfg *Config) *gorm.DB {
-	db := database.NewSqlite(cfg.SqlPath)
-	db.AutoMigrate(
-		&constant.Account{},      // sdk账户
-		&constant.PlayerUid{},    // 映射表
-		&constant.PlayerData{},   // 玩家数据
-		&constant.BlockData{},    // 地图数据
-		&constant.RogueConf{},    // 模拟宇宙配置
-		&constant.ScheduleConf{}, // 忘记了
-		&constant.PlayerBasic{},  // 好友简要信息
-		&constant.Mail{},         // 邮件配置
-		&constant.PlayerMail{},   // 玩家邮件配置
-		&constant.RegionConf{},   // 区服配置
-	)
-
-	logger.Info("数据库连接成功")
-	return db
-}
-
 // 初始化数据库步骤
 func NewServer(cfg *Config) *HkRpgGoServer {
 	s := new(HkRpgGoServer)
 	s.config = cfg
 	s.ec2b = alg.GetEc2b()
+	s.playerMapLock = new(sync.RWMutex)
 	// 加载res
 	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// 初始化数据库
-	s.db = newStorePE(cfg)
-	dbconf.GameServer(s.db)
-	database.GSS = &database.GameStore{PeMysql: s.db}
-
-	database.GATE = &database.GateStore{PlayerUidMysql: s.db}
-	database.DISPATCH = &database.DisaptchStore{AccountMysql: s.db}
+	database.NewPE(cfg.SqlPath)
+	dbconf.GameServer(database.PE)
+	database.GATE = &database.GateStore{PlayerUidMysql: database.PE}
+	database.DISPATCH = &database.DisaptchStore{AccountMysql: database.PE}
+	database.GSS = &database.GameStore{PlayerDataMysql: database.PE, ServerConf: database.PE}
 	// 初始化dispatch
 	s.Sdk = &sdk.Server{
 		IsAutoCreate: cfg.Dispatch.AutoCreate,
@@ -126,15 +107,16 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 			return
 		}
 	}()
+	session.MAX_CLIENT__CONN_NUM = cfg.MaxPlayer
 	go s.loginSessionManagement()
 	// new game
-
+	player.ISPE = true
 	s.playerMap = make(map[uint32]*PlayerGame)
 	s.CmdRouteManager = NewCmdRouteManager()
 	// 启动http api
 	go s.newHttpApi()
 	// 开启game定时器
-	s.autoUpDataPlayer = time.NewTicker(gameserver.AutoUpDataPlayerTicker * time.Second)
+	s.autoUpDataPlayer = time.NewTicker(AutoUpDataPlayerTicker * time.Second)
 	everyDay4 := alg.GetEveryDay4()
 	logger.Debug("离下一个刷新时间:%v", everyDay4)
 	s.everyDay4 = time.NewTicker(everyDay4)
@@ -188,6 +170,9 @@ func (g *PlayerGame) recvGameMsg() {
 		if !ok {
 			return
 		}
+		if g.S.SessionState == session.SessionClose {
+			return
+		}
 		switch bin.MsgType {
 		case player.Server:
 			protoData, err := pb.Marshal(bin.PlayerMsg)
@@ -223,11 +208,10 @@ func (h *HkRpgGoServer) AddPlayer(s *session.Session) *PlayerGame {
 	h.playerMapLock.Lock()
 	defer h.playerMapLock.Unlock()
 	g := &PlayerGame{
-		GamePlayer:     h.NewPlayer(s.Uid),
+		GamePlayer:     player.NewPlayer(s.Uid, h.config.GameServer.IsJumpMission),
 		S:              s,
 		LastActiveTime: time.Now().Unix(),
 	}
-	g.GamePlayer.GetPlayerDateByDb() // 拉取玩家数据
 	h.playerMap[s.Uid] = g
 	return h.playerMap[s.Uid]
 }
@@ -259,10 +243,8 @@ func (h *HkRpgGoServer) sessionLogin(s *session.Session) {
 	select {
 	case packMsg, ok := <-s.RecvChan:
 		if !ok {
-			// 通道关闭
 			return
 		}
-
 		if packMsg.CmdId != cmd.PlayerGetTokenCsReq {
 			return
 		}
@@ -276,7 +258,7 @@ func (h *HkRpgGoServer) sessionLogin(s *session.Session) {
 		if rsp.Retcode == 0 {
 			p := h.AddPlayer(s)
 			s.SessionState = session.SessionActivity
-			atomic.AddInt32(&session.CLIENT_CONN_NUM, 1)
+			atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
 			go h.sessionMsg(p)
 			go p.recvGameMsg()
 			go p.GamePlayer.RecvMsg()
@@ -382,31 +364,14 @@ func (h *HkRpgGoServer) GlobalRotationEvent4h() {
 	h.everyDay4 = time.NewTicker(everyDay4)
 }
 
-func (h *HkRpgGoServer) NewPlayer(uid uint32) *player.GamePlayer {
-	g := new(player.GamePlayer)
-	g.Uid = uid
-	g.RecvChan = make(chan player.Msg)
-	g.SendChan = make(chan player.Msg)
-	g.RecvCtx, g.RecvCal = context.WithCancel(context.Background())
-	g.SendCtx, g.SendCal = context.WithCancel(context.Background())
-	g.IsJumpMission = h.config.GameServer.IsJumpMission
-	g.Store = database.GSS // TODO
-	g.IsPE = true
-	g.RouteManager = player.NewRouteManager(g)
-	g.LastUpDataTime = time.Now().Unix()
-
-	return g
-}
-
 func (g *PlayerGame) Close() {
 	if g.S.SessionState == session.SessionClose {
 		return
 	}
-	logger.Info("[UID:%v]玩家下线", g.S.Uid)
-	// 通知客户端下线
+	// 下线GATE
 	g.S.Close()
-	// 保存数据
-	g.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
+	// 下线GS
+	g.GamePlayer.Close()
 }
 
 func (h *HkRpgGoServer) Close() {

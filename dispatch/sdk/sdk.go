@@ -54,15 +54,7 @@ func (s *Server) UpUpstreamServer() {
 		case <-ticker.C:
 			func() {
 				for seed, info := range s.UpstreamServer {
-					up := false
-					for _, server := range s.UpstreamServerList {
-						url := fmt.Sprintf("%sversion=%s&dispatch_seed=%s&is_need_url=1", server, info.Version, seed)
-						if s.handleGateServerResponse(url, seed, info.Version) {
-							up = true
-							continue
-						}
-					}
-					if !up {
+					if !s.handleGateServerResponse(info, seed) {
 						delete(s.UpstreamServer, seed)
 					}
 				}
@@ -71,37 +63,45 @@ func (s *Server) UpUpstreamServer() {
 	}
 }
 
-func (s *Server) handleGateServerResponse(url string, seed string, version string) bool {
-	rsps, err := http.Get(url)
-	if err != nil {
-		return false
+func (s *Server) handleGateServerResponse(info *UrlList, seed string) bool {
+	for _, server := range s.UpstreamServerList {
+		url := fmt.Sprintf("%sversion=%s&dispatch_seed=%s&platform_type=3&is_need_url=1", server, info.Version, seed)
+		rsps, err := http.Get(url)
+		if err != nil {
+			continue
+		}
+		defer rsps.Body.Close()
+		data, err := io.ReadAll(rsps.Body)
+		if err != nil {
+			logger.Error("Read body failed:", err)
+			continue
+		}
+		datamsg, _ := base64.StdEncoding.DecodeString(string(data))
+		dispatch := new(proto.GateServer)
+		err = pb.Unmarshal(datamsg, dispatch)
+		if err != nil {
+			logger.Error("", err)
+			continue
+		}
+		if dispatch.Ip == "" {
+			continue
+		}
+		if info.MdkResVersion != dispatch.MdkResVersion {
+			logger.Info("Version:%s|Seed:%s|NewMdkResVersion:%s|NewIfixVersion:%s",
+				info.Version, seed, dispatch.MdkResVersion, dispatch.IfixVersion)
+		}
+		s.UpstreamServer[seed] = &UrlList{
+			Version:        info.Version,
+			MdkResVersion:  dispatch.MdkResVersion,
+			IfixVersion:    dispatch.IfixVersion,
+			IfixUrl:        dispatch.IfixUrl,
+			LuaUrl:         dispatch.LuaUrl,
+			ExResourceUrl:  dispatch.ExResourceUrl,
+			AssetBundleUrl: dispatch.AssetBundleUrl,
+		}
+		return true
 	}
-	defer rsps.Body.Close()
-	data, err := io.ReadAll(rsps.Body)
-	if err != nil {
-		logger.Error("Read body failed:", err)
-		return false
-	}
-	datamsg, _ := base64.StdEncoding.DecodeString(string(data))
-	dispatch := new(proto.GateServer)
-	err = pb.Unmarshal(datamsg, dispatch)
-	if err != nil {
-		logger.Error("", err)
-		return false
-	}
-	if dispatch.Ip == "" {
-		return false
-	}
-	s.UpstreamServer[seed] = &UrlList{
-		Version:        version,
-		MdkResVersion:  dispatch.MdkResVersion,
-		IfixVersion:    dispatch.IfixVersion,
-		IfixUrl:        dispatch.IfixUrl,
-		LuaUrl:         dispatch.LuaUrl,
-		ExResourceUrl:  dispatch.ExResourceUrl,
-		AssetBundleUrl: dispatch.AssetBundleUrl,
-	}
-	return true
+	return false
 }
 
 func (s *Server) GetUpstreamServer(version, seed string) *UrlList {
@@ -112,9 +112,10 @@ func (s *Server) GetUpstreamServer(version, seed string) *UrlList {
 	}
 	if _, ok := s.UpstreamServer[seed]; !ok {
 		s.UpstreamServerLock.Lock()
-		s.UpstreamServer[seed] = &UrlList{
+		// 如果没有则直接去拉取一次
+		s.handleGateServerResponse(&UrlList{
 			Version: version,
-		}
+		}, seed)
 		s.UpstreamServerLock.Unlock()
 	}
 	return s.UpstreamServer[seed]
