@@ -24,7 +24,7 @@ func (g *GamePlayer) GetMailCsReq(payloadMsg pb.Message) {
 	rsp.MailList = append(rsp.MailList, g.GetPd().GetAllMail(
 		database.GetAllPlayerMail(
 			database.GSS.PlayerMail,
-			database.GSS.PeMysql, g.Uid))...)
+			database.PE, g.Uid))...)
 
 	g.Send(cmd.GetMailScRsp, rsp)
 }

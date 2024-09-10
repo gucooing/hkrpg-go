@@ -9,13 +9,12 @@ import (
 )
 
 type Config struct {
-	LogLevel   string                        `json:"LogLevel"`
-	MaxPlayer  int32                         `json:"MaxPlayer"`
-	AutoCreate bool                          `json:"AutoCreate"`
-	AppList    map[string]constant.AppList   `json:"AppList"`
-	NetConf    map[string]string             `json:"NetConf"`
-	MysqlConf  map[string]constant.MysqlConf `json:"MysqlConf"`
-	RedisConf  map[string]constant.RedisConf `json:"RedisConf"`
+	LogLevel  string                        `json:"LogLevel"`
+	MaxPlayer int64                         `json:"MaxPlayer"`
+	AppList   map[string]constant.AppList   `json:"AppList"`
+	NetConf   map[string]string             `json:"NetConf"`
+	MysqlConf map[string]constant.MysqlConf `json:"MysqlConf"`
+	RedisConf map[string]constant.RedisConf `json:"RedisConf"`
 }
 
 type NetConf struct {
@@ -51,51 +50,18 @@ func LoadConfig(confName string) error {
 }
 
 var DefaultConfig = &Config{
-	LogLevel:   "Info",
-	MaxPlayer:  -1,
-	AutoCreate: true,
+	LogLevel:  "Info",
+	MaxPlayer: -1,
 	AppList: map[string]constant.AppList{
 		"9001.1.1.1": {
-			App: map[string]constant.App{
+			RegionName: "hkrpg_rel",
+			MqAddr:     "127.0.0.1:20051",
+			App: map[string]constant.AppNet{
 				"port_player": {
-					Port:      "20041",
 					InnerAddr: "0.0.0.0",
+					InnerPort: "20041",
 					OuterAddr: "127.0.0.1",
-				},
-			},
-		},
-		"9001.2.1.1": {
-			App: map[string]constant.App{
-				"port_gt": {
-					Port: "20071",
-				},
-			},
-		},
-		"9001.3.1.1": {
-			App: map[string]constant.App{
-				"port_service": {
-					Port: "20081",
-				},
-			},
-		},
-		"9001.4.1.1": {
-			App: map[string]constant.App{
-				"port_http": {
-					Port: "8080",
-				},
-			},
-		},
-		"9001.5.1.1": {
-			App: map[string]constant.App{
-				"port_service": {
-					Port: "20091",
-				},
-			},
-		},
-		"9001.6.1.1": {
-			App: map[string]constant.App{
-				"port_http": {
-					Port: "20011",
+					OuterPort: "20041",
 				},
 			},
 		},

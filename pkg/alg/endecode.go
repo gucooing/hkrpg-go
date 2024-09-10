@@ -86,8 +86,10 @@ func DecodeLoop(data []byte, kcpMsgList *[]*PackMsg) {
 	// 返回数据
 	kcpMsg := new(PackMsg)
 	kcpMsg.CmdId = cmdId
-	kcpMsg.HeadData = headData
-	kcpMsg.ProtoData = protoData
+	kcpMsg.HeadData = make([]byte, headLen)
+	kcpMsg.ProtoData = make([]byte, protoLen)
+	copy(kcpMsg.HeadData, headData)
+	copy(kcpMsg.ProtoData, protoData)
 	*kcpMsgList = append(*kcpMsgList, kcpMsg)
 	// 有不止一个包 递归解析
 	if len(data) > packetLen {

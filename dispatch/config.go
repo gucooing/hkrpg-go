@@ -9,24 +9,14 @@ import (
 )
 
 type Config struct {
-	LogLevel   string                        `json:"LogLevel"`
-	AutoCreate bool                          `json:"AutoCreate"`
-	Dispatch   []Dispatch                    `json:"Dispatch"`
-	AppList    map[string]constant.AppList   `json:"AppList"`
-	NetConf    map[string]string             `json:"NetConf"`
-	Email      *email                        `json:"Email"`
-	MysqlConf  map[string]constant.MysqlConf `json:"MysqlConf"`
-	RedisConf  map[string]constant.RedisConf `json:"RedisConf"`
-}
-type Dispatch struct {
-	Name        string `json:"name"`
-	Title       string `json:"title"`
-	Type        string `json:"type"`
-	DispatchUrl string `json:"dispatchUrl"`
-}
-type Game struct {
-	Addr string `json:"addr"`
-	Port uint32 `json:"port"`
+	LogLevel           string                        `json:"LogLevel"`
+	AutoCreate         bool                          `json:"AutoCreate"`
+	UpstreamServerList []string                      `json:"UpstreamServerList"`
+	AppList            map[string]constant.AppList   `json:"AppList"`
+	NetConf            map[string]string             `json:"NetConf"`
+	Email              *email                        `json:"Email"`
+	MysqlConf          map[string]constant.MysqlConf `json:"MysqlConf"`
+	RedisConf          map[string]constant.RedisConf `json:"RedisConf"`
 }
 type email struct {
 	From     string `json:"from"`
@@ -65,69 +55,18 @@ func LoadConfig(confName string) error {
 }
 
 var DefaultConfig = &Config{
-	LogLevel: "Info",
-	Dispatch: []Dispatch{
-		{
-			Name:        "hkrpg-go",
-			Title:       "os_usa",
-			Type:        "2",
-			DispatchUrl: "/query_gateway",
-		},
-		{
-			Name:        "hkrpg-official_os",
-			Title:       "os_usa",
-			Type:        "2",
-			DispatchUrl: "/query_gateway_capture",
-		},
-		{
-			Name:        "hkrpg-official_cn",
-			Title:       "os_usa",
-			Type:        "2",
-			DispatchUrl: "/query_gateway_capture_cn",
-		},
-	},
+	LogLevel:           "Info",
+	AutoCreate:         true,
+	UpstreamServerList: make([]string, 0),
 	AppList: map[string]constant.AppList{
-		"9001.1.1.1": {
-			App: map[string]constant.App{
-				"port_player": {
-					Port: "20041",
-				},
-			},
-		},
-		"9001.2.1.1": {
-			App: map[string]constant.App{
-				"port_gt": {
-					Port: "20071",
-				},
-			},
-		},
-		"9001.3.1.1": {
-			App: map[string]constant.App{
-				"port_service": {
-					Port: "20081",
-				},
-			},
-		},
 		"9001.4.1.1": {
-			App: map[string]constant.App{
+			RegionName: "hkrpg_rel",
+			App: map[string]constant.AppNet{
 				"port_http": {
-					Port:      "8080",
+					InnerPort: "8080",
 					InnerAddr: "127.0.0.1",
-					OuterAddr: "http://127.0.0.1:8080",
-				},
-			},
-		},
-		"9001.5.1.1": {
-			App: map[string]constant.App{
-				"port_service": {
-					Port: "20091",
-				},
-			},
-		},
-		"9001.6.1.1": {
-			App: map[string]constant.App{
-				"port_http": {
-					Port: "20011",
+					OuterPort: "8080",
+					OuterAddr: "127.0.0.1",
 				},
 			},
 		},

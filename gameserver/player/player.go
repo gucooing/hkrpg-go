@@ -1,8 +1,6 @@
 package player
 
 import (
-	"context"
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
@@ -10,29 +8,23 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
 )
 
 var LogMsgPlayer uint32 = 5
+var ISPE = false
 
 type GamePlayer struct {
 	Uid           uint32
-	AccountId     uint32
 	IsJumpMission bool
-	Store         *database.GameStore
-	IsPE          bool
 	// 玩家数据
 	PlayerData     *model.PlayerData // 玩家内存
 	Platform       spb.PlatformType  // 登录设备
 	RouteManager   *RouteManager     // 路由
 	SendChan       chan Msg          // 发送消息通道
 	RecvChan       chan Msg          // 接收消息通道
-	SendCtx        context.Context
-	SendCal        context.CancelFunc
-	RecvCtx        context.Context
-	RecvCal        context.CancelFunc
 	IsClosed       bool
 	LastUpDataTime int64 // 最近一次的活跃时间
 }
@@ -68,11 +60,26 @@ func (g *GamePlayer) GetPd() *model.PlayerData {
 	return g.PlayerData
 }
 
+func NewPlayer(uid uint32, isJumpMission bool) *GamePlayer {
+	g := new(GamePlayer)
+	g.Uid = uid
+	g.RecvChan = make(chan Msg, 100)
+	g.SendChan = make(chan Msg, 100)
+	g.IsJumpMission = isJumpMission
+	g.RouteManager = NewRouteManager(g)
+	g.LastUpDataTime = time.Now().Unix()
+	g.GetPlayerDateByDb() // 拉取数据
+
+	return g
+}
+
 // 拉取账户数据
 func (g *GamePlayer) GetPlayerDateByDb() {
 	var err error
-	dbPlayer := database.GetPlayerDataByUid(g.Store.PlayerDataMysql,
-		g.Store.PeMysql, g.Uid)
+	dbPlayer := database.GetPlayerDataByUid(database.GSS.PlayerDataMysql, g.Uid)
+	if g.PlayerData != nil { // 如果有数据了就不需要去拉取
+		return
+	}
 	g.PlayerData = new(model.PlayerData)
 	if dbPlayer == nil || dbPlayer.BinData == nil {
 		dbPlayer = new(constant.PlayerData)
@@ -89,8 +96,7 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			logger.Error("pb marshal error: %v", err)
 		}
 
-		err = database.AddPlayerDataByUid(g.Store.PlayerDataMysql,
-			g.Store.PeMysql, dbPlayer)
+		err = database.AddPlayerDataByUid(database.GSS.PlayerDataMysql, dbPlayer)
 		if err != nil {
 			logger.Error("账号数据储存失败,err:%s", err.Error())
 		}
@@ -118,8 +124,8 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	var err error
 	// 验证状态
-	if !g.IsPE {
-		redisDb, ok := database.GetPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
+	if !ISPE {
+		redisDb, ok := database.GetPlayerStatus(database.GSS.StatusRedis, g.Uid)
 		if !ok {
 			return false
 		}
@@ -127,7 +133,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 		err = pb.Unmarshal(redisDb, statu)
 		if err != nil {
 			logger.Error("PlayerStatusRedisData Unmarshal error")
-			database.DelPlayerStatus(g.Store.StatusRedis, strconv.Itoa(int(g.Uid)))
+			database.DelPlayerStatus(database.GSS.StatusRedis, g.Uid)
 			return false
 		}
 		if /*statu.GameserverId != g.GameAppId &&*/ statu.DataVersion != g.GetPd().GetDataVersion() {
@@ -149,8 +155,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 		logger.Error("pb marshal error: %v", err)
 		return false
 	}
-	if err = database.UpPlayerDataByUid(g.Store.PlayerDataMysql,
-		g.Store.PeMysql, dbDate); err != nil {
+	if err = database.UpPlayerDataByUid(database.GSS.PlayerDataMysql, dbDate); err != nil {
 		logger.Error("Update Player error")
 		return false
 	}
@@ -191,29 +196,35 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 		Uid:     g.Uid,
 		BinData: bin,
 	}
-	return database.UpdatePlayerBasic(g.Store.PlayerBriefDataRedis,
-		g.Store.PeMysql, player)
+	return database.UpdatePlayerBasic(database.GSS.PlayerBriefDataRedis,
+		database.PE, player)
 }
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
-	if g.Uid == LogMsgPlayer {
-		LogMsgSeed(cmdId, playerMsg)
-	}
+	// if g.Uid == LogMsgPlayer {
+	// 	LogMsgSeed(cmdId, playerMsg)
+	// }
 	g.SendMsg(cmdId, playerMsg)
 }
 
-func (g *GamePlayer) DecodePayloadToProto(cmdId uint16, msg []byte) (protoObj pb.Message) {
-	protoObj = cmd.GetSharedCmdProtoMap().GetProtoObjCacheByCmdId(cmdId)
-	if protoObj == nil {
-		logger.Debug("get new proto object is nil")
-		return nil
+func (g *GamePlayer) Close() {
+	if g.IsClosed {
+		return
 	}
-	err := pb.Unmarshal(msg, protoObj)
-	if err != nil {
-		logger.Error("unmarshal proto data err: %v", err)
-		return nil
+	g.IsClosed = true
+	// 等待所有待发送的消息发送完毕
+	for {
+		if len(g.SendChan) == 0 {
+			time.Sleep(time.Millisecond * 100)
+			break
+		}
+		time.Sleep(time.Millisecond * 100)
 	}
-	return protoObj
+	logger.Info("[UID:%v]玩家下线GAME", g.Uid)
+	close(g.RecvChan)
+	close(g.SendChan)
+	// 保存数据
+	g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
 }
 
 var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatScRsp, cmd.PlayerHeartBeatCsReq} // 黑名单

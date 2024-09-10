@@ -4,11 +4,15 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 )
 
 type Config struct {
 	LogLevel           string      `json:"LogLevel"`
+	MaxPlayer          int64       `json:"MaxPlayer"`
 	GameDataConfigPath string      `json:"GameDataConfigPath"`
+	UpstreamServerList []string    `json:"UpstreamServerList"`
 	SqlPath            string      `json:"SqlPath"`
 	Dispatch           *Dispatch   `json:"Dispatch"`
 	GameServer         *GameServer `json:"GameServer"`
@@ -16,26 +20,19 @@ type Config struct {
 }
 
 type Dispatch struct {
-	AutoCreate   bool           `json:"AutoCreate"`
-	Addr         string         `json:"Addr"`
-	Port         string         `json:"Port"`
-	OuterAddr    string         `json:"OuterAddr"`
-	DispatchList []DispatchList `json:"DispatchList"`
+	AutoCreate   bool            `json:"AutoCreate"`
+	AppNet       constant.AppNet `json:"AppNet"`
+	DispatchList []DispatchList  `json:"DispatchList"`
 }
 type DispatchList struct {
-	Name        string `json:"name"`
-	Title       string `json:"title"`
-	Type        string `json:"type"`
-	DispatchUrl string `json:"dispatchUrl"`
+	Name  string `json:"name"`
+	Title string `json:"title"`
+	Type  string `json:"type"`
 }
 
 type GameServer struct {
-	MaxPlayer     int32  `json:"MaxPlayer"`
-	InnerAddr     string `json:"InnerAddr"`
-	InnerPort     string `json:"InnerPort"`
-	OuterAddr     string `json:"OuterAddr"`
-	OuterPort     string `json:"OuterPort"`
-	IsJumpMission bool   `json:"IsJumpMission"`
+	AppNet        constant.AppNet `json:"AppNet"`
+	IsJumpMission bool            `json:"IsJumpMission"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
@@ -74,40 +71,33 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel:           "Info",
+	MaxPlayer:          -1,
 	GameDataConfigPath: "resources",
+	UpstreamServerList: make([]string, 0),
 	SqlPath:            "./conf/hkrpg-go-pe.db",
 	Dispatch: &Dispatch{
 		AutoCreate: true,
-		Addr:       "0.0.0.0",
-		Port:       "8080",
-		OuterAddr:  "http://127.0.0.1:8080",
+		AppNet: constant.AppNet{
+			InnerAddr: "0.0.0.0",
+			InnerPort: "8080",
+			OuterAddr: "127.0.0.1",
+			OuterPort: "8080",
+		},
 		DispatchList: []DispatchList{
 			{
-				Name:        "hkrpg-go",
-				Title:       "os_usa",
-				Type:        "2",
-				DispatchUrl: "/query_gateway",
-			},
-			{
-				Name:        "hkrpg-official_os",
-				Title:       "os_usa",
-				Type:        "2",
-				DispatchUrl: "/query_gateway_capture",
-			},
-			{
-				Name:        "hkrpg-official_cn",
-				Title:       "os_usa",
-				Type:        "2",
-				DispatchUrl: "/query_gateway_capture_cn",
+				Name:  "hkrpg-go",
+				Title: "os_usa",
+				Type:  "2",
 			},
 		},
 	},
 	GameServer: &GameServer{
-		MaxPlayer:     -1,
-		InnerAddr:     "0.0.0.0",
-		InnerPort:     "20041",
-		OuterAddr:     "127.0.0.1",
-		OuterPort:     "20041",
+		AppNet: constant.AppNet{
+			InnerAddr: "0.0.0.0",
+			InnerPort: "20041",
+			OuterAddr: "127.0.0.1",
+			OuterPort: "20041",
+		},
 		IsJumpMission: true,
 	},
 	Gm: &Gm{

@@ -9,12 +9,9 @@ import (
 )
 
 // 使用账号id拉取数据
-func GetPlayerDataByUid(db *gorm.DB, peDb *gorm.DB, uid uint32) *constant.PlayerData {
+func GetPlayerDataByUid(db *gorm.DB, uid uint32) *constant.PlayerData {
 	if db != nil {
 		return queryAccountUidByFieldPlayer(db, uid)
-	}
-	if peDb != nil {
-		return queryAccountUidByFieldPlayer(peDb, uid)
 	}
 	return nil
 }
@@ -26,12 +23,9 @@ func queryAccountUidByFieldPlayer(db *gorm.DB, uid uint32) *constant.PlayerData 
 }
 
 // 添加新账号数据
-func AddPlayerDataByUid(db *gorm.DB, peDb *gorm.DB, player *constant.PlayerData) error {
+func AddPlayerDataByUid(db *gorm.DB, player *constant.PlayerData) error {
 	if db != nil {
 		return addDatePlayerFieldByFieldName(db, player)
-	}
-	if peDb != nil {
-		return addDatePlayerFieldByFieldName(peDb, player)
 	}
 	return nil
 }
@@ -45,12 +39,9 @@ func addDatePlayerFieldByFieldName(db *gorm.DB, player *constant.PlayerData) err
 
 // 更新账号
 
-func UpPlayerDataByUid(db *gorm.DB, peDb *gorm.DB, player *constant.PlayerData) error {
+func UpPlayerDataByUid(db *gorm.DB, player *constant.PlayerData) error {
 	if db != nil {
 		return updatePlayer(db, player)
-	}
-	if peDb != nil {
-		return updatePlayer(peDb, player)
 	}
 	return nil
 }
@@ -67,12 +58,9 @@ func updatePlayer(db *gorm.DB, player *constant.PlayerData) error {
 }
 
 // 拉取地图文件
-func GetBlockData(db *gorm.DB, dbPe *gorm.DB, uid, entryId uint32) *constant.BlockData {
+func GetBlockData(db *gorm.DB, uid, entryId uint32) *constant.BlockData {
 	if db != nil {
 		return getBlockData(db, uid, entryId)
-	}
-	if dbPe != nil {
-		return getBlockData(dbPe, uid, entryId)
 	}
 	return nil
 }
@@ -84,12 +72,9 @@ func getBlockData(db *gorm.DB, uid, entryId uint32) *constant.BlockData {
 }
 
 // 更新地图文件
-func UpdateBlockData(db *gorm.DB, dbPe *gorm.DB, blockData *constant.BlockData) error {
+func UpdateBlockData(db *gorm.DB, blockData *constant.BlockData) error {
 	if db != nil {
 		return updateBlockData(db, blockData)
-	}
-	if dbPe != nil {
-		return updateBlockData(dbPe, blockData)
 	}
 	return nil
 }

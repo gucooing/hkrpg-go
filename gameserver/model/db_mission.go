@@ -5,7 +5,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 func newMission() *spb.Mission {
@@ -349,7 +349,7 @@ func (g *PlayerData) MissionGetItem(itemId uint32) []uint32 {
 }
 
 // 忘却之庭关卡挑战任务
-func (g *PlayerData) ChallengeFinishCnt(challengeId uint32) []uint32 {
+func (g *PlayerData) ChallengeFinishCnt() []uint32 {
 	finishSubMission := make([]uint32, 0)
 	subMissionList := g.GetSubMainMissionList()
 	for _, info := range subMissionList {

@@ -2,7 +2,7 @@ package model
 
 import (
 	"github.com/gucooing/hkrpg-go/gdconf"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 func NewChangeStory() *spb.ChangeStory {

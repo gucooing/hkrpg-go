@@ -1,8 +1,6 @@
 package player
 
 import (
-	"time"
-
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	pb "google.golang.org/protobuf/proto"
@@ -256,14 +254,14 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 			return
 		}
 	}()
-	if g.Uid == LogMsgPlayer {
-		LogMsgRecv(cmdId, payloadMsg)
-	}
+	// if g.Uid == LogMsgPlayer {
+	// 	LogMsgRecv(cmdId, payloadMsg)
+	// }
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
-		// if g.Uid == LogMsgPlayer {
-		logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
-		// }
+		if g.Uid == LogMsgPlayer {
+			logger.Warn("[UID:%v]C --> S no route for msg, cmdId: %s", g.Uid, cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId))
+		}
 		return
 	}
 	handlerFunc(payloadMsg)
@@ -286,29 +284,18 @@ func (g *GamePlayer) RecvMsg() {
 			case DailyTask:
 				g.DailyTaskNotify()
 			}
-		case <-g.RecvCtx.Done():
-			g.IsClosed = true
-			return
 		}
 	}
 }
 
 // 发包
 func (g *GamePlayer) SendMsg(cmdId uint16, playerMsg pb.Message) {
-	if g.SendChan == nil {
+	if g.IsClosed {
 		return
 	}
-	timeout := time.After(2 * time.Second)
-	select {
-	case g.SendChan <- Msg{
+	g.SendChan <- Msg{
 		CmdId:     cmdId,
 		MsgType:   Server,
 		PlayerMsg: playerMsg,
-	}:
-		if g.IsClosed {
-			close(g.SendChan)
-		}
-	case <-timeout:
-		return
 	}
 }

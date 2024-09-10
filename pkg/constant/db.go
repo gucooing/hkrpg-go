@@ -50,10 +50,6 @@ type Item struct { // 邮件奖励模板
 	Num      uint32 // 数量
 }
 
-type ServerConf struct {
-	AutoCreate bool // 是否自动注册
-}
-
 type RogueConf struct {
 	SeasonId  uint32 `gorm:"primarykey;AUTO_INCREMENT"`
 	BeginTime sql.NullTime
@@ -64,6 +60,15 @@ type ScheduleConf struct {
 	ScheduleId uint32 `gorm:"primarykey;AUTO_INCREMENT"`
 	BeginTime  sql.NullTime
 	EndTime    sql.NullTime
+}
+
+type RegionConf struct { // 区服配置
+	Id              uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	Name            string // 区服名称
+	AutoCreate      bool   // 是否自动注册
+	Title           string // 地区
+	Type            uint32 // sdk类型
+	ClientSecretKey []byte // 加密密钥
 }
 
 /**********************player data*************************/

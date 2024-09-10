@@ -8,7 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -256,7 +256,7 @@ func (g *GamePlayer) ChallengeSettleNotify() {
 		ChallengeScore: cur.ScoreOne,    // 一层挑战得分
 	}
 	if cur.IsWin {
-		finishSubMission := g.GetPd().ChallengeFinishCnt(cur.ChallengeId)
+		finishSubMission := g.GetPd().ChallengeFinishCnt()
 		if len(finishSubMission) != 0 {
 			g.InspectMission(finishSubMission)
 		}

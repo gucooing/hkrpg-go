@@ -13,17 +13,17 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (s *HkRpgGoServer) newHttpApi() {
-	s.apiRouter = gin.Default()
-	s.apiRouter.Use(timeoutMiddleware())
-	s.initRouter()
-	addr := fmt.Sprintf("%s:%s", s.config.Gm.Addr, s.config.Gm.Port)
-	logger.Info("api监听地址:%s", addr)
-	server := &http.Server{Addr: addr, Handler: s.apiRouter}
+func (h *HkRpgGoServer) newHttpApi() {
+	h.apiRouter = gin.Default()
+	h.apiRouter.Use(timeoutMiddleware())
+	h.initRouter()
+	addr := fmt.Sprintf("%h:%h", h.config.Gm.Addr, h.config.Gm.Port)
+	logger.Info("api监听地址:%h", addr)
+	server := &http.Server{Addr: addr, Handler: h.apiRouter}
 	server.ListenAndServe()
 }
 
@@ -44,13 +44,13 @@ func timeResponse(c *gin.Context) {
 	})
 }
 
-func (s *HkRpgGoServer) initRouter() {
-	s.apiRouter.GET("/api", s.ApiInitRouter)
+func (h *HkRpgGoServer) initRouter() {
+	h.apiRouter.GET("/api", h.ApiInitRouter)
 }
 
-func (s *HkRpgGoServer) ApiInitRouter(c *gin.Context) {
+func (h *HkRpgGoServer) ApiInitRouter(c *gin.Context) {
 	signKey := c.Query("sign_key")
-	if !s.SignKey(signKey) {
+	if !h.SignKey(signKey) {
 		c.JSON(404, gin.H{
 			"code": -1,
 		})
@@ -74,7 +74,7 @@ func (s *HkRpgGoServer) ApiInitRouter(c *gin.Context) {
 		return
 	}
 	if isp {
-		p := s.GetPlayer(uid)
+		p := h.GetPlayer(uid)
 		if p == nil {
 			c.JSON(404, gin.H{
 				"code": -1,
@@ -111,14 +111,14 @@ func (s *HkRpgGoServer) ApiInitRouter(c *gin.Context) {
 		})
 		return
 	}
-	s.noPlayerCommand(c, commandList)
+	h.noPlayerCommand(c, commandList)
 }
 
-func (s *HkRpgGoServer) SignKey(signKey string) bool {
-	if s.config.Gm.SignKey == "" {
+func (h *HkRpgGoServer) SignKey(signKey string) bool {
+	if h.config.Gm.SignKey == "" {
 		return true
 	}
-	if signKey != s.config.Gm.SignKey {
+	if signKey != h.config.Gm.SignKey {
 		return false
 	}
 	return true
@@ -134,8 +134,8 @@ var commandMap = map[string]commHandlerFunc{
 	"status":        status,
 }
 
-func (s *HkRpgGoServer) noPlayerCommand(c *gin.Context, parameter []string) {
-	logger.Debug("执行指令:%s", parameter)
+func (h *HkRpgGoServer) noPlayerCommand(c *gin.Context, parameter []string) {
+	logger.Debug("执行指令:%h", parameter)
 	commFunc, ok := commandMap[parameter[0]]
 	if !ok {
 		c.JSON(404, gin.H{
@@ -146,7 +146,7 @@ func (s *HkRpgGoServer) noPlayerCommand(c *gin.Context, parameter []string) {
 	} else {
 		c.JSON(200, gin.H{
 			"code": 0,
-			"msg":  commFunc(s, parameter[1:]),
+			"msg":  commFunc(h, parameter[1:]),
 		})
 	}
 }
@@ -160,8 +160,7 @@ func getPlayerPb(s *HkRpgGoServer, parameter []string) any {
 	if p := s.GetPlayer(uid); p != nil {
 		return p.GamePlayer.GetPd().GetBasicBin()
 	} else {
-		dbPlayer := database.GetPlayerDataByUid(nil,
-			s.db.AccountMysql, uid)
+		dbPlayer := database.GetPlayerDataByUid(database.PE, uid)
 		if dbPlayer == nil || dbPlayer.BinData == nil {
 			return "Player Not Found"
 		}
@@ -203,18 +202,18 @@ func NewCmdRouteManager() (r *CmdRouteManager) {
 	return r
 }
 
-func (s *HkRpgGoServer) EnterCommand(command string) {
+func (h *HkRpgGoServer) EnterCommand(command string) {
 	commandList := strings.Split(command, " ")
 	if len(commandList) <= 0 {
 		logger.Error("Command Not enough parameters")
 		return
 	}
-	cmdHandlerFunc, ok := s.CmdRouteManager.cmdHandlerFuncRouteMap[commandList[0]]
+	cmdHandlerFunc, ok := h.CmdRouteManager.cmdHandlerFuncRouteMap[commandList[0]]
 	if !ok {
-		logger.Error("There is no such command, Command: %s", commandList[0])
+		logger.Error("There is no such command, Command: %h", commandList[0])
 		return
 	}
-	go cmdHandlerFunc(commandList, s)
+	go cmdHandlerFunc(commandList, h)
 }
 
 func help(parameter []string, s *HkRpgGoServer) {
@@ -257,7 +256,7 @@ func tp(parameter []string, s *HkRpgGoServer) {
 }
 
 func list(parameter []string, s *HkRpgGoServer) {
-	logger.Info("PlayerList:%s", len(s.getAllPlayer()))
+	logger.Info("PlayerList:%s", len(s.GetAllPlayer()))
 }
 
 func unlocked(parameter []string, s *HkRpgGoServer) {
