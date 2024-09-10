@@ -87,20 +87,21 @@ func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.SwitchLineupIndexScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg pb.Message) {
-	req := payloadMsg.(*proto.SwapLineupCsReq)
-
-	// 交换角色
-	g.GetPd().SwapLineup(req.Index, req.SrcSlot, req.DstSlot)
-
-	// 队伍更新通知
-	g.SyncLineupNotify(g.GetPd().GetLineUpById(req.Index))
-	g.SceneGroupRefreshScNotify(req.Index)
-
-	rsp := &proto.SwapLineupCsReq{}
-
-	g.Send(cmd.SwapLineupScRsp, rsp)
-}
+// 2.5.0 遗弃
+// func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg pb.Message) {
+// 	req := payloadMsg.(*proto.SwapLineupCsReq)
+//
+// 	// 交换角色
+// 	g.GetPd().SwapLineup(req.Index, req.SrcSlot, req.DstSlot)
+//
+// 	// 队伍更新通知
+// 	g.SyncLineupNotify(g.GetPd().GetLineUpById(req.Index))
+// 	g.SceneGroupRefreshScNotify(req.Index)
+//
+// 	rsp := &proto.SwapLineupCsReq{}
+//
+// 	g.Send(cmd.SwapLineupScRsp, rsp)
+// }
 
 func (g *GamePlayer) SetLineupNameCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetLineupNameCsReq)

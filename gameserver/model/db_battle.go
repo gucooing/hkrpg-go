@@ -302,18 +302,18 @@ func (g *PlayerData) NewCurChallenge() {
 
 func (g *PlayerData) SetCurChallenge(req *proto.StartChallengeCsReq) *spb.CurChallenge {
 	db := g.GetChallenge()
-	storyInfo := req.GetPlayerInfo()
+	storyInfo := req.GetStageInfo()
 	var buffOne uint32 = 0
 	var buffTwe uint32 = 0
 	var isBoos = false
 	if storyInfo != nil {
-		if storyInfo.StoryBuffInfo == nil {
+		if storyInfo.StoryInfo == nil {
 			isBoos = true
-			buffOne = storyInfo.GetBossBuffInfo().GetBuffOne()
-			buffTwe = storyInfo.GetBossBuffInfo().GetBuffTwo()
+			buffOne = storyInfo.GetBossInfo().GetBuffOne()
+			buffTwe = storyInfo.GetBossInfo().GetBuffTwo()
 		} else {
-			buffOne = storyInfo.GetStoryBuffInfo().GetBuffOne()
-			buffTwe = storyInfo.GetStoryBuffInfo().GetBuffTwo()
+			buffOne = storyInfo.GetStoryInfo().GetBuffOne()
+			buffTwe = storyInfo.GetStoryInfo().GetBuffTwo()
 		}
 	}
 	conf := gdconf.GetChallengeMazeConfigById(req.ChallengeId)
@@ -786,16 +786,11 @@ func (g *PlayerData) GetSceneBattleInfo(battleBackup *BattleBackup) *proto.Scene
 		BattleAvatarList: g.GetProtoBattleAvatar(battleBackup.BattleAvatarList),
 		BattleEvent:      make([]*proto.BattleEventBattleInfo, 0),
 		BuffList:         g.GetBattleBuff(battleBackup.BattleAvatarList),
-		HEAMIJGFDMO:      nil,
 		StageId:          battleBackup.StageID,
-		FNLHAHFIGNC:      nil,
-		HKOOBMMLGME:      nil,
 		BattleTargetInfo: g.GetBattleTargetInfo(),
-		MOJLNCNDIOB:      false,
 		RoundsLimit:      g.GetRoundsLimit(),
 		MonsterWaveList:  monsterWaveList,
 		WorldLevel:       battleBackup.WorldLevel,
-		BOJHPNCAKOP:      0,
 		BattleId:         battleBackup.BattleId,
 	}
 
@@ -993,7 +988,7 @@ func (g *PlayerData) GetChallengeInfo() *proto.CurChallenge {
 		ChallengeId:     db.ChallengeId,                   // 挑战关卡
 		Status:          proto.ChallengeStatus(db.Status), // 关卡状态
 		ExtraLineupType: lineUpType,                       // 队伍type
-		PlayerInfo:      g.GetCurChallengeStoryInfo(),     // 挑战buff
+		StageInfo:       g.GetCurChallengeStoryInfo(),     // 挑战buff
 		RoundCount:      db.RoundCount,                    // 已使用回合数
 		ScoreId:         db.ScoreOne,                      // 第一层得分
 		ScoreTwo:        db.ScoreTwo,                      // 第二层得分
@@ -1138,12 +1133,12 @@ func (g *PlayerData) GetChallengeStoryStageTertinggi(db *spb.ChallengeInfo) *pro
 		return nil
 	}
 	info := &proto.ChallengeStoryStageTertinggi{
-		LineupList:  g.GetChallengeLineupList(db.LineupList),
-		DKFHAHHJILF: 0,
-		Level:       db.Floor,
-		BuffTwo:     db.BuffTwo,
-		BuffOne:     db.BuffOne,
-		ScoreId:     db.ScoreOne + db.ScoreTwo,
+		LineupList: g.GetChallengeLineupList(db.LineupList),
+		// DKFHAHHJILF: 0,
+		Level:   db.Floor,
+		BuffTwo: db.BuffTwo,
+		BuffOne: db.BuffOne,
+		ScoreId: db.ScoreOne + db.ScoreTwo,
 	}
 	return info
 }
@@ -1168,10 +1163,10 @@ func (g *PlayerData) GetChallengeStageTertinggi(db *spb.ChallengeInfo) *proto.Ch
 		return nil
 	}
 	info := &proto.ChallengeStageTertinggi{
-		LineupList:  g.GetChallengeLineupList(db.LineupList),
-		DKFHAHHJILF: 0,
-		Level:       db.Floor,
-		RoundCount:  db.RecordId,
+		LineupList: g.GetChallengeLineupList(db.LineupList),
+		// DKFHAHHJILF: 0,
+		Level:      db.Floor,
+		RoundCount: db.RecordId,
 	}
 	return info
 }
@@ -1196,12 +1191,12 @@ func (g *PlayerData) GetChallengeBossStageTertinggi(db *spb.ChallengeInfo) *prot
 		return nil
 	}
 	info := &proto.ChallengeBossStageTertinggi{
-		LineupList:  g.GetChallengeLineupList(db.LineupList),
-		DKFHAHHJILF: 0,
-		Level:       db.Floor,
-		BuffTwo:     db.BuffTwo,
-		BuffOne:     db.BuffOne,
-		ScoreId:     db.ScoreOne + db.ScoreTwo,
+		LineupList: g.GetChallengeLineupList(db.LineupList),
+		// DKFHAHHJILF: 0,
+		Level:   db.Floor,
+		BuffTwo: db.BuffTwo,
+		BuffOne: db.BuffOne,
+		ScoreId: db.ScoreOne + db.ScoreTwo,
 	}
 	return info
 }

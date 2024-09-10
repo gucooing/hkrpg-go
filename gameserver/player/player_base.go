@@ -3,6 +3,7 @@ package player
 import (
 	"time"
 
+	"github.com/cloudwego/base64x"
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -213,19 +214,21 @@ func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg pb.Message) {
+	KPANKLHNMKE, _ := base64x.StdEncoding.DecodeString("DsX2Ig==")
 	rsp := &proto.GetSecretKeyInfoScRsp{
+		KPANKLHNMKE: KPANKLHNMKE,
 		SecretInfo: []*proto.SecretKeyInfo{
 			{
-				Type: proto.SecretKeyType_SECRET_KEY_SERVER_CHECK,
-				Key:  "F9hx2TEZ",
+				Type:      proto.SecretKeyType_SECRET_KEY_SERVER_CHECK,
+				SecretKey: "F9hx2TEZ",
 			},
 			{
-				Type: proto.SecretKeyType_SECRET_KEY_VIDEO,
-				Key:  "10120425825329403",
+				Type:      proto.SecretKeyType_SECRET_KEY_VIDEO,
+				SecretKey: "10120425825329403",
 			},
 			{
-				Type: proto.SecretKeyType_SECRET_KEY_BATTLE_TIME,
-				Key:  "3450822937",
+				Type:      proto.SecretKeyType_SECRET_KEY_BATTLE_TIME,
+				SecretKey: "2868639058",
 			},
 		},
 		Retcode: 0,
@@ -366,7 +369,7 @@ func (g *GamePlayer) UnlockBackGroundMusicCsReq(payloadMsg pb.Message) {
 	rsp := &proto.UnlockBackGroundMusicScRsp{
 		Retcode:           0,
 		UnlockedMusicList: make([]*proto.MusicData, 0),
-		UnlockIds:         make([]uint32, 0),
+		UnlockedIds:       make([]uint32, 0),
 	}
 	for _, unlockId := range req.UnlockIds {
 		conf := gdconf.GetBackGroundMusicById(unlockId)

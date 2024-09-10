@@ -73,7 +73,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.LuaUrl = url.LuaUrl
 	queryGateway.ExResourceUrl = url.ExResourceUrl
 	queryGateway.AssetBundleUrl = url.AssetBundleUrl
-	queryGateway.GLCOMFKHDGH = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
+	queryGateway.KEICDBEHMDO = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {

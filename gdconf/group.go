@@ -164,6 +164,8 @@ func (g *GameDataConfig) loadGroup() {
 					playerElementsFile, err := os.ReadFile(g.pathPrefix + "/" + groupInfo.GroupPath)
 					if err != nil {
 						logger.Error("open file error: %v", err)
+						wg.Done()
+						func() { <-sem }()
 						return
 					}
 

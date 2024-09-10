@@ -13,7 +13,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-var LogMsgPlayer uint32 = 5
+var LogMsgPlayer uint32 = 2
 var ISPE = false
 
 type GamePlayer struct {
@@ -201,9 +201,9 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 }
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
-	// if g.Uid == LogMsgPlayer {
-	// 	LogMsgSeed(cmdId, playerMsg)
-	// }
+	if g.Uid == LogMsgPlayer {
+		LogMsgSeed(cmdId, playerMsg)
+	}
 	g.SendMsg(cmdId, playerMsg)
 }
 

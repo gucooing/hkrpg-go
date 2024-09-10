@@ -94,12 +94,12 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetTrialActivityDataScRsp{
-		TrialActivityList: make([]*proto.TrialActivityInfo, 0),
+		TrialActivityInfoList: make([]*proto.TrialActivityInfo, 0),
 	}
 
 	for _, id := range g.GetPd().GetTrialActivity() {
 		trialActivityInfo := &proto.TrialActivityInfo{StageId: id}
-		rsp.TrialActivityList = append(rsp.TrialActivityList, trialActivityInfo)
+		rsp.TrialActivityInfoList = append(rsp.TrialActivityInfoList, trialActivityInfo)
 	}
 
 	g.Send(cmd.GetTrialActivityDataScRsp, rsp)

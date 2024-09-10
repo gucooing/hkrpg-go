@@ -18,8 +18,8 @@ func (g *GamePlayer) SetTurnFoodSwitchCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetTurnFoodSwitchCsReq)
 	rsp := &proto.SetTurnFoodSwitchScRsp{
 		Retcode:     0,
-		DGLLJFNEMOK: req.DGLLJFNEMOK,
-		LNEKBEGKACP: req.LNEKBEGKACP,
+		NDIFKAKHGKH: req.NDIFKAKHGKH,
+		LPLMJKEDLDB: req.LPLMJKEDLDB,
 	}
 	g.Send(cmd.SetTurnFoodSwitchScRsp, rsp)
 }

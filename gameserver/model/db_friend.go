@@ -138,17 +138,17 @@ func (g *PlayerData) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
 		return nil
 	}
 	simpleInfo := &proto.PlayerSimpleInfo{
-		ChatBubbleId:     friend.ChatBubbleId,
-		IsBanned:         false,
-		HeadIcon:         friend.HeadImageAvatarId,
-		Signature:        friend.Signature,
-		Platform:         proto.PlatformType(friend.PlatformType),
-		LastActiveTime:   friend.LastLoginTime,
-		OnlineStatus:     proto.FriendOnlineStatus(friend.Status),
-		Nickname:         friend.Nickname,
-		Uid:              friend.Uid,
-		Level:            friend.Level,
-		AssistSimpleList: make([]*proto.AssistSimpleInfo, 0),
+		ChatBubbleId:         friend.ChatBubbleId,
+		IsBanned:             false,
+		HeadIcon:             friend.HeadImageAvatarId,
+		Signature:            friend.Signature,
+		Platform:             proto.PlatformType(friend.PlatformType),
+		LastActiveTime:       friend.LastLoginTime,
+		OnlineStatus:         proto.FriendOnlineStatus(friend.Status),
+		Nickname:             friend.Nickname,
+		Uid:                  friend.Uid,
+		Level:                friend.Level,
+		AssistSimpleInfoList: make([]*proto.AssistSimpleInfo, 0),
 	}
 	return simpleInfo
 }
@@ -160,13 +160,13 @@ func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 	}
 	playerDetailInfo := &proto.PlayerDetailInfo{
 		RecordInfo: &proto.PlayerRecordInfo{
-			HNICFKBEKJO: 1,
-			INMEAGINKPN: 2,
-			MFMOAJONBBF: 3,
-			OOIOMMKOIAE: 4,
+			CCJLPCEOAMO:    1,
+			GFODBFNNHLL:    2,
+			DHLEJELLMEL:    3,
+			OHPJGNHDNCL:    4,
 			CollectionInfo: &proto.PlayerCollectionInfo{
-				KJNOOOJDGDN: 5,
-				NCCNLKFCAKM: 6,
+				// KJNOOOJDGDN: 5,
+				// NCCNLKFCAKM: 6,
 			},
 		},
 		WorldLevel:        friend.WorldLevel,
@@ -179,9 +179,9 @@ func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 		Platform:          proto.PlatformType(friend.PlatformType),
 		Signature:         friend.Signature,
 		Nickname:          friend.Nickname,
-		HNADOAKOMEE:       true,
-		LFFJMADBHNN:       14,
-		MLDNNOMLHJD:       &proto.DNCLPGJGHHK{},
+		// HNADOAKOMEE:       true,
+		// LFFJMADBHNN:       14,
+		// MLDNNOMLHJD:       &proto.DNCLPGJGHHK{},
 	}
 
 	return playerDetailInfo
@@ -202,10 +202,10 @@ func (g *PlayerData) GetFriendSimpleInfo(uid uint32) *proto.FriendSimpleInfo {
 		return nil
 	}
 	friendSimpleInfo := &proto.FriendSimpleInfo{
-		PlayerInfo:  simpleInfo,    // 基本信息
-		RemarkName:  db.RemarkName, // 备注
-		PlayerState: 0,
-		IsMarked:    db.IsMarked, // 是否特别关注
+		PlayerInfo:   simpleInfo,    // 基本信息
+		RemarkName:   db.RemarkName, // 备注
+		PlayingState: 0,
+		IsMarked:     db.IsMarked, // 是否特别关注
 	}
 	return friendSimpleInfo
 }
@@ -259,9 +259,7 @@ func (g *PlayerData) GetDisplayAvatarDetailInfoList(list map[uint32]*spb.AssistA
 			SkilltreeList: make([]*proto.AvatarSkillTree, 0),
 			Pos:           pos,
 
-			DressedSkinId:                     0,
-			AllPathUnlockedSpecialPointIdList: nil,
-			AllPathSpecialSkilltreeList:       nil,
+			DressedSkinId: 0,
 		}
 		// add Equipment
 		if db.Equipment != nil {

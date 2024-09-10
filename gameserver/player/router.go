@@ -26,11 +26,11 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetLineupAvatarDataCsReq: g.GetLineupAvatarDataCsReq,     // 获取队伍
 		cmd.JoinLineupCsReq:          g.HandleJoinLineupCsReq,        // 更新队伍请求
 		cmd.SwitchLineupIndexCsReq:   g.HandleSwitchLineupIndexCsReq, // 上场队伍更新请求
-		cmd.SwapLineupCsReq:          g.HandleSwapLineupCsReq,        // 队伍角色交换请求
-		cmd.SetLineupNameCsReq:       g.SetLineupNameCsReq,           // 修改队伍名称
-		cmd.ReplaceLineupCsReq:       g.ReplaceLineupCsReq,           // 快速入队
-		cmd.ChangeLineupLeaderCsReq:  g.ChangeLineupLeaderCsReq,      // 切换角色
-		cmd.QuitLineupCsReq:          g.QuitLineupCsReq,              // 角色离队
+		// cmd.SwapLineupCsReq:          g.HandleSwapLineupCsReq,        // 队伍角色交换请求 // 2.5.0 遗弃
+		cmd.SetLineupNameCsReq:      g.SetLineupNameCsReq,      // 修改队伍名称
+		cmd.ReplaceLineupCsReq:      g.ReplaceLineupCsReq,      // 快速入队
+		cmd.ChangeLineupLeaderCsReq: g.ChangeLineupLeaderCsReq, // 切换角色
+		cmd.QuitLineupCsReq:         g.QuitLineupCsReq,         // 角色离队
 		// 角色管理
 		cmd.GetMultiPathAvatarInfoCsReq: g.GetMultiPathAvatarInfoCsReq, // 请求多命途角色基本信息
 		cmd.GetAvatarDataCsReq:          g.HandleGetAvatarDataCsReq,    // 请求全部角色信息
@@ -254,9 +254,9 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 			return
 		}
 	}()
-	// if g.Uid == LogMsgPlayer {
-	// 	LogMsgRecv(cmdId, payloadMsg)
-	// }
+	if g.Uid == LogMsgPlayer {
+		LogMsgRecv(cmdId, payloadMsg)
+	}
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
 		if g.Uid == LogMsgPlayer {

@@ -421,7 +421,7 @@ func (g *PlayerData) GetGameAeonInfo() *proto.GameAeonInfo {
 	info := &proto.GameAeonInfo{
 		IsUnlocked:             true,
 		UnlockedAeonEnhanceNum: 3,
-		AeonId:                 rogue.AeonId,
+		GameAeonId:             rogue.AeonId,
 	}
 	return info
 }
@@ -543,7 +543,7 @@ func (g *PlayerData) GetRogueScene(roomId uint32) *proto.SceneInfo {
 		EntryId:            rogueRoom.MapEntrance,
 		GameModeType:       5, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		LevelGroupIdList:   nil,
+		GroupIdList:        nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -579,7 +579,7 @@ func (g *PlayerData) GetRogueScene(roomId uint32) *proto.SceneInfo {
 		if sceneGroup == nil {
 			continue
 		}
-		scene.LevelGroupIdList = append(scene.LevelGroupIdList, groupID)
+		scene.GroupIdList = append(scene.GroupIdList, groupID)
 		sceneGroupState := &proto.SceneGroupState{
 			GroupId:   groupID,
 			IsDefault: true,
