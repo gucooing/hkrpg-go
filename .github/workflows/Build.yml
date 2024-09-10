@@ -1,0 +1,66 @@
+name: Build
+on:
+  workflow_dispatch:
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Sync HKRPG-Go
+      uses: actions/checkout@v3
+      with:
+        repository: gucooing/hkrpg-go
+        ref: "dev"
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.22.1"
+        check-latest: true
+
+    - name: Build
+      run: bash build.sh
+
+    - name: Package
+      run: |
+        zip -r build/data.zip data/*
+        zip -r linux-amd64.zip build/*
+
+    - name: Upload Linux Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-amd64.zip
+        path: linux-amd64.zip
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - name: Sync HKRPG-Go
+      uses: actions/checkout@v3
+      with:
+        repository: gucooing/hkrpg-go
+        ref: "dev"
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: "1.22.1"
+        check-latest: true
+
+    - name: Build
+      run: |
+        dir
+        .\build.bat
+
+    - name: Package
+      run: |
+        Compress-Archive -Path data\* -DestinationPath build\data.zip
+        Compress-Archive -Path build\* -DestinationPath windows-amd64.zip
+
+    - name: Upload Windows Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-amd64.zip
+        path: windows-amd64.zip

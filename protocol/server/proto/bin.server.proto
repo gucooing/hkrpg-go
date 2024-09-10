@@ -1,0 +1,469 @@
+// TODO 不要轻易修改已有字段类型！！！！！！
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+import "pojok.nostalgia.proto";
+import "enum.server.proto";
+
+message PlayerBasicCompBin {
+  uint32 uid = 1; // uid
+  uint32 level = 2; // 等级
+  uint32 exp = 3; // 经验
+  string nickname = 4; // 昵称
+  uint32 world_level = 5; // 世界等级
+  Activity activity = 6; // 活动
+  string signature = 7; // 签名
+  uint32 head_image_avatar_id = 8; // 头像id
+  uint32 birthday = 9; // 生日
+  Scene scene = 10; // 当前场景
+  ChangeStory change_story = 11;//故事线
+  Avatar avatar = 13; // 角色数据
+  LineUp lineUp = 14; // 队伍数据
+  Item item = 15; // 背包
+  Gacha gacha = 16; // 抽卡数据
+  Battle battle = 17; // 战斗
+  repeated uint32 reward_taken_level_list = 18; // 等级奖励领取级别列表
+  uint32 unique_id = 19; // 唯一id
+  fixed32 register_time = 20; // 注册时间
+  uint32 total_login_days = 21; // 登录天数
+  uint32 total_game_time = 22; // 总游戏时长
+  fixed32 last_login_time = 23; // 上次登录时间
+  int64 last_stamina_time = 24; // 上次体力增加时间
+  fixed32 last_logout_time = 25; // 最后退出时间
+  Mail mail = 26; // 邮件
+  PlayerFriend friend = 27; // 好友
+  uint32 data_version = 28; // 数据版本
+  fixed32 last_daily_refresh_time = 29; // 最后每日刷新时间
+  TutorialDb tutorial = 30; // 教程
+  bool is_proficient_player = 31; // 是否老玩家
+  uint32 language_type = 32; // 语言
+  string client_app_version = 33; // 客户端版本
+  string client_device_info = 34; // 客户端设备信息
+  string client_system_version = 35; // 客户端系统版本
+  uint32 set_language_tag = 36; // 设置语言标签
+  uint32 guid_seq_id = 37; // 序列号
+  map<uint32, MessageGroup> message_group_list = 38; // NPC聊天信息
+  PhoneData phone_data = 39; // 手机信息
+  PojokNostalgia pojok_nostalgia = 40; // 常时传略
+  uint64 player_stat_id = 41; // 玩家统计id
+  ContentAuditBin nickname_audit_bin = 42; // 昵称审核bin
+  string ip_country_code = 43; // ip国家代码
+  string ip_region_name = 44; // ip区域名称
+  Mission mission = 45;// 任务
+  map<int32, Days> day = 46; // 每日刷新
+}
+
+message Activity{
+  repeated uint32 trial_activity = 1; // 已完成的试用角色
+  map<uint32, uint32> activity_login = 2; // 登录活动
+}
+
+message Scene {
+  uint32 entryId = 1; // 场景
+  //  uint32 planeId = 2;
+  //  uint32 floorId = 3;
+  VectorBin pos = 4; // 坐标
+  VectorBin rot = 5; // 朝向
+  uint32 group_id = 6;
+  uint32 anchor_id = 7;
+}
+
+message PhoneData {
+  uint32 cur_phone_theme = 1;
+  uint32 cur_chat_bubble = 2;
+  uint32 current_music_id = 3;
+  map<uint32, TextJoin> TextJoin = 47;//自定义文本
+}
+
+message TextJoin {
+  uint32 text_join_id = 1;
+  uint32 text_join_item_id = 2;
+}
+
+message ChangeStory {
+  uint32 cur_change_story = 1; // 当前故事线
+  map<uint32, ChangeStoryInfo> change_story_info = 2;
+  bool is_change_story = 3;//是否在故事线中
+}
+
+message ChangeStoryInfo {
+  uint32 change_story_id = 1; // 故事线Id
+  Scene scene = 2;// 场景
+}
+
+message Avatar {
+  map<uint32, AvatarBin> avatar_list = 1; // 角色列表
+  Gender gender = 2; // 性别
+  map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
+}
+
+message AvatarBin {
+  uint32 avatar_id = 1; // ID
+  uint32 exp = 2; // 经验
+  uint32 level = 3; // 等级
+  uint32 avatar_type = 4; // 状态
+  uint64 first_met_time_stamp = 5; // 获取时间
+  uint32 promote_level = 6; // 突破等级
+  repeated uint32 taken_rewards = 7; // 已领取的突破奖励
+  uint32 hp = 8; // 血量
+  AvatarSpBarInfo sp_bar = 9; // 能量
+  bool is_multi_path = 10; // 是否多命途
+  uint32 cur_path = 11;//当前命途
+  map<uint32, MultiPathAvatarInfo>multi_path_avatar_info_list = 12;//属性列表
+}
+
+message MultiPathAvatarInfo {
+  uint32 avatar_id = 1; // ID
+  uint32 rank = 2;
+  repeated AvatarSkillBin skilltree_list = 3; // 技能库
+  uint32 equipment_uniqueId = 4; // 装备光锥
+  map<uint32, uint32> equip_relic = 5; // 装备圣遗物
+}
+
+
+message AvatarSpBarInfo {
+  uint32 cur_sp = 1; // 当前能量
+  uint32 max_sp = 2; // 当前等级
+}
+
+message AvatarSkillBin {
+  uint32 point_id = 1; // 技能id
+  uint32 level = 2; // 等级
+}
+
+message VectorBin {
+  int32 x = 1;
+  int32 y = 2;
+  int32 z = 3;
+}
+
+message LineUp {
+  uint32 main_line_up = 1; // 当前上场队伍
+  uint32 mp = 2; // 当前能量
+  map<uint32, Line> line_up_list = 3; // 普通队伍
+  map<uint32, Line>battle_line_list = 4; // 战斗队伍
+  map<uint32, Line> story_line_list = 5;// 故事线队伍
+}
+
+message Line {
+  string name = 1; // 队伍名称
+  map<uint32, LineAvatarList>  avatar_id_list = 2; // 角色列表
+  uint32 index = 3; // 第几个队伍
+  uint32 leader_slot = 4; // 当前角色是第几个
+  ExtraLineupType line_type = 5;// 队伍类型
+  uint32 mp = 6; // 能量
+}
+
+message LineAvatarList {
+  uint32 slot = 1;//第几个
+  uint32 avatar_id = 2;;//角色id
+  LineAvatarType line_avatar_type = 3; // 角色属性
+}
+
+message Item  {
+  map<uint32, Relic> relic_map = 1; // 遗器
+  map<uint32, Equipment> equipment_map = 2; // 光锥
+  map<uint32, uint32> material_map = 3; // 材料
+  repeated uint32 head_icon = 4; // 头像
+  repeated uint32 unlock_formula_list = 5;// 解锁配方
+}
+
+message Relic {
+  uint32 tid = 1;// id
+  uint32 unique_id = 2; // 唯一ID
+  uint32 exp = 3;
+  uint32 level = 4;
+  uint32 main_affix_id = 5; // 主词条
+  map<uint32, RelicAffix>  relic_affix = 6; // 词条 map[affix_id]RelicAffix
+  uint32 base_avatar_id = 7; // 装备角色
+  bool is_protected = 8; // 是否锁定
+  string main_affix_property = 9;//主词条类型
+}
+
+message RelicAffix {
+  uint32 affix_id = 1;
+  uint32 cnt = 2;
+  uint32 step = 3;
+}
+
+message Equipment {
+  uint32 tid = 1; // id
+  uint32 unique_id = 2; // 唯一ID
+  uint32 exp = 3;
+  uint32 level = 4;
+  uint32 promotion = 5;
+  uint32 base_avatar_id = 6;// 装备角色
+  bool is_protected = 7;// 是否锁定
+  uint32 rank = 8;// 命座?
+}
+
+message Material {
+  uint32 tid = 1; // id
+  uint32 num = 2; // 个数
+}
+
+message Battle {// 战斗
+  BattleType battle_type = 1; // 当前状态
+  Rogue rogue = 2; // 期数-情况
+  Challenge challenge = 3; // 忘却之庭
+  RogueTourn rogue_tourn = 4; // 差分宇宙
+  Raid rain = 5;// 副本
+}
+
+message Rogue {
+  map<uint32, RogueArea> rogue_area = 1; // 关卡状态
+  CurRogue cur_rogue = 2; // 当前正在进行的
+  map<uint32, RogueHistory> rogue_history_list = 3;// 历史领取信息
+}
+
+message RogueArea {
+  uint32 areaId = 1;
+  RogueAreaStatus rogue_area_status = 2;
+}
+
+message CurRogue {// 当前正在进行的模拟宇宙
+  uint32 cur_area_id = 1; // 当前关卡
+  uint32 cur_siteId = 2; // 当前房间
+  map<uint32, RogueRoom> rogue_room_map = 3; // 房间列表
+  uint32 rogue_map_id = 4; // mapid
+  uint32 buff_num = 5; // buff// 计数器
+  uint32 aeon_id = 6; // 命途
+  map<uint32, RogueBuff> buff_list = 7;// 模拟宇宙已获得祝福列表
+  uint32 RogueActivityModuleID = 8;//模拟宇宙类型
+  bool is_win = 9;// 是否胜利
+  RogueStatus status = 10 ;// 状态
+}
+
+message RogueRoom {
+  uint32 room_id = 1;
+  RoomStatus room_status = 2;
+  repeated uint32 next_site_id_list = 3;
+}
+
+message RogueBuff {
+  uint32 buff_id = 1;
+  uint32 buff_level = 2;
+}
+
+message RogueHistory{
+  uint32 season_id = 1; // 期数
+  uint32 score = 2; // 分数
+}
+
+message RogueTourn {// 差分宇宙
+  uint32 exp = 1; // 经验
+  repeated uint32 taken_level_rewards = 2;// 已领取的等级奖励
+  map<uint32, InspirationCircuitInfo> inspiration_circuit_info = 3; // 灵感回路信息
+  repeated uint32 unlock_difficulty_info = 4;// 已解锁难度
+  CurRogueTourn cur_rogue_tourn = 5;// 当前差分宇宙
+}
+
+message InspirationCircuitInfo {// 灵感回路
+  uint32 inspiration_circuit_id = 1;
+  RogueTalentStatus status = 2;
+}
+
+message CurRogueTourn{// 当前差分宇宙
+  uint32 area_id = 1; // 关卡
+  repeated uint32 formula_list = 2; //方程列表
+  map<uint32, LayerInfo> cur_layer_list = 3;// 关卡列表
+  uint32 cur_layer_index = 4;//第几关当前
+}
+
+message LayerInfo{
+  uint32 layer_id = 1;//小关卡id
+  RogueTournLayerStatus status = 2;// 状态
+  uint32 layer_index = 3;//第几个小房间
+  map<uint32, RogueTournRoomInfo> rogue_tourn_room_list = 4;// 小关卡下属房间
+  uint32 cur_room_index = 5; // 第几个房间当前
+}
+
+message RogueTournRoomInfo{
+  uint32 room_id = 1;//id
+  uint32 room_index = 2;//第几个房间
+  RogueTournRoomStatus status = 3; // 状态
+}
+
+message Challenge {
+  map<uint32, ChallengeGroupInfo> challenge_group_list = 1; // 每期信息
+  CurChallenge cur_challenge = 3; // 当前战斗状态
+}
+
+message ChallengeGroupInfo {
+  map<uint32, ChallengeInfo> challenge_info_list = 1; // 通关状态
+  uint64 challenge_reward = 2; // 奖励领取信息
+  uint32 record_id = 3; // 挑战次数
+  uint32 max_challenge_id = 4;// 最高挑战关卡id
+}
+
+message ChallengeInfo {
+  uint32 stars = 1; // 星数
+  uint32 score_one = 2; // 第一关得分
+  uint32 score_two = 3; // 第二关得分
+  uint32 challenge_id = 4; // 关卡id
+  bool is_reward = 5;//是否领取
+  uint32 record_id = 6; // 挑战次数
+  uint32 buff_one = 7; // 第一关buff
+  uint32 buff_two = 8; // 第二关buff
+  repeated ChallengeLineup lineup_list = 9; // 队伍
+  uint32 floor = 10; // 第几关
+}
+
+message ChallengeLineup {
+  repeated ChallengeAvatar avatar_list = 1;
+}
+
+message ChallengeAvatar {
+  uint32 avatar_id = 1;
+  uint32 level = 2;
+  uint32 index = 3;
+  AvatarType type = 4;
+}
+
+message CurChallenge {// 正在进行的忘却之庭信息
+  uint32 challenge_id = 1;//挑战id
+  uint32 stage_num = 2; // 总共需要挑战数
+  uint32 cur_stage = 3; // 当前挑战
+  ChallengeStatus status = 4;// 状态
+  uint32 round_count = 5; // 已使用回合数
+  uint32 stars = 6;// 得分
+  uint32  score_one = 7; // 第一层得分
+  uint32  score_two = 8; // 第二层得分
+  bool is_win = 9; // 是否赢
+  uint32 dead_avatar = 10; // 死亡角色数
+  uint32 buff_one = 11; // 第一关buff
+  uint32 buff_two = 12; // 第二关buff
+  uint32 kill_monster = 13; // 当前关卡已杀死怪物数量
+  uint32 maze_buff_id = 14;//地图buff
+  bool is_boos = 15;// 是否末日之影
+  uint32 group_id = 16; // 期数
+  repeated ChallengeLineup lineup_list = 17; // 队伍
+  uint32 floor = 18; // 第几关
+}
+
+message Raid {
+  uint32 cur_raid_id = 1;//当前关卡
+  map<uint32, RaidInfo> raid_map = 2;// 关卡列表
+  map<uint32, RaidInfo> finish_raid_map = 3;// 已完成的关卡列表
+}
+
+message RaidInfo {
+  uint32 raid_id = 1;//关卡id
+  uint32 hard_level = 2;// 难度
+  uint32 entry_id = 3; // 场景
+  RaidStatus status = 4;//状态
+  VectorBin pos = 5; // 坐标
+  VectorBin rot = 6; // 朝向
+  uint64 finish_time = 7;// 完成时间
+}
+
+message Gacha {
+  map<uint32, GachaNum> gacha_map = 1;// [GachaType]*CeilingNum
+}
+
+message GachaNum {
+  uint32 ceiling_num = 1;// 抽取次数
+  uint32 pity4 = 2; // 几抽未四星up
+  bool failed_featured_item_pulls4 = 3;
+  bool failed_featured_item_pulls5 = 4; // 是否保底
+}
+
+message ContentAuditBin {
+  string content = 1; // 内容
+  uint32 audit_state = 2; // 审核状态
+  uint32 submit_time = 3; // 提交时间
+  uint32 submit_count = 4; // 提交计数
+}
+
+message Mail {
+  map<uint32, MailDts>MailList = 1;// 已领取邮件
+}
+
+message MailDts {
+  uint32 mail_id = 1;//邮件id
+  bool is_del = 2; // 是否删除
+  bool is_read = 3; // 是否领取
+}
+
+message PlayerFriend {
+  map<uint32, Friend> friend_list = 1;// 好友列表
+  map<uint32, uint32> assist_avatar_list = 2;// 展示角色
+  map<uint32, uint32> display_avatar_list = 3;// 支援角色
+}
+
+message Friend {
+  uint32 uid = 1; // 好友uid
+  bool is_marked = 2; // 是否关注
+  string remark_name = 3; // 备注
+}
+
+message Mission {// 任务
+  MainMission main_mission = 1;//主线任务
+}
+
+message MainMission{// 主线任务
+  map<uint32, MissionInfo> main_mission_list = 1; // 主任务
+  map<uint32, MissionInfo> sub_mission_list = 2;// 子任务
+  map<uint32, MissionInfo> finish_main_mission_list = 3;// 已完成的主任务
+  map<uint32, MissionInfo> finish_sub_mission_list = 4;// 已完成子任务
+}
+
+message MissionInfo{
+  uint32 mission_id = 1; //任务id
+  uint32 progress = 3; // 步骤
+  MissionStatus status = 4;// 任务状态
+  repeated MissionCustomValue mission_custom_value = 5;
+}
+
+message MissionCustomValue {
+  uint32 index = 1;
+  uint32 customValue = 2;
+}
+
+message TutorialDb {// 教程
+  map<uint32, TutorialInfo> Tutorial = 1;
+  map<uint32, TutorialInfo> TutorialGuide = 2;
+}
+
+message TutorialInfo {// 教程信息
+  uint32 id = 1;
+  TutorialStatus status = 2;
+}
+
+message MessageGroup {//NPC聊天信息
+  uint32 contact_id = 1;
+  uint32 id = 2;
+  map<uint32, MessageSection>message_section_list = 3;
+  int64 refresh_time = 4;
+  MessageGroupStatus status = 5;
+}
+
+message MessageSection {
+  uint32 id = 1;
+  MessageSectionStatus status = 2;
+}
+
+message Days {
+  uint32 daily_task = 1;// 每日任务
+  bool is_yk = 2;// 是否领取月卡
+}
+
+message BlockBin{// 地图配置
+  uint32 entry_id = 1; // 地图
+  map<uint32, BlockList> block_list = 2; // 区块信息
+  map<string, int32> floor_saved_data = 3;
+}
+
+message BlockList{
+  map<uint32, PropInfo>  prop_info = 1;// 物品实体信息
+  uint32 group_state = 2;// 组状态
+}
+
+message PropInfo{
+  uint32 inst_id = 1; // instid
+  uint32 prop_id = 2; // propid
+  uint32 prop_state = 3; // 状态
+}

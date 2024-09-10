@@ -3,29 +3,28 @@ package player
 import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandleQueryProductInfoCsReq(payloadMsg []byte) {
-	g.Send(cmd.QueryProductInfoScRsp, nil)
-}
-
-func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.SceneEntityMoveCsReq, payloadMsg)
-	req := msg.(*proto.SceneEntityMoveCsReq)
-	if g.GetBattleStatus() == spb.BattleType_Battle_NONE {
-		entityList := g.GetEntity(0)
+func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SceneEntityMoveCsReq)
+	if g.GetPd().IsChangeStory() {
+	} else if g.GetPd().GetBattleStatus() == spb.BattleType_Battle_RAID {
+	} else if g.GetPd().GetBattleStatus() == spb.BattleType_Battle_NONE {
+		entityList := g.GetPd().GetEntity(0)
 		if entityList == nil {
 			g.Send(cmd.SceneEntityMoveScRsp, &proto.SceneEntityMoveScRsp{})
 			return
 		}
 		for _, entry := range req.EntityMotionList {
 			if entityList[entry.EntityId] != nil {
-				g.SetPos(entry.Motion.Pos.X, entry.Motion.Pos.Y, entry.Motion.Pos.Z)
-				g.SetRot(entry.Motion.Rot.X, entry.Motion.Rot.Y, entry.Motion.Rot.Z)
+				g.GetPd().SetPos(entry.Motion.Pos.X, entry.Motion.Pos.Y, entry.Motion.Pos.Z)
+				g.GetPd().SetRot(entry.Motion.Rot.X, entry.Motion.Rot.Y, entry.Motion.Rot.Z)
 				break
 			}
 		}
 	}
+
 	g.Send(cmd.SceneEntityMoveScRsp, &proto.SceneEntityMoveScRsp{})
 }

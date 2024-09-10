@@ -1,27 +1,24 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-type ActivityInfoOnline struct {
-	StageId uint32 // 关卡id
-}
-
-func (g *GamePlayer) GetActivityInfoOnline() *ActivityInfoOnline {
-	db := g.GetCurBattle()
+func (g *GamePlayer) GetActivityInfoOnline() *model.ActivityInfoOnline {
+	db := g.GetPd().GetCurBattle()
 	if db.ActivityInfoOnline == nil {
-		db.ActivityInfoOnline = &ActivityInfoOnline{}
+		db.ActivityInfoOnline = &model.ActivityInfoOnline{}
 	}
 	return db.ActivityInfoOnline
 }
 
-func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.StartTrialActivityCsReq, payloadMsg)
-	req := msg.(*proto.StartTrialActivityCsReq)
+func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.StartTrialActivityCsReq)
 	rsp := &proto.StartTrialActivityScRsp{StageId: req.StageId}
 	avatarDemo := gdconf.GetAvatarDemoConfigById(req.StageId)
 	if avatarDemo == nil {
@@ -32,9 +29,9 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 	db := g.GetActivityInfoOnline()
 	db.StageId = req.StageId
 	// 设置状态
-	g.SetBattleStatus(spb.BattleType_Battle_TrialActivity)
+	g.GetPd().SetBattleStatus(spb.BattleType_Battle_TrialActivity)
 	// 更新角色
-	g.SetBattleLineUp(Activity, avatarDemo.TrialAvatarList)
+	g.SetBattleLineUp(model.Activity, avatarDemo.TrialAvatarList)
 	g.StartTrialEnterSceneByServerScNotify()
 
 	g.Send(cmd.StartTrialActivityScRsp, rsp)
@@ -43,7 +40,7 @@ func (g *GamePlayer) StartTrialActivityCsReq(payloadMsg []byte) {
 func (g *GamePlayer) StartTrialEnterSceneByServerScNotify() {
 	notify := &proto.EnterSceneByServerScNotify{
 		Scene:  g.GetTrialActivityScene(),
-		Lineup: g.GetLineUpPb(g.GetBattleLineUpById(Activity)),
+		Lineup: g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.Activity)),
 	}
 	g.Send(cmd.EnterSceneByServerScNotify, notify)
 }
@@ -58,7 +55,7 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 	if mapEntrance == nil {
 		return nil
 	}
-	leaderEntityId := g.GetNextGameObjectGuid()
+	leaderEntityId := g.GetPd().GetNextGameObjectGuid()
 	scene := &proto.SceneInfo{
 		ClientPosVersion:   0,
 		PlaneId:            mapEntrance.PlaneID,
@@ -68,7 +65,7 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 		EntryId:            avatarDemo.MapEntranceID,
 		GameModeType:       14, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
+		LevelGroupIdList:   nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -92,79 +89,87 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 			Z: int32(anchor.RotZ * 1000),
 		}
 	}
-	lineUp := g.GetBattleLineUpById(Activity)
+	lineUp := g.GetPd().GetBattleLineUpById(model.Activity)
 
 	// 添加队伍角色进实体列表，并设置坐标
-	g.GetSceneAvatarByLineUP(entityGroupList, lineUp, leaderEntityId, pos, rot)
+	g.GetPd().GetSceneAvatarByLineUP(entityGroupList, lineUp, leaderEntityId, pos, rot)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupList)
 
 	// 添加实体
-	levelGroup := gdconf.GetServerGroupById(mapEntrance.PlaneID, mapEntrance.FloorID, avatarDemo.MazeGroupID1)
-	scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
-	sceneGroupState := &proto.SceneGroupState{
-		GroupId:   levelGroup.GroupId,
-		IsDefault: true,
-	}
-	scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
+	for _, levelGroup := range gdconf.GetServerGroup(mapEntrance.PlaneID, mapEntrance.FloorID) {
+		scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
+		sceneGroupState := &proto.SceneGroupState{
+			GroupId:   levelGroup.GroupId,
+			IsDefault: true,
+		}
+		scene.GroupStateList = append(scene.GroupStateList, sceneGroupState)
 
-	entityGroupLists := &proto.SceneEntityGroupInfo{
-		GroupId:    levelGroup.GroupId,
-		EntityList: make([]*proto.SceneEntityInfo, 0),
-	}
-	// 添加物品实体
-	g.GetPropByID(entityGroupLists, levelGroup, nil, avatarDemo.MapEntranceID)
-	// 添加怪物实体
-	for _, monsterList := range levelGroup.MonsterList {
-		entityId := g.GetNextGameObjectGuid()
-		monsterPos := &proto.Vector{
-			X: int32(monsterList.PosX * 1000),
-			Y: int32(monsterList.PosY * 1000),
-			Z: int32(monsterList.PosZ * 1000),
+		entityGroupLists := &proto.SceneEntityGroupInfo{
+			GroupId:    levelGroup.GroupId,
+			EntityList: make([]*proto.SceneEntityInfo, 0),
 		}
-		monsterRot := &proto.Vector{
-			X: int32(monsterList.RotX * 1000),
-			Y: int32(monsterList.RotY * 1000),
-			Z: int32(monsterList.RotZ * 1000),
-		}
-		entityList := &proto.SceneEntityInfo{
-			GroupId:  levelGroup.GroupId,
-			InstId:   monsterList.ID,
-			EntityId: entityId,
-			Motion: &proto.MotionInfo{
-				Pos: monsterPos,
-				Rot: monsterRot,
-			},
-			NpcMonster: &proto.SceneNpcMonsterInfo{
-				MonsterId: avatarDemo.NpcMonsterIDList1[0],
-				EventId:   avatarDemo.EventIDList1[0],
-			},
-		}
+		// 添加物品实体
+		g.GetPd().GetPropByID(entityGroupLists, levelGroup, nil, avatarDemo.MapEntranceID)
 		// 添加怪物实体
-		g.AddEntity(levelGroup.GroupId, &MonsterEntity{
-			Entity: Entity{
-				InstId:   monsterList.ID,
-				EntityId: entityId,
-				GroupId:  levelGroup.GroupId,
-				Pos:      monsterPos,
-				Rot:      monsterRot,
-			},
-			EventID: avatarDemo.EventIDList1[0],
-		})
-		entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+		if levelGroup.GroupId == avatarDemo.MazeGroupID1 {
+			for _, monsterList := range levelGroup.MonsterList {
+				entityId := g.GetPd().GetNextGameObjectGuid()
+				monsterPos := &proto.Vector{
+					X: int32(monsterList.PosX * 1000),
+					Y: int32(monsterList.PosY * 1000),
+					Z: int32(monsterList.PosZ * 1000),
+				}
+				monsterRot := &proto.Vector{
+					X: int32(monsterList.RotX * 1000),
+					Y: int32(monsterList.RotY * 1000),
+					Z: int32(monsterList.RotZ * 1000),
+				}
+				entityList := &proto.SceneEntityInfo{
+					GroupId:  levelGroup.GroupId,
+					InstId:   monsterList.ID,
+					EntityId: entityId,
+					Motion: &proto.MotionInfo{
+						Pos: monsterPos,
+						Rot: monsterRot,
+					},
+					EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
+						NpcMonster: &proto.SceneNpcMonsterInfo{
+							MonsterId: avatarDemo.NpcMonsterIDList1[0],
+							EventId:   avatarDemo.EventIDList1[0],
+						},
+					},
+				}
+				// 添加怪物实体
+				g.GetPd().AddEntity(levelGroup.GroupId, &model.MonsterEntity{
+					Entity: model.Entity{
+						InstId:   monsterList.ID,
+						EntityId: entityId,
+						GroupId:  levelGroup.GroupId,
+						Pos:      monsterPos,
+						Rot:      monsterRot,
+					},
+					EventID: avatarDemo.EventIDList1[0],
+				})
+				entityGroupLists.EntityList = append(entityGroupLists.EntityList, entityList)
+			}
+		} else {
+			g.GetPd().GetNPCMonsterByID(entityGroupLists, levelGroup)
+		}
+
+		// 添加NPC实体
+		g.GetPd().GetNPCByID(entityGroupLists, levelGroup)
+		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 	}
-	// 添加NPC实体
-	g.GetNPCByID(entityGroupLists, levelGroup)
-	scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 
 	return scene
 }
 
 func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(req *proto.PVEBattleResultCsReq) {
-	g.SetBattleStatus(spb.BattleType_Battle_NONE)
+	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE)
 	db := g.GetActivityInfoOnline()
 	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
 		// 储存通关状态
-		g.GetActivity().TrialActivity = append(g.GetActivity().TrialActivity, db.StageId)
+		g.GetPd().GetActivity().TrialActivity = append(g.GetPd().GetActivity().TrialActivity, db.StageId)
 		// 发送通关通知
 		scNotify := &proto.TrialActivityDataChangeScNotify{
 			TrialActivityInfo: &proto.TrialActivityInfo{

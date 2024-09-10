@@ -5,7 +5,7 @@
 *.dylib
 *.test
 *.out
-*.bat
+
 protocol/*.py
 bulid
 go.work
@@ -191,3 +191,4 @@ config.json
 protocol/hkrpg
 ./muipserver
 protocol/proto/StarRail.proto
+/.vscode

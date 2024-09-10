@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 )
@@ -33,30 +33,22 @@ func (r *RoBot) GetCurSceneInfoScRsp(payloadMsg []byte) {
 		}
 	}
 
-	go r.EnterSceneCsReq()
+	r.EnterSceneCsReq()
 }
 
 func (r *RoBot) EnterSceneCsReq() {
 	entryIdList := gdconf.GetEntryIdList()
 	rand.New(rand.NewSource(time.Now().UnixNano()))
-	for {
-		if r.KcpAddr == "" {
-			return
-		}
-		entryId := rand.Intn(len(entryIdList)-1) + 1
-		rep := &proto.EnterSceneCsReq{
-			EntryId: entryIdList[entryId],
-		}
-
-		r.send(cmd.EnterSceneCsReq, rep)
-
-		time.Sleep(3 * time.Second)
+	if r.KcpConn == nil {
+		return
 	}
+	entryId := rand.Intn(len(entryIdList)-1) + 1
+	rep := &proto.EnterSceneCsReq{
+		EntryId: entryIdList[entryId],
+	}
+	r.send(cmd.EnterSceneCsReq, rep)
 }
 
 func (r *RoBot) EnterSceneByServerScNotify(payloadMsg []byte) {
-	// msg := decodePayloadToProto(cmd.EnterSceneByServerScNotify, payloadMsg)
-	// rsp := msg.(*proto.EnterSceneByServerScNotify)
-
-	// logger.Info("", rsp)
+	r.EnterSceneCsReq()
 }

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/dispatch/sdk"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -79,14 +79,14 @@ func (r *RoBot) httpLogin() {
 }
 
 func (r *RoBot) getHttpToken() (string, string) {
-	loginBody := new(sdk.LoginAccountRequestJson)
+	loginBody := new(constant.LoginAccountRequestJson)
 	loginBody.Account = r.AccountName
 	loginBody.Password = base64.RawStdEncoding.EncodeToString([]byte(r.AccountName))
 	loginBody.IsCrypto = true
 
-	login := new(sdk.Login)
-	login.Data = new(sdk.LoginData)
-	login.Data.Account = new(sdk.LoginAccount)
+	login := new(constant.Login)
+	login.Data = new(constant.LoginData)
+	login.Data.Account = new(constant.LoginAccount)
 	_, err := r.HttpClient.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(loginBody).
@@ -104,8 +104,8 @@ func (r *RoBot) getHttpToken() (string, string) {
 }
 
 func (r *RoBot) getHttpComboToken(token string) string {
-	loginBody := new(sdk.ComboTokenReq)
-	loginBodyData := new(sdk.ComboTokenReqLoginTokenData)
+	loginBody := new(constant.ComboTokenReq)
+	loginBodyData := new(constant.ComboTokenReqLoginTokenData)
 	loginBody.AppID = 11
 	loginBody.ChannelID = 1
 	loginBodyData.Uid = r.AccountUid
@@ -116,8 +116,8 @@ func (r *RoBot) getHttpComboToken(token string) string {
 
 	loginBody.Data = string(reqdata)
 
-	login := new(sdk.ComboTokenRsp)
-	login.Data = new(sdk.ComboTokenRspLoginData)
+	login := new(constant.ComboTokenRsp)
+	login.Data = new(constant.ComboTokenRspLoginData)
 	_, err := r.HttpClient.R().
 		SetHeader("Content-Type", "application/json").
 		SetBody(loginBody).

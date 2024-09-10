@@ -31,14 +31,7 @@ func (s *UDPSession) defaultRx() {
 					continue
 				}
 				if connType == ConnEnetFin {
-					s.defaultSendEnetNotifyToPeer(&Enet{
-						Addr:      s.remote.String(),
-						SessionId: sessionId,
-						Conv:      conv,
-						ConnType:  ConnEnetFin,
-						EnetType:  enetType,
-					})
-					_ = s.Close()
+					_ = s.CloseConn(enetType)
 					continue
 				}
 			}
@@ -69,14 +62,13 @@ func (l *Listener) defaultRx() {
 				}
 				switch connType {
 				case ConnEnetSyn:
-					// 客户端前置握手获取conv
 					l.enetNotifyChan <- &Enet{Addr: from.String(), SessionId: sessionId, Conv: conv, ConnType: ConnEnetSyn, EnetType: enetType}
 				case ConnEnetEst:
-					// 连接建立
 					l.enetNotifyChan <- &Enet{Addr: from.String(), SessionId: sessionId, Conv: conv, ConnType: ConnEnetEst, EnetType: enetType}
 				case ConnEnetFin:
-					// 连接断开
 					l.enetNotifyChan <- &Enet{Addr: from.String(), SessionId: sessionId, Conv: conv, ConnType: ConnEnetFin, EnetType: enetType}
+				case ConnEnetPing:
+					l.enetNotifyChan <- &Enet{Addr: from.String(), SessionId: sessionId, Conv: conv, ConnType: ConnEnetPing, EnetType: enetType}
 				default:
 					continue
 				}
@@ -92,8 +84,6 @@ func (l *Listener) defaultRx() {
 			if exist {
 				if conn.remote.String() != from.String() {
 					conn.remote = from
-					// 连接地址改变
-					l.enetNotifyChan <- &Enet{Addr: conn.remote.String(), SessionId: sessionId, Conv: conv, ConnType: ConnEnetAddrChange}
 				}
 			}
 			l.packetInput(udpPayload, from, rawConv)
@@ -147,5 +137,13 @@ func (s *UDPSession) defaultSendEnetNotifyToPeer(enet *Enet) {
 	if data == nil {
 		return
 	}
-	_, _ = s.conn.(*net.UDPConn).Write(data)
+	if s.l != nil {
+		remoteAddr, err := net.ResolveUDPAddr("udp", enet.Addr)
+		if err != nil {
+			return
+		}
+		_, _ = s.conn.WriteTo(data, remoteAddr)
+	} else {
+		_, _ = s.conn.(*net.UDPConn).Write(data)
+	}
 }

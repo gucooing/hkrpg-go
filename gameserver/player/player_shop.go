@@ -3,14 +3,15 @@ package player
 import (
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetShopListCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetShopListCsReq, payloadMsg)
-	req := msg.(*proto.GetShopListCsReq)
+func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetShopListCsReq)
 
 	rsp := new(proto.GetShopListScRsp)
 	rsp.ShopList = make([]*proto.Shop, 0)
@@ -71,24 +72,23 @@ func (g *GamePlayer) GetShopListCsReq(payloadMsg []byte) {
 	g.Send(cmd.GetShopListScRsp, rsp)
 }
 
-func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.ExchangeHcoinCsReq, payloadMsg)
-	req := msg.(*proto.ExchangeHcoinCsReq)
-	var dPileItem []*Material
-	var aPileItem []*Material
+func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ExchangeHcoinCsReq)
+	var dPileItem []*model.Material
+	var aPileItem []*model.Material
 
-	dPileItem = append(dPileItem, &Material{
+	dPileItem = append(dPileItem, &model.Material{
 		Tid: 3,
 		Num: req.Num,
 	})
 
-	aPileItem = append(aPileItem, &Material{
+	aPileItem = append(aPileItem, &model.Material{
 		Tid: 1,
 		Num: req.Num,
 	})
 
-	g.DelMaterial(dPileItem)
-	g.AddMaterial(aPileItem)
+	g.GetPd().DelMaterial(dPileItem)
+	g.GetPd().AddMaterial(aPileItem)
 
 	g.PlayerPlayerSyncScNotify()
 
@@ -98,66 +98,103 @@ func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg []byte) {
 	g.Send(cmd.ExchangeHcoinScRsp, rsp)
 }
 
-func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.ExchangeRogueRewardKeyCsReq, payloadMsg)
-	req := msg.(*proto.ExchangeRogueRewardKeyCsReq)
+func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ExchangeRogueRewardKeyCsReq)
 	g.Send(cmd.ExchangeRogueRewardKeyScRsp, &proto.ExchangeRogueRewardKeyCsReq{Count: req.Count})
 }
 
-func (g *GamePlayer) BuyGoodsCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.BuyGoodsCsReq, payloadMsg)
-	req := msg.(*proto.BuyGoodsCsReq)
-	var pileItem []*Material
+func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.BuyGoodsCsReq)
+	var pileItem []*model.Material
 
-	allSync := &AllPlayerSync{MaterialList: make([]uint32, 0)}
+	allSync := &model.AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
 
 	rsp := &proto.BuyGoodsScRsp{
 		ReturnItemList: &proto.ItemList{
-			ItemList: []*proto.Item{{
-				ItemId:      req.ItemId,
-				Level:       0,
-				Num:         req.GoodsNum,
-				MainAffixId: 0,
-				Rank:        0,
-				Promotion:   0,
-				UniqueId:    0,
-			}},
+			ItemList: make([]*proto.Item, 0),
 		},
 		ShopId:        req.ShopId,                // 商店id
 		GoodsId:       req.GoodsId,               // 商品id
 		GoodsBuyTimes: uint32(time.Now().Unix()), // 商品购买时间
 	}
 
-	var material []*Material
+	var material []*model.Material
 	goodsConfig := gdconf.GetShopGoodsConfigByGoodsID(req.ShopId, req.GoodsId)
 	for id, cost := range goodsConfig.CurrencyList {
 		allSync.MaterialList = append(allSync.MaterialList, cost)
-		material = append(material, &Material{
+		material = append(material, &model.Material{
 			Tid: cost,
-			Num: goodsConfig.CurrencyCostList[id],
+			Num: goodsConfig.CurrencyCostList[id] * req.GoodsNum,
 		})
 	}
-	g.DelMaterial(material)
-	pileItem = append(pileItem, &Material{
+	g.GetPd().DelMaterial(material)
+	num := goodsConfig.ItemCount * req.GoodsNum
+	pileItem = append(pileItem, &model.Material{
 		Tid: req.ItemId,
-		Num: req.GoodsNum,
+		Num: num,
 	})
-	g.AddItem(pileItem)
+	rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList,
+		&proto.Item{
+			ItemId:      req.ItemId,
+			Promotion:   0,
+			MainAffixId: 0,
+			Rank:        0,
+			Level:       0,
+			Num:         num,
+			UniqueId:    0,
+		})
+	g.GetPd().AddItem(pileItem, allSync)
 
-	allSync.MaterialList = append(allSync.MaterialList, req.ItemId)
 	g.AllPlayerSyncScNotify(allSync)
-	g.MissionGetItem(req.ItemId) // 任务检查
+	finishSubMission := g.GetPd().MissionGetItem(req.ItemId) // 任务检查
+	if len(finishSubMission) != 0 {
+		g.InspectMission(finishSubMission)
+	}
 	g.Send(cmd.BuyGoodsScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.GetRollShopInfoCsReq, payloadMsg)
-	req := msg.(*proto.GetRollShopInfoCsReq)
+func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.GetRollShopInfoCsReq)
 	rsp := &proto.GetRollShopInfoScRsp{
-		GachaRandom: 1,
-		NOPNEOADJEI: nil,
-		RollShopId:  req.RollShopId,
-		Retcode:     0,
+		GachaRandom:     1,
+		ShopGroupIdList: make([]uint32, 0),
+		RollShopId:      req.RollShopId,
+		Retcode:         0,
 	}
 	g.Send(cmd.GetRollShopInfoScRsp, rsp)
+}
+
+func (g *GamePlayer) QueryProductInfoCsReq(payloadMsg pb.Message) {
+	rsp := &proto.QueryProductInfoScRsp{
+		DHDAENPMKOO: make([]*proto.Product, 0),
+		OGLKEBKFNNK: 3,
+		ANMKBJHMKGC: 0,
+		BDDKLNCEJOE: 0,
+		Retcode:     0,
+	}
+	rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
+		KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_COIN,
+		JGOFENPOJJI: "Tier_60",
+		JBEFEAHCJDM: 0,
+		PDLIGIAGJLJ: "rpgchncoin6480tier60",
+		PNFMFLEHKFG: 0,
+		AFIPAJBMBGL: true,
+	})
+	rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
+		KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_POINT_CARD,
+		JGOFENPOJJI: "Tier_1",
+		JBEFEAHCJDM: 0,
+		PDLIGIAGJLJ: "rpgglbpointcardtierx",
+		PNFMFLEHKFG: 0,
+		AFIPAJBMBGL: false,
+	})
+	rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
+		KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_MONTH_CARD,
+		JGOFENPOJJI: "Tier_5",
+		JBEFEAHCJDM: 0,
+		PDLIGIAGJLJ: "rpgglbmonthcardtier5",
+		PNFMFLEHKFG: 0,
+		AFIPAJBMBGL: false,
+	})
+	g.Send(cmd.QueryProductInfoScRsp, rsp)
 }

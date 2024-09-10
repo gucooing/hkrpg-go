@@ -9,7 +9,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/robot/config"
 	"github.com/gucooing/hkrpg-go/robot/robot"

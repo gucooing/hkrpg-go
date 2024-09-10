@@ -1,77 +1,81 @@
 package player
 
 import (
-	"github.com/gucooing/hkrpg-go/pkg/gdconf"
+	"github.com/gucooing/hkrpg-go/gameserver/model"
+	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandleGetHeroBasicTypeInfoCsReq(payloadMsg []byte) {
-	avatarDb := g.GetAvatar()
-	main := g.GetAvatarById(8001)
-	rsp := &proto.GetHeroBasicTypeInfoScRsp{
-		Gender:            proto.Gender(avatarDb.Gender),
-		CurBasicType:      proto.HeroBasicType(main.CurPath),
-		IsGenderModified:  false,
-		BasicTypeInfoList: g.GetPlayerHeroBasicTypeInfo(),
-		Retcode:           0,
+func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg pb.Message) {
+	rsp := &proto.GetMultiPathAvatarInfoScRsp{
+		Retcode:                 0,
+		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),           // 已解锁多命途角色信息
+		CurAvatarPath:           make(map[uint32]proto.MultiPathAvatarType),      // 多命途角色列表
+		BasicTypeIdList:         []uint32{g.GetPd().GetAvatarById(8001).CurPath}, // 主角命途
 	}
 
-	g.Send(cmd.GetHeroBasicTypeInfoScRsp, rsp)
+	for _, avatarDb := range g.GetPd().GetAvatarList() {
+		if avatarDb.IsMultiPath {
+			rsp.MultiPathAvatarInfoList = append(rsp.MultiPathAvatarInfoList, g.GetPd().GetMultiPathAvatarInfo(avatarDb.AvatarId)...)
+			rsp.CurAvatarPath[avatarDb.AvatarId] = proto.MultiPathAvatarType(avatarDb.CurPath)
+		}
+	}
+
+	g.Send(cmd.GetMultiPathAvatarInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg []byte) {
+func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetAvatarDataScRsp)
 	rsp.IsGetAll = true
 	rsp.AvatarList = make([]*proto.Avatar, 0)
 
-	avatarDb := g.GetAvatar()
+	avatarDb := g.GetPd().GetAvatar()
 
 	for avatarId, _ := range avatarDb.AvatarList {
-		avatarList := g.GetProtoAvatarById(avatarId)
+		avatarList := g.GetPd().GetProtoAvatarById(avatarId)
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
 
 	g.Send(cmd.GetAvatarDataScRsp, rsp)
 }
 
-func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.RankUpAvatarCsReq, payloadMsg)
-	req := msg.(*proto.RankUpAvatarCsReq)
+func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RankUpAvatarCsReq)
 	rsp := &proto.RankUpAvatarScRsp{}
-	db := g.GetAvatarBinById(req.GetDressAvatarId())
+	db := g.GetPd().GetAvatarBinById(req.GetAvatarId())
 	cost := req.GetCostData()
 	if db == nil || cost == nil {
 		g.Send(cmd.RankUpAvatarScRsp, rsp)
 		return
 	}
-	pileItem := make([]*Material, 0)
-	allSync := &AllPlayerSync{
+	pileItem := make([]*model.Material, 0)
+	allSync := &model.AllPlayerSync{
 		AvatarList:   make([]uint32, 0),
 		MaterialList: make([]uint32, 0),
 	}
 	for _, item := range cost.GetItemList() {
 		allSync.MaterialList = append(allSync.MaterialList, item.GetPileItem().ItemId)
-		pileItem = append(pileItem, &Material{
+		pileItem = append(pileItem, &model.Material{
 			Tid: item.GetPileItem().ItemId,
 			Num: item.GetPileItem().ItemNum,
 		})
 	}
-	if !g.DelMaterial(pileItem) {
+	if !g.GetPd().DelMaterial(pileItem) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		g.Send(cmd.RankUpAvatarScRsp, rsp)
 		return
 	}
-	g.AddAvatarRank(1, db)
+	g.GetPd().AddAvatarRank(1, db)
 
-	allSync.AvatarList = append(allSync.AvatarList, req.GetDressAvatarId())
+	allSync.AvatarList = append(allSync.AvatarList, req.GetAvatarId())
 	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.RankUpAvatarScRsp, rsp)
 }
 
-func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.AvatarExpUpCsReq, payloadMsg)
-	req := msg.(*proto.AvatarExpUpCsReq)
+func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.AvatarExpUpCsReq)
 	rsp := &proto.AvatarExpUpScRsp{}
 	cost := req.GetItemCost()
 	// 从背包获取需要升级的角色
@@ -79,23 +83,21 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	if req.BaseAvatarId/1000 == 8 {
 		avatarId = 8001
 	}
-	dbAvatar := g.GetAvatarById(avatarId)
+	dbAvatar := g.GetPd().GetAvatarById(avatarId)
 	if dbAvatar == nil || cost == nil {
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
 
-	var pileItem []*Material // 需要删除的升级材料
-	var aPileItem []*Material
+	var pileItem []*model.Material // 需要删除的升级材料
+	var aPileItem []*model.Material
 	var delScoin uint32 // 扣除的信用点
 	var addExp uint32   // 增加的经验
-	allSync := &AllPlayerSync{
+	allSync := &model.AllPlayerSync{
 		IsBasic:      true,
 		AvatarList:   make([]uint32, 0),
 		MaterialList: make([]uint32, 0),
 	}
-
-	gdconfAvatar := gdconf.GetAvatarDataById(avatarId)
 
 	// 遍历用来升级的材料
 	for _, pileList := range cost.GetItemList() {
@@ -103,7 +105,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 		if pileList.GetPileItem() == nil {
 			continue
 		}
-		pileItem = append(pileItem, &Material{
+		pileItem = append(pileItem, &model.Material{
 			Tid: pileList.GetPileItem().ItemId,
 			Num: pileList.GetPileItem().ItemNum,
 		})
@@ -122,18 +124,19 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	// 计算添加后有多少经验
 	exp := addExp + dbAvatar.Exp
 	// 获取能升级到的等级和升级后经验
-	level, exp, newExp := gdconf.GetExpTypeByLevel(gdconfAvatar.ExpGroup, exp, dbAvatar.Level, dbAvatar.PromoteLevel, dbAvatar.AvatarId)
-	if level == 0 && exp == 0 {
+	newExp, is := g.GetPd().AvatarAddExp(avatarId, exp)
+	if !is {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
 	// 扣除本次升级需要的信用点
-	pileItem = append(pileItem, &Material{
+	pileItem = append(pileItem, &model.Material{
 		Tid: 2,
 		Num: delScoin,
 	})
 	// 删除用来升级的材料
-	if !g.DelMaterial(pileItem) {
+	if !g.GetPd().DelMaterial(pileItem) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
@@ -143,7 +146,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	if newExp >= 1000 {
 		num := (newExp / 1000) % 10
 		if num >= 5 {
-			aPileItem = append(aPileItem, &Material{
+			aPileItem = append(aPileItem, &model.Material{
 				Tid: 212,
 				Num: num / 5,
 			})
@@ -152,7 +155,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 				ItemNum: num % 5,
 			})
 		}
-		aPileItem = append(aPileItem, &Material{
+		aPileItem = append(aPileItem, &model.Material{
 			Tid: 211,
 			Num: num % 5,
 		})
@@ -160,11 +163,8 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 			ItemId:  211,
 			ItemNum: num % 5,
 		})
-		g.AddMaterial(aPileItem)
+		g.GetPd().AddMaterial(aPileItem)
 	}
-	// 更改角色状态
-	dbAvatar.Exp = exp
-	dbAvatar.Level = level
 	// 通知升级后角色消息
 	allSync.MaterialList = append(allSync.MaterialList, 2)
 	allSync.MaterialList = append(allSync.MaterialList, 211)
@@ -173,9 +173,8 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg []byte) {
 	g.Send(cmd.AvatarExpUpScRsp, rsp)
 }
 
-func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.PromoteAvatarCsReq, payloadMsg)
-	req := msg.(*proto.PromoteAvatarCsReq)
+func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.PromoteAvatarCsReq)
 	rsp := &proto.AvatarExpUpScRsp{}
 	itemList := req.GetItemList()
 	// 从背包获取需要升级的角色
@@ -183,15 +182,15 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
 	if req.BaseAvatarId/1000 == 8 {
 		avatarId = 8001
 	}
-	dbAvatar := g.GetAvatarById(avatarId)
+	dbAvatar := g.GetPd().GetAvatarById(avatarId)
 	if dbAvatar == nil || itemList == nil {
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
 	}
 
-	var pileItem []*Material // 需要删除的突破材料
-	var delScoin uint32      // 扣除的信用点
-	allSync := &AllPlayerSync{
+	var pileItem []*model.Material // 需要删除的突破材料
+	var delScoin uint32            // 扣除的信用点
+	allSync := &model.AllPlayerSync{
 		IsBasic:      true,
 		AvatarList:   make([]uint32, 0),
 		MaterialList: make([]uint32, 0),
@@ -204,7 +203,7 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
 			continue
 		}
 		allSync.MaterialList = append(allSync.MaterialList, pileList.GetPileItem().ItemId)
-		pileItem = append(pileItem, &Material{
+		pileItem = append(pileItem, &model.Material{
 			Tid: pileList.GetPileItem().ItemId,
 			Num: pileList.GetPileItem().ItemNum,
 		})
@@ -213,12 +212,12 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
 	// 计算需要扣除的信用点
 	delScoin = gdconf.GetAvatarPromotionConfigByLevel(dbAvatar.AvatarId, dbAvatar.PromoteLevel)
 	// 扣除本次升级需要的信用点
-	pileItem = append(pileItem, &Material{
+	pileItem = append(pileItem, &model.Material{
 		Tid: 2,
 		Num: delScoin,
 	})
 	// 删除用来突破的材料
-	if !g.DelMaterial(pileItem) {
+	if !g.GetPd().DelMaterial(pileItem) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
@@ -233,23 +232,22 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg []byte) {
 	g.Send(cmd.PromoteAvatarScRsp, rsp)
 }
 
-func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.UnlockSkilltreeCsReq, payloadMsg)
-	req := msg.(*proto.UnlockSkilltreeCsReq)
+func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.UnlockSkilltreeCsReq)
 	rsp := &proto.UnlockSkilltreeScRsp{}
 	avatarId := req.PointId / 1000 // 获取要升级技能的角色Id
 	if avatarId/1000 == 8 {
 		avatarId = 8001
 	}
-	avatarDb := g.GetAvatarById(avatarId)
+	avatarDb := g.GetPd().GetAvatarById(avatarId)
 	if avatarDb == nil {
 		rsp.Retcode = uint32(proto.Retcode_RET_FAIL)
 		g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 		return
 	}
 
-	var pileItem []*Material // 需要删除的升级材料
-	allSync := &AllPlayerSync{
+	var pileItem []*model.Material // 需要删除的升级材料
+	allSync := &model.AllPlayerSync{
 		AvatarList:   make([]uint32, 0),
 		MaterialList: make([]uint32, 0),
 	}
@@ -261,20 +259,20 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 			continue
 		}
 		allSync.MaterialList = append(allSync.MaterialList, pileList.GetPileItem().ItemId)
-		pileItem = append(pileItem, &Material{
+		pileItem = append(pileItem, &model.Material{
 			Tid: pileList.GetPileItem().ItemId,
 			Num: pileList.GetPileItem().ItemNum,
 		})
 	}
 
 	// 删除用来突破的材料
-	if !g.DelMaterial(pileItem) {
+	if !g.GetPd().DelMaterial(pileItem) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 		return
 	}
 	// 升级
-	for _, skilltree := range g.GetSkillTreeList(avatarId) {
+	for _, skilltree := range g.GetPd().GetSkillTreeList(avatarId) {
 		if skilltree.PointId == req.PointId {
 			skilltree.Level = req.Level
 		}
@@ -288,16 +286,15 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg []byte) {
 	g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 }
 
-func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg []byte) {
-	msg := g.DecodePayloadToProto(cmd.TakePromotionRewardCsReq, payloadMsg)
-	req := msg.(*proto.TakePromotionRewardCsReq)
-	var pileItem []*Material
-	allSync := &AllPlayerSync{
+func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TakePromotionRewardCsReq)
+	var pileItem []*model.Material
+	allSync := &model.AllPlayerSync{
 		AvatarList:   make([]uint32, 0),
 		MaterialList: make([]uint32, 0),
 	}
 
-	avatarDb := g.GetAvatarById(req.BaseAvatarId)
+	avatarDb := g.GetPd().GetAvatarById(req.BaseAvatarId)
 	if avatarDb == nil {
 		rsp := &proto.TakePromotionRewardScRsp{
 			Retcode: uint32(proto.Retcode_RET_FAIL),
@@ -307,12 +304,12 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg []byte) {
 	}
 	avatarDb.TakenRewards = append(avatarDb.TakenRewards, req.Promotion)
 
-	pileItem = append(pileItem, &Material{
+	pileItem = append(pileItem, &model.Material{
 		Tid: 101,
 		Num: 1,
 	})
 
-	g.AddMaterial(pileItem)
+	g.GetPd().AddMaterial(pileItem)
 	allSync.MaterialList = append(allSync.MaterialList, 101)
 	allSync.AvatarList = append(allSync.AvatarList, req.BaseAvatarId)
 	g.AllPlayerSyncScNotify(allSync)
@@ -330,4 +327,24 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg []byte) {
 		}},
 	}
 	g.Send(cmd.TakePromotionRewardScRsp, rsq)
+}
+
+func (g *GamePlayer) UnlockAvatarPathCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.UnlockAvatarPathCsReq)
+
+	g.GetPd().AddMultiPathAvatar(uint32(req.AvatarId))
+
+	rsp := &proto.UnlockAvatarPathScRsp{
+		BasicTypeIdList: []uint32{g.GetPd().GetAvatarById(8001).CurPath},
+		Retcode:         0,
+		AvatarId:        req.AvatarId,
+		Reward: &proto.ItemList{ItemList: []*proto.Item{
+			{
+				ItemId: uint32(req.AvatarId),
+				Num:    1,
+			},
+		}},
+	}
+
+	g.Send(cmd.UnlockAvatarPathScRsp, rsp)
 }

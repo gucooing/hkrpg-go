@@ -4,7 +4,7 @@
 // error-checked and anonymous delivery of streams over UDP packets.
 //
 // The interfaces of this package aims to be compatible with
-// Net.Conn in standard library, but offers powerful features for advanced users.
+// net.Conn in standard library, but offers powerful features for advanced users.
 package kcp
 
 import (
@@ -12,6 +12,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	rand2 "math/rand"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -32,7 +33,6 @@ const (
 var (
 	errInvalidOperation = errors.New("invalid operation")
 	errTimeout          = errors.New("timeout")
-	errReadTimeout      = errors.New("read timeout")
 )
 
 var (
@@ -71,15 +71,13 @@ type (
 		bufptr  []byte
 
 		// settings
-		remote     net.Addr      // remote peer address
-		rd         time.Time     // read deadline
-		wd         time.Time     // write deadline
-		idt        *time.Timer   // 空闲截止计时器时间
-		fd         time.Duration // 空闲截止时间
-		headerSize int           // the header size additional to a KCP frame
-		ackNoDelay bool          // send ack immediately for each incoming packet(testing purpose)
-		writeDelay bool          // delay kcp.flush() for Write() for bulk transfer
-		dup        int           // duplicate udp packets(testing purpose)
+		remote     net.Addr  // remote peer address
+		rd         time.Time // read deadline
+		wd         time.Time // write deadline
+		headerSize int       // the header size additional to a KCP frame
+		ackNoDelay bool      // send ack immediately for each incoming packet(testing purpose)
+		writeDelay bool      // delay kcp.flush() for Write() for bulk transfer
+		dup        int       // duplicate udp packets(testing purpose)
 
 		// notifications
 		die          chan struct{} // notify current session has Closed
@@ -97,7 +95,7 @@ type (
 
 		// packets waiting to be sent on wire
 		txqueue         []ipv4.Message
-		xconn           batchConn // for x/Net
+		xconn           batchConn // for x/net
 		xconnWriteError error
 
 		mu sync.Mutex
@@ -129,8 +127,6 @@ func newUDPSession(conv uint64, l *Listener, conn net.PacketConn, ownConn bool, 
 	sess.ownConn = ownConn
 	sess.l = l
 	sess.recvbuf = make([]byte, mtuLimit)
-	sess.fd = 10 * time.Second
-	sess.idt = time.NewTimer(sess.fd)
 
 	// cast to writebatch conn
 	if _, ok := conn.(*net.UDPConn); ok {
@@ -170,7 +166,7 @@ func newUDPSession(conv uint64, l *Listener, conn net.PacketConn, ownConn bool, 
 	return sess
 }
 
-// Read implements Net.Conn
+// Read implements net.Conn
 func (s *UDPSession) Read(b []byte) (n int, err error) {
 	for {
 		s.mu.Lock()
@@ -187,7 +183,6 @@ func (s *UDPSession) Read(b []byte) (n int, err error) {
 				s.kcp.Recv(b)
 				s.mu.Unlock()
 				atomic.AddUint64(&DefaultSnmp.BytesReceived, uint64(size))
-				s.idt.Reset(s.fd)
 				return size, nil
 			}
 
@@ -233,8 +228,6 @@ func (s *UDPSession) Read(b []byte) (n int, err error) {
 			return 0, s.socketReadError.Load().(error)
 		case <-s.die:
 			return 0, io.ErrClosedPipe
-		case <-s.idt.C:
-			return 0, errReadTimeout
 		}
 	}
 }
@@ -243,7 +236,7 @@ func (s *UDPSession) GetMaxPayloadLen() int {
 	return 256 * int(s.kcp.mss)
 }
 
-// Write implements Net.Conn
+// Write implements net.Conn
 func (s *UDPSession) Write(b []byte) (n int, err error) {
 	if len(b) > s.GetMaxPayloadLen() {
 		return 0, errors.New("send payload above 256*mss")
@@ -361,6 +354,17 @@ func (s *UDPSession) Close() error {
 	} else {
 		return io.ErrClosedPipe
 	}
+}
+
+func (s *UDPSession) CloseConn(enetType uint32) error {
+	s.SendEnetNotifyToPeer(&Enet{
+		Addr:      s.RemoteAddr().String(),
+		SessionId: s.GetSessionId(),
+		Conv:      s.GetConv(),
+		ConnType:  ConnEnetFin,
+		EnetType:  enetType,
+	})
+	return s.Close()
 }
 
 // LocalAddr returns the local network address. The Addr returned is shared by all invocations of LocalAddr, so do not modify it.
@@ -515,14 +519,6 @@ func (s *UDPSession) SetWriteBuffer(bytes int) error {
 		}
 	}
 	return errInvalidOperation
-}
-
-// 设置最大空闲时间
-func (s *UDPSession) SetIdleTicker(t time.Duration) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.fd = t
-	s.idt = time.NewTimer(s.fd)
 }
 
 // post-processing for sending a packet from kcp core
@@ -692,15 +688,62 @@ type (
 
 		rd atomic.Value // read deadline for Accept()
 
-		xconn           batchConn // for x/Net
+		xconn           batchConn // for x/net
 		xconnWriteError error
 
-		enetNotifyChan chan *Enet // Enet事件上报管道
+		enetNotifyChan   chan *Enet // Enet事件上报管道
+		sessionIdCounter uint32
 	}
 )
 
-func (l *Listener) GetEnetNotifyChan() chan *Enet {
-	return l.enetNotifyChan
+func (l *Listener) EnetHandle() {
+	go func() {
+		for {
+			enetNotify := <-l.enetNotifyChan
+			switch enetNotify.ConnType {
+			case ConnEnetSyn:
+				if enetNotify.EnetType != EnetClientConnectKey {
+					continue
+				}
+				var conv uint32
+				var sessionId uint32
+				if enetNotify.Conv != 0 {
+					conv = enetNotify.Conv
+				} else {
+					_ = binary.Read(rand.Reader, binary.LittleEndian, &conv)
+				}
+				sessionId = atomic.AddUint32(&l.sessionIdCounter, 1)
+				l.SendEnetNotifyToPeer(&Enet{
+					Addr:      enetNotify.Addr,
+					SessionId: sessionId,
+					Conv:      conv,
+					ConnType:  ConnEnetEst,
+					EnetType:  enetNotify.EnetType,
+				})
+			case ConnEnetFin:
+				rawConvData := make([]byte, 8)
+				binary.LittleEndian.PutUint32(rawConvData[0:4], enetNotify.SessionId)
+				binary.LittleEndian.PutUint32(rawConvData[4:8], enetNotify.Conv)
+				rawConv := binary.LittleEndian.Uint64(rawConvData)
+				l.sessionLock.RLock()
+				conn, exist := l.sessions[rawConv]
+				l.sessionLock.RUnlock()
+				if !exist {
+					continue
+				}
+				_ = conn.CloseConn(enetNotify.EnetType)
+			case ConnEnetPing:
+				l.SendEnetNotifyToPeer(&Enet{
+					Addr:      enetNotify.Addr,
+					SessionId: 0,
+					Conv:      0,
+					ConnType:  ConnEnetPing,
+					EnetType:  enetNotify.EnetType,
+				})
+			default:
+			}
+		}
+	}()
 }
 
 // packet input stage
@@ -909,6 +952,7 @@ func serveConn(conn net.PacketConn, ownConn bool) (*Listener, error) {
 	l.die = make(chan struct{})
 	l.chSocketReadError = make(chan struct{})
 	l.enetNotifyChan = make(chan *Enet, 1000)
+	l.sessionIdCounter = uint32(rand2.Intn(1000) + 1)
 
 	if _, ok := l.conn.(*net.UDPConn); ok {
 		addr, err := net.ResolveUDPAddr("udp", l.conn.LocalAddr().String())

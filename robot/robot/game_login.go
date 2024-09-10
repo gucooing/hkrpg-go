@@ -42,7 +42,7 @@ func (r *RoBot) PlayerLoginScRsp() {
 	req := new(proto.GetBagScRsp)
 
 	r.send(cmd.GetBasicInfoCsReq, req)
-	r.send(cmd.GetHeroBasicTypeInfoCsReq, req)
+	r.send(cmd.GetMultiPathAvatarInfoCsReq, req)
 	r.send(cmd.GetBagCsReq, req)
 	r.send(cmd.GetMarkItemListCsReq, req)
 	r.send(cmd.GetPlayerBoardDataCsReq, req)
@@ -121,20 +121,16 @@ func (r *RoBot) PlayerLoginScRsp() {
 }
 
 func (r *RoBot) PlayerHeartBeatCsReq() {
-	go func() {
-		for {
-			if r.KcpAddr == "" {
-				return
-			}
-			req := &proto.PlayerHeartBeatCsReq{
-				ClientTimeMs: uint64(time.Now().UnixMilli()),
-			}
-
-			r.send(cmd.PlayerHeartBeatCsReq, req)
-
-			time.Sleep(1 * time.Millisecond)
+	for {
+		if r.KcpConn == nil {
+			return
 		}
-	}()
+		req := &proto.PlayerHeartBeatCsReq{
+			ClientTimeMs: uint64(time.Now().UnixMilli()),
+		}
+		r.send(cmd.PlayerHeartBeatCsReq, req)
+		time.Sleep(1 * time.Second)
+	}
 }
 
 func (r *RoBot) PlayerHeartbeatScRsp(payloadMsg []byte) {

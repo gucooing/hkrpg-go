@@ -9,7 +9,7 @@ import (
 	"github.com/gucooing/gunet"
 	"github.com/gucooing/hkrpg-go/multiserver/db"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	spb "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 
 	"github.com/gucooing/hkrpg-go/multiserver/config"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -104,7 +104,7 @@ func (s *Multi) recvTcp(conn *gunet.TcpConn) {
 		nodeMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &nodeMsgList, nil)
 		for _, msg := range nodeMsgList {
-			serviceMsg := alg.DecodePayloadToProto(msg)
+			serviceMsg := cmd.DecodePayloadToProto(msg)
 			if msg.CmdId == cmd.GateLoginMultiReq {
 				rsp := serviceMsg.(*spb.GateLoginMultiReq)
 				go s.recvGate(conn, rsp.AppId)

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
@@ -19,38 +21,30 @@ import (
 3.此步是开启了自动注册，将用户名写入数据库，并且获取到key作为accountUid返回
 */
 func (s *Server) LoginRequestHandler(c *gin.Context) {
-	requestData := new(LoginAccountRequestJson)
+	requestData := new(constant.LoginAccountRequestJson)
 	err := c.ShouldBindJSON(requestData)
 	if err != nil {
 		logger.Error("parse LoginAccountRequestJson error: %v", err)
 		return
 	}
-	loginrsq := new(Login)
+	loginrsq := new(constant.Login)
 
 	s.AutoCreate.Lock()
-	var account *database.Account
-	if s.IsPe {
-		account = database.QueryAccountByFieldUsername(s.Store.HkrpgGoPe, requestData.Account)
-	} else {
-		account = database.QueryAccountByFieldUsername(s.Store.AccountMysql, requestData.Account)
-	}
+	var account *constant.Account
+	account = database.QueryAccountByFieldUsername(database.DISPATCH.AccountMysql, requestData.Account)
 	if account.Username == "" {
 		logger.Warn("在数据库中没有找到登录的账号")
 		if s.IsAutoCreate {
 			// 生成新的token
 			token := base64.StdEncoding.EncodeToString(random.GetRandomByte(24))
-			account = &database.Account{
+			account = &constant.Account{
 				Username:   requestData.Account,
 				Token:      token,
 				CreateTime: time.Now().Unix(),
 			}
 
 			var accountid uint32
-			if s.IsPe {
-				accountid, err = database.AddAccountFieldByFieldName(s.Store.HkrpgGoPe, account)
-			} else {
-				accountid, err = database.AddAccountFieldByFieldName(s.Store.AccountMysql, account)
-			}
+			accountid, err = database.AddAccountFieldByFieldName(database.DISPATCH.AccountMysql, account)
 			if err != nil {
 				logger.Error("自动注册账号添加失败:%s", err)
 				loginrsq.Data = nil
@@ -63,7 +57,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 
 			loginrsq.Retcode = 0
 			loginrsq.Message = "OK"
-			rspaccount := &LoginAccount{
+			rspaccount := &constant.LoginAccount{
 				UID:           strconv.Itoa(int(accountid)),
 				Name:          "",
 				Email:         requestData.Account + "@hkrpg-go.com",
@@ -71,7 +65,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 				Token:         token,
 				Country:       "HK",
 			}
-			repLoginData := &LoginData{
+			repLoginData := &constant.LoginData{
 				Account:           rspaccount,
 				RealnameOperation: "None",
 			}
@@ -91,7 +85,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 	s.AutoCreate.Unlock()
 	loginrsq.Retcode = 0
 	loginrsq.Message = "OK"
-	rspaccount := &LoginAccount{
+	rspaccount := &constant.LoginAccount{
 		UID:           strconv.Itoa(int(account.AccountId)),
 		Name:          "",
 		Email:         requestData.Account + "@hkrpg-go.com",
@@ -99,7 +93,7 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 		Token:         account.Token,
 		Country:       "HK",
 	}
-	repLoginData := &LoginData{
+	repLoginData := &constant.LoginData{
 		Account:           rspaccount,
 		RealnameOperation: "None",
 	}
@@ -109,24 +103,20 @@ func (s *Server) LoginRequestHandler(c *gin.Context) {
 }
 
 func (s *Server) VerifyRequestHandler(c *gin.Context) {
-	requestData := new(LoginTokenRequest)
+	requestData := new(constant.LoginTokenRequest)
 	err := c.ShouldBindJSON(requestData)
 	if err != nil {
 		logger.Error("parse LoginTokenRequest error: %v", err)
 		return
 	}
-	loginrsq := new(Login)
+	loginrsq := new(constant.Login)
 	uid, err := strconv.ParseInt(requestData.Uid, 10, 64)
 	if err != nil {
 		logger.Error("ParseInt uid error: %v", err)
 		return
 	}
-	var account *database.Account
-	if s.IsPe {
-		account = database.QueryAccountByFieldAccountId(s.Store.HkrpgGoPe, uint32(uid))
-	} else {
-		account = database.QueryAccountByFieldAccountId(s.Store.AccountMysql, uint32(uid))
-	}
+	var account *constant.Account
+	account = database.GetAccountByFieldAccountId(database.DISPATCH.AccountMysql, uint32(uid))
 	if account.Username == "" {
 		logger.Error("查询不到此账户,uid: %s", requestData.Uid)
 		c.Header("Content-type", "application/json")
@@ -142,7 +132,7 @@ func (s *Server) VerifyRequestHandler(c *gin.Context) {
 	}
 	loginrsq.Retcode = 0
 	loginrsq.Message = "OK"
-	rspaccount := &LoginAccount{
+	rspaccount := &constant.LoginAccount{
 		UID:           strconv.Itoa(int(account.AccountId)),
 		Name:          "",
 		Email:         account.Username + "@hkrpg-go.com",
@@ -150,7 +140,7 @@ func (s *Server) VerifyRequestHandler(c *gin.Context) {
 		Token:         account.Token,
 		Country:       "HK",
 	}
-	repLoginData := &LoginData{
+	repLoginData := &constant.LoginData{
 		Account:           rspaccount,
 		RealnameOperation: "None",
 	}
@@ -166,7 +156,7 @@ func (s *Server) VerifyRequestHandler(c *gin.Context) {
 3.若错误或不存在则返回错误
 */
 func (s *Server) V2LoginRequestHandler(c *gin.Context) {
-	requestData := new(ComboTokenReq)
+	requestData := new(constant.ComboTokenReq)
 	err := c.ShouldBindJSON(requestData)
 	if err != nil {
 		logger.Error("parse ComboTokenReq error: %v", err)
@@ -177,49 +167,31 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 		logger.Error("requestData.Data len == 0")
 		return
 	}
-	loginData := new(ComboTokenReqLoginTokenData)
+	loginData := new(constant.ComboTokenReqLoginTokenData)
 	err = json.Unmarshal([]byte(data), loginData)
 	if err != nil {
 		logger.Error("Unmarshal ComboTokenReqLoginTokenData error: %v", err)
 		return
 	}
-	uid, err := strconv.ParseInt(loginData.Uid, 10, 64)
-	if err != nil {
-		logger.Error("ParseInt uid error: %v", err)
-		return
-	}
-	responseData := new(ComboTokenRsp)
-	var account *database.Account
-	if s.IsPe {
-		account = database.QueryAccountByFieldAccountId(s.Store.HkrpgGoPe, uint32(uid))
-	} else {
-		account = database.QueryAccountByFieldAccountId(s.Store.AccountMysql, uint32(uid))
-	}
-	if account.Username == "" {
+	accountId := alg.S2U32(loginData.Uid)
+	responseData := new(constant.ComboTokenRsp)
+	var account *constant.Account
+	account = database.GetAccountByFieldAccountId(database.DISPATCH.AccountMysql, accountId)
+	if account.AccountId != accountId {
 		logger.Warn("查询不到此账户,uid: %s", loginData.Uid)
 		c.Header("Content-type", "application/json")
 		_, _ = c.Writer.WriteString("{\"data\":null,\"message\":\"游戏信息账号缓存错误\",\"retcode\":-103}")
 		return
 	} else {
 		if account.Token == loginData.Token {
-			var combotoken string
-			if s.IsPe {
-				account.ComboToken = random.GetRandomByteHexStr(20)
-				err = database.UpdateAccountFieldByFieldName(s.Store.HkrpgGoPe, account)
-				if err != nil {
-					logger.Warn("Hkrpg-Go-Pe ComboToken更新失败,uid: %s", loginData.Uid)
-				}
-				combotoken = account.ComboToken
-			} else {
-				combotoken = database.GetComboTokenByAccountId(s.Store.LoginRedis, loginData.Uid)
-			}
-
+			comboToken := random.GetRandomByteHexStr(20)
+			database.UpComboTokenByAccountId(database.DISPATCH.LoginRedis, database.DISPATCH.AccountMysql, account.AccountId, comboToken)
 			responseData.Retcode = 0
 			responseData.Message = "OK"
-			responseData.Data = &ComboTokenRspLoginData{
+			responseData.Data = &constant.ComboTokenRspLoginData{
 				ComboID:       "0",
 				OpenID:        loginData.Uid,
-				ComboToken:    combotoken,
+				ComboToken:    comboToken,
 				Data:          "{\"guest\":false}",
 				Heartbeat:     false,
 				AccountType:   1,
@@ -234,4 +206,16 @@ func (s *Server) V2LoginRequestHandler(c *gin.Context) {
 			return
 		}
 	}
+}
+
+func (s *Server) RiskyApiCheckHandler(c *gin.Context) {
+	c.String(200, "{\"retcode\":0,\"message\":\"OK\",\"data\":{\"id\":\"none\",\"action\":\"ACTION_NONE\",\"geetest\":null}}")
+}
+
+func (s *Server) loadConfig(c *gin.Context) {
+	c.String(200, "{\"retcode\": 0,\"message\": \"OK\",\"data\": {\"id\": 24,\"game_key\": \"hkrpg_global\",\"client\": \"PC\",\"identity\": \"I_IDENTITY\",\"guest\": false,\"ignore_versions\": \"\",\"scene\": \"S_NORMAL\",\"name\": \"崩坏RPG\",\"disable_regist\": false,\"enable_email_captcha\": false,\"thirdparty\": [\"fb\",\"tw\",\"gl\",\"ap\"],\"disable_mmt\": false,\"server_guest\": true,\"thirdparty_ignore\": {},\"enable_ps_bind_account\": false,\"thirdparty_login_configs\": {\"fb\": {\"token_type\": \"TK_GAME_TOKEN\",\"game_token_expires_in\": 2592000},\"gl\": {\"token_type\": \"TK_GAME_TOKEN\",\"game_token_expires_in\": 604800},\"tw\": {\"token_type\": \"TK_GAME_TOKEN\",\"game_token_expires_in\": 2592000},\"ap\": {\"token_type\": \"TK_GAME_TOKEN\",\"game_token_expires_in\": 604800}},\"initialize_firebase\": false,\"bbs_auth_login\": false,\"bbs_auth_login_ignore\": [],\"fetch_instance_id\": false,\"enable_flash_login\": false,\"enable_logo_18\": true,\"logo_height\": \"0\",\"logo_width\": \"0\",\"enable_cx_bind_account\": false,\"firebase_blacklist_devices_switch\": false,\"firebase_blacklist_devices_version\": 0,\"hoyolab_auth_login\": false,\"hoyolab_auth_login_ignore\": [],\"hoyoplay_auth_login\": true}}")
+}
+
+func (s *Server) compareProtocolVersion(c *gin.Context) {
+	c.String(200, "{\"retcode\":0,\"message\":\"OK\",\"data\":{\"modified\":false,\"protocol\":null}}")
 }

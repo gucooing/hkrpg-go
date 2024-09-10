@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -79,6 +80,27 @@ func S2I32(msg string) int32 {
 	return int32(ms)
 }
 
+func S2I(msg string) int {
+	if msg == "" {
+		return 0
+	}
+	ms, _ := strconv.ParseUint(msg, 10, 32)
+	return int(ms)
+}
+
+func GetRelicSub(sub string) map[uint32]uint32 {
+	re := regexp.MustCompile(`\[(\d+):(\d+)\]`)
+	matches := re.FindAllStringSubmatch(sub, -1)
+
+	result := make(map[uint32]uint32)
+	for _, match := range matches {
+		key := S2U32(match[1])
+		value := S2U32(match[2])
+		result[key] = value
+	}
+	return result
+}
+
 func GetEveryDay4() time.Duration {
 	currentTime := time.Now()
 	nextExecution := time.Date(currentTime.Year(), currentTime.Month(), currentTime.Day(), 4, 0, 0, 0, currentTime.Location())
@@ -86,4 +108,31 @@ func GetEveryDay4() time.Duration {
 		nextExecution = nextExecution.AddDate(0, 0, 1)
 	}
 	return nextExecution.Sub(currentTime)
+}
+
+func GetDaysSinceBaseline(currentTime time.Time) int32 {
+	baselineAt4 := time.Date(2024, 8, 1, 4, 0, 0, 0, currentTime.Location())
+	baselineAt4 = baselineAt4.AddDate(0, 0, -1)
+	daysSinceBaseline := int32(currentTime.Sub(baselineAt4).Hours() / 24)
+	return daysSinceBaseline
+}
+
+func ExtractDigits(str string) uint32 {
+	re := regexp.MustCompile(`\d+`)
+	parts := re.FindAllString(str, -1)
+
+	if len(parts) != 2 {
+		return 0
+	}
+	firstPart := parts[0]
+	secondPart := parts[1]
+
+	var thirdPart string
+	if len(secondPart) < 2 {
+		thirdPart = fmt.Sprintf("%02s", secondPart)
+	} else {
+		thirdPart = secondPart[len(secondPart)-2:]
+	}
+	result := firstPart + thirdPart
+	return S2U32(result)
 }

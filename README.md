@@ -1,22 +1,65 @@
-![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go-public/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
+![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
+
+[EN](./README.md) | [简中](./docs/README_zh-CN.md) | [繁中](./docs/README_zh-TW.md) | [JP](./docs/README-JP.md) | [RU](./docs/README-RU.md) | [FR](./docs/README-FR.md) | [KR](./docs/README-KR.md) |  [VI](./docs/README-VI.md)
  
-# **欢迎加入我们的 [Discord](https://discord.gg/222yVp6pUq)**
+# **Welcome to our [Discord](https://discord.gg/222yVp6pUq)**
 
-## 朋友要复出了，可以关注一下 [hk4e-dmca](https://github.com/flswld/hk4e-go)
+## A friend is making a comeback, keep an eye out [hk4e-dmca](https://github.com/flswld/hk4e-go)
 
-# 请不要在生产环境中使用
+## Please don't use it in a production environment
 
- 随机首包密钥，随机生成seed，使数据更加安全
+### Documentation:
+* [easy-tutorial](./docs/tutorial/zh-CN.md)
+* [config parsing](./docs/conf/zh-CN.md)
+* [api usage](./docs/command/zh-CN.md)
+* [Details](./docs/progress/zh-CN.md)
 
- 分布式架构，使可承载玩家大大提高
+### Notes:
+* If you want to help with this project, feel free to submit it.
 
- ~~学习golang的第一个稍微大一点的项目，bug max~~
+### Completed content
+- **Backpacks**
+- **Battle**
+- **Card draw**
+- **Formation**
+- **Mail**
+- **Friends**
+- **Scene Props/Monster/NPC Generation** - **Scenario**
+- **Plot**
+- **The Court of Forgetfulness and other spin-offs**
+- **Simulated Universe**
+- **Differential Universe**
+- **Regular Time Transmission (Partial**
 
-### [查看当前游戏服务器开发进度](./docs/进度/游戏逻辑.md)
+### Connecting with the client (Fiddler)
+1. Install and run [Fiddler Classic](https://www.telerik.com/fiddler).
+2. Set Fiddler to decrypt https traffic (Tools -> Options -> HTTPS -> Decrypt HTTPS Traffic), make sure `Ignore server certificate errors` is checked.
+3. Copy and paste the following code into the Fiddlerscript tab of Fiddler Classic:
 
-### 使用方法：
-1. 拉取项目文件
-2. [简易教程](./docs/README.md)
+```javascript
+import System; import System.
+import System.Windows.Forms;
+import Fiddler; import System.
+import System.Windows.Forms; import Fiddler; import System.Text.
+import System.Text.RegularExpressions; class Handlers
+static function OnBeforeRequest(oS: Session) {
+    static function OnBeforeRequest(oS: Session) {
+    if(
+        oS.host.EndsWith(".yuanshen.com") ||
+        oS.host.EndsWith(".hoyoverse.com") ||
+        oS.host.EndsWith(".mihoyo.com") ||
+        oS.host.EndsWith(".zenlesszonezero.com") ||
+        oS.host.EndsWith(".honkaiimpact3.com") ||
+        oS.host.EndsWith(".bhsr.com") ||
+        oS.host.EndsWith(".starrails.com") ||
+        oS.uriContains("http://overseauspider.yuanshen.com:8888/log")
+    ) {
+        var newUrl = "http://" + oS.host + oS.PathAndQuery;
+        oS.fullUrl = newUrl;
+        oS.host = "127.0.0.1:8080";
+    }
+}
+};
+```
 
-### 注：
-* 如果你想帮助此项目，欢迎提交
+4. Log in using your account name, the password can be set to any value.

@@ -1,0 +1,143 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "../../nodeserver/api;proto";
+
+// 节点服务器注册发现服务
+service NodeDiscovery {
+  // 测试
+  rpc Test (TestReq) returns (TestRsp) {}
+  // 向node注册服务
+  rpc  RegisterServer(RegisterServerReq) returns (RegisterServerRsp) {}
+  // 离线取消注册
+  rpc CloseServer(CloseServerReq) returns (CloseServerRsp) {}
+  // 服务器在线心跳保持
+  rpc KeepaliveServer (KeepaliveServerReq) returns (KeepaliveServerRsp) {}
+  // 获取全部gate mq
+  rpc GetAllGateServerMq (GetAllGateServerMqReq) returns (GetAllGateServerMqRsp) {}
+  // dispatch获取全部区服信息
+  rpc GetAllRegionInfo (GetAllRegionInfoReq) returns (GetAllRegionInfoRsp) {}
+  // 获取区服负载最小game
+  rpc GetRegionMinGame (GetRegionMinGameReq) returns (GetRegionMinGameRsp) {}
+  // 获取区服密钥
+  rpc GetRegionKey (GetRegionKeyReq) returns (GetRegionKeyRsp) {}
+}
+
+message TestReq {
+  string msg = 1;
+}
+
+message TestRsp {
+  string req_msg = 2;
+}
+
+message RegisterServerReq{
+  ServerType type = 1; // 服务类型
+  string app_version = 2; // 服务版本
+  string region_name = 3; // 区服
+  uint32 app_id = 4 ; // app id
+  string mq_addr = 5;
+  string outer_port = 6;
+  string outer_addr = 7;
+}
+
+message RegisterServerRsp{
+  Retcode ret_code = 1; // 状态
+}
+
+message CloseServerReq {
+  ServerType type = 1; // 服务类型
+  uint32 app_id = 2 ; // app id
+  string region_name = 3; // 区服
+}
+
+message CloseServerRsp {
+
+}
+
+message KeepaliveServerReq {
+  ServerType type = 1; // 服务类型
+  string app_version = 2; // 服务版本
+  string region_name = 3; // 区服
+  uint32 app_id = 4 ; // app id
+  string mq_addr = 5;
+  string outer_port = 6;
+  string outer_addr = 7;
+  int64 load_count = 8;
+}
+
+message KeepaliveServerRsp {
+  Retcode ret_code = 1; // 状态
+}
+
+message GetAllGateServerMqReq {
+  string region_name = 1;
+}
+
+message GetAllGateServerMqRsp {
+  repeated  GateServerMq server_list = 1;
+}
+
+message GateServerMq {
+  uint32 app_id = 1;
+  string mq_addr = 2;
+}
+
+message GetAllRegionInfoReq {
+
+}
+
+message GetAllRegionInfoRsp {
+  map<string, RegionInfo> region_info_list = 1;
+}
+
+message RegionInfo {
+  string name = 1;
+  string title = 2;
+  uint32 type = 3;
+  bytes client_secret_key = 4;
+  bool auto_create = 5;
+  string min_gate_addr = 6;
+  string min_gate_port = 7;
+  uint32 min_gate_app_id = 8;
+}
+
+message GetRegionMinGameReq {
+  string region_name = 1;
+}
+
+message GetRegionMinGameRsp {
+  uint32 min_gs_app_id = 1;
+}
+
+message GetRegionKeyReq{
+  string region_name = 1;
+}
+
+message GetRegionKeyRsp{
+  bytes client_secret_key = 1;
+}
+
+enum Retcode {
+  RET_SUCC = 0; // 成功
+  RET_Reconnect = 1; // 重连
+}
+
+enum ServerType {// 服务分类
+  SERVICE_NONE = 0;
+  SERVICE_NODE = 1;
+  SERVICE_GAME = 2;
+  SERVICE_GATE = 3;
+  SERVICE_DISPATCH = 4;
+  SERVICE_MULTI = 5;
+  SERVICE_MUIP = 6;
+}
+
+enum ServerStatus {
+  ServerStatus_None = 0;
+  ServerStatus_Normal = 1; // 正常
+  ServerStatus_Crowded = 2; // 拥挤 // 不建议参与分发
+  ServerStatus_Full = 3; // 爆满 // 禁止参与分发
+  ServerStatus_Rotation = 4; // 被轮替 // 禁止参与分发
+}

@@ -1,0 +1,196 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+import "enum.server.proto";
+
+message ServiceConnectionReq {// 向node注册包
+  ServerType server_type = 1;
+  uint32 app_id = 2; // 发起请求的app_id
+  string addr = 3;
+  string port = 4;
+}
+
+message ServiceConnectionRsp {// 向node注册回复
+  ServerType server_type = 1;
+  uint32 app_id = 2;
+}
+
+message GetAllServiceGateReq {// 向node获取gate服务请求
+  ServerType service_type = 1;
+  int64 dispatch_time = 2;
+}
+
+message GetAllServiceGateRsp {// 向node获取gate服务回复
+  repeated ServiceAll gate_service_list = 1;
+  int64 dispatch_time = 2;
+  int64 node_time = 3;
+}
+
+message ServiceAll{
+  ServerType service_type = 1; // 服务id
+  string addr = 2; // 地址
+  int64 player_num = 3; // 在线人数
+  uint32 app_id = 4; // app_id
+  string port = 5;
+}
+
+message GateToNodePingReq {// gate to node ping包请求
+  ServerType service_type = 1;
+  int64 gate_time = 2;
+  int64 player_num = 3;
+}
+
+message GateToNodePingRsp {// gate to node ping包回复
+  ServiceAll multi_service = 1;
+  repeated ServiceAll game_service_list = 2;
+  int64 gate_time = 3;
+  int64 node_time = 4;
+}
+
+message GameToNodePingReq{// game to node ping包请求
+  uint32 game_server_id = 1;
+  int64 game_server_time = 2;
+  int64 player_num = 3;
+}
+
+message GameToNodePingRsp{// game to node ping包回复
+  int64 game_server_time = 1;
+  int64 node_time = 2;
+}
+
+message GateToGameMsgNotify{// gate向game发送消息
+  uint32 uid = 1;
+  int32 cmd_id = 2;
+  bytes msg = 3;
+}
+
+message GameToGateMsgNotify{// game向gate发送消息
+  uint32 uid = 1;
+  int32 cmd_id = 2;
+  bytes msg = 3;
+}
+
+message GateLoginGameReq {// gate向game连接后发起请求
+  ServerType server_type = 1;
+  uint32 app_id = 2; // 发起请求的app_id
+}
+
+message GateLoginGameRsp {// gate向game连接后回复
+  Retcode retcode = 1; // 状态
+}
+
+message GateGamePingReq {// gate向game的ping请求包
+  int64 gate_server_time = 1; // gate时间
+}
+
+message GateGamePingRsp {// gate向game的ping回复包
+  int64 gate_server_time = 1; // gate时间
+  int64 game_server_time = 2; // game时间
+  int64 player_num = 3; // game上已有的玩家数
+}
+
+message GateGamePlayerLoginReq {// gate向game的玩家注册请求包
+  uint32 uid = 1; // 玩家uid
+  //int64 uuid = 2; // 用户临时唯一id
+  uint32 account_id = 3; // sdk 账户id
+}
+
+message GateGamePlayerLoginRsp {// gate向game的玩家注册请求包
+  Retcode retcode = 1; // 状态
+  uint32 uid = 2; // 玩家uid
+  //int64 uuid = 3; // 用户临时唯一id
+}
+
+message GetToGamePlayerLogoutReq{// gate直接向目标game申请下线玩家请求
+  Retcode retcode = 1; // 状态
+  uint32 uid = 2; // 玩家uid
+  uint32 account_id = 3; // sdk id
+  //int64 old_uuid = 4; // 用户临时唯一id
+  uint32 old_game_server_id = 5; // gameserver id
+  //int64 new_uuid = 6; // 用户临时唯一id
+  uint32 new_game_server_id = 7; // gameserver id
+}
+
+message GetToGamePlayerLogoutRsp{// gate直接向目标game申请下线玩家回复
+  Retcode retcode = 1; // 状态
+  uint32 uid = 2; // 玩家uid
+  //int64 new_uuid = 4; // 用户临时唯一id
+  uint32 new_game_server_id = 5; // gameserver id
+}
+
+message GameToGatePlayerLogoutNotify{// game通知gate玩家该离线了
+  uint32 uid = 1;
+  //int64  uuid = 2;
+}
+
+message GateToGamePlayerLogoutNotify {// gate通知game玩家该离线了
+  uint32 uid = 1;
+  //int64  uuid = 2;
+  uint32 account_id = 3; // sdk id
+}
+
+message MultiToNodePingReq {// multi向node发送的ping包
+  int64 multi_server_time = 1; // multi时间
+}
+
+message MultiToNodePingRsp {// node回复multi的ping包
+  int64 multi_server_time = 1; // multi时间
+  int64 node_server_time = 2; // node时间
+  repeated ServiceAll game_service_list = 3; // 获取全部game服务
+}
+
+message GateLoginMultiReq {// gate向Multi连接后发起请求
+  ServerType server_type = 1;
+  uint32 app_id = 2; // 发起请求的app_id
+}
+
+message GateLoginMultiRsp {// gate向Multi连接后回复
+  Retcode retcode = 1; // 状态
+}
+
+message MuipToNodePingReq{// muip向node发送的ping包
+  int64 muip_server_time = 1; // multi时间
+}
+
+message MuipToNodePingRsp {// node回复muip的ping包
+  int64 muip_server_time = 1; // muip时间
+  int64 node_server_time = 2; // node时间
+  map<uint32, MuipServiceAll> service_list = 3; // 全部服务
+}
+
+message MuipServiceAll {
+  repeated ServiceAll service_list = 1;
+}
+
+message PlayerMsgGateToNodeNotify{// 将玩家操作通知到node
+  PlayerMsgType msg_type = 1; // 类型
+  uint32 apply_uid = 2; // 发起玩家
+  uint32 send_uid = 3; // 接收玩家
+  bool is_accept_friend = 4;// 是否接受好友
+}
+
+message PlayerMsgNodeToGameNotify{// node将处理后的玩家操作转发给game
+  PlayerMsgType msg_type = 1; // 类型
+  uint32 apply_uid = 2; // 发起玩家
+  uint32 send_uid = 3; // 接收玩家
+  bool is_accept_friend = 4;// 是否接受好友
+  ChatMsg chat_msg = 5;// 消息内容
+}
+
+message ChatMsg {
+  repeated uint32 msg_to_uid_list = 2;// 消息发送目标列表
+}
+
+message GateTcpMqHandshakeReq {
+  ServerType type = 1; // 服务类型
+  uint32 app_id = 2; // app_id
+}
+
+message GateTcpMqHandshakeRsp {
+  Retcode ret_code = 1; // 状态
+  ServerType type = 2; // 服务类型
+  uint32 app_id = 3; // app_id
+}

@@ -60,14 +60,12 @@ func DecodeLoop(data []byte, kcpMsgList *[]*PackMsg) {
 
 	// 协议号
 	cmdId := binary.BigEndian.Uint16(data[4:6])
-
 	// 头部长度
 	headLen := binary.BigEndian.Uint16(data[6:8])
 	// proto长度
 	protoLen := binary.BigEndian.Uint32(data[8:12])
 	// 检查长度
 	packetLen := int(headLen) + int(protoLen) + 16
-
 	if packetLen > PacketMaxLen {
 		log.Println("packet len too long")
 		return
@@ -88,8 +86,10 @@ func DecodeLoop(data []byte, kcpMsgList *[]*PackMsg) {
 	// 返回数据
 	kcpMsg := new(PackMsg)
 	kcpMsg.CmdId = cmdId
-	kcpMsg.HeadData = headData
-	kcpMsg.ProtoData = protoData
+	kcpMsg.HeadData = make([]byte, headLen)
+	kcpMsg.ProtoData = make([]byte, protoLen)
+	copy(kcpMsg.HeadData, headData)
+	copy(kcpMsg.ProtoData, protoData)
 	*kcpMsgList = append(*kcpMsgList, kcpMsg)
 	// 有不止一个包 递归解析
 	if len(data) > packetLen {
