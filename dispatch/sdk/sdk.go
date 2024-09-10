@@ -21,7 +21,7 @@ type Server struct {
 	RegionInfo         map[string]*RegionInfo
 	UpstreamServerList []string
 	UpstreamServer     map[string]*UrlList // seed version
-	UpstreamServerLock sync.RWMutex
+	UpstreamServerLock *sync.RWMutex
 }
 
 type RegionInfo struct {
@@ -112,10 +112,13 @@ func (s *Server) GetUpstreamServer(version, seed string) *UrlList {
 	}
 	if _, ok := s.UpstreamServer[seed]; !ok {
 		s.UpstreamServerLock.Lock()
-		// 如果没有则直接去拉取一次
-		s.handleGateServerResponse(&UrlList{
+		info := &UrlList{
 			Version: version,
-		}, seed)
+		}
+		// 如果没有则直接去拉取一次
+		if !s.handleGateServerResponse(info, seed) {
+			s.UpstreamServer[seed] = info
+		}
 		s.UpstreamServerLock.Unlock()
 	}
 	return s.UpstreamServer[seed]

@@ -66,9 +66,11 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	database.GSS = &database.GameStore{PlayerDataMysql: database.PE, ServerConf: database.PE}
 	// 初始化dispatch
 	s.Sdk = &sdk.Server{
-		IsAutoCreate: cfg.Dispatch.AutoCreate,
-		OuterAddr:    fmt.Sprintf("http://%s:%s", cfg.Dispatch.AppNet.OuterAddr, cfg.Dispatch.AppNet.OuterPort),
-		RegionInfo:   make(map[string]*sdk.RegionInfo),
+		IsAutoCreate:       cfg.Dispatch.AutoCreate,
+		OuterAddr:          fmt.Sprintf("http://%s:%s", cfg.Dispatch.AppNet.OuterAddr, cfg.Dispatch.AppNet.OuterPort),
+		RegionInfo:         make(map[string]*sdk.RegionInfo),
+		UpstreamServerList: cfg.UpstreamServerList,
+		UpstreamServerLock: new(sync.RWMutex),
 	}
 	for _, d := range cfg.Dispatch.DispatchList {
 		s.Sdk.RegionInfo[d.Name] = &sdk.RegionInfo{
@@ -151,7 +153,6 @@ func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
 			protoMsg := cmd.DecodePayloadToProto(packMsg)
 			if packMsg.CmdId == cmd.PlayerLogoutCsReq { // 下线请求
 				h.DelPlayer(p.S.Uid)
-				p.Close()
 				return
 			}
 			p.sendGameMsg(player.Client, packMsg.CmdId, protoMsg)
@@ -234,8 +235,12 @@ func (h *HkRpgGoServer) GetAllPlayer() map[uint32]*PlayerGame {
 
 func (h *HkRpgGoServer) DelPlayer(uid uint32) {
 	h.playerMapLock.Lock()
+	p := h.playerMap[uid]
 	delete(h.playerMap, uid)
 	h.playerMapLock.Unlock()
+	if p != nil {
+		p.Close()
+	}
 }
 
 func (h *HkRpgGoServer) sessionLogin(s *session.Session) {
@@ -310,7 +315,6 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 	// 重复登录验证
 	if old := h.GetPlayer(account.Uid); old != nil {
 		h.DelPlayer(account.Uid)
-		old.Close()
 	}
 
 	// 回包
@@ -344,7 +348,6 @@ func (h *HkRpgGoServer) AutoUpDataPlayer() {
 		if g.LastActiveTime+50 < timestamp {
 			logger.Info("[UID:%v]玩家长时间无响应离线", g.S.Uid)
 			h.DelPlayer(g.S.Uid)
-			g.Close()
 			continue
 		}
 		lastUpDataTime := g.GamePlayer.LastUpDataTime

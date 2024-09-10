@@ -128,6 +128,6 @@ func (s *Session) Close() {
 	close(s.RecvChan)
 	close(s.SendChan)
 
-	logger.Info("[UID:%v]下线GATE", s.Uid)
+	logger.Info("[UID:%v]玩家下线GATE", s.Uid)
 	atomic.AddInt64(&CLIENT_CONN_NUM, -1)
 }

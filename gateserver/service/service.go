@@ -213,21 +213,7 @@ func (g *GateServer) sessionMsg(s *session.Session) {
 					ProtoData: protoData,
 				}
 			case session.SessionActivity:
-				if packMsg.CmdId == cmd.PlayerLogoutCsReq { // 下线请求
-					g.MessageQueue.SendToGame(s.GameAppId, &mq.NetMsg{ // 通知GS下线
-						MsgType: mq.PlayerLogout,
-						Uid:     s.Uid,
-					})
-					g.DelSession(s)
-					return
-				}
-				netMsg := &mq.NetMsg{
-					MsgType:        mq.GameServer,
-					Uid:            s.Uid,
-					CmdId:          packMsg.CmdId,
-					ServiceMsgByte: packMsg.ProtoData,
-				}
-				g.MessageQueue.SendToGame(s.GameAppId, netMsg)
+				g.packetCapture(s, packMsg)
 			case session.SessionFreeze:
 				continue
 			case session.SessionClose:

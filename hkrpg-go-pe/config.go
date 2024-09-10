@@ -12,6 +12,7 @@ type Config struct {
 	LogLevel           string      `json:"LogLevel"`
 	MaxPlayer          int64       `json:"MaxPlayer"`
 	GameDataConfigPath string      `json:"GameDataConfigPath"`
+	UpstreamServerList []string    `json:"UpstreamServerList"`
 	SqlPath            string      `json:"SqlPath"`
 	Dispatch           *Dispatch   `json:"Dispatch"`
 	GameServer         *GameServer `json:"GameServer"`
@@ -72,6 +73,7 @@ var DefaultConfig = &Config{
 	LogLevel:           "Info",
 	MaxPlayer:          -1,
 	GameDataConfigPath: "resources",
+	UpstreamServerList: make([]string, 0),
 	SqlPath:            "./conf/hkrpg-go-pe.db",
 	Dispatch: &Dispatch{
 		AutoCreate: true,
