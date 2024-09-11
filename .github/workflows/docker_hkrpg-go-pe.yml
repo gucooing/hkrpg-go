@@ -28,5 +28,4 @@ jobs:
           SHA=${{ github.sha }}
           docker build -t gucooing/hkrpg-go-pe:latest -t gucooing/hkrpg-go-pe:$SHA -f docker/hkrpg-go/Dockerfile .
           docker push gucooing/hkrpg-go-pe:$SHA
-          docker push gucooing/hkrpg-go-pe:v2.5.0
           docker push gucooing/hkrpg-go-pe:latest
