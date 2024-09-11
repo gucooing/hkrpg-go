@@ -39,8 +39,8 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg pb.Message) {
 		gachaInfoList := &proto.GachaInfo{
 			DropHistoryWebview: "http://127.0.0.1:8080/api/gacha/history", // 历史记录
 			DetailWebview:      "http://127.0.0.1:8080",                   // 卡池详情
-			ItemDetailList:     bannerslist.RateUpItems4,                  // 五星up
-			PrizeItemList:      bannerslist.RateUpItems5,                  // 四星up
+			ItemDetailList:     bannerslist.RateUpItems4,                  // 四星up
+			PrizeItemList:      bannerslist.RateUpItems5,                  // 五星up
 			GachaId:            bannerslist.Id,
 		}
 		if bannerslist.GachaType == "Normal" {

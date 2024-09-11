@@ -60,7 +60,9 @@ type AvatarEntity struct {
 
 type MonsterEntity struct {
 	Entity
-	EventID uint32 // 怪物id
+	EventID       uint32 // 怪物id
+	PurposeType   string // 类型
+	FarmElementID uint32 // 虚影Id
 }
 
 type NpcEntity struct {
@@ -878,6 +880,10 @@ func (g *PlayerData) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 	for _, propList := range sceneGroup.PropList {
 		entityId := g.GetNextGameObjectGuid()
 		g.StageObjectCapture(sceneGroup, propList, sceneGroup.GroupId, db)
+		propState := g.GetPropState(db, sceneGroup.GroupId, propList.ID, propList.State)
+		if propState == 0 { // TODO
+			continue
+		}
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
 			Y: int32(propList.PosY * 1000),
@@ -899,7 +905,7 @@ func (g *PlayerData) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 			EntityOneofCase: &proto.SceneEntityInfo_Prop{
 				Prop: &proto.ScenePropInfo{
 					PropId:    propList.PropID, // PropID
-					PropState: g.GetPropState(db, sceneGroup.GroupId, propList.ID, propList.State),
+					PropState: propState,
 				},
 			},
 		}
@@ -959,7 +965,9 @@ func (g *PlayerData) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 				Pos:      pos,
 				Rot:      rot,
 			},
-			EventID: monsterList.EventID,
+			EventID:       monsterList.EventID,
+			PurposeType:   monsterList.PurposeType,
+			FarmElementID: monsterList.FarmElementID,
 		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
@@ -1037,14 +1045,14 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		PlaneId:            mapEntrance.PlaneID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		LevelGroupIdList:   make([]uint32, 0),
+		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
 		FloorSavedData:     g.GetFloorSavedData(entryId),
 		GameStoryLineId:    g.GameStoryLineId(),
 		// DimensionId:        g.GetDimensionId(), // TODO
-		EntityBuffList: make([]*proto.EntityBuffInfo, 0),
+		EntityBuffInfoList: make([]*proto.EntityBuffInfo, 0),
 	}
 	// scene.LightenSectionList = append(scene.LightenSectionList, 0)
 	for i := uint32(0); i < 7; i++ {
@@ -1067,7 +1075,7 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		} else {
 			g.AddLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 		}
-		scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
+		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
@@ -1116,13 +1124,14 @@ func (g *PlayerData) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 			}
 			if isAdd {
 				var mainMissionId uint32 = 0
-				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
-					info.DisabledMainMissionIdList = append(info.DisabledMainMissionIdList, groupInfo.OwnerMainMissionID)
-				}
 				if finishMainMissionList[groupInfo.OwnerMainMissionID] != nil {
 					mainMissionId = groupInfo.OwnerMainMissionID
 					info.FinishedMainMissionIdList = append(info.FinishedMainMissionIdList, groupInfo.OwnerMainMissionID)
 				}
+				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
+					info.DisabledMainMissionIdList = append(info.DisabledMainMissionIdList, groupInfo.OwnerMainMissionID)
+				}
+
 				info.MainMissionMcvList = append(info.MainMissionMcvList, &proto.MainMissionCustomValue{
 					MainMissionId: mainMissionId,
 				})
@@ -1283,7 +1292,9 @@ func (g *PlayerData) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monste
 				Rot:      monsterRot,
 				InstId:   monster.ID,
 			},
-			EventID: monster.EventID,
+			EventID:       monster.EventID,
+			PurposeType:   monster.PurposeType,
+			FarmElementID: monster.FarmElementID,
 		})
 		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
 	}

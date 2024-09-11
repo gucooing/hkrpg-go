@@ -36,9 +36,9 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v1.4.0
-        name: Release v1.4.0
-        body: sr 2.4.0
+        tag_name: v1.5.0
+        name: Release v1.5.0
+        body: sr 2.5.0
         draft: false
         prerelease: false
         files: go/hkrpg/build/*

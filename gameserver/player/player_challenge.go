@@ -115,7 +115,7 @@ func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.StartChallengeCsReq)
 	// 设置战斗状态
-	storyInfo := req.GetPlayerInfo()
+	storyInfo := req.GetStageInfo()
 	if storyInfo == nil {
 		g.GetPd().SetBattleStatus(spb.BattleType_Battle_CHALLENGE)
 	} else {
@@ -276,7 +276,7 @@ func (g *GamePlayer) ChallengeBossPhaseSettleNotify(targeList map[uint32]*proto.
 		IsWin:             cur.IsWin,
 		BattleTargetList:  targeList[1].BattleTargetList,
 		ChallengeId:       cur.ChallengeId,
-		IsReward:          db.IsReward,
+		IsReward:          !db.IsReward,
 	}
 	g.Send(cmd.ChallengeBossPhaseSettleNotify, notify)
 }
@@ -470,8 +470,8 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		EntryId:            challengeMazeConfig.MapEntranceID,
 		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		EnvBuffList:        make([]*proto.BuffInfo, 0),
-		LevelGroupIdList:   make([]uint32, 0),
+		SceneBuffInfoList:  make([]*proto.BuffInfo, 0),
+		GroupIdList:        make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		LightenSectionList: []uint32{0},
 		EntityList:         make([]*proto.SceneEntityInfo, 0),
@@ -479,7 +479,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 
 	// 添加场景buff
 	if curChallenge.MazeBuffId != 0 {
-		scene.EnvBuffList = append(scene.EnvBuffList, &proto.BuffInfo{
+		scene.SceneBuffInfoList = append(scene.SceneBuffInfoList, &proto.BuffInfo{
 			Count:     4294967295,
 			LifeTime:  -1,
 			BuffId:    curChallenge.MazeBuffId,
@@ -489,7 +489,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	}
 	// 添加自选buff
 	if g.GetPd().GetCurChallengeBuffId() != 0 {
-		scene.EnvBuffList = append(scene.EnvBuffList, &proto.BuffInfo{
+		scene.SceneBuffInfoList = append(scene.SceneBuffInfoList, &proto.BuffInfo{
 			Count:     4294967295,
 			LifeTime:  -1,
 			BuffId:    g.GetPd().GetCurChallengeBuffId(),

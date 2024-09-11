@@ -46,21 +46,12 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	logger.Info("[ADDR:%s][regionName:%s]query_gateway", c.Request.RemoteAddr, regionName)
 	regionList := s.GetRegionInfo()
 	info := regionList[regionName]
-	if regionList == nil || info == nil || info.MinGateAddr == "" {
-		s.ErrorGate(c)
-		return
-	}
 
 	version := c.Query("version")
 	seed := c.Query("dispatch_seed")
 	url := s.GetUpstreamServer(version, seed)
 
 	queryGateway := new(proto.GateServer)
-	queryGateway.Msg = "OK"
-	queryGateway.Ip = info.MinGateAddr
-	queryGateway.RegionName = info.Name
-	queryGateway.Port = info.MinGatePort
-	queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(info.Ec2b.Bytes())
 	queryGateway.Unk1 = true
 	queryGateway.Unk2 = true
 	queryGateway.Unk3 = true
@@ -73,7 +64,18 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.LuaUrl = url.LuaUrl
 	queryGateway.ExResourceUrl = url.ExResourceUrl
 	queryGateway.AssetBundleUrl = url.AssetBundleUrl
-	queryGateway.GLCOMFKHDGH = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
+	queryGateway.KEICDBEHMDO = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
+
+	if regionList == nil || info == nil || info.MinGateAddr == "" {
+		queryGateway.Msg = "网关启动中"
+		queryGateway.Retcode = uint32(proto.Retcode_RET_SERVER_INTERNAL_ERROR)
+	} else {
+		queryGateway.Msg = "OK"
+		queryGateway.Ip = info.MinGateAddr
+		queryGateway.RegionName = info.Name
+		queryGateway.Port = info.MinGatePort
+		queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(info.Ec2b.Bytes())
+	}
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {
@@ -89,21 +91,6 @@ func (s *Server) ErrorDispatch(c *gin.Context) {
 	queryGateway.Retcode = uint32(proto.Retcode_RET_REPEATED_REQ)
 	queryGateway.Msg = "gate error\n游戏正在停服维护中，预计于{LOCALTIME:4070880000}{LOCALTIMEZONE}({LOCALZONE})开服，详情请关注官方公告。"
 	queryGateway.TopSeverRegionName = "https://bbs.mihoyo.com/srToBBS.html"
-
-	reqdata, err := pb.Marshal(queryGateway)
-	if err != nil {
-		logger.Error("pb marshal Gateserver error: %v", err)
-		return
-	}
-	reqdataBase64 := base64.StdEncoding.EncodeToString(reqdata)
-	c.String(200, reqdataBase64)
-}
-
-func (s *Server) ErrorGate(c *gin.Context) {
-	queryGateway := new(proto.GateServer)
-	queryGateway.RegionName = "hkrpg-go"
-	queryGateway.Msg = "gate error"
-	queryGateway.Retcode = uint32(proto.Retcode_RET_TIMEOUT)
 
 	reqdata, err := pb.Marshal(queryGateway)
 	if err != nil {

@@ -67,7 +67,7 @@ func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg pb.Message) {
 		MaterialList: make([]uint32, 0),
 		AvatarList:   make([]uint32, 0),
 	}
-	for _, id := range req.GetMailIdList() {
+	for _, id := range req.GetTakeMailIdList() {
 		mail := dbconf.GetAllMailById(id)
 		rsp.Attachment.ItemList = append(rsp.Attachment.ItemList, g.GetPd().GetAttachment(mail.ItemList)...)
 		rsp.SuccMailIdList = append(rsp.SuccMailIdList, id)

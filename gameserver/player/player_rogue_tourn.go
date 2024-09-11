@@ -16,7 +16,7 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 		RogueGetInfo: &proto.RogueTournInfo{
 			RogueTournSaveList:       make([]*proto.RogueTournSaveList, 0),
 			RogueTournAreaInfo:       g.GetPd().GetRogueTournAreaInfo(),
-			PermanentInfo:            g.GetPd().GetInspirationCircuitInfo(),
+			InspirationCircuit:       g.GetPd().GetInspirationCircuitInfo(),
 			RogueSeasonInfo:          g.GetPd().GetRogueTournSeasonInfo(),
 			ExtraScoreInfo:           g.GetPd().GetExtraScoreInfo(),
 			RogueTournExpInfo:        g.GetPd().GetRogueTournExpInfo(),
@@ -29,8 +29,8 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.RogueTournGetPermanentTalentInfoScRsp{
-		PermanentInfo: g.GetPd().GetInspirationCircuitInfo(),
-		Retcode:       0,
+		InspirationCircuit: g.GetPd().GetInspirationCircuitInfo(),
+		Retcode:            0,
 	}
 	g.Send(cmd.RogueTournGetPermanentTalentInfoScRsp, rsp)
 }
@@ -175,10 +175,10 @@ func (g *GamePlayer) FormulaSyncRogueCommonActionResultScNotify(formulaId uint32
 		return
 	}
 	notify := &proto.SyncRogueCommonActionResultScNotify{
-		ActionResult: make([]*proto.RogueCommonActionResult, 0),
-		RogueSubMode: 301,
+		ActionResultList: make([]*proto.RogueCommonActionResult, 0),
+		RogueSubMode:     301,
 	}
-	notify.ActionResult = append(notify.ActionResult, &proto.RogueCommonActionResult{
+	notify.ActionResultList = append(notify.ActionResultList, &proto.RogueCommonActionResult{
 		Source: 0,
 		RogueAction: &proto.RogueCommonActionResultData{
 			ResultData: &proto.RogueCommonActionResultData_GetFormulaList{

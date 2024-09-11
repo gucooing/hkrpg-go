@@ -187,7 +187,7 @@ func (g *PlayerData) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 		PlaneId:            mapEntrance.PlaneID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		LevelGroupIdList:   make([]uint32, 0),
+		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
 		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
@@ -215,7 +215,7 @@ func (g *PlayerData) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, li
 		} else {
 			g.AddLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 		}
-		scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
+		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),

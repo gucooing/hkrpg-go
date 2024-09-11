@@ -116,7 +116,7 @@ func newPlayerNet(uid, gateAppid uint32) *PlayerNet {
 		uid:            uid,
 		gateAppid:      gateAppid,
 		lastActiveTime: time.Now().Unix(),
-		p:              player.NewPlayer(uid, false), // TODO
+		p:              player.NewPlayer(uid),
 	}
 	return playerNet
 }

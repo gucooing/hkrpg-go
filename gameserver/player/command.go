@@ -17,6 +17,7 @@ var commandMap = map[string]commHandlerFunc{
 	"world_level": setWorldLevel,
 	"give":        give,
 	"give_relic":  giveRelic,
+	"jump_ission": jumpMission,
 }
 
 func (g *GamePlayer) EnterCommand(msg Msg) {
@@ -58,7 +59,7 @@ func give(g *GamePlayer, parameter []string) string {
 	}
 	all := alg.S2U32(parameter[0])
 	if all == 1 {
-		g.allGive(allSync, pileItem)
+		pileItem = append(pileItem, g.allGive(allSync)...)
 	} else {
 		pileItem = append(pileItem, &model.Material{
 			Tid: alg.S2U32(parameter[1]),
@@ -72,7 +73,8 @@ func give(g *GamePlayer, parameter []string) string {
 	return fmt.Sprintf("ok")
 }
 
-func (g *GamePlayer) allGive(allSync *model.AllPlayerSync, pileItem []*model.Material) {
+func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
+	var pileItem []*model.Material
 	itemConf := gdconf.GetItemConfigMap()
 	avatarConf := gdconf.GetAvatarDataMap()
 	// add avatar
@@ -114,6 +116,7 @@ func (g *GamePlayer) allGive(allSync *model.AllPlayerSync, pileItem []*model.Mat
 		uniqueId := g.GetPd().AddRelic(relic.ID, 0, nil)
 		allSync.RelicList = append(allSync.RelicList, uniqueId)
 	}
+	return pileItem
 }
 
 func giveRelic(g *GamePlayer, parameter []string) string {
@@ -141,6 +144,21 @@ func giveRelic(g *GamePlayer, parameter []string) string {
 		}
 	}
 	g.AllPlayerSyncScNotify(allSync)
+	return fmt.Sprintf("ok")
+}
+
+func jumpMission(g *GamePlayer, parameter []string) string {
+	if len(parameter) < 1 {
+		return "Command Not enough parameters"
+	}
+	db := g.GetPd().GetBasicBin()
+	is := alg.S2U32(parameter[0])
+	if is == 0 {
+		db.IsJumpMission = false
+	} else {
+		db.IsJumpMission = true
+	}
+	g.playerKickOutScNotify()
 	return fmt.Sprintf("ok")
 }
 

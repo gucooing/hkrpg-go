@@ -932,5 +932,173 @@
       21012,
       21046
     ]
+  },
+  {
+    "id": 2042,
+    "gachaType": "AvatarUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      1309
+    ],
+    "rateUpItems4": [
+      1009,
+      1111,
+      1223
+    ]
+  },
+  {
+    "id": 3041,
+    "gachaType": "WeaponUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      23031
+    ],
+    "rateUpItems4": [
+      21006,
+      21010,
+      21015
+    ]
+  },
+  {
+    "id": 2041,
+    "gachaType": "AvatarUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      1220
+    ],
+    "rateUpItems4": [
+      1009,
+      1111,
+      1223
+    ]
+  },
+  {
+    "id": 3043,
+    "gachaType": "WeaponUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      23031
+    ],
+    "rateUpItems4": [
+      21006,
+      21010,
+      21015
+    ]
+  },
+  {
+    "id": 3042,
+    "gachaType": "WeaponUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      23026
+    ],
+    "rateUpItems4": [
+      21006,
+      21010,
+      21015
+    ]
+  },
+  {
+    "id": 2043,
+    "gachaType": "AvatarUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      1307
+    ],
+    "rateUpItems4": [
+      1009,
+      1111,
+      1223
+    ]
+  },
+  {
+    "id": 2044,
+    "gachaType": "AvatarUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      1005
+    ],
+    "rateUpItems4": [
+      1223,
+      1009,
+      1111
+    ]
+  },
+  {
+    "id": 3044,
+    "gachaType": "WeaponUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      23006
+    ],
+    "rateUpItems4": [
+      21006,
+      21010,
+      21015
+    ]
+  },
+  {
+    "id": 2046,
+    "gachaType": "AvatarUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      1112
+    ],
+    "rateUpItems4": [
+      1105,
+      1312,
+      1210
+    ]
+  },
+  {
+    "id": 3045,
+    "gachaType": "WeaponUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      23032
+    ],
+    "rateUpItems4": [
+      21007,
+      21011,
+      21047
+    ]
+  },
+  {
+    "id": 2045,
+    "gachaType": "AvatarUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      1222
+    ],
+    "rateUpItems4": [
+      1105,
+      1210,
+      1312
+    ]
+  },
+  {
+    "id": 3046,
+    "gachaType": "WeaponUp",
+    "beginTime": 0,
+    "endTime": 1924992000,
+    "rateUpItems5": [
+      23016
+    ],
+    "rateUpItems4": [
+      21007,
+      21011,
+      21047
+    ]
   }
 ]

@@ -13,15 +13,12 @@ import (
 
 func (g *GamePlayer) GetAetherDivideInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetAetherDivideInfoScRsp{
-		AvatarList:  make([]*proto.AetherDivideSpiritInfo, 0),
-		NEOEJNKCKDM: 1,
-		KFBJEFGKIPH: 1,
-		CHKKOOPNPKG: 1,
-		// MMIJLNONOOI:     0,
+		AvatarList:      make([]*proto.AetherDivideSpiritInfo, 0),
+		LCNFCGHKACO:     1,
+		OMKNCCGDKNP:     1,
 		Retcode:         0,
 		AetherSkillList: make([]*proto.AetherSkillInfo, 0),
 		LineupList:      make([]*proto.AetherDivideLineupInfo, 0),
-		// OHIMLBKKODO:     8014143,
 	}
 	// add avatar
 	for _, db := range g.GetPd().GetAetherDivideAvatar() {
@@ -48,10 +45,10 @@ func (g *GamePlayer) GetAetherDivideChallengeInfoCsReq(payloadMsg pb.Message) {
 		x = append(x, uint32(i))
 	}
 	rsp := &proto.GetAetherDivideChallengeInfoScRsp{
-		// FIBDNGJJDFD:         1,
+		// ECDFJJCPFJA:         1,
 		// Retcode:             0,
-		EELDBMONEIM:         x,
-		FinishChallengeList: x,
+		ANLOIAIEKHB: x,
+		DEOOAOCGIIF: x,
 	}
 
 	g.Send(cmd.GetAetherDivideChallengeInfoScRsp, rsp)
@@ -211,9 +208,9 @@ func (g *GamePlayer) StartAetherDivideSceneBattleCsReq(payloadMsg pb.Message) {
 		Retcode:      0,
 	}
 	// 添加攻击发起者
-	g.GetPd().GetMem([]uint32{req.AttackedByEntityId}, battleBackup.Sce)
+	g.GetPd().GetMem([]uint32{req.AttackedByEntityId}, battleBackup)
 	// 添加被攻击者
-	g.GetPd().GetMem(req.AssistMonsterEntityIdList, battleBackup.Sce)
+	g.GetPd().GetMem(req.AssistMonsterEntityIdList, battleBackup)
 	if len(battleBackup.Sce.EvenIdList) == 0 || !battleBackup.Sce.IsAvatar { // 是否满足战斗条件
 		g.Send(cmd.StartAetherDivideSceneBattleScRsp, rsp)
 		return

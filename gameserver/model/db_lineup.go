@@ -417,7 +417,6 @@ func (g *PlayerData) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 		LeaderSlot:            db.LeaderSlot,
 		GameStoryLineId:       0,
 		StoryLineAvatarIdList: make([]uint32, 0),
-		Sus:                   make([]uint32, 0),
 	}
 	if changeStory := g.GetCurChangeStoryInfo(); changeStory != nil {
 		lineupList.GameStoryLineId = changeStory.ChangeStoryId

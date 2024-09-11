@@ -14,7 +14,6 @@ type RouteManager struct {
 
 func (r *RouteManager) initRoute(g *GamePlayer) {
 	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
-		cmd.GetBasicInfoCsReq:     g.HandleGetBasicInfoCsReq,
 		cmd.GetEnteredSceneCsReq:  g.HandleGetEnteredSceneCsReq,
 		cmd.GetChatEmojiListCsReq: g.HandleGetChatEmojiListCsReq, // 获取聊天表情
 		// 登录
@@ -26,11 +25,11 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetLineupAvatarDataCsReq: g.GetLineupAvatarDataCsReq,     // 获取队伍
 		cmd.JoinLineupCsReq:          g.HandleJoinLineupCsReq,        // 更新队伍请求
 		cmd.SwitchLineupIndexCsReq:   g.HandleSwitchLineupIndexCsReq, // 上场队伍更新请求
-		cmd.SwapLineupCsReq:          g.HandleSwapLineupCsReq,        // 队伍角色交换请求
-		cmd.SetLineupNameCsReq:       g.SetLineupNameCsReq,           // 修改队伍名称
-		cmd.ReplaceLineupCsReq:       g.ReplaceLineupCsReq,           // 快速入队
-		cmd.ChangeLineupLeaderCsReq:  g.ChangeLineupLeaderCsReq,      // 切换角色
-		cmd.QuitLineupCsReq:          g.QuitLineupCsReq,              // 角色离队
+		// cmd.SwapLineupCsReq:          g.HandleSwapLineupCsReq,        // 队伍角色交换请求 // 2.5.0 遗弃
+		cmd.SetLineupNameCsReq:      g.SetLineupNameCsReq,      // 修改队伍名称
+		cmd.ReplaceLineupCsReq:      g.ReplaceLineupCsReq,      // 快速入队
+		cmd.ChangeLineupLeaderCsReq: g.ChangeLineupLeaderCsReq, // 切换角色
+		cmd.QuitLineupCsReq:         g.QuitLineupCsReq,         // 角色离队
 		// 角色管理
 		cmd.GetMultiPathAvatarInfoCsReq: g.GetMultiPathAvatarInfoCsReq, // 请求多命途角色基本信息
 		cmd.GetAvatarDataCsReq:          g.HandleGetAvatarDataCsReq,    // 请求全部角色信息
@@ -64,17 +63,19 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartWolfBroGameCsReq:       g.StartWolfBroGameCsReq,      // 变身
 		cmd.SetGroupCustomSaveDataCsReq: g.SetGroupCustomSaveDataCsReq,
 		// 战斗
-		cmd.SceneCastSkillCostMpCsReq:   g.SceneCastSkillCostMpCsReq,   // 技能使用
-		cmd.SceneCastSkillCsReq:         g.SceneCastSkillCsReq,         // 场景开启战斗
-		cmd.SetTurnFoodSwitchCsReq:      g.SetTurnFoodSwitchCsReq,      // 使用消耗品buff
-		cmd.RefreshTriggerByClientCsReq: g.RefreshTriggerByClientCsReq, // 领域buff
-		cmd.PVEBattleResultCsReq:        g.PVEBattleResultCsReq,        // PVE战斗结算
-		cmd.StartCocoonStageCsReq:       g.StartCocoonStageCsReq,       // 副本/周本等
-		cmd.ActivateFarmElementCsReq:    g.ActivateFarmElementCsReq,    // 虚影战斗
-		cmd.SceneEnterStageCsReq:        g.SceneEnterStageCsReq,        // 场景直接发起战斗
-		cmd.GetRaidInfoCsReq:            g.GetRaidInfoCsReq,            // 获取raid
-		cmd.StartRaidCsReq:              g.StartRaidCsReq,              // 拓境探游
-		cmd.LeaveRaidCsReq:              g.LeaveRaidCsReq,              // 退出拓境探游
+		cmd.SceneCastSkillCostMpCsReq:    g.SceneCastSkillCostMpCsReq,    // 技能使用
+		cmd.SceneCastSkillCsReq:          g.SceneCastSkillCsReq,          // 场景开启战斗
+		cmd.SetTurnFoodSwitchCsReq:       g.SetTurnFoodSwitchCsReq,       // 使用消耗品buff
+		cmd.RefreshTriggerByClientCsReq:  g.RefreshTriggerByClientCsReq,  // 领域buff
+		cmd.PVEBattleResultCsReq:         g.PVEBattleResultCsReq,         // PVE战斗结算
+		cmd.StartCocoonStageCsReq:        g.StartCocoonStageCsReq,        // 副本/周本等
+		cmd.ActivateFarmElementCsReq:     g.ActivateFarmElementCsReq,     // 虚影战斗
+		cmd.ReEnterLastElementStageCsReq: g.ReEnterLastElementStageCsReq, // 虚影战斗再来一次
+		cmd.DeactivateFarmElementCsReq:   g.DeactivateFarmElementCsReq,   // 虚影
+		cmd.SceneEnterStageCsReq:         g.SceneEnterStageCsReq,         // 场景直接发起战斗
+		cmd.GetRaidInfoCsReq:             g.GetRaidInfoCsReq,             // 获取raid
+		cmd.StartRaidCsReq:               g.StartRaidCsReq,               // 拓境探游
+		cmd.LeaveRaidCsReq:               g.LeaveRaidCsReq,               // 退出拓境探游
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期
@@ -125,18 +126,18 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.BuyGoodsCsReq:               g.BuyGoodsCsReq,               // 商店交易
 		cmd.GetRollShopInfoCsReq:        g.GetRollShopInfoCsReq,        //
 		// 好友
-		cmd.SetDisplayAvatarCsReq:       g.SetDisplayAvatarCsReq,         // 设置展示角色
-		cmd.SetAssistAvatarCsReq:        g.SetAssistAvatarCsReq,          // 设置支援角色
-		cmd.GetFriendLoginInfoCsReq:     g.HandleGetFriendLoginInfoCsReq, // 获取好友信息列表
-		cmd.GetFriendListInfoCsReq:      g.GetFriendListInfoCsReq,        // 获取好友信息
-		cmd.GetPrivateChatHistoryCsReq:  g.GetPrivateChatHistoryCsReq,    // 获取私聊记录
-		cmd.SendMsgCsReq:                g.SendMsgCsReq,                  // 发送聊天信息
-		cmd.GetChatFriendHistoryCsReq:   g.GetChatFriendHistoryCsReq,     // 获取正在进行的聊天室
-		cmd.SearchPlayerCsReq:           g.SearchPlayerCsReq,             // 查找玩家
-		cmd.GetFriendApplyListInfoCsReq: g.GetFriendApplyListInfoCsReq,   // 获取好友申请列表
-		cmd.HandleFriendCsReq:           g.HandleFriendCsReq,             // 处理好友申请
-		// cmd.GetFriendRecommendListInfoCsReq: g.GetFriendRecommendListInfoCsReq, // 获取附近的人
-		cmd.GetPlayerDetailInfoCsReq: g.GetPlayerDetailInfoCsReq, // 获取玩家详细信息
+		cmd.SetDisplayAvatarCsReq:           g.SetDisplayAvatarCsReq,           // 设置展示角色
+		cmd.SetAssistAvatarCsReq:            g.SetAssistAvatarCsReq,            // 设置支援角色
+		cmd.GetFriendLoginInfoCsReq:         g.HandleGetFriendLoginInfoCsReq,   // 获取好友信息列表
+		cmd.GetFriendListInfoCsReq:          g.GetFriendListInfoCsReq,          // 获取好友信息
+		cmd.GetPrivateChatHistoryCsReq:      g.GetPrivateChatHistoryCsReq,      // 获取私聊记录
+		cmd.SendMsgCsReq:                    g.SendMsgCsReq,                    // 发送聊天信息
+		cmd.GetChatFriendHistoryCsReq:       g.GetChatFriendHistoryCsReq,       // 获取正在进行的聊天室
+		cmd.SearchPlayerCsReq:               g.SearchPlayerCsReq,               // 查找玩家
+		cmd.GetFriendApplyListInfoCsReq:     g.GetFriendApplyListInfoCsReq,     // 获取好友申请列表
+		cmd.HandleFriendCsReq:               g.HandleFriendCsReq,               // 处理好友申请
+		cmd.GetFriendRecommendListInfoCsReq: g.GetFriendRecommendListInfoCsReq, // 获取附近的人
+		cmd.GetPlayerDetailInfoCsReq:        g.GetPlayerDetailInfoCsReq,        // 获取玩家详细信息
 		// 邮件
 		cmd.MarkReadMailCsReq:       g.MarkReadMailCsReq,       // 读取邮件
 		cmd.GetMailCsReq:            g.GetMailCsReq,            // 获取邮件
@@ -159,6 +160,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,             // 对话选项
 		cmd.UpdateTrackMainMissionIdCsReq:  g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
 		// 活动
+		cmd.PlayerReturnInfoQueryCsReq:          g.PlayerReturnInfoQueryCsReq,           // 获取回归信息
+		cmd.PlayerReturnTakeRewardCsReq:         g.PlayerReturnTakeRewardCsReq,          // 领取回归横幅奖励
+		cmd.PlayerReturnSignCsReq:               g.PlayerReturnSignCsReq,                // 领取回归签到奖励
 		cmd.HeliobusActivityDataCsReq:           g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq:      g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
 		cmd.GetLoginActivityCsReq:               g.GetLoginActivityCsReq,                // 登录活动完成情况
@@ -184,6 +188,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		// cmd.SwordTrainingLearnSkillCsReq:g.SwordTrainingLearnSkillCsReq,// 领悟剑招请求
 		// cmd.SwordTrainingTurnActionCsReq:g.SwordTrainingTurnActionCsReq,// 开始日常训练
 		// 基础
+		cmd.GetBasicInfoCsReq:              g.HandleGetBasicInfoCsReq,        // 基础信息
 		cmd.GetPhoneDataCsReq:              g.HandleGetPhoneDataCsReq,        // 获取手机信息
 		cmd.SetClientPausedCsReq:           g.SetClientPausedCsReq,           // 客户端暂停请求
 		cmd.SyncClientResVersionCsReq:      g.SyncClientResVersionCsReq,      // 版本同步
@@ -254,9 +259,9 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 			return
 		}
 	}()
-	// if g.Uid == LogMsgPlayer {
-	// 	LogMsgRecv(cmdId, payloadMsg)
-	// }
+	if g.Uid == LogMsgPlayer {
+		LogMsgRecv(cmdId, payloadMsg)
+	}
 	handlerFunc, ok := g.RouteManager.handlerFuncRouteMap[cmdId]
 	if !ok {
 		if g.Uid == LogMsgPlayer {

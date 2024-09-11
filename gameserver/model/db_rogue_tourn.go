@@ -177,10 +177,10 @@ func (g *PlayerData) GetRogueTournSeasonInfo() *proto.RogueTournSeasonInfo {
 	return info
 }
 
-func (g *PlayerData) GetInspirationCircuitInfo() *proto.RogueTournPermanentTalentInfo {
-	info := &proto.RogueTournPermanentTalentInfo{
-		TalentInfoList:     &proto.RogueTalentInfoList{TalentInfo: make([]*proto.RogueTalentInfo, 0)},
-		TournTalentCoinNum: g.GetMaterialById(Inspiration),
+func (g *PlayerData) GetInspirationCircuitInfo() *proto.InspirationCircuitInfo {
+	info := &proto.InspirationCircuitInfo{
+		TalentInfoList: &proto.RogueTalentInfoList{TalentInfo: make([]*proto.RogueTalentInfo, 0)},
+		InspirationNum: g.GetMaterialById(Inspiration),
 	}
 	for v, k := range gdconf.GetRogueTournPermanentTalentMap() {
 		status := proto.RogueTalentStatus_ROGUE_TALENT_STATUS_LOCK
@@ -222,9 +222,9 @@ func (g *PlayerData) GetRogueTournExpInfo() *proto.RogueTournExpInfo {
 
 func (g *PlayerData) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
 	info := &proto.RogueTournHandbookInfo{
-		HandbookFormulaList:    make([]uint32, 0),
-		HandbookBuffList:       make([]uint32, 0),
-		ONPBIAFFJJK:            0,
+		HandbookFormulaList: make([]uint32, 0),
+		// HandbookBuffList:       make([]uint32, 0),
+		DFPKGDJNMHA:            1,
 		HandbookEventList:      make([]uint32, 0),
 		HandbookAvatarBaseList: make([]uint32, 0),
 		HandbookMiracleList:    make([]uint32, 0),
@@ -253,7 +253,7 @@ func (g *PlayerData) GetRogueTournAreaInfo() []*proto.RogueTournAreaInfo {
 	for _, id := range []uint32{101, 201, 202, 203, 204, 205, 1011, 1012, 1013, 1014, 1015} {
 		info = append(info, &proto.RogueTournAreaInfo{
 			AreaId:                      id,
-			IsFinish:                    true,
+			IsTournFinish:               true,
 			IsTakenReward:               false,
 			IsUnlock:                    true,
 			UnlockedTournDifficultyList: make([]uint32, 0),
@@ -269,32 +269,29 @@ func (g *PlayerData) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 	}
 	info := &proto.RogueTournCurInfo{
 		RogueTournCurAreaInfo: g.GetRogueTournCurAreaInfo(),
-		RogueTournCurGame: &proto.RogueTournCurInfo_RogueTournCurGameInfo{
-			RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
-				RogueTournGameAreaInfo: &proto.RogueTournGameAreaInfo{
-					AreaId: curRogueTourn.AreaId,
-				},
-				MiracleInfo:      g.GetChessRogueMiracleInfo(),
-				TournFormulaInfo: g.GetRogueTournFormulaInfo(),
-				ItemValue: &proto.RogueGameItemValue{
-					VirtualItem: map[uint32]uint32{Cf: g.GetMaterialById(Cf)},
-				},
-				Level: g.GetRogueTournLayerInfo(),
-				Lineup: &proto.RogueTournVirtualItem{
-					RogueReviveCost: &proto.ItemCostData{ItemList: []*proto.ItemCost{
-						{
-							ItemOneofCase: &proto.ItemCost_PileItem{
-								PileItem: &proto.PileItem{
-									ItemId:  Cf,
-									ItemNum: g.GetMaterialById(Cf),
-								},
-							},
-						},
-					}},
-				},
-				Buff:        g.GetRogueTournBuffInfo(),
-				UnlockValue: g.GetKeywordUnlockInfo(),
+
+		RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
+			RogueTournGameAreaInfo: &proto.RogueTournGameAreaInfo{
+				GameAreaId: curRogueTourn.AreaId,
 			},
+			MiracleInfo:      g.GetChessRogueMiracleInfo(),
+			TournFormulaInfo: g.GetRogueTournFormulaInfo(),
+			ItemValue: &proto.RogueGameItemValue{
+				VirtualItem: map[uint32]uint32{Cf: g.GetMaterialById(Cf)},
+			},
+			Level: g.GetRogueTournLayerInfo(),
+			Lineup: &proto.RogueTournLineupInfo{
+				RogueReviveCost: &proto.ItemCostData{ItemList: []*proto.ItemCost{
+					{
+						PileItem: &proto.PileItem{
+							ItemId:  Cf,
+							ItemNum: g.GetMaterialById(Cf),
+						},
+					},
+				}},
+			},
+			Buff:        g.GetRogueTournBuffInfo(),
+			UnlockValue: g.GetKeywordUnlockInfo(),
 		},
 	}
 	return info
@@ -307,7 +304,7 @@ func (g *PlayerData) GetRogueTournCurAreaInfo() *proto.RogueTournCurAreaInfo {
 	}
 	info := &proto.RogueTournCurAreaInfo{
 		RogueSubMode: 301,
-		AreaId:       curRogueTourn.AreaId,
+		SubAreaId:    curRogueTourn.AreaId,
 	}
 	return info
 }
@@ -451,7 +448,7 @@ func (g *PlayerData) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		EntryId:            roomConf.MapEntrance,
 		GameModeType:       17, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		LevelGroupIdList:   nil,
+		GroupIdList:        nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -466,7 +463,7 @@ func (g *PlayerData) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		if len(sceneGroup.AnchorList) > 0 {
 			avatarGroupID = groupID
 		}
-		scene.LevelGroupIdList = append(scene.LevelGroupIdList, groupID)
+		scene.GroupIdList = append(scene.GroupIdList, groupID)
 		sceneGroupState := &proto.SceneGroupState{
 			GroupId:   groupID,
 			IsDefault: true,
@@ -546,8 +543,8 @@ func (g *PlayerData) GetRogueTournNPCMonsterByID(entityGroupList *proto.SceneEnt
 			EntityOneofCase: &proto.SceneEntityInfo_NpcMonster{
 				NpcMonster: &proto.SceneNpcMonsterInfo{
 					ExtraInfo: &proto.NpcMonsterExtraInfo{
-						Extra: &proto.NpcMonsterExtraInfo_RogueInfo{
-							RogueInfo: &proto.NpcMonsterRogueInfo{
+						Extra: &proto.NpcMonsterExtraInfo_RogueGameInfo{
+							RogueGameInfo: &proto.NpcMonsterRogueInfo{
 								RogueMonsterId: info.RogueMonsterID,
 							},
 						},

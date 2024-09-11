@@ -13,10 +13,10 @@ func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg pb.Message) {
 		Retcode:           0,
 		NpcMeetStatusList: make([]*proto.FirstNpcTalkInfo, 0),
 	}
-	for _, seriesId := range req.SeriesIdList {
+	for _, seriesId := range req.NpcIdList {
 		rsp.NpcMeetStatusList = append(rsp.NpcMeetStatusList, &proto.FirstNpcTalkInfo{
-			IsMeet:   false,
-			SeriesId: seriesId,
+			IsMeet: false,
+			NpcId:  seriesId,
 		})
 	}
 	g.Send(cmd.GetFirstTalkNpcScRsp, rsp)

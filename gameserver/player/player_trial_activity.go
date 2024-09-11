@@ -65,7 +65,7 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 		EntryId:            avatarDemo.MapEntranceID,
 		GameModeType:       14, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		LevelGroupIdList:   nil,
+		GroupIdList:        nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -97,7 +97,7 @@ func (g *GamePlayer) GetTrialActivityScene() *proto.SceneInfo {
 
 	// 添加实体
 	for _, levelGroup := range gdconf.GetServerGroup(mapEntrance.PlaneID, mapEntrance.FloorID) {
-		scene.LevelGroupIdList = append(scene.LevelGroupIdList, levelGroup.GroupId)
+		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
 		sceneGroupState := &proto.SceneGroupState{
 			GroupId:   levelGroup.GroupId,
 			IsDefault: true,
@@ -179,8 +179,8 @@ func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(req *proto.PVEBattleResul
 		}
 		g.Send(cmd.TrialActivityDataChangeScNotify, scNotify)
 		notify := &proto.CurTrialActivityScNotify{
-			StageId: db.StageId,
-			Status:  proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
+			ActivityStageId: db.StageId,
+			Status:          proto.TrialActivityStatus_TRIAL_ACTIVITY_STATUS_FINISH,
 		}
 		g.Send(cmd.CurTrialActivityScNotify, notify)
 	}

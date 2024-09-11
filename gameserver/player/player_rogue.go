@@ -47,7 +47,7 @@ func (g *GamePlayer) GetRogueTalentInfoCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) GetRogueInfoCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetRogueInfoScRsp)
-	rsp.RogueInfo = g.GetPd().GetRogueInfo()
+	rsp.RogueGameInfo = g.GetPd().GetRogueInfo()
 
 	g.Send(cmd.GetRogueInfoScRsp, rsp)
 }
@@ -119,7 +119,7 @@ func (g *GamePlayer) StartRogueCsReq(payloadMsg pb.Message) {
 
 	rsp.Lineup = g.GetPd().GetLineUpPb(g.GetPd().GetBattleLineUpById(model.Rogue))
 	rsp.Scene = g.GetPd().GetRogueScene(rogueRoomMap[rogueMap.StartId].RoomId)
-	rsp.RogueInfo = g.GetPd().GetRogueInfo()
+	rsp.RogueGameInfo = g.GetPd().GetRogueInfo()
 
 	g.Send(cmd.StartRogueScRsp, rsp)
 }
@@ -234,11 +234,9 @@ func (g *GamePlayer) SyncRogueCommonPendingActionScNotify(buffIdList []uint32) {
 						SourceTotalCount:  1,                   // Source To Count
 						RollBuffCostData: &proto.ItemCostData{ItemList: []*proto.ItemCost{ // 刷新需要的东西
 							{
-								ItemOneofCase: &proto.ItemCost_PileItem{
-									PileItem: &proto.PileItem{
-										ItemId:  model.Cf,
-										ItemNum: g.GetPd().GetMaterialById(model.Cf),
-									},
+								PileItem: &proto.PileItem{
+									ItemId:  model.Cf,
+									ItemNum: g.GetPd().GetMaterialById(model.Cf),
 								},
 							},
 						}},
@@ -261,10 +259,10 @@ func (g *GamePlayer) SyncRogueCommonActionResultScNotify(buffId uint32) {
 		return
 	}
 	notify := &proto.SyncRogueCommonActionResultScNotify{
-		ActionResult: make([]*proto.RogueCommonActionResult, 0),
-		RogueSubMode: 101,
+		ActionResultList: make([]*proto.RogueCommonActionResult, 0),
+		RogueSubMode:     101,
 	}
-	notify.ActionResult = append(notify.ActionResult, &proto.RogueCommonActionResult{
+	notify.ActionResultList = append(notify.ActionResultList, &proto.RogueCommonActionResult{
 		Source: 0,
 		RogueAction: &proto.RogueCommonActionResultData{
 			ResultData: &proto.RogueCommonActionResultData_GetBuffList{
@@ -292,7 +290,7 @@ func (g *GamePlayer) QuitRogueCsReq(payloadMsg pb.Message) {
 	db.IsWin = true
 	g.Send(cmd.SyncRogueStatusScNotify, &proto.SyncRogueStatusScNotify{Status: proto.RogueStatus(db.Status)})
 	rsp := &proto.QuitRogueScRsp{
-		RogueInfo: g.GetPd().GetRogueInfo(),
+		RogueGameInfo: g.GetPd().GetRogueInfo(),
 	}
 	g.Send(cmd.QuitRogueScRsp, rsp)
 	g.GetPd().NewCurRogue()
@@ -303,8 +301,8 @@ func (g *GamePlayer) LeaveRogueCsReq(payloadMsg pb.Message) {
 	curLine := g.GetPd().GetCurLineUp()
 	// SyncRogueFinishScNotify
 	rsp := &proto.LeaveRogueScRsp{
-		RogueInfo: g.GetPd().GetRogueInfo(),
-		Lineup:    g.GetPd().GetLineUpPb(curLine),
+		RogueGameInfo: g.GetPd().GetRogueInfo(),
+		Lineup:        g.GetPd().GetLineUpPb(curLine),
 		Scene: g.GetPd().GetSceneInfo(
 			g.GetPd().GetScene().EntryId, g.GetPd().GetPosPb(), g.GetPd().GetRotPb(), curLine),
 	}
