@@ -113,7 +113,7 @@ func (s *Session) Close() {
 	protoData, err := pb.Marshal(&proto.PlayerKickOutScNotify{
 		BlackInfo: &proto.BlackInfo{},
 	})
-	if err != nil {
+	if err == nil {
 		binMsg := alg.EncodePayloadToBin(&alg.PackMsg{
 			CmdId:     cmd.PlayerKickOutScNotify,
 			HeadData:  nil,

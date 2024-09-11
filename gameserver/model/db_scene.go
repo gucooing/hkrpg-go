@@ -879,7 +879,7 @@ func (g *PlayerData) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 		entityId := g.GetNextGameObjectGuid()
 		g.StageObjectCapture(sceneGroup, propList, sceneGroup.GroupId, db)
 		propState := g.GetPropState(db, sceneGroup.GroupId, propList.ID, propList.State)
-		if propState == 0 {
+		if propState == 0 { // TODO
 			continue
 		}
 		pos := &proto.Vector{

@@ -57,7 +57,6 @@ func (k *KcpConn) RunKcp() error {
 			return fmt.Errorf("accept kcp err: %v", err)
 		}
 		go func() {
-			CLIENT_CONN_NUM++
 			kcpConn.SetACKNoDelay(true)
 			kcpConn.SetWriteDelay(false)
 			kcpConn.SetWindowSize(256, 256)

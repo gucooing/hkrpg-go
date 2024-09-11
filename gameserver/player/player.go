@@ -8,6 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
@@ -17,8 +18,7 @@ var LogMsgPlayer uint32 = 2
 var ISPE = false
 
 type GamePlayer struct {
-	Uid           uint32
-	IsJumpMission bool
+	Uid uint32
 	// 玩家数据
 	PlayerData     *model.PlayerData // 玩家内存
 	Platform       spb.PlatformType  // 登录设备
@@ -60,12 +60,11 @@ func (g *GamePlayer) GetPd() *model.PlayerData {
 	return g.PlayerData
 }
 
-func NewPlayer(uid uint32, isJumpMission bool) *GamePlayer {
+func NewPlayer(uid uint32) *GamePlayer {
 	g := new(GamePlayer)
 	g.Uid = uid
 	g.RecvChan = make(chan Msg, 100)
 	g.SendChan = make(chan Msg, 100)
-	g.IsJumpMission = isJumpMission
 	g.RouteManager = NewRouteManager(g)
 	g.LastUpDataTime = time.Now().Unix()
 	g.GetPlayerDateByDb() // 拉取数据
@@ -108,10 +107,8 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			g.PlayerData = model.NewPlayerData()
 		}
 	}
-	if g.IsJumpMission && !g.GetPd().GetIsProficientPlayer() {
-		g.FinishAllMission()
+	if g.GetPd().GetBasicBin().IsJumpMission {
 		g.FinishAllTutorial()
-		g.GetPd().GetBasicBin().IsProficientPlayer = true
 	}
 	g.PlayerData.BasicBin.Uid = g.Uid
 	if g.GetPd().GetIsProficientPlayer() { // 是否是老玩家
@@ -205,6 +202,13 @@ func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 		LogMsgSeed(cmdId, playerMsg)
 	}
 	g.SendMsg(cmdId, playerMsg)
+}
+
+func (g *GamePlayer) playerKickOutScNotify() {
+	g.Send(cmd.PlayerKickOutScNotify, &proto.PlayerKickOutScNotify{
+		KickType:  proto.KickType_KICK_BY_GM,
+		BlackInfo: &proto.BlackInfo{},
+	})
 }
 
 func (g *GamePlayer) Close() {

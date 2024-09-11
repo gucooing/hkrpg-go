@@ -203,7 +203,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		EquipmentList: nil,
 		RelicList:     nil,
 	}
-	addPileItem := make([]*model.Material, 0)
 
 	// 根据不同结算状态处理
 	switch req.EndStatus {
@@ -257,7 +256,6 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 			}
 		}
 		// 获取奖励
-		addPileItem = append(addPileItem, battleBin.DisplayItemList...)
 		for _, displayItem := range battleBin.DisplayItemList {
 			rsp.DropData.ItemList = append(rsp.DropData.ItemList, &proto.Item{
 				ItemId: displayItem.Tid,
@@ -266,7 +264,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		}
 		if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
 			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
-				g.GetPd().GetBattleDropData(conf.MappingInfoID, addPileItem, battleBin.WorldLevel, allSync)...)
+				g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin, allSync)...)
 			finishSubMission := g.GetPd().FinishCocoon(battleBin.CocoonId)
 			if len(finishSubMission) != 0 {
 				g.InspectMission(finishSubMission)
@@ -275,7 +273,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		}
 		if conf := gdconf.GetFarmElementConfig(req.StageId); conf != nil {
 			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
-				g.GetPd().GetBattleDropData(conf.MappingInfoID, addPileItem, battleBin.WorldLevel, allSync)...)
+				g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin, allSync)...)
 			g.GetPd().DelStamina(conf.StaminaCost)
 		}
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
@@ -303,7 +301,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		g.EnterSceneByServerScNotify(g.GetPd().GetCurEntryId(), 0, 0, 0)
 	}
 
-	g.GetPd().AddItem(addPileItem, allSync)
+	g.GetPd().AddItem(battleBin.DisplayItemList, allSync)
 	g.StaminaInfoScNotify()
 	g.AllPlayerSyncScNotify(allSync)
 	// g.AllScenePlaneEventScNotify(addPileItem)

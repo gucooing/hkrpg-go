@@ -21,10 +21,14 @@ func (h *HkRpgGoServer) newHttpApi() {
 	h.apiRouter = gin.Default()
 	h.apiRouter.Use(timeoutMiddleware())
 	h.initRouter()
-	addr := fmt.Sprintf("%h:%h", h.config.Gm.Addr, h.config.Gm.Port)
-	logger.Info("api监听地址:%h", addr)
+	addr := fmt.Sprintf("%s:%s", h.config.Gm.Addr, h.config.Gm.Port)
+	logger.Info("api监听地址:%s", addr)
 	server := &http.Server{Addr: addr, Handler: h.apiRouter}
-	server.ListenAndServe()
+	err := server.ListenAndServe()
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
 }
 
 func timeoutMiddleware() gin.HandlerFunc {

@@ -17,6 +17,7 @@ var commandMap = map[string]commHandlerFunc{
 	"world_level": setWorldLevel,
 	"give":        give,
 	"give_relic":  giveRelic,
+	"jump_ission": jumpMission,
 }
 
 func (g *GamePlayer) EnterCommand(msg Msg) {
@@ -141,6 +142,21 @@ func giveRelic(g *GamePlayer, parameter []string) string {
 		}
 	}
 	g.AllPlayerSyncScNotify(allSync)
+	return fmt.Sprintf("ok")
+}
+
+func jumpMission(g *GamePlayer, parameter []string) string {
+	if len(parameter) < 1 {
+		return "Command Not enough parameters"
+	}
+	db := g.GetPd().GetBasicBin()
+	is := alg.S2U32(parameter[0])
+	if is == 0 {
+		db.IsJumpMission = false
+	} else {
+		db.IsJumpMission = true
+	}
+	g.playerKickOutScNotify()
 	return fmt.Sprintf("ok")
 }
 

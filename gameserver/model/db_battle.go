@@ -709,10 +709,13 @@ func (g *PlayerData) ChallengeBattleEndLose() bool {
 
 /*************奖励*************/
 
-func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, addPileItem []*Material, worldLevel uint32, allSync *AllPlayerSync) []*proto.Item {
-	conf := gdconf.GetMappingInfoById(mappingInfoID, worldLevel)
+func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, battleBin *BattleBackup, allSync *AllPlayerSync) []*proto.Item {
+	conf := gdconf.GetMappingInfoById(mappingInfoID, battleBin.WorldLevel)
 	if conf == nil {
 		return nil
+	}
+	if battleBin.DisplayItemList == nil {
+		battleBin.DisplayItemList = make([]*Material, 0)
 	}
 	itemList := make([]*proto.Item, 0)
 	itemConfMap := gdconf.GetItemConfigMap()
@@ -733,12 +736,12 @@ func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, addPileItem []*Mate
 			}
 			itemNum := displayItem.ItemNum
 			if displayItem.ItemID == Scoin {
-				itemNum = 1500 + worldLevel*300
+				itemNum = 1500 + battleBin.WorldLevel*300
 			}
 			if itemNum == 0 {
-				itemNum = 1 + worldLevel
+				itemNum = 1 + battleBin.WorldLevel
 			}
-			addPileItem = append(addPileItem, &Material{
+			battleBin.DisplayItemList = append(battleBin.DisplayItemList, &Material{
 				Tid: displayItem.ItemID,
 				Num: itemNum,
 			})

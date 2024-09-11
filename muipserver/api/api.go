@@ -11,12 +11,13 @@ import (
 type ApiFunc func(c *gin.Context) (bool, string, bool)
 
 var ApiMap = map[int]ApiFunc{
-	constant.CommAndTest:   test,
-	constant.SetWorldLevel: worldLevel,
-	constant.GetPlayerDb:   getPlayerPb,
-	constant.Status:        status,
-	constant.Give:          give,
-	constant.GiveRelic:     giveRelic,
+	constant.CommAndTest:    test,
+	constant.SetWorldLevel:  worldLevel,
+	constant.GetPlayerDb:    getPlayerPb,
+	constant.Status:         status,
+	constant.Give:           give,
+	constant.GiveRelic:      giveRelic,
+	constant.SetJumpMission: setIsJumpMission,
 }
 
 func ApiInitRouter(c *gin.Context) (bool, string, bool) {

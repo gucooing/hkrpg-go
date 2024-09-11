@@ -41,6 +41,12 @@ func giveRelic(c *gin.Context) (bool, string, bool) {
 	return true, fmt.Sprintf("give_relic %s %s %s %s %s", all, id, num, main, sub), true
 }
 
+func setIsJumpMission(c *gin.Context) (bool, string, bool) {
+	is := c.Query("is")
+
+	return true, fmt.Sprintf("jump_ission %s", is), true
+}
+
 // func (a *muip.Api) MaxCurAvatar(c *gin.Context) {
 // 	uid := alg.S2U32(c.Query("uid"))
 // 	avatarId := alg.S2U32(c.Query("avatar_id"))

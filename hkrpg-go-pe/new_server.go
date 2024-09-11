@@ -209,7 +209,7 @@ func (h *HkRpgGoServer) AddPlayer(s *session.Session) *PlayerGame {
 	h.playerMapLock.Lock()
 	defer h.playerMapLock.Unlock()
 	g := &PlayerGame{
-		GamePlayer:     player.NewPlayer(s.Uid, h.config.GameServer.IsJumpMission),
+		GamePlayer:     player.NewPlayer(s.Uid),
 		S:              s,
 		LastActiveTime: time.Now().Unix(),
 	}

@@ -144,15 +144,14 @@ func (g *GamePlayer) SetHeadIconCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) GetAuthkeyCsReq(payloadMsg pb.Message) {
-	// msg := g.DecodePayloadToProto(cmd.GetAuthkeyCsReq, payloadMsg)
-	// req := msg.(*proto.GetAuthkeyCsReq)
+	req := payloadMsg.(*proto.GetAuthkeyCsReq)
 
 	rsp := &proto.GetAuthkeyScRsp{
-		// MHHOCCLKLFD: "",
-		// LIFIHJFLHHM: req.LIFIHJFLHHM,
-		// KFDBLEEICMC: req.KFDBLEEICMC,
-		// DKHDNIFJCEM: req.DKHDNIFJCEM,
-		Retcode: 0,
+		Retcode:     0,
+		JIJLACMMNIK: "错误",
+		LCGDNGLFEKN: req.LCGDNGLFEKN,
+		BEDBGJCCHPD: req.BEDBGJCCHPD,
+		EONHOELALPD: req.EONHOELALPD,
 	}
 	g.Send(cmd.GetAuthkeyScRsp, rsp)
 }

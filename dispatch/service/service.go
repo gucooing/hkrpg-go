@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/dispatch/sdk"
@@ -35,7 +36,11 @@ func NewDispatch(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Mess
 		AppId:           appId,
 		OuterAddr:       netInfo.OuterAddr,
 		OuterPort:       netInfo.OuterPort,
-		Server:          new(sdk.Server),
+		Server: &sdk.Server{
+			RegionInfo:         make(map[string]*sdk.RegionInfo),
+			UpstreamServer:     make(map[string]*sdk.UrlList),
+			UpstreamServerLock: new(sync.RWMutex),
+		},
 	}
 	d.getRegionInfo()
 	go d.keepaliveServer()

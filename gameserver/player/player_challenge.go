@@ -276,7 +276,7 @@ func (g *GamePlayer) ChallengeBossPhaseSettleNotify(targeList map[uint32]*proto.
 		IsWin:             cur.IsWin,
 		BattleTargetList:  targeList[1].BattleTargetList,
 		ChallengeId:       cur.ChallengeId,
-		IsReward:          db.IsReward,
+		IsReward:          !db.IsReward,
 	}
 	g.Send(cmd.ChallengeBossPhaseSettleNotify, notify)
 }

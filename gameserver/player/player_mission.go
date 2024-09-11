@@ -130,7 +130,7 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg pb.Message) {
 		DisabledMainMissionIdList:   make([]uint32, 0),
 		MainMissionMcvList:          make([]*proto.MainMissionCustomValue, 0),
 	}
-	if g.IsJumpMission {
+	if g.GetPd().GetBasicBin().IsJumpMission {
 		rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, req.MainMissionIdList...)
 		for _, id := range req.SubMissionIdList {
 			rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
@@ -226,9 +226,6 @@ func (g *GamePlayer) MissionRewardScNotify() {
 
 // 登录任务检查
 func (g *GamePlayer) LoginReadyMission() {
-	if g.IsJumpMission {
-		return
-	}
 	// g.ExpiredMission()
 	g.InspectMission(nil)
 	g.GetPd().AllCheckMainMission()
@@ -265,6 +262,9 @@ func (g *GamePlayer) ExpiredMission() {
 
 // 任务检查
 func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
+	if g.GetPd().GetBasicBin().IsJumpMission {
+		return
+	}
 	allSync := &model.AllPlayerSync{
 		IsBasic:                true,
 		MaterialList:           make([]uint32, 0),

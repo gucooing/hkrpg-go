@@ -54,6 +54,7 @@ message PlayerBasicCompBin {
   string ip_region_name = 44; // ip区域名称
   Mission mission = 45;// 任务
   map<int32, Days> day = 46; // 每日刷新
+  bool IsJumpMission = 47; // 是否跳过任务
 }
 
 message Activity{
