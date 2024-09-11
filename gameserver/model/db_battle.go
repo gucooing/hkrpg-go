@@ -3,7 +3,6 @@
 package model
 
 import (
-	"sync"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
@@ -14,14 +13,13 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
-var BattleBackupLock sync.Mutex // 战斗列表互斥锁
-
 type CurBattle struct {
 	BattleBackup    map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
 	RogueInfoOnline *RogueInfoOnline         // 模拟宇宙临时数据
 	// AvatarBuff         map[uint32]*OnBuffMap // 角色在线buff
 	ActivityInfoOnline *ActivityInfoOnline   // 角色试用在线数据
 	MazeBuffList       map[uint32]*OnBuffMap // 所有buff
+	FarmElementMap     map[uint32]uint32     // [id]world level // 虚影等级设置
 }
 
 type BattleBackup struct {
@@ -36,6 +34,8 @@ type BattleBackup struct {
 	AetherDivideId   uint32                   // 以太战线id
 	AetherAvatarList []*AetherAvatar          // 以太战线战斗角色
 	Sce              *SceneCastEntity         // 参与实体
+	IsFarmElement    bool                     // 是否虚影
+	FarmElementID    uint32                   // 虚影Id
 	// Skill
 	SummonUnitId uint32 // 领域
 	// 奖励
@@ -70,21 +70,23 @@ func (g *PlayerData) GetBattleBackup() map[uint32]*BattleBackup {
 }
 
 func (g *PlayerData) GetBattleBackupById(battleId uint32) *BattleBackup {
-	BattleBackupLock.Lock()
-	defer BattleBackupLock.Unlock()
 	return g.GetBattleBackup()[battleId]
 }
 
 func (g *PlayerData) AddBattleBackup(bb *BattleBackup) {
-	BattleBackupLock.Lock()
-	defer BattleBackupLock.Unlock()
 	g.GetBattleBackup()[bb.BattleId] = bb
 }
 
 func (g *PlayerData) DelBattleBackupById(battleId uint32) {
-	BattleBackupLock.Lock()
-	defer BattleBackupLock.Unlock()
 	delete(g.GetBattleBackup(), battleId)
+}
+
+func (g *PlayerData) GetFarmElementWorldLevel(stageId uint32) uint32 {
+	db := g.GetCurBattle()
+	if db.FarmElementMap == nil {
+		db.FarmElementMap = make(map[uint32]uint32)
+	}
+	return db.FarmElementMap[stageId]
 }
 
 type OnBuffMap struct {
@@ -588,7 +590,11 @@ type SceneCastEntity struct {
 	AvatarEntityId      uint32   // 角色实体id
 }
 
-func (g *PlayerData) GetMem(isMem []uint32, sce *SceneCastEntity) {
+func (g *PlayerData) GetMem(isMem []uint32, battleBackup *BattleBackup) {
+	if battleBackup.Sce == nil {
+		battleBackup.Sce = new(SceneCastEntity)
+	}
+	sce := battleBackup.Sce
 	for _, id := range isMem {
 		entity := g.GetEntityById(id)
 		if entity == nil {
@@ -606,8 +612,13 @@ func (g *PlayerData) GetMem(isMem []uint32, sce *SceneCastEntity) {
 			if sce.EvenIdList == nil {
 				sce.EvenIdList = make([]uint32, 0)
 			}
-			sce.MonsterEntityIdList = append(sce.MonsterEntityIdList, id)
-			sce.EvenIdList = append(sce.EvenIdList, entity.(*MonsterEntity).EventID)
+			monster := entity.(*MonsterEntity)
+			sce.EvenIdList = append(sce.EvenIdList, monster.EventID)
+			sce.MonsterEntityIdList = append(sce.MonsterEntityIdList, monster.EntityId)
+			if monster.PurposeType == "FarmElement" {
+				battleBackup.IsFarmElement = true
+				battleBackup.FarmElementID = monster.FarmElementID
+			}
 		case *PropEntity:
 			if sce.PropEntityIdList == nil {
 				sce.PropEntityIdList = make([]uint32, 0)

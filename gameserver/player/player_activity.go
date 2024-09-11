@@ -8,6 +8,39 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+func (g *GamePlayer) PlayerReturnInfoQueryCsReq(payloadMsg pb.Message) {
+	rsp := &proto.PlayerReturnInfoQueryScRsp{
+		// Retcode: 0,
+		// PGEJDBOBIFA: &proto.KKEOJCONOPE{
+		// 	CMFKBILFNKJ:   nil, // 领取的登录奖励
+		// 	AIKNJLOAHKG:   2,   // 回归登录天数
+		// 	CABLOFHOFNK:   nil,
+		// 	FinishTime:    1727208000, // 结束时间
+		// 	BONABAHODON:   0,
+		// 	Status:        proto.NNBOBAGNDPF_PLAYER_RETURN_PROCESSING, // 状态
+		// 	IsTakenReward: false,                                      // 是否领取横幅奖励
+		// 	PPGLLBKBAPO:   1725942699,                                 // 结束时间
+		// 	AEOIMDDLOOG:   11,
+		// },
+		// NBJHFNEPMCJ: 1, // 回归配置
+	}
+	g.Send(cmd.PlayerReturnInfoQueryScRsp, rsp)
+}
+
+func (g *GamePlayer) PlayerReturnTakeRewardCsReq(payloadMsg pb.Message) {
+	rsp := &proto.PlayerReturnTakeRewardScRsp{
+		Retcode: 0,
+	}
+	g.Send(cmd.PlayerReturnTakeRewardScRsp, rsp)
+}
+
+func (g *GamePlayer) PlayerReturnSignCsReq(payloadMsg pb.Message) {
+	rsp := &proto.PlayerReturnSignScRsp{
+		Retcode: 0,
+	}
+	g.Send(cmd.PlayerReturnSignScRsp, rsp)
+}
+
 func (g *GamePlayer) GetTreasureDungeonActivityDataCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetTreasureDungeonActivityDataScRsp{}
 	g.Send(cmd.GetTreasureDungeonActivityDataScRsp, rsp)

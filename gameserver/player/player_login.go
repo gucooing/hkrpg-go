@@ -61,8 +61,8 @@ func (g *GamePlayer) BattlePassInfoNotify() {
 		// TakenFreeExtendedReward:    2,
 		// CurBpId:                    5,
 		// TakenFreeReward:            6,
-		// BpTierType:                 proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
-		Level: 70,
+		BpTierType: proto.BpTierType_BP_TIER_TYPE_PREMIUM_2,
+		Level:      70,
 	}
 	g.Send(cmd.BattlePassInfoNotify, notify)
 }
@@ -123,9 +123,7 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 // 3.检查redis里是否有私人邮件
 func (g *GamePlayer) LoginReady() { // 登录准备工作
 	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE) // 取消掉战斗状态
-	if !ISPE {
-		g.GetPd().InspectionRedisAcceptApplyFriend() // 1.检查是否有好友再redis里
-	}
+	g.GetPd().InspectionRedisAcceptApplyFriend()          // 1.检查是否有好友再redis里
 	// db := g.GetBasicBin()
 	// db.ChangeStory = NewChangeStory()
 	// g.AddMainMission([]uint32{2022003})

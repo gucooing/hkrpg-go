@@ -14,7 +14,6 @@ type RouteManager struct {
 
 func (r *RouteManager) initRoute(g *GamePlayer) {
 	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
-		cmd.GetBasicInfoCsReq:     g.HandleGetBasicInfoCsReq,
 		cmd.GetEnteredSceneCsReq:  g.HandleGetEnteredSceneCsReq,
 		cmd.GetChatEmojiListCsReq: g.HandleGetChatEmojiListCsReq, // 获取聊天表情
 		// 登录
@@ -64,17 +63,19 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.StartWolfBroGameCsReq:       g.StartWolfBroGameCsReq,      // 变身
 		cmd.SetGroupCustomSaveDataCsReq: g.SetGroupCustomSaveDataCsReq,
 		// 战斗
-		cmd.SceneCastSkillCostMpCsReq:   g.SceneCastSkillCostMpCsReq,   // 技能使用
-		cmd.SceneCastSkillCsReq:         g.SceneCastSkillCsReq,         // 场景开启战斗
-		cmd.SetTurnFoodSwitchCsReq:      g.SetTurnFoodSwitchCsReq,      // 使用消耗品buff
-		cmd.RefreshTriggerByClientCsReq: g.RefreshTriggerByClientCsReq, // 领域buff
-		cmd.PVEBattleResultCsReq:        g.PVEBattleResultCsReq,        // PVE战斗结算
-		cmd.StartCocoonStageCsReq:       g.StartCocoonStageCsReq,       // 副本/周本等
-		cmd.ActivateFarmElementCsReq:    g.ActivateFarmElementCsReq,    // 虚影战斗
-		cmd.SceneEnterStageCsReq:        g.SceneEnterStageCsReq,        // 场景直接发起战斗
-		cmd.GetRaidInfoCsReq:            g.GetRaidInfoCsReq,            // 获取raid
-		cmd.StartRaidCsReq:              g.StartRaidCsReq,              // 拓境探游
-		cmd.LeaveRaidCsReq:              g.LeaveRaidCsReq,              // 退出拓境探游
+		cmd.SceneCastSkillCostMpCsReq:    g.SceneCastSkillCostMpCsReq,    // 技能使用
+		cmd.SceneCastSkillCsReq:          g.SceneCastSkillCsReq,          // 场景开启战斗
+		cmd.SetTurnFoodSwitchCsReq:       g.SetTurnFoodSwitchCsReq,       // 使用消耗品buff
+		cmd.RefreshTriggerByClientCsReq:  g.RefreshTriggerByClientCsReq,  // 领域buff
+		cmd.PVEBattleResultCsReq:         g.PVEBattleResultCsReq,         // PVE战斗结算
+		cmd.StartCocoonStageCsReq:        g.StartCocoonStageCsReq,        // 副本/周本等
+		cmd.ActivateFarmElementCsReq:     g.ActivateFarmElementCsReq,     // 虚影战斗
+		cmd.ReEnterLastElementStageCsReq: g.ReEnterLastElementStageCsReq, // 虚影战斗再来一次
+		cmd.DeactivateFarmElementCsReq:   g.DeactivateFarmElementCsReq,   // 虚影
+		cmd.SceneEnterStageCsReq:         g.SceneEnterStageCsReq,         // 场景直接发起战斗
+		cmd.GetRaidInfoCsReq:             g.GetRaidInfoCsReq,             // 获取raid
+		cmd.StartRaidCsReq:               g.StartRaidCsReq,               // 拓境探游
+		cmd.LeaveRaidCsReq:               g.LeaveRaidCsReq,               // 退出拓境探游
 		// 模拟宇宙
 		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
 		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期
@@ -159,6 +160,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,             // 对话选项
 		cmd.UpdateTrackMainMissionIdCsReq:  g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
 		// 活动
+		cmd.PlayerReturnInfoQueryCsReq:          g.PlayerReturnInfoQueryCsReq,           // 获取回归信息
+		cmd.PlayerReturnTakeRewardCsReq:         g.PlayerReturnTakeRewardCsReq,          // 领取回归横幅奖励
+		cmd.PlayerReturnSignCsReq:               g.PlayerReturnSignCsReq,                // 领取回归签到奖励
 		cmd.HeliobusActivityDataCsReq:           g.HeliobusActivityDataCsReq,            // 活动数据
 		cmd.GetActivityScheduleConfigCsReq:      g.HandleGetActivityScheduleConfigCsReq, // 活动排期请求
 		cmd.GetLoginActivityCsReq:               g.GetLoginActivityCsReq,                // 登录活动完成情况
@@ -184,6 +188,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		// cmd.SwordTrainingLearnSkillCsReq:g.SwordTrainingLearnSkillCsReq,// 领悟剑招请求
 		// cmd.SwordTrainingTurnActionCsReq:g.SwordTrainingTurnActionCsReq,// 开始日常训练
 		// 基础
+		cmd.GetBasicInfoCsReq:              g.HandleGetBasicInfoCsReq,        // 基础信息
 		cmd.GetPhoneDataCsReq:              g.HandleGetPhoneDataCsReq,        // 获取手机信息
 		cmd.SetClientPausedCsReq:           g.SetClientPausedCsReq,           // 客户端暂停请求
 		cmd.SyncClientResVersionCsReq:      g.SyncClientResVersionCsReq,      // 版本同步

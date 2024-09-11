@@ -60,7 +60,9 @@ type AvatarEntity struct {
 
 type MonsterEntity struct {
 	Entity
-	EventID uint32 // 怪物id
+	EventID       uint32 // 怪物id
+	PurposeType   string // 类型
+	FarmElementID uint32 // 虚影Id
 }
 
 type NpcEntity struct {
@@ -963,7 +965,9 @@ func (g *PlayerData) GetNPCMonsterByID(entityGroupList *proto.SceneEntityGroupIn
 				Pos:      pos,
 				Rot:      rot,
 			},
-			EventID: monsterList.EventID,
+			EventID:       monsterList.EventID,
+			PurposeType:   monsterList.PurposeType,
+			FarmElementID: monsterList.FarmElementID,
 		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
 	}
@@ -1120,13 +1124,14 @@ func (g *PlayerData) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 			}
 			if isAdd {
 				var mainMissionId uint32 = 0
-				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
-					info.DisabledMainMissionIdList = append(info.DisabledMainMissionIdList, groupInfo.OwnerMainMissionID)
-				}
 				if finishMainMissionList[groupInfo.OwnerMainMissionID] != nil {
 					mainMissionId = groupInfo.OwnerMainMissionID
 					info.FinishedMainMissionIdList = append(info.FinishedMainMissionIdList, groupInfo.OwnerMainMissionID)
 				}
+				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
+					info.DisabledMainMissionIdList = append(info.DisabledMainMissionIdList, groupInfo.OwnerMainMissionID)
+				}
+
 				info.MainMissionMcvList = append(info.MainMissionMcvList, &proto.MainMissionCustomValue{
 					MainMissionId: mainMissionId,
 				})
@@ -1287,7 +1292,9 @@ func (g *PlayerData) AddMonsterSceneEntityRefreshInfo(mazeGroupID uint32, monste
 				Rot:      monsterRot,
 				InstId:   monster.ID,
 			},
-			EventID: monster.EventID,
+			EventID:       monster.EventID,
+			PurposeType:   monster.PurposeType,
+			FarmElementID: monster.FarmElementID,
 		})
 		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, seri)
 	}

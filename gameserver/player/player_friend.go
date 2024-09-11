@@ -133,8 +133,8 @@ func (g *GamePlayer) HandleFriendCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) GetFriendRecommendListInfoCsReq(payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.GetFriendRecommendListInfoCsReq)
 	rsp := &proto.GetFriendRecommendListInfoScRsp{
-		LKAFHHBHBNC: make([]*proto.PIHAEEBHPPC, 0),
-		Retcode:     0,
+		PlayerInfoList: make([]*proto.FriendRecommendInfo, 0),
+		Retcode:        0,
 	}
 	g.Send(cmd.GetFriendRecommendListInfoScRsp, rsp)
 }

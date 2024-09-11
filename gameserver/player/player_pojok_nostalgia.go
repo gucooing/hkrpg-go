@@ -208,9 +208,9 @@ func (g *GamePlayer) StartAetherDivideSceneBattleCsReq(payloadMsg pb.Message) {
 		Retcode:      0,
 	}
 	// 添加攻击发起者
-	g.GetPd().GetMem([]uint32{req.AttackedByEntityId}, battleBackup.Sce)
+	g.GetPd().GetMem([]uint32{req.AttackedByEntityId}, battleBackup)
 	// 添加被攻击者
-	g.GetPd().GetMem(req.AssistMonsterEntityIdList, battleBackup.Sce)
+	g.GetPd().GetMem(req.AssistMonsterEntityIdList, battleBackup)
 	if len(battleBackup.Sce.EvenIdList) == 0 || !battleBackup.Sce.IsAvatar { // 是否满足战斗条件
 		g.Send(cmd.StartAetherDivideSceneBattleScRsp, rsp)
 		return

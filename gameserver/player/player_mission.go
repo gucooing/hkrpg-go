@@ -222,11 +222,20 @@ func (g *GamePlayer) MissionRewardScNotify() {
 
 }
 
+func (g *GamePlayer) MissionAcceptScNotify(subList []uint32) {
+	if len(subList) == 0 {
+		return
+	}
+	g.Send(cmd.MissionAcceptScNotify, &proto.MissionAcceptScNotify{SubMissionIdList: subList})
+}
+
 /*********************************检查操作*********************************/
 
 // 登录任务检查
 func (g *GamePlayer) LoginReadyMission() {
-	// g.ExpiredMission()
+	if g.GetPd().GetBasicBin().IsJumpMission {
+		return
+	}
 	g.InspectMission(nil)
 	g.GetPd().AllCheckMainMission()
 }
@@ -341,7 +350,7 @@ func (g *GamePlayer) AcceptInspectMission() ([]uint32, []uint32) {
 	g.GetPd().AddMainMission(mainList)
 	subList := g.GetPd().AcceptSubMission() // 接取子任务
 	g.GetPd().AddSubMission(subList)
-	g.Send(cmd.MissionAcceptScNotify, &proto.MissionAcceptScNotify{SubMissionIdList: subList})
+	g.MissionAcceptScNotify(subList)
 
 	return mainList, subList
 }

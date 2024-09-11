@@ -106,7 +106,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	// AttackedByEntityId 攻击发起者
 
 	// 添加攻击发起者
-	g.GetPd().GetMem([]uint32{req.AttackedByEntityId}, battleBackup.Sce)
+	g.GetPd().GetMem([]uint32{req.AttackedByEntityId}, battleBackup)
 	// 添加被攻击者
 	var isAttac = false
 	if req.AssistMonsterEntityInfo != nil {
@@ -119,13 +119,13 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 				}
 				entityIdList = append(entityIdList, entityId)
 			}
-			g.GetPd().GetMem(entityIdList, battleBackup.Sce)
+			g.GetPd().GetMem(entityIdList, battleBackup)
 		}
 	} else {
 		isAttac = true
 	}
 	if isAttac {
-		g.GetPd().GetMem(req.AssistMonsterEntityIdList, battleBackup.Sce)
+		g.GetPd().GetMem(req.AssistMonsterEntityIdList, battleBackup)
 	}
 
 	g.SceneCastSkillProp(battleBackup.Sce) // 物品效果
@@ -161,6 +161,9 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	if len(battleBackup.Sce.EvenIdList) == 0 || !battleBackup.IsBattle { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
+	}
+	if battleBackup.IsFarmElement {
+		battleBackup.WorldLevel = g.GetPd().GetFarmElementWorldLevel(battleBackup.FarmElementID)
 	}
 	// 获取战斗角色
 	battleBackup.BattleAvatarList = g.GetPd().GetBattleAvatarMap(g.GetPd().GetBattleLineUp())
@@ -208,7 +211,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 	switch req.EndStatus {
 	case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
 		// 删除怪物实体
-		if sce != nil {
+		if sce != nil && !battleBin.IsFarmElement {
 			g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
 				GroupRefreshList: g.GetPd().GetDelSceneGroupRefreshInfo(sce.MonsterEntityIdList),
 			})
@@ -352,12 +355,52 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ActivateFarmElementCsReq)
-
 	rsp := &proto.ActivateFarmElementScRsp{
 		WorldLevel: req.WorldLevel,
 		EntityId:   req.EntityId,
 	}
+	db := g.GetPd().GetCurBattle()
+	if db.FarmElementMap == nil {
+		db.FarmElementMap = make(map[uint32]uint32)
+	}
+	entity := g.GetPd().GetMonsterEntityById(req.EntityId)
+	if entity == nil {
+		logger.Warn("No Monster Entity Id:%v", req.EntityId)
+	} else if entity.PurposeType == "FarmElement" {
+		db.FarmElementMap[entity.FarmElementID] = req.WorldLevel
+	}
+
 	g.Send(cmd.ActivateFarmElementScRsp, rsp)
+}
+
+func (g *GamePlayer) ReEnterLastElementStageCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ReEnterLastElementStageCsReq)
+	battleBackup := &model.BattleBackup{
+		IsBattle:         true,
+		StageID:          req.StageId,
+		StageIDList:      []uint32{req.StageId},
+		WorldLevel:       req.StageId % 10,
+		BattleAvatarList: g.GetPd().GetBattleAvatarMap(g.GetPd().GetBattleLineUp()),
+		IsFarmElement:    true,
+	}
+	battleInfoPb := g.GetPd().GetSceneBattleInfo(battleBackup)
+	// 记录战斗
+	g.GetPd().AddBattleBackup(battleBackup)
+	rsp := &proto.ReEnterLastElementStageScRsp{
+		BattleInfo: battleInfoPb,
+		StageId:    req.StageId,
+		Retcode:    0,
+	}
+	g.Send(cmd.ReEnterLastElementStageScRsp, rsp)
+}
+
+func (g *GamePlayer) DeactivateFarmElementCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.DeactivateFarmElementCsReq)
+	rsp := &proto.DeactivateFarmElementScRsp{
+		EntityId: req.EntityId,
+		Retcode:  0,
+	}
+	g.Send(cmd.DeactivateFarmElementScRsp, rsp)
 }
 
 func (g *GamePlayer) RefreshTriggerByClientCsReq(payloadMsg pb.Message) {

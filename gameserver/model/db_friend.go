@@ -182,7 +182,7 @@ func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 		Nickname:          friend.Nickname,
 		KPFMBKIAGMJ:       true,
 		FLHDCJECCPN:       18,
-		OCAIAFOJGGI: &proto.DIIFJPBAOOB{
+		PrivacySettings: &proto.PrivacySettings{
 			OJNELKIOAOK: true,
 			DAAAIHDPCFE: true,
 			MAJIMDCHNDL: true,

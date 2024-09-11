@@ -578,8 +578,7 @@ func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg pb.Message) {
 		EquipmentList: make([]uint32, 0),
 		RelicList:     make([]uint32, 0),
 	}
-	var pileItem []*model.Material
-	g.allGive(allSync, pileItem)
+	pileItem := g.allGive(allSync)
 	g.GetPd().AddItem(pileItem, allSync)
 	rsp := &proto.TakeAllRewardScRsp{
 		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: model.Mcoin, Num: 1000}}},
