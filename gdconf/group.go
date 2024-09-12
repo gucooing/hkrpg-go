@@ -68,6 +68,7 @@ type PropList struct {
 	PropID                   uint32              `json:"PropID"`
 	IsDelete                 bool                `json:"IsDelete"`
 	IsClientOnly             bool                `json:"IsClientOnly"`
+	LoadOnInitial            bool                `json:"LoadOnInitial"`
 	IsOverrideInitLevelGraph bool                `json:"IsOverrideInitLevelGraph"`
 	CampID                   uint32              `json:"CampID"`
 	EventID                  uint32              `json:"EventID"`
@@ -302,7 +303,7 @@ func LoadProp(groupList *LevelGroup) map[uint32]*PropList {
 		return nil
 	}
 	for _, prop := range groupList.PropList {
-		if prop.IsDelete || prop.IsClientOnly {
+		if prop.IsDelete || prop.IsClientOnly || !prop.LoadOnInitial {
 			continue
 		}
 		MazePropExcel := GetMazePropId(prop.PropID)

@@ -881,9 +881,6 @@ func (g *PlayerData) GetPropByID(entityGroupList *proto.SceneEntityGroupInfo, sc
 		entityId := g.GetNextGameObjectGuid()
 		g.StageObjectCapture(sceneGroup, propList, sceneGroup.GroupId, db)
 		propState := g.GetPropState(db, sceneGroup.GroupId, propList.ID, propList.State)
-		if propState == 0 { // TODO
-			continue
-		}
 		pos := &proto.Vector{
 			X: int32(propList.PosX * 1000),
 			Y: int32(propList.PosY * 1000),
@@ -1108,6 +1105,9 @@ func (g *PlayerData) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 	subMissionList := g.GetSubMainMissionList()
 	finishSubMissionList := g.GetFinishSubMainMissionList()
 	for _, groupInfo := range foorMap {
+		// if groupInfo.Category != "Mission" {
+		// 	continue
+		// }
 		if groupInfo.OwnerMainMissionID != 0 {
 			var isAdd = true
 			for _, id := range info.DisabledMainMissionIdList {
