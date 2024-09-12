@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux:
+  build:
     runs-on: ubuntu-latest
     steps:
     - name: Sync HKRPG-Go

@@ -24,6 +24,7 @@ jobs:
 
     - name: Package
       run: |
+        mkdir bin
         zip -r bin/data.zip data/*
         zip -r bin/linux-amd64.zip build/linux-amd64/*
         zip -r bin/linux-arm64.zip build/linux-arm64/*
