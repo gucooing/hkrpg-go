@@ -60,40 +60,51 @@ func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetMainMissionCustomValueScRsp{MainMissionList: make([]*proto.MainMission, 0)}
 	mainMissionList := g.GetPd().GetMainMissionList()             // 已接取的主任务
 	finishMainMissionList := g.GetPd().GetFinishMainMissionList() // 已完成的主任务
-	for _, id := range req.MainMissionIdList {
-		if mainMissionList[id] != nil {
-			mission := &proto.MainMission{
+	if g.GetPd().GetBasicBin().IsJumpMission {
+		for _, id := range req.MainMissionIdList {
+			rsp.MainMissionList = append(rsp.MainMissionList, &proto.MainMission{
 				Id:              id,
 				CustomValueList: make([]*proto.MissionCustomValue, 0),
-				Status:          proto.MissionStatus(mainMissionList[id].Status),
-			}
-			if mainMissionList[id].MissionCustomValue != nil {
-				for _, v := range mainMissionList[id].MissionCustomValue {
-					mission.CustomValueList = append(mission.CustomValueList, &proto.MissionCustomValue{
-						CustomValue: v.CustomValue,
-						Index:       v.Index,
-					})
-				}
-			}
-			rsp.MainMissionList = append(rsp.MainMissionList, mission)
+				Status:          proto.MissionStatus_MISSION_FINISH,
+			})
 		}
-		if finishMainMissionList[id] != nil {
-			mission := &proto.MainMission{
-				Id:              id,
-				CustomValueList: make([]*proto.MissionCustomValue, 0),
-				Status:          proto.MissionStatus(finishMainMissionList[id].Status),
-			}
-			if finishMainMissionList[id].MissionCustomValue != nil {
-				for _, v := range finishMainMissionList[id].MissionCustomValue {
-					mission.CustomValueList = append(mission.CustomValueList, &proto.MissionCustomValue{
-						CustomValue: v.CustomValue,
-						Index:       v.Index,
-					})
+	} else {
+		for _, id := range req.MainMissionIdList {
+			if mainMissionList[id] != nil {
+				mission := &proto.MainMission{
+					Id:              id,
+					CustomValueList: make([]*proto.MissionCustomValue, 0),
+					Status:          proto.MissionStatus(mainMissionList[id].Status),
 				}
+				if mainMissionList[id].MissionCustomValue != nil {
+					for _, v := range mainMissionList[id].MissionCustomValue {
+						mission.CustomValueList = append(mission.CustomValueList, &proto.MissionCustomValue{
+							CustomValue: v.CustomValue,
+							Index:       v.Index,
+						})
+					}
+				}
+				rsp.MainMissionList = append(rsp.MainMissionList, mission)
 			}
-			rsp.MainMissionList = append(rsp.MainMissionList, mission)
+			if finishMainMissionList[id] != nil {
+				mission := &proto.MainMission{
+					Id:              id,
+					CustomValueList: make([]*proto.MissionCustomValue, 0),
+					Status:          proto.MissionStatus(finishMainMissionList[id].Status),
+				}
+				if finishMainMissionList[id].MissionCustomValue != nil {
+					for _, v := range finishMainMissionList[id].MissionCustomValue {
+						mission.CustomValueList = append(mission.CustomValueList, &proto.MissionCustomValue{
+							CustomValue: v.CustomValue,
+							Index:       v.Index,
+						})
+					}
+				}
+				rsp.MainMissionList = append(rsp.MainMissionList, mission)
+			}
 		}
 	}
+
 	g.Send(cmd.GetMainMissionCustomValueScRsp, rsp)
 }
 
@@ -108,13 +119,16 @@ func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg pb.Message) {
 		ChallengeEventId: 0,
 		MissionEventList: make([]*proto.Mission, 0),
 	}
-	for _, mission := range g.GetPd().GetMainMissionList() {
-		rsp.MissionEventList = append(rsp.MissionEventList, &proto.Mission{
-			Id:       mission.MissionId,
-			Progress: mission.MissionId,
-			Status:   proto.MissionStatus(mission.Status),
-		})
+	if !g.GetPd().GetBasicBin().IsJumpMission {
+		for _, mission := range g.GetPd().GetMainMissionList() {
+			rsp.MissionEventList = append(rsp.MissionEventList, &proto.Mission{
+				Id:       mission.MissionId,
+				Progress: 1,
+				Status:   proto.MissionStatus(mission.Status),
+			})
+		}
 	}
+
 	g.Send(cmd.GetMissionEventDataScRsp, rsp)
 }
 
@@ -134,6 +148,12 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg pb.Message) {
 		rsp.FinishedMainMissionIdList = append(rsp.FinishedMainMissionIdList, req.MainMissionIdList...)
 		for _, id := range req.SubMissionIdList {
 			rsp.SubMissionStatusList = append(rsp.SubMissionStatusList, &proto.Mission{
+				Id:     id,
+				Status: proto.MissionStatus_MISSION_FINISH,
+			})
+		}
+		for _, id := range req.MissionEventIdList {
+			rsp.MissionEventStatusList = append(rsp.MissionEventStatusList, &proto.Mission{
 				Id:     id,
 				Status: proto.MissionStatus_MISSION_FINISH,
 			})
@@ -181,20 +201,23 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg pb.Message) {
 		Retcode:         0,
 		// GOBNFADAILM:     1021201, // 102120113 // cur mainMission
 	}
-	// add main
-	for _, main := range mainMissionList {
-		rsp.MainMissionList = append(rsp.MainMissionList, &proto.MainMission{
-			Status: proto.MissionStatus(main.Status),
-			Id:     main.MissionId,
-		})
-	}
-	// add sub mission
-	for _, subMission := range subMainMissionList {
-		rsp.MissionList = append(rsp.MissionList, &proto.Mission{
-			Id:       subMission.MissionId,
-			Progress: subMission.Progress,
-			Status:   proto.MissionStatus(subMission.Status),
-		})
+
+	if !g.GetPd().GetBasicBin().IsJumpMission {
+		// add main
+		for _, main := range mainMissionList {
+			rsp.MainMissionList = append(rsp.MainMissionList, &proto.MainMission{
+				Status: proto.MissionStatus(main.Status),
+				Id:     main.MissionId,
+			})
+		}
+		// add sub mission
+		for _, subMission := range subMainMissionList {
+			rsp.MissionList = append(rsp.MissionList, &proto.Mission{
+				Id:       subMission.MissionId,
+				Progress: subMission.Progress,
+				Status:   proto.MissionStatus(subMission.Status),
+			})
+		}
 	}
 	g.Send(cmd.GetMissionDataScRsp, rsp)
 }

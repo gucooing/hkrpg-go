@@ -34,8 +34,6 @@ jobs:
     - name: Upload Release Assets
       id: upload-release-assets
       uses: softprops/action-gh-release@v1
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: v1.5.0
         name: Release v1.5.0

@@ -105,6 +105,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetCurChallengeCsReq:             g.GetCurChallengeCsReq,             // 获取忘却之庭状态
 		cmd.LeaveChallengeCsReq:              g.LeaveChallengeCsReq,              // 退出忘却之庭
 		cmd.TakeChallengeRewardCsReq:         g.TakeChallengeRewardCsReq,         // 忘却之庭领取奖励
+		cmd.RestartChallengePhaseCsReq:       g.RestartChallengePhaseCsReq,       // 重新挑战忘却之庭
 		// 末日之影
 		cmd.StartPartialChallengeCsReq:    g.StartPartialChallengeCsReq,    // 末日幻影,二次启动!
 		cmd.EnterChallengeNextPhaseCsReq:  g.EnterChallengeNextPhaseCsReq,  // 前往下一节点

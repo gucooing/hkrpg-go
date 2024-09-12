@@ -147,6 +147,34 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.StartChallengeScRsp, rsp)
 }
 
+// 忘却之庭重新挑战
+func (g *GamePlayer) RestartChallengePhaseCsReq(payloadMsg pb.Message) {
+	rsp := &proto.RestartChallengePhaseScRsp{
+		Retcode: 0,
+		Scene:   nil,
+	}
+	db := g.GetPd().GetCurChallenge()
+	if db == nil || db.ChallengeId == 0 { // 判断是否合法
+		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+	} else {
+		// 关卡回调
+		if db.CurStage == 1 {
+			db.ScoreOne = 0
+		} else {
+			db.ScoreTwo = 0
+		}
+		db.IsWin = false
+		db.CurStage--
+		db.KillMonster = 0
+		db.DeadAvatar = 0 // 如果第一关死了在第二关 重复挑战怎么办
+		g.GetPd().SetCurChallengeRoundCount(0)
+		g.GetPd().SetCurChallengeScore(0)
+		rsp.Scene = g.GetChallengeScene()
+	}
+
+	g.Send(cmd.RestartChallengePhaseScRsp, rsp)
+}
+
 // 忘却之庭战斗退出/结束
 
 func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
@@ -348,6 +376,7 @@ func (g *GamePlayer) ChallengeAddSceneGroupRefreshScNotify() {
 	sceneGroupRefreshInfo := &proto.GroupRefreshInfo{
 		GroupId:       mazeGroupID,
 		RefreshEntity: g.ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID, configList, eventIDList, npcMonsterIDList, foorMap.MonsterList),
+		RefreshType:   proto.SceneGroupRefreshType_SCENE_GROUP_REFRESH_TYPE_LOADED,
 	}
 	notify.GroupRefreshList = append(notify.GroupRefreshList, sceneGroupRefreshInfo)
 
