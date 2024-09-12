@@ -105,7 +105,7 @@ func parseTask(skill *GoppMazeSkill, task *TaskInfo) []*MazeSkillAction {
 			Type: constant.AddTeamPlayerSp,
 			Id:   5000,
 		})
-	} else if strings.Contains(task.Type, "CreateSummonUnit") {
+	} else if strings.Contains(task.Type, "CreateSummonUnit") && !task.IsClientOnly {
 		skill.TriggerBattle = false
 	} else if strings.Contains(task.Type, "AddAdventureModifier") {
 		skill.AdventureModifiers[task.ModifierName] = struct{}{}

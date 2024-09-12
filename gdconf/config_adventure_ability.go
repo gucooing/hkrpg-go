@@ -50,6 +50,8 @@ type TaskInfo struct {
 	ID                         uint32        `json:"ID"`
 	ModifierName               string        `json:"ModifierName"`
 	TriggerBattle              bool          `json:"TriggerBattle"`
+	IsClientOnly               bool          `json:"IsClientOnly"`
+	TaskEnabled                bool          `json:"TaskEnabled"`
 	LifeTime                   *DynamicFloat `json:"LifeTime"`
 	OnAttack                   []*TaskInfo   `json:"OnAttack"`
 	OnBattle                   []*TaskInfo   `json:"OnBattle"`
