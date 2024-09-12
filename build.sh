@@ -7,13 +7,10 @@ else
     exit 1
 fi
 
-set CGO_ENABLED=1
 go mod download
 go mod verify
 
-GOENV=$(go env GOHOSTOS)
-GOENV="$GOENV/$(go env GOHOSTARCH)"
-echo "GOENV $GOENV"
+PLATFORMS="linux/amd64 linux/arm64 windows/amd64 windows/arm64"
 
 OUT_DIR=./build
 
@@ -27,8 +24,16 @@ NODE_PATH=./cmd/nodeserver/nodeserver.go
 ROBOT_PATH=./cmd/robot/robot.go
 
 for file in $PE_PATH $DISPATCH_PATH $GAMESERVER_PATH $GATE_PATH $MUIP_PATH $MULTI_PATH $NODE_PATH $ROBOT_PATH; do
-    FILENAME=$(basename $file)
-    OUTPUT_NAME=${FILENAME%.*}
-    echo "Building $FILENAME..."
-    go build -ldflags="-s -w" -o $OUT_DIR/$OUTPUT_NAME $file
+  for platform in $PLATFORMS; do
+      GOOS=$(echo $platform | cut -d'/' -f1)
+      GOARCH=$(echo $platform | cut -d'/' -f2)
+      CURRENT_OUT_DIR=$OUT_DIR/$GOOS-$GOARCH
+      FILENAME=$(basename $file)
+      OUTPUT_NAME=${FILENAME%.*}_$GOOS"_"$GOARCH
+      if [ $GOOS = "windows" ]; then
+        OUTPUT_NAME="$OUTPUT_NAME.exe"
+      fi
+      echo "Building $FILENAME..."
+      go build -ldflags="-s -w" -o $CURRENT_OUT_DIR/$OUTPUT_NAME $file
+    done
 done

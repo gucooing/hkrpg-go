@@ -4,14 +4,7 @@ setlocal enabledelayedexpansion
 go mod download
 go mod verify
 
-set CGO_ENABLED=1
-set GOARCH=amd64
-set GOOS=windows
-
-for /f "delims=" %%i in ('go env GOHOSTOS') do set GOENV=%%i
-for /f "delims=" %%i in ('go env GOHOSTARCH') do set GOENV=!GOENV!/%%i
-
-echo GOENV !GOENV!
+set "PLATFORMS=windows/amd64 windows/arm64 linux/amd64 linux/arm64"
 
 set "OUT_DIR=./build"
 
@@ -24,11 +17,28 @@ set "MULTI_PATH=.\cmd\multiserver\multiserver.go"
 set "NODE_PATH=.\cmd\nodeserver\nodeserver.go"
 set "ROBOT_PATH=.\cmd\robot\robot.go"
 
-for %%f in ("%PE_PATH%" "%DISPATCH_PATH%" "%GAMESERVER_PATH%" "%GATE_PATH%" "%MUIP_PATH%" "%MULTI_PATH%" "%NODE_PATH%" "%ROBOT_PATH%") do (
-    set "FILENAME=%%~nxf"
-    set "OUTPUT_NAME=%%~nf"
-    echo Building !FILENAME!...
-    go build -ldflags="-s -w" -o "!OUT_DIR!/!OUTPUT_NAME!.exe" %%f
+for %%p in (%PLATFORMS%) do (
+    for /f "tokens=1,2 delims=/" %%a in ("%%p") do (
+        set "GOOS=%%a"
+        set "GOARCH=%%b"
+
+        echo Compiling for GOOS=!GOOS! GOARCH=!GOARCH!...
+
+        set "CURRENT_OUT_DIR=!OUT_DIR!/!GOOS!-!GOARCH!"
+        if not exist "!CURRENT_OUT_DIR!" mkdir "!CURRENT_OUT_DIR!"
+
+
+        for %%f in ("%PE_PATH%" "%DISPATCH_PATH%" "%GAMESERVER_PATH%" "%GATE_PATH%" "%MUIP_PATH%" "%MULTI_PATH%" "%NODE_PATH%" "%ROBOT_PATH%") do (
+            set "FILENAME=%%~nxf"
+            set "OUTPUT_NAME=%%~nf"
+
+            if "!GOOS!"=="windows" (
+                go build -ldflags="-s -w" -o "!CURRENT_OUT_DIR!/!OUTPUT_NAME!_!GOOS!_!GOARCH!.exe" %%f
+            ) else (
+                go build -ldflags="-s -w" -o "!CURRENT_OUT_DIR!/!OUTPUT_NAME!_!GOOS!_!GOARCH!" %%f
+            )
+        )
+    )
 )
 
 endlocal

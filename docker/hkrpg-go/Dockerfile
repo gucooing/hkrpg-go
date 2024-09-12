@@ -1,11 +1,9 @@
 FROM golang:1.23-alpine as builder
 LABEL authors="gucooing"
 
-RUN apk add --no-cache gcc musl-dev linux-headers
 WORKDIR /usr/hkrpg
 ADD go.mod .
 ADD go.sum .
-ENV CGO_ENABLED=1
 RUN go mod download && go mod verify
 COPY . .
 RUN go build -tags netgo -o /usr/hkrpg/hkrpg-go ./cmd/hkrpg-go/hkrpg-go.go

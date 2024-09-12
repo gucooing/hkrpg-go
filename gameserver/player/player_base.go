@@ -1,9 +1,9 @@
 package player
 
 import (
+	"encoding/base64"
 	"time"
 
-	"github.com/cloudwego/base64x"
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
@@ -213,7 +213,7 @@ func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg pb.Message) {
-	KPANKLHNMKE, _ := base64x.StdEncoding.DecodeString("DsX2Ig==")
+	KPANKLHNMKE, _ := base64.StdEncoding.DecodeString("DsX2Ig==")
 	rsp := &proto.GetSecretKeyInfoScRsp{
 		KPANKLHNMKE: KPANKLHNMKE,
 		SecretInfo: []*proto.SecretKeyInfo{
