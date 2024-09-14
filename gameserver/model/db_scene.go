@@ -1471,12 +1471,28 @@ func (g *PlayerData) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 		RefreshEntity: make([]*proto.SceneEntityRefreshInfo, 0),
 	}
 	for _, lineAvatar := range lineUp.AvatarIdList {
+		playerId := lineAvatar.AvatarId
 		actor := &proto.SceneActorInfo{
 			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 			BaseAvatarId: lineAvatar.AvatarId,
 		}
 		if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
-			actor.AvatarType = proto.AvatarType_AVATAR_TRIAL_TYPE
+			conf := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId)
+			if conf == nil {
+				continue
+			}
+			baseAvatarId := conf.AvatarID
+			playerId = conf.PlayerID
+			if path := gdconf.GetMultiplePathAvatarConfig(conf.AvatarID); path != nil {
+				baseAvatarId = path.BaseAvatarID
+				playerId = path.BaseAvatarID
+			}
+			actor = &proto.SceneActorInfo{
+				AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
+				BaseAvatarId: baseAvatarId,
+				MapLayer:     0,
+				Uid:          0,
+			}
 		}
 		entityId := g.GetNextGameObjectGuid()
 		sceneEntityRefreshInfo := &proto.SceneEntityRefreshInfo{
@@ -1498,7 +1514,7 @@ func (g *PlayerData) GetSceneGroupRefreshInfoByLineUP(lineUp *spb.Line, pos, rot
 				Pos:      pos,
 				Rot:      rot,
 			},
-			AvatarId:   lineAvatar.AvatarId,
+			AvatarId:   playerId,
 			LineAvatar: lineAvatar,
 		})
 		sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
