@@ -40,6 +40,13 @@ type Service struct {
 	status        nodeapi.ServerStatus // 服务状态
 }
 
+type PlayerInfo struct {
+	uid        uint32 // uid
+	regionName string // 区服
+	gateAppId  uint32 // 登录的gate
+	gameAppId  uint32 // 登录的game
+}
+
 func newMapService() map[nodeapi.ServerType]map[uint32]*Service {
 	return map[nodeapi.ServerType]map[uint32]*Service{
 		nodeapi.ServerType_SERVICE_DISPATCH: make(map[uint32]*Service),

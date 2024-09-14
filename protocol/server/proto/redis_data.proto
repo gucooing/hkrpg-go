@@ -44,8 +44,8 @@ enum PlayerStatusType {
 
 message PlayerStatusRedisData {// 玩家状态db
   PlayerStatusType status = 1; // 玩家状态
-  uint32 gameserver_id = 2; // 登录的gameserver
-  uint32 gateserver_id = 3; // 登录的gateserver
+  uint32 gate_app_id = 2;
+  uint32 game_app_id = 3;
   uint64 login_rand = 4; // 随机种子
   int64 login_time = 5; // 登录时间
   uint32 uid = 6; // uid

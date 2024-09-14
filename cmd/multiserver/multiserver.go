@@ -10,10 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gucooing/hkrpg-go/multiserver/db"
-
 	"github.com/gucooing/hkrpg-go/multiserver/config"
-	"github.com/gucooing/hkrpg-go/multiserver/multi"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -40,19 +37,8 @@ func main() {
 	logger.Info("hkrpg-go")
 	// 初始化
 	cfg := config.GetConfig()
-	// 初始化数据库
-	dbs := db.NewStore(cfg)
-	// 初始化服务
-	s := multi.NewMulti(cfg, appid, dbs)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-
-	// 启动game
-	go func() {
-		if err = s.StartMultiServer(); err != nil {
-			logger.Error("无法启动game服务器")
-		}
-	}()
 
 	go func() {
 		select {
@@ -60,7 +46,6 @@ func main() {
 			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
 			logger.Info("MultiServer 正在关闭")
-			s.Close()
 			logger.Info("MultiServer 服务已停止")
 			logger.CloseLogger()
 			os.Exit(0)

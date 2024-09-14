@@ -16,10 +16,6 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v]登录的客户端版本是:%s", g.Uid, req.ClientVersion)
 	g.Platform = spb.PlatformType(req.Platform)
-	g.HandlePlayerLoginScRsp()
-}
-
-func (g *GamePlayer) HandlePlayerLoginScRsp() {
 	rsp := new(proto.PlayerLoginScRsp)
 	db := g.GetPd().GetMaterialMap()
 	rsp.Stamina = db[model.Stamina] // 还有多久恢复下一个体力
@@ -35,8 +31,12 @@ func (g *GamePlayer) HandlePlayerLoginScRsp() {
 		Stamina:    db[model.Stamina],
 		Exp:        db[model.Exp],
 	}
+	if req.LoginRandom == 0 {
+		g.LoginRandom = 1
+	}
+	rsp.LoginRandom = g.LoginRandom
 	g.Send(cmd.PlayerLoginScRsp, rsp)
-	g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE) // 更新一次数据
+	g.SetPlayerStatusRedisData() // 更新状态
 	go g.LoginNotify()
 }
 

@@ -147,17 +147,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
 	}
-	g.GetPd().SceneCastSkill(battleBackup, skill, req)
-	// summonun
-	if battleBackup.SummonUnitId != 0 {
-		db := g.GetPd().GetSummonUnitInfo()
-		db.AvatarId = battleBackup.Sce.AvatarId
-		db.AttachEntityId = battleBackup.Sce.AvatarEntityId
-		db.EntityId = g.GetPd().GetNextGameObjectGuid()
-		db.SummonUnitId = battleBackup.SummonUnitId
-		db.Pos = req.TargetMotion.Pos
-		g.AddSummonUnitSceneGroupRefreshScNotify()
-	}
+	g.SceneCastSkill(battleBackup, skill, req)
 	if len(battleBackup.Sce.EvenIdList) == 0 || !battleBackup.IsBattle { // 是否满足战斗条件
 		g.Send(cmd.SceneCastSkillScRsp, rsp)
 		return
@@ -173,6 +163,35 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	// 回复
 	rsp.BattleInfo = battleInfoPb
 	g.Send(cmd.SceneCastSkillScRsp, rsp)
+}
+
+func (g *GamePlayer) SceneCastSkill(battleInfo *model.BattleBackup, skill *gdconf.GoppMazeSkill, req *proto.SceneCastSkillCsReq) {
+	battleInfo.IsBattle = skill.TriggerBattle
+	sce := battleInfo.Sce
+	for _, actions := range skill.ActionsList {
+		switch actions.Type {
+		case constant.AddMazeBuff:
+			g.GetPd().AddOnLineAvatarBuff(sce.AvatarId, actions.Id)
+		case constant.SetMonsterDie:
+			for i := 0; i < len(sce.EvenIdList); i++ {
+				monsterId := sce.EvenIdList[i]
+				if g.GetPd().SetMonsterDie(monsterId) {
+					sce.EvenIdList = append(sce.EvenIdList[:i], sce.EvenIdList[i+1:]...)
+					i--
+				}
+			}
+		case constant.AddTeamPlayerHP:
+		case constant.AddTeamPlayerSp:
+		case constant.SummonUnit:
+			db := g.GetPd().GetSummonUnitInfo()
+			db.AvatarId = battleInfo.Sce.AvatarId
+			db.AttachEntityId = battleInfo.Sce.AvatarEntityId
+			db.EntityId = g.GetPd().GetNextGameObjectGuid()
+			db.SummonUnitId = actions.Id
+			db.Pos = req.TargetMotion.Pos
+			g.AddSummonUnitSceneGroupRefreshScNotify()
+		}
+	}
 }
 
 /***********************************战斗结算***********************************/

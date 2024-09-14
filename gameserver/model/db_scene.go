@@ -827,6 +827,7 @@ func (g *PlayerData) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 		if lineAvatar.AvatarId == 0 {
 			continue
 		}
+		playerId := lineAvatar.AvatarId
 		actor := &proto.SceneActorInfo{
 			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 			BaseAvatarId: lineAvatar.AvatarId,
@@ -839,8 +840,10 @@ func (g *PlayerData) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 				continue
 			}
 			baseAvatarId := conf.AvatarID
+			playerId = conf.PlayerID
 			if path := gdconf.GetMultiplePathAvatarConfig(conf.AvatarID); path != nil {
 				baseAvatarId = path.BaseAvatarID
+				playerId = path.BaseAvatarID
 			}
 			actor = &proto.SceneActorInfo{
 				AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
@@ -869,7 +872,7 @@ func (g *PlayerData) GetSceneAvatarByLineUP(entityGroupList *proto.SceneEntityGr
 				Pos:      pos,
 				Rot:      rot,
 			},
-			AvatarId:   actor.BaseAvatarId,
+			AvatarId:   playerId,
 			LineAvatar: lineAvatar,
 		})
 		entityGroupList.EntityList = append(entityGroupList.EntityList, entityList)
@@ -1411,12 +1414,28 @@ func (g *PlayerData) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 		if lineAvatar.AvatarId == 0 {
 			continue
 		}
+		playerId := lineAvatar.AvatarId
 		actor := &proto.SceneActorInfo{
 			AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 			BaseAvatarId: lineAvatar.AvatarId,
 		}
 		if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
-			actor.AvatarType = proto.AvatarType_AVATAR_TRIAL_TYPE
+			conf := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId)
+			if conf == nil {
+				continue
+			}
+			baseAvatarId := conf.AvatarID
+			playerId = conf.PlayerID
+			if path := gdconf.GetMultiplePathAvatarConfig(conf.AvatarID); path != nil {
+				baseAvatarId = path.BaseAvatarID
+				playerId = path.BaseAvatarID
+			}
+			actor = &proto.SceneActorInfo{
+				AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
+				BaseAvatarId: baseAvatarId,
+				MapLayer:     0,
+				Uid:          0,
+			}
 		}
 		entityId := g.GetNextGameObjectGuid()
 		entityList := &proto.SceneEntityRefreshInfo{
@@ -1438,7 +1457,7 @@ func (g *PlayerData) GetAddAvatarSceneEntityRefreshInfo(lineUp *spb.Line, pos, r
 				Pos:      pos,
 				Rot:      rot,
 			},
-			AvatarId:   lineAvatar.AvatarId,
+			AvatarId:   playerId,
 			LineAvatar: lineAvatar,
 		})
 		sceneEntityRefreshInfo = append(sceneEntityRefreshInfo, entityList)

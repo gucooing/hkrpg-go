@@ -37,7 +37,6 @@ type BattleBackup struct {
 	IsFarmElement    bool                     // 是否虚影
 	FarmElementID    uint32                   // 虚影Id
 	// Skill
-	SummonUnitId uint32 // 领域
 	// 奖励
 	AvatarExpReward uint32
 	DisplayItemList []*Material
@@ -132,30 +131,7 @@ func (g *PlayerData) DelOnLineAvatarBuff(buffId uint32) {
 	delete(db, buffId)
 }
 
-func (g *PlayerData) SceneCastSkill(battleInfo *BattleBackup, skill *gdconf.GoppMazeSkill, req *proto.SceneCastSkillCsReq) {
-	battleInfo.IsBattle = skill.TriggerBattle
-	sce := battleInfo.Sce
-	for _, actions := range skill.ActionsList {
-		switch actions.Type {
-		case constant.AddMazeBuff:
-			g.AddOnLineAvatarBuff(sce.AvatarId, actions.Id)
-		case constant.SetMonsterDie:
-			for i := 0; i < len(sce.EvenIdList); i++ {
-				monsterId := sce.EvenIdList[i]
-				if g.setMonsterDie(monsterId) {
-					sce.EvenIdList = append(sce.EvenIdList[:i], sce.EvenIdList[i+1:]...)
-					i--
-				}
-			}
-		case constant.AddTeamPlayerHP:
-		case constant.AddTeamPlayerSp:
-		case constant.SummonUnit:
-			battleInfo.SummonUnitId = actions.Id
-		}
-	}
-}
-
-func (g *PlayerData) setMonsterDie(eventID uint32) bool {
+func (g *PlayerData) SetMonsterDie(eventID uint32) bool {
 	if eventID == 20134107 { // 扑满特殊处理
 		return false
 	}

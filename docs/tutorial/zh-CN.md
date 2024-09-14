@@ -4,7 +4,7 @@
 1. golang >= 1.22.4
 2. mysql
 3. redis
-4. linux:GCC / windows:MinGW
+~~4. linux:GCC / windows:MinGW~~
 
 ## 编译
 > 注:建议自行在运行服务器上进行编译,否则可能出现意外情况
@@ -15,8 +15,8 @@
 
 #### 自行编译
 1. 安装golang且版本不低于1.22.4
-2. 启用cgo
-3. 运行编译脚本
+~~启用cgo~~
+2. 运行编译脚本
 
 linux:
 ```bash

@@ -22,9 +22,10 @@ type GamePlayer struct {
 	// 玩家数据
 	PlayerData     *model.PlayerData // 玩家内存
 	Platform       spb.PlatformType  // 登录设备
-	RouteManager   *RouteManager     // 路由
-	SendChan       chan Msg          // 发送消息通道
-	RecvChan       chan Msg          // 接收消息通道
+	LoginRandom    uint64
+	RouteManager   *RouteManager // 路由
+	SendChan       chan Msg      // 发送消息通道
+	RecvChan       chan Msg      // 接收消息通道
 	IsClosed       bool
 	LastUpDataTime int64 // 最近一次的活跃时间
 }
@@ -133,10 +134,13 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 			database.DelPlayerStatus(database.GSS.StatusRedis, g.Uid)
 			return false
 		}
-		if /*statu.GameserverId != g.GameAppId &&*/ statu.DataVersion != g.GetPd().GetDataVersion() {
+		if statu.LoginRand != g.LoginRandom && statu.DataVersion != g.GetPd().GetDataVersion() {
 			// 脏数据
 			logger.Info("[UID:%v]数据过期，已丢弃", g.Uid)
 			return false
+		}
+		if status == spb.PlayerStatusType_PLAYER_STATUS_ONLINE {
+			g.SetPlayerStatusRedisData()
 		}
 	}
 	//  确认写入，更新数据版本
@@ -165,6 +169,25 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	}
 
 	return true
+}
+
+func (g *GamePlayer) SetPlayerStatusRedisData() {
+	if ISPE {
+		return
+	}
+	statu := &spb.PlayerStatusRedisData{
+		Status:      spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
+		LoginRand:   g.LoginRandom,
+		LoginTime:   0,
+		Uid:         g.Uid,
+		DataVersion: g.GetPd().GetDataVersion(),
+	}
+	bin, err := pb.Marshal(statu)
+	if err != nil {
+		logger.Error("pb marshal error: %v", err)
+		return
+	}
+	database.AddPlayerStatus(database.GSS.StatusRedis, g.Uid, bin)
 }
 
 func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) bool {
