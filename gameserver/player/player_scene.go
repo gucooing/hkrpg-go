@@ -473,6 +473,7 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(lineAvatar *spb.LineAvat
 		GroupRefreshList: make([]*proto.GroupRefreshInfo, 0),
 	}
 	info := new(proto.GroupRefreshInfo)
+	playerId := lineAvatar.AvatarId
 	actor := &proto.SceneActorInfo{
 		AvatarType:   proto.AvatarType_AVATAR_FORMAL_TYPE,
 		BaseAvatarId: lineAvatar.AvatarId,
@@ -485,9 +486,15 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(lineAvatar *spb.LineAvat
 		if conf == nil {
 			return
 		}
+		baseAvatarId := conf.AvatarID
+		playerId = conf.PlayerID
+		if path := gdconf.GetMultiplePathAvatarConfig(conf.AvatarID); path != nil {
+			baseAvatarId = path.BaseAvatarID
+			playerId = path.BaseAvatarID
+		}
 		actor = &proto.SceneActorInfo{
 			AvatarType:   proto.AvatarType_AVATAR_TRIAL_TYPE,
-			BaseAvatarId: conf.AvatarID,
+			BaseAvatarId: baseAvatarId,
 			MapLayer:     0,
 			Uid:          0,
 		}
@@ -512,7 +519,7 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(lineAvatar *spb.LineAvat
 			Pos:      pos,
 			Rot:      rot,
 		},
-		AvatarId:   actor.BaseAvatarId,
+		AvatarId:   playerId,
 		LineAvatar: lineAvatar,
 	})
 	notify.GroupRefreshList = append(notify.GroupRefreshList, info)

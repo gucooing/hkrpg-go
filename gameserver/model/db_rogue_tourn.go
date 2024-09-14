@@ -228,6 +228,7 @@ func (g *PlayerData) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
 		HandbookEventList:      make([]uint32, 0),
 		HandbookAvatarBaseList: make([]uint32, 0),
 		HandbookMiracleList:    make([]uint32, 0),
+		TakeHandbookRewardList: make([]uint32, 0),
 	}
 	// 添加方程
 	for id := range gdconf.GetRogueTournFormulaMap() {
