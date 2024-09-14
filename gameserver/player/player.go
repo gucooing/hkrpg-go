@@ -112,11 +112,6 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 		g.FinishAllTutorial()
 	}
 	g.PlayerData.BasicBin.Uid = g.Uid
-	if g.GetPd().GetIsProficientPlayer() { // 是否是老玩家
-
-	} else {
-
-	}
 }
 
 func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {

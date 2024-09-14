@@ -111,6 +111,7 @@ func (g *GamePlayer) DoGachaCsReq(payloadMsg pb.Message) {
 	if req.GachaNum != 10 && req.GachaNum != 1 {
 		return
 	}
+	g.GetPd().BasicBin.IsProficientPlayer = true
 	// 先扣球再抽卡
 	upBanners := gdconf.GetBannersMap()[req.GachaId]
 	if upBanners == nil {

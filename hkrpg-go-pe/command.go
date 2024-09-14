@@ -93,6 +93,14 @@ func (h *HkRpgGoServer) ApiInitRouter(c *gin.Context) {
 			})
 			return
 		}
+		if commandList[0] == "give" &&
+			!p.GamePlayer.GetPd().BasicBin.IsProficientPlayer {
+			c.JSON(404, gin.H{
+				"code": -1,
+				"msg":  "Please execute after completing the mission",
+			})
+			return
+		}
 		timeout2 := time.After(2 * time.Second)
 		select {
 		case p.GamePlayer.RecvChan <- player.Msg{
