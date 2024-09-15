@@ -28,10 +28,10 @@
 ## Vui lòng không sử dụng nó trong môi trường sản xuất
 
 ### Tài liệu:
-* [easy-tutorial](./docs/tutorial/zh-cn.md)
-* [config parsing](./docs/conf/zh-CN.md)
-* [api usage](./docs/command/zh-CN.md)
-* [Details](./docs/progress/zh-CN.md)
+* [easy-tutorial](./docs/tutorial/VI.md)
+* [config parsing](./docs/conf/VI.md)
+* [api usage](./docs/command/VI.md)
+* [Details](./docs/progress/VI.md)
 
 ### Lưu ý:
 * Nếu bạn muốn giúp đỡ dự án này, hãy gửi dự án.

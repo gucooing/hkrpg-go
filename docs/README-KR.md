@@ -28,10 +28,10 @@
 ## 프로덕션 환경에서 사용하지 마세요
 
 ### 문서:
-* [easy-tutorial](./docs/tutorial/zh-cn.md)
-* [config parsing](./docs/conf/zh-CN.md)
-* [api usage](./docs/command/zh-CN.md)
-* [Details](./docs/progress/zh-CN.md)
+* [easy-tutorial](./docs/tutorial/KR.md)
+* [config parsing](./docs/conf/KR.md)
+* [api usage](./docs/command/KR.md)
+* [Details](./docs/progress/KR.md)
 
 ### 참고:
 * 이 프로젝트를 돕고 싶으시다면, 자유롭게 제출하세요.

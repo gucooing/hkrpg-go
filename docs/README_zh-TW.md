@@ -28,10 +28,10 @@
  ## 請不要在生產環境中使用
 
  ### 文件:
- * [簡易教學](./docs/tutorial/zh-cn.md)
- * [配置解析](./docs/conf/zh-CN.md)
- * [api使用](./docs/command/zh-CN.md)
- * [詳情](./docs/progress/zh-CN.md)
+ * [簡易教學](./docs/tutorial/zh-TW.md)
+ * [配置解析](./docs/conf/zh-TW.md)
+ * [api使用](./docs/command/zh-TW.md)
+ * [詳情](./docs/progress/zh-TW.md)
 
  ### 注意：
  * 如果您想幫助該項目，請隨時提交。

@@ -28,10 +28,10 @@
 ## Пожалуйста, не используйте его в производственной среде
 
 ### Документация:
-* [easy-tutorial](./docs/tutorial/zh-cn.md)
-* [config parsing](./docs/conf/zh-CN.md)
-* [api usage](./docs/command/zh-CN.md)
-* [Details](./docs/progress/zh-CN.md)
+* [easy-tutorial](./docs/tutorial/RU.md)
+* [config parsing](./docs/conf/RU.md)
+* [api usage](./docs/command/RU.md)
+* [Details](./docs/progress/RU.md)
 
 ### Примечания:
 * Если вы хотите помочь с этим проектом, не стесняйтесь  чтобы отправить его.

@@ -28,10 +28,10 @@
 ## 本番環境では使用しないでください
 
 ### ドキュメント:
-* [easy-tutorial](./docs/tutorial/zh-cn.md)
-* [config 解析](./docs/conf/zh-CN.md)
-* [api の使用法](./docs/command/zh-CN.md)
-* [詳細](./docs/progress/zh-CN.md)
+* [easy-tutorial](./docs/tutorial/JP.md)
+* [config 解析](./docs/conf/JP.md)
+* [api の使用法](./docs/command/JP.md)
+* [詳細](./docs/progress/JP.md)
 
 ### 注:
 * このプロジェクトに協力したい場合は、お気軽に提出してください。
