@@ -16,6 +16,7 @@ import (
 
 const PacketMaxLen = 343 * 1024 // 最大应用层包长度
 var CLIENT_CONN_NUM int32 = 0   // 当前客户端连接数
+var QPS int64 = 0
 
 func (r *RoBot) newGame() {
 	r.HttpClient = nil
@@ -44,6 +45,7 @@ func (r *RoBot) recvHandle() {
 		kcpMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &kcpMsgList, r.XorKey)
 		for _, v := range kcpMsgList {
+			atomic.AddInt64(&QPS, 1)
 			// payloadMsg := r.DecodePayloadToProto(v)
 			// 密钥交换
 			if v.CmdId == cmd.PlayerGetTokenScRsp {
@@ -60,7 +62,7 @@ func (r *RoBot) recvHandle() {
 				r.PlayerLoginCsReq()
 				logger.Info("[UID:%v]账号%s 登录成功", r.GameUid, r.AccountName)
 			} else {
-				r.RegisterMessage(v.CmdId, v.ProtoData)
+				go r.RegisterMessage(v.CmdId, v.ProtoData)
 			}
 		}
 	}
@@ -100,6 +102,8 @@ func KcpNetInfo() {
 		logger.Info("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
 		logger.Info("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
 		logger.Info("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
+		logger.Info("QPS %v", QPS/60)
+		QPS = 0
 		clientConnNum := atomic.LoadInt32(&CLIENT_CONN_NUM)
 		logger.Info("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
 		kcp.DefaultSnmp.Reset()

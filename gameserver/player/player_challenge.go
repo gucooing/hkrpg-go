@@ -439,11 +439,15 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 }
 
 func (g *GamePlayer) StartPartialChallengeCsReq(payloadMsg pb.Message) {
-	// msg := g.DecodePayloadToProto(cmd.StartPartialChallengeCsReq, payloadMsg)
-	// req := msg.(*proto.StartPartialChallengeCsReq)
-	// g.SetBattleStatus(spb.BattleType_Battle_CHALLENGE_Story_2)
-	// // 设置当前战斗的忘却之庭
-	// g.SetCurChallenge(req.ChallengeId, storyInfo)
+	// req := payloadMsg.(*proto.StartPartialChallengeCsReq)
+
+	rsp := &proto.StartPartialChallengeScRsp{
+		Lineup:       nil,
+		Scene:        nil,
+		Retcode:      0,
+		CurChallenge: nil,
+	}
+	g.Send(cmd.StartPartialChallengeScRsp, rsp)
 }
 
 func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg pb.Message) {
@@ -469,11 +473,8 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 	configList := g.GetPd().GetChallengesConfigList()
 	npcMonsterIDList := g.GetPd().GetChallengesNpcMonsterIDList()
 	eventIDList := g.GetPd().GetChallengesEventIDList()
-	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
-	if challengeMazeConfig == nil {
-		return nil
-	}
-	mapEntrance := gdconf.GetMapEntranceById(challengeMazeConfig.MapEntranceID)
+	mapEntranceID := g.GetPd().GetChallengesMapEntranceID()
+	mapEntrance := gdconf.GetMapEntranceById(mapEntranceID)
 	if mapEntrance == nil {
 		return nil
 	}
@@ -496,7 +497,7 @@ func (g *GamePlayer) GetChallengeScene() *proto.SceneInfo {
 		FloorId:            mapEntrance.FloorID,
 		LeaderEntityId:     leaderEntityId,
 		WorldId:            worldId,
-		EntryId:            challengeMazeConfig.MapEntranceID,
+		EntryId:            mapEntranceID,
 		GameModeType:       gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
 		SceneBuffInfoList:  make([]*proto.BuffInfo, 0),

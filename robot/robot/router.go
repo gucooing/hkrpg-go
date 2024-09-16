@@ -9,6 +9,7 @@ func (r *RoBot) RegisterMessage(cmdId uint16, payloadMsg []byte) {
 	case cmd.PlayerLoginScRsp:
 		r.PlayerLoginScRsp()
 		go r.PlayerHeartBeatCsReq()
+		r.EnterSceneCsReq()
 	case cmd.PlayerHeartBeatScRsp:
 		r.PlayerHeartbeatScRsp(payloadMsg)
 	case cmd.GetCurSceneInfoScRsp:

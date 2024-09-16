@@ -32,8 +32,6 @@ func (r *RoBot) GetCurSceneInfoScRsp(payloadMsg []byte) {
 			}
 		}
 	}
-
-	r.EnterSceneCsReq()
 }
 
 func (r *RoBot) EnterSceneCsReq() {

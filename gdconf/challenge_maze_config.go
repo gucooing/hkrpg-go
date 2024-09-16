@@ -12,7 +12,8 @@ type ChallengeMazeConfig struct {
 	ID                 uint32                     `json:"ID"` // 关卡id
 	GroupID            uint32                     `json:"GroupID"`
 	Floor              uint32                     `json:"Floor"`
-	MapEntranceID      uint32                     `json:"MapEntranceID"` // 地图
+	MapEntranceID      uint32                     `json:"MapEntranceID"`  // 地图
+	MapEntranceID2     uint32                     `json:"MapEntranceID2"` // 地图
 	PreLevel           uint32                     `json:"PreLevel"`
 	PreChallengeMazeID uint32                     `json:"PreChallengeMazeID"`
 	RewardID           uint32                     `json:"RewardID"`    // 奖励配置id

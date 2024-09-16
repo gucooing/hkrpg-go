@@ -513,6 +513,21 @@ func (g *PlayerData) GetChallengesEventIDList() []uint32 {
 	return nil
 }
 
+func (g *PlayerData) GetChallengesMapEntranceID() uint32 {
+	curChallenge := g.GetCurChallenge()
+	challengeMazeConfig := gdconf.GetChallengeMazeConfigById(curChallenge.ChallengeId)
+	if challengeMazeConfig == nil {
+		return 0
+	}
+	switch curChallenge.CurStage {
+	case 1:
+		return challengeMazeConfig.MapEntranceID
+	case 2:
+		return challengeMazeConfig.MapEntranceID2
+	}
+	return 0
+}
+
 func (g *PlayerData) GetCurChallengeBuffId() uint32 {
 	curChallenge := g.GetCurChallenge()
 	if curChallenge == nil {
@@ -901,7 +916,7 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 					WaveFlag:        4294967295,
 					TargetIndexList: []uint32{avatarInfo.Index},
 					DynamicValues: map[string]float32{
-						"SkillIndex": float32(avatarInfo.Index),
+						"SkillIndex": 1,
 					},
 				})
 			}
