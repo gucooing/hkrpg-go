@@ -1,6 +1,25 @@
 ![hkrpg-go](https://socialify.git.ci/gucooing/hkrpg-go/image?description=1&font=Inter&forks=1&language=1&name=1&owner=1&pattern=Circuit%20Board&stargazers=1&theme=Auto)
 
-[EN](./README.md) | [简中](./docs/README_zh-CN.md) | [繁中](./docs/README_zh-TW.md) | [JP](./docs/README-JP.md) | [RU](./docs/README-RU.md) | [FR](./docs/README-FR.md) | [KR](./docs/README-KR.md) |  [VI](./docs/README-VI.md)
+<div align="center">
+<table>
+<td valign="center"><a href="README.md"><img src="https://github.com/twitter/twemoji/blob/master/assets/svg/1f1fa-1f1f8.svg" width="16"/> English</td>
+ 
+<td valign="center"><a href="docs/README_zh-CN.md"><img src="https://em-content.zobj.net/thumbs/120/twitter/351/flag-china_1f1e8-1f1f3.png" width="16"/> 简中</td>
+ 
+<td valign="center"><a href="docs/README_zh-TW.md"><img src="https://em-content.zobj.net/thumbs/120/twitter/351/flag-china_1f1e8-1f1f3.png" width="16"/> 繁中</td>
+ 
+<td valign="center"><a href="docs/README-JP.md"><img src="https://github.com/twitter/twemoji/blob/master/assets/svg/1f1ef-1f1f5.svg" width="16"/> 日本語</td>
+ 
+<td valign="center"><a href="docs/README-RU.md"><img src="https://github.com/twitter/twemoji/blob/master/assets/svg/1f1f7-1f1fa.svg" width="16"/> Русский</a></td>
+
+<td valign="center"><a href="docs/README-FR.md"><img src="https://em-content.zobj.net/thumbs/160/twitter/154/flag-for-france_1f1eb-1f1f7.png" width="16"/> Français</td>
+ 
+<td valign="center"><a href="docs/README-KR.md"><img src="https://em-content.zobj.net/source/twitter/53/flag-for-south-korea_1f1f0-1f1f7.png" width="16"/> 한국어</td>
+ 
+<td valign="center"><a href="docs/README-VI.md"><img src="https://em-content.zobj.net/thumbs/120/twitter/351/flag-vietnam_1f1fb-1f1f3.png" width="16"/> Tiếng Việt </a>
+</td>
+</table>
+</div>
  
 # **Welcome to our [Discord](https://discord.gg/222yVp6pUq)**
 
@@ -9,10 +28,10 @@
 ## Please don't use it in a production environment
 
 ### Documentation:
-* [easy-tutorial](./docs/tutorial/zh-CN.md)
-* [config parsing](./docs/conf/zh-CN.md)
-* [api usage](./docs/command/zh-CN.md)
-* [Details](./docs/progress/zh-CN.md)
+* [easy-tutorial](./docs/tutorial/EN.md)
+* [config parsing](./docs/conf/EN.md)
+* [api usage](./docs/command/EN.md)
+* [Details](./docs/progress/EN.md)
 
 ### Notes:
 * If you want to help with this project, feel free to submit it.
