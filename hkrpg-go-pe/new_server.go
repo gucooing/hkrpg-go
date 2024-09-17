@@ -314,6 +314,15 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 	}
 	// 重复登录验证
 	if old := h.GetPlayer(account.Uid); old != nil {
+		// 通知客户端下线
+		bin, _ := pb.Marshal(&proto.PlayerKickOutScNotify{
+			BlackInfo: &proto.BlackInfo{},
+		})
+		old.S.SendChan <- &alg.PackMsg{
+			CmdId:     cmd.PlayerKickOutScNotify,
+			HeadData:  nil,
+			ProtoData: bin,
+		}
 		h.DelPlayer(account.Uid)
 	}
 
@@ -340,9 +349,12 @@ func (h *HkRpgGoServer) gameTicker() {
 }
 
 func (h *HkRpgGoServer) AutoUpDataPlayer() {
-	logger.Info("开始自动保存玩家数据")
-	timestamp := time.Now().Unix()
 	playerList := h.GetAllPlayer()
+	if len(playerList) == 0 {
+		return
+	}
+	timestamp := time.Now().Unix()
+	logger.Info("开始自动保存玩家数据")
 	var num int
 	for _, g := range playerList {
 		if g.LastActiveTime+50 < timestamp {

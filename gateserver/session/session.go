@@ -9,8 +9,6 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
-	"github.com/gucooing/hkrpg-go/protocol/proto"
-	pb "google.golang.org/protobuf/proto"
 )
 
 type SessionState int
@@ -108,18 +106,6 @@ func (s *Session) Close() {
 			break
 		}
 		time.Sleep(time.Millisecond * 100)
-	}
-	// 通知客户端下线
-	protoData, err := pb.Marshal(&proto.PlayerKickOutScNotify{
-		BlackInfo: &proto.BlackInfo{},
-	})
-	if err == nil {
-		binMsg := alg.EncodePayloadToBin(&alg.PackMsg{
-			CmdId:     cmd.PlayerKickOutScNotify,
-			HeadData:  nil,
-			ProtoData: protoData,
-		}, s.XorKey)
-		s.kcpConn.Write(binMsg)
 	}
 
 	// 断开kcp

@@ -246,6 +246,15 @@ func (s *UDPSession) Write(b []byte) (n int, err error) {
 
 // WriteBuffers write a vector of byte slices to the underlying connection
 func (s *UDPSession) WriteBuffers(v [][]byte) (n int, err error) {
+RESET_TIMER:
+	var timeout *time.Timer
+	var c <-chan time.Time
+	if !s.wd.IsZero() {
+		delay := time.Until(s.wd)
+		timeout = time.NewTimer(delay)
+		c = timeout.C
+		defer timeout.Stop()
+	}
 	for {
 		select {
 		case <-s.chSocketWriteError:
@@ -285,23 +294,13 @@ func (s *UDPSession) WriteBuffers(v [][]byte) (n int, err error) {
 			return n, nil
 		}
 
-		var timeout *time.Timer
-		var c <-chan time.Time
-		if !s.wd.IsZero() {
-			if time.Now().After(s.wd) {
-				s.mu.Unlock()
-				return 0, errTimeout
-			}
-			delay := time.Until(s.wd)
-			timeout = time.NewTimer(delay)
-			c = timeout.C
-		}
 		s.mu.Unlock()
 
 		select {
 		case <-s.chWriteEvent:
 			if timeout != nil {
 				timeout.Stop()
+				goto RESET_TIMER
 			}
 		case <-c:
 			return 0, errTimeout
