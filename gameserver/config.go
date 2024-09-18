@@ -68,8 +68,8 @@ var DefaultConfig = &Config{
 		},
 	},
 	NetConf: map[string]string{
-		"Node": "127.0.0.1:20081",
-		"Game": "127.0.0.1:20081",
+		"NodeMq":   "127.0.0.1:20000",
+		"NodeGrpc": "127.0.0.1:20081",
 	},
 	MysqlConf: map[string]constant.MysqlConf{
 		"account": {

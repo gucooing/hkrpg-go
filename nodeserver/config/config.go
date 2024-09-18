@@ -48,12 +48,8 @@ var DefaultConfig = &Config{
 	LogLevel: "Info",
 	AppList: map[string]constant.AppList{
 		"9001.3.1.1": {
-			App: map[string]constant.AppNet{
-				"port_service": {
-					InnerPort: "20081",
-					InnerAddr: "127.0.0.1",
-				},
-			},
+			MqAddr:   "127.0.0.1:20000",
+			GrpcAddr: "127.0.0.1:20081",
 		},
 	},
 	MysqlConf: map[string]constant.MysqlConf{

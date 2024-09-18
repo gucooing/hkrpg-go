@@ -156,29 +156,31 @@ func (g *GateServer) loginSessionManagement() {
 		case s := <-g.KcpConn.DelLoginSessionChan: // 删除登录会话
 			delete(loginSessionMap, s.SessionId)
 		case netMsg := <-g.MessageQueue.GetNetMsg():
-			switch netMsg.MsgType {
-			case mq.GameServer: // 玩家消息转发
+			switch netMsg.OriginServerType {
+			case spb.ServerType_SERVICE_GAME:
 				go g.gameMsgHandle(netMsg)
-			case mq.ServerMsg:
-				go g.serverMsgHandle(netMsg)
+			default:
+				logger.Info("error ServerType:%s", netMsg.OriginServerType.String())
 			}
 		}
 	}
 }
 
 func (g *GateServer) gameMsgHandle(netMsg *mq.NetMsg) {
-	s := g.GetSession(netMsg.Uid)
-	if s == nil ||
-		s.SessionState != session.SessionActivity {
-		return
+	switch netMsg.MsgType {
+	case mq.GameServer:
+		s := g.GetSession(netMsg.Uid)
+		if s == nil ||
+			s.SessionState != session.SessionActivity {
+			return
+		}
+		s.SendChan <- &alg.PackMsg{
+			CmdId:     netMsg.CmdId,
+			ProtoData: netMsg.ServiceMsgByte,
+		}
+	case mq.ServerMsg:
+		logger.Info("to gate msg")
 	}
-	s.SendChan <- &alg.PackMsg{
-		CmdId:     netMsg.CmdId,
-		ProtoData: netMsg.ServiceMsgByte,
-	}
-}
-
-func (g *GateServer) serverMsgHandle(netMsg *mq.NetMsg) {
 }
 
 func (g *GateServer) sessionMsg(s *session.Session) {
@@ -275,7 +277,7 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 		if err != nil {
 			database.DelPlayerStatus(database.GATE.StatusRedis, account.Uid) // 删除状态
 		} else {
-			if statu.GateserverId == g.AppId {
+			if statu.GateAppId == g.AppId {
 				// 本地顶号
 			} else {
 				// 异地顶号

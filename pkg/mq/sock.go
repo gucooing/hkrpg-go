@@ -29,6 +29,7 @@ type MessageQueue struct {
 	netMsgOutput           chan *NetMsg             // 收包
 	gateTcpMqEventChan     chan *GateTcpMqEvent     // 连接管理
 	gateTcpMqDeadEventChan chan string              // gate 管理
+	nodeTcp                *NodeTcp                 // 和node的tcp连接
 	discoveryClient        *rpc.NodeDiscoveryClient // 和node连接的rpc
 	gateTcpMqInstMap       map[spb.ServerType]map[uint32]*GateTcpMqInst
 	gateTcpMqSync          *sync.RWMutex // 读写锁
@@ -45,9 +46,14 @@ type GateTcpMqInst struct {
 	appId      uint32
 }
 
+type NodeTcp struct {
+	nodeMqAddr string
+	conn       *gunet.TcpConn
+}
+
 func NewMessageQueue(serverType spb.ServerType, appId uint32,
-	discoveryClient *rpc.NodeDiscoveryClient, gateAddr, regionName string) (r *MessageQueue) {
-	if discoveryClient == nil {
+	discoveryClient *rpc.NodeDiscoveryClient, gateAddr, nodeMqAddr, regionName string) (r *MessageQueue) {
+	if discoveryClient == nil && serverType != spb.ServerType_SERVICE_NODE {
 		logger.Error("discoveryClient error")
 		return nil
 	}
@@ -61,14 +67,21 @@ func NewMessageQueue(serverType spb.ServerType, appId uint32,
 	r.gateTcpMqEventChan = make(chan *GateTcpMqEvent, 1000)
 	r.gateTcpMqDeadEventChan = make(chan string, 1000)
 	r.gateTcpMqSync = new(sync.RWMutex)
+	r.nodeTcp = &NodeTcp{
+		nodeMqAddr: nodeMqAddr,
+	}
 
-	if serverType == spb.ServerType_SERVICE_GATE {
+	if serverType == spb.ServerType_SERVICE_GATE ||
+		serverType == spb.ServerType_SERVICE_NODE {
 		go r.runGateTcpMqServer(gateAddr)
 	} else if serverType == spb.ServerType_SERVICE_DISPATCH ||
 		serverType == spb.ServerType_SERVICE_GAME ||
 		serverType == spb.ServerType_SERVICE_MUIP ||
 		serverType == spb.ServerType_SERVICE_MULTI {
 		go r.runGateTcpMqClient()
+	}
+	if serverType != spb.ServerType_SERVICE_NODE {
+		go r.nodeTcpMq()
 	}
 	go r.sendHandler()
 	return
@@ -95,13 +108,14 @@ func (m *MessageQueue) runGateTcpMqServer(gateAddr string) {
 		logger.Error("tcp mq listen error: %v", err)
 		return
 	}
+	logger.Info("new mq server")
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
 			logger.Error("tcp mq accept error: %v", err)
 			return
 		}
-		logger.Info("accept gate tcp mq, server addr: %v", conn.RemoteAddr().String())
+		logger.Info("accept tcp mq, server addr: %v", conn.RemoteAddr().String())
 		go m.gateTcpMqHandshake(conn)
 	}
 }
@@ -198,13 +212,24 @@ func (m *MessageQueue) sendHandler() {
 	for {
 		select {
 		case netMsg := <-m.netMsgInput:
-			inst := m.GetGateTcpMqInst(netMsg.ServerType, netMsg.AppId)
-			if inst == nil {
+			var conn *gunet.TcpConn
+			if netMsg.ServerType == spb.ServerType_SERVICE_NODE {
+				conn = m.nodeTcp.conn
+			} else {
+				inst := m.GetGateTcpMqInst(netMsg.ServerType, netMsg.AppId)
+				if inst == nil {
+					logger.Error("unknown server type: %v", netMsg.ServerType)
+					continue
+				}
+				conn = inst.conn
+			}
+			if conn == nil {
 				logger.Error("unknown server type: %v", netMsg.ServerType)
 				continue
 			}
+
 			bin := EncodePayloadToBin(netMsg)
-			_, err := inst.conn.Write(bin)
+			_, err := conn.Write(bin)
 			if err != nil {
 				logger.Error("write error: %v", err)
 				continue
@@ -213,12 +238,12 @@ func (m *MessageQueue) sendHandler() {
 			inst := event.inst
 			switch event.event {
 			case EventConnect: // 创建连接
-				logger.Info("gate tcp mq connect, addr: %v, server type: %v, appid: %v", inst.conn.RemoteAddr().String(), inst.serverType, inst.appId)
+				logger.Info("tcp mq connect, addr: %v, server type: %v, appid: %v", inst.conn.RemoteAddr().String(), inst.serverType, inst.appId)
 				m.gateTcpMqSync.Lock()
 				m.gateTcpMqInstMap[inst.serverType][inst.appId] = inst
 				m.gateTcpMqSync.Unlock()
 			case EventDisconnect: // 删除连接
-				logger.Info("gate tcp mq disconnect, addr: %v, server type: %v, appid: %v", inst.conn.RemoteAddr().String(), inst.serverType, inst.appId)
+				logger.Info("tcp mq disconnect, addr: %v, server type: %v, appid: %v", inst.conn.RemoteAddr().String(), inst.serverType, inst.appId)
 				m.gateTcpMqSync.Lock()
 				delete(m.gateTcpMqInstMap[inst.serverType], inst.appId)
 				m.gateTcpMqSync.Unlock()
@@ -292,5 +317,51 @@ func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
 		gateServerConnAddrMap[server.MqAddr] = true
 		logger.Info("connect gate tcp mq, gate addr: %v", conn.RemoteAddr().String())
 		go m.gateTcpMqRecvHandle(inst)
+	}
+}
+
+func (m *MessageQueue) nodeTcpMq() {
+	conn, err := gunet.NewTcpC(m.nodeTcp.nodeMqAddr)
+	if err != nil {
+		logger.Error("node tcp mq connect error: %v", err)
+		return
+	}
+	netMsg := &NetMsg{
+		CmdId: smd.GateTcpMqHandshakeReq,
+		ServiceMsgByte: smd.EncodeProtoToPayload(
+			&smd.ProtoMsg{
+				CmdId: smd.GateTcpMqHandshakeReq,
+				PayloadMessage: &spb.GateTcpMqHandshakeReq{
+					Type:  m.serverType,
+					AppId: m.appId,
+				},
+			}),
+	}
+	bin := EncodePayloadToBin(netMsg)
+	_, err = conn.Write(bin)
+	if err != nil {
+		logger.Error("node tcp mq handshake error: %v", err)
+		return
+	}
+	m.nodeTcp.conn = conn
+
+	logger.Info("node tcp mq connect, addr: %v", m.nodeTcp.nodeMqAddr)
+	go m.nodeTcpMqRecvHandle()
+}
+
+// node收信
+func (m *MessageQueue) nodeTcpMqRecvHandle() {
+	nodeTcp := m.nodeTcp
+	if nodeTcp.conn == nil {
+		return
+	}
+	for {
+		bin, err := nodeTcp.conn.Read()
+		if err != nil {
+			logger.Error("node tcp mq receive error: %v", err)
+			return
+		}
+		netMsg := DecodeBinToPayload(bin)
+		m.netMsgOutput <- netMsg
 	}
 }

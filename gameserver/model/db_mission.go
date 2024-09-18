@@ -643,6 +643,8 @@ func (g *PlayerData) AcceptSubMission() []uint32 {
 			// 检查接取条件
 			var isNext = true
 			switch subInfo.TakeType {
+			case constant.MissionBeginTypeNil:
+				break
 			case constant.MissionBeginTypeAuto:
 				break
 			case constant.MissionBeginTypeUnknown:

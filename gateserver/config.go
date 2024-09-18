@@ -17,9 +17,6 @@ type Config struct {
 	RedisConf map[string]constant.RedisConf `json:"RedisConf"`
 }
 
-type NetConf struct {
-}
-
 var CONF *Config = nil
 
 func GetConfig() *Config {
@@ -67,7 +64,8 @@ var DefaultConfig = &Config{
 		},
 	},
 	NetConf: map[string]string{
-		"Node": "127.0.0.1:20081",
+		"NodeMq":   "127.0.0.1:20000",
+		"NodeGrpc": "127.0.0.1:20081",
 	},
 	MysqlConf: map[string]constant.MysqlConf{
 		"account": {

@@ -14,6 +14,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/mq"
 	"github.com/gucooing/hkrpg-go/pkg/rpc"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -77,16 +78,26 @@ func (g *GameServer) keepaliveServer() {
 
 func (g *GameServer) messageQueue() {
 	for {
-		select {
-		case netMsg := <-g.MessageQueue.GetNetMsg():
-			switch netMsg.MsgType {
-			case mq.GameServer:
-				g.gameMsgHandle(netMsg)
-			case mq.ServerMsg:
-			case mq.PlayerLogout: // 玩家下线
-				g.delPlayerNet(netMsg.Uid)
-			}
+		netMsg := <-g.MessageQueue.GetNetMsg()
+		switch netMsg.OriginServerType {
+		case spb.ServerType_SERVICE_GATE:
+			g.mqGateMsg(netMsg)
+		case spb.ServerType_SERVICE_NODE:
+		default:
+			logger.Error("unknow server type: %v", netMsg.OriginServerType)
 		}
+	}
+}
+
+func (g *GameServer) mqGateMsg(netMsg *mq.NetMsg) {
+	switch netMsg.MsgType {
+	case mq.GameServer:
+		g.gameMsgHandle(netMsg)
+	case mq.ServerMsg:
+	case mq.PlayerLogout: // 玩家下线
+		g.delPlayerNet(netMsg.Uid)
+	default:
+		logger.Error("unknow msg type: %v", netMsg.MsgType)
 	}
 }
 

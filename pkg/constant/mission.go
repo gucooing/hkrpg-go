@@ -483,6 +483,7 @@ const (
 type MissionBeginType string
 
 const (
+	MissionBeginTypeNil                        MissionBeginType = ""
 	MissionBeginTypeUnknown                    MissionBeginType = "Unknown"
 	MissionBeginTypeAuto                       MissionBeginType = "Auto"
 	MissionBeginTypeManual                     MissionBeginType = "Manual"

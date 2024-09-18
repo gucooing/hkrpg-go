@@ -4,6 +4,7 @@ type AppList struct {
 	App        map[string]AppNet `json:"app"`
 	RegionName string            `json:"region_name"`
 	MqAddr     string            `json:"mq_addr"`
+	GrpcAddr   string            `json:"grpc_addr"`
 }
 
 type AppNet struct {

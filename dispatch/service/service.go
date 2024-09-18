@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/base64"
 	"sync"
 	"time"
 
@@ -44,8 +45,22 @@ func NewDispatch(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Mess
 	}
 	d.getRegionInfo()
 	go d.keepaliveServer()
+	go d.messageQueue()
 
 	return d
+}
+
+// mq收包
+func (d *Dispatch) messageQueue() {
+	for {
+		netMsg := <-d.MessageQueue.GetNetMsg()
+		switch netMsg.OriginServerType {
+		case spb.ServerType_SERVICE_NODE:
+			logger.Info("node mq msg:%s", base64.StdEncoding.EncodeToString(netMsg.ServiceMsgByte))
+		default:
+			logger.Info("error ServerType:%s", netMsg.OriginServerType.String())
+		}
+	}
 }
 
 // 心跳

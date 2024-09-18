@@ -14,7 +14,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-var LogMsgPlayer uint32 = 2
+var LogMsgPlayer uint32 = 1
 var ISPE = false
 
 type GamePlayer struct {

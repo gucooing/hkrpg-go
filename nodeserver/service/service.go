@@ -9,6 +9,7 @@ import (
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/mq"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 )
 
@@ -16,6 +17,7 @@ type NodeDiscoveryService struct {
 	nodeapi.UnimplementedNodeDiscoveryServer
 	regionMap     map[string]*RegionInfo
 	regionMapLock sync.RWMutex
+	MessageQueue  *mq.MessageQueue
 }
 
 type RegionInfo struct {
@@ -78,6 +80,7 @@ func NewNodeService(s *NodeDiscoveryService) {
 		}
 		s.regionMap[regionConf.Name] = info
 	}
+	go s.messageQueue()
 }
 
 func (s *NodeDiscoveryService) GetRegionMap() map[string]*RegionInfo {

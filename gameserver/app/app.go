@@ -29,11 +29,11 @@ func Run(done chan os.Signal, cfg *gameserver.Config, appid string) error {
 		return fmt.Errorf("app not exist")
 	}
 	// new grpc
-	nodeAddr, ok := cfg.NetConf["Node"]
+	nodeGrpc, ok := cfg.NetConf["NodeGrpc"]
 	if !ok {
-		return fmt.Errorf("node not exist")
+		return fmt.Errorf("NodeGrpc not exist")
 	}
-	discoveryClient, err := rpc.NewNodeRpcClient(nodeAddr)
+	discoveryClient, err := rpc.NewNodeRpcClient(nodeGrpc)
 	if err != nil {
 		return err
 	}
@@ -58,15 +58,19 @@ func Run(done chan os.Signal, cfg *gameserver.Config, appid string) error {
 			RegionName: appInfo.RegionName,
 		})
 	}()
-	// new conf
-	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// new mq
+	nodeMq, ok := cfg.NetConf["NodeMq"]
+	if !ok {
+		return fmt.Errorf("NodeMq not exist")
+	}
 	messageQueue := mq.NewMessageQueue(spb.ServerType_SERVICE_GAME,
-		alg.GetAppIdUint32(appid), discoveryClient, "", appInfo.RegionName)
+		alg.GetAppIdUint32(appid), discoveryClient, "", nodeMq, appInfo.RegionName)
 	if messageQueue == nil {
 		return fmt.Errorf("message queue nil")
 	}
 	defer messageQueue.Close()
+	// new conf
+	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// new db
 	database.NewGameStore(cfg.MysqlConf, cfg.RedisConf)
 	// new game

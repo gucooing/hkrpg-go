@@ -10,8 +10,11 @@ import (
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
 	"github.com/gucooing/hkrpg-go/nodeserver/service"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/mq"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	"google.golang.org/grpc"
 )
 
@@ -20,13 +23,8 @@ func Run(done chan os.Signal, cfg *config.Config, appid string) error {
 	if !ok {
 		return fmt.Errorf("app not exist")
 	}
-	netInfo, ok := appInfo.App["port_service"]
-	if !ok {
-		return fmt.Errorf("app not exist")
-	}
 	// new grpc
-	rpcAddr := fmt.Sprintf("%s:%s", netInfo.InnerAddr, netInfo.InnerPort)
-	lis, err := net.Listen("tcp", rpcAddr)
+	lis, err := net.Listen("tcp", appInfo.GrpcAddr)
 	if err != nil {
 		return err
 	}
@@ -42,8 +40,15 @@ func Run(done chan os.Signal, cfg *config.Config, appid string) error {
 		}
 	}()
 
-	logger.Info("grpc server start addr:%s", rpcAddr)
+	logger.Info("grpc server start addr:%s", appInfo.GrpcAddr)
 	defer grpcServer.GracefulStop()
+	// new mq
+	messageQueue := mq.NewMessageQueue(spb.ServerType_SERVICE_NODE,
+		alg.GetAppIdUint32(appid), nil, appInfo.MqAddr, "", appInfo.RegionName)
+	if messageQueue == nil {
+		return fmt.Errorf("message queue nil")
+	}
+	node.MessageQueue = messageQueue
 	// new db
 	database.NewNodeStore(cfg.MysqlConf, cfg.RedisConf)
 	// new node
