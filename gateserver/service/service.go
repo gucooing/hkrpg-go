@@ -278,9 +278,21 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 			database.DelPlayerStatus(database.GATE.StatusRedis, account.Uid) // 删除状态
 		} else {
 			if statu.GateAppId == g.AppId {
-				// 本地顶号
+				old := g.GetSession(account.Uid)
+				if old != nil { // 本地顶号
+					protoData, _ := pb.Marshal(&proto.PlayerKickOutScNotify{
+						BlackInfo: &proto.BlackInfo{},
+					})
+					old.SendChan <- &alg.PackMsg{
+						CmdId:     cmd.PlayerKickOutScNotify,
+						HeadData:  nil,
+						ProtoData: protoData,
+					}
+					PlayerLogoutCsReq(g, old, nil)
+				}
 			} else {
 				// 异地顶号
+
 			}
 		}
 	}

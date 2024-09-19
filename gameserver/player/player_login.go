@@ -31,12 +31,8 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg pb.Message) {
 		Stamina:    db[model.Stamina],
 		Exp:        db[model.Exp],
 	}
-	if req.LoginRandom == 0 {
-		g.LoginRandom = 1
-	}
 	rsp.LoginRandom = g.LoginRandom
 	g.Send(cmd.PlayerLoginScRsp, rsp)
-	g.SetPlayerStatusRedisData() // 更新状态
 	go g.LoginNotify()
 }
 

@@ -15,8 +15,6 @@ func (s *Server) GetSdkRouter(router *gin.Engine) {
 	router.GET("/query_dispatch", s.QueryDispatchHandler)
 	router.GET("/query_dispatch/gucooing/az", s.QueryDispatchHandler)
 	router.GET("/query_gateway/:regionName", s.QueryGatewayHandler)
-	// router.GET("/query_gateway_capture", s.QueryGatewayHandlerCapture)
-	// router.GET("/query_gateway_capture_cn", s.QueryGatewayHandlerCaptureCn)
 
 	// 登录
 	router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)

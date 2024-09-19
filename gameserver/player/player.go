@@ -7,6 +7,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
@@ -14,7 +15,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-var LogMsgPlayer uint32 = 1
+var LogMsgPlayer uint32 = 0
 var ISPE = false
 
 type GamePlayer struct {
@@ -68,7 +69,8 @@ func NewPlayer(uid uint32) *GamePlayer {
 	g.SendChan = make(chan Msg, 100)
 	g.RouteManager = NewRouteManager(g)
 	g.LastUpDataTime = time.Now().Unix()
-	g.GetPlayerDateByDb() // 拉取数据
+	g.GetPlayerDateByDb()                         // 拉取数据
+	g.LoginRandom = random.GetTimeRand().Uint64() // 设置此次随机
 
 	return g
 }
@@ -134,8 +136,8 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 			logger.Info("[UID:%v]数据过期，已丢弃", g.Uid)
 			return false
 		}
-		if status == spb.PlayerStatusType_PLAYER_STATUS_ONLINE {
-			g.SetPlayerStatusRedisData()
+		if status == spb.PlayerStatusType_PLAYER_STATUS_OFFLINE {
+			database.DelPlayerStatus(database.GSS.StatusRedis, g.Uid)
 		}
 	}
 	//  确认写入，更新数据版本
@@ -164,25 +166,6 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	}
 
 	return true
-}
-
-func (g *GamePlayer) SetPlayerStatusRedisData() {
-	if ISPE {
-		return
-	}
-	statu := &spb.PlayerStatusRedisData{
-		Status:      spb.PlayerStatusType_PLAYER_STATUS_ONLINE,
-		LoginRand:   g.LoginRandom,
-		LoginTime:   0,
-		Uid:         g.Uid,
-		DataVersion: g.GetPd().GetDataVersion(),
-	}
-	bin, err := pb.Marshal(statu)
-	if err != nil {
-		logger.Error("pb marshal error: %v", err)
-		return
-	}
-	database.AddPlayerStatus(database.GSS.StatusRedis, g.Uid, bin)
 }
 
 func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) bool {

@@ -10,6 +10,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/mq"
 	"github.com/gucooing/hkrpg-go/pkg/rpc"
@@ -31,7 +32,8 @@ type PlayerNet struct {
 	p              *player.GamePlayer // 玩家内存
 	uid            uint32
 	gateAppid      uint32 // gateId
-	lastActiveTime int64  // 最近一次的活跃时间
+	gameAppid      uint32
+	lastActiveTime int64 // 最近一次的活跃时间
 }
 
 func NewGameServer(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.MessageQueue,
@@ -116,16 +118,18 @@ func (g *GameServer) addPlayerNet(playerNet *PlayerNet) {
 func (g *GameServer) delPlayerNet(uid uint32) {
 	g.PlayerSync.Lock()
 	if s := g.PlayerMap[uid]; s != nil {
+		s.SetPlayerStatusRedisData(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
 		s.p.Close()
 		delete(g.PlayerMap, uid)
 	}
 	g.PlayerSync.Unlock()
 }
 
-func newPlayerNet(uid, gateAppid uint32) *PlayerNet {
+func (g *GameServer) newPlayerNet(uid, gateAppid uint32) *PlayerNet {
 	playerNet := &PlayerNet{
 		uid:            uid,
 		gateAppid:      gateAppid,
+		gameAppid:      g.AppId,
 		lastActiveTime: time.Now().Unix(),
 		p:              player.NewPlayer(uid),
 	}
@@ -159,8 +163,9 @@ func (g *GameServer) playerLogin(uid, gateAppid uint32) {
 		g.delPlayerNet(uid)
 		return // 避免覆写
 	}
-	s := newPlayerNet(uid, gateAppid)
+	s := g.newPlayerNet(uid, gateAppid)
 	g.addPlayerNet(s)
+	s.SetPlayerStatusRedisData(spb.PlayerStatusType_PLAYER_STATUS_ONLINE)
 	go s.p.RecvMsg() // player 收包
 	go g.recvGameMsg(s)
 }
@@ -188,4 +193,23 @@ func (g *GameServer) recvGameMsg(s *PlayerNet) {
 			g.MessageQueue.SendToGate(s.gateAppid, msg)
 		}
 	}
+}
+
+func (s *PlayerNet) SetPlayerStatusRedisData(statu spb.PlayerStatusType) {
+	g := s.p
+	nbin := &spb.PlayerStatusRedisData{
+		Status:      statu,
+		GateAppId:   s.gateAppid,
+		GameAppId:   s.gameAppid,
+		LoginRand:   g.LoginRandom,
+		LoginTime:   0,
+		Uid:         g.Uid,
+		DataVersion: g.GetPd().GetDataVersion(),
+	}
+	bin, err := pb.Marshal(nbin)
+	if err != nil {
+		logger.Error("pb marshal error: %v", err)
+		return
+	}
+	database.AddPlayerStatus(database.GSS.StatusRedis, g.Uid, bin)
 }

@@ -2,6 +2,7 @@ package mq
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -49,7 +50,15 @@ type GateTcpMqInst struct {
 type NodeTcp struct {
 	nodeMqAddr string
 	conn       *gunet.TcpConn
+	state      nodeConn
 }
+type nodeConn int
+
+const (
+	nodeConnLost  nodeConn = 0
+	nodeConnEct   nodeConn = 1
+	nodeConnClose nodeConn = 2
+)
 
 func NewMessageQueue(serverType spb.ServerType, appId uint32,
 	discoveryClient *rpc.NodeDiscoveryClient, gateAddr, nodeMqAddr, regionName string) (r *MessageQueue) {
@@ -95,11 +104,11 @@ func (m *MessageQueue) Close() {
 	// 等待所有待发送的消息发送完毕
 	for {
 		if len(m.netMsgInput) == 0 {
-			time.Sleep(time.Millisecond * 100)
 			break
 		}
 		time.Sleep(time.Millisecond * 100)
 	}
+	m.nodeTcp.Close()
 }
 
 func (m *MessageQueue) runGateTcpMqServer(gateAddr string) {
@@ -321,47 +330,69 @@ func (m *MessageQueue) gateTcpMqConn(gateServerConnAddrMap map[string]bool) {
 }
 
 func (m *MessageQueue) nodeTcpMq() {
-	conn, err := gunet.NewTcpC(m.nodeTcp.nodeMqAddr)
-	if err != nil {
-		logger.Error("node tcp mq connect error: %v", err)
-		return
-	}
-	netMsg := &NetMsg{
-		CmdId: smd.GateTcpMqHandshakeReq,
-		ServiceMsgByte: smd.EncodeProtoToPayload(
-			&smd.ProtoMsg{
-				CmdId: smd.GateTcpMqHandshakeReq,
-				PayloadMessage: &spb.GateTcpMqHandshakeReq{
-					Type:  m.serverType,
-					AppId: m.appId,
-				},
-			}),
-	}
-	bin := EncodePayloadToBin(netMsg)
-	_, err = conn.Write(bin)
-	if err != nil {
-		logger.Error("node tcp mq handshake error: %v", err)
-		return
-	}
-	m.nodeTcp.conn = conn
+	nodeTcp := m.nodeTcp
+	for {
+		if nodeTcp.state == nodeConnClose { // 连接验证
+			return
+		}
+		conn, err := gunet.NewTcpC(nodeTcp.nodeMqAddr)
+		if err != nil {
+			logger.Error("node tcp mq connect error: %v", err)
+			return
+		}
+		netMsg := &NetMsg{
+			CmdId: smd.GateTcpMqHandshakeReq,
+			ServiceMsgByte: smd.EncodeProtoToPayload(
+				&smd.ProtoMsg{
+					CmdId: smd.GateTcpMqHandshakeReq,
+					PayloadMessage: &spb.GateTcpMqHandshakeReq{
+						Type:  m.serverType,
+						AppId: m.appId,
+					},
+				}),
+		}
+		bin := EncodePayloadToBin(netMsg)
+		_, err = conn.Write(bin)
+		if err != nil {
+			logger.Error("node tcp mq handshake error: %v", err)
+			return
+		}
+		nodeTcp.conn = conn
 
-	logger.Info("node tcp mq connect, addr: %v", m.nodeTcp.nodeMqAddr)
-	go m.nodeTcpMqRecvHandle()
+		nodeTcp.state = nodeConnEct
+		logger.Info("node tcp mq connect, addr: %v", nodeTcp.nodeMqAddr)
+		err = m.nodeTcpMqRecvHandle()
+		if err != nil {
+			logger.Error("node tcp mq receive error: %v", err)
+		}
+		time.Sleep(time.Second * 5)
+	}
 }
 
 // node收信
-func (m *MessageQueue) nodeTcpMqRecvHandle() {
+func (m *MessageQueue) nodeTcpMqRecvHandle() error {
 	nodeTcp := m.nodeTcp
 	if nodeTcp.conn == nil {
-		return
+		return errors.New("node tcp mq connect fail")
 	}
 	for {
 		bin, err := nodeTcp.conn.Read()
 		if err != nil {
 			logger.Error("node tcp mq receive error: %v", err)
-			return
+			nodeTcp.state = nodeConnLost
+			return err
 		}
 		netMsg := DecodeBinToPayload(bin)
 		m.netMsgOutput <- netMsg
+	}
+}
+
+func (n *NodeTcp) Close() {
+	if n.state == nodeConnClose {
+		return
+	}
+	n.state = nodeConnClose
+	if n.conn != nil {
+		n.conn.Close()
 	}
 }

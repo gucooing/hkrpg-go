@@ -23,7 +23,7 @@ func (m *MessageQueue) SendToGame(appid uint32, msg *NetMsg) {
 }
 
 func (m *MessageQueue) SendToNode(msg *NetMsg) error {
-	if m.nodeTcp.conn == nil {
+	if m.nodeTcp.state != nodeConnEct {
 		return errors.New("node conn nil")
 	}
 	msg.ServerType = spb.ServerType_SERVICE_NODE
