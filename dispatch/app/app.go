@@ -75,6 +75,7 @@ func Run(done chan os.Signal, cfg *dispatch.Config, appid string) error {
 	d.Server.IsAutoCreate = cfg.AutoCreate
 	d.Server.OuterAddr = fmt.Sprintf("http://%s:%s", netInfo.OuterAddr, netInfo.OuterPort)
 	d.Server.UpstreamServerList = cfg.UpstreamServerList
+	gin.SetMode(gin.ReleaseMode) // 初始化gin
 	sdkRouter := gin.New()
 	sdkRouter.Use(gin.Recovery())
 	d.Server.GetSdkRouter(sdkRouter) // 初始化路由

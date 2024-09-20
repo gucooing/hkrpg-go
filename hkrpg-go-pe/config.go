@@ -31,13 +31,10 @@ type DispatchList struct {
 }
 
 type GameServer struct {
-	AppNet        constant.AppNet `json:"AppNet"`
-	IsJumpMission bool            `json:"IsJumpMission"`
+	AppNet constant.AppNet `json:"AppNet"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
-	Addr    string `json:"Addr"`
-	Port    string `json:"Port"`
 }
 
 var CONF *Config = nil
@@ -98,11 +95,8 @@ var DefaultConfig = &Config{
 			OuterAddr: "127.0.0.1",
 			OuterPort: "20041",
 		},
-		IsJumpMission: true,
 	},
 	Gm: &Gm{
 		SignKey: "123456",
-		Addr:    "0.0.0.0",
-		Port:    "20011",
 	},
 }

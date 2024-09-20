@@ -48,7 +48,8 @@ GET: api?cmd=1001&uid=1&sign_key=123456&world_level=6
 ___
 
 ### 获取账号数据 cmd 1002
-**参数**:无
+**参数**:
+- **bin**: `uint32` 可选 | **1:二进制**
 #### 请求示例:
 ```plaintext
 GET: api?cmd=1002&uid=1&sign_key=123456
@@ -60,7 +61,7 @@ ___
 **参数**:无
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1003&sign_key=123456
+GET: api?cmd=1003&sign_key=123456&bin=1
 ```
 
 ___

@@ -40,7 +40,7 @@ func (s *NodeDiscoveryService) messageQueue() {
 	}
 }
 
-func (g *NodeDiscoveryService) gateMsgHandle(netMsg *mq.NetMsg) {
+func (s *NodeDiscoveryService) gateMsgHandle(netMsg *mq.NetMsg) {
 	switch netMsg.MsgType {
 	case mq.ServerMsg:
 		handle, ok := handlerFuncRouteMap[netMsg.CmdId]
@@ -49,6 +49,6 @@ func (g *NodeDiscoveryService) gateMsgHandle(netMsg *mq.NetMsg) {
 				smd.GetSharedCmdProtoMap().GetCmdNameByCmdId(netMsg.CmdId))
 			return
 		}
-		handle(g, netMsg.ServiceMsgPb)
+		handle(s, netMsg.ServiceMsgPb)
 	}
 }

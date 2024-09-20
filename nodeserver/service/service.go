@@ -347,17 +347,18 @@ func (s *NodeDiscoveryService) PlayerLogout(ctx context.Context, req *nodeapi.Pl
 	service := s.GetService(req.RegionName, nodeapi.ServerType_SERVICE_GATE, req.GateAppId)
 	if service == nil {
 		rsp.RetCode = nodeapi.Retcode_RET_GateNil
+	} else {
+		s.MessageQueue.SendToGate(req.GateAppId, &mq.NetMsg{
+			MsgType: mq.ServerMsg,
+			Uid:     req.Uid,
+			CmdId:   smd.PlayerLogoutReq,
+			ServiceMsgPb: &spb.PlayerLogoutReq{
+				Uid:       req.Uid,
+				GateAppId: req.OriginGateAppId,
+				Status:    spb.LOGOUTSTATUS_OFFLINE_REPEAT_LOGIN,
+			},
+		})
 	}
-	s.MessageQueue.SendToGate(req.GateAppId, &mq.NetMsg{
-		MsgType: mq.ServerMsg,
-		Uid:     req.Uid,
-		CmdId:   smd.PlayerLogoutReq,
-		ServiceMsgPb: &spb.PlayerLogoutReq{
-			Uid:       req.Uid,
-			GateAppId: req.OriginGateAppId,
-			Status:    spb.LOGOUTSTATUS_OFFLINE_REPEAT_LOGIN,
-		},
-	})
 
 	return rsp, nil
 }

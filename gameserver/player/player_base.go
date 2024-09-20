@@ -184,9 +184,6 @@ func (g *GamePlayer) GetPrivateChatHistoryCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetPrivateChatHistoryScRsp, rsp)
 }
 
-func (g *GamePlayer) SendMsgCsReq(payloadMsg pb.Message) {
-}
-
 func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg pb.Message) {
 	conf := gdconf.GetVideoVersionKey()
 	rsp := &proto.GetVideoVersionKeyScRsp{

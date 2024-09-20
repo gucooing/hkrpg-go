@@ -132,7 +132,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetFriendLoginInfoCsReq:         g.HandleGetFriendLoginInfoCsReq,   // 获取好友信息列表
 		cmd.GetFriendListInfoCsReq:          g.GetFriendListInfoCsReq,          // 获取好友信息
 		cmd.GetPrivateChatHistoryCsReq:      g.GetPrivateChatHistoryCsReq,      // 获取私聊记录
-		cmd.SendMsgCsReq:                    g.SendMsgCsReq,                    // 发送聊天信息
 		cmd.GetChatFriendHistoryCsReq:       g.GetChatFriendHistoryCsReq,       // 获取正在进行的聊天室
 		cmd.SearchPlayerCsReq:               g.SearchPlayerCsReq,               // 查找玩家
 		cmd.GetFriendApplyListInfoCsReq:     g.GetFriendApplyListInfoCsReq,     // 获取好友申请列表

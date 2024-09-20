@@ -13,6 +13,7 @@ import (
 	"github.com/gucooing/hkrpg-go/gameserver/player"
 	"github.com/gucooing/hkrpg-go/gateserver/session"
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/muipserver/api"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -36,12 +37,11 @@ type HkRpgGoServer struct {
 	playerMap     map[uint32]*PlayerGame
 	playerMapLock *sync.RWMutex // 读写锁
 
-	apiRouter *gin.Engine // http api
+	comm *api.ApiServer
 
 	// 下面是定时器
 	everyDay4        *time.Ticker
 	autoUpDataPlayer *time.Ticker
-	CmdRouteManager  *CmdRouteManager
 }
 
 type PlayerGame struct {
@@ -114,8 +114,8 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	// new game
 	player.ISPE = true
 	s.playerMap = make(map[uint32]*PlayerGame)
-	s.CmdRouteManager = NewCmdRouteManager()
 	// 启动http api
+	s.comm = api.NewApiServer(cfg.Gm.SignKey, sdkRouter)
 	go s.newHttpApi()
 	// 开启game定时器
 	s.autoUpDataPlayer = time.NewTicker(AutoUpDataPlayerTicker * time.Second)
@@ -151,11 +151,7 @@ func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
 		case session.SessionLogin:
 		case session.SessionActivity:
 			protoMsg := cmd.DecodePayloadToProto(packMsg)
-			if packMsg.CmdId == cmd.PlayerLogoutCsReq { // 下线请求
-				h.DelPlayer(p.S.Uid)
-				return
-			}
-			p.sendGameMsg(player.Client, packMsg.CmdId, protoMsg)
+			h.packetCapture(p, packMsg.CmdId, protoMsg)
 		case session.SessionFreeze:
 			continue
 		case session.SessionClose:
