@@ -65,41 +65,6 @@ func LoadConfig(confName string) error {
 var DefaultConfig = &Config{
 	LogLevel: "Info",
 	AppList: map[string]AppList{
-		"9001.1.1.1": {
-			App: map[string]App{
-				"port_player": {
-					Port: "20041",
-				},
-			},
-		},
-		"9001.2.1.1": {
-			App: map[string]App{
-				"port_gt": {
-					Port: "20071",
-				},
-			},
-		},
-		"9001.3.1.1": {
-			App: map[string]App{
-				"port_service": {
-					Port: "20081",
-				},
-			},
-		},
-		"9001.4.1.1": {
-			App: map[string]App{
-				"port_http": {
-					Port: "8080",
-				},
-			},
-		},
-		"9001.5.1.1": {
-			App: map[string]App{
-				"port_service": {
-					Port: "20091",
-				},
-			},
-		},
 		"9001.6.1.1": {
 			App: map[string]App{
 				"port_http": {

@@ -21,15 +21,16 @@ const (
 )
 
 type Session struct {
-	kcpConn      *kcp.UDPSession
-	SessionId    uint32
-	Uid          uint32            // 玩家游戏id
-	Seed         uint64            // 随机种子
-	XorKey       []byte            // 密钥
-	SessionState SessionState      // 状态
-	GameAppId    uint32            // 所属gs服务器(仅分布式
-	RecvChan     chan *alg.PackMsg // kcp接收通道
-	SendChan     chan *alg.PackMsg // kcp发送通道
+	kcpConn              *kcp.UDPSession
+	SessionId            uint32
+	Uid                  uint32            // 玩家游戏id
+	Seed                 uint64            // 随机种子
+	XorKey               []byte            // 密钥
+	SessionState         SessionState      // 状态
+	GameAppId            uint32            // 所属gs服务器(仅分布式
+	RecvChan             chan *alg.PackMsg // kcp接收通道
+	SendChan             chan *alg.PackMsg // kcp发送通道
+	KickFinishNotifyChan chan bool         // 等待离线通道
 }
 
 func NewSession(kcpConn *kcp.UDPSession, xorKey []byte) *Session {
@@ -40,6 +41,7 @@ func NewSession(kcpConn *kcp.UDPSession, xorKey []byte) *Session {
 	s.SessionState = SessionLogin
 	s.RecvChan = make(chan *alg.PackMsg, 100)
 	s.SendChan = make(chan *alg.PackMsg, 100)
+	s.KickFinishNotifyChan = make(chan bool, 1)
 
 	return s
 }

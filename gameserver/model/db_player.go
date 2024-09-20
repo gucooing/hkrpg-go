@@ -187,12 +187,6 @@ func (g *PlayerData) GetDataVersion() uint32 {
 	return db.DataVersion
 }
 
-func (g *PlayerData) AddDataVersion() uint32 {
-	db := g.GetBasicBin()
-	db.DataVersion++
-	return db.DataVersion
-}
-
 func (g *PlayerData) GetSignature() string {
 	db := g.GetBasicBin()
 	return db.Signature

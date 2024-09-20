@@ -18,6 +18,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/rpc"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	smd "github.com/gucooing/hkrpg-go/protocol/server"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -159,6 +160,8 @@ func (g *GateServer) loginSessionManagement() {
 			switch netMsg.OriginServerType {
 			case spb.ServerType_SERVICE_GAME:
 				go g.gameMsgHandle(netMsg)
+			case spb.ServerType_SERVICE_NODE:
+				go g.nodeMsgHandle(netMsg, loginSessionMap)
 			default:
 				logger.Info("error ServerType:%s", netMsg.OriginServerType.String())
 			}
@@ -180,6 +183,23 @@ func (g *GateServer) gameMsgHandle(netMsg *mq.NetMsg) {
 		}
 	case mq.ServerMsg:
 		logger.Info("to gate msg")
+	}
+}
+
+func (g *GateServer) nodeMsgHandle(netMsg *mq.NetMsg, loginSessionMap map[uint32]*session.Session) {
+	switch netMsg.MsgType {
+	case mq.PlayerLoginKill:
+		if s, ok := loginSessionMap[netMsg.Uid]; ok {
+			s.KickFinishNotifyChan <- true
+		}
+	case mq.ServerMsg:
+		handle, ok := handlerFuncRouteMap[netMsg.CmdId]
+		if !ok {
+			logger.Error("server msg error,cmd:%s",
+				smd.GetSharedCmdProtoMap().GetCmdNameByCmdId(netMsg.CmdId))
+			return
+		}
+		handle(g, netMsg.ServiceMsgPb)
 	}
 }
 
@@ -254,9 +274,14 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 		rsp.Retcode = uint32(proto.Retcode_RET_REACH_MAX_PLAYER_NUM)
 		return rsp
 	}
+
+	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
+
 	// token 验证
-	// rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
-	// return rsp
+	if req.Token != account.ComboToken {
+		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
+		return rsp
+	}
 
 	// 登录分布式锁
 	if ok := database.LoginDistLockSync(database.GATE.LoginRedis, req.AccountUid); !ok {
@@ -264,7 +289,6 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 		return rsp
 	}
 
-	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
 	// ban 验证
 	if account.IsBan && account.BanEndTime >= time.Now().Unix() {
 		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)
@@ -292,7 +316,33 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 				}
 			} else {
 				// 异地顶号
-
+				nodeReq, err := g.DiscoveryClient.PlayerLogout(context.TODO(), &nodeapi.PlayerLogoutReq{
+					Uid:             account.Uid,
+					RegionName:      g.RegionName,
+					OriginGateAppId: g.AppId,
+					GateAppId:       statu.GateAppId,
+				})
+				if err != nil {
+					rsp.Retcode = uint32(proto.Retcode_RET_TIMEOUT)
+					logger.Error("内部服务错误:%s", err.Error())
+					return rsp
+				}
+				// 顶号等待
+				logger.Info("run global interrupt login kick wait, uid: %v", account.Uid)
+				timer := time.NewTimer(time.Second * 10)
+				switch nodeReq.RetCode {
+				case nodeapi.Retcode_RET_GateNil:
+				default:
+					select {
+					case <-timer.C:
+						logger.Error("global interrupt login kick wait timeout, uid: %v", account.Uid)
+						timer.Stop()
+						rsp.Retcode = uint32(proto.Retcode_RET_TIMEOUT)
+						return rsp
+					case <-s.KickFinishNotifyChan:
+						timer.Stop()
+					}
+				}
 			}
 		}
 	}

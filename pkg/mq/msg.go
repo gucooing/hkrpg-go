@@ -4,7 +4,10 @@ import (
 	"encoding/binary"
 	"log"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
+	smd "github.com/gucooing/hkrpg-go/protocol/server"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type NetMsg struct {
@@ -17,18 +20,18 @@ type NetMsg struct {
 	Uid               uint32         // 玩家id // 4
 	CmdId             uint16         // cmd id // 2
 	ServiceMsgByte    []byte         // 消息
+	ServiceMsgPb      pb.Message     // pb消息
 }
 
 type MsgType int
-
-var err error
 
 const (
 	GameServer MsgType = 1 // 玩家消息转发
 	ServerMsg  MsgType = 2 // 服务消息
 	// 玩家事件
-	PlayerLogin  MsgType = 3 // 玩家登录
-	PlayerLogout MsgType = 4 // 玩家下线
+	PlayerLogin     MsgType = 3 // 玩家登录
+	PlayerLogout    MsgType = 4 // 玩家下线
+	PlayerLoginKill MsgType = 5 // 玩家重复登录下线回调给gate
 )
 
 func DecodeBinToPayload(data []byte) *NetMsg {
@@ -64,6 +67,13 @@ func DecodeBinToPayload(data []byte) *NetMsg {
 		ServiceMsgByte:    make([]byte, protoLen),
 	}
 	copy(netMsg.ServiceMsgByte, serviceMsgByte)
+	if netMsg.MsgType == ServerMsg {
+		netMsg.ServiceMsgPb = smd.DecodePayloadToProto(&alg.PackMsg{
+			CmdId:     netMsg.CmdId,
+			HeadData:  nil,
+			ProtoData: netMsg.ServiceMsgByte,
+		})
+	}
 	return netMsg
 }
 

@@ -27,6 +27,7 @@ const (
 	NodeDiscovery_GetAllRegionInfo_FullMethodName   = "/proto.NodeDiscovery/GetAllRegionInfo"
 	NodeDiscovery_GetRegionMinGame_FullMethodName   = "/proto.NodeDiscovery/GetRegionMinGame"
 	NodeDiscovery_GetRegionKey_FullMethodName       = "/proto.NodeDiscovery/GetRegionKey"
+	NodeDiscovery_PlayerLogout_FullMethodName       = "/proto.NodeDiscovery/PlayerLogout"
 )
 
 // NodeDiscoveryClient is the client API for NodeDiscovery service.
@@ -51,6 +52,8 @@ type NodeDiscoveryClient interface {
 	GetRegionMinGame(ctx context.Context, in *GetRegionMinGameReq, opts ...grpc.CallOption) (*GetRegionMinGameRsp, error)
 	// 获取区服密钥
 	GetRegionKey(ctx context.Context, in *GetRegionKeyReq, opts ...grpc.CallOption) (*GetRegionKeyRsp, error)
+	// 转发下线玩家请求
+	PlayerLogout(ctx context.Context, in *PlayerLogoutReq, opts ...grpc.CallOption) (*PlayerLogoutRsp, error)
 }
 
 type nodeDiscoveryClient struct {
@@ -141,6 +144,16 @@ func (c *nodeDiscoveryClient) GetRegionKey(ctx context.Context, in *GetRegionKey
 	return out, nil
 }
 
+func (c *nodeDiscoveryClient) PlayerLogout(ctx context.Context, in *PlayerLogoutReq, opts ...grpc.CallOption) (*PlayerLogoutRsp, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(PlayerLogoutRsp)
+	err := c.cc.Invoke(ctx, NodeDiscovery_PlayerLogout_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // NodeDiscoveryServer is the server API for NodeDiscovery service.
 // All implementations must embed UnimplementedNodeDiscoveryServer
 // for forward compatibility.
@@ -163,6 +176,8 @@ type NodeDiscoveryServer interface {
 	GetRegionMinGame(context.Context, *GetRegionMinGameReq) (*GetRegionMinGameRsp, error)
 	// 获取区服密钥
 	GetRegionKey(context.Context, *GetRegionKeyReq) (*GetRegionKeyRsp, error)
+	// 转发下线玩家请求
+	PlayerLogout(context.Context, *PlayerLogoutReq) (*PlayerLogoutRsp, error)
 	mustEmbedUnimplementedNodeDiscoveryServer()
 }
 
@@ -196,6 +211,9 @@ func (UnimplementedNodeDiscoveryServer) GetRegionMinGame(context.Context, *GetRe
 }
 func (UnimplementedNodeDiscoveryServer) GetRegionKey(context.Context, *GetRegionKeyReq) (*GetRegionKeyRsp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetRegionKey not implemented")
+}
+func (UnimplementedNodeDiscoveryServer) PlayerLogout(context.Context, *PlayerLogoutReq) (*PlayerLogoutRsp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PlayerLogout not implemented")
 }
 func (UnimplementedNodeDiscoveryServer) mustEmbedUnimplementedNodeDiscoveryServer() {}
 func (UnimplementedNodeDiscoveryServer) testEmbeddedByValue()                       {}
@@ -362,6 +380,24 @@ func _NodeDiscovery_GetRegionKey_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _NodeDiscovery_PlayerLogout_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PlayerLogoutReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(NodeDiscoveryServer).PlayerLogout(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: NodeDiscovery_PlayerLogout_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(NodeDiscoveryServer).PlayerLogout(ctx, req.(*PlayerLogoutReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // NodeDiscovery_ServiceDesc is the grpc.ServiceDesc for NodeDiscovery service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -400,6 +436,10 @@ var NodeDiscovery_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetRegionKey",
 			Handler:    _NodeDiscovery_GetRegionKey_Handler,
+		},
+		{
+			MethodName: "PlayerLogout",
+			Handler:    _NodeDiscovery_PlayerLogout_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -236,6 +236,13 @@ func (m *MessageQueue) sendHandler() {
 				logger.Error("unknown server type: %v", netMsg.ServerType)
 				continue
 			}
+			if netMsg.MsgType == ServerMsg {
+				netMsg.ServiceMsgByte = smd.EncodeProtoToPayload(
+					&smd.ProtoMsg{
+						CmdId:          netMsg.CmdId,
+						PayloadMessage: netMsg.ServiceMsgPb,
+					})
+			}
 
 			bin := EncodePayloadToBin(netMsg)
 			_, err := conn.Write(bin)

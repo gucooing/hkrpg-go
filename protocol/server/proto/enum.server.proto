@@ -123,10 +123,11 @@ enum PlayerStatus {// 玩家状态
   PlayerStatus_Logout = 4;//离线等待中
 }
 
-enum PlayerOfflineReason {// 玩家离线原因
+enum LOGOUTSTATUS {// 玩家离线原因
   OFFLINE_NONE = 0; // 正常离线
   OFFLINE_GAME_ERROR = 1; // gs异常
   OFFLINE_REPEAT_LOGIN = 2; // 重复登录
+  OFFLINE_GM= 3; // GM 离线
 }
 
 enum ChallengeStatus {// 正在进行的忘却之庭关卡状态

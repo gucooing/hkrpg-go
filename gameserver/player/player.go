@@ -140,8 +140,6 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 			database.DelPlayerStatus(database.GSS.StatusRedis, g.Uid)
 		}
 	}
-	//  确认写入，更新数据版本
-	g.GetPd().AddDataVersion()
 	dbDate := new(constant.PlayerData)
 	dbDate.Uid = g.Uid
 	dbDate.Level = g.GetPd().GetLevel()

@@ -20,6 +20,8 @@ import (
 )
 
 func Run(done chan os.Signal, cfg *gateserver.Config, appid string) error {
+	// new db
+	database.NewGateStore(cfg.MysqlConf, cfg.RedisConf)
 	appInfo, ok := cfg.AppList[appid]
 	if !ok {
 		return fmt.Errorf("app not exist")
@@ -69,8 +71,6 @@ func Run(done chan os.Signal, cfg *gateserver.Config, appid string) error {
 		return fmt.Errorf("message queue nil")
 	}
 	defer messageQueue.Close()
-	// new db
-	database.NewGateStore(cfg.MysqlConf, cfg.RedisConf)
 	// new gate
 	g := service.NewGateServer(discoveryClient, messageQueue, netInfo, appInfo, alg.GetAppIdUint32(appid))
 	if g == nil {

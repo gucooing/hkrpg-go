@@ -22,6 +22,8 @@ service NodeDiscovery {
   rpc GetRegionMinGame (GetRegionMinGameReq) returns (GetRegionMinGameRsp) {}
   // 获取区服密钥
   rpc GetRegionKey (GetRegionKeyReq) returns (GetRegionKeyRsp) {}
+  // 转发下线玩家请求
+  rpc PlayerLogout (PlayerLogoutReq) returns (PlayerLogoutRsp) {}
 }
 
 message TestReq {
@@ -119,9 +121,21 @@ message GetRegionKeyRsp{
   bytes client_secret_key = 1;
 }
 
+message PlayerLogoutReq {
+  uint32 uid = 1;
+  string region_name = 2;
+  uint32 gate_app_id = 3;
+  uint32 origin_gate_app_id = 4;
+}
+
+message PlayerLogoutRsp {
+    Retcode ret_code =1;
+}
+
 enum Retcode {
   RET_SUCC = 0; // 成功
   RET_Reconnect = 1; // 重连
+  RET_GateNil =2; // gate 服务不存在
 }
 
 enum ServerType {// 服务分类

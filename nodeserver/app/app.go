@@ -19,6 +19,8 @@ import (
 )
 
 func Run(done chan os.Signal, cfg *config.Config, appid string) error {
+	// new db
+	database.NewNodeStore(cfg.MysqlConf, cfg.RedisConf)
 	appInfo, ok := cfg.AppList[appid]
 	if !ok {
 		return fmt.Errorf("app not exist")
@@ -49,8 +51,6 @@ func Run(done chan os.Signal, cfg *config.Config, appid string) error {
 		return fmt.Errorf("message queue nil")
 	}
 	node.MessageQueue = messageQueue
-	// new db
-	database.NewNodeStore(cfg.MysqlConf, cfg.RedisConf)
 	// new node
 	service.NewNodeService(node)
 	logger.Info("node service start")

@@ -11,6 +11,8 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/mq"
 	"github.com/gucooing/hkrpg-go/pkg/random"
+	smd "github.com/gucooing/hkrpg-go/protocol/server"
+	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
 type NodeDiscoveryService struct {
@@ -40,13 +42,6 @@ type Service struct {
 	outerPort     string               // 外网端口
 	outerAddr     string               // 外网地址
 	status        nodeapi.ServerStatus // 服务状态
-}
-
-type PlayerInfo struct {
-	uid        uint32 // uid
-	regionName string // 区服
-	gateAppId  uint32 // 登录的gate
-	gameAppId  uint32 // 登录的game
 }
 
 func newMapService() map[nodeapi.ServerType]map[uint32]*Service {
@@ -344,4 +339,25 @@ func (s *NodeDiscoveryService) GetRegionKey(ctx context.Context, req *nodeapi.Ge
 			ClientSecretKey: region.ClientSecretKey.Bytes(),
 		}, nil
 	}
+}
+
+// 下线通知
+func (s *NodeDiscoveryService) PlayerLogout(ctx context.Context, req *nodeapi.PlayerLogoutReq) (*nodeapi.PlayerLogoutRsp, error) {
+	rsp := &nodeapi.PlayerLogoutRsp{}
+	service := s.GetService(req.RegionName, nodeapi.ServerType_SERVICE_GATE, req.GateAppId)
+	if service == nil {
+		rsp.RetCode = nodeapi.Retcode_RET_GateNil
+	}
+	s.MessageQueue.SendToGate(req.GateAppId, &mq.NetMsg{
+		MsgType: mq.ServerMsg,
+		Uid:     req.Uid,
+		CmdId:   smd.PlayerLogoutReq,
+		ServiceMsgPb: &spb.PlayerLogoutReq{
+			Uid:       req.Uid,
+			GateAppId: req.OriginGateAppId,
+			Status:    spb.LOGOUTSTATUS_OFFLINE_REPEAT_LOGIN,
+		},
+	})
+
+	return rsp, nil
 }

@@ -20,6 +20,8 @@ import (
 )
 
 func Run(done chan os.Signal, cfg *gameserver.Config, appid string) error {
+	// new db
+	database.NewGameStore(cfg.MysqlConf, cfg.RedisConf)
 	appInfo, ok := cfg.AppList[appid]
 	if !ok {
 		return fmt.Errorf("app not exist")
@@ -71,8 +73,6 @@ func Run(done chan os.Signal, cfg *gameserver.Config, appid string) error {
 	defer messageQueue.Close()
 	// new conf
 	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
-	// new db
-	database.NewGameStore(cfg.MysqlConf, cfg.RedisConf)
 	// new game
 	g := service.NewGameServer(discoveryClient, messageQueue, netInfo, appInfo, alg.GetAppIdUint32(appid))
 	if g == nil {

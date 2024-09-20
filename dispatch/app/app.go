@@ -20,6 +20,8 @@ import (
 )
 
 func Run(done chan os.Signal, cfg *dispatch.Config, appid string) error {
+	// new db
+	database.NewDisaptchStore(cfg.MysqlConf, cfg.RedisConf)
 	appInfo, ok := cfg.AppList[appid]
 	if !ok {
 		return fmt.Errorf("app not exist")
@@ -68,8 +70,6 @@ func Run(done chan os.Signal, cfg *dispatch.Config, appid string) error {
 		return fmt.Errorf("message queue nil")
 	}
 	defer messageQueue.Close()
-	// new db
-	database.NewDisaptchStore(cfg.MysqlConf, cfg.RedisConf)
 	// new sdk
 	d := service.NewDispatch(discoveryClient, messageQueue, netInfo, appInfo, alg.GetAppIdUint32(appid))
 	d.Server.IsAutoCreate = cfg.AutoCreate
