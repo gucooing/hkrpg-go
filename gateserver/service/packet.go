@@ -1,6 +1,8 @@
 package service
 
 import (
+	"time"
+
 	"github.com/gucooing/hkrpg-go/gateserver/session"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -43,23 +45,47 @@ func PlayerLogoutCsReq(g *GateServer, s *session.Session, payloadMsg pb.Message)
 
 func SendMsgCsReq(g *GateServer, s *session.Session, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SendMsgCsReq)
-	notify := &proto.RevcMsgScNotify{
-		SourceUid:   s.Uid,
-		MessageText: req.MessageText,
-		ExtraId:     req.ExtraId,
-		MessageType: req.MessageType,
-		TargetUid:   req.TargetList[0],
-		IGNEAJDPAPE: req.IGNEAJDPAPE,
-		ChatType:    req.ChatType,
+
+	targetList := req.TargetList
+	targetList = append(targetList, s.Uid)
+	for _, targetUid := range targetList {
+		target := g.GetSession(targetUid)
+		if target == nil {
+			continue
+		}
+		notify := &proto.RevcMsgScNotify{
+			SourceUid:   s.Uid,
+			MessageText: req.MessageText,
+			ExtraId:     req.ExtraId,
+			MessageType: req.MessageType,
+			TargetUid:   targetUid,
+			IGNEAJDPAPE: req.IGNEAJDPAPE,
+			ChatType:    req.ChatType,
+		}
+		protoData, err := pb.Marshal(notify)
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
+		s.SendChan <- &alg.PackMsg{
+			CmdId:     cmd.RevcMsgScNotify,
+			HeadData:  nil,
+			ProtoData: protoData,
+		}
 	}
-	protoData, err := pb.Marshal(notify)
+
+	rsp := &proto.SendMsgScRsp{
+		EndTime: uint64(time.Now().Unix()),
+		Retcode: 0,
+	}
+	rspbin, err := pb.Marshal(rsp)
 	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
 	s.SendChan <- &alg.PackMsg{
-		CmdId:     cmd.RevcMsgScNotify,
+		CmdId:     cmd.SendMsgScRsp,
 		HeadData:  nil,
-		ProtoData: protoData,
+		ProtoData: rspbin,
 	}
 }

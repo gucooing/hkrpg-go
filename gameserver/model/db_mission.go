@@ -1,9 +1,12 @@
 package model
 
 import (
+	"fmt"
+
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
@@ -668,7 +671,14 @@ func (g *PlayerData) AcceptSubMission() []uint32 {
 			case constant.MissionBeginTypeCustomValue:
 				isNext = g.MissionCustomValue(subInfo.ID, m.MissionCustomValue)
 			default:
-				logger.Error("error TakeType missionId:%v", subInfo.ID)
+				client.PushServer(&constant.LogPush{
+					PushMessage: constant.PushMessage{
+						Tag: "Mission",
+					},
+					LogMsg: fmt.Sprintf("未知的子任务接取条件,MissionId:%v,接取条件:%s",
+						subInfo.ID, subInfo.TakeType),
+					LogLevel: constant.ERROR,
+				})
 			}
 			if isNext {
 				acceptSubMissionList = append(acceptSubMissionList, subInfo.ID)
@@ -710,6 +720,7 @@ func (g *PlayerData) MissionCustomValue(subId uint32, customValueList []*spb.Mis
 func (g *PlayerData) IsAcceptMainMission(mission *gdconf.MainMission, mainMissionList, finishMainMissionList map[uint32]*spb.MissionInfo) bool {
 	var isReceive = false
 	if mission == nil ||
+		mission.Type == "Daily" || // 不接取日常任务
 		mainMissionList == nil ||
 		finishMainMissionList == nil ||
 		mission.TakeParam == nil {
@@ -729,7 +740,17 @@ func (g *PlayerData) IsAcceptMainMission(mission *gdconf.MainMission, mainMissio
 			if take.Value <= g.GetLevel() {
 				isReceive = true
 			}
+		case constant.MissionBeginTypeManual:
+			return true
 		default:
+			client.PushServer(&constant.LogPush{
+				PushMessage: constant.PushMessage{
+					Tag: "Mission",
+				},
+				LogMsg: fmt.Sprintf("未知的主任务接取条件,MissionId:%v,接取条件:%s",
+					mission.MainMissionID, take.Type),
+				LogLevel: constant.ERROR,
+			})
 			return false
 		}
 	}

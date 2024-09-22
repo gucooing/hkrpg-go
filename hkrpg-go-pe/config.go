@@ -17,6 +17,7 @@ type Config struct {
 	Dispatch           *Dispatch   `json:"Dispatch"`
 	GameServer         *GameServer `json:"GameServer"`
 	Gm                 *Gm         `json:"Gm"`
+	PushUrl            string      `json:"PushUrl"`
 }
 
 type Dispatch struct {
@@ -72,6 +73,7 @@ var DefaultConfig = &Config{
 	GameDataConfigPath: "resources",
 	UpstreamServerList: make([]string, 0),
 	SqlPath:            "./conf/hkrpg-go-pe.db",
+	PushUrl:            "http://localhost:3000",
 	Dispatch: &Dispatch{
 		AutoCreate: true,
 		AppNet: constant.AppNet{

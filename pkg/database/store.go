@@ -120,6 +120,7 @@ func NewPE(dsn string) {
 		&constant.BlockData{},    // 地图数据
 		&constant.RogueConf{},    // 模拟宇宙配置
 		&constant.ScheduleConf{}, // 忘记了
+		&constant.ApplyFriend{},  // 好友申请
 		&constant.PlayerBasic{},  // 好友简要信息
 		&constant.Mail{},         // 邮件配置
 		&constant.PlayerMail{},   // 玩家邮件配置

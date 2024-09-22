@@ -155,6 +155,18 @@ func getApplyFriendMysql(db *gorm.DB, uid uint32) *constant.ApplyFriend {
 	return applyFriend
 }
 
+// 设置玩家好友申请信息
+
+func SetPlayerFriend(rc *redis.Client, db *gorm.DB, uid uint32, value []byte) bool {
+	if rc != nil {
+		return setPlayerFriendRedis(rc, uid, value)
+	}
+	if db != nil {
+
+	}
+	return false
+}
+
 // 获取待加入好友
 func GetAcceptApplyFriend(rc *redis.Client, db *gorm.DB, uid uint32) ([]byte, bool) {
 	if rc != nil {

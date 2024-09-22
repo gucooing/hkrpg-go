@@ -91,8 +91,8 @@ func (g *PlayerData) MailReadItem(itemList []*constant.Item, allSync *AllPlayerS
 
 func (g *PlayerData) GetAllMail(mailMap map[uint32]*constant.Mail) []*proto.ClientMail {
 	mailList := make([]*proto.ClientMail, 0)
-	for id, mail := range mailMap {
-		db := g.GetMailById(id)
+	for _, mail := range mailMap {
+		db := g.GetMailById(mail.Id)
 		if db.IsDel {
 			continue
 		}

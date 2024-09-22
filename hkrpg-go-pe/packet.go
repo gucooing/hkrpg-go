@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/player"
-	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
@@ -16,6 +14,7 @@ type packetFunc func(h *HkRpgGoServer, p *PlayerGame, protoMsg pb.Message)
 var packetCaptureMap = map[uint16]packetFunc{ // 抽包
 	cmd.PlayerLogoutCsReq: PlayerLogoutCsReq, // 下线请求
 	cmd.SendMsgCsReq:      SendMsgCsReq,      // 发送聊天消息
+	cmd.ApplyFriendCsReq:  ApplyFriendCsReq,  // 发起好友申请
 }
 
 func (h *HkRpgGoServer) packetCapture(p *PlayerGame, cmdId uint16, protoMsg pb.Message) {
@@ -39,7 +38,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 	for _, targetUid := range targetList {
 		target := h.GetPlayer(targetUid)
 		if target == nil {
-			return
+			continue
 		}
 		notify := &proto.RevcMsgScNotify{
 			SourceUid:   p.S.Uid,
@@ -50,30 +49,30 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 			IGNEAJDPAPE: req.IGNEAJDPAPE,
 			ChatType:    req.ChatType,
 		}
-		protoData, err := pb.Marshal(notify)
-		if err != nil {
-			logger.Error(err.Error())
-			return
-		}
-		target.S.SendChan <- &alg.PackMsg{
+		target.toSession(player.Msg{
 			CmdId:     cmd.RevcMsgScNotify,
-			HeadData:  nil,
-			ProtoData: protoData,
-		}
+			PlayerMsg: notify,
+		})
 	}
 
 	rsp := &proto.SendMsgScRsp{
 		EndTime: uint64(time.Now().Unix()),
 		Retcode: 0,
 	}
-	rspbin, err := pb.Marshal(rsp)
-	if err != nil {
-		logger.Error(err.Error())
-		return
-	}
-	p.S.SendChan <- &alg.PackMsg{
+	p.toSession(player.Msg{
 		CmdId:     cmd.SendMsgScRsp,
-		HeadData:  nil,
-		ProtoData: rspbin,
+		PlayerMsg: rsp,
+	})
+}
+
+func ApplyFriendCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ApplyFriendCsReq)
+	rsp := &proto.ApplyFriendScRsp{
+		Uid:     req.Uid,
+		Retcode: 0,
 	}
+	p.toSession(player.Msg{
+		CmdId:     cmd.ApplyFriendScRsp,
+		PlayerMsg: rsp,
+	})
 }

@@ -108,6 +108,7 @@ type PlayerUid struct {
 
 type ApplyFriend struct {
 	Uid          uint32 `gorm:"primarykey;AUTO_INCREMENT"`
+	ApplyUid     uint32 `gorm:"primarykey;AUTO_INCREMENT"` // 申请者
 	ReceiveApply []byte
 }
 

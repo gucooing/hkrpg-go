@@ -1,10 +1,13 @@
 package player
 
 import (
+	"fmt"
+
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
@@ -405,6 +408,8 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 		}
 		ifFinish := false
 		switch conf.FinishType {
+		case constant.Talk:
+			break
 		case constant.GetTrialAvatar: // 加载试用角色
 			lineAvatar := g.GetPd().GetTrialAvatar(conf.ParamInt1)
 			g.AddAvatarSceneGroupRefreshScNotify(lineAvatar, g.GetPd().GetPosPb(), g.GetPd().GetRotPb())
@@ -478,6 +483,15 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 		case constant.AetherDivideCollectSpiritType: // 以太战线获得新角色
 			ifFinish = true // 直接完成
 			break
+		default:
+			client.PushServer(&constant.LogPush{
+				PushMessage: constant.PushMessage{
+					Tag: "Mission",
+				},
+				LogMsg: fmt.Sprintf("未知的任务完成条件,MissionId:%v,完成条件:%s",
+					conf.ID, conf.FinishType),
+				LogLevel: constant.ERROR,
+			})
 		}
 		if ifFinish {
 			finishServerSubMissionList = append(finishServerSubMissionList, id)
@@ -560,6 +574,15 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32, pileItem []*model.
 			if ok {
 				g.EnterSceneByServerScNotify(entryId, 0, anchorGroup, anchorId)
 			}
+		default:
+			client.PushServer(&constant.LogPush{
+				PushMessage: constant.PushMessage{
+					Tag: "Mission",
+				},
+				LogMsg: fmt.Sprintf("未知的任务自动执行,MissionId:%v,自动执行:%s",
+					conf.ID, finishAction.FinishActionType),
+				LogLevel: constant.ERROR,
+			})
 		}
 	}
 }
