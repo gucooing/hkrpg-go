@@ -110,7 +110,6 @@ resources的准备:
 ./gameserver -i 9001.2.1.1
 ./gateserver -i 9001.1.1.1
 ./dispatch -i 9001.4.1.1
-./multiserver -i 9001.5.1.1
 ./muipserver -i 9001.6.1.1
 ```
 
@@ -122,8 +121,6 @@ resources的准备:
 ### gateserver 网关服务器（有状态，可集群），内部网络与外界唯一交互口
 
 ### gameserver 逻辑服务器（有状态，可集群），处理业务逻辑
-
-### multiserver 多人服务器（有状态，不可集群）没有用的服务
 
 ### muipserver 目前仅负责api
 

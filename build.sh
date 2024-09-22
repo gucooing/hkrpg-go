@@ -19,11 +19,10 @@ DISPATCH_PATH=./cmd/dispatch/dispatch.go
 GAMESERVER_PATH=./cmd/gameserver/gameserver.go
 GATE_PATH=./cmd/gateserver/gateserver.go
 MUIP_PATH=./cmd/muipserver/muipserver.go
-MULTI_PATH=./cmd/multiserver/multiserver.go
 NODE_PATH=./cmd/nodeserver/nodeserver.go
 ROBOT_PATH=./cmd/robot/robot.go
 
-for file in $PE_PATH $DISPATCH_PATH $GAMESERVER_PATH $GATE_PATH $MUIP_PATH $MULTI_PATH $NODE_PATH $ROBOT_PATH; do
+for file in $PE_PATH $DISPATCH_PATH $GAMESERVER_PATH $GATE_PATH $MUIP_PATH $NODE_PATH $ROBOT_PATH; do
   for platform in $PLATFORMS; do
       GOOS=$(echo $platform | cut -d'/' -f1)
       GOARCH=$(echo $platform | cut -d'/' -f2)

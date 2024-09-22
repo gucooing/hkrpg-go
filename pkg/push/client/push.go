@@ -69,6 +69,9 @@ func logPush(log *constant.LogPush) {
 }
 
 func isHash(tag, msg string) bool {
+	if tag == "" {
+		return false
+	}
 	x := md5.Sum([]byte(msg))
 	h := hex.EncodeToString(x[:])
 	is := false

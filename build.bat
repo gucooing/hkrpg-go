@@ -13,7 +13,6 @@ set "DISPATCH_PATH=.\cmd\dispatch\dispatch.go"
 set "GAMESERVER_PATH=.\cmd\gameserver\gameserver.go"
 set "GATE_PATH=.\cmd\gateserver\gateserver.go"
 set "MUIP_PATH=.\cmd\muipserver\muipserver.go"
-set "MULTI_PATH=.\cmd\multiserver\multiserver.go"
 set "NODE_PATH=.\cmd\nodeserver\nodeserver.go"
 set "ROBOT_PATH=.\cmd\robot\robot.go"
 
@@ -28,7 +27,7 @@ for %%p in (%PLATFORMS%) do (
         if not exist "!CURRENT_OUT_DIR!" mkdir "!CURRENT_OUT_DIR!"
 
 
-        for %%f in ("%PE_PATH%" "%DISPATCH_PATH%" "%GAMESERVER_PATH%" "%GATE_PATH%" "%MUIP_PATH%" "%MULTI_PATH%" "%NODE_PATH%" "%ROBOT_PATH%") do (
+        for %%f in ("%PE_PATH%" "%DISPATCH_PATH%" "%GAMESERVER_PATH%" "%GATE_PATH%" "%MUIP_PATH%" "%NODE_PATH%" "%ROBOT_PATH%") do (
             set "FILENAME=%%~nxf"
             set "OUTPUT_NAME=%%~nf"
 
