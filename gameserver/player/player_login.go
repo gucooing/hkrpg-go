@@ -2,6 +2,7 @@ package player
 
 import (
 	"encoding/base64"
+	"os"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
@@ -112,6 +113,17 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 		},
 	},
 	)
+}
+
+func (g *GamePlayer) Dump() {
+	content, _ := os.ReadFile("./data/dump-csharp.lua")
+	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{
+		DownloadData: &proto.ClientDownloadData{
+			Version: 1,
+			Time:    1935664461,
+			Data:    content,
+		},
+	})
 }
 
 // 1.检查是否有好友再redis里

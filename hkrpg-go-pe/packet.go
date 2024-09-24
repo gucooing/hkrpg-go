@@ -1,6 +1,7 @@
 package hkrpg_go_pe
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/player"
@@ -34,26 +35,49 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SendMsgCsReq)
 
 	targetList := req.TargetList
-	targetList = append(targetList, p.S.Uid)
+	notify := &proto.RevcMsgScNotify{
+		SourceUid:   p.S.Uid,
+		MessageText: req.MessageText,
+		ExtraId:     req.ExtraId,
+		MessageType: req.MessageType,
+		IGNEAJDPAPE: req.IGNEAJDPAPE,
+		ChatType:    req.ChatType,
+	}
 	for _, targetUid := range targetList {
+		notify.TargetUid = targetUid
+		p.toSession(player.Msg{
+			CmdId:     cmd.RevcMsgScNotify,
+			PlayerMsg: notify,
+		})
+		if targetUid == 0 {
+			bot := &proto.RevcMsgScNotify{
+				SourceUid:   0,
+				TargetUid:   p.S.Uid,
+				MessageText: p.GamePlayer.EnterCommand(player.Msg{CommandList: strings.Split(req.MessageText, " ")}),
+				ExtraId:     req.ExtraId,
+				MessageType: req.MessageType,
+				IGNEAJDPAPE: req.IGNEAJDPAPE,
+				ChatType:    req.ChatType,
+			}
+			p.toSession(player.Msg{
+				CmdId:     cmd.RevcMsgScNotify,
+				PlayerMsg: bot,
+			})
+			continue
+		}
 		target := h.GetPlayer(targetUid)
 		if target == nil {
 			continue
-		}
-		notify := &proto.RevcMsgScNotify{
-			SourceUid:   p.S.Uid,
-			MessageText: req.MessageText,
-			ExtraId:     req.ExtraId,
-			MessageType: req.MessageType,
-			TargetUid:   targetUid,
-			IGNEAJDPAPE: req.IGNEAJDPAPE,
-			ChatType:    req.ChatType,
 		}
 		target.toSession(player.Msg{
 			CmdId:     cmd.RevcMsgScNotify,
 			PlayerMsg: notify,
 		})
 	}
+
+	// if req.MessageText == "dump" {
+	// 	p.GamePlayer.Dump()
+	// }
 
 	rsp := &proto.SendMsgScRsp{
 		EndTime: uint64(time.Now().Unix()),

@@ -285,7 +285,7 @@ func (g *GamePlayer) RecvMsg() {
 			case Client:
 				g.registerMessage(recvMsg.CmdId, recvMsg.PlayerMsg)
 			case GmReq:
-				g.EnterCommand(recvMsg)
+				logger.Info(g.EnterCommand(recvMsg))
 			case DailyTask:
 				g.DailyTaskNotify()
 			}

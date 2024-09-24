@@ -27,7 +27,7 @@ func (s *Server) PushLog(c *gin.Context) {
 			logger.Error("push log bind error, invalid log level: %s", log.LogLevel)
 			return
 		}
-		s.WebHooks(fmt.Sprintf("额外标签:%s|%s", log.Tag, log.LogMsg), url)
+		s.WebHooks(fmt.Sprintf("额外标签:%s\n%s", log.Tag, log.LogMsg), url)
 	}
 }
 

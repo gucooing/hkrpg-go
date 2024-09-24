@@ -8,7 +8,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
@@ -90,7 +92,7 @@ func (s *Server) handleGateServerResponse(info *UrlList, seed string) bool {
 			logger.Info("Version:%s|Seed:%s|NewMdkResVersion:%s|NewIfixVersion:%s",
 				info.Version, seed, dispatch.MdkResVersion, dispatch.IfixVersion)
 		}
-		s.UpstreamServer[seed] = &UrlList{
+		urlList := &UrlList{
 			Version:        info.Version,
 			MdkResVersion:  dispatch.MdkResVersion,
 			IfixVersion:    dispatch.IfixVersion,
@@ -99,6 +101,28 @@ func (s *Server) handleGateServerResponse(info *UrlList, seed string) bool {
 			ExResourceUrl:  dispatch.ExResourceUrl,
 			AssetBundleUrl: dispatch.AssetBundleUrl,
 		}
+		s.UpstreamServer[seed] = urlList
+		client.PushServer(&constant.LogPush{
+			PushMessage: constant.PushMessage{
+				Tag: "NewVersion",
+			},
+			LogMsg: fmt.Sprintf(
+				"Version:%s\n"+
+					"MdkResVersion:%s\n"+
+					"IfixVersion:%s\n"+
+					"IfixUrl:%s\n"+
+					"LuaUrl:%s\n"+
+					"ExResourceUrl:%s\n"+
+					"AssetBundleUrl:%s\n",
+				info.Version,
+				dispatch.MdkResVersion,
+				dispatch.IfixVersion,
+				dispatch.IfixUrl,
+				dispatch.LuaUrl,
+				dispatch.ExResourceUrl,
+				dispatch.AssetBundleUrl),
+			LogLevel: constant.INFO,
+		})
 		return true
 	}
 	return false

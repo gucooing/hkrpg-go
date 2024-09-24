@@ -665,12 +665,12 @@ func (g *GamePlayer) TextJoinBatchSaveCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) TextJoinSaveCsReq(payloadMsg pb.Message) {
-	// req := payloadMsg.(*proto.TextJoinSaveCsReq)
-	// rsp := &proto.TextJoinSaveScRsp{
-	// 	TextItemId:       req.TextItemId,
-	// 	Retcode:          0,
-	// 	CFCJDNAKCNA:      req.CFCJDNAKCNA,
-	// 	TextItemConfigId: "",
-	// }
-	// g.Send(cmd.TextJoinSaveScRsp, rsp)
+	req := payloadMsg.(*proto.TextJoinSaveCsReq)
+	rsp := &proto.TextJoinSaveScRsp{
+		TextItemId:       req.TextItemId,
+		Retcode:          0,
+		FJFBPABNBBL:      req.FJFBPABNBBL,
+		TextItemConfigId: req.TextItemConfigId,
+	}
+	g.Send(cmd.TextJoinSaveScRsp, rsp)
 }

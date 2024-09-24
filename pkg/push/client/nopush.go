@@ -12,4 +12,4 @@ func NewPushClient(addr string) {
 	logger.Info("push client start blocked")
 }
 
-func PushMessage(message constant.PushMessageAll) {}
+func PushServer(message constant.PushMessageAll) {}

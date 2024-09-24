@@ -6,7 +6,6 @@ import (
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
 )
@@ -20,7 +19,7 @@ var commandMap = map[string]commHandlerFunc{
 	"jump_ission": jumpMission,
 }
 
-func (g *GamePlayer) EnterCommand(msg Msg) {
+func (g *GamePlayer) EnterCommand(msg Msg) string {
 	var rspSt string
 	if len(msg.CommandList) <= 0 {
 		rspSt = "Command Not enough parameters"
@@ -32,7 +31,7 @@ func (g *GamePlayer) EnterCommand(msg Msg) {
 			rspSt = commFunc(g, msg.CommandList[1:])
 		}
 	}
-	logger.Info("[UID%v]执行指令:%s|响应:%s", g.Uid, msg.CommandList, rspSt)
+	return fmt.Sprintf("[UID%v]执行指令:%s|响应:%s", g.Uid, msg.CommandList, rspSt)
 }
 
 // 设置世界等级

@@ -6,6 +6,7 @@ package client
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"sync"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
@@ -15,6 +16,7 @@ import (
 var PushServerUrl = "http://localhost:3000"
 var Client *resty.Client
 var pushHashMap = make(map[string]map[string]int)
+var syncS sync.RWMutex
 
 func getClientR() *resty.Request {
 	r := Client.R().
@@ -75,6 +77,7 @@ func isHash(tag, msg string) bool {
 	x := md5.Sum([]byte(msg))
 	h := hex.EncodeToString(x[:])
 	is := false
+	syncS.Lock()
 	if pushHashMap[tag] == nil {
 		pushHashMap[tag] = make(map[string]int)
 	}
@@ -83,6 +86,7 @@ func isHash(tag, msg string) bool {
 	} else {
 		pushHashMap[tag][h] = 1
 	}
+	syncS.Unlock()
 
 	return is
 }

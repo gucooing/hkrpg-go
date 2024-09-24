@@ -741,7 +741,7 @@ func (g *PlayerData) IsAcceptMainMission(mission *gdconf.MainMission, mainMissio
 				isReceive = true
 			}
 		case constant.MissionBeginTypeManual:
-			return true
+			return false
 		default:
 			client.PushServer(&constant.LogPush{
 				PushMessage: constant.PushMessage{
