@@ -1,16 +1,16 @@
 package session
 
 import (
-	"encoding/binary"
 	"fmt"
 	"net"
 	"sync/atomic"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/endec"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
@@ -34,6 +34,13 @@ func (t *TcpListener) initListener() error {
 	}
 	t.tcpListener = tcpListener
 	go tcpNetInfo()
+	client.PushServer(&constant.LogPush{
+		PushMessage: constant.PushMessage{
+			Tag: "gateway",
+		},
+		LogMsg:   "网关模式为TCP",
+		LogLevel: constant.INFO,
+	})
 
 	return nil
 }
@@ -65,7 +72,7 @@ func (t *TcpListener) Run() error {
 }
 
 func (s *TcpSession) recvHandle() {
-	defer s.Close()
+	// defer s.Close()
 	payload := make([]byte, alg.PacketMaxLen)
 	bin := make([]byte, 0)
 	for {
@@ -74,62 +81,29 @@ func (s *TcpSession) recvHandle() {
 			logger.Debug("exit recv loop, conn read err: %v", err)
 			return
 		}
-		if s.SessionState == SessionClose {
-			return
-		}
 		x := make([]byte, recvLen)
 		copy(x, payload[:recvLen])
 		bin = append(bin, x...)
 		if len(bin) > 16 {
-			// 头部幻数错误
-			if binary.BigEndian.Uint32(bin[:4]) != 0x9d74c714 {
-				logger.Error("packet head magic 0x9d74c714 error")
+			kcpMsgList := make([]*alg.PackMsg, 0)
+			err = alg.TcpDecodeBinToPayload(bin, &kcpMsgList, s.XorKey)
+			if err != nil {
+				logger.Error(err.Error())
 				return
 			}
-			// 协议号
-			cmdId := binary.BigEndian.Uint16(bin[4:6])
-			// 头部长度
-			headLen := binary.BigEndian.Uint16(bin[6:8])
-			// proto长度
-			protoLen := binary.BigEndian.Uint32(bin[8:12])
-			// 检查长度
-			packetLen := int(headLen) + int(protoLen) + 16
-			if packetLen > alg.PacketMaxLen {
-				logger.Error("packet len too long")
-				return
+			for _, v := range kcpMsgList {
+				if s.SessionState == SessionClose {
+					return
+				}
+				bin = bin[v.Length:]
+				s.RecvChan <- v
 			}
-			if len(bin) < packetLen {
-				continue
-			}
-			// 尾部幻数错误
-			if binary.BigEndian.Uint32(bin[len(bin)-4:]) != 0xd7a152c8 {
-				logger.Error("packet tail magic 0xd7a152c8 error")
-				return
-			}
-			data := bin[12 : 12+int(headLen)+int(protoLen)]
-			if s.XorKey != nil {
-				endec.Xor(data, s.XorKey)
-			}
-			// 头部数据
-			headData := data[int(headLen):]
-			// proto数据
-			protoData := data[int(headLen) : int(headLen)+int(protoLen)]
-			// 返回数据
-			kcpMsg := new(alg.PackMsg)
-			kcpMsg.CmdId = cmdId
-			kcpMsg.HeadData = make([]byte, headLen)
-			kcpMsg.ProtoData = make([]byte, protoLen)
-			copy(kcpMsg.HeadData, headData)
-			copy(kcpMsg.ProtoData, protoData)
-			bin = bin[16+int(headLen)+int(protoLen):]
-			QPS++
-			s.RecvChan <- kcpMsg
 		}
 	}
 }
 
 func (s *TcpSession) sendHandle() {
-	defer s.Close()
+	// defer s.Close()
 	for {
 		packMsg, ok := <-s.SendChan
 		if !ok {

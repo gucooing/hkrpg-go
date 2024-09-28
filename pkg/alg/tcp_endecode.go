@@ -2,6 +2,7 @@ package alg
 
 import (
 	"encoding/binary"
+	"errors"
 	"log"
 
 	"github.com/gucooing/hkrpg-go/pkg/endec"
@@ -20,6 +21,62 @@ import (
 |								payload*						|		0xd7a152c8		|
 +---------------------------------------------------------------------------------------+
 */
+
+func TcpDecodeBinToPayload(bin []byte, kcpMsgList *[]*PackMsg, xorKey []byte) error {
+	var err error
+	TcpDecodeLoop(bin, kcpMsgList, xorKey, err)
+	return err
+}
+
+func TcpDecodeLoop(bin []byte, kcpMsgList *[]*PackMsg, xorKey []byte, err error) {
+	// 头部幻数错误
+	if binary.BigEndian.Uint32(bin[:4]) != 0x9d74c714 {
+		err = errors.New("packet head magic 0x9d74c714 error")
+		return
+	}
+	// 协议号
+	cmdId := binary.BigEndian.Uint16(bin[4:6])
+	// 头部长度
+	headLen := binary.BigEndian.Uint16(bin[6:8])
+	// proto长度
+	protoLen := binary.BigEndian.Uint32(bin[8:12])
+	// 检查长度
+	packetLen := int(headLen) + int(protoLen) + 16
+	if packetLen > PacketMaxLen {
+		err = errors.New("packet len too long")
+		return
+	}
+	if len(bin) < packetLen {
+		return
+	}
+	// 尾部幻数错误
+	if binary.BigEndian.Uint32(bin[packetLen-4:packetLen]) != 0xd7a152c8 {
+		err = errors.New("packet tail magic 0xd7a152c8 error")
+		return
+	}
+	data := bin[12 : 12+int(headLen)+int(protoLen)]
+	if xorKey != nil {
+		endec.Xor(data, xorKey)
+	}
+	// 头部数据
+	headData := data[int(headLen):]
+	// proto数据
+	protoData := data[int(headLen) : int(headLen)+int(protoLen)]
+	// 返回数据
+	kcpMsg := new(PackMsg)
+	kcpMsg.CmdId = cmdId
+	kcpMsg.HeadData = make([]byte, headLen)
+	kcpMsg.ProtoData = make([]byte, protoLen)
+	kcpMsg.Length = packetLen
+	copy(kcpMsg.HeadData, headData)
+	copy(kcpMsg.ProtoData, protoData)
+	*kcpMsgList = append(*kcpMsgList, kcpMsg)
+
+	// 有不止一个包 递归解析
+	if len(bin) > packetLen+16 {
+		TcpDecodeLoop(bin[packetLen:], kcpMsgList, xorKey, err)
+	}
+}
 
 func TcpEncodePayloadToBin(kcpMsg *PackMsg, xorKey []byte) (bin []byte) {
 	if kcpMsg.HeadData == nil {

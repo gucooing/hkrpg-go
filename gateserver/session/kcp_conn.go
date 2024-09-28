@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 )
@@ -30,7 +32,13 @@ func (k *KcpListener) initListener() error {
 	k.kcpListener = kcpListener
 	k.kcpListener.EnetHandle()
 	go kcpNetInfo()
-
+	client.PushServer(&constant.LogPush{
+		PushMessage: constant.PushMessage{
+			Tag: "gateway",
+		},
+		LogMsg:   "网关模式为KCP",
+		LogLevel: constant.INFO,
+	})
 	return nil
 }
 
@@ -64,7 +72,7 @@ func (k *KcpListener) Run() error {
 }
 
 func (s *KcpSession) recvHandle() {
-	defer s.Close()
+	// defer s.Close()
 	payload := make([]byte, alg.PacketMaxLen)
 	for {
 		recvLen, err := s.kcpConn.Read(payload)
@@ -86,7 +94,7 @@ func (s *KcpSession) recvHandle() {
 }
 
 func (s *KcpSession) sendHandle() {
-	defer s.Close()
+	// defer s.Close()
 	for {
 		packMsg, ok := <-s.SendChan
 		if !ok {

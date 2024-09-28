@@ -33,6 +33,7 @@ const (
 
 type PackMsg struct {
 	CmdId     uint16
+	Length    int
 	HeadData  []byte
 	ProtoData []byte
 }
