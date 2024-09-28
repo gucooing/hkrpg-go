@@ -57,15 +57,11 @@ func (g *GameDataConfig) goppServerGroup() {
 						LoadCondition:      groups.LoadCondition,
 						UnloadCondition:    groups.UnloadCondition,
 						LoadOnInitial:      groups.LoadOnInitial,
-						PropList:           nil,
-						MonsterList:        nil,
-						NPCList:            nil,
-						AnchorList:         nil,
+						PropList:           LoadProp(groups),
+						MonsterList:        LoadMonster(groups),
+						NPCList:            LoadNpc(groups, nPCList),
+						AnchorList:         LoadAnchor(groups),
 					}
-					g.ServerGroupMap[planeId][floorId][groupsId].PropList = LoadProp(groups)
-					g.ServerGroupMap[planeId][floorId][groupsId].MonsterList = LoadMonster(groups)
-					g.ServerGroupMap[planeId][floorId][groupsId].NPCList = LoadNpc(groups, nPCList)
-					g.ServerGroupMap[planeId][floorId][groupsId].AnchorList = LoadAnchor(groups)
 				}
 			}
 		}

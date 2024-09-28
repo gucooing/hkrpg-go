@@ -108,6 +108,7 @@ func (d *Dispatch) getRegionInfo() { // 拉取区服信息
 		if d.MessageQueue.GetGateTcpMqInst(spb.ServerType_SERVICE_GATE, info.MinGateAppId) != nil {
 			regionInfo.MinGateAddr = info.MinGateAddr
 			regionInfo.MinGatePort = alg.S2U32(info.MinGatePort)
+			regionInfo.MinGateTcp = info.MinGateTcp
 		}
 		ec2b, _ := random.LoadEc2bKey(info.ClientSecretKey)
 		regionInfo.Ec2b = ec2b

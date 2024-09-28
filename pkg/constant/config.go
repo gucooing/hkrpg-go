@@ -5,6 +5,7 @@ type AppList struct {
 	RegionName string            `json:"region_name"`
 	MqAddr     string            `json:"mq_addr"`
 	GrpcAddr   string            `json:"grpc_addr"`
+	GateTcp    bool              `json:"gate_tcp"`
 }
 
 type AppNet struct {

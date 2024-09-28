@@ -35,7 +35,7 @@ type HkRpgGoServer struct {
 	config        *Config
 	ec2b          *random.Ec2b
 	Sdk           *sdk.Server
-	KcpConn       *session.KcpConn
+	Listener      session.ListenerAll
 	playerMap     map[uint32]*PlayerGame
 	playerMapLock *sync.RWMutex // 读写锁
 
@@ -48,7 +48,7 @@ type HkRpgGoServer struct {
 
 type PlayerGame struct {
 	GamePlayer     *player.GamePlayer // 玩家内存
-	S              *session.Session   // 会话
+	Conn           session.SessionAll // 会话
 	LastActiveTime int64              // 最近一次的活跃时间
 }
 
@@ -82,6 +82,7 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 			Ec2b:        s.ec2b,
 			MinGateAddr: cfg.GameServer.AppNet.OuterAddr,
 			MinGatePort: alg.S2U32(cfg.GameServer.AppNet.OuterPort),
+			MinGateTcp:  cfg.GameServer.GateTcp,
 		}
 	}
 	gin.SetMode(gin.ReleaseMode) // 初始化gin
@@ -97,15 +98,15 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 		}
 	}()
 	// new Kcp
-	k, err := session.NewKcpConn(cfg.GameServer.AppNet)
+	l, err := session.NewListener(cfg.GameServer.AppNet, cfg.GameServer.GateTcp)
 	if err != nil {
 		logger.Error(err.Error())
 		return nil
 	}
-	k.Ec2b = s.ec2b
-	s.KcpConn = k
+	session.Ec2b = s.ec2b
+	s.Listener = l
 	go func() {
-		err = k.RunKcp()
+		err = s.Listener.Run()
 		if err != nil {
 			logger.Error(err.Error())
 			return
@@ -135,26 +136,28 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 
 // Session消息队列
 func (h *HkRpgGoServer) loginSessionManagement() {
-	loginSessionMap := make(map[uint32]*session.Session) // 登录列表
+	loginSessionMap := make(map[uint32]session.SessionAll) // 登录列表
+	listener := h.Listener.GetListener()
 	for {
 		select {
-		case s := <-h.KcpConn.LoginSessionChan: // 添加登录会话
-			loginSessionMap[s.SessionId] = s
+		case s := <-listener.LoginSessionChan: // 添加登录会话
+			loginSessionMap[s.GetSession().SessionId] = s
 			go h.sessionLogin(s)
-		case s := <-h.KcpConn.DelLoginSessionChan: // 删除登录会话
-			delete(loginSessionMap, s.SessionId)
+		case s := <-listener.DelLoginSessionChan: // 删除登录会话
+			delete(loginSessionMap, s.GetSession().SessionId)
 		}
 	}
 }
 
 func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
+	s := p.Conn.GetSession()
 	for {
-		packMsg, ok := <-p.S.RecvChan
+		packMsg, ok := <-s.RecvChan
 		p.LastActiveTime = time.Now().Unix()
-		if !ok || p.S.SessionState == session.SessionClose {
+		if !ok || s.SessionState == session.SessionClose {
 			return
 		}
-		switch p.S.SessionState {
+		switch s.SessionState {
 		case session.SessionLogin:
 		case session.SessionActivity:
 			protoMsg := cmd.DecodePayloadToProto(packMsg)
@@ -169,12 +172,13 @@ func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
 
 // 接收game传来的消息
 func (g *PlayerGame) recvGameMsg() {
+	s := g.Conn.GetSession()
 	for {
 		bin, ok := <-g.GamePlayer.SendChan
 		if !ok {
 			return
 		}
-		if g.S.SessionState == session.SessionClose {
+		if s.SessionState == session.SessionClose {
 			return
 		}
 		switch bin.MsgType {
@@ -190,7 +194,7 @@ func (g *PlayerGame) toSession(bin player.Msg) {
 		logger.Error(err.Error())
 		return
 	}
-	g.S.SendChan <- &alg.PackMsg{
+	g.Conn.GetSession().SendChan <- &alg.PackMsg{
 		CmdId:     bin.CmdId,
 		HeadData:  nil,
 		ProtoData: protoData,
@@ -199,7 +203,7 @@ func (g *PlayerGame) toSession(bin player.Msg) {
 
 // 将消息发送给game
 func (g *PlayerGame) sendGameMsg(msgType player.MsgType, cmdId uint16, playerMsg pb.Message) {
-	if g.S.SessionState == session.SessionClose {
+	if g.Conn.GetSession().SessionState == session.SessionClose {
 		return
 	}
 	g.GamePlayer.RecvChan <- player.Msg{
@@ -212,9 +216,10 @@ func (g *PlayerGame) sendGameMsg(msgType player.MsgType, cmdId uint16, playerMsg
 	}
 }
 
-func (h *HkRpgGoServer) AddPlayer(s *session.Session) *PlayerGame {
+func (h *HkRpgGoServer) AddPlayer(sAll session.SessionAll) *PlayerGame {
 	h.playerMapLock.Lock()
 	defer h.playerMapLock.Unlock()
+	s := sAll.GetSession()
 	client.PushServer(&constant.LogPush{
 		PushMessage: constant.PushMessage{},
 		LogMsg:      fmt.Sprintf("玩家[UID:%v]登录", s.Uid),
@@ -222,7 +227,7 @@ func (h *HkRpgGoServer) AddPlayer(s *session.Session) *PlayerGame {
 	})
 	g := &PlayerGame{
 		GamePlayer:     player.NewPlayer(s.Uid),
-		S:              s,
+		Conn:           sAll,
 		LastActiveTime: time.Now().Unix(),
 	}
 	h.playerMap[s.Uid] = g
@@ -260,7 +265,9 @@ func (h *HkRpgGoServer) DelPlayer(uid uint32) {
 	}
 }
 
-func (h *HkRpgGoServer) sessionLogin(s *session.Session) {
+func (h *HkRpgGoServer) sessionLogin(sAll session.SessionAll) {
+	s := sAll.GetSession()
+	listener := h.Listener.GetListener()
 	timeout := time.After(5 * time.Second)
 	select {
 	case packMsg, ok := <-s.RecvChan:
@@ -276,9 +283,9 @@ func (h *HkRpgGoServer) sessionLogin(s *session.Session) {
 			logger.Error(err.Error())
 			return
 		}
-		h.KcpConn.DelLoginSessionChan <- s
+		listener.DelLoginSessionChan <- sAll
 		if rsp.Retcode == 0 {
-			p := h.AddPlayer(s)
+			p := h.AddPlayer(sAll)
 			s.SessionState = session.SessionActivity
 			atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
 			go h.sessionMsg(p)
@@ -335,7 +342,7 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 		bin, _ := pb.Marshal(&proto.PlayerKickOutScNotify{
 			BlackInfo: &proto.BlackInfo{},
 		})
-		old.S.SendChan <- &alg.PackMsg{
+		old.Conn.GetSession().SendChan <- &alg.PackMsg{
 			CmdId:     cmd.PlayerKickOutScNotify,
 			HeadData:  nil,
 			ProtoData: bin,
@@ -375,13 +382,13 @@ func (h *HkRpgGoServer) AutoUpDataPlayer() {
 	var num int
 	for _, g := range playerList {
 		if g.LastActiveTime+50 < timestamp {
-			logger.Info("[UID:%v]玩家长时间无响应离线", g.S.Uid)
-			h.DelPlayer(g.S.Uid)
+			logger.Info("[UID:%v]玩家长时间无响应离线", g.Conn.GetSession().Uid)
+			h.DelPlayer(g.Conn.GetSession().Uid)
 			continue
 		}
 		lastUpDataTime := g.GamePlayer.LastUpDataTime
 		if timestamp-lastUpDataTime >= 180 {
-			logger.Debug("[UID:%v]玩家数据自动保存", g.S.Uid)
+			logger.Debug("[UID:%v]玩家数据自动保存", g.Conn.GetSession().Uid)
 			g.GamePlayer.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_ONLINE)
 			g.GamePlayer.LastUpDataTime = timestamp + rand.Int63n(120)
 			num++
@@ -397,11 +404,11 @@ func (h *HkRpgGoServer) GlobalRotationEvent4h() {
 }
 
 func (g *PlayerGame) Close() {
-	if g.S.SessionState == session.SessionClose {
+	if g.Conn.GetSession().SessionState == session.SessionClose {
 		return
 	}
 	// 下线GATE
-	g.S.Close()
+	g.Conn.Close()
 	// 下线GS
 	g.GamePlayer.Close()
 }

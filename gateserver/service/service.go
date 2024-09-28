@@ -31,10 +31,11 @@ type GateServer struct {
 	OuterPort       string
 	OuterAddr       string
 	MqAddr          string
-	KcpConn         *session.KcpConn
+	Listener        session.ListenerAll
 	MinGsAppId      uint32
-	SessionMap      map[uint32]*session.Session // 正常连接的玩家会话
-	SessionMapMutex *sync.RWMutex               // 读写锁
+	SessionMap      map[uint32]session.SessionAll // 正常连接的玩家会话
+	SessionMapMutex *sync.RWMutex                 // 读写锁
+	GateTcp         bool
 }
 
 func NewGateServer(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.MessageQueue,
@@ -47,15 +48,16 @@ func NewGateServer(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Me
 		RegionName:      appInfo.RegionName,
 		MqAddr:          appInfo.MqAddr,
 		AppId:           appId,
-		SessionMap:      make(map[uint32]*session.Session),
+		SessionMap:      make(map[uint32]session.SessionAll),
 		SessionMapMutex: new(sync.RWMutex),
+		GateTcp:         appInfo.GateTcp,
 	}
-	k, err := session.NewKcpConn(netInfo)
+	l, err := session.NewListener(netInfo, appInfo.GateTcp)
 	if err != nil {
 		logger.Error(err.Error())
 		return nil
 	}
-	g.KcpConn = k
+	g.Listener = l
 	go g.loginSessionManagement()
 
 	g.getRegionKey() // 获取区服密钥
@@ -81,6 +83,7 @@ func (g *GateServer) keepaliveServer() {
 				OuterAddr:  g.OuterAddr,
 				MqAddr:     g.MqAddr,
 				LoadCount:  session.CLIENT_CONN_NUM,
+				GateTcp:    g.GateTcp,
 			})
 			if err != nil {
 				logger.Error("keepalive error: %v", err)
@@ -120,42 +123,43 @@ func (g *GateServer) getRegionKey() { // 获取keu
 		logger.Error(err.Error())
 		return
 	}
-	g.KcpConn.Ec2b, err = random.LoadEc2bKey(rsp.ClientSecretKey)
+	session.Ec2b, err = random.LoadEc2bKey(rsp.ClientSecretKey)
 	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
 }
 
-func (g *GateServer) GetSession(uid uint32) *session.Session {
+func (g *GateServer) GetSession(uid uint32) session.SessionAll {
 	g.SessionMapMutex.RLock()
 	defer g.SessionMapMutex.RUnlock()
 	return g.SessionMap[uid]
 }
 
-func (g *GateServer) AddSession(s *session.Session) {
+func (g *GateServer) AddSession(s session.SessionAll) {
 	g.SessionMapMutex.Lock()
 	defer g.SessionMapMutex.Unlock()
-	g.SessionMap[s.Uid] = s
+	g.SessionMap[s.GetSession().Uid] = s
 }
 
-func (g *GateServer) DelSession(s *session.Session) {
+func (g *GateServer) DelSession(s session.SessionAll) {
 	g.SessionMapMutex.Lock()
 	defer g.SessionMapMutex.Unlock()
 	s.Close()
-	delete(g.SessionMap, s.Uid)
+	delete(g.SessionMap, s.GetSession().Uid)
 }
 
 // 消息 队列
 func (g *GateServer) loginSessionManagement() {
-	loginSessionMap := make(map[uint32]*session.Session) // 登录列表
+	loginSessionMap := make(map[uint32]session.SessionAll) // 登录列表
+	listener := g.Listener.GetListener()
 	for {
 		select {
-		case s := <-g.KcpConn.LoginSessionChan: // 添加登录会话
-			loginSessionMap[s.SessionId] = s
+		case s := <-listener.LoginSessionChan: // 添加登录会话
+			loginSessionMap[s.GetSession().SessionId] = s
 			go g.sessionMsg(s)
-		case s := <-g.KcpConn.DelLoginSessionChan: // 删除登录会话
-			delete(loginSessionMap, s.SessionId)
+		case s := <-listener.DelLoginSessionChan: // 删除登录会话
+			delete(loginSessionMap, s.GetSession().SessionId)
 		case netMsg := <-g.MessageQueue.GetNetMsg():
 			switch netMsg.OriginServerType {
 			case spb.ServerType_SERVICE_GAME:
@@ -174,10 +178,10 @@ func (g *GateServer) gameMsgHandle(netMsg *mq.NetMsg) {
 	case mq.GameServer:
 		s := g.GetSession(netMsg.Uid)
 		if s == nil ||
-			s.SessionState != session.SessionActivity {
+			s.GetSession().SessionState != session.SessionActivity {
 			return
 		}
-		s.SendChan <- &alg.PackMsg{
+		s.GetSession().SendChan <- &alg.PackMsg{
 			CmdId:     netMsg.CmdId,
 			ProtoData: netMsg.ServiceMsgByte,
 		}
@@ -186,11 +190,11 @@ func (g *GateServer) gameMsgHandle(netMsg *mq.NetMsg) {
 	}
 }
 
-func (g *GateServer) nodeMsgHandle(netMsg *mq.NetMsg, loginSessionMap map[uint32]*session.Session) {
+func (g *GateServer) nodeMsgHandle(netMsg *mq.NetMsg, loginSessionMap map[uint32]session.SessionAll) {
 	switch netMsg.MsgType {
 	case mq.PlayerLoginKill:
 		if s, ok := loginSessionMap[netMsg.Uid]; ok {
-			s.KickFinishNotifyChan <- true
+			s.GetSession().KickFinishNotifyChan <- true
 		}
 	case mq.ServerMsg:
 		handle, ok := handlerFuncRouteMap[netMsg.CmdId]
@@ -203,7 +207,9 @@ func (g *GateServer) nodeMsgHandle(netMsg *mq.NetMsg, loginSessionMap map[uint32
 	}
 }
 
-func (g *GateServer) sessionMsg(s *session.Session) {
+func (g *GateServer) sessionMsg(sAll session.SessionAll) {
+	s := sAll.GetSession()
+	listener := g.Listener.GetListener()
 	timeout := time.After(5 * time.Second)
 	for {
 		select {
@@ -222,9 +228,9 @@ func (g *GateServer) sessionMsg(s *session.Session) {
 					logger.Error(err.Error())
 					continue
 				}
-				g.KcpConn.DelLoginSessionChan <- s
+				listener.DelLoginSessionChan <- sAll
 				if rsp.Retcode == 0 {
-					g.AddSession(s)
+					g.AddSession(sAll)
 					s.SessionState = session.SessionActivity
 					s.GameAppId = g.MinGsAppId
 					atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
@@ -235,7 +241,7 @@ func (g *GateServer) sessionMsg(s *session.Session) {
 					ProtoData: protoData,
 				}
 			case session.SessionActivity:
-				g.packetCapture(s, packMsg)
+				g.packetCapture(sAll, packMsg)
 			case session.SessionFreeze:
 				continue
 			case session.SessionClose:
@@ -243,7 +249,7 @@ func (g *GateServer) sessionMsg(s *session.Session) {
 			}
 		case <-timeout:
 			if s.SessionState == session.SessionLogin {
-				g.KcpConn.DelLoginSessionChan <- s
+				listener.DelLoginSessionChan <- sAll
 				return
 			}
 		}
@@ -307,7 +313,7 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 					protoData, _ := pb.Marshal(&proto.PlayerKickOutScNotify{
 						BlackInfo: &proto.BlackInfo{},
 					})
-					old.SendChan <- &alg.PackMsg{
+					old.GetSession().SendChan <- &alg.PackMsg{
 						CmdId:     cmd.PlayerKickOutScNotify,
 						HeadData:  nil,
 						ProtoData: protoData,

@@ -28,7 +28,7 @@ func (h *HkRpgGoServer) packetCapture(p *PlayerGame, cmdId uint16, protoMsg pb.M
 }
 
 func PlayerLogoutCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
-	h.DelPlayer(p.S.Uid)
+	h.DelPlayer(p.Conn.GetSession().Uid)
 }
 
 func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
@@ -36,7 +36,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 
 	targetList := req.TargetList
 	notify := &proto.RevcMsgScNotify{
-		SourceUid:   p.S.Uid,
+		SourceUid:   p.Conn.GetSession().Uid,
 		MessageText: req.MessageText,
 		ExtraId:     req.ExtraId,
 		MessageType: req.MessageType,
@@ -52,7 +52,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 		if targetUid == 0 {
 			bot := &proto.RevcMsgScNotify{
 				SourceUid:   0,
-				TargetUid:   p.S.Uid,
+				TargetUid:   p.Conn.GetSession().Uid,
 				MessageText: p.GamePlayer.EnterCommand(player.Msg{CommandList: strings.Split(req.MessageText, " ")}),
 				ExtraId:     req.ExtraId,
 				MessageType: req.MessageType,

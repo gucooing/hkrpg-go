@@ -53,6 +53,7 @@ var DefaultConfig = &Config{
 		"9001.1.1.1": {
 			RegionName: "hkrpg_rel",
 			MqAddr:     "127.0.0.1:20051",
+			GateTcp:    false,
 			App: map[string]constant.AppNet{
 				"port_player": {
 					InnerAddr: "0.0.0.0",

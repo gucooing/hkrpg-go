@@ -42,6 +42,7 @@ type Service struct {
 	outerPort     string               // 外网端口
 	outerAddr     string               // 外网地址
 	status        nodeapi.ServerStatus // 服务状态
+	gateTcp       bool                 // 是否启用tcp游戏网关
 }
 
 func newMapService() map[nodeapi.ServerType]map[uint32]*Service {
@@ -222,6 +223,7 @@ func (s *NodeDiscoveryService) RegisterServer(ctx context.Context, req *nodeapi.
 		lastAliveTime: time.Now().Unix(),
 		outerPort:     req.OuterPort,
 		outerAddr:     req.OuterAddr,
+		gateTcp:       req.GateTcp,
 	}
 	rsp := &nodeapi.RegisterServerRsp{}
 	if s.AddService(info) {
@@ -262,6 +264,7 @@ func (s *NodeDiscoveryService) KeepaliveServer(ctx context.Context, req *nodeapi
 		lastAliveTime: time.Now().Unix(),
 		outerPort:     req.OuterPort,
 		outerAddr:     req.OuterAddr,
+		gateTcp:       req.GateTcp,
 	}
 	rsp := &nodeapi.KeepaliveServerRsp{}
 	if s.AddService(info) {
@@ -310,6 +313,7 @@ func (s *NodeDiscoveryService) GetAllRegionInfo(ctx context.Context, req *nodeap
 			info.MinGateAddr = service.outerAddr
 			info.MinGatePort = service.outerPort
 			info.MinGateAppId = service.appId
+			info.MinGateTcp = service.gateTcp
 		}
 		rsp.RegionInfoList[name] = info
 	}

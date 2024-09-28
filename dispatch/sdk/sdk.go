@@ -33,6 +33,7 @@ type RegionInfo struct {
 	Type        uint32
 	MinGateAddr string
 	MinGatePort uint32
+	MinGateTcp  bool
 }
 
 type UrlList struct {

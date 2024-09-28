@@ -48,6 +48,7 @@ func Run(done chan os.Signal, cfg *gateserver.Config, appid string) error {
 		AppId:      alg.GetAppIdUint32(appid),
 		OuterPort:  netInfo.OuterPort,
 		OuterAddr:  netInfo.OuterAddr,
+		GateTcp:    appInfo.GateTcp,
 	})
 	if err != nil {
 		return fmt.Errorf("register server error: %v ", err)
@@ -79,7 +80,7 @@ func Run(done chan os.Signal, cfg *gateserver.Config, appid string) error {
 	session.MAX_CLIENT__CONN_NUM = cfg.MaxPlayer
 	// run kcp
 	go func() {
-		err = g.KcpConn.RunKcp()
+		err = g.Listener.Run()
 		if err != nil {
 			logger.Error("kcp conn err: %v", err)
 			return
@@ -94,7 +95,7 @@ func Run(done chan os.Signal, cfg *gateserver.Config, appid string) error {
 		_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 		logger.Info("gate服务正在关闭")
-		g.KcpConn.Close()
+		g.Listener.Close()
 		logger.Info("gate服务已停止")
 		logger.CloseLogger()
 		return nil

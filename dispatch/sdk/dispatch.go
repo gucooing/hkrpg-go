@@ -58,6 +58,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	queryGateway.Unk4 = true
 	queryGateway.Unk5 = true
 	queryGateway.Unk6 = true
+	queryGateway.Unk7 = true
 	queryGateway.MdkResVersion = url.MdkResVersion
 	queryGateway.IfixVersion = url.IfixVersion
 	queryGateway.IfixUrl = url.IfixUrl
@@ -75,6 +76,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 		queryGateway.RegionName = info.Name
 		queryGateway.Port = info.MinGatePort
 		queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(info.Ec2b.Bytes())
+		queryGateway.JIDBDEKOHDH = info.MinGateTcp
 	}
 
 	reqdata, err := pb.Marshal(queryGateway)

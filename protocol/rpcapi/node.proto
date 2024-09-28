@@ -42,6 +42,7 @@ message RegisterServerReq{
   string mq_addr = 5;
   string outer_port = 6;
   string outer_addr = 7;
+  bool gate_tcp = 8; // 是否启用tcp游戏网关
 }
 
 message RegisterServerRsp{
@@ -67,6 +68,7 @@ message KeepaliveServerReq {
   string outer_port = 6;
   string outer_addr = 7;
   int64 load_count = 8;
+  bool gate_tcp = 9; // 是否启用tcp游戏网关
 }
 
 message KeepaliveServerRsp {
@@ -103,6 +105,7 @@ message RegionInfo {
   string min_gate_addr = 6;
   string min_gate_port = 7;
   uint32 min_gate_app_id = 8;
+  bool min_gate_tcp = 9; // 是否启用tcp游戏网关
 }
 
 message GetRegionMinGameReq {

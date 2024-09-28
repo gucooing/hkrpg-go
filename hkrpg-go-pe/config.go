@@ -32,7 +32,8 @@ type DispatchList struct {
 }
 
 type GameServer struct {
-	AppNet constant.AppNet `json:"AppNet"`
+	GateTcp bool            `json:"GateTcp"`
+	AppNet  constant.AppNet `json:"AppNet"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
@@ -91,6 +92,7 @@ var DefaultConfig = &Config{
 		},
 	},
 	GameServer: &GameServer{
+		GateTcp: false,
 		AppNet: constant.AppNet{
 			InnerAddr: "0.0.0.0",
 			InnerPort: "20041",
