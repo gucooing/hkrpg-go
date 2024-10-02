@@ -26,7 +26,6 @@ jobs:
       - name: Build the Docker image
         run: |
           SHA=${{ github.sha }}
-          docker build -t gucooing/hkrpg-go-pe:latest -t ghcr.io/gucooing/hkrpg-go:latest -t gucooing/hkrpg-go-pe:$SHA -f docker/hkrpg-go/Dockerfile .
+          docker build -t gucooing/hkrpg-go-pe:latest -t gucooing/hkrpg-go-pe:$SHA -f docker/hkrpg-go/Dockerfile .
           docker push gucooing/hkrpg-go-pe:$SHA
           docker push gucooing/hkrpg-go-pe:latest
-          docker push ghcr.io/gucooing/hkrpg-go:latest

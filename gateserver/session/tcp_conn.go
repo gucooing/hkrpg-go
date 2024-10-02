@@ -22,8 +22,6 @@ type TcpListener struct {
 	tcpListener net.Listener
 }
 
-func (t *TcpListener) Null() {}
-
 func (t *TcpListener) initListener() error {
 	addr := fmt.Sprintf("%s:%s", t.netInfo.InnerAddr, t.netInfo.InnerPort)
 	logger.Info("tcp监听地址:%s", addr)

@@ -13,6 +13,25 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+func MissionInit() {
+	MissionFinishType = map[constant.QuestFinishType]func(this *QuestFinishType){
+		constant.Talk:                          Break,
+		constant.Unknown:                       Unknown,                       // 直接完成
+		constant.PropState:                     MissionPropState,              // 物品状态
+		constant.GetTrialAvatar:                GetTrialAvatar,                // 加载试用角色
+		constant.DelTrialAvatar:                DelTrialAvatar,                // 卸载试用角色
+		constant.EnterFloor:                    EnterFloor,                    // 传送
+		constant.EnterRaidScene:                EnterRaidScene,                // raid传送
+		constant.SubMissionFinishCnt:           SubMissionFinishCnt,           // 完成列表中的子任务即可
+		constant.FinishMission:                 FinishMission,                 // 完成列表中的主任务即可
+		constant.RaidFinishCnt:                 RaidFinishCnt,                 // 完成raid
+		constant.MessagePerformSectionFinish:   MessagePerformSectionFinish,   // 发送对话框
+		constant.MessageSectionFinish:          MessageSectionFinish,          // 发送消息
+		constant.UseSelectedItem:               UseSelectedItem,               // 使用消耗品
+		constant.AetherDivideCollectSpiritType: AetherDivideCollectSpiritType, // 以太战线获得新角色
+	}
+}
+
 /*******************每日任务****************/
 
 // 每日实训
@@ -397,104 +416,45 @@ func (g *GamePlayer) FinishInspectMission(allSync *model.AllPlayerSync, pileItem
 
 // 子任务完成检查
 func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
+	this := &QuestFinishType{
+		GamePlayer: g,
+		conf:       nil,
+		finishMap:  make(map[uint32]int),
+		notifyMap:  make(map[uint32]int),
+	}
 	subMissionList := g.GetPd().GetSubMainMissionList() // 已接取的子任务
-	// finishSubMissionList := g.GetFinishSubMainMissionList() // 已完成的子任务
 	finishServerSubMissionList := make([]uint32, 0)
 	progressSubMissionList := make([]uint32, 0)
 	for id, _ := range subMissionList {
 		conf := gdconf.GetSubMainMissionById(id)
 		if conf == nil {
+			this.finishMap[id] = 114514 // 直接完成掉
+			logger.Debug("Mission:%v Conf Error", id)
 			continue
 		}
-		ifFinish := false
-		switch conf.FinishType {
-		case constant.Talk:
-			break
-		case constant.GetTrialAvatar: // 加载试用角色
-			lineAvatar := g.GetPd().GetTrialAvatar(conf.ParamInt1)
-			g.AddAvatarSceneGroupRefreshScNotify(lineAvatar, g.GetPd().GetPosPb(), g.GetPd().GetRotPb())
-			g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
-			ifFinish = true
-			break
-		case constant.DelTrialAvatar: // 卸载试用角色
-			g.GetPd().DelTrialAvatar(conf.ParamInt1)
-			g.GetPd().GetAddAvatarSceneEntityRefreshInfo(
-				g.GetPd().GetBattleLineUp(), g.GetPd().GetPosPb(), g.GetPd().GetRotPb())
-			g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
-			ifFinish = true
-			break
-		case constant.EnterFloor: // 传送
-			if entryId, groupID, anchorID, ok := gdconf.GetEntryId(id); ok {
-				g.GetPd().SetCurEntryId(entryId)
-				g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
-				ifFinish = true
-			} else {
-				logger.Error("EnterFloor MissionId:%v error", id)
-			}
-			break
-		case constant.EnterRaidScene: // raid传送
-			g.RaidEnterSceneByServerScNotify(conf.ParamInt2)
-			ifFinish = true
-			break
-		case constant.SubMissionFinishCnt: // 完成列表中的子任务即可
-			finish, progress := g.GetPd().SubMissionFinishCnt(id)
-			if finish != 0 {
-				finishServerSubMissionList = append(finishServerSubMissionList, finish)
-			}
-			if progress != 0 {
-				progressSubMissionList = append(progressSubMissionList, progress)
-			}
-			break
-		case constant.FinishMission: // 完成列表中的主任务即可
-			finish, progress := g.GetPd().FinishMainMission(id)
-			if finish != 0 {
-				finishServerSubMissionList = append(finishServerSubMissionList, finish)
-			}
-			if progress != 0 {
-				progressSubMissionList = append(progressSubMissionList, progress)
-			}
-			break
-		case constant.RaidFinishCnt: // 完成raid
-			ifFinish = true
-			for _, raid := range conf.ParamIntList {
-				if g.GetPd().GetFinishRaidInfo(raid) == nil {
-					ifFinish = false
-					break
-				}
-			}
-		case constant.MessagePerformSectionFinish: // 发送对话框
-			contactId := g.GetPd().AddMessageGroup(conf.ParamInt1)
-			g.MessageGroupPlayerSyncScNotify(contactId)
-			break
-		case constant.MessageSectionFinish: // 发送消息
-			contactId := g.GetPd().AddMessageGroup(conf.ParamInt1)
-			g.MessageGroupPlayerSyncScNotify(contactId)
-			ifFinish = true
-			break
-		case constant.Unknown: // 直接完成
-			ifFinish = true
-			break
-		case constant.PropState:
-			ifFinish = g.GetPd().MissionPropState(id)
-			break
-		case constant.UseSelectedItem: // 使用消耗品
-			ifFinish = true
-			break
-		case constant.AetherDivideCollectSpiritType: // 以太战线获得新角色
-			ifFinish = true // 直接完成
-			break
-		default:
-			client.PushServer(&constant.LogPush{
-				PushMessage: constant.PushMessage{
-					Tag: "Mission",
-				},
-				LogMsg: fmt.Sprintf("未知的任务完成条件,MissionId:%v,完成条件:%s",
-					conf.ID, conf.FinishType),
-				LogLevel: constant.ERROR,
-			})
+		handle, ok := MissionFinishType[conf.FinishType]
+		if !ok {
+			// client.PushServer(&constant.LogPush{
+			// 	PushMessage: constant.PushMessage{
+			// 		Tag: "Mission",
+			// 	},
+			// 	LogMsg: fmt.Sprintf("未知的任务完成条件,MissionId:%v,完成条件:%s",
+			// 		conf.ID, conf.FinishType),
+			// 	LogLevel: constant.ERROR,
+			// })
+			continue
 		}
-		if ifFinish {
+		this.conf = conf
+		handle(this)
+	}
+	for id, info := range this.finishMap {
+		if info == 114514 {
 			finishServerSubMissionList = append(finishServerSubMissionList, id)
+		}
+	}
+	for id, info := range this.notifyMap {
+		if info == 114514 {
+			progressSubMissionList = append(progressSubMissionList, id)
 		}
 	}
 
@@ -586,3 +546,177 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32, pileItem []*model.
 		}
 	}
 }
+
+/**********************************任务方法********************************/
+
+// 子任务完成检查
+var MissionFinishType map[constant.QuestFinishType]func(this *QuestFinishType)
+
+type QuestFinishType struct {
+	*GamePlayer
+	conf      *gdconf.SubMission // 任务配置
+	finishMap map[uint32]int     // 完成列表
+	notifyMap map[uint32]int     // 更改列表
+}
+
+func (this *QuestFinishType) addFinishMap() {
+	if this.finishMap == nil {
+		this.finishMap = make(map[uint32]int)
+	}
+	if this.notifyMap[this.conf.ID] != 0 {
+		delete(this.notifyMap, this.conf.ID)
+	}
+	this.finishMap[this.conf.ID] = 114514
+}
+
+func (this *QuestFinishType) addNotifyMap() {
+	if this.notifyMap == nil {
+		this.notifyMap = make(map[uint32]int)
+	}
+	if this.finishMap[this.conf.ID] == 0 {
+		this.notifyMap[this.conf.ID] = 114514
+	}
+}
+
+func Break(this *QuestFinishType) {}
+
+func Unknown(this *QuestFinishType) {
+	this.addNotifyMap()
+}
+
+func GetTrialAvatar(this *QuestFinishType) {
+	lineAvatar := this.GetPd().GetTrialAvatar(this.conf.ParamInt1)
+	this.AddAvatarSceneGroupRefreshScNotify(lineAvatar, this.GetPd().GetPosPb(), this.GetPd().GetRotPb())
+	this.SyncLineupNotify(this.GetPd().GetBattleLineUp())
+
+	this.addFinishMap()
+}
+
+func DelTrialAvatar(this *QuestFinishType) {
+	this.GetPd().DelTrialAvatar(this.conf.ParamInt1)
+	this.GetPd().GetAddAvatarSceneEntityRefreshInfo(
+		this.GetPd().GetBattleLineUp(), this.GetPd().GetPosPb(), this.GetPd().GetRotPb())
+	this.SyncLineupNotify(this.GetPd().GetBattleLineUp())
+
+	this.addFinishMap()
+}
+
+func EnterFloor(this *QuestFinishType) {
+	if entryId, groupID, anchorID, ok := gdconf.GetEntryId(this.conf.ID); ok {
+		this.GetPd().SetCurEntryId(entryId)
+		this.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
+
+		this.addFinishMap()
+	} else {
+		logger.Error("EnterFloor MissionId:%v error", this.conf.ID)
+	}
+}
+
+func EnterRaidScene(this *QuestFinishType) {
+	this.RaidEnterSceneByServerScNotify(this.conf.ParamInt2)
+
+	this.addFinishMap()
+}
+
+func SubMissionFinishCnt(this *QuestFinishType) {
+	db := this.GetPd().GetSubMainMissionList()[this.conf.ID]
+	finishSubMissionList := this.GetPd().GetFinishSubMainMissionList()
+	conf := gdconf.GetSubMainMissionById(this.conf.ID)
+	if conf == nil || db == nil {
+		return
+	}
+	OldProgress := db.Progress
+	db.Progress = 0
+	isFinish := true
+	for _, paramInt := range conf.ParamIntList {
+		if finishSubMissionList[paramInt] != nil {
+			db.Progress++
+		} else {
+			isFinish = false
+		}
+	}
+	if db.Progress == conf.Progress {
+		isFinish = true
+	}
+	if isFinish { // 完成任务
+		db.Progress = conf.Progress
+
+		this.addFinishMap()
+	} else {
+		if OldProgress != db.Progress {
+			this.addFinishMap()
+		}
+	}
+}
+
+func FinishMission(this *QuestFinishType) {
+	db := this.GetPd().GetSubMainMissionList()[this.conf.ID]
+	finishMainMissionList := this.GetPd().GetFinishMainMissionList()
+	conf := gdconf.GetSubMainMissionById(this.conf.ID)
+	if conf == nil || db == nil {
+		return
+	}
+	OldProgress := db.Progress
+	db.Progress = 0
+	isFinish := true
+	for _, paramInt := range conf.ParamIntList {
+		if finishMainMissionList[paramInt] != nil {
+			db.Progress++
+		} else {
+			isFinish = false
+		}
+	}
+	if isFinish { // 完成任务
+		db.Progress = conf.Progress
+
+		this.addFinishMap()
+	} else {
+		if OldProgress != db.Progress {
+			this.addFinishMap()
+		}
+	}
+}
+
+func RaidFinishCnt(this *QuestFinishType) {
+	var ifFinish = true
+	for _, raid := range this.conf.ParamIntList {
+		if this.GetPd().GetFinishRaidInfo(raid) == nil {
+			ifFinish = false
+			break
+		}
+	}
+	if ifFinish {
+		this.addFinishMap()
+	}
+}
+
+func MessagePerformSectionFinish(this *QuestFinishType) {
+	contactId := this.GetPd().AddMessageGroup(this.conf.ParamInt1)
+	this.MessageGroupPlayerSyncScNotify(contactId)
+}
+
+func MessageSectionFinish(this *QuestFinishType) {
+	contactId := this.GetPd().AddMessageGroup(this.conf.ParamInt1)
+	this.MessageGroupPlayerSyncScNotify(contactId)
+}
+
+func MissionPropState(this *QuestFinishType) {
+	db := this.GetPd().GetBlock(this.GetPd().GetCurEntryId())
+	conf := gdconf.GetSubMainMissionById(this.conf.ID)
+	if conf == nil || db == nil {
+		return // 不存在
+	}
+	if this.GetPd().GetPropState(db, conf.ParamInt1, conf.ParamInt2, "") == conf.ParamInt3 {
+		this.addFinishMap()
+	}
+}
+
+func UseSelectedItem(this *QuestFinishType) {
+	this.addFinishMap()
+}
+
+func AetherDivideCollectSpiritType(this *QuestFinishType) {
+	this.addFinishMap()
+}
+
+// 完成任务后完成服务端动作（不结束任务

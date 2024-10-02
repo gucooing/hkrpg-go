@@ -1,8 +1,8 @@
 package pkg
 
 const (
-	AppVersion  = "1.4.0"
-	GameVersion = "2.4.0"
+	AppVersion  = "1.5.0"
+	GameVersion = "2.5.0"
 )
 
 func GetAppVersion() string {

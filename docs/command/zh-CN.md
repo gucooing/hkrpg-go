@@ -19,16 +19,17 @@
 </div>
 
 # API
-- 示例参数均以 uid = 1 | sign_key = 123456 进行
+- 示例参数均以 uid = 1 | sign_key = 123456 | region = hkrpg_rel进行
 
 ### 路径参数
 - **cmd**: `int16` 必须 | **调用指令**
 - **uid**: `uint32` 必须 | **玩家UID**
+- **region**: `string` 必须 | **区服**
 - **sign_key**: `string` 可选 | **key**
 
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1&uid=1&sign_key=123456
+GET: api?region=hkrpg_rel&cmd=1&uid=1&sign_key=123456
 ```
 
 #### 回调解析`json`:
@@ -42,7 +43,7 @@ ___
 - **world_level**: `uint32` 必须 | **要设置的世界等级**
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1001&uid=1&sign_key=123456&world_level=6
+GET: api?region=hkrpg_rel&cmd=1001&uid=1&sign_key=123456&world_level=6
 ```
 
 ___
@@ -52,7 +53,7 @@ ___
 - **bin**: `uint32` 可选 | **1:二进制**
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1002&uid=1&sign_key=123456
+GET: api?region=hkrpg_rel&cmd=1002&uid=1&sign_key=123456
 ```
 
 ___
@@ -61,7 +62,7 @@ ___
 **参数**:无
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1003&sign_key=123456&bin=1
+GET: api?region=hkrpg_rel&cmd=1003&sign_key=123456&bin=1
 ```
 
 ___
@@ -72,7 +73,7 @@ ___
 - **num**: `uint32` 可选 | **物品数量**
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1004&uid=1&sign_key=123456&all=0&id=22&num=999
+GET: api?region=hkrpg_rel&cmd=1004&uid=1&sign_key=123456&all=0&id=22&num=999
 ```
 
 ___
@@ -85,7 +86,7 @@ ___
 - **sub**: `string` 可选 | **指定圣遗物副属性**
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1005&uid=1&sign_key=123456&all=0&id=31011&num=1&main=1&sub=[2:10][3:9][4:8]
+GET: api?region=hkrpg_rel&cmd=1005&uid=1&sign_key=123456&all=0&id=31011&num=1&main=1&sub=[2:10][3:9][4:8]
 ```
 
 ___
@@ -94,7 +95,7 @@ ___
 - **is**: `bool` 可选 | **修改是否跳过剧情 | 0:false|1:true**
 #### 请求示例:
 ```plaintext
-GET: api?cmd=1007&uid=1&sign_key=123456&is=1
+GET: api?region=hkrpg_rel&cmd=1007&uid=1&sign_key=123456&is=1
 ```
 
 > 需要注意的是，如果你开启了一次跳过剧情，你的所有教程会直接被完成，并且后续无法触发，这会造成未知后果，包括但不限于某些任务无法正常进行，某些事件无法正常触发

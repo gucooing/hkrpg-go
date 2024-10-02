@@ -10,6 +10,7 @@ import (
 	"github.com/goccy/go-json"
 	"github.com/gucooing/hkrpg-go/nodeserver/app"
 	"github.com/gucooing/hkrpg-go/nodeserver/config"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -34,6 +35,7 @@ func main() {
 	appid := alg.GetAppId()
 	logger.InitLogger("nodeserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
+	logger.Info("AppVersion:%s", pkg.GetAppVersion())
 	cfg := config.GetConfig()
 
 	done := make(chan os.Signal, 1)

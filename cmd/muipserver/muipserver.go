@@ -12,6 +12,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/muipserver/config"
 	"github.com/gucooing/hkrpg-go/muipserver/muip"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -35,6 +36,7 @@ func main() {
 	// 初始化日志
 	logger.InitLogger("muipserver"+"["+appid+"]", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
+	logger.Info("AppVersion:%s", pkg.GetAppVersion())
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	cfg := config.GetConfig()

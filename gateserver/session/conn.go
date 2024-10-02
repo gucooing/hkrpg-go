@@ -9,7 +9,6 @@ var MAX_CLIENT__CONN_NUM int64 = -1 // 最大客户端连接数
 var QPS int64
 
 type ListenerAll interface {
-	Null()
 	initListener() error
 	GetListener() *Listener
 	Run() error

@@ -10,6 +10,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gateserver"
 	"github.com/gucooing/hkrpg-go/gateserver/app"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -34,6 +35,8 @@ func main() {
 	// 初始化日志
 	logger.InitLogger("gateserver"+"["+appid+"]", strings.ToUpper(gateserver.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
+	logger.Info("AppVersion:%s", pkg.GetAppVersion())
+	logger.Info("GameVersion:%s", pkg.GetGameVersion())
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	cfg := gateserver.GetConfig()

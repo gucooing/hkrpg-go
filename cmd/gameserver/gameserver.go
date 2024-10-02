@@ -10,6 +10,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gameserver"
 	"github.com/gucooing/hkrpg-go/gameserver/app"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -35,6 +36,8 @@ func main() {
 	// 初始化日志
 	logger.InitLogger("gameserver"+"["+appid+"]", strings.ToUpper(cfg.LogLevel))
 	logger.Info("hkrpg-go")
+	logger.Info("AppVersion:%s", pkg.GetAppVersion())
+	logger.Info("GameVersion:%s", pkg.GetGameVersion())
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	if err = app.Run(done, cfg, appid); err != nil {

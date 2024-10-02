@@ -1,5 +1,5 @@
 package yuankong
 
-func NewYuanKong() {
+func YuanKong() {
 
 }

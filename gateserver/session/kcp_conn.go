@@ -19,8 +19,6 @@ type KcpListener struct {
 	kcpListener *kcp.Listener
 }
 
-func (k *KcpListener) Null() {}
-
 func (k *KcpListener) initListener() error {
 	addr := fmt.Sprintf("%s:%s", k.netInfo.InnerAddr, k.netInfo.InnerPort)
 	logger.Info("kcp监听地址:%s", addr)

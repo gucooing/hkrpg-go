@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/robot/config"
 	"github.com/gucooing/hkrpg-go/robot/robot"
@@ -35,6 +36,8 @@ func main() {
 	// 初始化日志
 	logger.InitLogger("robot", strings.ToUpper(config.GetConfig().LogLevel))
 	logger.Info("hkrpg-robot-go")
+	logger.Info("AppVersion:%s", pkg.GetAppVersion())
+	logger.Info("GameVersion:%s", pkg.GetGameVersion())
 
 	gdconf.InitGameDataConfig(config.GetConfig().GameDataConfigPath)
 

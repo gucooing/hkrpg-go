@@ -10,6 +10,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/dispatch"
 	"github.com/gucooing/hkrpg-go/dispatch/app"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
@@ -34,7 +35,8 @@ func main() {
 	// 初始化日志
 	logger.InitLogger("discord"+"["+appid+"]", strings.ToUpper(dispatch.GetConfig().LogLevel))
 	logger.Info("hkrpg-go")
-
+	logger.Info("AppVersion:%s", pkg.GetAppVersion())
+	logger.Info("GameVersion:%s", pkg.GetGameVersion())
 	cfg := dispatch.GetConfig()
 
 	done := make(chan os.Signal, 1)

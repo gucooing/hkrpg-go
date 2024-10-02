@@ -15,6 +15,10 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
+func init() {
+	MissionInit()
+}
+
 var LogMsgPlayer uint32 = 2
 var ISPE = false
 

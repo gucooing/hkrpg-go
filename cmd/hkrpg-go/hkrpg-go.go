@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/hkrpg-go-pe"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/push/client"
 )
@@ -34,6 +35,8 @@ func main() {
 	// 初始化日志
 	logger.InitLogger("hkrpg_go_pe", strings.ToUpper(cfg.LogLevel))
 	logger.Info("hkrpg_go_pe")
+	logger.Info("AppVersion:%s", pkg.GetAppVersion())
+	logger.Info("GameVersion:%s", pkg.GetGameVersion())
 	client.NewPushClient(cfg.PushUrl)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
