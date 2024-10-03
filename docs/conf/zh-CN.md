@@ -26,6 +26,8 @@
 
 ### AutoCreate：仅sdk有效
 
+### grpc：仅node配置
+
 ### AppList：
     格式：appid[配置]
     port_player：用于gateserver，代表对外连接端口，即kcp端口
@@ -49,10 +51,12 @@
 ### MysqlConf:
     格式：表[地址]
     各个需要的mysql连接地址
+    仅gate和node配置
 
 ### RedisConf:
     格式：表[连接配置]
     各个需要的redis连接配置
+    
 
 
 ### RedisConf:
