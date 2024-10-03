@@ -26,16 +26,16 @@
 
 ### AutoCreate：仅sdk有效
 
-### grpc：仅node配置
-
 ### AppList：
     格式：appid[配置]
     port_player：用于gateserver，代表对外连接端口，即kcp端口
     port_gt：用于gameserver，代表与gateserver构成连接所使用的端口
     port_service：代表本服务接受其他服务连接的端口
     port_http：在这个端口上启动一个http服务器
-    MqAddr: gate的消息队列服务地址
+    MqAddr: 仅gate和node配置
     RegionName: 区服名称
+    grpcAddr：仅node配置
+    gateTcp：是否启用tcp模式
 
 ### AppNet:
     InnerAddr: 启动地址
@@ -51,7 +51,7 @@
 ### MysqlConf:
     格式：表[地址]
     各个需要的mysql连接地址
-    仅gate和node配置
+ 
 
 ### RedisConf:
     格式：表[连接配置]
