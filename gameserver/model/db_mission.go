@@ -75,6 +75,10 @@ func (g *PlayerData) GetFinishSubMainMissionById(id uint32) *spb.MissionInfo {
 
 /*********************************客户端操作*********************************/
 
+type Mission struct {
+	MissionFinishTypeMap map[constant.QuestFinishType]map[uint32]func() // 将任务通过完成条件分开
+}
+
 // 处理创建角色任务
 func (g *PlayerData) CreateCharacterSubMission() []uint32 {
 	finishSubMission := make([]uint32, 0)

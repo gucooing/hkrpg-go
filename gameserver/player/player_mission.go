@@ -30,6 +30,22 @@ func MissionInit() {
 		constant.UseSelectedItem:               UseSelectedItem,               // 使用消耗品
 		constant.AetherDivideCollectSpiritType: AetherDivideCollectSpiritType, // 以太战线获得新角色
 	}
+
+	FinishActionMap = map[constant.FinishActionType]func(this *FinishActionType) bool{
+		constant.ChangeLineup:          FinishActionChangeLineup,          // 强制更新队伍
+		constant.Recover:               FinishActionRecover,               // 恢复队伍
+		constant.AddMissionItem:        FinishActionAddMissionItem,        // 添加任务道具
+		constant.AddRecoverMissionItem: FinishActionAddRecoverMissionItem, // 添加任务恢复道具
+		constant.DelMissionItem:        FinishActionDelMissionItem,        // 删除任务道具
+		constant.DelMission:            FinishActionDelMission,            // 结束任务
+		constant.DisableMission:        FinishActionDisableMission,        // 删除主线任务
+		constant.DelSubMission:         FinishActionDelSubMission,         // 删除子任务
+		constant.EnterEntryIfNotThere:  FinishActionEnterEntryIfNotThere,  // 传送到目标场景
+		constant.SetFloorSavedValue:    FinishActionSetFloorSavedValue,    // 设置物品状态
+		constant.MoveToAnchor:          FinishActionMoveToAnchor,          // 移动到锚点
+		constant.SetGroupState:         FinishActionSetGroupState,         // 设置组状态
+		constant.FATChangeStoryLine:    FinishActionFATChangeStoryLine,    // 强制添加并开启故事线
+	}
 }
 
 /*******************每日任务****************/
@@ -464,77 +480,18 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 // 完成任务后完成服务端动作（不结束任务
 func (g *GamePlayer) AutoServerMissionFinishAction(id uint32, pileItem []*model.Material) {
 	conf := gdconf.GetSubMainMissionById(id)
-	if conf == nil {
+	if conf == nil || conf.FinishActionList == nil {
 		return
 	}
-	if conf.FinishActionList == nil {
-		return
+	this := &FinishActionType{
+		GamePlayer:   g,
+		conf:         conf,
+		pileItem:     pileItem,
+		finishAction: nil,
 	}
 	for _, finishAction := range conf.FinishActionList {
-		switch finishAction.FinishActionType {
-		case constant.ChangeLineup: // 强制更新队伍
-			g.GetPd().NewTrialLine(finishAction.FinishActionPara) // 设置队伍角色
-		case constant.Recover: // 恢复队伍
-			g.RecoverLine()
-		case constant.AddMissionItem: // 添加任务道具
-			for index, item := range finishAction.FinishActionPara {
-				if len(finishAction.FinishActionPara) < index+2 && index%2 != 0 {
-					continue
-				}
-				pileItem = append(pileItem, &model.Material{
-					Tid: item,
-					Num: finishAction.FinishActionPara[index+1],
-				})
-			}
-		case constant.AddRecoverMissionItem: // 添加任务恢复道具
-			for index, item := range finishAction.FinishActionPara {
-				if len(finishAction.FinishActionPara) < index+2 && index%2 != 0 {
-					continue
-				}
-				pileItem = append(pileItem, &model.Material{
-					Tid: item,
-					Num: finishAction.FinishActionPara[index+1],
-				})
-			}
-		case constant.DelMissionItem: // 删除任务道具
-
-		case constant.DelMission: // 结束任务
-			g.InspectMission(finishAction.FinishActionPara)
-		case constant.DisableMission: // 删除主线任务
-			g.GetPd().AddFinishMainMission(finishAction.FinishActionPara, pileItem)
-			g.InspectMission(nil)
-		case constant.DelSubMission: // 删除子任务
-			g.InspectMission(finishAction.FinishActionPara)
-		case constant.EnterEntryIfNotThere: // 传送到目标场景
-			if len(finishAction.FinishActionPara) < 3 {
-				continue
-			}
-			entryId := finishAction.FinishActionPara[0]
-			groupID := finishAction.FinishActionPara[1]
-			anchorID := finishAction.FinishActionPara[2]
-			g.GetPd().SetCurEntryId(entryId)
-			g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
-		case constant.SetFloorSavedValue: // 设置物品状态
-			g.SetFloorSavedValue(conf, finishAction)
-		case constant.MoveToAnchor: // 移动到锚点
-			if len(finishAction.FinishActionPara) < 3 {
-				continue
-			}
-			entryId := finishAction.FinishActionPara[0]
-			groupID := finishAction.FinishActionPara[1]
-			anchorID := finishAction.FinishActionPara[2]
-			g.GetPd().SetCurEntryId(entryId)
-			g.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
-		case constant.SetGroupState: // 设置组状态
-			groupID := finishAction.FinishActionPara[0]
-			groupState := finishAction.FinishActionPara[1]
-			g.GetPd().SetGroupState(g.GetPd().GetBlock(model.FloorTentry(conf.LevelFloorID)), groupID, groupState)
-		case constant.FATChangeStoryLine: // 强制添加并开启故事线
-			entryId, anchorGroup, anchorId, ok := g.GetPd().MissionAddChangeStoryLine(finishAction.FinishActionPara)
-			if ok {
-				g.EnterSceneByServerScNotify(entryId, 0, anchorGroup, anchorId)
-			}
-		default:
+		handle, ok := FinishActionMap[finishAction.FinishActionType]
+		if !ok {
 			client.PushServer(&constant.LogPush{
 				PushMessage: constant.PushMessage{
 					Tag: "Mission",
@@ -543,7 +500,10 @@ func (g *GamePlayer) AutoServerMissionFinishAction(id uint32, pileItem []*model.
 					conf.ID, finishAction.FinishActionType),
 				LogLevel: constant.ERROR,
 			})
+			continue
 		}
+		this.finishAction = finishAction
+		handle(this)
 	}
 }
 
@@ -720,3 +680,114 @@ func AetherDivideCollectSpiritType(this *QuestFinishType) {
 }
 
 // 完成任务后完成服务端动作（不结束任务
+
+var FinishActionMap map[constant.FinishActionType]func(this *FinishActionType) bool
+
+type FinishActionType struct {
+	*GamePlayer
+	finishAction *gdconf.FinishAction
+	conf         *gdconf.SubMission
+	pileItem     []*model.Material
+}
+
+func FinishActionChangeLineup(this *FinishActionType) bool {
+	this.GetPd().NewTrialLine(this.finishAction.FinishActionPara) // 设置队伍角色
+	return true
+}
+
+func FinishActionRecover(this *FinishActionType) bool {
+	this.RecoverLine()
+	return true
+}
+
+func FinishActionAddMissionItem(this *FinishActionType) bool {
+	for index, item := range this.finishAction.FinishActionPara {
+		if len(this.finishAction.FinishActionPara) < index+2 && index%2 != 0 {
+			continue
+		}
+		this.pileItem = append(this.pileItem, &model.Material{
+			Tid: item,
+			Num: this.finishAction.FinishActionPara[index+1],
+		})
+	}
+	return true
+}
+
+func FinishActionAddRecoverMissionItem(this *FinishActionType) bool {
+	for index, item := range this.finishAction.FinishActionPara {
+		if len(this.finishAction.FinishActionPara) < index+2 && index%2 != 0 {
+			continue
+		}
+		this.pileItem = append(this.pileItem, &model.Material{
+			Tid: item,
+			Num: this.finishAction.FinishActionPara[index+1],
+		})
+	}
+	return true
+}
+
+func FinishActionDelMissionItem(this *FinishActionType) bool {
+	return true
+}
+
+func FinishActionDelMission(this *FinishActionType) bool {
+	this.InspectMission(this.finishAction.FinishActionPara)
+	return true
+}
+
+func FinishActionDisableMission(this *FinishActionType) bool {
+	this.GetPd().AddFinishMainMission(this.finishAction.FinishActionPara, this.pileItem)
+	this.InspectMission(nil)
+	return true
+}
+
+func FinishActionDelSubMission(this *FinishActionType) bool {
+	this.InspectMission(this.finishAction.FinishActionPara)
+	return true
+}
+
+func FinishActionEnterEntryIfNotThere(this *FinishActionType) bool {
+	if len(this.finishAction.FinishActionPara) < 3 {
+		return false
+	}
+	entryId := this.finishAction.FinishActionPara[0]
+	groupID := this.finishAction.FinishActionPara[1]
+	anchorID := this.finishAction.FinishActionPara[2]
+	this.GetPd().SetCurEntryId(entryId)
+	this.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
+	return true
+}
+
+func FinishActionSetFloorSavedValue(this *FinishActionType) bool {
+	this.SetFloorSavedValue(this.conf, this.finishAction)
+	return true
+}
+
+func FinishActionMoveToAnchor(this *FinishActionType) bool {
+	if len(this.finishAction.FinishActionPara) < 3 {
+		return false
+	}
+	entryId := this.finishAction.FinishActionPara[0]
+	groupID := this.finishAction.FinishActionPara[1]
+	anchorID := this.finishAction.FinishActionPara[2]
+	this.GetPd().SetCurEntryId(entryId)
+	this.EnterSceneByServerScNotify(entryId, 0, groupID, anchorID)
+	return true
+}
+
+func FinishActionSetGroupState(this *FinishActionType) bool {
+	groupID := this.finishAction.FinishActionPara[0]
+	groupState := this.finishAction.FinishActionPara[1]
+	this.GetPd().SetGroupState(this.GetPd().GetBlock(model.FloorTentry(this.conf.LevelFloorID)), groupID, groupState)
+	return true
+}
+
+func FinishActionFATChangeStoryLine(this *FinishActionType) bool {
+	entryId, anchorGroup, anchorId, ok := this.GetPd().MissionAddChangeStoryLine(this.finishAction.FinishActionPara)
+	if ok {
+		this.EnterSceneByServerScNotify(entryId, 0, anchorGroup, anchorId)
+	}
+	return true
+}
+
+// 任务分类TYPE

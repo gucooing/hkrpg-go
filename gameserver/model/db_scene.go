@@ -551,8 +551,6 @@ func (g *PlayerData) GetAllBlockMap() map[uint32]*spb.BlockBin {
 		db.BlockMap = NewBlockMap()
 	}
 	blockMap := make(map[uint32]*spb.BlockBin)
-	db.blockMapLock.Lock()
-	defer db.blockMapLock.Unlock()
 	for k, v := range db.BlockMap {
 		blockMap[k] = v
 	}
@@ -568,10 +566,7 @@ func (g *PlayerData) GetBlock(entryId uint32) *spb.BlockBin {
 	if mapEntrance := gdconf.GetMapEntranceById(newEntryId); mapEntrance == nil {
 		newEntryId = entryId
 	}
-	on := g.GetOnlineData()
 	db := g.GetBlockMap()
-	on.blockMapLock.Lock()
-	defer on.blockMapLock.Unlock()
 	if db[newEntryId] == nil {
 		bin := database.GetBlockData(database.GSS.PlayerDataMysql,
 			g.GetBasicBin().Uid, newEntryId)
@@ -615,9 +610,6 @@ func (g *PlayerData) GetPropState(db *spb.BlockBin, groupId, propId uint32, stat
 	if db == nil {
 		return gdconf.GetStateValue(state)
 	}
-	on := g.GetOnlineData()
-	on.blockMapLock.Lock()
-	defer on.blockMapLock.Unlock()
 	if db.BlockList == nil {
 		db.BlockList = make(map[uint32]*spb.BlockList)
 	}
@@ -640,9 +632,6 @@ func (g *PlayerData) GetPropState(db *spb.BlockBin, groupId, propId uint32, stat
 }
 
 func (g *PlayerData) UpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
-	on := g.GetOnlineData()
-	on.blockMapLock.Lock()
-	defer on.blockMapLock.Unlock()
 	if db.BlockList == nil {
 		db.BlockList = make(map[uint32]*spb.BlockList)
 	}
@@ -665,9 +654,6 @@ func (g *PlayerData) UpPropState(db *spb.BlockBin, groupId, propId, state uint32
 }
 
 func (g *PlayerData) GetGroupState(db *spb.BlockBin, groupId uint32) uint32 {
-	on := g.GetOnlineData()
-	on.blockMapLock.Lock()
-	defer on.blockMapLock.Unlock()
 	if db.BlockList == nil {
 		db.BlockList = make(map[uint32]*spb.BlockList)
 	}
@@ -680,9 +666,6 @@ func (g *PlayerData) GetGroupState(db *spb.BlockBin, groupId uint32) uint32 {
 }
 
 func (g *PlayerData) SetGroupState(db *spb.BlockBin, groupId, groupState uint32) {
-	on := g.GetOnlineData()
-	on.blockMapLock.Lock()
-	defer on.blockMapLock.Unlock()
 	if db.BlockList == nil {
 		db.BlockList = make(map[uint32]*spb.BlockList)
 	}
@@ -724,9 +707,6 @@ func (g *PlayerData) SetFloorSavedData(entryId uint32, key string, v int32) {
 }
 
 func (g *PlayerData) ObjectCaptureUpPropState(db *spb.BlockBin, groupId, propId, state uint32) {
-	on := g.GetOnlineData()
-	on.blockMapLock.Lock()
-	defer on.blockMapLock.Unlock()
 	if db.BlockList == nil {
 		db.BlockList = make(map[uint32]*spb.BlockList)
 	}

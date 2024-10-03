@@ -37,7 +37,7 @@ type PlayerNet struct {
 }
 
 func NewGameServer(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.MessageQueue,
-	netInfo constant.AppNet, appInfo constant.AppList, appId uint32) *GameServer {
+	appInfo constant.AppList, appId uint32) *GameServer {
 	g := &GameServer{
 		DiscoveryClient: discoveryClient,
 		MessageQueue:    messageQueue,

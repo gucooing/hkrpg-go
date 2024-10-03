@@ -59,12 +59,6 @@ var DefaultConfig = &Config{
 	AppList: map[string]constant.AppList{
 		"9001.2.1.1": {
 			RegionName: "hkrpg_rel",
-			App: map[string]constant.AppNet{
-				"port_gt": {
-					InnerPort: "20071",
-					InnerAddr: "127.0.0.1",
-				},
-			},
 		},
 	},
 	NetConf: map[string]string{

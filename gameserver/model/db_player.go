@@ -1,8 +1,6 @@
 package model
 
 import (
-	"sync"
-
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
@@ -21,8 +19,8 @@ type OnlineData struct {
 	IsNickName            bool                     // 是否修改昵称
 	SceneMap              *SceneMap                // 在线场景管理
 	BlockMap              map[uint32]*spb.BlockBin // 缓存场景
-	blockMapLock          sync.Mutex               // 缓存场景互斥锁
 	CurBattle             *CurBattle               // 正在进行的战斗
+	Mission               *Mission                 // 任务预处理
 }
 
 func NewPlayerData() *PlayerData {
@@ -107,6 +105,7 @@ func (g *PlayerData) GetOnlineData() *OnlineData {
 			BlockMap:              NewBlockMap(),
 			CurBattle:             g.NewCurBattle(),
 			BattleId:              10000,
+			Mission:               new(Mission),
 		}
 	}
 

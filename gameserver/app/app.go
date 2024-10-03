@@ -26,10 +26,6 @@ func Run(done chan os.Signal, cfg *gameserver.Config, appid string) error {
 	if !ok {
 		return fmt.Errorf("app not exist")
 	}
-	netInfo, ok := appInfo.App["port_gt"]
-	if !ok {
-		return fmt.Errorf("app not exist")
-	}
 	// new grpc
 	nodeGrpc, ok := cfg.NetConf["NodeGrpc"]
 	if !ok {
@@ -74,7 +70,7 @@ func Run(done chan os.Signal, cfg *gameserver.Config, appid string) error {
 	// new conf
 	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// new game
-	g := service.NewGameServer(discoveryClient, messageQueue, netInfo, appInfo, alg.GetAppIdUint32(appid))
+	g := service.NewGameServer(discoveryClient, messageQueue, appInfo, alg.GetAppIdUint32(appid))
 	if g == nil {
 		return fmt.Errorf("create game server error")
 	}
