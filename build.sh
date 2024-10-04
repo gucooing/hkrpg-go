@@ -9,7 +9,7 @@ fi
 
 go mod download
 go mod verify
-CGO_ENABLED=0
+export CGO_ENABLED=0
 
 PLATFORMS="linux/amd64 linux/arm64 windows/amd64 windows/arm64"
 
@@ -25,15 +25,15 @@ ROBOT_PATH=./cmd/robot/robot.go
 
 for file in $PE_PATH $DISPATCH_PATH $GAMESERVER_PATH $GATE_PATH $MUIP_PATH $NODE_PATH $ROBOT_PATH; do
   for platform in $PLATFORMS; do
-      GOOS=$(echo $platform | cut -d'/' -f1)
-      GOARCH=$(echo $platform | cut -d'/' -f2)
+      export GOOS=$(echo $platform | cut -d'/' -f1)
+      export GOARCH=$(echo $platform | cut -d'/' -f2)
       CURRENT_OUT_DIR=$OUT_DIR/$GOOS-$GOARCH
       FILENAME=$(basename $file)
       OUTPUT_NAME=${FILENAME%.*}_$GOOS"_"$GOARCH
       if [ $GOOS = "windows" ]; then
         OUTPUT_NAME="$OUTPUT_NAME.exe"
       fi
-      echo "Building $FILENAME..."
+      echo "Building $OUTPUT_NAME..."
       go build -ldflags="-s -w" -o $CURRENT_OUT_DIR/$OUTPUT_NAME $file
     done
 done
