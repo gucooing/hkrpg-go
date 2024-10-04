@@ -9,6 +9,7 @@ fi
 
 go mod download
 go mod verify
+CGO_ENABLED=0
 
 PLATFORMS="linux/amd64 linux/arm64 windows/amd64 windows/arm64"
 

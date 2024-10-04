@@ -22,15 +22,17 @@ jobs:
     - name: Build
       run: bash build.sh
 
-    - name: Package
-      run: |
-        zip -r build/data.zip data/*
-
     - name: Upload data
       uses: actions/upload-artifact@v4
       with:
         name: data.zip
         path: data/*
+
+    - name: Upload docs
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs.zip
+        path: docs/*
 
     - name: Upload linux-amd64
       uses: actions/upload-artifact@v4

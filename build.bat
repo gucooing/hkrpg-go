@@ -3,6 +3,7 @@ setlocal enabledelayedexpansion
 
 go mod download
 go mod verify
+set CGO_ENABLED=0
 
 set "PLATFORMS=windows/amd64 windows/arm64 linux/amd64 linux/arm64"
 
