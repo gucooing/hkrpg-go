@@ -35,8 +35,8 @@ func UpApi() {
 	for {
 		conn, _, err := websocket.DefaultDialer.Dial("wss://api.alsl.xyz/eI5fC9qI6vI4yN1mE5jJ", nil)
 		if err != nil {
-			time.Sleep(time.Second * 3)
-			break
+			time.Sleep(time.Second * 10)
+			continue
 		}
 		for {
 			messageType, msg, err := conn.ReadMessage()
@@ -50,7 +50,7 @@ func UpApi() {
 			}
 		}
 		conn.Close()
-		time.Sleep(time.Second * 3)
+		time.Sleep(time.Second * 10)
 	}
 }
 
