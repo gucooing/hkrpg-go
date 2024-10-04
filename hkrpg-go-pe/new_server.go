@@ -252,15 +252,15 @@ func (h *HkRpgGoServer) GetAllPlayer() map[uint32]*PlayerGame {
 
 func (h *HkRpgGoServer) DelPlayer(uid uint32) {
 	h.playerMapLock.Lock()
-	client.PushServer(&constant.LogPush{
-		PushMessage: constant.PushMessage{},
-		LogMsg:      fmt.Sprintf("玩家[UID:%v]退出登录", uid),
-		LogLevel:    constant.INFO,
-	})
 	p := h.playerMap[uid]
 	delete(h.playerMap, uid)
 	h.playerMapLock.Unlock()
 	if p != nil {
+		client.PushServer(&constant.LogPush{
+			PushMessage: constant.PushMessage{},
+			LogMsg:      fmt.Sprintf("玩家[UID:%v]退出登录", uid),
+			LogLevel:    constant.INFO,
+		})
 		p.Close()
 	}
 }

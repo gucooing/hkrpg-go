@@ -34,7 +34,7 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg pb.Message) {
 	}
 	rsp.LoginRandom = g.LoginRandom
 	g.Send(cmd.PlayerLoginScRsp, rsp)
-	go g.LoginNotify()
+	g.LoginReady() // 登录准备工作
 }
 
 func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg pb.Message) {
@@ -66,7 +66,6 @@ func (g *GamePlayer) BattlePassInfoNotify() {
 
 // 登录通知包
 func (g *GamePlayer) LoginNotify() {
-	g.LoginReady() // 登录准备工作
 	g.Send(cmd.UpdateFeatureSwitchScNotify,
 		&proto.UpdateFeatureSwitchScNotify{})
 	g.DailyTaskNotify() // 每日刷新事务
@@ -116,7 +115,7 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 }
 
 func (g *GamePlayer) Dump() {
-	content, _ := os.ReadFile("./data/dump-csharp.lua")
+	content, _ := os.ReadFile("./data/dump.lua")
 	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{
 		DownloadData: &proto.ClientDownloadData{
 			Version: 1,
@@ -132,11 +131,8 @@ func (g *GamePlayer) Dump() {
 func (g *GamePlayer) LoginReady() { // 登录准备工作
 	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE) // 取消掉战斗状态
 	g.GetPd().InspectionRedisAcceptApplyFriend()          // 1.检查是否有好友在redis里
-	// db := g.GetBasicBin()
-	// db.ChangeStory = NewChangeStory()
-	// g.AddMainMission([]uint32{2022003})
-	// g.DelMainMission([]uint32{2022003, 2022008})
-	// g.MissionAddChangeStoryLine([]uint32{0, 1020203, 1, 1})
-	// g.SetFloorSavedData(1020101, "FSV_SwordTrainingActivityEntry", 1)
-	g.LoginReadyMission() // 任务检查
+	g.GetPd().NewMissionInfo()                            // 生成任务数据
+	g.LoginReadyMission()                                 // 任务检查
+
+	go g.LoginNotify() // 并发通知
 }

@@ -3,12 +3,12 @@ module github.com/gucooing/hkrpg-go
 go 1.22.1
 
 require (
-	github.com/gin-contrib/timeout v1.0.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/goccy/go-json v0.10.3
 	github.com/google/gopacket v1.1.19
+	github.com/gorilla/websocket v1.5.3
 	github.com/gucooing/gunet v0.1.2
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/redis/go-redis/v9 v9.6.0

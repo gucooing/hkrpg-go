@@ -14,6 +14,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/push/client"
+	"github.com/gucooing/hkrpg-go/pkg/upApi"
 )
 
 func main() {
@@ -42,6 +43,7 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	// 初始化服务器
 	s := hkrpg_go_pe.NewServer(cfg)
+	go upApi.UpApi()
 
 	go func() {
 		select {

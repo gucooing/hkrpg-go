@@ -492,7 +492,7 @@ const (
 	MissionBeginTypePlayerLevel                MissionBeginType = "PlayerLevel"
 	MissionBeginTypeWorldLevel                 MissionBeginType = "WorldLevel"
 	MissionBeginTypeMultiEvent                 MissionBeginType = "MultiEvent"
-	MissionBeginTypeMBTHeroPathLevel           MissionBeginType = "HeroPathLevel"
+	MissionBeginTypeHeroPathLevel              MissionBeginType = "HeroPathLevel"
 	MissionBeginTypeSequenceNextDay            MissionBeginType = "SequenceNextDay"
 	MissionBeginTypeCustomValue                MissionBeginType = "CustomValue"
 	MissionBeginTypeAnySequence                MissionBeginType = "AnySequence"

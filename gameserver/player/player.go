@@ -219,14 +219,6 @@ func (g *GamePlayer) Close() {
 		return
 	}
 	g.IsClosed = true
-	// 等待所有待发送的消息发送完毕
-	for {
-		if len(g.SendChan) == 0 {
-			time.Sleep(time.Millisecond * 100)
-			break
-		}
-		time.Sleep(time.Millisecond * 100)
-	}
 	logger.Info("[UID:%v]玩家下线GAME", g.Uid)
 	close(g.RecvChan)
 	close(g.SendChan)

@@ -144,15 +144,6 @@ func (s *TcpSession) Close() {
 		return
 	}
 	s.SessionState = SessionClose
-	// 等待所有待发送的消息发送完毕
-	for {
-		if len(s.SendChan) == 0 {
-			time.Sleep(time.Millisecond * 100)
-			break
-		}
-		time.Sleep(time.Millisecond * 100)
-	}
-
 	// 断开kcp
 	s.tcpConn.Close()
 	// 断开通道

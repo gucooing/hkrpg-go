@@ -75,8 +75,26 @@ func (g *PlayerData) GetFinishSubMainMissionById(id uint32) *spb.MissionInfo {
 
 /*********************************客户端操作*********************************/
 
-type Mission struct {
-	MissionFinishTypeMap map[constant.QuestFinishType]map[uint32]func() // 将任务通过完成条件分开
+type MissionInfo struct {
+	MissionFinishTypeMap map[constant.QuestFinishType]map[uint32]*spb.MissionInfo // 将任务通过完成条件分开
+}
+
+// pb生成任务列表
+func (g *PlayerData) NewMissionInfo() {
+	db := &MissionInfo{
+		MissionFinishTypeMap: make(map[constant.QuestFinishType]map[uint32]*spb.MissionInfo),
+	}
+	for id, info := range g.GetSubMainMissionList() {
+		conf := gdconf.GetSubMainMissionById(id)
+		if conf == nil {
+			continue
+		}
+		if db.MissionFinishTypeMap[conf.FinishType] == nil {
+			db.MissionFinishTypeMap[conf.FinishType] = make(map[uint32]*spb.MissionInfo)
+		}
+		db.MissionFinishTypeMap[conf.FinishType][id] = info
+	}
+	g.GetOnlineData().Mission = db
 }
 
 // 处理创建角色任务
@@ -371,70 +389,6 @@ func (g *PlayerData) ChallengeFinishCnt() []uint32 {
 	return finishSubMission
 }
 
-/*****************************服务端检查FinishType**************************/
-
-// 完成列表中的主任务即可
-func (g *PlayerData) FinishMainMission(id uint32) (uint32, uint32) {
-	db := g.GetSubMainMissionList()[id]
-	finishMainMissionList := g.GetFinishMainMissionList()
-	conf := gdconf.GetSubMainMissionById(id)
-	if conf == nil || db == nil {
-		return 0, 0
-	}
-	OldProgress := db.Progress
-	db.Progress = 0
-	isFinish := true
-	for _, paramInt := range conf.ParamIntList {
-		if finishMainMissionList[paramInt] != nil {
-			db.Progress++
-		} else {
-			isFinish = false
-		}
-	}
-	if isFinish { // 完成任务
-		db.Progress = conf.Progress
-		return id, 0
-	} else {
-		if OldProgress != db.Progress {
-			return 0, id
-		}
-	}
-	return 0, 0
-}
-
-// 完成列表中的子任务即可
-func (g *PlayerData) SubMissionFinishCnt(id uint32) (uint32, uint32) {
-	db := g.GetSubMainMissionList()[id]
-	finishSubMissionList := g.GetFinishSubMainMissionList()
-	conf := gdconf.GetSubMainMissionById(id)
-	if conf == nil || db == nil {
-		return 0, 0
-	}
-	OldProgress := db.Progress
-	db.Progress = 0
-	isFinish := true
-	for _, paramInt := range conf.ParamIntList {
-		if finishSubMissionList[paramInt] != nil {
-			db.Progress++
-		} else {
-			isFinish = false
-		}
-	}
-	if db.Progress == conf.Progress {
-		isFinish = true
-	}
-	if isFinish { // 完成任务
-		db.Progress = conf.Progress
-		// g.FinishSubMission(id)
-		return id, 0
-	} else {
-		if OldProgress != db.Progress {
-			return 0, id
-		}
-	}
-	return 0, 0
-}
-
 /*********************************数据库操作*********************************/
 
 func (g *PlayerData) AddMainMission(acceptMainList []uint32) {
@@ -629,6 +583,8 @@ func (g *PlayerData) AcceptMainMission() []uint32 {
 
 	return acceptMainMissionList
 }
+
+var MissionTakeTypeMap map[constant.MissionBeginType]func()
 
 // 检查当前主任务下是否有子任务需要接取
 func (g *PlayerData) AcceptSubMission() []uint32 {

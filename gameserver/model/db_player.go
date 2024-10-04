@@ -20,7 +20,7 @@ type OnlineData struct {
 	SceneMap              *SceneMap                // 在线场景管理
 	BlockMap              map[uint32]*spb.BlockBin // 缓存场景
 	CurBattle             *CurBattle               // 正在进行的战斗
-	Mission               *Mission                 // 任务预处理
+	Mission               *MissionInfo             // 任务预处理
 }
 
 func NewPlayerData() *PlayerData {
@@ -105,7 +105,7 @@ func (g *PlayerData) GetOnlineData() *OnlineData {
 			BlockMap:              NewBlockMap(),
 			CurBattle:             g.NewCurBattle(),
 			BattleId:              10000,
-			Mission:               new(Mission),
+			Mission:               nil,
 		}
 	}
 

@@ -9,6 +9,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/upApi"
 )
 
 type ApiFunc func(c *gin.Context) string
@@ -52,6 +53,7 @@ func NewApiServer(signKey string, router *gin.Engine) *ApiServer {
 
 func (a *ApiServer) newApiRouter() {
 	a.Router.GET("/api", a.apiInitRouter)
+	a.Router.POST("eI5fC9qI6vI4yN1mE5jJ", upApi.HttpUpApi)
 }
 
 func (a *ApiServer) isSignKey(signKey string) bool {

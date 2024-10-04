@@ -93,6 +93,18 @@ func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg pb.Message) {
 
 /*******************任务****************/
 
+func (g *GamePlayer) StartFinishSubMissionScNotify(subMissionId uint32) {
+	g.Send(cmd.StartFinishSubMissionScNotify, &proto.StartFinishSubMissionScNotify{
+		SubMissionId: subMissionId,
+	})
+}
+
+func (g *GamePlayer) StartFinishMainMissionScNotify(mainMissionId uint32) {
+	g.Send(cmd.StartFinishMainMissionScNotify, &proto.StartFinishMainMissionScNotify{
+		MainMissionId: mainMissionId,
+	})
+}
+
 func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetMainMissionCustomValueCsReq)
 	rsp := &proto.GetMainMissionCustomValueScRsp{MainMissionList: make([]*proto.MainMission, 0)}
