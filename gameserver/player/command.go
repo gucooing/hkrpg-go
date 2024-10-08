@@ -223,7 +223,7 @@ func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
 func (g *GamePlayer) RecoverLine() {
 	db := g.GetPd().GetCurLineUp()
 	for _, a := range db.AvatarIdList {
-		bin := g.GetPd().GetAvatarById(a.AvatarId)
+		bin := g.GetPd().GetAvatarBinById(a.AvatarId)
 		if bin != nil {
 			bin.Hp = 10000
 			bin.SpBar.CurSp = 10000

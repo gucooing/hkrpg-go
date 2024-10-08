@@ -83,6 +83,7 @@ func Run(done chan os.Signal, cfg *gameserver.Config, appid string) error {
 		_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 		defer cancel()
 		logger.Info("game服务正在关闭")
+		g.Close()
 		logger.Info("game服务已停止")
 		logger.CloseLogger()
 		return nil

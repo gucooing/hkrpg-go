@@ -52,6 +52,17 @@ func NewGameServer(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Me
 	return g
 }
 
+func (g *GameServer) Close() {
+	logger.Info("开始保存玩家数据")
+	var num int
+	allP := g.getAllPlayerNet()
+	for _, p := range allP {
+		g.delPlayerNet(p.uid)
+		num++
+	}
+	logger.Info("保存玩家数据结束,保存玩家数量:%v", num)
+}
+
 // 心跳
 func (g *GameServer) keepaliveServer() {
 	ticker := time.NewTicker(time.Second * 15)
@@ -107,6 +118,16 @@ func (g *GameServer) getPlayerNet(uid uint32) *PlayerNet {
 	g.PlayerSync.RLock()
 	defer g.PlayerSync.RUnlock()
 	return g.PlayerMap[uid]
+}
+
+func (g *GameServer) getAllPlayerNet() map[uint32]*PlayerNet {
+	g.PlayerSync.RLock()
+	defer g.PlayerSync.RUnlock()
+	all := make(map[uint32]*PlayerNet)
+	for k, v := range g.PlayerMap {
+		all[k] = v
+	}
+	return all
 }
 
 func (g *GameServer) addPlayerNet(playerNet *PlayerNet) {

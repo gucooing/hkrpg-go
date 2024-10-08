@@ -179,7 +179,7 @@ func (g *PlayerData) NewTrialLine(trialList []uint32) {
 		if slot == 4 {
 			continue
 		}
-		if g.GetAvatarById(id) != nil {
+		if g.GetAvatarBinById(id) != nil {
 			db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{
 				AvatarId:       id,
 				Slot:           uint32(slot),
@@ -202,7 +202,7 @@ func (g *PlayerData) NewTrialLine(trialList []uint32) {
 func (g *PlayerData) GetTrialAvatar(trialAvatarId uint32) *spb.LineAvatarList {
 	db := g.GetBattleLineUp()
 	var lineAvatarType spb.LineAvatarType
-	if g.GetAvatarById(trialAvatarId) != nil {
+	if g.GetAvatarBinById(trialAvatarId) != nil {
 		lineAvatarType = spb.LineAvatarType_LineAvatarType_MI
 	}
 	if gdconf.GetSpecialAvatarById(trialAvatarId) != nil {

@@ -74,24 +74,8 @@ func UpdatePlayerUid(db *gorm.DB, playerUid *constant.PlayerUid) error {
 	}
 }
 
-func GetComboTokenByAccountId(rc *redis.Client, db *gorm.DB, accountId uint32) string {
-	if rc != nil {
-		return getComboTokenByAccountIdRedis(rc, strconv.Itoa(int(accountId)))
-	}
-	if db != nil {
-		return getComboTokenByAccountIdGorm(db, accountId)
-	}
-	return ""
-}
-
-// 获取ComboToken Gorm
-func getComboTokenByAccountIdGorm(db *gorm.DB, accountId uint32) string {
-	p := GetPlayerUidByAccountId(db, accountId)
-	return p.ComboToken
-}
-
 // 获取ComboToken Redis
-func getComboTokenByAccountIdRedis(rc *redis.Client, accountId string) string {
+func GetComboTokenByAccountIdRedis(rc *redis.Client, accountId string) string {
 	key := "player_comboToken:" + accountId
 	comboToken, _ := rc.Get(ctx, key).Result()
 	return comboToken

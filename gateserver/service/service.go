@@ -136,6 +136,18 @@ func (g *GateServer) GetSession(uid uint32) session.SessionAll {
 	return g.SessionMap[uid]
 }
 
+func (g *GateServer) GetAllGsSession(gsAppid uint32) map[uint32]session.SessionAll {
+	all := make(map[uint32]session.SessionAll)
+	g.SessionMapMutex.RLock()
+	for k, v := range g.SessionMap {
+		if v.GetSession().GameAppId == gsAppid {
+			all[k] = v
+		}
+	}
+	g.SessionMapMutex.RUnlock()
+	return all
+}
+
 func (g *GateServer) AddSession(s session.SessionAll) {
 	g.SessionMapMutex.Lock()
 	defer g.SessionMapMutex.Unlock()
@@ -187,6 +199,17 @@ func (g *GateServer) gameMsgHandle(netMsg *mq.NetMsg) {
 		}
 	case mq.ServerMsg:
 		logger.Info("to gate msg")
+	case mq.ServiceLogout:
+		go g.gameLogout(netMsg.OriginServerAppId)
+	}
+}
+
+// gs服务离线
+func (g *GateServer) gameLogout(gsAppid uint32) {
+	logger.Info("game server:%v logout", gsAppid)
+	sessions := g.GetAllGsSession(gsAppid)
+	for _, s := range sessions {
+		g.DelSession(s)
 	}
 }
 
@@ -281,10 +304,9 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 		return rsp
 	}
 
-	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
-
+	comboToken := database.GetComboTokenByAccountIdRedis(database.GATE.LoginRedis, req.AccountUid)
 	// token 验证
-	if req.Token != account.ComboToken {
+	if req.Token != comboToken {
 		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 		return rsp
 	}
@@ -295,6 +317,7 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 		return rsp
 	}
 
+	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
 	// ban 验证
 	if account.IsBan && account.BanEndTime >= time.Now().Unix() {
 		rsp.Retcode = uint32(proto.Retcode_RET_IN_GM_BIND_ACCESS)

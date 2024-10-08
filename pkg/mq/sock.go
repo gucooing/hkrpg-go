@@ -262,6 +262,11 @@ func (m *MessageQueue) sendHandler() {
 				logger.Info("tcp mq disconnect, addr: %v, server type: %v, appid: %v", inst.conn.RemoteAddr().String(), inst.serverType, inst.appId)
 				m.gateTcpMqSync.Lock()
 				delete(m.gateTcpMqInstMap[inst.serverType], inst.appId)
+				m.netMsgOutput <- &NetMsg{
+					OriginServerType:  inst.serverType,
+					OriginServerAppId: inst.appId,
+					MsgType:           ServiceLogout,
+				}
 				m.gateTcpMqSync.Unlock()
 				m.gateTcpMqDeadEventChan <- inst.conn.RemoteAddr().String()
 			}

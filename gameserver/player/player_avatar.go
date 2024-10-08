@@ -11,9 +11,9 @@ import (
 func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetMultiPathAvatarInfoScRsp{
 		Retcode:                 0,
-		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),           // 已解锁多命途角色信息
-		CurAvatarPath:           make(map[uint32]proto.MultiPathAvatarType),      // 多命途角色列表
-		BasicTypeIdList:         []uint32{g.GetPd().GetAvatarById(8001).CurPath}, // 主角命途
+		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),              // 已解锁多命途角色信息
+		CurAvatarPath:           make(map[uint32]proto.MultiPathAvatarType),         // 多命途角色列表
+		BasicTypeIdList:         []uint32{g.GetPd().GetAvatarBinById(8001).CurPath}, // 主角命途
 	}
 
 	for _, avatarDb := range g.GetPd().GetAvatarList() {
@@ -83,7 +83,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 	if req.BaseAvatarId/1000 == 8 {
 		avatarId = 8001
 	}
-	dbAvatar := g.GetPd().GetAvatarById(avatarId)
+	dbAvatar := g.GetPd().GetAvatarBinById(avatarId)
 	if dbAvatar == nil || cost == nil {
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
@@ -182,7 +182,7 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg pb.Message) {
 	if req.BaseAvatarId/1000 == 8 {
 		avatarId = 8001
 	}
-	dbAvatar := g.GetPd().GetAvatarById(avatarId)
+	dbAvatar := g.GetPd().GetAvatarBinById(avatarId)
 	if dbAvatar == nil || itemList == nil {
 		g.Send(cmd.AvatarExpUpScRsp, rsp)
 		return
@@ -239,7 +239,7 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg pb.Message) {
 	if avatarId/1000 == 8 {
 		avatarId = 8001
 	}
-	avatarDb := g.GetPd().GetAvatarById(avatarId)
+	avatarDb := g.GetPd().GetAvatarBinById(avatarId)
 	if avatarDb == nil {
 		rsp.Retcode = uint32(proto.Retcode_RET_FAIL)
 		g.Send(cmd.UnlockSkilltreeScRsp, rsp)
@@ -294,7 +294,7 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg pb.Message) {
 		MaterialList: make([]uint32, 0),
 	}
 
-	avatarDb := g.GetPd().GetAvatarById(req.BaseAvatarId)
+	avatarDb := g.GetPd().GetAvatarBinById(req.BaseAvatarId)
 	if avatarDb == nil {
 		rsp := &proto.TakePromotionRewardScRsp{
 			Retcode: uint32(proto.Retcode_RET_FAIL),
@@ -335,7 +335,7 @@ func (g *GamePlayer) UnlockAvatarPathCsReq(payloadMsg pb.Message) {
 	g.GetPd().AddMultiPathAvatar(uint32(req.AvatarId))
 
 	rsp := &proto.UnlockAvatarPathScRsp{
-		BasicTypeIdList: []uint32{g.GetPd().GetAvatarById(8001).CurPath},
+		BasicTypeIdList: []uint32{g.GetPd().GetAvatarBinById(8001).CurPath},
 		Retcode:         0,
 		AvatarId:        req.AvatarId,
 		Reward: &proto.ItemList{ItemList: []*proto.Item{

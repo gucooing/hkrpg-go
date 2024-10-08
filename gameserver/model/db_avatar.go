@@ -48,28 +48,8 @@ func (g *PlayerData) GetAvatarBinById(avatarId uint32) *spb.AvatarBin {
 	if patchConf != nil {
 		avatarId = patchConf.BaseAvatarID
 	}
-	return bin[avatarId]
-}
-
-func (g *PlayerData) GetBattleAvatarBinById(avatarId uint32) *spb.AvatarBin {
-	bin := g.GetBattleAvatarList()
-	return bin[avatarId]
-}
-
-func (g *PlayerData) GetAvatarById(avatarId uint32) *spb.AvatarBin {
-	// var bin map[uint32]*spb.AvatarBin
-	// switch g.GetBattleStatus() {
-	// case spb.BattleType_Battle_NONE:
-	// 	bin = g.GetAvatarList()
-	// default:
-	// 	bin = g.GetBattleAvatarList()
-	// }
-	bin := g.GetAvatarList()
-	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
-	if patchConf != nil {
-		avatarId = patchConf.BaseAvatarID
-	}
-	return bin[avatarId]
+	a := bin[avatarId]
+	return a
 }
 
 func (g *PlayerData) GetCurAvatar() *spb.AvatarBin {
@@ -77,8 +57,6 @@ func (g *PlayerData) GetCurAvatar() *spb.AvatarBin {
 	return g.GetAvatarBinById(db)
 }
 
-// 8001,8002,8003,8004,8005,8006 -> 8001
-// 1001,1224 -> 1001
 func (g *PlayerData) AddAvatar(avatarId uint32) {
 	if gdconf.GetAvatarDataById(avatarId) == nil {
 		return // 过滤没有的角色
@@ -132,15 +110,19 @@ func (g *PlayerData) AddAvatar(avatarId uint32) {
 
 // AddMultiPathAvatar 添加命途
 func (g *PlayerData) AddMultiPathAvatar(avatarId uint32) {
+	var db *spb.AvatarBin
 	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
 	if patchConf == nil {
-		return
+		db = g.GetAvatarBinById(avatarId)
+	} else {
+		db = g.GetAvatarBinById(patchConf.BaseAvatarID)
 	}
-	db := g.GetAvatarById(patchConf.BaseAvatarID)
 	if db == nil {
 		return
 	}
-	db.IsMultiPath = true
+	if db.MultiPathAvatarInfoList == nil {
+		db.MultiPathAvatarInfoList = make(map[uint32]*spb.MultiPathAvatarInfo)
+	}
 	if db.MultiPathAvatarInfoList[avatarId] == nil {
 		db.MultiPathAvatarInfoList[avatarId] = &spb.MultiPathAvatarInfo{
 			AvatarId:          avatarId,
@@ -150,27 +132,30 @@ func (g *PlayerData) AddMultiPathAvatar(avatarId uint32) {
 			EquipRelic:        make(map[uint32]uint32),
 		}
 	}
+	if len(db.MultiPathAvatarInfoList) > 1 {
+		db.IsMultiPath = true
+	}
 }
 
 // 获取命途
-func (g *PlayerData) GetMultiPathAvatar(avatarId uint32) *spb.MultiPathAvatarInfo {
-	patchConf := gdconf.GetMultiplePathAvatarConfig(avatarId)
-	if patchConf == nil {
-		return nil
-	}
-	db := g.GetAvatarById(patchConf.BaseAvatarID)
-	if db == nil {
-		return nil
-	}
-	return db.MultiPathAvatarInfoList[avatarId]
-}
-
 func (g *PlayerData) GetCurMultiPathAvatar(avatarId uint32) *spb.MultiPathAvatarInfo {
-	db := g.GetAvatarById(avatarId)
+	db := g.GetAvatarBinById(avatarId)
 	if db == nil {
 		return nil
 	}
-	return db.MultiPathAvatarInfoList[avatarId]
+	if db.MultiPathAvatarInfoList[db.CurPath] == nil {
+		pathId := db.CurPath
+		if gdconf.GetAvatarDataById(pathId) == nil {
+			if db.AvatarId == 8001 {
+				pathId = 8000 + uint32(g.GetBasicBin().GetAvatar().Gender)
+			} else {
+				pathId = avatarId
+			}
+		}
+		db.CurPath = pathId
+		g.AddMultiPathAvatar(db.CurPath)
+	}
+	return db.MultiPathAvatarInfoList[db.CurPath]
 }
 
 // 添加技能
@@ -255,7 +240,7 @@ re:
 			break re
 		}
 		avatarId := avatarStt.Id
-		avatarBin := g.GetAvatarById(avatarId)
+		avatarBin := g.GetAvatarBinById(avatarId)
 		if avatarBin == nil {
 			continue
 		}
@@ -306,7 +291,7 @@ func (g *PlayerData) GetAvatarEquipRelic(avatarId, slot uint32) *spb.Relic {
 
 func (g *PlayerData) AvatarAddExp(avatarId, exp uint32) (uint32, bool) {
 	conf := gdconf.GetAvatarDataById(avatarId)
-	dbAvatar := g.GetAvatarById(avatarId)
+	dbAvatar := g.GetAvatarBinById(avatarId)
 	if conf == nil || dbAvatar == nil {
 		return 0, false
 	}
@@ -320,14 +305,14 @@ func (g *PlayerData) AvatarAddExp(avatarId, exp uint32) (uint32, bool) {
 }
 
 func (g *PlayerData) AvatarRecover(avatarId uint32) {
-	db := g.GetAvatarById(avatarId)
+	db := g.GetAvatarBinById(avatarId)
 	if db != nil {
 		db.Hp = 10000
 	}
 }
 
 func (g *PlayerData) getAvatarBaseHp(avatarId uint32) float64 {
-	avatarDb := g.GetAvatarById(avatarId)
+	avatarDb := g.GetAvatarBinById(avatarId)
 	if avatarDb == nil {
 		return 0
 	}
@@ -350,7 +335,7 @@ func (g *PlayerData) getAvatarBaseHp(avatarId uint32) float64 {
 }
 
 func (g *PlayerData) getAvatarEquiHp(avatarId uint32, baseHp float64) float64 {
-	avatarDb := g.GetAvatarById(avatarId)
+	avatarDb := g.GetAvatarBinById(avatarId)
 	if avatarDb == nil {
 		return 0
 	}
@@ -412,7 +397,7 @@ func (g *PlayerData) getAvatarEquiHp(avatarId uint32, baseHp float64) float64 {
 
 // 恢复角色
 func (g *PlayerData) AvatarRecoverPercent(avatarId uint32, Value, percent float64) {
-	avatarDb := g.GetAvatarById(avatarId)
+	avatarDb := g.GetAvatarBinById(avatarId)
 	if avatarDb == nil {
 		return
 	}
@@ -441,7 +426,7 @@ func (g *PlayerData) CheckUnlockMultiPath(allSync *AllPlayerSync) { // 任务检
 		if info.UnlockConditions == nil {
 			continue
 		}
-		db := g.GetAvatarById(info.AvatarID)
+		db := g.GetAvatarBinById(info.AvatarID)
 		if db == nil {
 			continue
 		}
@@ -510,7 +495,7 @@ func (g *PlayerData) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 	if avatardb == nil {
 		return nil
 	}
-	patch := avatardb.MultiPathAvatarInfoList[avatardb.CurPath]
+	patch := g.GetCurMultiPathAvatar(avatarId)
 	if patch == nil {
 		return nil
 	}
@@ -583,7 +568,7 @@ func (g *PlayerData) GetProtoBattleAvatar(bAList map[uint32]*BattleAvatar) []*pr
 
 // 角色
 func (g *PlayerData) GetBattleAvatar(avatarId, index uint32) *proto.BattleAvatar {
-	db := g.GetAvatarById(avatarId)
+	db := g.GetAvatarBinById(avatarId)
 	if db == nil {
 		return nil
 	}

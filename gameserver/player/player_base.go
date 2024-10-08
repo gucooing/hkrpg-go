@@ -163,7 +163,7 @@ func (g *GamePlayer) SetAvatarPathCsReq(payloadMsg pb.Message) {
 	}
 	conf := gdconf.GetMultiplePathAvatarConfig(uint32(req.AvatarId))
 	if conf != nil {
-		db := g.GetPd().GetAvatarById(conf.BaseAvatarID)
+		db := g.GetPd().GetAvatarBinById(conf.BaseAvatarID)
 		if db != nil {
 			db.CurPath = uint32(req.AvatarId)
 			g.AllPlayerSyncScNotify(&model.AllPlayerSync{AvatarList: []uint32{conf.BaseAvatarID}})

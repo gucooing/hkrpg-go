@@ -127,7 +127,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 	// 添加角色
 	if allSync.AvatarList != nil {
 		for _, avatarId := range allSync.AvatarList {
-			avatarDb := g.GetPd().GetAvatarById(avatarId)
+			avatarDb := g.GetPd().GetAvatarBinById(avatarId)
 			if avatarDb == nil {
 				continue
 			}

@@ -19,9 +19,6 @@ type Config struct {
 	RedisConf          map[string]constant.RedisConf `json:"RedisConf"`
 }
 
-type NetConf struct {
-}
-
 var CONF *Config = nil
 
 func GetConfig() *Config {

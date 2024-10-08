@@ -26,10 +26,10 @@ type NetMsg struct {
 type MsgType int
 
 const (
-	GameServer MsgType = 1 // 玩家消息转发
-	ServerMsg  MsgType = 2 // 服务消息
+	GameServer    MsgType = 1 // 玩家消息转发
+	ServerMsg     MsgType = 2 // 服务消息
+	ServiceLogout MsgType = 3 // 服务下线通知
 	// 玩家事件
-	PlayerLogin     MsgType = 3 // 玩家登录
 	PlayerLogout    MsgType = 4 // 玩家下线
 	PlayerLoginKill MsgType = 5 // 玩家重复登录下线回调给gate
 )

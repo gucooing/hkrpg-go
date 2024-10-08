@@ -223,7 +223,7 @@ func (g *PlayerData) GetAssistAvatarListSpb(list map[uint32]uint32) map[uint32]*
 		return infoList
 	}
 	for pos, avatarId := range list {
-		if db := g.GetAvatarById(avatarId); db != nil {
+		if db := g.GetAvatarBinById(avatarId); db != nil {
 			path := g.GetCurMultiPathAvatar(avatarId)
 			if path == nil {
 				continue
