@@ -87,6 +87,7 @@ func (g *GateServer) keepaliveServer() {
 			})
 			if err != nil {
 				logger.Error("keepalive error: %v", err)
+				continue
 			}
 			if rsp.RetCode == nodeapi.Retcode_RET_Reconnect {
 				// TODO 代表是重连

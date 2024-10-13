@@ -2,7 +2,6 @@ package mq
 
 import (
 	"context"
-	"errors"
 	"sync"
 	"time"
 
@@ -373,26 +372,24 @@ func (m *MessageQueue) nodeTcpMq() {
 
 		nodeTcp.state = nodeConnEct
 		logger.Info("node tcp mq connect, addr: %v", nodeTcp.nodeMqAddr)
-		err = m.nodeTcpMqRecvHandle()
-		if err != nil {
-			logger.Error("node tcp mq receive error: %v", err)
-		}
+		m.nodeTcpMqRecvHandle()
 		time.Sleep(time.Second * 5)
 	}
 }
 
 // node收信
-func (m *MessageQueue) nodeTcpMqRecvHandle() error {
+func (m *MessageQueue) nodeTcpMqRecvHandle() {
 	nodeTcp := m.nodeTcp
 	if nodeTcp.conn == nil {
-		return errors.New("node tcp mq connect fail")
+		logger.Error("node tcp mq connect fail")
+		return
 	}
 	for {
 		bin, err := nodeTcp.conn.Read()
 		if err != nil {
 			logger.Error("node tcp mq receive error: %v", err)
 			nodeTcp.state = nodeConnLost
-			return err
+			return
 		}
 		netMsg := DecodeBinToPayload(bin)
 		m.netMsgOutput <- netMsg

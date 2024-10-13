@@ -7,6 +7,7 @@ import (
 	"time"
 
 	nodeapi "github.com/gucooing/hkrpg-go/nodeserver/api"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/mq"
@@ -30,6 +31,7 @@ type RegionInfo struct {
 	AutoCreate      bool
 	serviceMap      map[nodeapi.ServerType]map[uint32]*Service // [ServerType][appid][Service]
 	serviceMapLock  sync.RWMutex                               // 服务列表互斥锁
+	playerMap       map[uint32]*PlayerInfo                     // 全区玩家列表
 }
 
 type Service struct {
@@ -45,6 +47,12 @@ type Service struct {
 	gateTcp       bool                 // 是否启用tcp游戏网关
 }
 
+type PlayerInfo struct {
+	uid       uint32
+	gateAppid uint32
+	gameAppid uint32
+}
+
 func newMapService() map[nodeapi.ServerType]map[uint32]*Service {
 	return map[nodeapi.ServerType]map[uint32]*Service{
 		nodeapi.ServerType_SERVICE_DISPATCH: make(map[uint32]*Service),
@@ -53,6 +61,19 @@ func newMapService() map[nodeapi.ServerType]map[uint32]*Service {
 		nodeapi.ServerType_SERVICE_MUIP:     make(map[uint32]*Service),
 		nodeapi.ServerType_SERVICE_MULTI:    make(map[uint32]*Service),
 	}
+}
+
+func newRegionInfo(ec2b *random.Ec2b, regionConf *constant.RegionConf) *RegionInfo {
+	info := &RegionInfo{
+		Name:            regionConf.Name,
+		Title:           regionConf.Title,
+		Type:            regionConf.Type,
+		ClientSecretKey: ec2b,
+		AutoCreate:      regionConf.AutoCreate,
+		serviceMap:      newMapService(),
+		playerMap:       make(map[uint32]*PlayerInfo),
+	}
+	return info
 }
 
 func NewNodeService(s *NodeDiscoveryService) {
@@ -66,15 +87,7 @@ func NewNodeService(s *NodeDiscoveryService) {
 		if err != nil {
 			logger.Warn("更新区服配置失败:%s", err.Error())
 		}
-		info := &RegionInfo{
-			Name:            regionConf.Name,
-			Title:           regionConf.Title,
-			Type:            regionConf.Type,
-			ClientSecretKey: ec2b,
-			AutoCreate:      regionConf.AutoCreate,
-			serviceMap:      newMapService(),
-		}
-		s.regionMap[regionConf.Name] = info
+		s.regionMap[regionConf.Name] = newRegionInfo(ec2b, regionConf)
 	}
 	go s.messageQueue()
 }
@@ -105,15 +118,7 @@ func (s *NodeDiscoveryService) GetRegion(regionName string) *RegionInfo {
 		if err != nil {
 			logger.Warn("更新区服配置失败:%s", err.Error())
 		}
-		info := &RegionInfo{
-			Name:            regionConf.Name,
-			Title:           regionConf.Title,
-			Type:            regionConf.Type,
-			ClientSecretKey: ec2b,
-			AutoCreate:      regionConf.AutoCreate,
-			serviceMap:      newMapService(),
-		}
-		s.regionMap[regionName] = info
+		s.regionMap[regionName] = newRegionInfo(ec2b, regionConf)
 		s.regionMapLock.Unlock()
 	}
 	s.regionMapLock.RLock()
