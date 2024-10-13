@@ -7,9 +7,8 @@ import (
 func (r *RoBot) RegisterMessage(cmdId uint16, payloadMsg []byte) {
 	switch cmdId {
 	case cmd.PlayerLoginScRsp:
-		r.PlayerLoginScRsp()
+		go r.PlayerLoginScRsp()
 		go r.PlayerHeartBeatCsReq()
-		r.EnterSceneCsReq()
 	case cmd.PlayerHeartBeatScRsp:
 		r.PlayerHeartbeatScRsp(payloadMsg)
 	case cmd.GetCurSceneInfoScRsp:

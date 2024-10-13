@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
@@ -39,15 +38,15 @@ func NewBot() {
 		for i := 0; i < config.GetConfig().Conc; i++ {
 			roBot := new(RoBot)
 			roBot.HttpClient = resty.New()
-			roBot.AccountName = config.GetConfig().AccountName + strconv.Itoa(amount)
+			roBot.AccountName = config.GetConfig().AccountName // + strconv.Itoa(amount)
 
 			amount++
 			go roBot.httpLogin()
-			if amount > config.GetConfig().Amount {
+			if amount >= config.GetConfig().Amount {
 				return
 			}
 		}
-		if amount > config.GetConfig().Amount {
+		if amount >= config.GetConfig().Amount {
 			return
 		}
 		time.Sleep(2 * time.Second)

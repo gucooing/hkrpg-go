@@ -48,5 +48,5 @@ func (r *RoBot) EnterSceneCsReq() {
 }
 
 func (r *RoBot) EnterSceneByServerScNotify(payloadMsg []byte) {
-	r.EnterSceneCsReq()
+	// r.EnterSceneCsReq()
 }
