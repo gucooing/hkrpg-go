@@ -51,21 +51,26 @@ import System.Text.RegularExpressions;
 class Handlers
 {
     static function OnBeforeRequest(oS: Session) {
-    if(
-        oS.host.EndsWith(".yuanshen.com") ||
-        oS.host.EndsWith(".hoyoverse.com") ||
-        oS.host.EndsWith(".mihoyo.com") ||
-        oS.host.EndsWith(".zenlesszonezero.com") ||
-        oS.host.EndsWith(".honkaiimpact3.com") ||
-        oS.host.EndsWith(".bhsr.com") ||
-        oS.host.EndsWith(".starrails.com") ||
-        oS.uriContains("http://overseauspider.yuanshen.com:8888/log")
-    ) {
-        var newUrl = "http://" + oS.host + oS.PathAndQuery;
-        oS.fullUrl = newUrl;
-        oS.host = "127.0.0.1:8080";
+        if(
+            oS.host.EndsWith(".yuanshen.com") 
+            //oS.host.EndsWith(".hoyoverse.com") 
+            oS.host.EndsWith(".mihoyo.com") 
+            //oS.host.EndsWith(".zenlesszonezero.com") 
+            oS.host.EndsWith(".honkaiimpact3.com") 
+            //oS.host.EndsWith(".bhsr.com") 
+            oS.host.EndsWith(".starrails.com") 
+            //oS.host.EndsWith("aki-config-cf.aki-game.net") 
+            oS.host.EndsWith("aki-config-aws.aki-game.net") 
+            //oS.host.EndsWith("aki-config-qcloud.aki-game.net") 
+            oS.host.EndsWith("aki-config-akamai.aki-game.net") 
+            //oS.host.EndsWith("aki-config-huoshan.aki-game.net") 
+            oS.host.EndsWith("gar-service.aki-game.net") ||
+            oS.uriContains("http://overseauspider.yuanshen.com:8888/log")
+        ) {
+            oS.oRequest.headers.UriScheme = "http";
+            oS.host = "127.0.0.1:8080";
+        }
     }
-}
 };
 ```
 
