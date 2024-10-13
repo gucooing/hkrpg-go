@@ -9,6 +9,8 @@
 </table>
 </div>>
 
+# **因为不可抗力的原因将在未来永久private并删除相关资源，我们将会在private前邀请贡献者加入。**
+
 # **欢迎加入我们的 [Discord](https://discord.gg/222yVp6pUq)**
 
 ## 朋友要复出了，可以关注一下 [hk4e-dmca](https://github.com/flswld/hk4e-go)
