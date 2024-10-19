@@ -192,3 +192,5 @@ protocol/hkrpg
 ./muipserver
 protocol/proto/StarRail.proto
 /.vscode
+protocol/excel/*.proto
+/tools

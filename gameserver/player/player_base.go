@@ -348,11 +348,17 @@ func (g *GamePlayer) HandleGetJukeboxDataCsReq(payloadMsg pb.Message) {
 		Retcode:           0,
 		UnlockedMusicList: make([]*proto.MusicData, 0),
 	}
-	for _, backMusicList := range gdconf.GetBackGroundMusicMap() {
+	musicMap := g.GetPd().GetMusicInfoMap()
+	for _, v := range musicMap {
+		conf := gdconf.GetBackGroundMusicById(v.MusicId)
+		if conf == nil {
+			// TODO 建议删除
+			continue
+		}
 		musicList := &proto.MusicData{
-			GroupId:  backMusicList.GroupID,
+			GroupId:  conf.GroupID,
 			IsPlayed: true,
-			Id:       backMusicList.ID,
+			Id:       conf.ID,
 		}
 		rsp.UnlockedMusicList = append(rsp.UnlockedMusicList, musicList)
 	}

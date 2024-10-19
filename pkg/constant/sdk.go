@@ -129,3 +129,109 @@ type LoginTokenRequest struct {
 	Uid   string `json:"uid"`
 	Token string `json:"token"`
 }
+
+type CreateOrderReq struct {
+	Who struct {
+		Account string `json:"account"`
+		Token   string `json:"token"`
+	} `json:"who"`
+	Order struct {
+		ChannelId  string `json:"channel_id"`
+		Account    string `json:"account"`
+		PayPlat    string `json:"pay_plat"`
+		Country    string `json:"country"`
+		Currency   string `json:"currency"`
+		Amount     int    `json:"amount"`
+		Game       string `json:"game"`
+		Region     string `json:"region"`
+		Uid        string `json:"uid"`
+		GoodsId    string `json:"goods_id"`
+		GoodsTitle string `json:"goods_title"`
+		GoodsNum   string `json:"goods_num"`
+		ClientType int    `json:"client_type"`
+		Device     string `json:"device"`
+		PriceTier  string `json:"price_tier"`
+	} `json:"order"`
+	Sign             string `json:"sign"`
+	DoNotNoticeAgain bool   `json:"do_not_notice_again"`
+}
+
+type CreateOrderResp struct {
+	Retcode int             `json:"retcode"`
+	Message string          `json:"message"`
+	Data    CreateOrderData `json:"data"`
+}
+
+type CreateOrderData struct {
+	GoodsId              string `json:"goods_id"`
+	OrderNo              string `json:"order_no"`
+	Currency             string `json:"currency"`
+	Amount               string `json:"amount"`
+	RedirectUrl          string `json:"redirect_url"`
+	ForeignSerial        string `json:"foreign_serial"`
+	EncodeOrder          string `json:"encode_order"`
+	Account              string `json:"account"`
+	CreateTime           string `json:"create_time"`
+	ExtInfo              string `json:"ext_info"`
+	Balance              string `json:"balance"`
+	Method               string `json:"method"`
+	Action               string `json:"action"`
+	SessionToken         string `json:"session_token"`
+	DisplayDontShowAgain bool   `json:"display_dont_show_again"`
+	NoticeAmount         int    `json:"notice_amount"`
+	Cluster              string `json:"cluster"`
+}
+
+type ListPayPlatResp struct {
+	Retcode int              `json:"retcode"`
+	Message string           `json:"message"`
+	Data    *ListPayPlatData `json:"data"`
+}
+
+type ListPayPlatData struct {
+	IsNewUser              bool        `json:"is_new_user"`
+	PayPlats               []*PayPlat  `json:"pay_plats"`
+	SelectedPayType        string      `json:"selected_pay_type"`
+	FoldOther              bool        `json:"fold_other"`
+	FoldOtherFinal         bool        `json:"fold_other_final"`
+	ExpandMixedQrcode      bool        `json:"expand_mixed_qrcode"`
+	ExpandMixedQrcodeFinal bool        `json:"expand_mixed_qrcode_final"`
+	UseOfficialQrcode      bool        `json:"use_official_qrcode"`
+	Reports                interface{} `json:"reports"`
+}
+
+type PayPlat struct {
+	IsRecommend  bool   `json:"is_recommend"`
+	MarketWord   string `json:"market_word"`
+	MerchantInfo struct {
+		MerchantId        string `json:"merchant_id"`
+		MiniProgramId     string `json:"mini_program_id"`
+		OfficialAccountId string `json:"official_account_id"`
+	} `json:"merchant_info"`
+	PayPlat                  string      `json:"pay_plat"`
+	PayType                  string      `json:"pay_type"`
+	PayTypeIconUrl           string      `json:"pay_type_icon_url"`
+	PayTypeName              string      `json:"pay_type_name"`
+	MarketId                 string      `json:"market_id"`
+	UseMarket                bool        `json:"use_market"`
+	UseOfficialQrcode        bool        `json:"use_official_qrcode"`
+	RealCashierId            string      `json:"real_cashier_id"`
+	PromotionText            string      `json:"promotion_text"`
+	Desc                     string      `json:"desc"`
+	Fold                     bool        `json:"fold"`
+	DistinctQrCodePayInfo    interface{} `json:"distinct_qr_code_pay_info"`
+	PayAbility               string      `json:"pay_ability"`
+	IsPromotionTextClickable bool        `json:"is_promotion_text_clickable"`
+	ChannelPromotion         interface{} `json:"channel_promotion"`
+	OpenId                   string      `json:"open_id"`
+}
+
+type CurrencyAndCountryByIpResp struct {
+	Retcode int    `json:"retcode"`
+	Message string `json:"message"`
+	Data    struct {
+		Currency         string `json:"currency"`
+		Country          string `json:"country"`
+		PriceTierVersion string `json:"price_tier_version"`
+	} `json:"data"`
+}

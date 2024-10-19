@@ -117,6 +117,9 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	case constant.ItemSubTypeGift:
 		item := g.GetPd().ItemSubTypeGift(conf.UseDataID, req.UseItemCount, allSync)
+		if req.UseItemId == 300101 {
+			g.RechargeSuccNotify()
+		}
 		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	}
 	if req.OptionalRewardId != 0 {
@@ -200,6 +203,10 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 
 	g.AllPlayerSyncScNotify(allSync)
 	g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
+}
+
+func (g *GamePlayer) CancelCacheNotifyCsReq(payloadMsg pb.Message) {
+	g.Send(cmd.CancelCacheNotifyScRsp, &proto.CancelCacheNotifyScRsp{})
 }
 
 /***************************relic*************************************/

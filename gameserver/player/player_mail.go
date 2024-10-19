@@ -69,9 +69,9 @@ func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg pb.Message) {
 	}
 	for _, id := range req.GetTakeMailIdList() {
 		mail := dbconf.GetAllMailById(id)
-		rsp.Attachment.ItemList = append(rsp.Attachment.ItemList, g.GetPd().GetAttachment(mail.ItemList)...)
 		rsp.SuccMailIdList = append(rsp.SuccMailIdList, id)
-		if g.GetPd().MailReadItem(mail.ItemList, allSync) {
+		if ok, itemList := g.GetPd().MailReadItem(mail.ItemList, allSync); ok {
+			rsp.Attachment.ItemList = append(rsp.Attachment.ItemList, itemList...)
 			g.GetPd().ReadMail(id)
 		}
 	}

@@ -10,7 +10,8 @@ import (
 )
 
 type ItemList struct {
-	Item             map[uint32]*ItemConfig // 背包物品
+	AllItem          map[uint32]*ItemConfig // 总表
+	Item             map[uint32]*ItemConfig // 物品
 	Avatar           map[uint32]*ItemConfig // 角色
 	AvatarPlayerIcon map[uint32]*ItemConfig // 头像
 	AvatarRank       map[uint32]*ItemConfig // 命星
@@ -21,16 +22,16 @@ type ItemList struct {
 }
 
 type ItemConfig struct {
-	ID                  uint32               `json:"ID"`
-	ItemMainType        string               `json:"ItemMainType"`
-	ItemSubType         constant.ItemSubType `json:"ItemSubType"`
-	InventoryDisplayTag uint32               `json:"InventoryDisplayTag"`
-	Rarity              string               `json:"Rarity"`
-	PurposeType         uint32               `json:"PurposeType"`
-	IsVisible           bool                 `json:"isVisible"`
-	PileLimit           uint32               `json:"PileLimit"`
-	UseDataID           uint32               `json:"UseDataID"`
-	CustomDataList      []uint32             `json:"CustomDataList"`
+	ID                  uint32                `json:"ID"`
+	ItemMainType        constant.ItemMainType `json:"ItemMainType"`
+	ItemSubType         constant.ItemSubType  `json:"ItemSubType"`
+	InventoryDisplayTag uint32                `json:"InventoryDisplayTag"`
+	Rarity              string                `json:"Rarity"`
+	PurposeType         uint32                `json:"PurposeType"`
+	IsVisible           bool                  `json:"isVisible"`
+	PileLimit           uint32                `json:"PileLimit"`
+	UseDataID           uint32                `json:"UseDataID"`
+	CustomDataList      []uint32              `json:"CustomDataList"`
 }
 
 func (g *GameDataConfig) loadItemConfig() {
@@ -132,6 +133,7 @@ func (g *GameDataConfig) loadItemConfig() {
 	}
 
 	g.ItemConfigMap = &ItemList{
+		AllItem:          make(map[uint32]*ItemConfig),
 		Item:             make(map[uint32]*ItemConfig),
 		Avatar:           make(map[uint32]*ItemConfig),
 		AvatarPlayerIcon: make(map[uint32]*ItemConfig),
@@ -144,37 +146,59 @@ func (g *GameDataConfig) loadItemConfig() {
 
 	for _, v := range itemMap {
 		g.ItemConfigMap.Item[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range avatarMap {
 		g.ItemConfigMap.Avatar[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range avatarPlayerIconMap {
 		g.ItemConfigMap.AvatarPlayerIcon[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range avatarRankMap {
 		g.ItemConfigMap.AvatarRank[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range bookMap {
 		g.ItemConfigMap.Book[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range diskMap {
 		g.ItemConfigMap.Disk[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range equipmentMap {
 		g.ItemConfigMap.Equipment[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range relicMap {
 		g.ItemConfigMap.Relic[v.ID] = v
+		addItem(v, g.ItemConfigMap)
 	}
 
 	logger.Info("load %v ItemConfig", len(g.ItemConfigMap.Item))
-
 }
 
-func GetItemConfigMap() *ItemList {
+func addItem(v *ItemConfig, itemMap *ItemList) {
+	if itemMap.AllItem == nil {
+		itemMap.AllItem = make(map[uint32]*ItemConfig)
+	}
+	if itemMap.AllItem[v.ID] == nil {
+		itemMap.AllItem[v.ID] = v
+	} else {
+		logger.Error("add item %v fail", v.ID)
+	}
+}
+
+func GetItemConfig() *ItemList {
 	return CONF.ItemConfigMap
 }
 
+func GetItemConfigMap() map[uint32]*ItemConfig {
+	return CONF.ItemConfigMap.AllItem
+}
+
 func GetItemConfigById(id uint32) *ItemConfig {
-	return CONF.ItemConfigMap.Item[id]
+	return CONF.ItemConfigMap.AllItem[id]
 }

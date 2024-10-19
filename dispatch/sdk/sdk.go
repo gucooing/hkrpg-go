@@ -58,7 +58,9 @@ func (s *Server) UpUpstreamServer() {
 			func() {
 				for seed, info := range s.UpstreamServer {
 					if !s.handleGateServerResponse(info, seed) {
-						delete(s.UpstreamServer, seed)
+						if info.Version == "" { // no old
+							delete(s.UpstreamServer, seed)
+						}
 					}
 				}
 			}()

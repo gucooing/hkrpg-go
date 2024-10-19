@@ -1,6 +1,7 @@
 package model
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
@@ -103,69 +105,78 @@ func (g *PlayerData) GetUnlockFormulaList() []uint32 {
 }
 
 func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
-	itemConf := gdconf.GetItemConfigMap()
 	materialList := make([]*Material, 0)
 	for _, itemInfo := range pileItem {
 		if itemInfo.Num <= 0 {
 			continue
 		}
-		if itemConf.Item[itemInfo.Tid] != nil {
+		conf := gdconf.GetItemConfigById(itemInfo.Tid)
+		if conf == nil {
+			msg := fmt.Sprintf("[UID:%v]ItemId:%v 异常的物品写入", g.GetBasicBin().Uid, itemInfo.Tid)
+			logger.Error(msg)
+			client.PushServer(&constant.LogPush{
+				PushMessage: constant.PushMessage{
+					Tag: "异常物品写入",
+				},
+				LogLevel: 2,
+				LogMsg:   msg,
+			})
+			return
+		}
+		switch conf.ItemMainType {
+		case constant.ItemMainTypeVirtual:
 			materialList = append(materialList, itemInfo)
 			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
 			continue
-		}
-		if itemConf.Avatar[itemInfo.Tid] != nil {
+		case constant.ItemMainTypeAvatarCard:
 			g.AddAvatar(itemInfo.Tid)
 			allSync.AvatarList = append(allSync.AvatarList, itemInfo.Tid)
 			continue
-		}
-		if itemConf.AvatarPlayerIcon[itemInfo.Tid] != nil {
-			g.AddHeadIcon(itemInfo.Tid)
-			continue
-		}
-		if itemConf.AvatarRank[itemInfo.Tid] != nil {
-			materialList = append(materialList, itemInfo)
-			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
-			continue
-		}
-		if itemConf.Book[itemInfo.Tid] != nil {
-			materialList = append(materialList, itemInfo)
-			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
-			continue
-		}
-		if itemConf.Disk[itemInfo.Tid] != nil {
-			materialList = append(materialList, itemInfo)
-			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
-			continue
-		}
-		if itemConf.Equipment[itemInfo.Tid] != nil {
+		case constant.ItemMainTypeEquipment:
 			g.AddEquipment(itemInfo.Tid)
 			allSync.EquipmentList = append(allSync.EquipmentList, itemInfo.Tid)
 			continue
-		}
-		if itemConf.Relic[itemInfo.Tid] != nil {
+		case constant.ItemMainTypeRelic:
 			g.AddRelic(itemInfo.Tid, 0, nil)
 			allSync.RelicList = append(allSync.RelicList, itemInfo.Tid)
 			continue
+		case constant.ItemMainTypeUsable:
+			g.addItemUsable(conf)
+			continue
+		case constant.ItemMainTypeMaterial:
+			materialList = append(materialList, itemInfo)
+			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
+			continue
+		case constant.ItemMainTypeMission:
+			materialList = append(materialList, itemInfo)
+			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
+			continue
+		case constant.ItemMainTypeDisplay:
+		case constant.ItemMainTypeUnknown:
+			logger.Info("ItemMainTypeUnknown ItemId:%v", conf.ID)
+		default:
+			logger.Info("ItemMainTypeUnknown ItemId:%v,Type:%s",
+				conf.ID, conf.ItemMainType)
 		}
-		logger.Debug("AddItemId:%v error", itemInfo.Tid)
 	}
 	if len(materialList) > 0 {
 		g.AddMaterial(materialList)
 	}
 }
 
+func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig) {
+	switch conf.ItemSubType {
+	case constant.ItemSubTypeMusicAlbum: // 唱片
+
+	}
+}
+
 func IsMateria(id uint32) bool {
 	itemConf := gdconf.GetItemConfigMap()
-	if conf := itemConf.Item[id]; conf != nil {
+	if conf := itemConf[id]; conf != nil {
 		if conf.ItemSubType == constant.ItemSubTypeAetherSkill {
 			return false
 		}
-	}
-	if itemConf.Item[id] != nil ||
-		itemConf.AvatarRank[id] != nil ||
-		itemConf.Book[id] != nil ||
-		itemConf.Disk[id] != nil {
 		return true
 	}
 	return false
@@ -316,18 +327,12 @@ func (g *PlayerData) GetRelic(uniqueId uint32) *proto.Relic {
 func (g *PlayerData) AddRelic(tid uint32, mainAffix uint32, subAffix map[uint32]uint32) uint32 {
 	relicConf := gdconf.GetRelicById(tid)
 	if relicConf == nil {
-		logger.Warn("relic:%v,error", tid)
+		logger.Error("relic:%v,error", tid)
 		return 0
 	}
-	var mainAffixConf *gdconf.RelicMainAffixConfig
-	if mainAffix == 0 {
-		mainAffixConf = gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
-	} else {
+	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+	if mainAffixConf == nil { // 当主属性不合法时，随机一个合法的主属性，避免后续空指针
 		mainAffixConf = gdconf.GetRelicMainAffixConfig(relicConf.MainAffixGroup, mainAffix)
-	}
-	if mainAffixConf == nil {
-		logger.Warn("relic:%v,mainAffixId:%v,error", tid, mainAffix)
-		return 0
 	}
 	if len(subAffix) == 0 {
 		subAffix = newRelicAffix(relicConf, mainAffixConf.Property)
@@ -683,6 +688,10 @@ func (g *PlayerData) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 
 func (g *PlayerData) GetRelicItem(uniqueId uint32) *proto.Item {
 	db := g.GetRelicById(uniqueId)
+	if db == nil {
+		logger.Error("异常遗器获取UniqueId:%v", uniqueId)
+		return nil
+	}
 	return &proto.Item{
 		ItemId:      db.Tid,
 		Promotion:   0,

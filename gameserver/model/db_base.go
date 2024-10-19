@@ -131,6 +131,14 @@ func (g *PlayerData) GetTextJoinPBById(id uint32) *spb.TextJoin {
 	return db.TextJoin[id]
 }
 
+func (g *PlayerData) GetMusicInfoMap() map[uint32]*spb.MusicInfo {
+	db := g.GetPhoneData()
+	if db.MusicInfoMap == nil {
+		db.MusicInfoMap = make(map[uint32]*spb.MusicInfo)
+	}
+	return db.MusicInfoMap
+}
+
 func (g *PlayerData) GetNextRecoverTime() int64 {
 	if g.GetMaterialById(Stamina) < 240 {
 		if g.GetBasicBin().LastStaminaTime == 0 {

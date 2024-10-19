@@ -15,8 +15,10 @@ type Account struct {
 
 // 邮件奖励类型
 const (
-	MailAvatar   = 1 // 角色
-	MailMaterial = 2 // 材料
+	MailAvatar    = 1 // 角色
+	MailMaterial  = 2 // 材料
+	MailRelic     = 3 // 遗器
+	MailEquipment = 4 // 装备
 )
 
 // 全服邮件
@@ -45,9 +47,11 @@ type PlayerMail struct {
 }
 
 type Item struct { // 邮件奖励模板
-	ItemType uint32 // 类型
-	ItemId   uint32 // id
-	Num      uint32 // 数量
+	ItemType     uint32            // 类型
+	ItemId       uint32            // id
+	Num          uint32            // 数量
+	MainAffixId  uint32            // 遗器主属性
+	SubAffixList map[uint32]uint32 // 遗器副属性
 }
 
 type RogueConf struct {

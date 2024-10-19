@@ -73,15 +73,21 @@ message Scene {
 }
 
 message PhoneData {
-  uint32 cur_phone_theme = 1;
-  uint32 cur_chat_bubble = 2;
-  uint32 current_music_id = 3;
+  uint32 cur_phone_theme = 1; // 当前聊天主题
+  uint32 cur_chat_bubble = 2; // 当前个人页主题
+  uint32 current_music_id = 3; // 当前车厢音乐
   map<uint32, TextJoin> TextJoin = 47;//自定义文本
+  map<uint32,MusicInfo> music_info_map  = 4;// 已解锁音乐信息
 }
 
 message TextJoin {
   uint32 text_join_id = 1;
   uint32 text_join_item_id = 2;
+}
+
+message MusicInfo {
+  uint32 music_id = 1;
+ //  bool is = 2; // 是否解锁？
 }
 
 message ChangeStory {

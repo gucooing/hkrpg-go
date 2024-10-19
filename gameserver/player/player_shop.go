@@ -18,9 +18,6 @@ func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
 
 	if req.ShopType == 0 {
 		for id, shopConf := range gdconf.GetShopGoodsConfigMap() {
-			if id == 503 || id == 502 {
-				continue
-			}
 			shop := &proto.Shop{
 				CityLevel:            1,
 				BeginTime:            1622145600,
@@ -45,7 +42,10 @@ func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
 	} else {
 		rsp.ShopType = req.ShopType
 		for _, shopList := range gdconf.GetShopConfigByTypeId(req.ShopType) {
-			shopConf := gdconf.GetShopGoodsConfigById(shopList)
+			shopConf := gdconf.GetShopGoodsConfigById(shopList.ShopID)
+			if shopList.ShopBar == "RechargePage" {
+				continue
+			}
 			shop := &proto.Shop{
 				CityLevel:            1,
 				BeginTime:            1622145600,
@@ -53,7 +53,7 @@ func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
 				GoodsList:            make([]*proto.Goods, 0),
 				CityExp:              0,
 				CityTakenLevelReward: 0,
-				ShopId:               shopList,
+				ShopId:               shopList.ShopID,
 			}
 			for _, shopc := range shopConf {
 				goods := &proto.Goods{
@@ -133,6 +133,7 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 		Tid: req.ItemId,
 		Num: num,
 	})
+	// TODO 针对物品属性进行发包
 	rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList,
 		&proto.Item{
 			ItemId:      req.ItemId,
@@ -166,35 +167,42 @@ func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) QueryProductInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.QueryProductInfoScRsp{
-		// DHDAENPMKOO: make([]*proto.Product, 0),
-		// OGLKEBKFNNK: 3,
-		// ANMKBJHMKGC: 0,
-		// BDDKLNCEJOE: 0,
-		// Retcode:     0,
+		PEKJLBINDGG: 1710014400,
+		Retcode:     0,
+		DKHKEPDJHLP: 3,
+		JGNNBOABIHM: 2,
+		NFNHPJCCKIH: make([]*proto.Product, 0),
 	}
-	// rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
-	// 	KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_COIN,
-	// 	JGOFENPOJJI: "Tier_60",
-	// 	JBEFEAHCJDM: 0,
-	// 	PDLIGIAGJLJ: "rpgchncoin6480tier60",
-	// 	PNFMFLEHKFG: 0,
-	// 	AFIPAJBMBGL: true,
-	// })
-	// rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
-	// 	KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_POINT_CARD,
-	// 	JGOFENPOJJI: "Tier_1",
-	// 	JBEFEAHCJDM: 0,
-	// 	PDLIGIAGJLJ: "rpgglbpointcardtierx",
-	// 	PNFMFLEHKFG: 0,
-	// 	AFIPAJBMBGL: false,
-	// })
-	// rsp.DHDAENPMKOO = append(rsp.DHDAENPMKOO, &proto.Product{
-	// 	KNFOKOAOGJH: proto.ProductGiftType_PRODUCT_GIFT_MONTH_CARD,
-	// 	JGOFENPOJJI: "Tier_5",
-	// 	JBEFEAHCJDM: 0,
-	// 	PDLIGIAGJLJ: "rpgglbmonthcardtier5",
-	// 	PNFMFLEHKFG: 0,
-	// 	AFIPAJBMBGL: false,
-	// })
+	rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
+		AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_COIN,
+		IJBPDDPJPND: "Tier_60",
+		KJLPCGMNOND: "rpgchncoin6480tier60",
+		CEBLIHAPPFH: true,
+	})
+	rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
+		AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_POINT_CARD,
+		IJBPDDPJPND: "Tier_1",
+		KJLPCGMNOND: "rpgchnpointcardtierx",
+		CEBLIHAPPFH: false,
+	})
+	rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
+		AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_MONTH_CARD,
+		IJBPDDPJPND: "Tier_5",
+		KJLPCGMNOND: "rpgchnmonthcardtier5",
+		CEBLIHAPPFH: false,
+	})
 	g.Send(cmd.QueryProductInfoScRsp, rsp)
+}
+
+func (g *GamePlayer) RechargeSuccNotify() {
+	notify := &proto.RechargeSuccNotify{
+		ItemList: &proto.ItemList{ItemList: []*proto.Item{{
+			Num:    300,
+			ItemId: 3,
+		}}},
+		ProductId:            "rpgchnmonthcardtier5",
+		ChannelOrderNo:       "114514",
+		MonthCardOutdateTime: 1731268800,
+	}
+	g.Send(cmd.RechargeSuccNotify, notify)
 }

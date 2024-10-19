@@ -1,5 +1,19 @@
 package constant
 
+type ItemMainType = string
+
+const (
+	ItemMainTypeUnknown    ItemMainType = "Unknown"
+	ItemMainTypeVirtual    ItemMainType = "Virtual"
+	ItemMainTypeAvatarCard ItemMainType = "AvatarCard"
+	ItemMainTypeEquipment  ItemMainType = "Equipment"
+	ItemMainTypeRelic      ItemMainType = "Relic"
+	ItemMainTypeUsable     ItemMainType = "Usable"
+	ItemMainTypeMaterial   ItemMainType = "Material"
+	ItemMainTypeMission    ItemMainType = "Mission"
+	ItemMainTypeDisplay    ItemMainType = "Display"
+)
+
 type ItemSubType = string
 
 const (

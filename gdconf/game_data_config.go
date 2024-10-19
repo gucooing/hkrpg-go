@@ -82,7 +82,7 @@ type GameDataConfig struct {
 	PlaneEventMap                map[uint32]map[uint32]*PlaneEvent               // 大世界怪物信息
 	StageConfigMap               map[uint32]*StageConfig                         // 具体怪物群信息
 	LoadingDescMap               map[uint32]*LoadingDesc                         // 战斗随机种子
-	ShopConfigMap                map[uint32][]uint32                             // 商店配置
+	ShopConfigMap                map[uint32][]*ShopConfig                        // 商店配置
 	ShopGoodsConfigMap           map[uint32]map[uint32]*ShopGoodsConfig          // 商品配置
 	RewardDataMap                map[uint32]*RewardData                          // 奖励配置
 	MainMissionMap               map[uint32]*MainMission                         // 主线任务

@@ -74,7 +74,7 @@ func give(g *GamePlayer, parameter []string) string {
 
 func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
 	var pileItem []*model.Material
-	itemConf := gdconf.GetItemConfigMap()
+	itemConf := gdconf.GetItemConfig()
 	avatarConf := gdconf.GetAvatarDataMap()
 	// add avatar
 	for _, avatar := range avatarConf {
@@ -107,7 +107,7 @@ func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
 	for _, item := range itemConf.Item {
 		pileItem = append(pileItem, &model.Material{
 			Tid: item.ID,
-			Num: 999999999,
+			Num: 9999999,
 		})
 	}
 	// add relic
@@ -127,7 +127,7 @@ func giveRelic(g *GamePlayer, parameter []string) string {
 	}
 	all := alg.S2U32(parameter[0])
 	if all == 1 {
-		itemConf := gdconf.GetItemConfigMap()
+		itemConf := gdconf.GetItemConfig()
 		for _, relic := range itemConf.Relic {
 			uniqueId := g.GetPd().AddRelic(relic.ID, 0, nil)
 			allSync.RelicList = append(allSync.RelicList, uniqueId)
@@ -266,6 +266,7 @@ func (g *GamePlayer) FinishAllMission() {
 	}
 }
 
+// 完成所有教程
 func (g *GamePlayer) FinishAllTutorial() {
 	tDb := g.GetPd().GetTutorial()
 	for id := range gdconf.GetTutorialData() {

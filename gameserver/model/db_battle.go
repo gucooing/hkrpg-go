@@ -720,7 +720,7 @@ func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, battleBin *BattleBa
 		battleBin.DisplayItemList = make([]*Material, 0)
 	}
 	itemList := make([]*proto.Item, 0)
-	itemConfMap := gdconf.GetItemConfigMap()
+	itemConfMap := gdconf.GetItemConfig()
 	for _, displayItem := range conf.DisplayItemList {
 		itemConf := itemConfMap.Item[displayItem.ItemID]
 		if itemConf != nil {

@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
+	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
@@ -69,26 +70,48 @@ func (g *PlayerData) DelPlayerMail(id uint32) {
 }
 
 // TODO 邮件奖励兑换方法（拓展此处以支持更多奖励物品
-func (g *PlayerData) MailReadItem(itemList []*constant.Item, allSync *AllPlayerSync) bool {
+func (g *PlayerData) MailReadItem(conf []*constant.Item, allSync *AllPlayerSync) (bool, []*proto.Item) {
 	pileItem := make([]*Material, 0)
-	for _, item := range itemList {
-		switch item.ItemType {
+	itemList := make([]*proto.Item, 0)
+	for _, v := range conf {
+		var item *proto.Item
+		switch v.ItemType {
 		case constant.MailAvatar:
-			allSync.AvatarList = append(allSync.AvatarList, item.ItemId)
-			g.AddAvatar(item.ItemId)
+			allSync.AvatarList = append(allSync.AvatarList, v.ItemId)
+			item = &proto.Item{
+				ItemId: v.ItemId,
+				Num:    v.Num,
+			}
+			g.AddAvatar(v.ItemId)
 		case constant.MailMaterial:
-			allSync.MaterialList = append(allSync.MaterialList, item.ItemId)
+			allSync.MaterialList = append(allSync.MaterialList, v.ItemId)
 			pileItem = append(pileItem, &Material{
-				Tid: item.ItemId,
-				Num: item.Num,
+				Tid: v.ItemId,
+				Num: v.Num,
 			})
+			item = &proto.Item{
+				ItemId: v.ItemId,
+				Num:    v.Num,
+			}
+		case constant.MailRelic: // 遗器处理
+			r := g.AddRelic(v.ItemId, v.MainAffixId, v.SubAffixList)
+			allSync.RelicList = append(allSync.RelicList, r)
+			pileItem = append(pileItem, &Material{
+				Tid: v.ItemId,
+				Num: v.Num,
+			})
+			item = g.GetRelicItem(r)
+		default:
+			logger.Error("未知的物品类型Type:%s", v.ItemType)
 		}
+		itemList = append(itemList, item)
 	}
-	g.AddMaterial(pileItem)
+	g.AddMaterial(pileItem) // TODO 应该统一到addItem方法
 
-	return true
+	return true, itemList
 }
 
+// 此处是获取邮件信息，并不是领取
 func (g *PlayerData) GetAllMail(mailMap map[uint32]*constant.Mail) []*proto.ClientMail {
 	mailList := make([]*proto.ClientMail, 0)
 	for _, mail := range mailMap {
@@ -118,12 +141,12 @@ func (g *PlayerData) GetAllMail(mailMap map[uint32]*constant.Mail) []*proto.Clie
 
 func (g *PlayerData) GetAttachment(itemList []*constant.Item) []*proto.Item {
 	ItemList := make([]*proto.Item, 0)
-	for _, item := range itemList {
-		Item := &proto.Item{
-			ItemId: item.ItemId,
-			Num:    item.Num,
+	for _, v := range itemList {
+		item := &proto.Item{
+			ItemId: v.ItemId,
+			Num:    v.Num,
 		}
-		ItemList = append(ItemList, Item)
+		ItemList = append(ItemList, item)
 	}
 	return ItemList
 }

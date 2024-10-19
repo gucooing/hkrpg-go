@@ -119,6 +119,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.ComposeSelectedRelicCsReq: g.ComposeSelectedRelicCsReq, // 遗器合成
 		cmd.LockRelicCsReq:            g.LockRelicCsReq,            // 圣遗物上锁
 		cmd.LockEquipmentCsReq:        g.LockEquipmentCsReq,        // 光锥上锁
+		cmd.CancelCacheNotifyCsReq:    g.CancelCacheNotifyCsReq,
 		// 交易
 		cmd.QueryProductInfoCsReq:       g.QueryProductInfoCsReq,       // 获取交易信息
 		cmd.GetShopListCsReq:            g.GetShopListCsReq,            // 获取商店物品列表
