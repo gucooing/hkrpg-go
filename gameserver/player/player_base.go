@@ -378,9 +378,11 @@ func (g *GamePlayer) UnlockBackGroundMusicCsReq(payloadMsg pb.Message) {
 		if conf == nil {
 			continue
 		}
+		g.GetPd().AddMusicInfo(unlockId)
 		musicList := &proto.MusicData{
-			GroupId: conf.GroupID,
-			Id:      conf.ID,
+			GroupId:  conf.GroupID,
+			Id:       conf.ID,
+			IsPlayed: true,
 		}
 		rsp.UnlockedMusicList = append(rsp.UnlockedMusicList, musicList)
 	}

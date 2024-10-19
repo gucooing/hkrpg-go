@@ -13,6 +13,7 @@ type BackGroundMusic struct {
 	GroupID         uint32 `json:"GroupID"`
 	MusicSwitchName string `json:"MusicSwitchName"`
 	BPM             uint32 `json:"BPM"`
+	Unlock          bool   `json:"Unlock"`
 }
 
 func (g *GameDataConfig) loadBackGroundMusic() {

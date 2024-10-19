@@ -158,7 +158,10 @@ func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg pb.Message) {
 			avatarBin := g.GetPd().GetAvatarBinById(avatar.Id)
 			g.GetPd().CopyBattleAvatar(avatarBin)
 		}
-	} else {
+	}
+
+	// 是当前队伍的时候就需要场景通知
+	if g.GetPd().GetCurLineUp().Index == req.Index {
 		g.SceneGroupRefreshScNotify(req.Index)
 	}
 

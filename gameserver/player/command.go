@@ -110,6 +110,13 @@ func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
 			Num: 9999999,
 		})
 	}
+	// add disk
+	for _, item := range itemConf.Disk {
+		pileItem = append(pileItem, &model.Material{
+			Tid: item.ID,
+			Num: 1,
+		})
+	}
 	// add relic
 	for _, relic := range itemConf.Relic {
 		uniqueId := g.GetPd().AddRelic(relic.ID, 0, nil)

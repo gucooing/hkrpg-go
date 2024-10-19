@@ -131,12 +131,36 @@ func (g *PlayerData) GetTextJoinPBById(id uint32) *spb.TextJoin {
 	return db.TextJoin[id]
 }
 
+func newMusicInfoMap() map[uint32]*spb.MusicInfo {
+	musicInfoMap := make(map[uint32]*spb.MusicInfo)
+	for _, v := range gdconf.GetBackGroundMusicMap() {
+		if v.Unlock {
+			musicInfoMap[v.ID] = &spb.MusicInfo{
+				MusicId: v.ID,
+				Is:      true,
+			}
+		}
+	}
+	return musicInfoMap
+}
+
 func (g *PlayerData) GetMusicInfoMap() map[uint32]*spb.MusicInfo {
 	db := g.GetPhoneData()
 	if db.MusicInfoMap == nil {
-		db.MusicInfoMap = make(map[uint32]*spb.MusicInfo)
+		db.MusicInfoMap = newMusicInfoMap()
 	}
 	return db.MusicInfoMap
+}
+
+func (g *PlayerData) AddMusicInfo(id uint32) {
+	db := g.GetMusicInfoMap()
+	if conf := gdconf.GetBackGroundMusicById(id); conf != nil &&
+		db[id] == nil {
+		db[id] = &spb.MusicInfo{
+			MusicId: id,
+			Is:      true,
+		}
+	}
 }
 
 func (g *PlayerData) GetNextRecoverTime() int64 {

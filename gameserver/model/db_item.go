@@ -141,7 +141,8 @@ func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
 			allSync.RelicList = append(allSync.RelicList, itemInfo.Tid)
 			continue
 		case constant.ItemMainTypeUsable:
-			g.addItemUsable(conf)
+			g.addItemUsable(conf, allSync, itemInfo)
+			materialList = append(materialList, itemInfo)
 			continue
 		case constant.ItemMainTypeMaterial:
 			materialList = append(materialList, itemInfo)
@@ -164,10 +165,10 @@ func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
 	}
 }
 
-func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig) {
+func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, allSync *AllPlayerSync, itemInfo *Material) {
 	switch conf.ItemSubType {
 	case constant.ItemSubTypeMusicAlbum: // 唱片
-
+		allSync.MaterialList = append(allSync.MaterialList, conf.ID)
 	}
 }
 
@@ -705,6 +706,10 @@ func (g *PlayerData) GetRelicItem(uniqueId uint32) *proto.Item {
 
 func (g *PlayerData) GetEquipmentItem(uniqueId uint32) *proto.Item {
 	db := g.GetEquipmentById(uniqueId)
+	if db == nil {
+		logger.Error("异常装备获取UniqueId:%v", uniqueId)
+		return nil
+	}
 	return &proto.Item{
 		ItemId:      db.Tid,
 		Promotion:   db.Promotion,
