@@ -444,10 +444,11 @@ func (g *PlayerData) AddSubMission(acceptSubList []uint32) {
 	}
 }
 
-func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, pileItem []*Material) {
+func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, addItem *AddItem) {
 	if finishMainList == nil {
 		return
 	}
+	addItem = NewAddItem(addItem)
 	mainMissionList := g.GetMainMissionList()
 	finishMainMissionList := g.GetFinishMainMissionList()
 	for _, id := range finishMainList {
@@ -465,7 +466,7 @@ func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, pileItem []*M
 			delete(mainMissionList, id)
 		}
 		// 奖励发放
-		pileItem, _ = GetRewardData(conf.RewardID)
+		addItem.PileItem = append(addItem.PileItem, GetRewardData(conf.RewardID)...)
 		// 完成全部子任务
 	}
 }
@@ -508,10 +509,11 @@ func (g *PlayerData) AllCheckMainMission() []uint32 {
 	return finishSubMission
 }
 
-func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, pileItem []*Material) {
+func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, addItem *AddItem) {
 	if finishSubList == nil {
 		return
 	}
+	addItem = NewAddItem(addItem)
 	subMissionList := g.GetSubMainMissionList()
 	finishSubMissionList := g.GetFinishSubMainMissionList()
 	for _, subId := range finishSubList {
@@ -528,7 +530,7 @@ func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, pileItem []*Mat
 			Status:    spb.MissionStatus_MISSION_FINISH,
 		}
 		// 奖励发放
-		pileItem, _ = GetRewardData(conf.SubRewardID)
+		addItem.PileItem = append(addItem.PileItem, GetRewardData(conf.SubRewardID)...)
 	}
 }
 

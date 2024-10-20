@@ -174,8 +174,10 @@ message Item  {
   map<uint32, Relic> relic_map = 1; // 遗器
   map<uint32, Equipment> equipment_map = 2; // 光锥
   map<uint32, uint32> material_map = 3; // 材料
-  repeated uint32 head_icon = 4; // 头像
+  map<uint32, uint32>head_icon_map = 6; // 头像
   repeated uint32 unlock_formula_list = 5;// 解锁配方
+
+  reserved 4;
 }
 
 message Relic {

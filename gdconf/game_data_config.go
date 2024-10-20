@@ -28,6 +28,7 @@ type GameDataConfig struct {
 	dataPrefix   string
 	// 配置表数据
 	AvatarDataMap                map[uint32]*AvatarData                          // 角色
+	AvatarPlayerIconMap          map[uint32]*AvatarPlayerIcon                    // 角色头像配置
 	AvatarExpItemConfigMap       map[uint32]*AvatarExpItemConfig                 // 角色升级经验材料配置
 	AvatarPromotionConfigMap     map[uint32]map[uint32]*AvatarPromotionConfig    // 角色突破配置
 	MultiplePathAvatarConfigMap  map[uint32]*MultiplePathAvatarConfig            // 多命途角色配置
@@ -205,6 +206,7 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 func (g *GameDataConfig) load() {
 	g.loadFunc = []loadFunc{
 		g.loadAvatarData,               // 角色
+		g.loadAvatarPlayerIcon,         // 角色头像配置
 		g.loadAvatarExpItemConfig,      // 角色升级经验材料配置
 		g.loadAvatarPromotionConfig,    // 角色突破配置
 		g.loadMultiplePathAvatarConfig, // 多命途角色配置

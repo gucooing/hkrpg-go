@@ -341,7 +341,6 @@ func (g *PlayerData) GetBattleLineUp() *spb.Line {
 	default:
 		return g.GetCurLineUp()
 	}
-	return g.GetCurLineUp() // 多余了
 }
 
 func (g *PlayerData) GetChallengeLineUp() *spb.Line {

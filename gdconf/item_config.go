@@ -32,6 +32,7 @@ type ItemConfig struct {
 	PileLimit           uint32                `json:"PileLimit"`
 	UseDataID           uint32                `json:"UseDataID"`
 	CustomDataList      []uint32              `json:"CustomDataList"`
+	UseMethod           string                `json:"UseMethod"`
 }
 
 func (g *GameDataConfig) loadItemConfig() {
@@ -43,6 +44,7 @@ func (g *GameDataConfig) loadItemConfig() {
 	diskMap := make([]*ItemConfig, 0)
 	equipmentMap := make([]*ItemConfig, 0)
 	relicMap := make([]*ItemConfig, 0)
+	playerCardMap := make([]*ItemConfig, 0)
 
 	playerElementsFileItemConfig, err := os.ReadFile(g.excelPrefix + "ItemConfig.json")
 	if err != nil {
@@ -132,6 +134,17 @@ func (g *GameDataConfig) loadItemConfig() {
 		panic(info)
 	}
 
+	playerElementsFileItemPlayerCard, err := os.ReadFile(g.excelPrefix + "ItemPlayerCard.json")
+	if err != nil {
+		info := fmt.Sprintf("open file error: %v", err)
+		panic(info)
+	}
+	err = hjson.Unmarshal(playerElementsFileItemPlayerCard, &playerCardMap)
+	if err != nil {
+		info := fmt.Sprintf("parse file error: %v", err)
+		panic(info)
+	}
+
 	g.ItemConfigMap = &ItemList{
 		AllItem:          make(map[uint32]*ItemConfig),
 		Item:             make(map[uint32]*ItemConfig),
@@ -153,6 +166,10 @@ func (g *GameDataConfig) loadItemConfig() {
 		addItem(v, g.ItemConfigMap)
 	}
 	for _, v := range avatarPlayerIconMap {
+		g.ItemConfigMap.AvatarPlayerIcon[v.ID] = v
+		addItem(v, g.ItemConfigMap)
+	}
+	for _, v := range playerCardMap {
 		g.ItemConfigMap.AvatarPlayerIcon[v.ID] = v
 		addItem(v, g.ItemConfigMap)
 	}

@@ -45,8 +45,8 @@ func (g *GamePlayer) TakeChallengeRewardCsReq(payloadMsg pb.Message) {
 		GroupId:         req.GroupId,
 		Retcode:         0,
 	}
+	addItem := model.NewAddItem(nil)
 
-	allSync := &model.AllPlayerSync{MaterialList: make([]uint32, 0)}
 	db := g.GetPd().GetChallengeGroupInfoById(req.GroupId)
 	conf := gdconf.GetChallengeGroupConfig(req.GroupId)
 	if conf == nil {
@@ -64,17 +64,18 @@ func (g *GamePlayer) TakeChallengeRewardCsReq(payloadMsg pb.Message) {
 		if rewardID == 0 {
 			continue
 		}
-		pile, item := model.GetRewardData(rewardID)
-		g.GetPd().AddItem(pile, allSync)
-		rsp.TakenRewardList = append(rsp.TakenRewardList, &proto.TakenChallengeRewardInfo{
-			StarCount: curStart,
-			Reward: &proto.ItemList{
-				ItemList: item,
-			},
-		})
+		pile := model.GetRewardData(rewardID)
+		addItem.PileItem = append(addItem.PileItem, pile...)
+		g.GetPd().AddItem(addItem)
 		db.ChallengeReward = model.SetTakenReward(db.ChallengeReward, curStart)
 	}
-	g.AllPlayerSyncScNotify(allSync)
+	rsp.TakenRewardList = append(rsp.TakenRewardList, &proto.TakenChallengeRewardInfo{
+		StarCount: curStart,
+		Reward: &proto.ItemList{
+			ItemList: addItem.ItemList,
+		},
+	})
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.TakeChallengeRewardScRsp, rsp)
 }
 
@@ -265,23 +266,22 @@ func (g *GamePlayer) ChallengePVEBattleResultCsReq(req *proto.PVEBattleResultCsR
 }
 
 func (g *GamePlayer) ChallengeSettleNotify() {
-	allSync := &model.AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
 	cur := g.GetPd().GetCurChallenge()
 	db := g.GetPd().GetChallengeInfoById(cur.GroupId, cur.ChallengeId)
-	var itemList *proto.ItemList
+	addItem := model.NewAddItem(nil)
 	if !db.IsReward {
-		itemList = g.GetPd().GetChallengeReward(allSync)
+		g.GetPd().GetChallengeReward(addItem)
 		db.IsReward = true
-		g.AllPlayerSyncScNotify(allSync)
+		g.AllPlayerSyncScNotify(addItem.AllSync)
 	}
 
 	notify := &proto.ChallengeSettleNotify{
-		Star:           cur.Stars,       // 得分
-		Reward:         itemList,        // 奖励
-		ChallengeId:    cur.ChallengeId, // 关卡id
-		IsWin:          cur.IsWin,       // 是否赢
-		ScoreTwo:       cur.ScoreTwo,    // 二层挑战得分
-		ChallengeScore: cur.ScoreOne,    // 一层挑战得分
+		Star:           cur.Stars,                                   // 得分
+		Reward:         &proto.ItemList{ItemList: addItem.ItemList}, // 奖励
+		ChallengeId:    cur.ChallengeId,                             // 关卡id
+		IsWin:          cur.IsWin,                                   // 是否赢
+		ScoreTwo:       cur.ScoreTwo,                                // 二层挑战得分
+		ChallengeScore: cur.ScoreOne,                                // 一层挑战得分
 	}
 	if cur.IsWin {
 		finishSubMission := g.GetPd().ChallengeFinishCnt()

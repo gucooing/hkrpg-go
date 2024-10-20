@@ -415,10 +415,6 @@ func (g *PlayerData) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 	}
 	// 检查强制卸载条件
 	// 检查加载条件
-	// if levelGroup.GroupId == 66 {
-	// 	logger.Info("")
-	// 	return true
-	// }
 	if levelGroup.LoadCondition != nil {
 		for _, conditions := range levelGroup.LoadCondition.Conditions {
 			if conditions.Phase == "Finish" { // 完成了这个任务

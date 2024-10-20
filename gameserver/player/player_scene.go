@@ -247,12 +247,8 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 		PropState:    0,
 		PropEntityId: req.PropEntityId,
 	}
-	var pileItem []*model.Material
+	addItem := model.NewAddItem(nil)
 	var propEntityIdList []uint32
-	allSync := &model.AllPlayerSync{
-		IsBasic:      true,
-		MaterialList: make([]uint32, 0),
-	}
 
 	pe := g.GetPd().GetPropEntityById(req.PropEntityId)
 	if pe == nil {
@@ -286,7 +282,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 	switch mazeProp.PropType {
 	case gdconf.PROP_TREASURE_CHEST: // 宝箱
 		if oldState == 12 && newState == 13 {
-			pileItem = append(pileItem, &model.Material{Tid: model.Mcoin, Num: 1000})
+			addItem.PileItem = append(addItem.PileItem, &model.Material{Tid: model.Mcoin, Num: 1000})
 		}
 	case gdconf.PROP_DESTRUCT: // 破坏物
 		if newState == 0 {
@@ -312,9 +308,9 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 	g.GetPd().UpPropState(blockBin, pe.GroupId, pe.InstId, setState) // 更新地图
 	rsp.PropState = setState
 	// 统一通知
-	g.GetPd().AddItem(pileItem, allSync)
-	g.AllPlayerSyncScNotify(allSync)
-	g.AllScenePlaneEventScNotify(pileItem)
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	g.AllScenePlaneEventScNotify(addItem.PileItem)
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin)  // 通知状态更改
 	finishSubMission := g.GetPd().UpInteractSubMission(blockBin) // 检查交互任务
 	if len(finishSubMission) != 0 {

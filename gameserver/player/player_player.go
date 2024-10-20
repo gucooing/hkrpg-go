@@ -86,6 +86,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 	}
 	if !allSync.IsBasic &&
 		len(allSync.AvatarList) == 0 &&
+		len(allSync.UnlockedHeadIconList) == 0 &&
 		len(allSync.MaterialList) == 0 &&
 		len(allSync.EquipmentList) == 0 &&
 		len(allSync.DelEquipmentList) == 0 &&
@@ -108,6 +109,9 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		MissionSync: &proto.MissionSync{
 			MissionList:               make([]*proto.Mission, 0),
 			FinishedMainMissionIdList: make([]uint32, 0),
+		},
+		PlayerboardModuleSync: &proto.PlayerBoardModuleSync{
+			UnlockedHeadIconList: make([]*proto.HeadIconData, 0),
 		},
 	}
 	db := g.GetPd().GetMaterialMap()
@@ -138,6 +142,13 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 			notify.AvatarSync.AvatarList = append(notify.AvatarSync.AvatarList,
 				g.GetPd().GetProtoAvatarById(avatarId))
 
+		}
+	}
+	// 添加头像
+	if len(allSync.UnlockedHeadIconList) > 0 {
+		for _, headIconId := range allSync.UnlockedHeadIconList {
+			notify.PlayerboardModuleSync.UnlockedHeadIconList = append(notify.PlayerboardModuleSync.UnlockedHeadIconList,
+				&proto.HeadIconData{Id: headIconId})
 		}
 	}
 	// 添加物品

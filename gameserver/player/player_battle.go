@@ -218,14 +218,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 	// 更新角色状态
 	g.GetPd().BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
 	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
-
-	allSync := &model.AllPlayerSync{
-		IsBasic:       true,
-		MaterialList:  make([]uint32, 0),
-		EquipmentList: nil,
-		RelicList:     nil,
-	}
-
+	battleBin.AddItem = model.NewAddItem(battleBin.AddItem)
 	// 根据不同结算状态处理
 	switch req.EndStatus {
 	case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
@@ -274,19 +267,12 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		// 参战角色经验添加
 		for _, avatar := range req.Stt.GetBattleAvatarList() {
 			if _, ok := g.GetPd().AvatarAddExp(avatar.Id, battleBin.AvatarExpReward); ok {
-				allSync.AvatarList = append(allSync.AvatarList, avatar.Id)
+				battleBin.AddItem.AllSync.AvatarList = append(battleBin.AddItem.AllSync.AvatarList, avatar.Id)
 			}
 		}
 		// 获取奖励
-		for _, displayItem := range battleBin.DisplayItemList {
-			rsp.DropData.ItemList = append(rsp.DropData.ItemList, &proto.Item{
-				ItemId: displayItem.Tid,
-				Num:    displayItem.Num,
-			})
-		}
 		if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
-			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
-				g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin, allSync)...)
+			g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin)
 			finishSubMission := g.GetPd().FinishCocoon(battleBin.CocoonId)
 			if len(finishSubMission) != 0 {
 				g.InspectMission(finishSubMission)
@@ -294,8 +280,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 			g.GetPd().DelStamina(conf.StaminaCost)
 		}
 		if conf := gdconf.GetFarmElementConfig(req.StageId); conf != nil {
-			rsp.DropData.ItemList = append(rsp.DropData.ItemList,
-				g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin, allSync)...)
+			g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin)
 			g.GetPd().DelStamina(conf.StaminaCost)
 		}
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
@@ -323,9 +308,10 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		g.EnterSceneByServerScNotify(g.GetPd().GetCurEntryId(), 0, 0, 0)
 	}
 
-	g.GetPd().AddItem(battleBin.DisplayItemList, allSync)
+	g.GetPd().AddItem(battleBin.AddItem)
+	rsp.DropData.ItemList = battleBin.AddItem.ItemList
 	g.StaminaInfoScNotify()
-	g.AllPlayerSyncScNotify(allSync)
+	g.AllPlayerSyncScNotify(battleBin.AddItem.AllSync)
 	// g.AllScenePlaneEventScNotify(addPileItem)
 
 	g.GetPd().DelBattleBackupById(req.BattleId)

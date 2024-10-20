@@ -317,14 +317,7 @@ func (g *GamePlayer) LoginReadyMission() {
 func (g *GamePlayer) ExpiredMission() {
 	mainMissionList := g.GetPd().GetMainMissionList() // 已接取的主任务
 	delMainMissionList := make([]uint32, 0)
-	allSync := &model.AllPlayerSync{
-		IsBasic:                true,
-		MaterialList:           make([]uint32, 0),
-		MissionFinishMainList:  make([]uint32, 0),
-		MissionFinishSubList:   make([]uint32, 0),
-		MissionProgressSubList: make([]uint32, 0),
-	}
-	var pileItem []*model.Material
+	addItem := model.NewAddItem(nil)
 	for _, info := range mainMissionList {
 		if conf := gdconf.GetMainMissionById(info.MissionId); conf != nil {
 			if conf.Type == "Branch" { // 活动任务处理
@@ -334,12 +327,12 @@ func (g *GamePlayer) ExpiredMission() {
 			delMainMissionList = append(delMainMissionList, info.MissionId)
 		}
 	}
-	g.GetPd().AddFinishMainMission(delMainMissionList, pileItem)
+	g.GetPd().AddFinishMainMission(delMainMissionList, addItem)
 	// 完成主任务中的未完成子任务
 	finishSubLists := g.GetPd().CheckMainMission(delMainMissionList)
-	g.GetPd().AddFinishSubMission(finishSubLists, pileItem)
-	g.GetPd().AddItem(pileItem, allSync)
-	g.AllPlayerSyncScNotify(allSync)
+	g.GetPd().AddFinishSubMission(finishSubLists, addItem)
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 }
 
 // 任务检查
@@ -347,15 +340,9 @@ func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 	if g.GetPd().GetBasicBin().IsJumpMission {
 		return
 	}
-	allSync := &model.AllPlayerSync{
-		IsBasic:                true,
-		MaterialList:           make([]uint32, 0),
-		MissionFinishMainList:  make([]uint32, 0),
-		MissionFinishSubList:   make([]uint32, 0),
-		MissionProgressSubList: make([]uint32, 0),
-	}
-	var pileItem []*model.Material
-	g.GetPd().AddFinishSubMission(finishSubMission, pileItem)
+	addItem := model.NewAddItem(nil)
+
+	g.GetPd().AddFinishSubMission(finishSubMission, addItem)
 	finishMainList := make([]uint32, 0)
 	newFinishSubList := make([]uint32, 0)
 	newProgressSubList := make([]uint32, 0)
@@ -365,7 +352,7 @@ func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 		mainList, subList := g.AcceptInspectMission()
 		newProgressSubList = append(newProgressSubList, subList...) // 将接取的任务添加到同步列表
 		// 完成检查
-		finishList, finishSubList, progressSubList := g.FinishInspectMission(allSync, pileItem)
+		finishList, finishSubList, progressSubList := g.FinishInspectMission(addItem)
 		finishMainList = append(finishMainList, finishList...)              // 将完成的任务添加到同步列表
 		newFinishSubList = append(newFinishSubList, finishSubList...)       // 将完成的任务添加到同步列表
 		newProgressSubList = append(newProgressSubList, progressSubList...) // 将接取的任务添加到同步列表
@@ -386,7 +373,7 @@ func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 
 	for i := len(newProgressSubList) - 1; i >= 0; i-- {
 		for _, finishId := range newFinishSubList {
-			g.AutoServerMissionFinishAction(finishId, pileItem)
+			g.AutoServerMissionFinishAction(finishId, addItem)
 			g.Send(cmd.StartFinishSubMissionScNotify,
 				&proto.StartFinishSubMissionScNotify{SubMissionId: finishId})
 			if newProgressSubList[i] == finishId {
@@ -396,24 +383,24 @@ func (g *GamePlayer) InspectMission(finishSubMission []uint32) {
 		}
 	}
 
-	g.GetPd().AddItem(pileItem, allSync)
-	allSync.MissionFinishMainList = finishMainList
-	allSync.MissionFinishSubList = newFinishSubList
-	allSync.MissionProgressSubList = newProgressSubList
+	g.GetPd().AddItem(addItem)
+	addItem.AllSync.MissionFinishMainList = finishMainList
+	addItem.AllSync.MissionFinishSubList = newFinishSubList
+	addItem.AllSync.MissionProgressSubList = newProgressSubList
 	// 检查场景卸加载
 	uninstallGroup, loadedGroupList := g.GetPd().AutoEntryGroup()
 	g.UpSceneGroupRefreshScNotify(uninstallGroup, loadedGroupList)
 	// 命途解锁检查
-	g.GetPd().CheckUnlockMultiPath(allSync)
+	g.GetPd().CheckUnlockMultiPath(addItem.AllSync)
 	if raidId, ok := g.GetPd().CheckRaid(); ok {
 		g.RaidInfoNotify(raidId) // raid完成检查
 	}
-	if len(allSync.MaterialList) != 0 ||
-		len(allSync.MissionFinishMainList) != 0 ||
-		len(allSync.MissionFinishSubList) != 0 ||
-		len(allSync.MissionProgressSubList) != 0 {
-		g.AllPlayerSyncScNotify(allSync)
-		g.AllScenePlaneEventScNotify(pileItem)
+	if len(addItem.AllSync.MaterialList) != 0 ||
+		len(addItem.AllSync.MissionFinishMainList) != 0 ||
+		len(addItem.AllSync.MissionFinishSubList) != 0 ||
+		len(addItem.AllSync.MissionProgressSubList) != 0 {
+		g.AllPlayerSyncScNotify(addItem.AllSync)
+		g.AllScenePlaneEventScNotify(addItem.PileItem)
 		g.InspectMission(nil)
 	}
 }
@@ -428,15 +415,15 @@ func (g *GamePlayer) AcceptInspectMission() ([]uint32, []uint32) {
 	return mainList, subList
 }
 
-func (g *GamePlayer) FinishInspectMission(allSync *model.AllPlayerSync, pileItem []*model.Material) ([]uint32, []uint32, []uint32) {
+func (g *GamePlayer) FinishInspectMission(addItem *model.AddItem) ([]uint32, []uint32, []uint32) {
 	finishSubList, progressSubList := g.FinishServerSubMission()
-	g.GetPd().AddFinishSubMission(finishSubList, pileItem)
+	g.GetPd().AddFinishSubMission(finishSubList, addItem)
 	// 主任务完成检查
 	finishMainList := g.GetPd().FinishServerMainMission()
-	g.GetPd().AddFinishMainMission(finishMainList, pileItem)
+	g.GetPd().AddFinishMainMission(finishMainList, addItem)
 	// 完成主任务中的未完成子任务
 	finishSubLists := g.GetPd().CheckMainMission(finishMainList)
-	g.GetPd().AddFinishSubMission(finishSubLists, pileItem)
+	g.GetPd().AddFinishSubMission(finishSubLists, addItem)
 	finishSubList = append(finishSubList, finishSubLists...)
 
 	return finishMainList, finishSubList, progressSubList
@@ -490,15 +477,16 @@ func (g *GamePlayer) FinishServerSubMission() ([]uint32, []uint32) {
 }
 
 // 完成任务后完成服务端动作（不结束任务
-func (g *GamePlayer) AutoServerMissionFinishAction(id uint32, pileItem []*model.Material) {
+func (g *GamePlayer) AutoServerMissionFinishAction(id uint32, addItem *model.AddItem) {
 	conf := gdconf.GetSubMainMissionById(id)
+	addItem = model.NewAddItem(addItem)
 	if conf == nil || conf.FinishActionList == nil {
 		return
 	}
 	this := &FinishActionType{
 		GamePlayer:   g,
 		conf:         conf,
-		pileItem:     pileItem,
+		addItem:      addItem,
 		finishAction: nil,
 	}
 	for _, finishAction := range conf.FinishActionList {
@@ -699,7 +687,7 @@ type FinishActionType struct {
 	*GamePlayer
 	finishAction *gdconf.FinishAction
 	conf         *gdconf.SubMission
-	pileItem     []*model.Material
+	addItem      *model.AddItem
 }
 
 func FinishActionChangeLineup(this *FinishActionType) bool {
@@ -717,7 +705,7 @@ func FinishActionAddMissionItem(this *FinishActionType) bool {
 		if len(this.finishAction.FinishActionPara) < index+2 && index%2 != 0 {
 			continue
 		}
-		this.pileItem = append(this.pileItem, &model.Material{
+		this.addItem.PileItem = append(this.addItem.PileItem, &model.Material{
 			Tid: item,
 			Num: this.finishAction.FinishActionPara[index+1],
 		})
@@ -730,7 +718,7 @@ func FinishActionAddRecoverMissionItem(this *FinishActionType) bool {
 		if len(this.finishAction.FinishActionPara) < index+2 && index%2 != 0 {
 			continue
 		}
-		this.pileItem = append(this.pileItem, &model.Material{
+		this.addItem.PileItem = append(this.addItem.PileItem, &model.Material{
 			Tid: item,
 			Num: this.finishAction.FinishActionPara[index+1],
 		})
@@ -748,7 +736,7 @@ func FinishActionDelMission(this *FinishActionType) bool {
 }
 
 func FinishActionDisableMission(this *FinishActionType) bool {
-	this.GetPd().AddFinishMainMission(this.finishAction.FinishActionPara, this.pileItem)
+	this.GetPd().AddFinishMainMission(this.finishAction.FinishActionPara, this.addItem)
 	this.InspectMission(nil)
 	return true
 }

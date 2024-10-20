@@ -58,12 +58,8 @@ func (g *GamePlayer) DestroyItemCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) SellItemCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SellItemCsReq)
-	var material []*model.Material
-	allSync := &model.AllPlayerSync{
-		MaterialList:     make([]uint32, 0),
-		DelRelicList:     make([]uint32, 0),
-		DelEquipmentList: make([]uint32, 0),
-	}
+	addItem := model.NewAddItem(nil)
+
 	rsp := &proto.SellItemScRsp{
 		ReturnItemList: &proto.ItemList{
 			ItemList: make([]*proto.Item, 0),
@@ -75,17 +71,15 @@ func (g *GamePlayer) SellItemCsReq(payloadMsg pb.Message) {
 		// pileItem := item.GetPileItem()
 		equipmentUniqueId := item.GetEquipmentUniqueId()
 		relicUniqueId := item.GetRelicUniqueId()
-		material = append(material, g.GetPd().SellDelEquipment(equipmentUniqueId)...)
-		material = append(material, g.GetPd().SellDelRelic(relicUniqueId, req.ToMaterial)...)
-		allSync.DelRelicList = append(allSync.DelRelicList, relicUniqueId)
-		allSync.DelEquipmentList = append(allSync.DelEquipmentList, equipmentUniqueId)
+		addItem.PileItem = append(addItem.PileItem, g.GetPd().SellDelEquipment(equipmentUniqueId)...)
+		addItem.PileItem = append(addItem.PileItem, g.GetPd().SellDelRelic(relicUniqueId, req.ToMaterial)...)
+		addItem.AllSync.DelRelicList = append(addItem.AllSync.DelRelicList, relicUniqueId)
+		addItem.AllSync.DelEquipmentList = append(addItem.AllSync.DelEquipmentList, equipmentUniqueId)
 	}
 
-	for _, item := range material {
-		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{ItemId: item.Tid, Num: item.Num})
-	}
-	g.GetPd().AddItem(material, allSync)
-	g.AllPlayerSyncScNotify(allSync)
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	rsp.ReturnItemList.ItemList = addItem.ItemList
 	g.Send(cmd.SellItemScRsp, rsp)
 }
 
@@ -98,6 +92,8 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 		ReturnData:   &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
 
+	addItem := model.NewAddItem(nil)
+
 	conf := gdconf.GetItemConfigById(req.UseItemId)
 	if conf == nil || !g.GetPd().DelMaterial([]*model.Material{{Tid: req.UseItemId, Num: req.UseItemCount}}) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
@@ -105,7 +101,7 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 		return
 	}
 	var addBuffList []uint32
-	allSync := &model.AllPlayerSync{MaterialList: make([]uint32, 0)}
+
 	switch conf.ItemSubType {
 	case constant.ItemSubTypeFormula: // 配方
 		g.GetPd().AddUnlockFormulaList(req.UseItemId)
@@ -113,22 +109,30 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 	case constant.ItemSubTypeFood: // 食物
 		g.GetPd().UseItem(gdconf.GetItemUseBuffDataById(req.UseItemId), req.BaseAvatarId, addBuffList)
 	case constant.ItemSubTypeMaterial: // 兑换奖励
-		item := g.GetPd().ItemSubTypeMaterial(conf.UseDataID, req.UseItemCount, allSync)
-		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
+		g.GetPd().ItemSubTypeMaterial(conf.UseDataID, req.UseItemCount, addItem)
 	case constant.ItemSubTypeGift:
-		item := g.GetPd().ItemSubTypeGift(conf.UseDataID, req.UseItemCount, allSync)
-		if req.UseItemId == 300101 {
-			g.RechargeSuccNotify()
+		use := gdconf.GetItemUseData(conf.UseDataID)
+		if use == nil {
+			switch conf.UseMethod {
+			case "MonthlyCard":
+				g.RechargeSuccNotify()
+			case "RandomRewardGift":
+
+			default:
+				logger.Error("ItemId:%v未处理的UseMethod:%s", conf.ID, conf.UseMethod)
+			}
+		} else {
+			g.GetPd().ItemSubTypeGift(conf.UseDataID, req.UseItemCount, addItem)
 		}
-		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
 	}
 	if req.OptionalRewardId != 0 {
-		pile, item := model.GetRewardData(req.OptionalRewardId)
-		g.GetPd().AddItem(pile, allSync)
-		rsp.ReturnData.ItemList = append(rsp.ReturnData.ItemList, item...)
+		pile := model.GetRewardData(req.OptionalRewardId)
+		addItem.PileItem = append(addItem.PileItem, pile...)
+		g.GetPd().AddItem(addItem)
 	}
-	allSync.MaterialList = append(allSync.MaterialList, req.UseItemId)
-	g.AllPlayerSyncScNotify(allSync)
+	rsp.ReturnData.ItemList = addItem.ItemList
+	addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, req.UseItemId)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
 	g.SyncEntityBuffChangeListScNotify(addBuffList)
 
@@ -143,31 +147,28 @@ func (g *GamePlayer) ComposeItemCsReq(payloadMsg pb.Message) {
 		Retcode:        0,
 		ReturnItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
+	addItem := model.NewAddItem(nil)
+
 	conf := gdconf.GetItemComposeConfig(req.ComposeId)
 	if conf == nil {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_FORMULA_NOT_EXIST)
 		g.Send(cmd.ComposeItemScRsp, rsp)
 		return
 	}
-	retcode, allSync := g.GetPd().ComposeItem(conf, req.Count, req.ComposeItemList)
+	retcode := g.GetPd().ComposeItem(conf, req.Count, req.ComposeItemList, addItem)
 	rsp.Retcode = uint32(retcode)
 	if retcode != 0 {
 		g.Send(cmd.ComposeItemScRsp, rsp)
 		return
 	}
-	var addMaterial []*model.Material
-	addMaterial = append(addMaterial, &model.Material{
+	addItem.MaterialList = append(addItem.MaterialList, &model.Material{
 		Tid: conf.ItemID,
 		Num: req.Count,
 	})
-	// 发送合成物
-	rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
-		ItemId: conf.ItemID,
-		Num:    req.Count,
-	})
-	g.GetPd().AddItem(addMaterial, allSync)
 
-	g.AllPlayerSyncScNotify(allSync)
+	g.GetPd().AddItem(addItem)
+	rsp.ReturnItemList.ItemList = addItem.ItemList
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.ComposeItemScRsp, rsp)
 }
 
@@ -178,13 +179,15 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 		ReturnItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		ComposeId:      req.ComposeId,
 	}
+	addItem := model.NewAddItem(nil)
+
 	conf := gdconf.GetItemComposeConfig(req.ComposeId)
 	if conf == nil {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_FORMULA_NOT_EXIST)
 		g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
 		return
 	}
-	retcode, allSync := g.GetPd().ComposeItem(conf, req.Count, req.ComposeItemList)
+	retcode := g.GetPd().ComposeItem(conf, req.Count, req.ComposeItemList, addItem)
 	rsp.Retcode = uint32(retcode)
 	if retcode != 0 {
 		g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
@@ -193,7 +196,7 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 
 	for i := 0; i < int(req.Count); i++ {
 		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, req.MainAffixId, nil)
-		allSync.RelicList = append(allSync.RelicList, uniqueId)
+		addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
 			ItemId:   req.ComposeRelicId,
 			Num:      1,
@@ -201,7 +204,7 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 		})
 	}
 
-	g.AllPlayerSyncScNotify(allSync)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
 }
 

@@ -141,28 +141,23 @@ func (g *PlayerData) CheckRaid() (uint32, bool) {
 	return 0, false
 }
 
-func (g *PlayerData) RaidReward(raidID, hardLevel uint32, allSync *AllPlayerSync) []*proto.Item {
+func (g *PlayerData) RaidReward(raidID, hardLevel uint32, addItem *AddItem) {
 	conf := gdconf.GetRaidConfig(raidID, hardLevel)
-	itemList := make([]*proto.Item, 0)
-	if conf == nil {
-		return itemList
-	}
-
-	pileItem := make([]*Material, 0)
-	switch conf.Type {
-	case constant.RaidConfigTypeEquilibriumTrial:
-		g.AddWorldLevel(1)
-	default:
-		if !conf.SkipRewardOnFinish && conf.RewardList != nil {
-			for _, reward := range conf.RewardList {
-				pile, item := GetRewardData(reward)
-				pileItem = append(pileItem, pile...)
-				itemList = append(itemList, item...)
+	if conf != nil {
+		addItem = NewAddItem(addItem)
+		switch conf.Type {
+		case constant.RaidConfigTypeEquilibriumTrial:
+			g.AddWorldLevel(1)
+		default:
+			if !conf.SkipRewardOnFinish && conf.RewardList != nil {
+				for _, reward := range conf.RewardList {
+					pile := GetRewardData(reward)
+					addItem.PileItem = append(addItem.PileItem, pile...)
+				}
 			}
 		}
+		g.AddItem(addItem)
 	}
-	g.AddItem(pileItem, allSync)
-	return itemList
 }
 
 func (g *PlayerData) GetRaidSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp *spb.Line) *proto.SceneInfo {

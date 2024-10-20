@@ -99,7 +99,7 @@ func (g *GamePlayer) RaidInfoNotify(raidID uint32) {
 	if db == nil {
 		return
 	}
-	allSync := &model.AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
+	addItem := model.NewAddItem(nil)
 	notify := &proto.RaidInfoNotify{
 		ItemList:       &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		RaidId:         db.RaidId,
@@ -109,10 +109,12 @@ func (g *GamePlayer) RaidInfoNotify(raidID uint32) {
 	}
 	// TODO 有重复领取的问题，db加个字段就行了
 	if db.Status == spb.RaidStatus_RAID_STATUS_FINISH {
-		notify.ItemList.ItemList = g.GetPd().RaidReward(db.RaidId, db.HardLevel, allSync)
-	}
+		g.GetPd().RaidReward(db.RaidId, db.HardLevel, addItem)
 
-	g.AllPlayerSyncScNotify(allSync)
+	}
+	notify.ItemList.ItemList = addItem.ItemList
+
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 
 	g.Send(cmd.RaidInfoNotify, notify)
 }

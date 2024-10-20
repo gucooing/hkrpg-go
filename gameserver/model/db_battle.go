@@ -39,7 +39,7 @@ type BattleBackup struct {
 	// Skill
 	// 奖励
 	AvatarExpReward uint32
-	DisplayItemList []*Material
+	AddItem         *AddItem
 }
 
 type ActivityInfoOnline struct {
@@ -711,54 +711,47 @@ func (g *PlayerData) ChallengeBattleEndLose() bool {
 
 /*************奖励*************/
 
-func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, battleBin *BattleBackup, allSync *AllPlayerSync) []*proto.Item {
+func (g *PlayerData) GetBattleDropData(mappingInfoID uint32, battleBin *BattleBackup) {
 	conf := gdconf.GetMappingInfoById(mappingInfoID, battleBin.WorldLevel)
-	if conf == nil {
-		return nil
-	}
-	if battleBin.DisplayItemList == nil {
-		battleBin.DisplayItemList = make([]*Material, 0)
-	}
-	itemList := make([]*proto.Item, 0)
-	itemConfMap := gdconf.GetItemConfig()
-	for _, displayItem := range conf.DisplayItemList {
-		itemConf := itemConfMap.Item[displayItem.ItemID]
-		if itemConf != nil {
-			switch itemConf.ItemSubType {
-			case constant.ItemSubTypeRelicSetShowOnly:
-				for _, id := range itemConf.CustomDataList {
-					relicConf := gdconf.GetRelicBySetID(id, itemConf.Rarity)
-					if relicConf != nil {
-						uniqueId := g.AddRelic(relicConf.ID, 0, nil)
-						itemList = append(itemList, g.GetRelicItem(uniqueId))
-						allSync.RelicList = append(allSync.RelicList, uniqueId)
+	if conf != nil {
+		battleBin.AddItem = NewAddItem(battleBin.AddItem)
+		itemConfMap := gdconf.GetItemConfig()
+		for _, displayItem := range conf.DisplayItemList {
+			itemConf := itemConfMap.Item[displayItem.ItemID]
+			if itemConf != nil {
+				switch itemConf.ItemSubType {
+				case constant.ItemSubTypeRelicSetShowOnly:
+					for _, id := range itemConf.CustomDataList {
+						relicConf := gdconf.GetRelicBySetID(id, itemConf.Rarity)
+						if relicConf != nil {
+							battleBin.AddItem.PileItem = append(battleBin.AddItem.PileItem, &Material{
+								Tid: relicConf.ID,
+								Num: 1,
+							})
+						}
 					}
+					continue
 				}
+				itemNum := displayItem.ItemNum
+				if displayItem.ItemID == Scoin {
+					itemNum = 1500 + battleBin.WorldLevel*300
+				}
+				if itemNum == 0 {
+					itemNum = 1 + battleBin.WorldLevel
+				}
+				battleBin.AddItem.PileItem = append(battleBin.AddItem.PileItem, &Material{
+					Tid: displayItem.ItemID,
+					Num: itemNum,
+				})
 				continue
+			} else if itemConfMap.Equipment[displayItem.ItemID] != nil {
+				battleBin.AddItem.PileItem = append(battleBin.AddItem.PileItem, &Material{
+					Tid: displayItem.ItemID,
+					Num: 1,
+				})
 			}
-			itemNum := displayItem.ItemNum
-			if displayItem.ItemID == Scoin {
-				itemNum = 1500 + battleBin.WorldLevel*300
-			}
-			if itemNum == 0 {
-				itemNum = 1 + battleBin.WorldLevel
-			}
-			battleBin.DisplayItemList = append(battleBin.DisplayItemList, &Material{
-				Tid: displayItem.ItemID,
-				Num: itemNum,
-			})
-			itemList = append(itemList, &proto.Item{
-				ItemId: displayItem.ItemID,
-				Num:    itemNum,
-			})
-			continue
-		} else if itemConfMap.Equipment[displayItem.ItemID] != nil {
-			uniqueId := g.AddEquipment(displayItem.ItemID)
-			itemList = append(itemList, g.GetEquipmentItem(uniqueId))
-			allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
 		}
 	}
-	return itemList
 }
 
 /****************************************************功能***************************************************/
@@ -826,6 +819,7 @@ func (g *PlayerData) GetSceneMonsterWaveByStageID(stageID, worldLevel, waveId ui
 		logger.Warn("[UID:%v]get SceneMonsterWave error stageID:%v", g.GetBasicBin().Uid, stageID)
 		return nil
 	}
+	battleBackup.AddItem = NewAddItem(battleBackup.AddItem)
 	for _, monsterListMap := range stageConfig.MonsterList {
 		monsterWaveList := &proto.SceneMonsterWave{
 			BattleStageId: stageID,
@@ -853,7 +847,7 @@ func (g *PlayerData) GetSceneMonsterWaveByStageID(stageID, worldLevel, waveId ui
 						ItemId: item.ItemID,
 						Num:    num,
 					})
-					battleBackup.DisplayItemList = append(battleBackup.DisplayItemList, &Material{
+					battleBackup.AddItem.PileItem = append(battleBackup.AddItem.PileItem, &Material{
 						Tid: item.ItemID,
 						Num: num,
 					})
@@ -1098,22 +1092,15 @@ func (g *PlayerData) GetBattleTargetInfo() map[uint32]*proto.BattleTargetList {
 	return battleTargetInfoList
 }
 
-func (g *PlayerData) GetChallengeReward(allSync *AllPlayerSync) *proto.ItemList {
-	itemList := &proto.ItemList{
-		ItemList: make([]*proto.Item, 0),
-	}
+func (g *PlayerData) GetChallengeReward(addItem *AddItem) {
 	db := g.GetCurChallenge()
+	addItem = NewAddItem(addItem)
 	conf := gdconf.GetChallengeMazeConfigById(db.ChallengeId)
-	if conf == nil {
-		return itemList
+	if conf != nil && db.IsWin {
+		pile := GetRewardData(conf.RewardID)
+		addItem.PileItem = append(addItem.PileItem, pile...)
+		g.AddItem(addItem)
 	}
-	if db.IsWin {
-		pile, item := GetRewardData(conf.RewardID)
-		itemList.ItemList = item
-		g.AddItem(pile, allSync)
-	}
-
-	return itemList
 }
 
 /****************************忘却之庭获取挑战信息(明明一模一样还分成三个proto*******************************/

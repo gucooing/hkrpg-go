@@ -2,7 +2,6 @@ package model
 
 import (
 	"github.com/gucooing/hkrpg-go/gdconf"
-	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
@@ -243,16 +242,16 @@ func (g *PlayerData) UnlockTutorialGuide(id uint32) {
 	}
 }
 
-func (g *PlayerData) FinishTutorialGuide(id uint32, allSync *AllPlayerSync) []*proto.Item {
+func (g *PlayerData) FinishTutorialGuide(id uint32, addItem *AddItem) {
 	db := g.GetTutorialGuide()
-	if db[id] == nil {
-		return nil
+	if db[id] != nil {
+		addItem = NewAddItem(addItem)
+		db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
+		conf := gdconf.GetTutorialGuideGroup(id)
+		pile := GetRewardData(conf.RewardID)
+		addItem.PileItem = append(addItem.PileItem, pile...)
+		g.AddItem(addItem)
 	}
-	db[id].Status = spb.TutorialStatus_TUTORIAL_FINISH
-	conf := gdconf.GetTutorialGuideGroup(id)
-	pile, item := GetRewardData(conf.RewardID)
-	g.AddItem(pile, allSync)
-	return item
 }
 
 func (g *PlayerData) GetRewardTakenLevelList() []uint32 {

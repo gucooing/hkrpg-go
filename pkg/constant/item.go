@@ -12,6 +12,7 @@ const (
 	ItemMainTypeMaterial   ItemMainType = "Material"
 	ItemMainTypeMission    ItemMainType = "Mission"
 	ItemMainTypeDisplay    ItemMainType = "Display"
+	ItemMainTypePet        ItemMainType = "Pet"
 )
 
 type ItemSubType = string

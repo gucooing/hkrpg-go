@@ -37,7 +37,7 @@ func NewItem() *spb.Item {
 		RelicMap:          make(map[uint32]*spb.Relic),
 		EquipmentMap:      make(map[uint32]*spb.Equipment),
 		MaterialMap:       make(map[uint32]uint32),
-		HeadIcon:          make([]uint32, 0),
+		HeadIconMap:       make(map[uint32]uint32),
 		UnlockFormulaList: make([]uint32, 0),
 	}
 	item.MaterialMap[Stamina] = 240
@@ -104,9 +104,42 @@ func (g *PlayerData) GetUnlockFormulaList() []uint32 {
 	return db.UnlockFormulaList
 }
 
-func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
-	materialList := make([]*Material, 0)
-	for _, itemInfo := range pileItem {
+type AddItem struct {
+	AllSync  *AllPlayerSync // 待同步列表
+	PileItem []*Material    // 需要添加的物品
+	ItemList []*proto.Item  // 返回给客户端的列表
+
+	MaterialList []*Material // 写入背包的材料
+}
+
+func NewAddItem(addItem *AddItem) *AddItem {
+	if addItem == nil {
+		addItem = &AddItem{
+			AllSync:      NewAllPlayerSync(),
+			PileItem:     make([]*Material, 0),
+			ItemList:     make([]*proto.Item, 0),
+			MaterialList: make([]*Material, 0),
+		}
+		return addItem
+	}
+	if addItem.AllSync == nil {
+		addItem.AllSync = NewAllPlayerSync()
+	}
+	if addItem.PileItem == nil {
+		addItem.PileItem = make([]*Material, 0)
+	}
+	if addItem.ItemList == nil {
+		addItem.ItemList = make([]*proto.Item, 0)
+	}
+	if addItem.MaterialList == nil {
+		addItem.MaterialList = make([]*Material, 0)
+	}
+	return addItem
+}
+
+func (g *PlayerData) AddItem(addItem *AddItem) {
+	addItem = NewAddItem(addItem)
+	for _, itemInfo := range addItem.PileItem {
 		if itemInfo.Num <= 0 {
 			continue
 		}
@@ -121,38 +154,77 @@ func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
 				LogLevel: 2,
 				LogMsg:   msg,
 			})
-			return
+			continue
 		}
 		switch conf.ItemMainType {
 		case constant.ItemMainTypeVirtual:
-			materialList = append(materialList, itemInfo)
-			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
+			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
+			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, itemInfo.Tid)
+			addItem.ItemList = append(addItem.ItemList, &proto.Item{
+				Num:    itemInfo.Num,
+				ItemId: itemInfo.Tid,
+			})
 			continue
 		case constant.ItemMainTypeAvatarCard:
-			g.AddAvatar(itemInfo.Tid)
-			allSync.AvatarList = append(allSync.AvatarList, itemInfo.Tid)
+			avatarList := g.GetAvatarList()
+			if _, ok := avatarList[itemInfo.Tid]; ok {
+				addItem.MaterialList = append(addItem.MaterialList, &Material{
+					Tid: itemInfo.Tid + 10000,
+					Num: itemInfo.Num,
+				})
+				addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, itemInfo.Tid+10000)
+				addItem.ItemList = append(addItem.ItemList, &proto.Item{
+					Num:    itemInfo.Num,
+					ItemId: itemInfo.Tid + 10000,
+				})
+			} else {
+				if icon := gdconf.GetAvatarPlayerIcon(conf.ID); icon != nil {
+					g.AddHeadIcon(icon.ID)
+					addItem.AllSync.UnlockedHeadIconList = append(addItem.AllSync.UnlockedHeadIconList, icon.ID)
+				}
+				g.AddAvatar(itemInfo.Tid)
+				addItem.AllSync.AvatarList = append(addItem.AllSync.AvatarList, itemInfo.Tid)
+			}
 			continue
 		case constant.ItemMainTypeEquipment:
-			g.AddEquipment(itemInfo.Tid)
-			allSync.EquipmentList = append(allSync.EquipmentList, itemInfo.Tid)
+			uniqueId := g.AddEquipment(itemInfo.Tid)
+			addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
+			addItem.ItemList = append(addItem.ItemList, g.GetEquipmentItem(uniqueId))
 			continue
 		case constant.ItemMainTypeRelic:
-			g.AddRelic(itemInfo.Tid, 0, nil)
-			allSync.RelicList = append(allSync.RelicList, itemInfo.Tid)
+			uniqueId := g.AddRelic(itemInfo.Tid, 0, nil)
+			addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
+			addItem.ItemList = append(addItem.ItemList, g.GetRelicItem(uniqueId))
 			continue
 		case constant.ItemMainTypeUsable:
-			g.addItemUsable(conf, allSync, itemInfo)
-			materialList = append(materialList, itemInfo)
+			g.addItemUsable(conf, addItem, itemInfo)
+			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
 			continue
 		case constant.ItemMainTypeMaterial:
-			materialList = append(materialList, itemInfo)
-			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
+			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
+			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, itemInfo.Tid)
+			addItem.ItemList = append(addItem.ItemList, &proto.Item{
+				Num:    itemInfo.Num,
+				ItemId: itemInfo.Tid,
+			})
 			continue
 		case constant.ItemMainTypeMission:
-			materialList = append(materialList, itemInfo)
-			allSync.MaterialList = append(allSync.MaterialList, itemInfo.Tid)
+			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
+			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, itemInfo.Tid)
+			addItem.ItemList = append(addItem.ItemList, &proto.Item{
+				Num:    itemInfo.Num,
+				ItemId: itemInfo.Tid,
+			})
 			continue
 		case constant.ItemMainTypeDisplay:
+		case constant.ItemMainTypePet:
+			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
+			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, itemInfo.Tid)
+			addItem.ItemList = append(addItem.ItemList, &proto.Item{
+				Num:    itemInfo.Num,
+				ItemId: itemInfo.Tid,
+			})
+			continue
 		case constant.ItemMainTypeUnknown:
 			logger.Info("ItemMainTypeUnknown ItemId:%v", conf.ID)
 		default:
@@ -160,15 +232,42 @@ func (g *PlayerData) AddItem(pileItem []*Material, allSync *AllPlayerSync) {
 				conf.ID, conf.ItemMainType)
 		}
 	}
-	if len(materialList) > 0 {
-		g.AddMaterial(materialList)
+	if len(addItem.MaterialList) > 0 {
+		g.AddMaterial(addItem.MaterialList)
 	}
 }
 
-func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, allSync *AllPlayerSync, itemInfo *Material) {
+func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, itemInfo *Material) {
 	switch conf.ItemSubType {
 	case constant.ItemSubTypeMusicAlbum: // 唱片
-		allSync.MaterialList = append(allSync.MaterialList, conf.ID)
+		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
+		addItem.ItemList = append(addItem.ItemList, &proto.Item{
+			Num:    itemInfo.Num,
+			ItemId: itemInfo.Tid,
+		})
+	case constant.ItemSubTypeHeadIcon: // 头像
+		g.AddHeadIcon(conf.ID)
+		addItem.AllSync.UnlockedHeadIconList = append(addItem.AllSync.UnlockedHeadIconList, conf.ID)
+	case constant.ItemSubTypeGift: // 杂
+		if use := gdconf.GetItemUseData(conf.UseDataID); use != nil && use.IsAutoUse {
+			for _, rewardId := range use.UseParam {
+				pile := GetRewardData(rewardId)
+				for _, v := range pile { // 避免无限循环，这里只处理一次
+					addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, v.Tid)
+					addItem.ItemList = append(addItem.ItemList, &proto.Item{
+						Num:    v.Num,
+						ItemId: v.Tid,
+					})
+				}
+				addItem.MaterialList = append(addItem.MaterialList, pile...)
+			}
+		} else {
+			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
+			addItem.ItemList = append(addItem.ItemList, &proto.Item{
+				Num:    itemInfo.Num,
+				ItemId: itemInfo.Tid,
+			})
+		}
 	}
 }
 
@@ -220,19 +319,18 @@ func (g *PlayerData) DelMaterial(pileItem []*Material) bool {
 	return true
 }
 
-func (g *PlayerData) GetHeadIconList() []uint32 {
+func (g *PlayerData) GetHeadIconList() map[uint32]uint32 {
 	db := g.GetItem()
-	if db.HeadIcon == nil {
-		db.HeadIcon = make([]uint32, 0)
+	if db.HeadIconMap == nil {
+		db.HeadIconMap = make(map[uint32]uint32)
 	}
-	return db.HeadIcon
+
+	return db.HeadIconMap
 }
 
 func (g *PlayerData) AddHeadIcon(headIconId uint32) {
 	db := g.GetHeadIconList()
-	db = append(db, headIconId)
-	// TODO
-	// g.ScenePlaneEventScNotify(headIconId, 1)
+	db[headIconId] = headIconId
 }
 
 func (g *PlayerData) AddUnlockFormulaList(formulaId uint32) {
@@ -532,57 +630,43 @@ func (g *PlayerData) UseItem(conf *gdconf.ItemUseBuffData, avatarId uint32, addB
 	}
 }
 
-func (g *PlayerData) ItemSubTypeMaterial(useDataID, useItemCount uint32, allSync *AllPlayerSync) []*proto.Item {
+func (g *PlayerData) ItemSubTypeMaterial(useDataID, useItemCount uint32, addItem *AddItem) {
 	conf := gdconf.GetItemUseData(useDataID)
-	itemList := make([]*proto.Item, 0)
-	pileItem := make([]*Material, 0)
-	if conf == nil {
-		return itemList
-	}
-	var i uint32 = 0
-	for i = 0; i < useItemCount; i++ {
-		for _, rewardId := range conf.UseParam {
-			pile, item := GetRewardData(rewardId)
-			pileItem = append(pileItem, pile...)
-			itemList = append(itemList, item...)
+	addItem = NewAddItem(addItem)
+	if conf != nil {
+		var i uint32 = 0
+		for i = 0; i < useItemCount; i++ {
+			for _, rewardId := range conf.UseParam {
+				pile := GetRewardData(rewardId)
+				addItem.PileItem = append(addItem.PileItem, pile...)
+			}
 		}
+		g.AddItem(addItem)
 	}
-	g.AddItem(pileItem, allSync)
-	return itemList
 }
 
-func (g *PlayerData) ItemSubTypeGift(useDataID, useItemCount uint32, allSync *AllPlayerSync) []*proto.Item {
+func (g *PlayerData) ItemSubTypeGift(useDataID, useItemCount uint32, addItem *AddItem) {
 	conf := gdconf.GetItemUseData(useDataID)
-	itemList := make([]*proto.Item, 0)
-	pileItem := make([]*Material, 0)
-	if conf == nil {
-		return itemList
-	}
-	var i uint32 = 0
-	for i = 0; i < useItemCount; i++ {
-		for _, rewardId := range conf.UseParam {
-			pile, item := GetRewardData(rewardId)
-			pileItem = append(pileItem, pile...)
-			itemList = append(itemList, item...)
+	addItem = NewAddItem(addItem)
+	if conf != nil {
+		var i uint32 = 0
+		for i = 0; i < useItemCount; i++ {
+			for _, rewardId := range conf.UseParam {
+				pile := GetRewardData(rewardId)
+				addItem.PileItem = append(addItem.PileItem, pile...)
+			}
 		}
 	}
-
-	g.AddItem(pileItem, allSync)
-	return itemList
+	g.AddItem(addItem)
 }
 
-func GetRewardData(rewardID uint32) ([]*Material, []*proto.Item) {
+func GetRewardData(rewardID uint32) []*Material {
 	pileItem := make([]*Material, 0)
-	itemList := make([]*proto.Item, 0)
 	if rewardConf := gdconf.GetRewardDataById(rewardID); rewardConf != nil {
 		if rewardConf.Hcoin != 0 {
 			pileItem = append(pileItem, &Material{
 				Tid: Hcoin,
 				Num: rewardConf.Hcoin,
-			})
-			itemList = append(itemList, &proto.Item{
-				ItemId: Hcoin,
-				Num:    rewardConf.Hcoin,
 			})
 		}
 		for _, data := range rewardConf.Items {
@@ -590,25 +674,18 @@ func GetRewardData(rewardID uint32) ([]*Material, []*proto.Item) {
 				Tid: data.ItemID,
 				Num: data.Count,
 			})
-			itemList = append(itemList, &proto.Item{
-				ItemId: data.ItemID,
-				Num:    data.Count,
-			})
 		}
 	}
-	return pileItem, itemList
+	return pileItem
 }
 
-func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData) (proto.Retcode, *AllPlayerSync) {
+func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData, addItem *AddItem) proto.Retcode {
 	// 扣除材料
 	var pileItem []*Material
-	allSync := &AllPlayerSync{
-		IsBasic:      true,
-		MaterialList: make([]uint32, 0),
-	}
+
 	if composeItemList != nil {
 		for _, item := range composeItemList.ItemList {
-			allSync.MaterialList = append(allSync.MaterialList, item.GetPileItem().ItemId)
+			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, item.GetPileItem().ItemId)
 			pileItem = append(pileItem, &Material{
 				Tid: item.GetPileItem().ItemId,
 				Num: item.GetPileItem().ItemNum,
@@ -617,7 +694,7 @@ func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, c
 	}
 	if conf.MaterialCost != nil {
 		for _, item := range conf.MaterialCost {
-			allSync.MaterialList = append(allSync.MaterialList, item.ItemID)
+			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, item.ItemID)
 			pileItem = append(pileItem, &Material{
 				Tid: item.ItemID,
 				Num: item.ItemNum * count,
@@ -629,9 +706,9 @@ func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, c
 		Num: conf.CoinCost * count,
 	})
 	if !g.DelMaterial(pileItem) {
-		return proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH, nil
+		return proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH
 	}
-	return proto.Retcode_RET_SUCC, allSync
+	return proto.Retcode_RET_SUCC
 }
 
 /*********************************************接口方法******************************************/

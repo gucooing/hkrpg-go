@@ -105,9 +105,8 @@ func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.BuyGoodsCsReq)
-	var pileItem []*model.Material
 
-	allSync := &model.AllPlayerSync{IsBasic: true, MaterialList: make([]uint32, 0)}
+	addItem := model.NewAddItem(nil)
 
 	rsp := &proto.BuyGoodsScRsp{
 		ReturnItemList: &proto.ItemList{
@@ -118,35 +117,29 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 		GoodsBuyTimes: uint32(time.Now().Unix()), // 商品购买时间
 	}
 
-	var material []*model.Material
+	var material []*model.Material // 扣除的货币
 	goodsConfig := gdconf.GetShopGoodsConfigByGoodsID(req.ShopId, req.GoodsId)
 	for id, cost := range goodsConfig.CurrencyList {
-		allSync.MaterialList = append(allSync.MaterialList, cost)
+		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, cost)
 		material = append(material, &model.Material{
 			Tid: cost,
 			Num: goodsConfig.CurrencyCostList[id] * req.GoodsNum,
 		})
 	}
-	g.GetPd().DelMaterial(material)
+	if !g.GetPd().DelMaterial(material) {
+		rsp.Retcode = uint32(proto.Retcode_RET_ALLEY_SHOP_GOODS_NOT_VALID)
+		g.Send(cmd.BuyGoodsScRsp, rsp)
+		return
+	}
+
 	num := goodsConfig.ItemCount * req.GoodsNum
-	pileItem = append(pileItem, &model.Material{
+	addItem.PileItem = append(addItem.PileItem, &model.Material{
 		Tid: req.ItemId,
 		Num: num,
 	})
-	// TODO 针对物品属性进行发包
-	rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList,
-		&proto.Item{
-			ItemId:      req.ItemId,
-			Promotion:   0,
-			MainAffixId: 0,
-			Rank:        0,
-			Level:       0,
-			Num:         num,
-			UniqueId:    0,
-		})
-	g.GetPd().AddItem(pileItem, allSync)
-
-	g.AllPlayerSyncScNotify(allSync)
+	g.GetPd().AddItem(addItem)
+	rsp.ReturnItemList.ItemList = addItem.ItemList
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	finishSubMission := g.GetPd().MissionGetItem(req.ItemId) // 任务检查
 	if len(finishSubMission) != 0 {
 		g.InspectMission(finishSubMission)

@@ -16,6 +16,7 @@ const (
 type AllPlayerSync struct {
 	IsBasic                bool     // 基本信息
 	AvatarList             []uint32 // 角色列表
+	UnlockedHeadIconList   []uint32 // 头像解锁列表
 	MaterialList           []uint32 // 物品id列表
 	EquipmentList          []uint32 // 光锥列表
 	DelEquipmentList       []uint32 // 删除列表
@@ -24,6 +25,22 @@ type AllPlayerSync struct {
 	MissionFinishMainList  []uint32 // 已完成的主任务
 	MissionFinishSubList   []uint32 // 已完成的子任务
 	MissionProgressSubList []uint32 // 需要通知的子任务
+}
+
+func NewAllPlayerSync() *AllPlayerSync {
+	return &AllPlayerSync{
+		IsBasic:                true,
+		AvatarList:             make([]uint32, 0),
+		UnlockedHeadIconList:   make([]uint32, 0),
+		MaterialList:           make([]uint32, 0),
+		EquipmentList:          make([]uint32, 0),
+		DelEquipmentList:       make([]uint32, 0),
+		RelicList:              make([]uint32, 0),
+		DelRelicList:           make([]uint32, 0),
+		MissionFinishMainList:  make([]uint32, 0),
+		MissionFinishSubList:   make([]uint32, 0),
+		MissionProgressSubList: make([]uint32, 0),
+	}
 }
 
 func (g *PlayerData) GetUniqueId() uint32 {
@@ -137,7 +154,6 @@ func newMusicInfoMap() map[uint32]*spb.MusicInfo {
 		if v.Unlock {
 			musicInfoMap[v.ID] = &spb.MusicInfo{
 				MusicId: v.ID,
-				Is:      true,
 			}
 		}
 	}
@@ -158,7 +174,6 @@ func (g *PlayerData) AddMusicInfo(id uint32) {
 		db[id] == nil {
 		db[id] = &spb.MusicInfo{
 			MusicId: id,
-			Is:      true,
 		}
 	}
 }

@@ -159,6 +159,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetVideoVersionKeyCsReq:        g.GetVideoVersionKeyCsReq,       // 获取key
 		cmd.GetSecretKeyInfoCsReq:          g.GetSecretKeyInfoCsReq,         // key
 		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,             // 对话选项
+		// cmd.FinishSectionIdCsReq:           g.FinishSectionIdCsReq,          // 对话完成
 		cmd.UpdateTrackMainMissionIdCsReq:  g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
 		// 活动
 		cmd.PlayerReturnInfoQueryCsReq:          g.PlayerReturnInfoQueryCsReq,           // 获取回归信息

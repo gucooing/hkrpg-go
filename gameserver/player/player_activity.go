@@ -98,8 +98,7 @@ func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeLoginActivityRewardCsReq)
-	var pileItem []*model.Material
-	allSync := &model.AllPlayerSync{MaterialList: make([]uint32, 0)}
+	addItem := model.NewAddItem(nil)
 
 	rsp := &proto.TakeLoginActivityRewardScRsp{
 		TakeDays: req.TakeDays,
@@ -116,11 +115,11 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	pile, item := model.GetRewardData(activityLoginConfig.RewardList[req.TakeDays-1])
-	pileItem = append(pileItem, pile...)
-	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
-	g.GetPd().AddItem(pileItem, allSync)
-	g.AllPlayerSyncScNotify(allSync)
+	addItem.PileItem = model.GetRewardData(activityLoginConfig.RewardList[req.TakeDays-1])
+	g.GetPd().AddItem(addItem)
+	rsp.Reward.ItemList = addItem.ItemList
+
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 
 	g.Send(cmd.TakeLoginActivityRewardScRsp, rsp)
 }

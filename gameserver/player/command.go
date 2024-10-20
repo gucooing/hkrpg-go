@@ -48,31 +48,24 @@ func give(g *GamePlayer, parameter []string) string {
 	if len(parameter) < 3 {
 		return "Command Not enough parameters"
 	}
-	var pileItem []*model.Material
-	allSync := &model.AllPlayerSync{
-		IsBasic:       true,
-		AvatarList:    make([]uint32, 0),
-		MaterialList:  make([]uint32, 0),
-		EquipmentList: make([]uint32, 0),
-		RelicList:     make([]uint32, 0),
-	}
+	addItem := model.NewAddItem(nil)
 	all := alg.S2U32(parameter[0])
 	if all == 1 {
-		pileItem = append(pileItem, g.allGive(allSync)...)
+		addItem.PileItem = g.allGive()
 	} else {
-		pileItem = append(pileItem, &model.Material{
+		addItem.PileItem = append(addItem.PileItem, &model.Material{
 			Tid: alg.S2U32(parameter[1]),
 			Num: alg.S2U32(parameter[2]),
 		})
 
 	}
-	g.GetPd().AddItem(pileItem, allSync)
-	g.AllPlayerSyncScNotify(allSync)
-	g.AllScenePlaneEventScNotify(pileItem)
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	g.AllScenePlaneEventScNotify(addItem.MaterialList)
 	return fmt.Sprintf("ok")
 }
 
-func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
+func (g *GamePlayer) allGive() []*model.Material {
 	var pileItem []*model.Material
 	itemConf := gdconf.GetItemConfig()
 	avatarConf := gdconf.GetAvatarDataMap()
@@ -82,15 +75,18 @@ func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
 		if x != 1 && x != 8 {
 			continue
 		}
-		allSync.AvatarList = append(allSync.AvatarList, avatar.AvatarId)
-		g.GetPd().AddAvatar(avatar.AvatarId)
+		pileItem = append(pileItem, &model.Material{
+			Tid: avatar.AvatarId,
+			Num: 1,
+		})
 	}
 	// add playerIcon
-	var playerIconList []uint32
-	for _, playerIcon := range itemConf.AvatarPlayerIcon {
-		playerIconList = append(playerIconList, playerIcon.ID)
+	for _, item := range itemConf.AvatarPlayerIcon {
+		pileItem = append(pileItem, &model.Material{
+			Tid: item.ID,
+			Num: 1,
+		})
 	}
-	g.GetPd().GetItem().HeadIcon = playerIconList
 	// add rank
 	for _, rank := range itemConf.AvatarRank {
 		pileItem = append(pileItem, &model.Material{
@@ -100,8 +96,10 @@ func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
 	}
 	// add equipment
 	for _, equipment := range itemConf.Equipment {
-		uniqueId := g.GetPd().AddEquipment(equipment.ID)
-		allSync.EquipmentList = append(allSync.EquipmentList, uniqueId)
+		pileItem = append(pileItem, &model.Material{
+			Tid: equipment.ID,
+			Num: 1,
+		})
 	}
 	// add item
 	for _, item := range itemConf.Item {
@@ -119,8 +117,10 @@ func (g *GamePlayer) allGive(allSync *model.AllPlayerSync) []*model.Material {
 	}
 	// add relic
 	for _, relic := range itemConf.Relic {
-		uniqueId := g.GetPd().AddRelic(relic.ID, 0, nil)
-		allSync.RelicList = append(allSync.RelicList, uniqueId)
+		pileItem = append(pileItem, &model.Material{
+			Tid: relic.ID,
+			Num: 1,
+		})
 	}
 	return pileItem
 }
@@ -177,7 +177,7 @@ func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
 		RelicMap:     make(map[uint32]*spb.Relic),
 		EquipmentMap: make(map[uint32]*spb.Equipment),
 		MaterialMap:  make(map[uint32]uint32),
-		HeadIcon:     make([]uint32, 0),
+		HeadIconMap:  make(map[uint32]uint32),
 	}
 	db.MaterialMap[11] = 240
 }

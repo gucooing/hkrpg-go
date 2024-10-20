@@ -109,9 +109,9 @@ func (g *GamePlayer) HandleGetPlayerBoardDataCsReq(payloadMsg pb.Message) {
 	}
 
 	// add UnlockedHeadIconList
-	for _, avatar := range g.GetPd().GetHeadIconList() {
+	for _, id := range g.GetPd().GetHeadIconList() {
 		headIcon := &proto.HeadIconData{
-			Id: avatar,
+			Id: id,
 		}
 		rsp.UnlockedHeadIconList = append(rsp.UnlockedHeadIconList, headIcon)
 	}
@@ -308,13 +308,13 @@ func (g *GamePlayer) FinishTutorialCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) FinishTutorialGuideCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishTutorialGuideCsReq)
-	allSync := &model.AllPlayerSync{MaterialList: make([]uint32, 0)}
-	itemList := g.GetPd().FinishTutorialGuide(req.GroupId, allSync)
-	g.AllPlayerSyncScNotify(allSync)
+	addItem := model.NewAddItem(nil)
+	g.GetPd().FinishTutorialGuide(req.GroupId, addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	rsp := &proto.FinishTutorialGuideScRsp{
 		Retcode: 0,
 		Reward: &proto.ItemList{
-			ItemList: itemList,
+			ItemList: addItem.ItemList,
 		},
 		TutorialGuide: &proto.TutorialGuide{
 			Id:     req.GroupId,
@@ -535,11 +535,8 @@ func (g *GamePlayer) GetLevelRewardTakenListCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetLevelRewardCsReq)
-	allSync := &model.AllPlayerSync{
-		IsBasic:      true,
-		MaterialList: make([]uint32, 0),
-	}
-	pileItem := make([]*model.Material, 0)
+	addItem := model.NewAddItem(nil)
+
 	rsp := &proto.GetLevelRewardScRsp{
 		Reward:  &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		Retcode: 0,
@@ -551,45 +548,39 @@ func (g *GamePlayer) GetLevelRewardCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	pile, item := model.GetRewardData(conf.LevelRewardID)
-	pileItem = append(pileItem, pile...)
-	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item...)
+	pile := model.GetRewardData(conf.LevelRewardID)
+	addItem.PileItem = append(addItem.PileItem, pile...)
 
-	g.GetPd().AddItem(pileItem, allSync)
+	g.GetPd().AddItem(addItem)
+	rsp.Reward.ItemList = addItem.ItemList
 	g.GetPd().AddRewardTakenLevelList(req.Level)
-	g.AllPlayerSyncScNotify(allSync)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.GetLevelRewardScRsp, rsp)
 }
 
 func (g *GamePlayer) TakeBpRewardCsReq(payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.TakeBpRewardCsReq)
 	rsp := &proto.TakeBpRewardScRsp{
-		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: model.Hcoin, Num: 1000}}},
+		Reward:  &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		Retcode: 0,
 	}
-	allSync := &model.AllPlayerSync{
-		IsBasic: true,
-	}
-	g.GetPd().AddItem([]*model.Material{{Tid: model.Hcoin, Num: 1000}}, allSync)
-	g.AllPlayerSyncScNotify(allSync)
+	addItem := model.NewAddItem(nil)
+	addItem.MaterialList = []*model.Material{{Tid: model.Hcoin, Num: 1000}}
+	g.GetPd().AddItem(addItem)
+	rsp.Reward.ItemList = addItem.ItemList
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.TakeBpRewardScRsp, rsp)
 }
 
 func (g *GamePlayer) TakeAllRewardCsReq(payloadMsg pb.Message) {
-	allSync := &model.AllPlayerSync{
-		IsBasic:       true,
-		AvatarList:    make([]uint32, 0),
-		MaterialList:  make([]uint32, 0),
-		EquipmentList: make([]uint32, 0),
-		RelicList:     make([]uint32, 0),
-	}
-	pileItem := g.allGive(allSync)
-	g.GetPd().AddItem(pileItem, allSync)
+	addItem := model.NewAddItem(nil)
+	addItem.PileItem = g.allGive()
+	g.GetPd().AddItem(addItem)
 	rsp := &proto.TakeAllRewardScRsp{
 		Reward:  &proto.ItemList{ItemList: []*proto.Item{{ItemId: model.Mcoin, Num: 1000}}},
 		Retcode: 0,
 	}
-	g.AllPlayerSyncScNotify(allSync)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.TakeAllRewardScRsp, rsp)
 }
 
@@ -602,12 +593,11 @@ func (g *GamePlayer) ReserveStaminaExchangeCsReq(payloadMsg pb.Message) {
 	if !g.GetPd().DelMaterial([]*model.Material{{Tid: model.RStamina, Num: req.Num}}) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 	}
-	allSync := &model.AllPlayerSync{
-		IsBasic: true,
-	}
-	g.GetPd().AddItem([]*model.Material{{Tid: model.Stamina, Num: req.Num}}, allSync)
+	addItem := model.NewAddItem(nil)
+	addItem.PileItem = []*model.Material{{Tid: model.Stamina, Num: req.Num}}
+	g.GetPd().AddItem(addItem)
 	g.StaminaInfoScNotify()
-	g.AllPlayerSyncScNotify(allSync)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 
 	g.Send(cmd.ReserveStaminaExchangeScRsp, rsp)
 }
