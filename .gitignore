@@ -192,6 +192,7 @@ protocol/hkrpg
 protocol/excel/*.proto
 protocol/proto
 protocol/cmd
+protocol/server
 ./muipserver
 /.vscode
 /tools
