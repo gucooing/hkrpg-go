@@ -11,6 +11,10 @@
  
 # **Due to force majeure, the project will be permanently private and related resources will be deleted in the future. We will invite contributors to join before the project goes private.**
 
+# 唐人搬运搬出优越感了，xswl
+![怎么会有这么唐的人](./唐/唐璃2.png)
+![怎么会有这么唐的人](./唐/唐璃.png)
+
 # **Welcome to our [Discord](https://discord.gg/222yVp6pUq)**
 
 ## A friend is making a comeback, keep an eye out [hk4e-dmca](https://github.com/flswld/hk4e-go)

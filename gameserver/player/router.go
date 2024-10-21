@@ -123,9 +123,11 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DelMailCsReq:            g.DelMailCsReq,            // 删除邮件
 		cmd.TakeMailAttachmentCsReq: g.TakeMailAttachmentCsReq, // 领取邮件
 		// 卡池
-		cmd.GetGachaInfoCsReq:    g.HandleGetGachaInfoCsReq,    // 获取卡池信息
-		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
-		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
+		cmd.GetGachaInfoCsReq:          g.HandleGetGachaInfoCsReq,    // 获取卡池信息
+		cmd.DoGachaCsReq:               g.DoGachaCsReq,               // 抽卡请求
+		cmd.GetGachaCeilingCsReq:       g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
+		cmd.ExchangeGachaCeilingCsReq:  g.ExchangeGachaCeilingCsReq,  // 300抽保底
+		cmd.GetFarmStageGachaInfoCsReq: g.GetFarmStageGachaInfoCsReq, // 获取卡池刷新情况?
 		// 任务
 		cmd.GetDailyActiveInfoCsReq:        g.GetDailyActiveInfoCsReq, // 每日实训
 		cmd.GetMainMissionCustomValueCsReq: g.GetMainMissionCustomValueCsReq,
@@ -179,7 +181,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SetGameplayBirthdayCsReq:       g.SetGameplayBirthdayCsReq,       // 修改生日请求
 		cmd.SetSignatureCsReq:              g.SetSignatureCsReq,              // 简介修改请求
 		cmd.GetPlayerBoardDataCsReq:        g.HandleGetPlayerBoardDataCsReq,  // 获取角色名片页信息
-		cmd.GetFarmStageGachaInfoCsReq:     g.GetFarmStageGachaInfoCsReq,     // 获取怪物刷新情况
 		cmd.GetTutorialCsReq:               g.GetTutorialCsReq,               // 获取新手教程状态
 		cmd.GetTutorialGuideCsReq:          g.GetTutorialGuideCsReq,          // 获取教程指南
 		cmd.UnlockTutorialCsReq:            g.UnlockTutorialCsReq,            // 教程解锁

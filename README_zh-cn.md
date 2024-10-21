@@ -7,9 +7,13 @@
 <td valign="center"><a href="README_zh-cn.md"><img src="https://em-content.zobj.net/thumbs/120/twitter/351/flag-china_1f1e8-1f1f3.png" width="16"/> 简中</td>
 </a></td>
 </table>
-</div>>
+</div>
 
 # **因为不可抗力的原因将在未来永久private并删除相关资源，我们将会在private前邀请贡献者加入。**
+
+# 唐人搬运搬出优越感了，xswl
+![怎么会有这么唐的人](./唐/唐璃2.png)
+![怎么会有这么唐的人](./唐/唐璃.png)
 
 # **欢迎加入我们的 [Discord](https://discord.gg/222yVp6pUq)**
 
