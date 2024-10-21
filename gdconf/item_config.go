@@ -194,7 +194,7 @@ func (g *GameDataConfig) loadItemConfig() {
 		addItem(v, g.ItemConfigMap)
 	}
 
-	logger.Info("load %v ItemConfig", len(g.ItemConfigMap.Item))
+	logger.Info("load %v ItemConfig", len(g.ItemConfigMap.AllItem))
 }
 
 func addItem(v *ItemConfig, itemMap *ItemList) {

@@ -7,6 +7,14 @@ import (
 	"github.com/hjson/hjson-go/v4"
 )
 
+type BannersConf struct {
+	NormalRateUpItems4 []uint32
+	NormalRateUpItems5 []uint32
+	NewRateUpItems4    []uint32
+	NewRateUpItems5    []uint32
+	UpList             map[uint32]*Banners
+}
+
 type Banners struct {
 	Id           uint32   `json:"id"`
 	GachaType    string   `json:"gachaType"`
