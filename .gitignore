@@ -190,7 +190,7 @@ rich.go
 config.json
 protocol/hkrpg
 ./muipserver
-protocol/proto/StarRail.proto
 /.vscode
 protocol/excel/*.proto
+protocol/proto
 /tools
