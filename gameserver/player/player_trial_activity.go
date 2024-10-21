@@ -169,7 +169,8 @@ func (g *GamePlayer) TrialActivityPVEBattleResultScRsp(req *proto.PVEBattleResul
 	db := g.GetActivityInfoOnline()
 	if req.EndStatus == proto.BattleEndStatus_BATTLE_END_WIN {
 		// 储存通关状态
-		g.GetPd().GetActivity().TrialActivity = append(g.GetPd().GetActivity().TrialActivity, db.StageId)
+		trialDb := g.GetPd().GetTrialActivityById(db.StageId)
+		trialDb.Finish = true
 		// 发送通关通知
 		scNotify := &proto.TrialActivityDataChangeScNotify{
 			TrialActivityInfo: &proto.TrialActivityInfo{

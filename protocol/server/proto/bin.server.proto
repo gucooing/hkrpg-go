@@ -58,8 +58,16 @@ message PlayerBasicCompBin {
 }
 
 message Activity{
-  repeated uint32 trial_activity = 1; // 已完成的试用角色
+  map<uint32,TrialActivityInfo> trial_activity = 3; // 角色试用活动
   map<uint32, uint32> activity_login = 2; // 登录活动
+
+  reserved 1;
+}
+
+message TrialActivityInfo {
+  uint32 stage_id = 1;
+  bool taken_reward = 2;
+  bool finish = 3;
 }
 
 message Scene {

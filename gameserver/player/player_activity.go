@@ -129,9 +129,12 @@ func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg pb.Message) {
 		TrialActivityInfoList: make([]*proto.TrialActivityInfo, 0),
 	}
 
-	for _, id := range g.GetPd().GetTrialActivity() {
-		trialActivityInfo := &proto.TrialActivityInfo{StageId: id}
-		rsp.TrialActivityInfoList = append(rsp.TrialActivityInfoList, trialActivityInfo)
+	for _, v := range g.GetPd().GetTrialActivity() {
+		if v.Finish {
+			rsp.TrialActivityInfoList = append(rsp.TrialActivityInfoList, &proto.TrialActivityInfo{
+				StageId:     v.StageId,
+				TakenReward: v.TakenReward})
+		}
 	}
 
 	g.Send(cmd.GetTrialActivityDataScRsp, rsp)
@@ -140,24 +143,28 @@ func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) TakeTrialActivityRewardCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeTrialActivityRewardCsReq)
-	var pileItem []*model.Material
-
 	rsp := &proto.TakeTrialActivityRewardScRsp{
 		StageId: req.StageId,
 		Reward: &proto.ItemList{
 			ItemList: make([]*proto.Item, 0),
 		},
 	}
-	item := &proto.Item{
-		ItemId: 102,
-		Num:    100,
+	conf := gdconf.GetAvatarDemoConfigById(req.StageId)
+	if conf == nil {
+		g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
+		return
 	}
-	rsp.Reward.ItemList = append(rsp.Reward.ItemList, item)
-	pileItem = append(pileItem, &model.Material{
-		Tid: 102,
-		Num: 100,
-	})
-	g.GetPd().AddMaterial(pileItem)
+	db := g.GetPd().GetTrialActivityById(req.StageId)
+	if db.TakenReward || !db.Finish {
+		g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
+		return
+	}
+	addItem := model.NewAddItem(nil)
+	addItem.PileItem = model.GetRewardData(conf.RewardID)
+	g.GetPd().AddItem(addItem)
+	rsp.Reward.ItemList = addItem.ItemList
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	db.TakenReward = true
 
 	g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
 }

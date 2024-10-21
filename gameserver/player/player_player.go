@@ -28,25 +28,6 @@ func (g *GamePlayer) GetSpringRecoverDataCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetSpringRecoverDataScRsp, rsp)
 }
 
-// 角色状态改变时需要发送通知
-func (g *GamePlayer) PlayerPlayerSyncScNotify() {
-	db := g.GetPd().GetMaterialMap()
-	notify := &proto.PlayerSyncScNotify{
-		BasicInfo: &proto.PlayerBasicInfo{
-			Nickname:   g.GetPd().GetNickname(),
-			Level:      g.GetPd().GetLevel(),
-			Exp:        db[model.Exp],
-			Hcoin:      db[model.Hcoin],
-			Scoin:      db[model.Scoin],
-			Mcoin:      db[model.Mcoin],
-			Stamina:    db[model.Stamina],
-			WorldLevel: g.GetPd().GetWorldLevel(),
-		},
-	}
-
-	g.Send(cmd.PlayerSyncScNotify, notify)
-}
-
 func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetPlayerInfoCsReq)
 

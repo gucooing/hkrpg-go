@@ -457,7 +457,8 @@ func (g *GamePlayer) SetNicknameCsReq(payloadMsg pb.Message) {
 
 	dbOnl.IsNickName = !dbOnl.IsNickName
 
-	g.PlayerPlayerSyncScNotify()
+	g.AllPlayerSyncScNotify(&model.AllPlayerSync{IsBasic: true})
+
 	g.Send(cmd.SetNicknameScRsp, nil)
 }
 

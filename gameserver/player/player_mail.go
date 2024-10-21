@@ -62,28 +62,18 @@ func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg pb.Message) {
 		SuccMailIdList: make([]uint32, 0),
 		Attachment:     &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
-	allSync := &model.AllPlayerSync{
-		IsBasic:      true,
-		MaterialList: make([]uint32, 0),
-		AvatarList:   make([]uint32, 0),
-	}
+	addItem := model.NewAddItem(nil)
+
 	for _, id := range req.GetTakeMailIdList() {
 		mail := dbconf.GetAllMailById(id)
 		rsp.SuccMailIdList = append(rsp.SuccMailIdList, id)
-		if ok, itemList := g.GetPd().MailReadItem(mail.ItemList, allSync); ok {
-			rsp.Attachment.ItemList = append(rsp.Attachment.ItemList, itemList...)
-			g.GetPd().ReadMail(id)
-		}
+		g.GetPd().MailReadItem(mail.ItemList, addItem)
+		g.GetPd().ReadMail(id)
 	}
-	g.AllPlayerSyncScNotify(allSync)
-	for _, avatarId := range allSync.AvatarList {
-		g.Send(cmd.AddAvatarScNotify, &proto.AddAvatarScNotify{
-			Reward:       nil,
-			BaseAvatarId: avatarId,
-			Src:          proto.AddAvatarSrcState_ADD_AVATAR_SRC_NONE,
-			IsNew:        true,
-		})
-	}
+
+	g.GetPd().AddItem(addItem)
+	rsp.Attachment.ItemList = addItem.ItemList
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 
 	g.Send(cmd.TakeMailAttachmentScRsp, rsp)
 }

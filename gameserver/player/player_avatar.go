@@ -89,16 +89,11 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 		return
 	}
 
-	var pileItem []*model.Material // 需要删除的升级材料
-	var aPileItem []*model.Material
-	var delScoin uint32 // 扣除的信用点
-	var addExp uint32   // 增加的经验
-	allSync := &model.AllPlayerSync{
-		IsBasic:      true,
-		AvatarList:   make([]uint32, 0),
-		MaterialList: make([]uint32, 0),
-	}
+	addItem := model.NewAddItem(nil)
 
+	var pileItem []*model.Material // 需要删除的升级材料
+	var delScoin uint32            // 扣除的信用点
+	var addExp uint32              // 增加的经验
 	// 遍历用来升级的材料
 	for _, pileList := range cost.GetItemList() {
 		// 如果没有则退出
@@ -109,7 +104,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 			Tid: pileList.GetPileItem().ItemId,
 			Num: pileList.GetPileItem().ItemNum,
 		})
-		allSync.MaterialList = append(allSync.MaterialList, pileList.GetPileItem().ItemId)
+		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, pileList.GetPileItem().ItemId)
 		// 获取材料配置
 		pileconf := gdconf.GetAvatarExpItemConfigById(pileList.GetPileItem().ItemId)
 		if pileconf == nil {
@@ -146,7 +141,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 	if newExp >= 1000 {
 		num := (newExp / 1000) % 10
 		if num >= 5 {
-			aPileItem = append(aPileItem, &model.Material{
+			addItem.PileItem = append(addItem.PileItem, &model.Material{
 				Tid: 212,
 				Num: num / 5,
 			})
@@ -155,7 +150,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 				ItemNum: num % 5,
 			})
 		}
-		aPileItem = append(aPileItem, &model.Material{
+		addItem.PileItem = append(addItem.PileItem, &model.Material{
 			Tid: 211,
 			Num: num % 5,
 		})
@@ -163,13 +158,11 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 			ItemId:  211,
 			ItemNum: num % 5,
 		})
-		g.GetPd().AddMaterial(aPileItem)
 	}
 	// 通知升级后角色消息
-	allSync.MaterialList = append(allSync.MaterialList, 2)
-	allSync.MaterialList = append(allSync.MaterialList, 211)
-	allSync.AvatarList = append(allSync.AvatarList, avatarId)
-	g.AllPlayerSyncScNotify(allSync)
+	g.GetPd().AddItem(addItem)
+	addItem.AllSync.AvatarList = append(addItem.AllSync.AvatarList, avatarId)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.AvatarExpUpScRsp, rsp)
 }
 
@@ -288,12 +281,6 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakePromotionRewardCsReq)
-	var pileItem []*model.Material
-	allSync := &model.AllPlayerSync{
-		AvatarList:   make([]uint32, 0),
-		MaterialList: make([]uint32, 0),
-	}
-
 	avatarDb := g.GetPd().GetAvatarBinById(req.BaseAvatarId)
 	if avatarDb == nil {
 		rsp := &proto.TakePromotionRewardScRsp{
@@ -302,29 +289,19 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.TakePromotionRewardScRsp, rsp)
 		return
 	}
+	addItem := model.NewAddItem(nil)
 	avatarDb.TakenRewards = append(avatarDb.TakenRewards, req.Promotion)
-
-	pileItem = append(pileItem, &model.Material{
+	addItem.PileItem = append(addItem.PileItem, &model.Material{
 		Tid: 101,
 		Num: 1,
 	})
 
-	g.GetPd().AddMaterial(pileItem)
-	allSync.MaterialList = append(allSync.MaterialList, 101)
-	allSync.AvatarList = append(allSync.AvatarList, req.BaseAvatarId)
-	g.AllPlayerSyncScNotify(allSync)
+	addItem.AllSync.AvatarList = append(addItem.AllSync.AvatarList, req.BaseAvatarId)
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 
 	rsq := &proto.TakePromotionRewardScRsp{
-		RewardList: &proto.ItemList{ItemList: []*proto.Item{
-			{
-				ItemId:      101,
-				Level:       0,
-				Num:         1,
-				MainAffixId: 0,
-				Rank:        0,
-				Promotion:   0,
-				UniqueId:    0},
-		}},
+		RewardList: &proto.ItemList{ItemList: addItem.ItemList},
 	}
 	g.Send(cmd.TakePromotionRewardScRsp, rsq)
 }
