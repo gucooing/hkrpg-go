@@ -189,9 +189,8 @@ log/
 rich.go
 config.json
 protocol/hkrpg
-protocol/excel/*.proto
-protocol/proto
-protocol/cmd
 ./muipserver
+protocol/proto/StarRail.proto
 /.vscode
+protocol/excel/*.proto
 /tools

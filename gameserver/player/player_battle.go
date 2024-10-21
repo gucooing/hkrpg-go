@@ -294,6 +294,9 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		g.ChallengePVEBattleResultCsReq(req, battleBin)
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		g.ChallengePVEBattleResultCsReq(req, battleBin)
+	case spb.BattleType_Battle_ROGUE:
+		teleportToAnchor = false
+		g.RoguePVEBattleResultCsReq(req, sce)
 	case spb.BattleType_Battle_TrialActivity: // 角色试用
 		g.TrialActivityPVEBattleResultScRsp(req)
 		teleportToAnchor = true
