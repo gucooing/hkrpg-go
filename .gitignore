@@ -194,5 +194,6 @@ protocol/proto
 protocol/cmd
 protocol/server
 ./muipserver
+protocol/proto/StarRail.proto
 /.vscode
 /tools

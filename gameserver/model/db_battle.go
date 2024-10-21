@@ -14,7 +14,8 @@ import (
 )
 
 type CurBattle struct {
-	BattleBackup map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
+	BattleBackup    map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
+	RogueInfoOnline *RogueInfoOnline         // 模拟宇宙临时数据
 	// AvatarBuff         map[uint32]*OnBuffMap // 角色在线buff
 	ActivityInfoOnline *ActivityInfoOnline   // 角色试用在线数据
 	MazeBuffList       map[uint32]*OnBuffMap // 所有buff
@@ -180,6 +181,7 @@ func (g *PlayerData) DelMp(avatarId uint32) bool {
 func NewBattle() *spb.Battle {
 	return &spb.Battle{
 		BattleType: 0,
+		Rogue:      nil,
 		Challenge:  nil,
 		Rain:       nil,
 	}
@@ -936,6 +938,8 @@ func (g *PlayerData) GetBattleBuff(avatarMap map[uint32]*BattleAvatar) []*proto.
 		buffList = append(buffList, g.GetCurChallengeBuff()...)
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		buffList = append(buffList, g.GetCurChallengeBuff()...)
+	case spb.BattleType_Battle_ROGUE:
+		buffList = append(buffList, g.GetCurRogueBuff()...)
 	}
 	return buffList
 }
