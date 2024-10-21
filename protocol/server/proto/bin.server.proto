@@ -216,84 +216,8 @@ message Material {
 
 message Battle {// 战斗
   BattleType battle_type = 1; // 当前状态
-  Rogue rogue = 2; // 期数-情况
   Challenge challenge = 3; // 忘却之庭
-  RogueTourn rogue_tourn = 4; // 差分宇宙
   Raid rain = 5;// 副本
-}
-
-message Rogue {
-  map<uint32, RogueArea> rogue_area = 1; // 关卡状态
-  CurRogue cur_rogue = 2; // 当前正在进行的
-  map<uint32, RogueHistory> rogue_history_list = 3;// 历史领取信息
-}
-
-message RogueArea {
-  uint32 areaId = 1;
-  RogueAreaStatus rogue_area_status = 2;
-}
-
-message CurRogue {// 当前正在进行的模拟宇宙
-  uint32 cur_area_id = 1; // 当前关卡
-  uint32 cur_siteId = 2; // 当前房间
-  map<uint32, RogueRoom> rogue_room_map = 3; // 房间列表
-  uint32 rogue_map_id = 4; // mapid
-  uint32 buff_num = 5; // buff// 计数器
-  uint32 aeon_id = 6; // 命途
-  map<uint32, RogueBuff> buff_list = 7;// 模拟宇宙已获得祝福列表
-  uint32 RogueActivityModuleID = 8;//模拟宇宙类型
-  bool is_win = 9;// 是否胜利
-  RogueStatus status = 10 ;// 状态
-}
-
-message RogueRoom {
-  uint32 room_id = 1;
-  RoomStatus room_status = 2;
-  repeated uint32 next_site_id_list = 3;
-}
-
-message RogueBuff {
-  uint32 buff_id = 1;
-  uint32 buff_level = 2;
-}
-
-message RogueHistory{
-  uint32 season_id = 1; // 期数
-  uint32 score = 2; // 分数
-}
-
-message RogueTourn {// 差分宇宙
-  uint32 exp = 1; // 经验
-  repeated uint32 taken_level_rewards = 2;// 已领取的等级奖励
-  map<uint32, InspirationCircuitInfo> inspiration_circuit_info = 3; // 灵感回路信息
-  repeated uint32 unlock_difficulty_info = 4;// 已解锁难度
-  CurRogueTourn cur_rogue_tourn = 5;// 当前差分宇宙
-}
-
-message InspirationCircuitInfo {// 灵感回路
-  uint32 inspiration_circuit_id = 1;
-  RogueTalentStatus status = 2;
-}
-
-message CurRogueTourn{// 当前差分宇宙
-  uint32 area_id = 1; // 关卡
-  repeated uint32 formula_list = 2; //方程列表
-  map<uint32, LayerInfo> cur_layer_list = 3;// 关卡列表
-  uint32 cur_layer_index = 4;//第几关当前
-}
-
-message LayerInfo{
-  uint32 layer_id = 1;//小关卡id
-  RogueTournLayerStatus status = 2;// 状态
-  uint32 layer_index = 3;//第几个小房间
-  map<uint32, RogueTournRoomInfo> rogue_tourn_room_list = 4;// 小关卡下属房间
-  uint32 cur_room_index = 5; // 第几个房间当前
-}
-
-message RogueTournRoomInfo{
-  uint32 room_id = 1;//id
-  uint32 room_index = 2;//第几个房间
-  RogueTournRoomStatus status = 3; // 状态
 }
 
 message Challenge {

@@ -76,28 +76,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.GetRaidInfoCsReq:             g.GetRaidInfoCsReq,             // 获取raid
 		cmd.StartRaidCsReq:               g.StartRaidCsReq,               // 拓境探游
 		cmd.LeaveRaidCsReq:               g.LeaveRaidCsReq,               // 退出拓境探游
-		// 模拟宇宙
-		cmd.GetRogueHandbookDataCsReq:           g.GetRogueHandbookDataCsReq,           // 模拟宇宙图鉴
-		cmd.GetRogueScoreRewardInfoCsReq:        g.GetRogueScoreRewardInfoCsReq,        // 获取模拟宇宙排期
-		cmd.GetRogueInitialScoreCsReq:           g.GetRogueInitialScoreCsReq,           // 查询模拟宇宙当前分数
-		cmd.GetRogueTalentInfoCsReq:             g.GetRogueTalentInfoCsReq,             // 获取天赋信息
-		cmd.GetRogueInfoCsReq:                   g.GetRogueInfoCsReq,                   // 获取模拟宇宙
-		cmd.StartRogueCsReq:                     g.StartRogueCsReq,                     // 模拟宇宙,启动!
-		cmd.LeaveRogueCsReq:                     g.LeaveRogueCsReq,                     // 模拟宇宙撤离请求
-		cmd.QuitRogueCsReq:                      g.QuitRogueCsReq,                      // 模拟宇宙结算请求
-		cmd.HandleRogueCommonPendingActionCsReq: g.HandleRogueCommonPendingActionCsReq, // 模拟宇宙常见操作请求
-		cmd.EnterRogueMapRoomCsReq:              g.EnterRogueMapRoomCsReq,              // 模拟宇宙进入下一场景
-		cmd.GetRogueBuffEnhanceInfoCsReq:        g.GetRogueBuffEnhanceInfoCsReq,        // 获取模拟宇宙buff信息
-		// cmd.EnhanceRogueBuffCsReq:g.EnhanceRogueBuffCsReq,// 强化buff
-		cmd.GetRogueAdventureRoomInfoCsReq: g.GetRogueAdventureRoomInfoCsReq, // 模拟宇宙冒险
-		// 差分宇宙
-		cmd.RogueTournQueryCsReq:                  g.RogueTournQueryCsReq,                  // 获取差分宇宙信息
-		cmd.RogueTournGetPermanentTalentInfoCsReq: g.RogueTournGetPermanentTalentInfoCsReq, // 获取差分宇宙灵感回路
-		cmd.RogueTournStartCsReq:                  g.RogueTournStartCsReq,                  // 差分宇宙.启动!
-		cmd.RogueTournGetMiscRealTimeDataCsReq:    g.RogueTournGetMiscRealTimeDataCsReq,    // 获取差分宇宙实时信息
-		cmd.RogueTournEnterCsReq:                  g.RogueTournEnterCsReq,                  // 继续进度
-		cmd.RogueTournSettleCsReq:                 g.RogueTournSettleCsReq,                 // 结束并结算
-		cmd.RogueTournEnterRoomCsReq:              g.RogueTournEnterRoomCsReq,              // 差分宇宙进入下一场景
 		// 忘却之庭
 		cmd.GetChallengeGroupStatisticsCsReq: g.GetChallengeGroupStatisticsCsReq, // 获取忘却之庭状态
 		cmd.GetChallengeCsReq:                g.HandleGetChallengeCsReq,          // 获取忘却之庭挑战完成信息
