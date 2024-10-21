@@ -66,7 +66,7 @@ type GameDataConfig struct {
 	FloorMap                     map[uint32]map[uint32]*LevelFloor               // ?
 	MapEntranceMap               map[uint32]*MapEntrance                         // 地图入口
 	SpecialPropMap               map[uint32]*SpecialProp                         // 物品特殊状态
-	BannersMap                   map[uint32]*Banners                             // 卡池信息
+	BannersMap                   *BannersConf                                    // 卡池信息
 	ActivityPanelMap             map[uint32]*ActivityPanel                       // 活动
 	ActivityLoginConfigMap       map[uint32]*ActivityLoginConfig                 // 登录活动表
 	AvatarDemoConfigMap          map[uint32]*AvatarDemoConfig                    // 角色试用信息
@@ -244,7 +244,6 @@ func (g *GameDataConfig) load() {
 		g.loadFloor,                     // 场景
 		g.loadMapEntrance,               // 地图入口
 		g.loadSpecialProp,               // 物品特殊状态
-		g.loadBanners,                   // 卡池信息
 		g.loadActivityPanel,             // 活动
 		g.loadAvatarDemoConfig,          // 角色试用信息
 		g.loadSpecialAvatar,             // 预设角色映射表
@@ -309,6 +308,7 @@ func (g *GameDataConfig) gopp() {
 		g.goppTeleports,   // 预处理传送锚点
 		g.goppMainMission, // 预处理主线任务
 		g.goppRogueRoom,   // 预处理模拟宇宙地图配置表
-		g.goppAbility,
+		g.goppAbility,     // Ability
+		g.loadBanners,     // 卡池信息
 	}
 }

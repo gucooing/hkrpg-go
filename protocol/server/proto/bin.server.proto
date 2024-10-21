@@ -370,14 +370,16 @@ message RaidInfo {
 }
 
 message Gacha {
-  map<uint32, GachaNum> gacha_map = 1;// [GachaType]*CeilingNum
+  map<uint32, GachaInfo> gacha_map = 1;// [GachaType]*CeilingNum
 }
 
-message GachaNum {
+message GachaInfo {
   uint32 ceiling_num = 1;// 抽取次数
   uint32 pity4 = 2; // 几抽未四星up
   bool failed_featured_item_pulls4 = 3;
   bool failed_featured_item_pulls5 = 4; // 是否保底
+  bool is_claimed = 5; // 常驻是否领取300
+  uint32 n_ceiling_num = 6; // 常驻总抽数
 }
 
 message ContentAuditBin {

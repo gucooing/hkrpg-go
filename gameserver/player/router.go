@@ -145,22 +145,24 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.DelMailCsReq:            g.DelMailCsReq,            // 删除邮件
 		cmd.TakeMailAttachmentCsReq: g.TakeMailAttachmentCsReq, // 领取邮件
 		// 卡池
-		cmd.GetGachaInfoCsReq:    g.HandleGetGachaInfoCsReq,    // 获取卡池信息
-		cmd.DoGachaCsReq:         g.DoGachaCsReq,               // 抽卡请求
-		cmd.GetGachaCeilingCsReq: g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
+		cmd.GetGachaInfoCsReq:          g.HandleGetGachaInfoCsReq,    // 获取卡池信息
+		cmd.DoGachaCsReq:               g.DoGachaCsReq,               // 抽卡请求
+		cmd.GetGachaCeilingCsReq:       g.HandleGetGachaCeilingCsReq, // 基础卡池保底达到进度请求
+		cmd.ExchangeGachaCeilingCsReq:  g.ExchangeGachaCeilingCsReq,  // 300抽保底
+		cmd.GetFarmStageGachaInfoCsReq: g.GetFarmStageGachaInfoCsReq, // 获取卡池刷新情况?
 		// 任务
 		cmd.GetDailyActiveInfoCsReq:        g.GetDailyActiveInfoCsReq, // 每日实训
 		cmd.GetMainMissionCustomValueCsReq: g.GetMainMissionCustomValueCsReq,
 		cmd.GetMissionEventDataCsReq:       g.GetMissionEventDataCsReq,
-		cmd.GetMissionStatusCsReq:          g.HandleGetMissionStatusCsReq,   // 获取任务状态
-		cmd.GetMissionDataCsReq:            g.GetMissionDataCsReq,           // 获取任务数据
-		cmd.FinishTalkMissionCsReq:         g.FinishTalkMissionCsReq,        // 完成任务
-		cmd.FinishCosumeItemMissionCsReq:   g.FinishCosumeItemMissionCsReq,  // 完成道具提交任务
-		cmd.GetVideoVersionKeyCsReq:        g.GetVideoVersionKeyCsReq,       // 获取key
-		cmd.GetSecretKeyInfoCsReq:          g.GetSecretKeyInfoCsReq,         // key
-		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,             // 对话选项
+		cmd.GetMissionStatusCsReq:          g.HandleGetMissionStatusCsReq,  // 获取任务状态
+		cmd.GetMissionDataCsReq:            g.GetMissionDataCsReq,          // 获取任务数据
+		cmd.FinishTalkMissionCsReq:         g.FinishTalkMissionCsReq,       // 完成任务
+		cmd.FinishCosumeItemMissionCsReq:   g.FinishCosumeItemMissionCsReq, // 完成道具提交任务
+		cmd.GetVideoVersionKeyCsReq:        g.GetVideoVersionKeyCsReq,      // 获取key
+		cmd.GetSecretKeyInfoCsReq:          g.GetSecretKeyInfoCsReq,        // key
+		cmd.FinishItemIdCsReq:              g.FinishItemIdCsReq,            // 对话选项
 		// cmd.FinishSectionIdCsReq:           g.FinishSectionIdCsReq,          // 对话完成
-		cmd.UpdateTrackMainMissionIdCsReq:  g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
+		cmd.UpdateTrackMainMissionIdCsReq: g.UpdateTrackMainMissionIdCsReq, //  更改当前任务
 		// 活动
 		cmd.PlayerReturnInfoQueryCsReq:          g.PlayerReturnInfoQueryCsReq,           // 获取回归信息
 		cmd.PlayerReturnTakeRewardCsReq:         g.PlayerReturnTakeRewardCsReq,          // 领取回归横幅奖励
@@ -201,7 +203,6 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SetGameplayBirthdayCsReq:       g.SetGameplayBirthdayCsReq,       // 修改生日请求
 		cmd.SetSignatureCsReq:              g.SetSignatureCsReq,              // 简介修改请求
 		cmd.GetPlayerBoardDataCsReq:        g.HandleGetPlayerBoardDataCsReq,  // 获取角色名片页信息
-		cmd.GetFarmStageGachaInfoCsReq:     g.GetFarmStageGachaInfoCsReq,     // 获取怪物刷新情况
 		cmd.GetTutorialCsReq:               g.GetTutorialCsReq,               // 获取新手教程状态
 		cmd.GetTutorialGuideCsReq:          g.GetTutorialGuideCsReq,          // 获取教程指南
 		cmd.UnlockTutorialCsReq:            g.UnlockTutorialCsReq,            // 教程解锁

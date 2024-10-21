@@ -14,18 +14,7 @@ import (
 func (g *GamePlayer) HandleGetBagCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.GetBagScRsp)
 	// 获取背包材料
-	db := g.GetPd().GetMaterialMap()
-	for id, materia := range db {
-		if materia == 0 || !model.IsMateria(id) {
-			delete(db, id)
-			continue
-		}
-		materialList := &proto.Material{
-			Tid: id,
-			Num: materia,
-		}
-		rsp.MaterialList = append(rsp.MaterialList, materialList)
-	}
+	rsp.MaterialList = g.GetPd().GetMaterial()
 	// 获取背包光锥
 	for _, equipment := range g.GetPd().GetItem().EquipmentMap {
 		equipmentList := g.GetPd().GetEquipment(equipment.UniqueId)

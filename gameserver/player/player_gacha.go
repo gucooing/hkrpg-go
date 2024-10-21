@@ -1,9 +1,6 @@
 package player
 
 import (
-	"math/rand"
-	"time"
-
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -31,37 +28,10 @@ func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg pb.Message) {
-	rsp := new(proto.GetGachaInfoScRsp)
-	rsp.GachaInfoList = make([]*proto.GachaInfo, 0)
-
-	for _, bannerslist := range gdconf.GetBannersMap() {
-		gacha := g.GetPd().GetDbGacha(bannerslist.Id)
-		gachaInfoList := &proto.GachaInfo{
-			DropHistoryWebview: "http://127.0.0.1:8080/api/gacha/history", // 历史记录
-			DetailWebview:      "http://127.0.0.1:8080",                   // 卡池详情
-			ItemDetailList:     bannerslist.RateUpItems4,                  // 四星up
-			PrizeItemList:      bannerslist.RateUpItems5,                  // 五星up
-			GachaId:            bannerslist.Id,
-		}
-		if bannerslist.GachaType == "Normal" {
-			gachaInfoList.GachaCeiling = &proto.GachaCeiling{
-				IsClaimed:  false, // 是否已领取自选
-				AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-				CeilingNum: gacha.CeilingNum,
-			}
-			// for _, id := range bannerslist.RateUpItems5 {
-			// 	avatarlist := &proto.GachaCeilingAvatar{
-			// 		RepeatedCnt: 0,
-			// 		AvatarId:    id,
-			// 	}
-			// 	gachaInfoList.GachaCeiling.AvatarList = append(gachaInfoList.GachaCeiling.AvatarList, avatarlist)
-			// }
-		} else {
-			gachaInfoList.BeginTime = bannerslist.BeginTime // 开始时间
-			gachaInfoList.EndTime = bannerslist.EndTime     // 结束时间
-		}
-
-		rsp.GachaInfoList = append(rsp.GachaInfoList, gachaInfoList)
+	rsp := &proto.GetGachaInfoScRsp{
+		Retcode:       0,
+		GachaRandom:   0,
+		GachaInfoList: g.GetPd().GetGachaInfoList(),
 	}
 
 	g.Send(cmd.GetGachaInfoScRsp, rsp)
@@ -69,17 +39,17 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetGachaCeilingCsReq)
-
 	rsp := &proto.GetGachaCeilingScRsp{
 		GachaType: req.GachaType,
 	}
-	list := []uint32{1003, 1101, 1211}
+	conf := gdconf.GetBannersConf()
+	db := g.GetPd().GetDbGacha(1001)
 	rsp.GachaCeiling = &proto.GachaCeiling{
-		IsClaimed:  false,
+		IsClaimed:  db.IsClaimed,
 		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
-		CeilingNum: g.GetPd().GetDbGacha(1001).CeilingNum,
+		CeilingNum: db.NCeilingNum,
 	}
-	for _, id := range list {
+	for _, id := range conf.NormalRateUpItems5 {
 		avatarlist := &proto.GachaCeilingAvatar{
 			RepeatedCnt: 0,
 			AvatarId:    id,
@@ -90,320 +60,92 @@ func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetGachaCeilingScRsp, rsp)
 }
 
+func (g *GamePlayer) ExchangeGachaCeilingCsReq(payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.ExchangeGachaCeilingCsReq)
+	addItem := model.NewAddItem(nil)
+	rsp := &proto.ExchangeGachaCeilingScRsp{
+		Retcode:          0,
+		AvatarId:         req.AvatarId,
+		GachaType:        0,
+		TransferItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
+	}
+
+	db := g.GetPd().GetDbGacha(1001)
+	if db.NCeilingNum < 300 || db.IsClaimed {
+		g.Send(cmd.ExchangeGachaCeilingScRsp, rsp)
+		return
+	}
+	db.IsClaimed = true
+
+	addItem.PileItem = append(addItem.PileItem, &model.Material{
+		Tid: req.AvatarId,
+		Num: 1,
+	})
+	rsp.TransferItemList.ItemList = append(rsp.TransferItemList.ItemList,
+		&proto.Item{
+			Num:    1,
+			ItemId: req.AvatarId,
+		})
+	rsp.GachaCeiling = &proto.GachaCeiling{
+		AvatarList: make([]*proto.GachaCeilingAvatar, 0),
+		IsClaimed:  db.IsClaimed,
+		CeilingNum: db.NCeilingNum,
+	}
+	g.GetPd().AddItem(addItem)
+	rsp.TransferItemList.ItemList = addItem.ItemList
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+
+	g.Send(cmd.ExchangeGachaCeilingScRsp, rsp)
+}
+
 func (g *GamePlayer) DoGachaCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DoGachaCsReq)
+	db := g.GetPd().GetDbGacha(req.GachaId)
 	rsp := &proto.DoGachaScRsp{
 		GachaId:       req.GachaId,
-		CeilingNum:    0,
+		CeilingNum:    db.NCeilingNum,
 		GachaItemList: make([]*proto.GachaItem, 0),
 		GachaNum:      req.GachaNum,
 	}
-	allSync := &model.AllPlayerSync{
-		IsBasic:       true,
-		MaterialList:  make([]uint32, 0),
-		RelicList:     make([]uint32, 0),
-		AvatarList:    make([]uint32, 0),
-		EquipmentList: make([]uint32, 0),
-	}
-	var dPileItem []*model.Material
-	var pileItem []*model.Material
+	addItem := model.NewAddItem(nil)
 
 	if req.GachaNum != 10 && req.GachaNum != 1 {
-		return
-	}
-	g.GetPd().BasicBin.IsProficientPlayer = true
-	// 先扣球再抽卡
-	upBanners := gdconf.GetBannersMap()[req.GachaId]
-	if upBanners == nil {
+		rsp.Retcode = uint32(proto.Retcode_RET_ROGUE_SHOP_GOOD_NOT_FOUND)
 		g.Send(cmd.DoGachaScRsp, rsp)
 		return
 	}
-	switch upBanners.GachaType {
-	case "Normal":
-		dPileItem = append(dPileItem, &model.Material{
-			Tid: 101,
-			Num: req.GachaNum,
-		})
-		allSync.MaterialList = append(allSync.MaterialList, 101)
-	case "NewPlayer":
-		dPileItem = append(dPileItem, &model.Material{
-			Tid: 101,
-			Num: 8,
-		})
-		allSync.MaterialList = append(allSync.MaterialList, 101)
-	case "AvatarUp":
-		dPileItem = append(dPileItem, &model.Material{
-			Tid: 102,
-			Num: req.GachaNum,
-		})
-		allSync.MaterialList = append(allSync.MaterialList, 102)
-	case "WeaponUp":
-		dPileItem = append(dPileItem, &model.Material{
-			Tid: 102,
-			Num: req.GachaNum,
-		})
-		allSync.MaterialList = append(allSync.MaterialList, 102)
-	default:
+	if !g.GetPd().CheckDoGacha(req, addItem) {
+		rsp.Retcode = uint32(proto.Retcode_RET_ROGUE_SHOP_GOOD_NOT_FOUND)
 		g.Send(cmd.DoGachaScRsp, rsp)
 		return
 	}
-	g.GetPd().DelMaterial(dPileItem)
+
+	gachaRandom := g.GetPd().NewGachaRandom(req.GachaId)
+	if gachaRandom == nil {
+		rsp.Retcode = uint32(proto.Retcode_RET_ROGUE_SHOP_GOOD_NOT_FOUND)
+		g.Send(cmd.DoGachaScRsp, rsp)
+		return
+	}
 
 	for i := 0; i < int(req.GachaNum); i++ {
-		id := g.GachaRandom(req.GachaId)
-		isAvatar, isNew := g.GetPd().AddGachaItem(id, allSync)
-		gachaItemList := &proto.GachaItem{
+		id := g.GetPd().GachaRandom(gachaRandom)
+		gachaItem := &proto.GachaItem{
 			TransferItemList: &proto.ItemList{ItemList: make([]*proto.Item, 0)},
-			IsNew:            isNew,
+			IsNew:            false,
 			GachaItem:        nil,
 			TokenItem:        &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 		}
-		gachaItem := &proto.Item{
-			ItemId:      id,
-			Level:       1,
-			Num:         1,
-			MainAffixId: 0,
-			Rank:        1,
-			Promotion:   0,
-			UniqueId:    0,
-		}
-		if isAvatar {
-			if isNew {
-
-			} else {
-				tokenItemList := &proto.Item{
-					Num:    8,
-					ItemId: 252,
-				}
-				gachaItemList.TokenItem.ItemList = append(gachaItemList.TokenItem.ItemList, tokenItemList)
-
-				transferItemList := &proto.Item{
-					Num:    1,
-					ItemId: 10000 + id,
-				}
-				gachaItemList.TransferItemList.ItemList = append(gachaItemList.TransferItemList.ItemList, transferItemList)
-
-				pileItem = append(pileItem, &model.Material{
-					Tid: 252,
-					Num: 8,
-				})
-				pileItem = append(pileItem, &model.Material{
-					Tid: 10000 + id,
-					Num: 1,
-				})
-				allSync.MaterialList = append(allSync.MaterialList, 252)
-				allSync.MaterialList = append(allSync.MaterialList, 10000+id)
-			}
-		} else {
-			tokenItemList := &proto.Item{
-				Num:    42,
-				ItemId: 251,
-			}
-			gachaItemList.TokenItem.ItemList = append(gachaItemList.TokenItem.ItemList, tokenItemList)
-		}
-		gachaItemList.GachaItem = gachaItem
-
-		rsp.GachaItemList = append(rsp.GachaItemList, gachaItemList)
+		g.GetPd().AddGachaItem(id, addItem, gachaItem)
+		rsp.GachaItemList = append(rsp.GachaItemList, gachaItem)
 	}
 
-	pileItem = append(pileItem, &model.Material{
+	addItem.PileItem = append(addItem.PileItem, &model.Material{
 		Tid: 251,
 		Num: req.GachaNum * 42,
 	})
-	allSync.MaterialList = append(allSync.MaterialList, 251)
 
-	for _, avatarId := range allSync.AvatarList {
-		g.Send(cmd.AddAvatarScNotify, &proto.AddAvatarScNotify{
-			Reward:       nil,
-			BaseAvatarId: avatarId,
-			Src:          proto.AddAvatarSrcState_ADD_AVATAR_SRC_GACHA,
-			IsNew:        true,
-		})
-	}
-
-	g.GetPd().AddMaterial(pileItem)
-	g.AllPlayerSyncScNotify(allSync)
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 
 	g.Send(cmd.DoGachaScRsp, rsp)
-}
-
-func (g *GamePlayer) GachaRandom(gachaId uint32) uint32 {
-	var (
-		list3 []uint32 // 三星池
-		list4 []uint32 // 四星池
-		list5 []uint32 // 五星池
-	)
-
-	probability5, probability4 := g.GetProbability(gachaId)
-
-	upBanners := gdconf.GetBannersMap()[gachaId]
-
-	for _, equi := range gdconf.GetEquipmentConfigMap() {
-		switch equi.Rarity {
-		case "CombatPowerLightconeRarity3":
-			list3 = append(list3, equi.EquipmentID)
-		case "CombatPowerLightconeRarity4":
-			list4 = append(list4, equi.EquipmentID)
-		case "CombatPowerLightconeRarity5":
-			list5 = append(list5, equi.EquipmentID)
-		}
-	}
-
-	for _, avatar := range gdconf.GetAvatarDataMap() {
-		// 过滤主角
-		if avatar.AvatarId/100 == 80 {
-			continue
-		}
-		switch avatar.Rarity {
-		case "CombatPowerAvatarRarityType4":
-			list4 = append(list4, avatar.AvatarId)
-		case "CombatPowerAvatarRarityType5":
-			list5 = append(list5, avatar.AvatarId)
-		}
-	}
-
-	// 特殊情况处理
-	gachaFb := g.GetPd().GetDbGacha(gachaId)
-	if gachaFb.Pity4 == 8 && gachaFb.CeilingNum == 88 {
-		// 五星
-		if gachaFb.FailedFeaturedItemPulls5 {
-			idIndex := rand.Intn(len(upBanners.RateUpItems5))
-			gachaFb.CeilingNum = 0
-			gachaFb.FailedFeaturedItemPulls5 = false
-			return upBanners.RateUpItems5[idIndex]
-		} else {
-			idIndex := rand.Intn(len(list5))
-			gachaFb.CeilingNum = 0
-			for _, id := range upBanners.RateUpItems5 {
-				if list5[idIndex] == id {
-					gachaFb.FailedFeaturedItemPulls5 = false
-					break
-				} else {
-					gachaFb.FailedFeaturedItemPulls5 = true
-				}
-			}
-			gachaFb.Pity4++
-			return list5[idIndex]
-		}
-	}
-
-	// 保底四星
-	if gachaFb.Pity4 == 9 && !gachaFb.FailedFeaturedItemPulls4 {
-		idIndex := rand.Intn(len(list4))
-
-		for _, id := range upBanners.RateUpItems4 {
-			if list4[idIndex] == id {
-				gachaFb.FailedFeaturedItemPulls4 = false
-				break
-			} else {
-				gachaFb.FailedFeaturedItemPulls4 = true
-			}
-		}
-		gachaFb.Pity4 = 0
-		gachaFb.CeilingNum++
-		return list4[idIndex]
-	}
-
-	// 大保底四星
-	if gachaFb.Pity4 == 9 && gachaFb.FailedFeaturedItemPulls4 {
-		idIndex := rand.Intn(len(upBanners.RateUpItems4))
-		gachaFb.Pity4 = 0
-		gachaFb.FailedFeaturedItemPulls4 = false
-		return upBanners.RateUpItems4[idIndex]
-	}
-
-	// 保底五星
-	if gachaFb.CeilingNum == 89 && !gachaFb.FailedFeaturedItemPulls5 {
-		idIndex := rand.Intn(len(list5))
-		gachaFb.CeilingNum = 0
-		for _, id := range upBanners.RateUpItems5 {
-			if list5[idIndex] == id {
-				gachaFb.FailedFeaturedItemPulls5 = false
-				break
-			} else {
-				gachaFb.FailedFeaturedItemPulls5 = true
-			}
-		}
-		gachaFb.Pity4++
-		return list5[idIndex]
-	}
-
-	// 大保底五星
-	if gachaFb.CeilingNum == 89 && gachaFb.FailedFeaturedItemPulls5 {
-		idIndex := rand.Intn(len(upBanners.RateUpItems5))
-		gachaFb.CeilingNum = 0
-		gachaFb.FailedFeaturedItemPulls5 = false
-		return upBanners.RateUpItems5[idIndex]
-	}
-
-	// 下面是概率
-	rand.New(rand.NewSource(time.Now().UnixNano()))
-	randomNumbe := rand.Intn(10000) + 1
-	randomNumber := uint32(randomNumbe)
-
-	if randomNumber >= probability5 {
-		// 五星
-		if gachaFb.FailedFeaturedItemPulls5 {
-			idIndex := rand.Intn(len(upBanners.RateUpItems5))
-			gachaFb.CeilingNum = 0
-			gachaFb.FailedFeaturedItemPulls5 = false
-			return upBanners.RateUpItems5[idIndex]
-		} else {
-			idIndex := rand.Intn(len(list5))
-			gachaFb.CeilingNum = 0
-			for _, id := range upBanners.RateUpItems5 {
-				if list5[idIndex] == id {
-					gachaFb.FailedFeaturedItemPulls5 = false
-					break
-				} else {
-					gachaFb.FailedFeaturedItemPulls5 = true
-				}
-			}
-			gachaFb.Pity4++
-			return list5[idIndex]
-		}
-	}
-	if randomNumber >= probability4 {
-		// 四星
-		if gachaFb.FailedFeaturedItemPulls4 {
-			idIndex := rand.Intn(len(upBanners.RateUpItems4))
-			gachaFb.Pity4 = 0
-			gachaFb.FailedFeaturedItemPulls4 = false
-			return upBanners.RateUpItems4[idIndex]
-		} else {
-			idIndex := rand.Intn(len(list4))
-			for _, id := range upBanners.RateUpItems4 {
-				if list4[idIndex] == id {
-					gachaFb.FailedFeaturedItemPulls4 = false
-					break
-				} else {
-					gachaFb.FailedFeaturedItemPulls4 = true
-				}
-			}
-			gachaFb.Pity4 = 0
-			gachaFb.CeilingNum++
-			return list4[idIndex]
-		}
-	}
-	// 三星
-	idIndex := rand.Intn(len(list3))
-	gachaFb.CeilingNum++
-	gachaFb.Pity4++
-	return list3[idIndex]
-}
-
-func (g *GamePlayer) GetProbability(gachaId uint32) (uint32, uint32) {
-	var probability5 uint32
-	var probability4 uint32
-	probability5 = 60
-	probability4 = 510
-
-	gaCha := g.GetPd().GetDbGacha(gachaId)
-
-	if gaCha.CeilingNum >= 73 {
-		probability5 += (gaCha.CeilingNum - 73) * 622
-		return 10000 - probability5, 10000 - probability5 - probability4
-	}
-
-	return 10000 - probability5, 10000 - probability5 - probability4
 }

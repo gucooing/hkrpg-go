@@ -166,25 +166,7 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 			})
 			continue
 		case constant.ItemMainTypeAvatarCard:
-			avatarList := g.GetAvatarList()
-			if _, ok := avatarList[itemInfo.Tid]; ok {
-				addItem.MaterialList = append(addItem.MaterialList, &Material{
-					Tid: itemInfo.Tid + 10000,
-					Num: itemInfo.Num,
-				})
-				addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, itemInfo.Tid+10000)
-				addItem.ItemList = append(addItem.ItemList, &proto.Item{
-					Num:    itemInfo.Num,
-					ItemId: itemInfo.Tid + 10000,
-				})
-			} else {
-				if icon := gdconf.GetAvatarPlayerIcon(conf.ID); icon != nil {
-					g.AddHeadIcon(icon.ID)
-					addItem.AllSync.UnlockedHeadIconList = append(addItem.AllSync.UnlockedHeadIconList, icon.ID)
-				}
-				g.AddAvatar(itemInfo.Tid)
-				addItem.AllSync.AvatarList = append(addItem.AllSync.AvatarList, itemInfo.Tid)
-			}
+			g.addTypeAvatarCard(itemInfo.Tid, addItem)
 			continue
 		case constant.ItemMainTypeEquipment:
 			uniqueId := g.AddEquipment(itemInfo.Tid)
@@ -237,6 +219,32 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 	}
 }
 
+func (g *PlayerData) addTypeAvatarCard(avatarId uint32, addItem *AddItem) {
+	avatarList := g.GetAvatarList()
+	if _, ok := avatarList[avatarId]; ok {
+		addItem.MaterialList = append(addItem.MaterialList, &Material{
+			Tid: avatarId + 10000,
+			Num: 1,
+		})
+		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, avatarId+10000)
+		addItem.ItemList = append(addItem.ItemList, &proto.Item{
+			Num:    1,
+			ItemId: avatarId + 10000,
+		})
+	} else {
+		if icon := gdconf.GetAvatarPlayerIcon(avatarId); icon != nil {
+			g.AddHeadIcon(icon.ID)
+			addItem.AllSync.UnlockedHeadIconList = append(addItem.AllSync.UnlockedHeadIconList, icon.ID)
+		}
+		addItem.ItemList = append(addItem.ItemList, &proto.Item{
+			Num:    1,
+			ItemId: avatarId,
+		})
+		g.AddAvatar(avatarId)
+		addItem.AllSync.AvatarList = append(addItem.AllSync.AvatarList, avatarId)
+	}
+}
+
 func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, itemInfo *Material) {
 	switch conf.ItemSubType {
 	case constant.ItemSubTypeMusicAlbum: // 唱片
@@ -248,10 +256,25 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 	case constant.ItemSubTypeHeadIcon: // 头像
 		g.AddHeadIcon(conf.ID)
 		addItem.AllSync.UnlockedHeadIconList = append(addItem.AllSync.UnlockedHeadIconList, conf.ID)
+	case constant.ItemSubTypeFormula: // 配方
+		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
+		addItem.ItemList = append(addItem.ItemList, &proto.Item{
+			Num:    itemInfo.Num,
+			ItemId: itemInfo.Tid,
+		})
+	case constant.ItemSubTypeFood: // 食物
+		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
+		addItem.ItemList = append(addItem.ItemList, &proto.Item{
+			Num:    itemInfo.Num,
+			ItemId: itemInfo.Tid,
+		})
 	case constant.ItemSubTypeGift: // 杂
 		if use := gdconf.GetItemUseData(conf.UseDataID); use != nil && use.IsAutoUse {
-			for _, rewardId := range use.UseParam {
-				pile := GetRewardData(rewardId)
+			// switch expr {
+			//
+			// }
+			for _, paramId := range use.UseParam {
+				pile := GetRewardData(paramId)
 				for _, v := range pile { // 避免无限循环，这里只处理一次
 					addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, v.Tid)
 					addItem.ItemList = append(addItem.ItemList, &proto.Item{
@@ -271,15 +294,27 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 	}
 }
 
-func IsMateria(id uint32) bool {
-	itemConf := gdconf.GetItemConfigMap()
-	if conf := itemConf[id]; conf != nil {
-		if conf.ItemSubType == constant.ItemSubTypeAetherSkill {
-			return false
+func (g *PlayerData) GetMaterial() []*proto.Material {
+	list := make([]*proto.Material, 0)
+	db := g.GetMaterialMap()
+	for id, num := range db {
+		conf := gdconf.GetItemConfigById(id)
+		if num == 0 ||
+			conf == nil ||
+			conf.ItemSubType == constant.ItemSubTypeAetherSkill {
+			delete(db, id)
+			continue
 		}
-		return true
+		if conf.PileLimit != 0 && num > conf.PileLimit {
+			num = conf.PileLimit
+			g.SetMaterialById(id, conf.PileLimit)
+		}
+		list = append(list, &proto.Material{
+			Tid: id,
+			Num: num,
+		})
 	}
-	return false
+	return list
 }
 
 func (g *PlayerData) AddMaterial(pileItem []*Material) {
