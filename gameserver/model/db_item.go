@@ -322,16 +322,6 @@ func (g *PlayerData) AddMaterial(pileItem []*Material) {
 	for _, material := range pileItem {
 		// 特殊物品处理
 		switch material.Tid {
-		case Stamina:
-			db[material.Tid] += material.Num
-			if db[material.Tid] > 240 {
-				db[material.Tid] = 240
-			}
-		case RStamina:
-			db[material.Tid] += material.Num
-			if db[material.Tid] > 2400 {
-				db[material.Tid] = 2400
-			}
 		case Exp:
 			g.AddTrailblazerExp(material.Num)
 		default:

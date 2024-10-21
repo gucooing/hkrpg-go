@@ -74,27 +74,31 @@ func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ExchangeHcoinCsReq)
+
+	addItem := model.NewAddItem(nil)
 	var dPileItem []*model.Material
-	var aPileItem []*model.Material
-
 	dPileItem = append(dPileItem, &model.Material{
-		Tid: 3,
+		Tid: model.Mcoin,
 		Num: req.Num,
 	})
 
-	aPileItem = append(aPileItem, &model.Material{
-		Tid: 1,
+	addItem.PileItem = append(addItem.PileItem, &model.Material{
+		Tid: model.Hcoin,
 		Num: req.Num,
 	})
-
-	g.GetPd().DelMaterial(dPileItem)
-	g.GetPd().AddMaterial(aPileItem)
-
-	g.PlayerPlayerSyncScNotify()
 
 	rsp := &proto.ExchangeHcoinScRsp{
 		Num: req.Num,
 	}
+
+	if !g.GetPd().DelMaterial(dPileItem) {
+		rsp.Retcode = 0
+		g.Send(cmd.ExchangeHcoinScRsp, rsp)
+		return
+	}
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+
 	g.Send(cmd.ExchangeHcoinScRsp, rsp)
 }
 

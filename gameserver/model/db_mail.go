@@ -69,46 +69,30 @@ func (g *PlayerData) DelPlayerMail(id uint32) {
 	// TODO 删数据库
 }
 
-// TODO 邮件奖励兑换方法（拓展此处以支持更多奖励物品
-func (g *PlayerData) MailReadItem(conf []*constant.Item, allSync *AllPlayerSync) (bool, []*proto.Item) {
-	pileItem := make([]*Material, 0)
-	itemList := make([]*proto.Item, 0)
+// 邮件奖励兑换方法（拓展此处以支持更多奖励物品
+func (g *PlayerData) MailReadItem(conf []*constant.Item, addItem *AddItem) {
 	for _, v := range conf {
-		var item *proto.Item
 		switch v.ItemType {
 		case constant.MailAvatar:
-			allSync.AvatarList = append(allSync.AvatarList, v.ItemId)
-			item = &proto.Item{
-				ItemId: v.ItemId,
-				Num:    v.Num,
-			}
-			g.AddAvatar(v.ItemId)
+			addItem.PileItem = append(addItem.PileItem, &Material{
+				Tid: v.ItemId,
+				Num: v.Num,
+			})
 		case constant.MailMaterial:
-			allSync.MaterialList = append(allSync.MaterialList, v.ItemId)
-			pileItem = append(pileItem, &Material{
+			addItem.PileItem = append(addItem.PileItem, &Material{
 				Tid: v.ItemId,
 				Num: v.Num,
 			})
-			item = &proto.Item{
-				ItemId: v.ItemId,
-				Num:    v.Num,
-			}
 		case constant.MailRelic: // 遗器处理
-			r := g.AddRelic(v.ItemId, v.MainAffixId, v.SubAffixList)
-			allSync.RelicList = append(allSync.RelicList, r)
-			pileItem = append(pileItem, &Material{
-				Tid: v.ItemId,
-				Num: v.Num,
-			})
-			item = g.GetRelicItem(r)
+			uniqueId := g.AddRelic(v.ItemId, v.MainAffixId, v.SubAffixList)
+			addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
+		case constant.MailEquipment:
+			uniqueId := g.AddEquipment(v.ItemId)
+			addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
 		default:
 			logger.Error("未知的物品类型Type:%s", v.ItemType)
 		}
-		itemList = append(itemList, item)
 	}
-	g.AddMaterial(pileItem) // TODO 应该统一到addItem方法
-
-	return true, itemList
 }
 
 // 此处是获取邮件信息，并不是领取

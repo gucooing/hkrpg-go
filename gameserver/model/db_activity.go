@@ -6,7 +6,7 @@ import (
 
 func NewActivity() *spb.Activity {
 	return &spb.Activity{
-		TrialActivity: make([]uint32, 0),
+		TrialActivity: make(map[uint32]*spb.TrialActivityInfo),
 		ActivityLogin: make(map[uint32]uint32),
 	}
 }
@@ -19,11 +19,22 @@ func (g *PlayerData) GetActivity() *spb.Activity {
 	return db.Activity
 }
 
-func (g *PlayerData) GetTrialActivity() []uint32 {
+func (g *PlayerData) GetTrialActivity() map[uint32]*spb.TrialActivityInfo {
 	if g.GetActivity().TrialActivity == nil {
-		g.GetActivity().TrialActivity = make([]uint32, 0)
+		g.GetActivity().TrialActivity = make(map[uint32]*spb.TrialActivityInfo)
 	}
 	return g.GetActivity().TrialActivity
+}
+
+func (g *PlayerData) GetTrialActivityById(stageId uint32) *spb.TrialActivityInfo {
+	db := g.GetTrialActivity()
+	if db[stageId] == nil {
+		db[stageId] = &spb.TrialActivityInfo{
+			StageId:     stageId,
+			TakenReward: false,
+		}
+	}
+	return db[stageId]
 }
 
 func (g *PlayerData) GetLoginActivity() map[uint32]uint32 {

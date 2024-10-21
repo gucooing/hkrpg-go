@@ -62,14 +62,8 @@ func (g *PlayerData) AddAvatar(avatarId uint32) {
 		return // 过滤没有的角色
 	}
 	db := g.GetAvatarList()
-	// 重复角色判断
+	// 重复角色拦截
 	if db[avatarId] != nil {
-		var pileItem []*Material
-		pileItem = append(pileItem, &Material{
-			Tid: avatarId + 10000,
-			Num: 1,
-		})
-		g.AddMaterial(pileItem)
 		return
 	}
 	// 多命途判断
