@@ -22,8 +22,9 @@ type Server struct {
 	AutoCreate         sync.Mutex
 	RegionInfo         map[string]*RegionInfo
 	UpstreamServerList []string
-	UpstreamServer     map[string]*UrlList // seed version
+	UpstreamServer     map[string]*constant.UrlList // seed version
 	UpstreamServerLock *sync.RWMutex
+	Url                *constant.UrlList
 }
 
 type RegionInfo struct {
@@ -34,16 +35,6 @@ type RegionInfo struct {
 	MinGateAddr string
 	MinGatePort uint32
 	MinGateTcp  bool
-}
-
-type UrlList struct {
-	Version        string
-	MdkResVersion  string
-	IfixVersion    string
-	IfixUrl        string
-	LuaUrl         string
-	ExResourceUrl  string
-	AssetBundleUrl string
 }
 
 func (s *Server) GetRegionInfo() map[string]*RegionInfo {
@@ -68,7 +59,7 @@ func (s *Server) UpUpstreamServer() {
 	}
 }
 
-func (s *Server) handleGateServerResponse(info *UrlList, seed string) bool {
+func (s *Server) handleGateServerResponse(info *constant.UrlList, seed string) bool {
 	for _, server := range s.UpstreamServerList {
 		url := fmt.Sprintf("%sversion=%s&dispatch_seed=%s&platform_type=3&is_need_url=1", server, info.Version, seed)
 		rsps, err := http.Get(url)
@@ -95,7 +86,7 @@ func (s *Server) handleGateServerResponse(info *UrlList, seed string) bool {
 			logger.Info("Version:%s|Seed:%s|NewMdkResVersion:%s|NewIfixVersion:%s",
 				info.Version, seed, dispatch.MdkResVersion, dispatch.IfixVersion)
 		}
-		urlList := &UrlList{
+		urlList := &constant.UrlList{
 			Version:        info.Version,
 			MdkResVersion:  dispatch.MdkResVersion,
 			IfixVersion:    dispatch.IfixVersion,
@@ -131,15 +122,18 @@ func (s *Server) handleGateServerResponse(info *UrlList, seed string) bool {
 	return false
 }
 
-func (s *Server) GetUpstreamServer(version, seed string) *UrlList {
+func (s *Server) GetUpstreamServer(version, seed string) *constant.UrlList {
+	if s.Url != nil {
+		return s.Url
+	}
 	if s.UpstreamServer == nil {
 		s.UpstreamServerLock.Lock()
-		s.UpstreamServer = make(map[string]*UrlList)
+		s.UpstreamServer = make(map[string]*constant.UrlList)
 		s.UpstreamServerLock.Unlock()
 	}
 	if _, ok := s.UpstreamServer[seed]; !ok {
 		s.UpstreamServerLock.Lock()
-		info := &UrlList{
+		info := &constant.UrlList{
 			Version: version,
 		}
 		// 如果没有则直接去拉取一次

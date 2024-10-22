@@ -21,9 +21,10 @@ type Config struct {
 }
 
 type Dispatch struct {
-	AutoCreate   bool            `json:"AutoCreate"`
-	AppNet       constant.AppNet `json:"AppNet"`
-	DispatchList []DispatchList  `json:"DispatchList"`
+	AutoCreate   bool              `json:"AutoCreate"`
+	AppNet       constant.AppNet   `json:"AppNet"`
+	DispatchList []DispatchList    `json:"DispatchList"`
+	Url          *constant.UrlList `json:"Url"`
 }
 type DispatchList struct {
 	Name  string `json:"name"`

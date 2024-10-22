@@ -89,7 +89,12 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	sdkRouter := gin.New()
 	sdkRouter.Use(gin.Recovery())
 	s.Sdk.GetSdkRouter(sdkRouter) // 初始化路由
-	go s.Sdk.UpUpstreamServer()
+	if cfg.Dispatch.Url == nil || cfg.Dispatch.Url.Version == "" {
+		go s.Sdk.UpUpstreamServer()
+	} else {
+		s.Sdk.Url = cfg.Dispatch.Url
+	}
+
 	go func() {
 		err := alg.NewHttp(cfg.Dispatch.AppNet, sdkRouter)
 		if err != nil {

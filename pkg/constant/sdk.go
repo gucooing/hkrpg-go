@@ -1,5 +1,15 @@
 package constant
 
+type UrlList struct {
+	Version        string
+	MdkResVersion  string
+	IfixVersion    string
+	IfixUrl        string
+	LuaUrl         string
+	ExResourceUrl  string
+	AssetBundleUrl string
+}
+
 type Login struct {
 	Data    *LoginData `json:"data"`
 	Message string     `json:"message"`
