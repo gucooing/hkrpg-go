@@ -52,20 +52,20 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	url := s.GetUpstreamServer(version, seed)
 
 	queryGateway := new(proto.GateServer)
-	queryGateway.Unk1 = true
-	queryGateway.Unk2 = true
-	queryGateway.Unk3 = true
-	queryGateway.Unk4 = true
-	queryGateway.Unk5 = true
-	queryGateway.Unk6 = true
-	queryGateway.Unk7 = true
+	queryGateway.EnableVersionUpdate = true
+	queryGateway.EnableWatermark = true
+	queryGateway.EventTrackingOpen = true
+	queryGateway.CloseRedeemCode = true
+	queryGateway.EnableAndroidMiddlePackage = true
+	queryGateway.NetworkDiagnostic = true
+	queryGateway.IALOEKGOJOC = true
 	queryGateway.MdkResVersion = url.MdkResVersion
 	queryGateway.IfixVersion = url.IfixVersion
 	queryGateway.IfixUrl = url.IfixUrl
 	queryGateway.LuaUrl = url.LuaUrl
 	queryGateway.ExResourceUrl = url.ExResourceUrl
 	queryGateway.AssetBundleUrl = url.AssetBundleUrl
-	queryGateway.KEICDBEHMDO = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
+	queryGateway.IIJLFILFMDF = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
 
 	if regionList == nil || info == nil || info.MinGateAddr == "" {
 		queryGateway.Msg = "网关启动中"
@@ -76,7 +76,7 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 		queryGateway.RegionName = info.Name
 		queryGateway.Port = info.MinGatePort
 		queryGateway.ClientSecretKey = base64.RawStdEncoding.EncodeToString(info.Ec2b.Bytes())
-		queryGateway.JIDBDEKOHDH = info.MinGateTcp
+		queryGateway.UseTcp = info.MinGateTcp
 	}
 
 	reqdata, err := pb.Marshal(queryGateway)

@@ -305,14 +305,20 @@ func (g *PlayerData) GetMaterial() []*proto.Material {
 			delete(db, id)
 			continue
 		}
-		if conf.PileLimit != 0 && num > conf.PileLimit {
-			num = conf.PileLimit
-			g.SetMaterialById(id, conf.PileLimit)
+		if conf.ItemMainType == constant.ItemMainTypeVirtual ||
+			conf.ItemMainType == constant.ItemMainTypeUsable ||
+			conf.ItemMainType == constant.ItemMainTypeMaterial ||
+			conf.ItemMainType == constant.ItemMainTypeMission ||
+			conf.ItemMainType == constant.ItemMainTypePet {
+			if conf.PileLimit != 0 && num > conf.PileLimit {
+				num = conf.PileLimit
+				g.SetMaterialById(id, conf.PileLimit)
+			}
+			list = append(list, &proto.Material{
+				Tid: id,
+				Num: num,
+			})
 		}
-		list = append(list, &proto.Material{
-			Tid: id,
-			Num: num,
-		})
 	}
 	return list
 }

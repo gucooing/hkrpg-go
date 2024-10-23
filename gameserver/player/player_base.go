@@ -144,14 +144,14 @@ func (g *GamePlayer) SetHeadIconCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) GetAuthkeyCsReq(payloadMsg pb.Message) {
-	req := payloadMsg.(*proto.GetAuthkeyCsReq)
+	// req := payloadMsg.(*proto.GetAuthkeyCsReq)
 
 	rsp := &proto.GetAuthkeyScRsp{
-		Retcode:     0,
-		JIJLACMMNIK: "错误",
-		LCGDNGLFEKN: req.LCGDNGLFEKN,
-		BEDBGJCCHPD: req.BEDBGJCCHPD,
-		EONHOELALPD: req.EONHOELALPD,
+		Retcode: 0,
+		// JIJLACMMNIK: "错误",
+		// LCGDNGLFEKN: req.LCGDNGLFEKN,
+		// BEDBGJCCHPD: req.BEDBGJCCHPD,
+		// EONHOELALPD: req.EONHOELALPD,
 	}
 	g.Send(cmd.GetAuthkeyScRsp, rsp)
 }
@@ -212,7 +212,7 @@ func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg pb.Message) {
 func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg pb.Message) {
 	KPANKLHNMKE, _ := base64.StdEncoding.DecodeString("DsX2Ig==")
 	rsp := &proto.GetSecretKeyInfoScRsp{
-		KPANKLHNMKE: KPANKLHNMKE,
+		LIBNNLNDHCN: KPANKLHNMKE,
 		SecretInfo: []*proto.SecretKeyInfo{
 			{
 				Type:      proto.SecretKeyType_SECRET_KEY_SERVER_CHECK,
@@ -668,7 +668,7 @@ func (g *GamePlayer) TextJoinSaveCsReq(payloadMsg pb.Message) {
 	rsp := &proto.TextJoinSaveScRsp{
 		TextItemId:       req.TextItemId,
 		Retcode:          0,
-		FJFBPABNBBL:      req.FJFBPABNBBL,
+		AINAOENMOME:      req.AINAOENMOME,
 		TextItemConfigId: req.TextItemConfigId,
 	}
 	g.Send(cmd.TextJoinSaveScRsp, rsp)

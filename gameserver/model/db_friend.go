@@ -160,12 +160,12 @@ func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 	}
 	playerDetailInfo := &proto.PlayerDetailInfo{
 		RecordInfo: &proto.PlayerRecordInfo{
-			ArchiveAvatarNum:    1,
-			ArchiveBookNum:      1,
-			ArchiveEquipmentNum: 1,
-			ArchiveMusicNum:     1,
-			ArchiveQuestNum:     1,
-			CollectionInfo:      &proto.PlayerCollectionInfo{
+			// ArchiveAvatarNum:    1,
+			// ArchiveBookNum:      1,
+			// ArchiveEquipmentNum: 1,
+			// ArchiveMusicNum:     1,
+			// ArchiveQuestNum:     1,
+			CollectionInfo: &proto.PlayerCollectionInfo{
 				// KJNOOOJDGDN: 5,
 				// NCCNLKFCAKM: 6,
 			},
@@ -180,14 +180,14 @@ func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 		Platform:          proto.PlatformType(friend.PlatformType),
 		Signature:         friend.Signature,
 		Nickname:          friend.Nickname,
-		KPFMBKIAGMJ:       true,
-		FLHDCJECCPN:       18,
+		// KPFMBKIAGMJ:       true,
+		// FLHDCJECCPN:       18,
 		PrivacySettings: &proto.PrivacySettings{
-			OJNELKIOAOK: true,
-			DAAAIHDPCFE: true,
-			MAJIMDCHNDL: true,
-			MOKMEEDBECL: true,
-			BBJGEGEJJFB: true,
+			// OJNELKIOAOK: true,
+			// DAAAIHDPCFE: true,
+			// MAJIMDCHNDL: true,
+			// MOKMEEDBECL: true,
+			// BBJGEGEJJFB: true,
 		},
 	}
 

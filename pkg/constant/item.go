@@ -46,6 +46,7 @@ const (
 	ItemSubTypeMission               ItemSubType = "Mission"
 	ItemSubTypeRelicSetShowOnly      ItemSubType = "RelicSetShowOnly"
 	ItemSubTypeRelicRarityShowOnly   ItemSubType = "RelicRarityShowOnly"
+	ItemSubTypeNormalPet             ItemSubType = "NormalPet"
 )
 
 type FormulaType = string

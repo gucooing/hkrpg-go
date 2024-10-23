@@ -697,11 +697,9 @@ func (g *PlayerData) GetRoguePropByID(entityGroupList *proto.SceneEntityGroupInf
 					prop.PropId = 1021
 				}
 				prop.ExtraInfo = &proto.PropExtraInfo{
-					InfoOneofCase: &proto.PropExtraInfo_RogueInfo{
-						RogueInfo: &proto.PropRogueInfo{
-							RoomId: nextRoom.RoomId,
-							SiteId: siteId,
-						},
+					RogueInfo: &proto.PropRogueInfo{
+						RoomId: nextRoom.RoomId,
+						SiteId: siteId,
 					},
 				}
 			} else {

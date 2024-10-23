@@ -40,7 +40,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 		MessageText: req.MessageText,
 		ExtraId:     req.ExtraId,
 		MessageType: req.MessageType,
-		IGNEAJDPAPE: req.IGNEAJDPAPE,
+		BNABNCCMILM: req.BNABNCCMILM,
 		ChatType:    req.ChatType,
 	}
 	for _, targetUid := range targetList {
@@ -56,7 +56,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 				MessageText: p.GamePlayer.EnterCommand(player.Msg{CommandList: strings.Split(req.MessageText, " ")}),
 				ExtraId:     req.ExtraId,
 				MessageType: req.MessageType,
-				IGNEAJDPAPE: req.IGNEAJDPAPE,
+				BNABNCCMILM: req.BNABNCCMILM,
 				ChatType:    req.ChatType,
 			}
 			p.toSession(player.Msg{

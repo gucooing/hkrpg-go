@@ -45,8 +45,8 @@ func (g *GameDataConfig) goppServerGroup() {
 				continue
 			}
 			for groupsId, groups := range levelGroup {
-				if // (groups.Category == "Mission" && alg.ExtractDigits(groups.GroupName) != 0 && groups.OwnerMainMissionID != 0) ||
-				!strings.Contains(groups.GroupName, "DeployPuzzle_Repeat_Area") &&
+				if                                                                 // (groups.Category == "Mission" && alg.ExtractDigits(groups.GroupName) != 0 && groups.OwnerMainMissionID != 0) ||
+				!strings.Contains(groups.GroupName, "DeployPuzzle_Repeat_Area") && // TODO 地图问题？
 					groups.LoadSide == "Server" && !strings.Contains(groups.GroupName, "PuzzleCompass") {
 					g.ServerGroupMap[planeId][floorId][groupsId] = &GoppLevelGroup{
 						GroupId:            groups.GroupId,

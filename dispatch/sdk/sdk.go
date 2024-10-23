@@ -96,25 +96,27 @@ func (s *Server) handleGateServerResponse(info *constant.UrlList, seed string) b
 			AssetBundleUrl: dispatch.AssetBundleUrl,
 		}
 		s.UpstreamServer[seed] = urlList
+		logMsg := fmt.Sprintf(
+			"Version:%s\n"+
+				"MdkResVersion:%s\n"+
+				"IfixVersion:%s\n"+
+				"IfixUrl:%s\n"+
+				"LuaUrl:%s\n"+
+				"ExResourceUrl:%s\n"+
+				"AssetBundleUrl:%s\n",
+			info.Version,
+			dispatch.MdkResVersion,
+			dispatch.IfixVersion,
+			dispatch.IfixUrl,
+			dispatch.LuaUrl,
+			dispatch.ExResourceUrl,
+			dispatch.AssetBundleUrl)
+		// logger.Info("NewVersion:%s", logMsg)
 		client.PushServer(&constant.LogPush{
 			PushMessage: constant.PushMessage{
 				Tag: "NewVersion",
 			},
-			LogMsg: fmt.Sprintf(
-				"Version:%s\n"+
-					"MdkResVersion:%s\n"+
-					"IfixVersion:%s\n"+
-					"IfixUrl:%s\n"+
-					"LuaUrl:%s\n"+
-					"ExResourceUrl:%s\n"+
-					"AssetBundleUrl:%s\n",
-				info.Version,
-				dispatch.MdkResVersion,
-				dispatch.IfixVersion,
-				dispatch.IfixUrl,
-				dispatch.LuaUrl,
-				dispatch.ExResourceUrl,
-				dispatch.AssetBundleUrl),
+			LogMsg:   logMsg,
 			LogLevel: constant.INFO,
 		})
 		return true
