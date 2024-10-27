@@ -34,9 +34,9 @@ jobs:
     - name: Upload Release Assets
       id: upload-release-assets
       uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
+        repository: gucooing/hkrpg-go
+        token: ${{ secrets.GITHUB_TOKEN }}
         tag_name: v1.6.0
         name: Release v1.6.0
         body: sr 2.6.0
