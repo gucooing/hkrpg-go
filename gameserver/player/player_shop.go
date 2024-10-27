@@ -164,30 +164,30 @@ func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg pb.Message) {
 
 func (g *GamePlayer) QueryProductInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.QueryProductInfoScRsp{
-		PEKJLBINDGG: 1710014400,
-		Retcode:     0,
-		DKHKEPDJHLP: 3,
-		JGNNBOABIHM: 2,
-		NFNHPJCCKIH: make([]*proto.Product, 0),
+		// PEKJLBINDGG: 1710014400,
+		// Retcode:     0,
+		// DKHKEPDJHLP: 3,
+		// JGNNBOABIHM: 2,
+		// NFNHPJCCKIH: make([]*proto.Product, 0),
 	}
-	rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
-		AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_COIN,
-		IJBPDDPJPND: "Tier_60",
-		KJLPCGMNOND: "rpgchncoin6480tier60",
-		CEBLIHAPPFH: true,
-	})
-	rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
-		AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_POINT_CARD,
-		IJBPDDPJPND: "Tier_1",
-		KJLPCGMNOND: "rpgchnpointcardtierx",
-		CEBLIHAPPFH: false,
-	})
-	rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
-		AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_MONTH_CARD,
-		IJBPDDPJPND: "Tier_5",
-		KJLPCGMNOND: "rpgchnmonthcardtier5",
-		CEBLIHAPPFH: false,
-	})
+	// rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
+	// 	AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_COIN,
+	// 	IJBPDDPJPND: "Tier_60",
+	// 	KJLPCGMNOND: "rpgchncoin6480tier60",
+	// 	CEBLIHAPPFH: true,
+	// })
+	// rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
+	// 	AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_POINT_CARD,
+	// 	IJBPDDPJPND: "Tier_1",
+	// 	KJLPCGMNOND: "rpgchnpointcardtierx",
+	// 	CEBLIHAPPFH: false,
+	// })
+	// rsp.NFNHPJCCKIH = append(rsp.NFNHPJCCKIH, &proto.Product{
+	// 	AAEACEFBDJK: proto.ProductGiftType_PRODUCT_GIFT_MONTH_CARD,
+	// 	IJBPDDPJPND: "Tier_5",
+	// 	KJLPCGMNOND: "rpgchnmonthcardtier5",
+	// 	CEBLIHAPPFH: false,
+	// })
 	g.Send(cmd.QueryProductInfoScRsp, rsp)
 }
 

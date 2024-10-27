@@ -160,6 +160,10 @@ func (g *PlayerData) GetWorldLevel() uint32 {
 	return db.WorldLevel
 }
 
+func (g *PlayerData) GetIsJumpMission() bool {
+	return g.GetBasicBin().IsJumpMission
+}
+
 func (g *PlayerData) AddWorldLevel(num uint32) {
 	g.SetWorldLevel(g.GetWorldLevel() + num)
 }

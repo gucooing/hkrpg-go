@@ -23,20 +23,22 @@ const (
 type RogueCommonActionResultSourceType int32
 
 const (
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_NONE            RogueCommonActionResultSourceType = 0
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SELECT          RogueCommonActionResultSourceType = 1
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_ENHANCE         RogueCommonActionResultSourceType = 2
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MIRACLE         RogueCommonActionResultSourceType = 3
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DIALOGUE        RogueCommonActionResultSourceType = 4
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BONUS           RogueCommonActionResultSourceType = 5
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SHOP            RogueCommonActionResultSourceType = 6
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DICE            RogueCommonActionResultSourceType = 7
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_AEON            RogueCommonActionResultSourceType = 8
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BOARD_EVENT     RogueCommonActionResultSourceType = 9
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAZE_SKILL      RogueCommonActionResultSourceType = 10
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_LEVEL_MECHANISM RogueCommonActionResultSourceType = 11
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BUFF            RogueCommonActionResultSourceType = 12
-	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_REFORGE         RogueCommonActionResultSourceType = 13
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_NONE               RogueCommonActionResultSourceType = 0
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SELECT             RogueCommonActionResultSourceType = 1
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_ENHANCE            RogueCommonActionResultSourceType = 2
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MIRACLE            RogueCommonActionResultSourceType = 3
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DIALOGUE           RogueCommonActionResultSourceType = 4
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BONUS              RogueCommonActionResultSourceType = 5
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SHOP               RogueCommonActionResultSourceType = 6
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DICE               RogueCommonActionResultSourceType = 7
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_AEON               RogueCommonActionResultSourceType = 8
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BOARD_EVENT        RogueCommonActionResultSourceType = 9
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAZE_SKILL         RogueCommonActionResultSourceType = 10
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_LEVEL_MECHANISM    RogueCommonActionResultSourceType = 11
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BUFF               RogueCommonActionResultSourceType = 12
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_REFORGE            RogueCommonActionResultSourceType = 13
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAGIC_UNIT_COMPOSE RogueCommonActionResultSourceType = 14
+	RogueCommonActionResultSourceType_ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAGIC_UNIT_REFORGE RogueCommonActionResultSourceType = 15
 )
 
 // Enum value maps for RogueCommonActionResultSourceType.
@@ -56,22 +58,26 @@ var (
 		11: "ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_LEVEL_MECHANISM",
 		12: "ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BUFF",
 		13: "ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_REFORGE",
+		14: "ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAGIC_UNIT_COMPOSE",
+		15: "ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAGIC_UNIT_REFORGE",
 	}
 	RogueCommonActionResultSourceType_value = map[string]int32{
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_NONE":            0,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SELECT":          1,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_ENHANCE":         2,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MIRACLE":         3,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DIALOGUE":        4,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BONUS":           5,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SHOP":            6,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DICE":            7,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_AEON":            8,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BOARD_EVENT":     9,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAZE_SKILL":      10,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_LEVEL_MECHANISM": 11,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BUFF":            12,
-		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_REFORGE":         13,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_NONE":               0,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SELECT":             1,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_ENHANCE":            2,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MIRACLE":            3,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DIALOGUE":           4,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BONUS":              5,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_SHOP":               6,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_DICE":               7,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_AEON":               8,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BOARD_EVENT":        9,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAZE_SKILL":         10,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_LEVEL_MECHANISM":    11,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_BUFF":               12,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_REFORGE":            13,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAGIC_UNIT_COMPOSE": 14,
+		"ROGUE_COMMON_ACTION_RESULT_SOURCE_TYPE_MAGIC_UNIT_REFORGE": 15,
 	}
 )
 
@@ -107,7 +113,7 @@ var File_RogueCommonActionResultSourceType_proto protoreflect.FileDescriptor
 var file_RogueCommonActionResultSourceType_proto_rawDesc = []byte{
 	0x0a, 0x27, 0x52, 0x6f, 0x67, 0x75, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x41, 0x63, 0x74,
 	0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54,
-	0x79, 0x70, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2a, 0xf9, 0x05, 0x0a, 0x21, 0x52, 0x6f,
+	0x79, 0x70, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2a, 0xf7, 0x06, 0x0a, 0x21, 0x52, 0x6f,
 	0x67, 0x75, 0x65, 0x43, 0x6f, 0x6d, 0x6d, 0x6f, 0x6e, 0x41, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52,
 	0x65, 0x73, 0x75, 0x6c, 0x74, 0x53, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x54, 0x79, 0x70, 0x65, 0x12,
 	0x2f, 0x0a, 0x2b, 0x52, 0x4f, 0x47, 0x55, 0x45, 0x5f, 0x43, 0x4f, 0x4d, 0x4d, 0x4f, 0x4e, 0x5f,
@@ -155,10 +161,18 @@ var file_RogueCommonActionResultSourceType_proto_rawDesc = []byte{
 	0x0c, 0x12, 0x32, 0x0a, 0x2e, 0x52, 0x4f, 0x47, 0x55, 0x45, 0x5f, 0x43, 0x4f, 0x4d, 0x4d, 0x4f,
 	0x4e, 0x5f, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x52, 0x45, 0x53, 0x55, 0x4c, 0x54, 0x5f,
 	0x53, 0x4f, 0x55, 0x52, 0x43, 0x45, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x52, 0x45, 0x46, 0x4f,
-	0x52, 0x47, 0x45, 0x10, 0x0d, 0x42, 0x2e, 0x5a, 0x0e, 0x2e, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x3b, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0xaa, 0x02, 0x1b, 0x45, 0x67, 0x67, 0x4c, 0x69, 0x6e,
-	0x6b, 0x2e, 0x44, 0x61, 0x6e, 0x68, 0x65, 0x6e, 0x67, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2e,
-	0x50, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x47, 0x45, 0x10, 0x0d, 0x12, 0x3d, 0x0a, 0x39, 0x52, 0x4f, 0x47, 0x55, 0x45, 0x5f, 0x43,
+	0x4f, 0x4d, 0x4d, 0x4f, 0x4e, 0x5f, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x52, 0x45, 0x53,
+	0x55, 0x4c, 0x54, 0x5f, 0x53, 0x4f, 0x55, 0x52, 0x43, 0x45, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f,
+	0x4d, 0x41, 0x47, 0x49, 0x43, 0x5f, 0x55, 0x4e, 0x49, 0x54, 0x5f, 0x43, 0x4f, 0x4d, 0x50, 0x4f,
+	0x53, 0x45, 0x10, 0x0e, 0x12, 0x3d, 0x0a, 0x39, 0x52, 0x4f, 0x47, 0x55, 0x45, 0x5f, 0x43, 0x4f,
+	0x4d, 0x4d, 0x4f, 0x4e, 0x5f, 0x41, 0x43, 0x54, 0x49, 0x4f, 0x4e, 0x5f, 0x52, 0x45, 0x53, 0x55,
+	0x4c, 0x54, 0x5f, 0x53, 0x4f, 0x55, 0x52, 0x43, 0x45, 0x5f, 0x54, 0x59, 0x50, 0x45, 0x5f, 0x4d,
+	0x41, 0x47, 0x49, 0x43, 0x5f, 0x55, 0x4e, 0x49, 0x54, 0x5f, 0x52, 0x45, 0x46, 0x4f, 0x52, 0x47,
+	0x45, 0x10, 0x0f, 0x42, 0x2e, 0x5a, 0x0e, 0x2e, 0x2e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x3b,
+	0x70, 0x72, 0x6f, 0x74, 0x6f, 0xaa, 0x02, 0x1b, 0x45, 0x67, 0x67, 0x4c, 0x69, 0x6e, 0x6b, 0x2e,
+	0x44, 0x61, 0x6e, 0x68, 0x65, 0x6e, 0x67, 0x53, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2e, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

@@ -79,7 +79,7 @@ func (g *PlayerData) GetRecvApplyFriend() map[uint32]*spb.ReceiveApply {
 	return friend.RecvApplyFriend
 }
 
-func (g *PlayerData) GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefData {
+func GetPlayerBasicBriefData(uid uint32) *spb.PlayerBasicBriefData {
 	if uid == 0 {
 		return &spb.PlayerBasicBriefData{
 			Nickname:          "hkrpg-go",
@@ -132,8 +132,8 @@ func (g *PlayerData) InspectionRedisAcceptApplyFriend() {
 
 /*******************************************接口*******************************************/
 
-func (g *PlayerData) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
-	friend := g.GetPlayerBasicBriefData(uid)
+func GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
+	friend := GetPlayerBasicBriefData(uid)
 	if friend == nil {
 		return nil
 	}
@@ -154,18 +154,18 @@ func (g *PlayerData) GetPlayerSimpleInfo(uid uint32) *proto.PlayerSimpleInfo {
 }
 
 func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
-	friend := g.GetPlayerBasicBriefData(uid)
+	friend := GetPlayerBasicBriefData(uid)
 	if friend == nil {
 		return nil
 	}
 	playerDetailInfo := &proto.PlayerDetailInfo{
 		RecordInfo: &proto.PlayerRecordInfo{
-			ArchiveAvatarNum:    1,
-			ArchiveBookNum:      1,
-			ArchiveEquipmentNum: 1,
-			ArchiveMusicNum:     1,
-			ArchiveQuestNum:     1,
-			CollectionInfo:      &proto.PlayerCollectionInfo{
+			// ArchiveAvatarNum:    1,
+			// ArchiveBookNum:      1,
+			// ArchiveEquipmentNum: 1,
+			// ArchiveMusicNum:     1,
+			// ArchiveQuestNum:     1,
+			CollectionInfo: &proto.PlayerCollectionInfo{
 				// KJNOOOJDGDN: 5,
 				// NCCNLKFCAKM: 6,
 			},
@@ -180,14 +180,14 @@ func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 		Platform:          proto.PlatformType(friend.PlatformType),
 		Signature:         friend.Signature,
 		Nickname:          friend.Nickname,
-		KPFMBKIAGMJ:       true,
-		FLHDCJECCPN:       18,
+		// KPFMBKIAGMJ:       true,
+		// FLHDCJECCPN:       18,
 		PrivacySettings: &proto.PrivacySettings{
-			OJNELKIOAOK: true,
-			DAAAIHDPCFE: true,
-			MAJIMDCHNDL: true,
-			MOKMEEDBECL: true,
-			BBJGEGEJJFB: true,
+			// OJNELKIOAOK: true,
+			// DAAAIHDPCFE: true,
+			// MAJIMDCHNDL: true,
+			// MOKMEEDBECL: true,
+			// BBJGEGEJJFB: true,
 		},
 	}
 
@@ -197,14 +197,14 @@ func (g *PlayerData) GetPlayerDetailInfo(uid uint32) *proto.PlayerDetailInfo {
 func (g *PlayerData) GetFriendApplyInfo(receiveApply *spb.ReceiveApply) *proto.FriendApplyInfo {
 	friendApplyInfo := &proto.FriendApplyInfo{
 		ApplyTime:  receiveApply.ApplyTime,
-		PlayerInfo: g.GetPlayerSimpleInfo(receiveApply.ApplyUid),
+		PlayerInfo: GetPlayerSimpleInfo(receiveApply.ApplyUid),
 	}
 	return friendApplyInfo
 }
 
 func (g *PlayerData) GetFriendSimpleInfo(uid uint32) *proto.FriendSimpleInfo {
 	db := g.GetFriendByUid(uid)
-	simpleInfo := g.GetPlayerSimpleInfo(uid)
+	simpleInfo := GetPlayerSimpleInfo(uid)
 	if db == nil || simpleInfo == nil {
 		return nil
 	}

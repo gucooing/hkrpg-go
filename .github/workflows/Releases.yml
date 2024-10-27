@@ -35,9 +35,9 @@ jobs:
       id: upload-release-assets
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: v1.5.0
-        name: Release v1.5.0
-        body: sr 2.5.0
+        tag_name: v1.6.0
+        name: Release v1.6.0
+        body: sr 2.6.0
         draft: false
         prerelease: false
         files: bin/*

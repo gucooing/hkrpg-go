@@ -406,10 +406,10 @@ func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg pb.Message) {
 	g.GetPd().AvatarRecover(req.Id)
 
 	rsp := &proto.SpringRecoverSingleAvatarScRsp{
-		HpFieldNumber: 10000,
-		Retcode:       0,
-		AvatarType:    req.AvatarType,
-		Id:            req.Id,
+		Hp:         10000,
+		Retcode:    0,
+		AvatarType: req.AvatarType,
+		Id:         req.Id,
 	}
 	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
 	g.Send(cmd.SpringRecoverSingleAvatarScRsp, rsp)

@@ -15,8 +15,9 @@ import (
 type packetFunc func(g *GateServer, s session.SessionAll, payloadMsg pb.Message)
 
 var packetCaptureMap = map[uint16]packetFunc{ // 抽包
-	cmd.PlayerLogoutCsReq: PlayerLogoutCsReq, // 下线请求
-	cmd.SendMsgCsReq:      SendMsgCsReq,      // 发送聊天消息
+	cmd.PlayerLogoutCsReq:               PlayerLogoutCsReq,               // 下线请求
+	cmd.SendMsgCsReq:                    SendMsgCsReq,                    // 发送聊天消息
+	cmd.GetFriendRecommendListInfoCsReq: GetFriendRecommendListInfoCsReq, // 获取附近的人
 }
 
 func (g *GateServer) packetCapture(s session.SessionAll, packMsg *alg.PackMsg) {
@@ -60,7 +61,7 @@ func SendMsgCsReq(g *GateServer, sAll session.SessionAll, payloadMsg pb.Message)
 			ExtraId:     req.ExtraId,
 			MessageType: req.MessageType,
 			TargetUid:   targetUid,
-			IGNEAJDPAPE: req.IGNEAJDPAPE,
+			BNABNCCMILM: req.BNABNCCMILM,
 			ChatType:    req.ChatType,
 		}
 		protoData, err := pb.Marshal(notify)
@@ -84,6 +85,25 @@ func SendMsgCsReq(g *GateServer, sAll session.SessionAll, payloadMsg pb.Message)
 		logger.Error(err.Error())
 		return
 	}
+	s.SendChan <- &alg.PackMsg{
+		CmdId:     cmd.SendMsgScRsp,
+		HeadData:  nil,
+		ProtoData: rspbin,
+	}
+}
+
+func GetFriendRecommendListInfoCsReq(g *GateServer, sAll session.SessionAll, payloadMsg pb.Message) {
+	rsp := &proto.GetFriendRecommendListInfoScRsp{
+		PlayerInfoList: make([]*proto.FriendRecommendInfo, 0),
+		Retcode:        0,
+	}
+
+	rspbin, err := pb.Marshal(rsp)
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
+	s := sAll.GetSession()
 	s.SendChan <- &alg.PackMsg{
 		CmdId:     cmd.SendMsgScRsp,
 		HeadData:  nil,

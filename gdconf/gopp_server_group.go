@@ -7,18 +7,24 @@ import (
 )
 
 type GoppLevelGroup struct {
-	GroupId            uint32
-	GroupName          string                  `json:"GroupName"`
-	LoadSide           string                  `json:"LoadSide"`           // 负载端
-	Category           string                  `json:"Category"`           // 类别
-	OwnerMainMissionID uint32                  `json:"OwnerMainMissionID"` // 主任务id
-	LoadCondition      *LoadCondition          `json:"LoadCondition"`      // 加载条件
-	UnloadCondition    *UnloadCondition        `json:"UnloadCondition"`    // 卸载条件
-	LoadOnInitial      bool                    `json:"LoadOnInitial"`      // 是否默认加载
-	PropList           map[uint32]*PropList    `json:"PropList"`           // 实体列表
-	MonsterList        map[uint32]*MonsterList `json:"MonsterList"`        // 怪物列表
-	NPCList            map[uint32]*NPCList     `json:"NPCList"`            // NPC列表
-	AnchorList         map[uint32]*AnchorList  `json:"AnchorList"`         // 锚点列表
+	Index                 uint32
+	GroupId               uint32
+	GroupName             string
+	HoYoGroupType         string
+	IsHoyoGroup           bool
+	LoadSide              string
+	SystemUnlockCondition *LevelGroupSystemUnlockConditionSet
+	Category              string
+	OwnerMainMissionID    uint32
+	LoadCondition         *LevelGroupMissionConditionSet
+	UnloadCondition       *LevelGroupMissionConditionSet
+	ForceUnloadCondition  *LevelGroupMissionConditionSet
+	LoadOnInitial         bool
+	IsPendedUnload        bool
+	PropList              map[uint32]*PropList
+	MonsterList           map[uint32]*MonsterList
+	NPCList               map[uint32]*NPCList
+	AnchorList            map[uint32]*AnchorList
 }
 
 type GoppValue struct {
@@ -28,15 +34,15 @@ type GoppValue struct {
 
 func (g *GameDataConfig) goppServerGroup() {
 	g.ServerGroupMap = make(map[uint32]map[uint32]map[uint32]*GoppLevelGroup)
-	floor := CONF.FloorMap
-	if floor == nil {
+	floors := CONF.FloorMap
+	if floors == nil {
 		logger.Error("floor error")
 
 		return
 	}
-	for planeId, list := range floor {
+	for planeId, floor := range floors {
 		g.ServerGroupMap[planeId] = make(map[uint32]map[uint32]*GoppLevelGroup)
-		for floorId, _ := range list { // levelFloor
+		for floorId, v := range floor { // levelFloor
 			g.ServerGroupMap[planeId][floorId] = make(map[uint32]*GoppLevelGroup)
 			var nPCList []*NPCList
 			levelGroup := GetGroupById(planeId, floorId)
@@ -44,23 +50,35 @@ func (g *GameDataConfig) goppServerGroup() {
 				// logger.Debug("goppServerGroup planeId:%v,floorId:%v,error", planeId, floorId)
 				continue
 			}
-			for groupsId, groups := range levelGroup {
-				if // (groups.Category == "Mission" && alg.ExtractDigits(groups.GroupName) != 0 && groups.OwnerMainMissionID != 0) ||
-				!strings.Contains(groups.GroupName, "DeployPuzzle_Repeat_Area") &&
-					groups.LoadSide == "Server" && !strings.Contains(groups.GroupName, "PuzzleCompass") {
-					g.ServerGroupMap[planeId][floorId][groupsId] = &GoppLevelGroup{
-						GroupId:            groups.GroupId,
-						GroupName:          groups.GroupName,
-						LoadSide:           groups.LoadSide,
-						Category:           groups.Category,
-						OwnerMainMissionID: groups.OwnerMainMissionID,
-						LoadCondition:      groups.LoadCondition,
-						UnloadCondition:    groups.UnloadCondition,
-						LoadOnInitial:      groups.LoadOnInitial,
-						PropList:           LoadProp(groups),
-						MonsterList:        LoadMonster(groups),
-						NPCList:            LoadNpc(groups, nPCList),
-						AnchorList:         LoadAnchor(groups),
+			mainDimension := getMainDimension(v.DimensionList)
+			if mainDimension == nil {
+				logger.Error("main dimension error")
+				continue
+			}
+			for _, groups := range levelGroup {
+				if groups.LoadSide == "Server" &&
+					contains(mainDimension.GroupIndexList, groups.Index) &&
+					!strings.Contains(groups.GroupName, "DeployPuzzle_Repeat_Area") &&
+					!strings.Contains(groups.GroupName, "PuzzleCompass") {
+					g.ServerGroupMap[planeId][floorId][groups.GroupId] = &GoppLevelGroup{
+						GroupId:               groups.GroupId,
+						Index:                 groups.Index,
+						GroupName:             groups.GroupName,
+						HoYoGroupType:         groups.HoYoGroupType,
+						IsHoyoGroup:           groups.IsHoyoGroup,
+						LoadSide:              groups.LoadSide,
+						Category:              groups.Category,
+						SystemUnlockCondition: groups.SystemUnlockCondition,
+						OwnerMainMissionID:    groups.OwnerMainMissionID,
+						LoadCondition:         groups.LoadCondition,
+						UnloadCondition:       groups.UnloadCondition,
+						ForceUnloadCondition:  groups.ForceUnloadCondition,
+						LoadOnInitial:         groups.LoadOnInitial,
+						IsPendedUnload:        groups.IsPendedUnload,
+						PropList:              LoadProp(groups),
+						MonsterList:           LoadMonster(groups),
+						NPCList:               LoadNpc(groups, nPCList),
+						AnchorList:            LoadAnchor(groups),
 					}
 				}
 			}

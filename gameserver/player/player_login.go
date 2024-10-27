@@ -114,6 +114,11 @@ func (g *GamePlayer) ClientDownloadDataScNotify() {
 	)
 }
 
+func (g *GamePlayer) SceneUpdatePositionVersionNotify() {
+	notify := &proto.SceneUpdatePositionVersionNotify{}
+	g.Send(cmd.SceneUpdatePositionVersionNotify, notify)
+}
+
 func (g *GamePlayer) Dump() {
 	content, _ := os.ReadFile("./data/dump.lua")
 	g.Send(cmd.ClientDownloadDataScNotify, &proto.ClientDownloadDataScNotify{

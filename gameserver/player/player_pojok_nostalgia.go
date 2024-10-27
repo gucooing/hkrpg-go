@@ -13,9 +13,9 @@ import (
 
 func (g *GamePlayer) GetAetherDivideInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetAetherDivideInfoScRsp{
-		AvatarList:      make([]*proto.AetherDivideSpiritInfo, 0),
-		LCNFCGHKACO:     1,
-		OMKNCCGDKNP:     1,
+		AvatarList: make([]*proto.AetherDivideSpiritInfo, 0),
+		// LCNFCGHKACO:     1,
+		// OMKNCCGDKNP:     1,
 		Retcode:         0,
 		AetherSkillList: make([]*proto.AetherSkillInfo, 0),
 		LineupList:      make([]*proto.AetherDivideLineupInfo, 0),
@@ -47,8 +47,8 @@ func (g *GamePlayer) GetAetherDivideChallengeInfoCsReq(payloadMsg pb.Message) {
 	rsp := &proto.GetAetherDivideChallengeInfoScRsp{
 		// ECDFJJCPFJA:         1,
 		// Retcode:             0,
-		ANLOIAIEKHB: x,
-		DEOOAOCGIIF: x,
+		// ANLOIAIEKHB: x,
+		// DEOOAOCGIIF: x,
 	}
 
 	g.Send(cmd.GetAetherDivideChallengeInfoScRsp, rsp)
@@ -60,7 +60,7 @@ func (g *GamePlayer) SetAetherDivideLineUpCsReq(payloadMsg pb.Message) {
 	db := g.GetPd().GetAetherDivide()
 	db.Lineup[req.Lineup.Slot] = &spb.AetherDivideLineup{
 		Index:      req.Lineup.Slot,
-		AvatarList: req.Lineup.AvatarList,
+		AvatarList: req.Lineup.AetherAvatarList,
 	}
 
 	rsp := &proto.SetAetherDivideLineUpScRsp{
@@ -78,7 +78,7 @@ func (g *GamePlayer) EquipAetherDividePassiveSkillCsReq(payloadMsg pb.Message) {
 		Retcode: 0,
 	}
 
-	avatarDb := g.GetPd().GetAetherDivideAvatarInfoById(req.AvatarId)
+	avatarDb := g.GetPd().GetAetherDivideAvatarInfoById(req.AetherAvatarId)
 	if avatarDb == nil {
 		g.Send(cmd.EquipAetherDividePassiveSkillScRsp, rsp)
 		return
@@ -92,9 +92,9 @@ func (g *GamePlayer) EquipAetherDividePassiveSkillCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.EquipAetherDividePassiveSkillScRsp, rsp)
 		return
 	}
-	skillDb.DressAvatarId = req.AvatarId
+	skillDb.DressAvatarId = req.AetherAvatarId
 
-	rsp.AvatarInfo = g.GetPd().GetAetherDivideSpiritInfo(req.AvatarId)
+	rsp.AetherInfo = g.GetPd().GetAetherDivideSpiritInfo(req.AetherAvatarId)
 	rsp.AetherSkillInfo = g.GetPd().GetAetherSkillInfo(req.ItemId)
 
 	g.Send(cmd.EquipAetherDividePassiveSkillScRsp, rsp)
@@ -107,7 +107,7 @@ func (g *GamePlayer) ClearAetherDividePassiveSkillCsReq(payloadMsg pb.Message) {
 		Retcode: 0,
 	}
 
-	avatarDb := g.GetPd().GetAetherDivideAvatarInfoById(req.AvatarId)
+	avatarDb := g.GetPd().GetAetherDivideAvatarInfoById(req.AetherAvatarId)
 	if avatarDb == nil {
 		g.Send(cmd.EquipAetherDividePassiveSkillScRsp, rsp)
 		return
@@ -125,7 +125,7 @@ func (g *GamePlayer) ClearAetherDividePassiveSkillCsReq(payloadMsg pb.Message) {
 	}
 	skillDb.DressAvatarId = 0
 
-	rsp.AvatarInfo = g.GetPd().GetAetherDivideSpiritInfo(req.AvatarId)
+	rsp.AetherInfo = g.GetPd().GetAetherDivideSpiritInfo(req.AetherAvatarId)
 	rsp.AetherSkillInfo = g.GetPd().GetAetherSkillInfo(oldItemId)
 
 	g.Send(cmd.ClearAetherDividePassiveSkillScRsp, rsp)

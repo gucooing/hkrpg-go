@@ -150,7 +150,8 @@ func (g *GamePlayer) ComposeItemCsReq(payloadMsg pb.Message) {
 		g.Send(cmd.ComposeItemScRsp, rsp)
 		return
 	}
-	addItem.MaterialList = append(addItem.MaterialList, &model.Material{
+	// 添加物品
+	addItem.PileItem = append(addItem.PileItem, &model.Material{
 		Tid: conf.ItemID,
 		Num: req.Count,
 	})

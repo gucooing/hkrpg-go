@@ -122,9 +122,9 @@ func (g *PlayerData) GetAetherDivideSpiritInfo(avatarId uint32) *proto.AetherDiv
 		return nil
 	}
 	info := &proto.AetherDivideSpiritInfo{
-		PassiveSkill: make([]*proto.PassiveSkillItem, 0),
-		AvatarId:     db.AvatarId,
-		Promotion:    db.Promotion,
+		PassiveSkill:   make([]*proto.PassiveSkillItem, 0),
+		AetherAvatarId: db.AvatarId,
+		Promotion:      db.Promotion,
 		SpBar: &proto.SpBarInfo{
 			CurSp: db.CurSp,
 			MaxSp: db.MaxSp,
@@ -145,9 +145,9 @@ func (g *PlayerData) GetAetherSkillInfo(itemId uint32) *proto.AetherSkillInfo {
 		return nil
 	}
 	info := &proto.AetherSkillInfo{
-		ItemId:        db.ItemId,
-		DressAvatarId: db.DressAvatarId,
-		Num:           db.Num,
+		ItemId:             db.ItemId,
+		SkillDressAvatarId: db.DressAvatarId,
+		Num:                db.Num,
 	}
 	return info
 }
@@ -158,8 +158,8 @@ func (g *PlayerData) GetAetherDivideLineupInfo(index uint32) *proto.AetherDivide
 		return nil
 	}
 	info := &proto.AetherDivideLineupInfo{
-		AvatarList: db.AvatarList,
-		Slot:       db.Index,
+		AetherAvatarList: db.AvatarList,
+		Slot:             db.Index,
 	}
 	return info
 }
@@ -213,10 +213,10 @@ func (g *PlayerData) GetAetherAvatarInfoList(avatarInfo []*AetherAvatar) []*prot
 				continue
 			}
 			infoList = append(infoList, &proto.AetherAvatarInfo{
-				Id:        avatarConf.SpiritID,
-				Index:     uint32(index),
-				Promotion: avatarConf.Promotion,
-				Type:      proto.AetherdivideSpiritLineupType_AETHERDIVIDE_SPIRIT_LINEUP_TRIAL,
+				Id:               avatarConf.SpiritID,
+				Index:            uint32(index),
+				Promotion:        avatarConf.Promotion,
+				SpiritLineupType: proto.AetherdivideSpiritLineupType_AETHERDIVIDE_SPIRIT_LINEUP_TRIAL,
 				SpBar: &proto.SpBarInfo{
 					CurSp: 3000,
 					MaxSp: 3000,
@@ -227,10 +227,10 @@ func (g *PlayerData) GetAetherAvatarInfoList(avatarInfo []*AetherAvatar) []*prot
 		}
 		if db := g.GetAetherDivideAvatarInfoById(avatar.AvatarId); db != nil {
 			info := &proto.AetherAvatarInfo{
-				Id:        db.AvatarId,
-				Index:     uint32(index),
-				Promotion: db.Promotion,
-				Type:      proto.AetherdivideSpiritLineupType_AETHERDIVIDE_SPIRIT_LINEUP_NORMAL,
+				Id:               db.AvatarId,
+				Index:            uint32(index),
+				Promotion:        db.Promotion,
+				SpiritLineupType: proto.AetherdivideSpiritLineupType_AETHERDIVIDE_SPIRIT_LINEUP_NORMAL,
 				SpBar: &proto.SpBarInfo{
 					CurSp: db.CurSp,
 					MaxSp: db.MaxSp,

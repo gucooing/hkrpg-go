@@ -331,9 +331,11 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
 
 	// token 验证
-	if req.Token != account.ComboToken {
-		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
-		return rsp
+	if h.config.GameServer.IsToken {
+		if req.Token != account.ComboToken {
+			rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
+			return rsp
+		}
 	}
 
 	// ban 验证

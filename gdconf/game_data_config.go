@@ -123,6 +123,8 @@ type GameDataConfig struct {
 	AetherDivideChallengeListMap map[uint32]*AetherDivideChallengeList
 	ChallengeGroupConfigMap      map[uint32]*ChallengeGroupConfig
 	ChallengeRewardLineMap       map[uint32]map[uint32]*ChallengeRewardLine
+	FuncUnlockDataMap            map[uint32]*FuncUnlockData
+	GroupSystemUnlockDataMap     map[uint32]*GroupSystemUnlockData
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -299,6 +301,8 @@ func (g *GameDataConfig) load() {
 		g.loadAetherDivideChallengeList,
 		g.loadChallengeGroupConfig,
 		g.loadChallengeRewardLine,
+		g.loadFuncUnlockData,
+		g.loadGroupSystemUnlockData,
 	}
 }
 

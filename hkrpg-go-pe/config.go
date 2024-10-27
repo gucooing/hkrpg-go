@@ -33,8 +33,10 @@ type DispatchList struct {
 }
 
 type GameServer struct {
-	GateTcp bool            `json:"GateTcp"`
-	AppNet  constant.AppNet `json:"AppNet"`
+	GateTcp    bool            `json:"GateTcp"`
+	IsToken    bool            `json:"IsToken"`
+	CheckToken string          `json:"CheckToken"`
+	AppNet     constant.AppNet `json:"AppNet"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
@@ -93,7 +95,9 @@ var DefaultConfig = &Config{
 		},
 	},
 	GameServer: &GameServer{
-		GateTcp: false,
+		GateTcp:    false,
+		IsToken:    true,
+		CheckToken: "http://127.0.0.1:8080/api/token",
 		AppNet: constant.AppNet{
 			InnerAddr: "0.0.0.0",
 			InnerPort: "20041",

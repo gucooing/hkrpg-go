@@ -312,7 +312,7 @@ func (g *GamePlayer) UnlockAvatarPathCsReq(payloadMsg pb.Message) {
 	g.GetPd().AddMultiPathAvatar(uint32(req.AvatarId))
 
 	rsp := &proto.UnlockAvatarPathScRsp{
-		BasicTypeIdList: []uint32{g.GetPd().GetAvatarBinById(8001).CurPath},
+		BasicTypeIdList: []uint32{g.GetPd().GetAvatarBinById(uint32(req.AvatarId)).CurPath},
 		Retcode:         0,
 		AvatarId:        req.AvatarId,
 		Reward: &proto.ItemList{ItemList: []*proto.Item{

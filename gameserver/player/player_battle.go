@@ -18,8 +18,8 @@ func (g *GamePlayer) SetTurnFoodSwitchCsReq(payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetTurnFoodSwitchCsReq)
 	rsp := &proto.SetTurnFoodSwitchScRsp{
 		Retcode:     0,
-		NDIFKAKHGKH: req.NDIFKAKHGKH,
-		LPLMJKEDLDB: req.LPLMJKEDLDB,
+		CIEEDPPEKAC: req.CIEEDPPEKAC,
+		EDHONFLKEGG: req.EDHONFLKEGG,
 	}
 	g.Send(cmd.SetTurnFoodSwitchScRsp, rsp)
 }
@@ -132,7 +132,8 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	var skill *gdconf.GoppMazeSkill
 	if req.SkillIndex != 0 {
 		skill = gdconf.GetGoppMazeSkill(battleBackup.Sce.AvatarId, 2)
-		if g.GetPd().DelMp(battleBackup.Sce.AvatarId) {
+		if g.GetPd().DelMp(battleBackup.Sce.AvatarId) &&
+			req.MazeAbilityStr != "LocalPlayer_Rappa_00_MazeSkill_End" { // 临时解决
 			g.GetPd().DelLineUpMp(1)
 			g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
 				CastEntityId: req.CastEntityId,

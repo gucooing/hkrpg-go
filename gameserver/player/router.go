@@ -14,8 +14,6 @@ type RouteManager struct {
 
 func (r *RouteManager) initRoute(g *GamePlayer) {
 	r.handlerFuncRouteMap = map[uint16]HandlerFunc{
-		cmd.GetEnteredSceneCsReq:  g.HandleGetEnteredSceneCsReq,
-		cmd.GetChatEmojiListCsReq: g.HandleGetChatEmojiListCsReq, // 获取聊天表情
 		// 登录
 		cmd.PlayerLoginCsReq:       g.HandlePlayerLoginCsReq,       // 玩家登录请求 第二个登录包
 		cmd.PlayerLoginFinishCsReq: g.HandlePlayerLoginFinishCsReq, // 登录完成包
@@ -52,6 +50,7 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.ExpUpRelicCsReq:           g.ExpUpRelicCsReq,           // 圣遗物升级
 		cmd.RelicAvatarRecommendCsReq: g.RelicAvatarRecommendCsReq, // 查看圣遗物推荐角色
 		// 场景
+		cmd.GetEnteredSceneCsReq:        g.HandleGetEnteredSceneCsReq, // 获取当前场景id
 		cmd.GetSceneMapInfoCsReq:        g.HanldeGetSceneMapInfoCsReq, // 获取地图信息
 		cmd.GetCurSceneInfoCsReq:        g.HandleGetCurSceneInfoCsReq, // 获取场景信息(关键包)
 		cmd.SceneEntityMoveCsReq:        g.SceneEntityMoveCsReq,       // 场景实体移动
@@ -128,17 +127,17 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.BuyGoodsCsReq:               g.BuyGoodsCsReq,               // 商店交易
 		cmd.GetRollShopInfoCsReq:        g.GetRollShopInfoCsReq,        //
 		// 好友
-		cmd.SetDisplayAvatarCsReq:           g.SetDisplayAvatarCsReq,           // 设置展示角色
-		cmd.SetAssistAvatarCsReq:            g.SetAssistAvatarCsReq,            // 设置支援角色
-		cmd.GetFriendLoginInfoCsReq:         g.HandleGetFriendLoginInfoCsReq,   // 获取好友信息列表
-		cmd.GetFriendListInfoCsReq:          g.GetFriendListInfoCsReq,          // 获取好友信息
-		cmd.GetPrivateChatHistoryCsReq:      g.GetPrivateChatHistoryCsReq,      // 获取私聊记录
-		cmd.GetChatFriendHistoryCsReq:       g.GetChatFriendHistoryCsReq,       // 获取正在进行的聊天室
-		cmd.SearchPlayerCsReq:               g.SearchPlayerCsReq,               // 查找玩家
-		cmd.GetFriendApplyListInfoCsReq:     g.GetFriendApplyListInfoCsReq,     // 获取好友申请列表
-		cmd.HandleFriendCsReq:               g.HandleFriendCsReq,               // 处理好友申请
-		cmd.GetFriendRecommendListInfoCsReq: g.GetFriendRecommendListInfoCsReq, // 获取附近的人
-		cmd.GetPlayerDetailInfoCsReq:        g.GetPlayerDetailInfoCsReq,        // 获取玩家详细信息
+		cmd.GetChatEmojiListCsReq:       g.HandleGetChatEmojiListCsReq,   // 获取聊天表情
+		cmd.SetDisplayAvatarCsReq:       g.SetDisplayAvatarCsReq,         // 设置展示角色
+		cmd.SetAssistAvatarCsReq:        g.SetAssistAvatarCsReq,          // 设置支援角色
+		cmd.GetFriendLoginInfoCsReq:     g.HandleGetFriendLoginInfoCsReq, // 获取好友信息列表
+		cmd.GetFriendListInfoCsReq:      g.GetFriendListInfoCsReq,        // 获取好友信息
+		cmd.GetPrivateChatHistoryCsReq:  g.GetPrivateChatHistoryCsReq,    // 获取私聊记录
+		cmd.GetChatFriendHistoryCsReq:   g.GetChatFriendHistoryCsReq,     // 获取正在进行的聊天室
+		cmd.SearchPlayerCsReq:           g.SearchPlayerCsReq,             // 查找玩家
+		cmd.GetFriendApplyListInfoCsReq: g.GetFriendApplyListInfoCsReq,   // 获取好友申请列表
+		cmd.HandleFriendCsReq:           g.HandleFriendCsReq,             // 处理好友申请
+		cmd.GetPlayerDetailInfoCsReq:    g.GetPlayerDetailInfoCsReq,      // 获取玩家详细信息
 		// 邮件
 		cmd.MarkReadMailCsReq:       g.MarkReadMailCsReq,       // 读取邮件
 		cmd.GetMailCsReq:            g.GetMailCsReq,            // 获取邮件
