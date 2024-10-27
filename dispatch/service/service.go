@@ -39,7 +39,7 @@ func NewDispatch(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Mess
 		OuterPort:       netInfo.OuterPort,
 		Server: &sdk.Server{
 			RegionInfo:         make(map[string]*sdk.RegionInfo),
-			UpstreamServer:     make(map[string]*sdk.UrlList),
+			UpstreamServer:     make(map[string]*constant.UrlList),
 			UpstreamServerLock: new(sync.RWMutex),
 		},
 	}
