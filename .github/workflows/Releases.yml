@@ -36,7 +36,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         repository: gucooing/hkrpg-go
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.TOKEN }}
         tag_name: v1.6.0
         name: Release v1.6.0
         body: sr 2.6.0
