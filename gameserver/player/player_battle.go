@@ -133,7 +133,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 	if req.SkillIndex != 0 {
 		skill = gdconf.GetGoppMazeSkill(battleBackup.Sce.AvatarId, 2)
 		if g.GetPd().DelMp(battleBackup.Sce.AvatarId) &&
-			req.MFHMICGELNB != "LocalPlayer_Rappa_00_MazeSkill_End" { // 临时解决
+			req.MazeAbilityStr != "LocalPlayer_Rappa_00_MazeSkill_End" { // 临时解决
 			g.GetPd().DelLineUpMp(1)
 			g.Send(cmd.SceneCastSkillMpUpdateScNotify, &proto.SceneCastSkillMpUpdateScNotify{
 				CastEntityId: req.CastEntityId,

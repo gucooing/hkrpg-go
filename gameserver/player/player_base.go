@@ -210,7 +210,7 @@ func (g *GamePlayer) GetVideoVersionKeyCsReq(payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg pb.Message) {
-	KPANKLHNMKE, _ := base64.StdEncoding.DecodeString("DsX2Ig==")
+	KPANKLHNMKE, _ := base64.StdEncoding.DecodeString("85V6dg==")
 	rsp := &proto.GetSecretKeyInfoScRsp{
 		LIBNNLNDHCN: KPANKLHNMKE,
 		SecretInfo: []*proto.SecretKeyInfo{
@@ -224,7 +224,7 @@ func (g *GamePlayer) GetSecretKeyInfoCsReq(payloadMsg pb.Message) {
 			},
 			{
 				Type:      proto.SecretKeyType_SECRET_KEY_BATTLE_TIME,
-				SecretKey: "2868639058",
+				SecretKey: "2026518941",
 			},
 		},
 		Retcode: 0,

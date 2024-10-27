@@ -21,7 +21,7 @@ type LevelFloor struct {
 	EnableGroupSpaceConflict bool                 `json:"EnableGroupSpaceConflict"`
 	TempGroupUnloadByY       uint32               `json:"TempGroupUnloadByY"`
 	CustomValues             []*CustomValue       `json:"CustomValues"`
-	SavedValues              []*SavedValue        `json:"SavedValues"`
+	DimensionList            []*Dimension         `json:"DimensionList"`
 }
 type GroupInstanceList struct {
 	ID        uint32 `json:"ID"`
@@ -33,6 +33,27 @@ type CustomValue struct {
 	ID   uint32 `json:"ID"`
 	Name string `json:"Name"`
 }
+
+type Dimension struct {
+	ID                        uint32        `json:"ID"`
+	Category                  string        `json:"Category"`
+	StartAnchorID             uint32        `json:"StartAnchorID"`
+	StartGroupIndex           uint32        `json:"StartGroupIndex"`
+	DefaultEnviroProfile      string        `json:"DefaultEnviroProfile"`
+	ConstValues               []*ConstValue `json:"ConstValues"`
+	SavedValues               []*SavedValue `json:"SavedValues"`
+	IsExclusiveSaveMapSection bool          `json:"IsExclusiveSaveMapSection"`
+	GroupIndexList            []uint32      `json:"GroupIndexList"`
+}
+
+type ConstValue struct {
+	AgentType  string `json:"AgentType"`
+	GroupID    uint32 `json:"GroupID"`
+	InstanceID string `json:"InstanceID"`
+	ID         uint32 `json:"ID"`
+	Name       string `json:"Name"`
+}
+
 type SavedValue struct {
 	ID            uint32   `json:"ID"`
 	Name          string   `json:"Name"`
@@ -152,33 +173,51 @@ func GetAnchor(planeId, floorId, startGroupID, startAnchorID uint32) *AnchorList
 	return nil
 }
 
-func GetSavedValue(planeId, floorId uint32, name string) (uint32, uint32) {
-	floor := GetFloorById(planeId, floorId)
-	var group *LevelGroup
-	var porp *PropList
-	if floor != nil && floor.SavedValues != nil {
-		for _, v := range floor.SavedValues {
-			if v.Name == name {
-				if len(v.AllowedValues) < 2 {
-					return 0, 0
-				}
-				groupInstance := floor.GroupInstanceList[v.AllowedValues[0]]
-				if groupInstance == nil {
-					return 0, 0
-				}
-				group = GetNGroupById(planeId, floorId, groupInstance.ID)
-				if group == nil {
-					return 0, 0
-				}
-				if uint32(len(group.PropList)) < v.AllowedValues[1] {
-					return 0, 0
-				}
-				porp = group.PropList[v.AllowedValues[1]]
-			}
+func getMainDimension(list []*Dimension) *Dimension {
+	for _, v := range list {
+		if v.ID == 0 {
+			return v
 		}
 	}
-	if group != nil && porp != nil {
-		return group.GroupId, porp.ID
+	return nil
+}
+
+func contains(arr []uint32, num uint32) bool {
+	for _, v := range arr {
+		if v == num {
+			return true
+		}
 	}
+	return false
+}
+
+func GetSavedValue(planeId, floorId uint32, name string) (uint32, uint32) {
+	// floor := GetFloorById(planeId, floorId)
+	// var group *LevelGroup
+	// var porp *PropList
+	// if floor != nil && floor.SavedValues != nil {
+	// 	for _, v := range floor.SavedValues {
+	// 		if v.Name == name {
+	// 			if len(v.AllowedValues) < 2 {
+	// 				return 0, 0
+	// 			}
+	// 			groupInstance := floor.GroupInstanceList[v.AllowedValues[0]]
+	// 			if groupInstance == nil {
+	// 				return 0, 0
+	// 			}
+	// 			group = GetNGroupById(planeId, floorId, groupInstance.ID)
+	// 			if group == nil {
+	// 				return 0, 0
+	// 			}
+	// 			if uint32(len(group.PropList)) < v.AllowedValues[1] {
+	// 				return 0, 0
+	// 			}
+	// 			porp = group.PropList[v.AllowedValues[1]]
+	// 		}
+	// 	}
+	// }
+	// if group != nil && porp != nil {
+	// 	return group.GroupId, porp.ID
+	// }
 	return 0, 0
 }

@@ -55,6 +55,7 @@ message PlayerBasicCompBin {
   Mission mission = 45;// 任务
   map<int32, Days> day = 46; // 每日刷新
   bool IsJumpMission = 47; // 是否跳过任务
+  Shop shop = 48; // 商店
 }
 
 message Activity{
@@ -468,6 +469,14 @@ message MessageSection {
 message Days {
   uint32 daily_task = 1;// 每日任务
   bool is_yk = 2;// 是否领取月卡
+}
+
+message Shop {
+
+}
+
+message ShopInfo {
+
 }
 
 message BlockBin{// 地图配置

@@ -377,119 +377,210 @@ func (g *PlayerData) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
 	switch levelGroup.Category {
 	case "": // 基础
 		return g.IfMissionLoadMap(levelGroup, true)
+	case "Mission": // 任务
+		return g.IfMissionLoadMap(levelGroup, true)
+	case "BattleProps":
+		return g.IfMissionLoadMap(levelGroup, true)
+	case "BattleAudiences":
+		return g.IfMissionLoadMap(levelGroup, true)
+	case "Custom": // 特殊环境场景:模拟宇宙等
+		return g.IfMissionLoadMap(levelGroup, false)
 	case "System": // 副本/关卡/等入口
 		return g.IfMissionLoadMap(levelGroup, true)
 	case "Atmosphere": // 特殊交互物品
-		return true
-	case "Custom": // 特殊环境场景:模拟宇宙等
-		return false
-	case "Mission": // 任务
-		return g.IfMissionLoadMap(levelGroup, false)
+		return g.IfMissionLoadMap(levelGroup, true)
 	default:
 		logger.Warn("未知的地图类型 Category:%s", levelGroup.Category)
-		return true
+		return false
 	}
 }
 
 func (g *PlayerData) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsLoaded bool) bool {
-	finishSubMainMissionList := g.GetFinishSubMainMissionList() // 已完成子任务
-	subMainMissionList := g.GetSubMainMissionList()             // 接受的子任务
-	mainMissionList := g.GetMainMissionList()                   // 接取的主任务
-	finishMainMissionList := g.GetFinishMainMissionList()       // 已完成的主任务
-	isLoaded := mainIsLoaded
-	if levelGroup.OwnerMainMissionID != 0 {
-		if mainMissionList[levelGroup.OwnerMainMissionID] == nil {
-			return false
-		}
-	}
-	if levelGroup.LoadCondition == nil &&
-		levelGroup.UnloadCondition == nil {
-		if levelGroup.Category == "Mission" && levelGroup.OwnerMainMissionID != 0 {
-			subMissionId := alg.ExtractDigits(levelGroup.GroupName)
-			if subMissionId == 0 || subMainMissionList[subMissionId] != nil {
-				return true
-			}
-			return false
-		}
-		return mainIsLoaded
-	}
-	// 检查强制卸载条件
-	// 检查加载条件
-	if levelGroup.LoadCondition != nil {
-		for _, conditions := range levelGroup.LoadCondition.Conditions {
-			if conditions.Phase == "Finish" { // 完成了这个任务
-				if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
-					isLoaded = true
-					if levelGroup.LoadCondition.Operation == "Or" {
-						break
-					}
-				} else {
-					isLoaded = false
-				}
-				continue
-			}
-			if conditions.Type == "SubMission" && conditions.Phase == "" { // 接取了这个子任务
-				if subMainMissionList[conditions.ID] != nil {
-					isLoaded = true
-					if levelGroup.LoadCondition.Operation == "Or" {
-						break
-					}
-				} else {
-					isLoaded = false
-				}
-				continue
-			}
-			if conditions.Type == "" && conditions.Phase == "" { // 接取主线任务
-				if mainMissionList[conditions.ID] != nil {
-					isLoaded = true
-					if levelGroup.LoadCondition.Operation == "Or" {
-						break
-					}
-				} else {
-					isLoaded = false
-				}
-				continue
-			}
-		}
+	c := &LevelGroupMissionConditionSet{
+		PlayerData:                    g,
+		finishSubMainMissionList:      g.GetFinishSubMainMissionList(),
+		subMainMissionList:            g.GetSubMainMissionList(),
+		mainMissionList:               g.GetMainMissionList(),
+		finishMainMissionList:         g.GetFinishMainMissionList(),
+		systemUnlockCondition:         levelGroup.SystemUnlockCondition,
+		levelGroupMissionConditionSet: nil,
 	}
 
-	if !isLoaded {
-		return isLoaded
+	switch levelGroup.GroupId {
+	// case 127, 128, 129:
+	// 	return false
+	}
+
+	// 检查系统功能解锁条件
+	if !c.CheckSystemUnlockCondition() {
+		return false
+	}
+
+	if levelGroup.OwnerMainMissionID != 0 {
+		if c.mainMissionList[levelGroup.OwnerMainMissionID] == nil {
+			return false
+		} else {
+			mainIsLoaded = true
+		}
+	}
+	// if levelGroup.LoadCondition == nil &&
+	// 	levelGroup.UnloadCondition == nil {
+	// 	if levelGroup.Category == "Mission" {
+	// 		if levelGroup.OwnerMainMissionID == 0 {
+	// 			subMissionId := alg.ExtractDigits(levelGroup.GroupName)
+	// 			if c.subMainMissionList[subMissionId] != nil {
+	// 				return true
+	// 			}
+	// 			return false
+	// 		}
+	// 	}
+	// 	return mainIsLoaded
+	// }
+
+	// 检查加载条件
+	if levelGroup.LoadCondition != nil {
+		c.levelGroupMissionConditionSet = levelGroup.LoadCondition
+		if !c.CheckLevelGroupMissionConditionSet(true) {
+			return false
+		} else {
+			mainIsLoaded = true
+		}
 	}
 
 	// 检查卸载条件
 	if levelGroup.UnloadCondition != nil {
-		all := false
-		for _, conditions := range levelGroup.UnloadCondition.Conditions {
-			if conditions.Phase == "Finish" { // 完成了这个任务
-				if finishSubMainMissionList[conditions.ID] != nil || finishMainMissionList[conditions.ID] != nil {
-					if levelGroup.UnloadCondition.Operation == "Or" {
-						isLoaded = false
-						break
-					} else {
-						all = true
-					}
-				}
-				continue
-			}
-			if conditions.Phase == "" { // 接取了这个任务
-				if subMainMissionList[conditions.ID] != nil || mainMissionList[conditions.ID] != nil {
-					if levelGroup.UnloadCondition.Operation == "Or" {
-						isLoaded = false
-						break
-					} else {
-						all = true
-					}
-				}
-				continue
-			}
-		}
-		if all {
-			isLoaded = false
+		c.levelGroupMissionConditionSet = levelGroup.UnloadCondition
+		if c.CheckLevelGroupMissionConditionSet(false) {
+			return false
 		}
 	}
 
+	// 检查强制卸载条件
+	if levelGroup.ForceUnloadCondition != nil {
+		c.levelGroupMissionConditionSet = levelGroup.ForceUnloadCondition
+		if c.CheckLevelGroupMissionConditionSet(false) {
+			return false
+		}
+	}
+
+	return mainIsLoaded
+}
+
+type LevelGroupMissionConditionSet struct {
+	*PlayerData
+	finishSubMainMissionList      map[uint32]*spb.MissionInfo // 已完成子任务
+	subMainMissionList            map[uint32]*spb.MissionInfo // 接受的子任务
+	mainMissionList               map[uint32]*spb.MissionInfo // 接取的主任务
+	finishMainMissionList         map[uint32]*spb.MissionInfo // 已完成的主任务
+	systemUnlockCondition         *gdconf.LevelGroupSystemUnlockConditionSet
+	levelGroupMissionConditionSet *gdconf.LevelGroupMissionConditionSet
+}
+
+func (c *LevelGroupMissionConditionSet) CheckSystemUnlockCondition() bool {
+	if c.systemUnlockCondition == nil {
+		return true
+	}
+	result := c.systemUnlockCondition.Operation != constant.LogicOperationTypeOr
+	for _, conditionId := range c.systemUnlockCondition.Conditions {
+		gsuk := gdconf.GetGroupSystemUnlockData(conditionId)
+		if gsuk == nil {
+			continue
+		}
+		part := c.GetUnlockStatus(gsuk.UnlockID)
+		if c.systemUnlockCondition.Operation == constant.LogicOperationTypeOr && part {
+			return true
+		}
+		if c.systemUnlockCondition.Operation == constant.LogicOperationTypeAnd && !part {
+			return false
+		}
+
+		if c.systemUnlockCondition.Operation != constant.LogicOperationTypeNot || !part {
+			continue
+		}
+		return false
+	}
+	return result
+}
+
+func (c *LevelGroupMissionConditionSet) GetUnlockStatus(unlockId uint32) bool {
+	conf := gdconf.GetFuncUnlockData(unlockId)
+	if conf == nil {
+		return false
+	}
+	for _, condition := range conf.Conditions {
+		switch condition.Type {
+		case constant.ConditionTypeFinishMainMission:
+			if !c.GetIsJumpMission() &&
+				c.finishMainMissionList[alg.S2U32(condition.Param)] == nil {
+				return false
+			}
+		case constant.ConditionTypePlayerLevel:
+			if c.GetLevel() < alg.S2U32(condition.Param) {
+				return false
+			}
+		case constant.ConditionTypeWorldLevel:
+			if c.GetWorldLevel() < alg.S2U32(condition.Param) {
+				return false
+			}
+		case constant.ConditionTypeFinishSubMission:
+			if !c.GetIsJumpMission() &&
+				c.finishSubMainMissionList[alg.S2U32(condition.Param)] == nil {
+				return false
+			}
+		case constant.ConditionTypeInStoryLine:
+			storyLine := c.GetCurChangeStoryInfo()
+			if storyLine != nil &&
+				storyLine.ChangeStoryId != alg.S2U32(condition.Param) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (c *LevelGroupMissionConditionSet) CheckLevelGroupMissionConditionSet(defaultResult bool) bool {
+	if len(c.levelGroupMissionConditionSet.Conditions) == 0 {
+		return defaultResult
+	}
+	isLoaded := false // c.levelGroupMissionConditionSet.Operation == constant.LogicOperationTypeAnd
+	for _, condition := range c.levelGroupMissionConditionSet.Conditions {
+		status := c.GetMissionStatus(condition.ID)
+		if c.GetIsJumpMission() {
+			status = constant.LevelGroupMissionPhaseFinish
+		}
+		newPhase := func() constant.LevelGroupMissionPhase {
+			if condition.LevelGroupMissionPhase == constant.LevelGroupMissionPhaseCancel {
+				return constant.LevelGroupMissionPhaseFinish
+			}
+			return condition.LevelGroupMissionPhase
+		}()
+		if status != newPhase {
+			isLoaded = false
+			if c.levelGroupMissionConditionSet.Operation ==
+				constant.LogicOperationTypeAnd {
+				break
+			}
+		} else {
+			isLoaded = true
+			if c.levelGroupMissionConditionSet.Operation ==
+				constant.LogicOperationTypeOr {
+				break
+			}
+		}
+	}
 	return isLoaded
+}
+
+func (c *LevelGroupMissionConditionSet) GetMissionStatus(id uint32) constant.LevelGroupMissionPhase {
+	if c.subMainMissionList[id] != nil ||
+		c.mainMissionList[id] != nil {
+		return constant.LevelGroupMissionPhaseAccept
+	}
+	if c.finishSubMainMissionList[id] != nil ||
+		c.finishMainMissionList[id] != nil {
+		return constant.LevelGroupMissionPhaseFinish
+	}
+	return constant.LevelGroupMissionPhaseCancel
 }
 
 // 检查场景上是否有实体需要卸载/加载
@@ -686,9 +777,11 @@ func (g *PlayerData) GetFloorSavedData(entryId uint32) map[string]int32 {
 	if foorMap == nil {
 		return db.FloorSavedData
 	}
-	for _, savedValue := range foorMap.SavedValues {
-		if db.FloorSavedData[savedValue.Name] == 0 {
-			db.FloorSavedData[savedValue.Name] = savedValue.DefaultValue
+	for _, dimension := range foorMap.DimensionList {
+		for _, savedValue := range dimension.SavedValues {
+			if db.FloorSavedData[savedValue.Name] == 0 {
+				db.FloorSavedData[savedValue.Name] = savedValue.DefaultValue
+			}
 		}
 	}
 	return db.FloorSavedData
@@ -1049,6 +1142,8 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 			g.AddNoLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 			continue
 		} else {
+			// logger.Info("加载组PlaneID:%v,FloorID:%v,GroupId:%v,Index:%v",
+			// 	mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId, levelGroup.Index)
 			g.AddLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
 		}
 		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
@@ -1063,7 +1158,9 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 		g.GetNPCMonsterByID(entityGroupLists, levelGroup)
 		// 添加NPC实体
 		g.GetNPCByID(entityGroupLists, levelGroup)
-		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
+		if len(entityGroupLists.EntityList) != 0 {
+			scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
+		}
 	}
 	return scene
 }
@@ -1147,7 +1244,7 @@ func (g *PlayerData) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 		if groupInfo.LoadCondition != nil {
 			for _, conditions := range groupInfo.LoadCondition.Conditions {
 				var isAdd = true
-				if conditions.Type != "SubMission" {
+				if conditions.LevelGroupMissionType != "SubMission" {
 					continue
 				}
 				for _, v := range info.SubMissionStatusList {
@@ -1174,7 +1271,7 @@ func (g *PlayerData) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.Leve
 		if groupInfo.UnloadCondition != nil {
 			for _, conditions := range groupInfo.UnloadCondition.Conditions {
 				var isAdd = true
-				if conditions.Type != "SubMission" {
+				if conditions.LevelGroupMissionType != "SubMission" {
 					continue
 				}
 				for _, v := range info.SubMissionStatusList {

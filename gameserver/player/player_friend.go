@@ -3,6 +3,7 @@ package player
 import (
 	"time"
 
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	pb "google.golang.org/protobuf/proto"
@@ -106,7 +107,7 @@ func (g *GamePlayer) SearchPlayerCsReq(payloadMsg pb.Message) {
 		SimpleInfoList: make([]*proto.PlayerSimpleInfo, 0),
 	}
 	for _, uid := range req.UidList {
-		bin := g.GetPd().GetPlayerSimpleInfo(uid)
+		bin := model.GetPlayerSimpleInfo(uid)
 		if bin == nil {
 			continue
 		}
@@ -128,13 +129,4 @@ func (g *GamePlayer) HandleFriendCsReq(payloadMsg pb.Message) {
 		FriendInfo: g.GetPd().GetFriendSimpleInfo(req.Uid),
 	}
 	g.Send(cmd.HandleFriendScRsp, rsp)
-}
-
-func (g *GamePlayer) GetFriendRecommendListInfoCsReq(payloadMsg pb.Message) {
-	// req := payloadMsg.(*proto.GetFriendRecommendListInfoCsReq)
-	rsp := &proto.GetFriendRecommendListInfoScRsp{
-		PlayerInfoList: make([]*proto.FriendRecommendInfo, 0),
-		Retcode:        0,
-	}
-	g.Send(cmd.GetFriendRecommendListInfoScRsp, rsp)
 }
