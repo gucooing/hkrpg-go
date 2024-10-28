@@ -423,19 +423,14 @@ func (g *PlayerData) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 			mainIsLoaded = true
 		}
 	}
-	// if levelGroup.LoadCondition == nil &&
-	// 	levelGroup.UnloadCondition == nil {
-	// 	if levelGroup.Category == "Mission" {
-	// 		if levelGroup.OwnerMainMissionID == 0 {
-	// 			subMissionId := alg.ExtractDigits(levelGroup.GroupName)
-	// 			if c.subMainMissionList[subMissionId] != nil {
-	// 				return true
-	// 			}
-	// 			return false
-	// 		}
-	// 	}
-	// 	return mainIsLoaded
-	// }
+
+	if subMissionId := alg.ExtractDigits(levelGroup.GroupName); subMissionId != 0 &&
+		levelGroup.Category == "Mission" {
+		if c.subMainMissionList[subMissionId] != nil {
+			return true
+		}
+		return false
+	}
 
 	// 检查加载条件
 	if levelGroup.LoadCondition != nil {

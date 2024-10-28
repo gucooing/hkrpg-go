@@ -132,7 +132,8 @@ func (g *PlayerData) DelOnLineAvatarBuff(buffId uint32) {
 }
 
 func (g *PlayerData) SetMonsterDie(eventID uint32) bool {
-	if eventID == 20134107 { // 扑满特殊处理
+	switch eventID {
+	case 20241170, 20134107: // 扑满特殊处理
 		return false
 	}
 	worldLevel := g.GetWorldLevel()
