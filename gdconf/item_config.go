@@ -219,3 +219,11 @@ func GetItemConfigMap() map[uint32]*ItemConfig {
 func GetItemConfigById(id uint32) *ItemConfig {
 	return CONF.ItemConfigMap.AllItem[id]
 }
+
+func GetItemRelic() map[uint32]*ItemConfig {
+	return CONF.ItemConfigMap.Relic
+}
+
+func GetItemEquipment() map[uint32]*ItemConfig {
+	return CONF.ItemConfigMap.Equipment
+}

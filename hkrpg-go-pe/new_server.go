@@ -14,6 +14,7 @@ import (
 	"github.com/gucooing/hkrpg-go/gateserver/session"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/muipserver/api"
+	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
@@ -127,8 +128,9 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	go s.newHttpApi()
 	client.PushServer(&constant.LogPush{
 		PushMessage: constant.PushMessage{},
-		LogMsg:      "hkrpg-pe 启动完成!",
-		LogLevel:    constant.INFO,
+		LogMsg: fmt.Sprintf("AppVersion:%s\nGameVersion:%s\nhkrpg-pe 启动完成!",
+			pkg.GetAppVersion(), pkg.GetGameVersion()),
+		LogLevel: constant.INFO,
 	})
 	// 开启game定时器
 	s.autoUpDataPlayer = time.NewTicker(AutoUpDataPlayerTicker * time.Second)
@@ -207,17 +209,15 @@ func (g *PlayerGame) toSession(bin player.Msg) {
 }
 
 // 将消息发送给game
-func (g *PlayerGame) sendGameMsg(msgType player.MsgType, cmdId uint16, playerMsg pb.Message) {
+func (g *PlayerGame) sendGameMsg(msgType player.MsgType, cmdId uint16, playerMsg pb.Message, command string) {
 	if g.Conn.GetSession().SessionState == session.SessionClose {
 		return
 	}
 	g.GamePlayer.RecvChan <- player.Msg{
-		CmdId:       cmdId,
-		MsgType:     msgType,
-		PlayerMsg:   playerMsg,
-		CommandList: nil,
-		CommandId:   0,
-		CommandRsp:  "",
+		CmdId:     cmdId,
+		MsgType:   msgType,
+		PlayerMsg: playerMsg,
+		Command:   command,
 	}
 }
 
@@ -330,8 +330,8 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 
 	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
 
-	// token 验证
 	if h.config.GameServer.IsToken {
+		// token 验证
 		if req.Token != account.ComboToken {
 			rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 			return rsp

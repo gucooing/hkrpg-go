@@ -75,7 +75,7 @@ func newBasicBin() *spb.PlayerBasicCompBin {
 		NicknameAuditBin:     nil,
 		IpCountryCode:        "",
 		IpRegionName:         "",
-		IsJumpMission:        false,
+		IsJumpMission:        true,
 	}
 
 	return basicBin
@@ -144,6 +144,18 @@ func (g *PlayerData) SetNickname(name string) {
 	db.Nickname = name
 }
 
+func (g *PlayerData) GetLanguageType() spb.LanguageType {
+	db := g.GetBasicBin()
+	if db.LanguageType == spb.LanguageType_LANGUAGE_NONE {
+		db.LanguageType = spb.LanguageType_LANGUAGE_SC
+	}
+	return db.LanguageType
+}
+
+func (g *PlayerData) SetLanguageType(l spb.LanguageType) {
+	g.GetBasicBin().LanguageType = l
+}
+
 func (g *PlayerData) GetLevel() uint32 {
 	db := g.GetBasicBin()
 	if db.Level <= 0 {
@@ -164,6 +176,10 @@ func (g *PlayerData) GetIsJumpMission() bool {
 	return g.GetBasicBin().IsJumpMission
 }
 
+func (g *PlayerData) SeIsJumpMission(b bool) {
+	g.GetBasicBin().IsJumpMission = b
+}
+
 func (g *PlayerData) AddWorldLevel(num uint32) {
 	g.SetWorldLevel(g.GetWorldLevel() + num)
 }
@@ -174,6 +190,13 @@ func (g *PlayerData) SetWorldLevel(worldLevel uint32) {
 	}
 	db := g.GetBasicBin()
 	db.WorldLevel = worldLevel
+}
+
+func (g *PlayerData) SetPlayerLevel(playerLevel uint32) {
+	if playerLevel < 0 {
+		return
+	}
+	g.GetBasicBin().Level = playerLevel
 }
 
 func (g *PlayerData) GetHeadIcon() uint32 {

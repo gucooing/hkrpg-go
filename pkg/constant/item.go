@@ -37,6 +37,7 @@ const (
 	ItemSubTypeTravelBrochurePaster  ItemSubType = "TravelBrochurePaster"
 	ItemSubTypeChessRogueDiceSurface ItemSubType = "ChessRogueDiceSurface"
 	ItemSubTypeRogueMedal            ItemSubType = "RogueMedal"
+	ItemSubTypePamSkin               ItemSubType = "PamSkin"
 	ItemSubTypeMaterial              ItemSubType = "Material"
 	ItemSubTypeEidolon               ItemSubType = "Eidolon"
 	ItemSubTypeMuseumExhibit         ItemSubType = "MuseumExhibit"
@@ -46,7 +47,6 @@ const (
 	ItemSubTypeMission               ItemSubType = "Mission"
 	ItemSubTypeRelicSetShowOnly      ItemSubType = "RelicSetShowOnly"
 	ItemSubTypeRelicRarityShowOnly   ItemSubType = "RelicRarityShowOnly"
-	ItemSubTypeNormalPet             ItemSubType = "NormalPet"
 )
 
 type FormulaType = string

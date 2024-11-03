@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 )
 
 var CONF *GameDataConfig = nil
@@ -63,7 +64,8 @@ type GameDataConfig struct {
 	MazePropMap                  map[uint32]*MazeProp                            // 实体列表？
 	NPCDataMap                   map[uint32]*NPCData                             // NPC列表？
 	GroupMap                     map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
-	FloorMap                     map[uint32]map[uint32]*LevelFloor               // ?
+	FloorMap                     map[uint32]map[uint32]*LevelFloor               // 地图配置
+	GoppFloorMap                 map[uint32]map[uint32]*GoppLevelFloor           // 地图配置预处理
 	MapEntranceMap               map[uint32]*MapEntrance                         // 地图入口
 	SpecialPropMap               map[uint32]*SpecialProp                         // 物品特殊状态
 	BannersMap                   *BannersConf                                    // 卡池信息
@@ -134,20 +136,20 @@ type GameDataConfig struct {
 }
 
 func InitGameDataConfig(gameDataConfigPath string) {
-	logger.Info("读取资源文件")
+	logger.Info(text.GetText(14))
 	CONF = new(GameDataConfig)
 	startTime := time.Now().Unix()
 	CONF.loadAll(gameDataConfigPath)
 	runtime.GC()
 	endTime := time.Now().Unix()
-	logger.Info("load all game data config finish, cost: %v(s)", endTime-startTime)
+	logger.Info(text.GetText(15), endTime-startTime)
 }
 
 func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	pathPrefix := gameDataConfigPath
 	dirInfo, err := os.Stat(pathPrefix)
 	if err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("open game data config dir error: %v", err)
+		info := fmt.Sprintf(text.GetText(16), err)
 		panic(info)
 	}
 	g.pathPrefix = pathPrefix
@@ -158,7 +160,7 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.excelPrefix = pathPrefix + "/ExcelOutput"
 	dirInfo, err = os.Stat(g.excelPrefix)
 	if err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("open game data config ExcelOutput dir error: %v", err)
+		info := fmt.Sprintf(text.GetText(16), err)
 		panic(info)
 	}
 	g.excelPrefix += "/"
@@ -166,7 +168,7 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.configPrefix = pathPrefix + "/Config"
 	dirInfo, err = os.Stat(g.configPrefix)
 	if err != nil || !dirInfo.IsDir() {
-		info := fmt.Sprintf("open game data config Config dir error: %v", err)
+		info := fmt.Sprintf(text.GetText(16), err)
 		panic(info)
 	}
 	g.configPrefix += "/"
@@ -174,7 +176,7 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.dataPrefix = "data"
 	dirInfo, err = os.Stat(g.dataPrefix)
 	if err != nil || !dirInfo.IsDir() {
-		logger.Error("open game data config data dir error: %v", err)
+		logger.Error(text.GetText(16), err)
 	}
 	g.dataPrefix += "/"
 
@@ -308,6 +310,7 @@ func (g *GameDataConfig) load() {
 
 func (g *GameDataConfig) gopp() {
 	g.goppFunc = []loadFunc{
+		g.goppFloor,       // 预处理服务器地图
 		g.goppServerGroup, // 预处理服务器场景
 		g.goppTeleports,   // 预处理传送锚点
 		g.goppMainMission, // 预处理主线任务

@@ -1,7 +1,6 @@
 package gdconf
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -11,6 +10,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -26,6 +26,7 @@ type LevelGroup struct {
 	IsHoyoGroup           bool                                `json:"IsHoyoGroup"`
 	IsPendedUnload        bool                                `json:"IsPendedUnload"`
 	SystemUnlockCondition *LevelGroupSystemUnlockConditionSet `json:"SystemUnlockCondition"`
+	SavedValueCondition   *LevelGroupSavedValueConditionSet   `json:"SavedValueCondition"`
 	Category              string                              `json:"Category"`             // 类别
 	OwnerMainMissionID    uint32                              `json:"OwnerMainMissionID"`   // 主任务id
 	LoadCondition         *LevelGroupMissionConditionSet      `json:"LoadCondition"`        // 加载条件
@@ -44,6 +45,15 @@ type AtmosphereCondition struct {
 type LevelGroupSystemUnlockConditionSet struct {
 	Conditions []uint32                    `json:"Conditions"`
 	Operation  constant.LogicOperationType `json:"Operation"`
+}
+type LevelGroupSavedValueConditionSet struct {
+	Conditions []*LevelGroupSavedValueCondition `json:"Conditions"`
+	Operation  constant.LogicOperationType      `json:"Operation"`
+}
+type LevelGroupSavedValueCondition struct {
+	SavedValueName string               `json:"SavedValueName"`
+	Operation      constant.CompareType `json:"Operation"`
+	Value          uint32               `json:"Value"`
 }
 type LevelGroupMissionConditionSet struct {
 	Conditions         []*LevelGroupMissionCondition `json:"Conditions"`
@@ -169,7 +179,7 @@ func (g *GameDataConfig) loadGroup() {
 						levelGroup := new(LevelGroup)
 						playerElementsFile, err := os.ReadFile(g.pathPrefix + "/" + groupInfo.GroupPath)
 						if err != nil {
-							logger.Error("open file error: %v", err)
+							logger.Error(text.GetText(18), playerElementsFile, err)
 							wg.Done()
 							func() { <-sem }()
 							return
@@ -177,8 +187,8 @@ func (g *GameDataConfig) loadGroup() {
 
 						err = hjson.Unmarshal(playerElementsFile, levelGroup)
 						if err != nil {
-							info := fmt.Sprintf("parse file error: %v", err)
-							panic(info)
+							logger.Error(text.GetText(19), playerElementsFile, err)
+							return
 						}
 						levelGroup.GroupId = groupInfo.ID
 						levelGroup.Index = index
@@ -207,8 +217,8 @@ func (g *GameDataConfig) loadGroup() {
 	}
 
 	wg.Wait()
-	logger.Info("load %v Groups", len(g.GroupMap))
 
+	logger.Info(text.GetText(17), len(g.GroupMap), "Groups")
 }
 
 func GetNGroupById(planeId, floorId, groupId uint32) *LevelGroup {

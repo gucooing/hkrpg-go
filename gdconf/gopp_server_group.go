@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 )
 
 type GoppLevelGroup struct {
@@ -14,6 +15,7 @@ type GoppLevelGroup struct {
 	IsHoyoGroup           bool
 	LoadSide              string
 	SystemUnlockCondition *LevelGroupSystemUnlockConditionSet
+	SavedValueCondition   *LevelGroupSavedValueConditionSet
 	Category              string
 	OwnerMainMissionID    uint32
 	LoadCondition         *LevelGroupMissionConditionSet
@@ -36,13 +38,12 @@ func (g *GameDataConfig) goppServerGroup() {
 	g.ServerGroupMap = make(map[uint32]map[uint32]map[uint32]*GoppLevelGroup)
 	floors := CONF.FloorMap
 	if floors == nil {
-		logger.Error("floor error")
-
+		logger.Error(text.GetText(24))
 		return
 	}
 	for planeId, floor := range floors {
 		g.ServerGroupMap[planeId] = make(map[uint32]map[uint32]*GoppLevelGroup)
-		for floorId, v := range floor { // levelFloor
+		for floorId, _ := range floor { // levelFloor
 			g.ServerGroupMap[planeId][floorId] = make(map[uint32]*GoppLevelGroup)
 			var nPCList []*NPCList
 			levelGroup := GetGroupById(planeId, floorId)
@@ -50,14 +51,14 @@ func (g *GameDataConfig) goppServerGroup() {
 				// logger.Debug("goppServerGroup planeId:%v,floorId:%v,error", planeId, floorId)
 				continue
 			}
-			mainDimension := getMainDimension(v.DimensionList)
-			if mainDimension == nil {
-				logger.Error("main dimension error")
-				continue
-			}
+			// mainDimension := getMainDimension(v.DimensionList)
+			// if mainDimension == nil {
+			// 	logger.Error(text.GetText(23), planeId, floorId)
+			// 	continue
+			// }
 			for _, groups := range levelGroup {
 				if groups.LoadSide == "Server" &&
-					contains(mainDimension.GroupIndexList, groups.Index) &&
+					// contains(mainDimension.GroupIndexList, groups.Index) &&
 					!strings.Contains(groups.GroupName, "DeployPuzzle_Repeat_Area") &&
 					!strings.Contains(groups.GroupName, "PuzzleCompass") {
 					g.ServerGroupMap[planeId][floorId][groups.GroupId] = &GoppLevelGroup{
@@ -69,6 +70,7 @@ func (g *GameDataConfig) goppServerGroup() {
 						LoadSide:              groups.LoadSide,
 						Category:              groups.Category,
 						SystemUnlockCondition: groups.SystemUnlockCondition,
+						SavedValueCondition:   groups.SavedValueCondition,
 						OwnerMainMissionID:    groups.OwnerMainMissionID,
 						LoadCondition:         groups.LoadCondition,
 						UnloadCondition:       groups.UnloadCondition,
@@ -85,7 +87,7 @@ func (g *GameDataConfig) goppServerGroup() {
 		}
 	}
 
-	logger.Info("gopp %v ServerGroup", len(g.ServerGroupMap))
+	logger.Info(text.GetText(17), len(g.ServerGroupMap), "ServerGroup")
 }
 
 func GetServerGroup(planeId, floorId uint32) map[uint32]*GoppLevelGroup {

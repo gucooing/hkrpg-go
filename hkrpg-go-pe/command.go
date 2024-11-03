@@ -3,6 +3,7 @@ package hkrpg_go_pe
 import (
 	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,13 +22,23 @@ func (h *HkRpgGoServer) newHttpApi() {
 			return
 		}
 		// 先查询是不是无状态指令
-		commFunc, ok := commandMap[a.CommandList[0]]
-		if ok {
+		if !a.IsPlayer {
+			commFunc, ok := commandMap[strings.Split(a.CommandList, " ")[0]]
+			if !ok {
+				a.Resp <- api.ApiResp{
+					Code: 404,
+					Obj: gin.H{
+						"code": 0,
+						"msg":  "指令不存在",
+					},
+				}
+				continue
+			}
 			a.Resp <- api.ApiResp{
 				Code: 200,
 				Obj: gin.H{
 					"code": 0,
-					"msg":  commFunc(h, a.CommandList[1:]),
+					"msg":  commFunc(h, strings.Split(a.CommandList, " ")[1:]),
 				},
 			}
 			continue
@@ -55,22 +66,12 @@ func (h *HkRpgGoServer) newHttpApi() {
 			}
 			continue
 		}
-		if a.CommandList[0] == "give" &&
-			!p.GamePlayer.GetPd().BasicBin.IsProficientPlayer {
-			a.Resp <- api.ApiResp{
-				Code: 404,
-				Obj: gin.H{
-					"code": -1,
-					"msg":  "Please execute after completing the mission",
-				},
-			}
-			continue
-		}
+
 		timeout2 := time.After(2 * time.Second)
 		select {
 		case p.GamePlayer.RecvChan <- player.Msg{
-			CommandList: a.CommandList,
-			MsgType:     player.GmReq,
+			Command: a.CommandList,
+			MsgType: player.GmReq,
 		}:
 			if p.GamePlayer.IsClosed {
 				close(p.GamePlayer.RecvChan)
@@ -147,17 +148,4 @@ func tp(parameter []string, s *HkRpgGoServer) {
 		return
 	}
 	p.GamePlayer.EnterSceneByServerScNotify(alg.S2U32(parameter[2]), 0, 0, 0)
-}
-
-func unlocked(parameter []string, s *HkRpgGoServer) {
-	index := len(parameter)
-	if index < 2 {
-		return
-	}
-	p := s.GetPlayer(alg.S2U32(parameter[1]))
-	if p == nil {
-		return
-	}
-	p.GamePlayer.FinishAllMission()
-	p.GamePlayer.FinishAllTutorial()
 }

@@ -1,10 +1,10 @@
 package gdconf
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -20,23 +20,23 @@ type MazePlane struct {
 func (g *GameDataConfig) loadMazePlane() {
 	g.MazePlaneMap = make(map[uint32]*MazePlane)
 	mazePlaneMap := make([]*MazePlane, 0)
-	playerElementsFilePath := g.excelPrefix + "MazePlane.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "MazePlane.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		logger.Error(text.GetText(18), name, err)
+		return
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &mazePlaneMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		logger.Error(text.GetText(19), name, err)
+		return
 	}
 	for _, v := range mazePlaneMap {
 		g.MazePlaneMap[v.PlaneID] = v
 	}
-	logger.Info("load %v MazePlane", len(g.MazePlaneMap))
 
+	logger.Info(text.GetText(17), len(g.MazePlaneMap), name)
 }
 
 func GetMazePlaneById(planeID uint32) *MazePlane {
@@ -47,20 +47,56 @@ func GetMazePlaneMap() map[uint32]*MazePlane {
 	return CONF.MazePlaneMap
 }
 
-func GetPlaneType(state string) uint32 {
+func GetPlaneType(planeID uint32) uint32 {
+	m := GetMazePlaneById(planeID)
+	return m.getPlaneType()
+}
+
+func GetWorldId(planeID uint32) uint32 {
+	m := GetMazePlaneById(planeID)
+	return m.getWorldId()
+}
+
+func (m *MazePlane) getWorldId() uint32 {
+	if m == nil {
+		return 0
+	}
+	if m.WorldID == 100 {
+		return 401
+	}
+	return m.WorldID
+}
+
+func (m *MazePlane) getPlaneType() uint32 {
+	if m == nil {
+		return 0
+	}
 	stateMap := map[string]uint32{
-		"Unknown":       0,
-		"Town":          1,
-		"Maze":          2,
-		"Train":         3,
-		"Challenge":     4,
-		"Rogue":         5,
-		"Raid":          6,
-		"AetherDivide":  7,
-		"TrialActivity": 8,
+		"Unknown":           0,
+		"Town":              1,
+		"Maze":              2,
+		"Train":             3,
+		"Challenge":         4,
+		"RogueExplore":      5,
+		"RogueChallenge":    6,
+		"TownRoom":          7,
+		"Raid":              8,
+		"FarmRelic":         9,
+		"Client":            10,
+		"ChallengeActivity": 11,
+		"ActivityPunkLord":  12,
+		"RogueAeonRoom":     13,
+		"TrialActivity":     14,
+		"AetherDivide":      15,
+		"ChessRogue":        16,
+		"TournRogue":        17,
+		"RelicRogue":        18,
+		"ArcadeRogue":       19,
+		"MagicRogue":        20,
+		"TrainParty":        21,
 	}
 
-	value, ok := stateMap[state]
+	value, ok := stateMap[m.PlaneType]
 	if !ok {
 		return 0
 	}

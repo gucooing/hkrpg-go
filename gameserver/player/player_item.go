@@ -98,9 +98,9 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 	case constant.ItemSubTypeFood: // 食物
 		g.GetPd().UseItem(gdconf.GetItemUseBuffDataById(req.UseItemId), req.BaseAvatarId, addBuffList)
 	case constant.ItemSubTypeMaterial: // 兑换奖励
-		g.GetPd().ItemSubTypeMaterial(conf.UseDataID, req.UseItemCount, addItem)
+		g.GetPd().ItemSubTypeMaterial(conf.ID, req.UseItemCount, addItem)
 	case constant.ItemSubTypeGift:
-		use := gdconf.GetItemUseData(conf.UseDataID)
+		use := gdconf.GetItemUseData(conf.ID)
 		if use == nil {
 			switch conf.UseMethod {
 			case "MonthlyCard":
@@ -111,7 +111,7 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 				logger.Error("ItemId:%v未处理的UseMethod:%s", conf.ID, conf.UseMethod)
 			}
 		} else {
-			g.GetPd().ItemSubTypeGift(conf.UseDataID, req.UseItemCount, addItem)
+			g.GetPd().ItemSubTypeGift(conf.ID, req.UseItemCount, addItem)
 		}
 	}
 	if req.OptionalRewardId != 0 {
@@ -185,7 +185,7 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 	}
 
 	for i := 0; i < int(req.Count); i++ {
-		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, req.MainAffixId, nil)
+		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, 1, req.MainAffixId, nil)
 		addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
 			ItemId:   req.ComposeRelicId,

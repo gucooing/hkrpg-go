@@ -18,6 +18,9 @@ func (g *PlayerData) GetChangeStory() *spb.ChangeStory {
 	if db.ChangeStory == nil {
 		db.ChangeStory = NewChangeStory()
 	}
+	if g.GetIsJumpMission() {
+		db.ChangeStory.IsChangeStory = false
+	}
 	return db.ChangeStory
 }
 

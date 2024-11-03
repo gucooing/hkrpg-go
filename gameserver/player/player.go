@@ -19,7 +19,7 @@ func init() {
 	MissionInit()
 }
 
-var LogMsgPlayer uint32 = 0
+var LogMsgPlayer uint32 = 5
 var ISPE = false
 
 type GamePlayer struct {
@@ -40,9 +40,7 @@ type Msg struct {
 	MsgType   MsgType
 	PlayerMsg pb.Message
 	// command
-	CommandList []string
-	CommandId   int64
-	CommandRsp  string
+	Command string
 }
 
 type MsgType int
@@ -113,9 +111,6 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			logger.Error("unmarshal proto data err: %v", err)
 			g.PlayerData = model.NewPlayerData()
 		}
-	}
-	if g.GetPd().GetBasicBin().IsJumpMission {
-		g.FinishAllTutorial()
 	}
 	g.PlayerData.BasicBin.Uid = g.Uid
 }

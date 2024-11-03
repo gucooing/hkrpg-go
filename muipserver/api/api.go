@@ -2,7 +2,6 @@ package api
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,13 +11,13 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/upApi"
 )
 
-type ApiFunc func(c *gin.Context) string
+type ApiFunc func(c *gin.Context) Comm
 
 var ApiMap = map[int]ApiFunc{
-	constant.CommAndTest:    test,
-	constant.SetWorldLevel:  worldLevel,
-	constant.GetPlayerDb:    getPlayerPb,
-	constant.Status:         status,
+	constant.CommAndTest:   test,
+	constant.SetWorldLevel: worldLevel,
+	constant.GetPlayerDb:   getPlayerPb,
+	// constant.Status:         status,
 	constant.Give:           give,
 	constant.GiveRelic:      giveRelic,
 	constant.SetJumpMission: setIsJumpMission,
@@ -32,8 +31,9 @@ type ApiServer struct {
 
 type Comm struct {
 	Resp        chan ApiResp
-	Uid         uint32   // uid
-	CommandList []string // 指令内容
+	Uid         uint32 // uid
+	IsPlayer    bool   // 是否作用于玩家
+	CommandList string // 指令内容
 }
 
 type ApiResp struct {
@@ -83,23 +83,14 @@ func (a *ApiServer) apiInitRouter(c *gin.Context) {
 		})
 		return
 	}
-	uid := alg.S2U32(c.Query("uid"))
-	command := apiFunc(c)
-	commandList := strings.Split(command, " ")
-	if len(commandList) <= 0 {
-		c.JSON(404, gin.H{
-			"code": -1,
-			"msg":  "Command Not enough parameters",
-		})
-		return
-	}
 	rspChan := make(chan ApiResp)
-	a.ApiChan <- Comm{
-		Resp:        rspChan,
-		Uid:         uid,
-		CommandList: commandList,
-	}
-	logger.Debug("执行指令:%s", commandList)
+	uid := alg.S2U32(c.Query("uid"))
+	comm := apiFunc(c)
+	comm.Uid = uid
+	comm.Resp = rspChan
+
+	a.ApiChan <- comm
+	logger.Debug("执行指令:%s", comm.CommandList)
 	timer := time.NewTimer(time.Second * 10)
 	select {
 	case <-timer.C:
@@ -125,47 +116,77 @@ func (a *ApiServer) apiInitRouter(c *gin.Context) {
 }
 
 // 下面是将请求解析成指令格式
-func test(c *gin.Context) string {
+func test(c *gin.Context) Comm {
 	msg := c.Query("msg")
-	return fmt.Sprintf("test %v", msg)
+	comm := Comm{
+		IsPlayer:    false,
+		CommandList: msg,
+	}
+	return comm
 }
 
-func worldLevel(c *gin.Context) string {
+func worldLevel(c *gin.Context) Comm {
 	level := alg.S2U32(c.Query("world_level"))
 	if level < 0 || level > 6 {
 		level = 0
 	}
-	return fmt.Sprintf("world_level %v", level)
+	comm := Comm{
+		IsPlayer:    true,
+		CommandList: fmt.Sprintf("/set WorldLevel %v", level),
+	}
+	return comm
 }
 
-func getPlayerPb(c *gin.Context) string {
+func getPlayerPb(c *gin.Context) Comm {
 	bin := c.Query("bin")
-	return fmt.Sprintf("get_player_pb %s %s", c.Query("uid"), bin)
+	comm := Comm{
+		IsPlayer:    false,
+		CommandList: fmt.Sprintf("get_player_pb %s %s", c.Query("uid"), bin),
+	}
+	return comm
 }
 
-func status(c *gin.Context) string {
-	return "status"
-}
-
-func give(c *gin.Context) string {
-	all := c.Query("all")
+func give(c *gin.Context) Comm {
+	all := alg.S2U32(c.Query("all"))
 	id := c.Query("id")
 	num := c.Query("num")
+	list := "/give "
+	if all != 0 {
+		list += "all"
+	} else {
+		list += id + " " + num
+	}
 
-	return fmt.Sprintf("give %s %s %s", all, id, num)
+	return Comm{
+		IsPlayer:    true,
+		CommandList: list,
+	}
 }
 
-func giveRelic(c *gin.Context) string {
-	all := c.Query("all")
+func giveRelic(c *gin.Context) Comm {
+	all := alg.S2U32(c.Query("all"))
 	id := c.Query("id")
 	num := c.Query("num")
+	level := c.Query("level")
 	main := c.Query("main")
 	sub := c.Query("sub")
+	list := "/relic "
+	if all != 0 {
+		list += "all"
+	} else {
+		list += id + " " + num + " " + level + " " + main + " " + sub
+	}
 
-	return fmt.Sprintf("give_relic %s %s %s %s %s", all, id, num, main, sub)
+	return Comm{
+		IsPlayer:    true,
+		CommandList: list,
+	}
 }
 
-func setIsJumpMission(c *gin.Context) string {
+func setIsJumpMission(c *gin.Context) Comm {
 	is := c.Query("is")
-	return fmt.Sprintf("jump_ission %s", is)
+	return Comm{
+		IsPlayer:    true,
+		CommandList: fmt.Sprintf("/set JumpMission %s", is),
+	}
 }

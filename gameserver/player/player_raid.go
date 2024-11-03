@@ -165,7 +165,7 @@ func (g *GamePlayer) RaidEnterSceneByServerScNotify(entryId uint32) bool {
 		g.Send(cmd.EnterSceneByServerScNotify, rsp)
 		return false
 	}
-	rsp.Scene = g.GetPd().GetRaidSceneInfo(entryId, pos, rot, lineDb)
+	rsp.Scene = g.GetPd().GetSceneInfo(entryId, pos, rot, lineDb)
 	// g.SetCurEntryId(entryId)
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 	return true

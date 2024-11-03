@@ -2,67 +2,75 @@ package player
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
-	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
+	"github.com/gucooing/hkrpg-go/pkg/text"
+	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
-	pb "google.golang.org/protobuf/proto"
 )
 
-type commHandlerFunc func(g *GamePlayer, parameter []string) string
-
-var commandMap = map[string]commHandlerFunc{
-	"world_level": setWorldLevel,
-	"give":        give,
-	"give_relic":  giveRelic,
-	"jump_ission": jumpMission,
-}
-
-func (g *GamePlayer) EnterCommand(msg Msg) string {
-	var rspSt string
-	if len(msg.CommandList) <= 0 {
-		rspSt = "Command Not enough parameters"
-	} else {
-		commFunc, ok := commandMap[msg.CommandList[0]]
-		if !ok {
-			rspSt = "Unknown command"
-		} else {
-			rspSt = commFunc(g, msg.CommandList[1:])
+// msg.CommandList
+func (g *GamePlayer) EnterCommand(msg Msg) {
+	reqMessageTextList := text.GetTextByL(g.GetPd().GetLanguageType(), 28)
+	lists := strings.Split(msg.Command, " ")
+	c, err := constant.GetCommand(lists, g.GetPd().GetLanguageType())
+	if err != nil {
+		reqMessageTextList = err.Error()
+	}
+	if c != nil {
+		switch x := c.(type) {
+		case *constant.CommandGive:
+			reqMessageTextList = g.commandGive(x)
+		case *constant.CommandSet:
+			reqMessageTextList = g.commandSet(x)
+		case *constant.CommandRelic:
+			reqMessageTextList = g.commandRelic(x)
+		case *constant.CommandEquipment:
+			reqMessageTextList = g.commandEquipment(x)
+		case *constant.CommandAvatar:
+			reqMessageTextList = g.commandAvatar(x)
+		case *constant.CommandDel:
+			reqMessageTextList = g.commandDel(x)
 		}
 	}
-	return fmt.Sprintf("[UID%v]执行指令:%s|响应:%s", g.Uid, msg.CommandList, rspSt)
+	for _, reqMessageText := range strings.Split(reqMessageTextList, "\n") {
+		notify := &proto.RevcMsgScNotify{
+			SourceUid:   0,
+			TargetUid:   g.Uid,
+			MessageText: reqMessageText,
+			MessageType: proto.MsgType_MSG_TYPE_CUSTOM_TEXT,
+			ChatType:    proto.ChatType_CHAT_TYPE_PRIVATE,
+		}
+		g.Send(cmd.RevcMsgScNotify, notify)
+	}
 }
 
-// 设置世界等级
-func setWorldLevel(g *GamePlayer, parameter []string) string {
-	if len(parameter) < 1 {
-		return "Command Not enough parameters"
-	}
-	g.GetPd().SetWorldLevel(alg.S2U32(parameter[0]))
-	g.AllPlayerSyncScNotify(&model.AllPlayerSync{IsBasic: true})
-	return fmt.Sprintf("set world_level ok")
-}
-
-func give(g *GamePlayer, parameter []string) string {
-	if len(parameter) < 3 {
-		return "Command Not enough parameters"
-	}
+func (g *GamePlayer) commandGive(c *constant.CommandGive) string {
 	addItem := model.NewAddItem(nil)
-	all := alg.S2U32(parameter[0])
-	if all == 1 {
+	if !g.GetPd().GetIsProficientPlayer() &&
+		!g.GetPd().GetIsJumpMission() {
+		return text.GetTextByL(g.GetPd().GetLanguageType(), 48)
+	}
+	if c.IsAll {
 		addItem.PileItem = g.allGive()
 	} else {
+		if gdconf.GetItemConfigById(c.ItemId) == nil {
+			return fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 32), c.ItemId)
+		}
 		addItem.PileItem = append(addItem.PileItem, &model.Material{
-			Tid: alg.S2U32(parameter[1]),
-			Num: alg.S2U32(parameter[2]),
+			Tid: c.ItemId,
+			Num: c.ItemNum,
 		})
-
 	}
+
 	g.GetPd().AddItem(addItem)
 	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.AllScenePlaneEventScNotify(addItem.MaterialList)
-	return fmt.Sprintf("ok")
+	return fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "give")
 }
 
 func (g *GamePlayer) allGive() []*model.Material {
@@ -125,107 +133,213 @@ func (g *GamePlayer) allGive() []*model.Material {
 	return pileItem
 }
 
-func giveRelic(g *GamePlayer, parameter []string) string {
-	if len(parameter) < 5 {
-		return "Command Not enough parameters"
-	}
-	allSync := &model.AllPlayerSync{
-		RelicList: make([]uint32, 0),
-	}
-	all := alg.S2U32(parameter[0])
-	if all == 1 {
-		itemConf := gdconf.GetItemConfig()
-		for _, relic := range itemConf.Relic {
-			uniqueId := g.GetPd().AddRelic(relic.ID, 0, nil)
-			allSync.RelicList = append(allSync.RelicList, uniqueId)
+func (g *GamePlayer) commandSet(c *constant.CommandSet) string {
+	addItem := model.NewAddItem(nil)
+	res := text.GetTextByL(g.GetPd().GetLanguageType(), 47)
+
+	switch c.SetType {
+	case constant.SetTypeWorldLevel:
+		g.GetPd().SetWorldLevel(c.Sub1)
+		res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 42), g.GetPd().GetWorldLevel())
+	case constant.SetTypePlayerLevel:
+		g.GetPd().SetPlayerLevel(c.Sub1)
+		res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 43), c.Sub1)
+	case constant.SetTypeJumpMission:
+		if c.Sub1 == 0 {
+			g.GetPd().SeIsJumpMission(false)
+		} else if c.Sub1 == 1 {
+			g.GetPd().SeIsJumpMission(true)
 		}
-	} else {
-		id := alg.S2U32(parameter[1])
-		num := alg.S2I(parameter[2])
-		main := alg.S2U32(parameter[3])
-		sub := parameter[4]
-		for i := 0; i < num; i++ {
-			uniqueId := g.GetPd().AddRelic(id, main, alg.GetRelicSub(sub))
-			allSync.RelicList = append(allSync.RelicList, uniqueId)
+		res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 44), g.GetPd().GetIsJumpMission())
+	case constant.SetTypeLanguage:
+		g.GetPd().SetLanguageType(c.Language)
+		res = text.GetTextByL(g.GetPd().GetLanguageType(), 45)
+	case constant.SetTypeMainAvatar:
+		if c.Sub1 == 0 {
+			g.GetPd().SetGender(spb.Gender_GenderMan)
+			g.GetPd().SetMultiPathAvatar(8001)
+		} else if c.Sub1 == 1 {
+			g.GetPd().SetGender(spb.Gender_GenderWoman)
+			g.GetPd().SetMultiPathAvatar(8002)
 		}
+		addItem.AllSync.AvatarList = append(addItem.AllSync.AvatarList, 8001)
+		res = text.GetTextByL(g.GetPd().GetLanguageType(), 46)
 	}
-	g.AllPlayerSyncScNotify(allSync)
-	return fmt.Sprintf("ok")
+
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	return res
 }
 
-func jumpMission(g *GamePlayer, parameter []string) string {
-	if len(parameter) < 1 {
-		return "Command Not enough parameters"
-	}
-	db := g.GetPd().GetBasicBin()
-	is := alg.S2U32(parameter[0])
-	if is == 0 {
-		db.IsJumpMission = false
+func (g *GamePlayer) commandRelic(c *constant.CommandRelic) string {
+	addItem := model.NewAddItem(nil)
+	res := fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "equipment")
+
+	if c.IsAll {
+		for id := range gdconf.GetItemRelic() {
+			addItem.PileItem = append(addItem.PileItem, &model.Material{
+				Tid: id,
+				Num: c.Num,
+			})
+		}
 	} else {
-		db.IsJumpMission = true
+		var i uint32 = 0
+		for ; i < c.Num; i++ {
+			if uniqueId := g.GetPd().AddRelic(c.RelicId, c.Level, c.Main, c.Sub); uniqueId == 0 {
+				res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 54), c.RelicId)
+				break
+			} else {
+				addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
+			}
+		}
 	}
-	g.playerKickOutScNotify()
-	return fmt.Sprintf("ok")
+
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	return res
+}
+
+func (g *GamePlayer) commandEquipment(c *constant.CommandEquipment) string {
+	addItem := model.NewAddItem(nil)
+	res := fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "relic")
+
+	if c.IsAll {
+		for id := range gdconf.GetItemEquipment() {
+			addItem.PileItem = append(addItem.PileItem, &model.Material{
+				Tid: id,
+				Num: c.Num,
+			})
+		}
+	} else {
+		var i uint32 = 0
+		for ; i < c.Num; i++ {
+			if uniqueId := g.GetPd().AddEquipment(c.EquipmentId, c.Level, c.Rank); uniqueId == 0 {
+				res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 60), c.EquipmentId)
+				break
+			} else {
+				addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
+			}
+		}
+	}
+
+	g.GetPd().AddItem(addItem)
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	return res
+}
+
+func (g *GamePlayer) commandDel(c *constant.CommandDel) string {
+	allSync := model.NewAllPlayerSync()
+	res := fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 64), c.DelType)
+	db := g.GetPd().GetItem()
+
+	switch c.DelType {
+	case constant.DelTypeUnknown:
+		if c.IsAll {
+			db = &spb.Item{
+				RelicMap:     make(map[uint32]*spb.Relic),
+				EquipmentMap: make(map[uint32]*spb.Equipment),
+				MaterialMap:  make(map[uint32]uint32),
+				HeadIconMap:  make(map[uint32]uint32),
+			}
+			res = text.GetTextByL(g.GetPd().GetLanguageType(), 62)
+		}
+	case constant.DelTypeEquipment:
+		if c.IsAll {
+			db.EquipmentMap = make(map[uint32]*spb.Equipment)
+			res = text.GetTextByL(g.GetPd().GetLanguageType(), 62)
+		} else {
+			if db.EquipmentMap[c.Id] != nil {
+				delete(db.EquipmentMap, c.Id)
+				allSync.DelEquipmentList = append(allSync.DelEquipmentList, c.Id)
+				res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 63), string(c.DelType)+string(c.Id))
+			}
+		}
+	case constant.DelTypeRelic:
+		if c.IsAll {
+			db.RelicMap = make(map[uint32]*spb.Relic)
+			res = text.GetTextByL(g.GetPd().GetLanguageType(), 62)
+		} else {
+			if db.RelicMap[c.Id] != nil {
+				delete(db.RelicMap, c.Id)
+				allSync.DelRelicList = append(allSync.DelRelicList, c.Id)
+				res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 63), string(c.DelType)+string(c.Id))
+			}
+		}
+	case constant.DelTypeItem:
+		if c.IsAll {
+			db.MaterialMap = make(map[uint32]uint32)
+			res = text.GetTextByL(g.GetPd().GetLanguageType(), 62)
+		} else {
+			if n := db.MaterialMap[c.Id]; n >= c.Num {
+				db.MaterialMap[c.Id] = n - c.Num
+			} else {
+				db.MaterialMap[c.Id] = 0
+			}
+			res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 68), c.Id, db.MaterialMap[c.Id])
+			allSync.MaterialList = append(allSync.MaterialList, c.Id)
+		}
+	}
+
+	g.AllPlayerSyncScNotify(allSync)
+	return res
+}
+
+func (g *GamePlayer) commandAvatar(c *constant.CommandAvatar) string {
+	allSync := model.NewAllPlayerSync()
+	res := fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "avatar")
+
+	switch c.Type {
+	case constant.CommAvatarTypeAdd:
+		if c.IsAll {
+			allSync.AvatarList = gdconf.GetAvatarList()
+		} else {
+			if gdconf.GetAvatarDataById(c.AvatarId) == nil {
+				res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 74), c.AvatarId)
+			} else {
+				allSync.AvatarList = append(allSync.AvatarList, c.AvatarId)
+			}
+		}
+	case constant.CommAvatarTypeBuild:
+		if c.IsAll {
+			for id := range g.GetPd().GetAvatarList() {
+				allSync.AvatarList = append(allSync.AvatarList, id)
+			}
+		} else {
+			if g.GetPd().GetAvatarBinById(c.AvatarId) == nil {
+				res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 73), c.AvatarId)
+			} else {
+				allSync.AvatarList = append(allSync.AvatarList, c.AvatarId)
+			}
+		}
+	case constant.CommAvatarTypeDel:
+		res = text.GetTextByL(g.GetPd().GetLanguageType(), 75)
+	}
+
+	for _, id := range allSync.AvatarList {
+		db := g.GetPd().GetAvatarBinById(id)
+		if db == nil {
+			g.GetPd().AddAvatar(id)
+			db = g.GetPd().GetAvatarBinById(id)
+		}
+		if db == nil {
+			continue
+		}
+		// 提升等级
+		if c.IsMax {
+			g.GetPd().SetAvatarLevel(db, 80)
+			g.GetPd().SetAvatarMultiPath(db, true, 6)
+		} else {
+			g.GetPd().SetAvatarLevel(db, c.Level)
+			g.GetPd().SetAvatarMultiPath(db, c.Skill, c.Rank)
+		}
+		db.Hp = 10000
+		db.SpBar.CurSp = db.SpBar.MaxSp
+	}
+
+	g.AllPlayerSyncScNotify(allSync)
+	return res
 }
 
 /**********************************分割线*******************************/
-
-// 清空背包
-func (g *GamePlayer) DelItem(payloadMsg pb.Message) {
-	db := g.GetPd().GetItem()
-	db = &spb.Item{
-		RelicMap:     make(map[uint32]*spb.Relic),
-		EquipmentMap: make(map[uint32]*spb.Equipment),
-		MaterialMap:  make(map[uint32]uint32),
-		HeadIconMap:  make(map[uint32]uint32),
-	}
-	db.MaterialMap[11] = 240
-}
-
-// 角色一键满级
-func (g *GamePlayer) GmMaxCurAvatar(payloadMsg pb.Message) {
-	req := payloadMsg.(*spb.MaxCurAvatar)
-	allSync := &model.AllPlayerSync{AvatarList: make([]uint32, 0)}
-	if req.All {
-		bin := g.GetPd().GetAvatar()
-		if bin == nil {
-			return
-		}
-		for _, db := range bin.AvatarList {
-			g.SetAvatarMaxByDb(db)
-			allSync.AvatarList = append(allSync.AvatarList, db.AvatarId)
-		}
-	} else {
-		var db *spb.AvatarBin
-		db = g.GetPd().GetAvatarBinById(req.AvatarId)
-		if db == nil {
-			db = g.GetPd().GetCurAvatar()
-		}
-		allSync.AvatarList = append(allSync.AvatarList, db.AvatarId)
-		g.SetAvatarMaxByDb(db)
-	}
-	g.AllPlayerSyncScNotify(allSync)
-}
-
-func (g *GamePlayer) SetAvatarMaxByDb(db *spb.AvatarBin) {
-	if db == nil {
-		return
-	}
-	db.Level = 80          // 80级
-	db.PromoteLevel = 6    // 突破等级
-	db.Hp = 10000          // 满血
-	db.SpBar.CurSp = 10000 // 满能量
-	for _, info := range db.MultiPathAvatarInfoList {
-		info.Rank = 6                              // 六命
-		for _, skill := range info.SkilltreeList { // 技能满级
-			conf := gdconf.GetAvatarSkilltreeBySkillId(skill.PointId, 1)
-			if conf == nil {
-				continue
-			}
-			skill.Level = conf.MaxLevel
-		}
-	}
-}
 
 func (g *GamePlayer) RecoverLine() {
 	db := g.GetPd().GetCurLineUp()
@@ -237,56 +351,4 @@ func (g *GamePlayer) RecoverLine() {
 		}
 	}
 	g.SyncLineupNotify(db)
-}
-
-func (g *GamePlayer) GmMission(req *spb.GmMission) {
-	if req.FinishAll {
-		g.FinishAllMission()
-		g.FinishAllTutorial()
-		return
-	}
-}
-
-func (g *GamePlayer) FinishAllMission() {
-	db := g.GetPd().GetMainMission()
-	db.SubMissionList = make(map[uint32]*spb.MissionInfo)
-	db.MainMissionList = make(map[uint32]*spb.MissionInfo)
-	for id, info := range gdconf.GetSubMainMission() {
-		if db.FinishSubMissionList == nil {
-			db.FinishSubMissionList = make(map[uint32]*spb.MissionInfo)
-		}
-		db.FinishSubMissionList[id] = &spb.MissionInfo{
-			MissionId: id,
-			Progress:  info.Progress,
-			Status:    spb.MissionStatus_MISSION_FINISH,
-		}
-	}
-	for id := range gdconf.GetGoppMainMission() {
-		if db.FinishMainMissionList == nil {
-			db.FinishMainMissionList = make(map[uint32]*spb.MissionInfo)
-		}
-		db.FinishMainMissionList[id] = &spb.MissionInfo{
-			MissionId: id,
-			Progress:  1,
-			Status:    spb.MissionStatus_MISSION_FINISH,
-		}
-	}
-}
-
-// 完成所有教程
-func (g *GamePlayer) FinishAllTutorial() {
-	tDb := g.GetPd().GetTutorial()
-	for id := range gdconf.GetTutorialData() {
-		tDb[id] = &spb.TutorialInfo{
-			Id:     id,
-			Status: spb.TutorialStatus_TUTORIAL_FINISH,
-		}
-	}
-	gDb := g.GetPd().GetTutorialGuide()
-	for id := range gdconf.GetTutorialGuideGroupMap() {
-		gDb[id] = &spb.TutorialInfo{
-			Id:     id,
-			Status: spb.TutorialStatus_TUTORIAL_FINISH,
-		}
-	}
 }

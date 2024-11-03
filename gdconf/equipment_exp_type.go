@@ -50,3 +50,20 @@ func GetEquipmentExpByLevel(equipmentType, exp, level, promotion, equipmentId ui
 	newExp := CONF.EquipmentExpTypeMap[equipmentType][maxLevel].Exp
 	return maxLevel, newExp
 }
+
+func GetEquipmentPromotion(level uint32) uint32 {
+	if level < 20 {
+		return 0
+	} else if level < 30 {
+		return 1
+	} else if level < 40 {
+		return 2
+	} else if level < 50 {
+		return 3
+	} else if level < 60 {
+		return 4
+	} else if level < 70 {
+		return 5
+	}
+	return 6
+}

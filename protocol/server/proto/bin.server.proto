@@ -39,7 +39,7 @@ message PlayerBasicCompBin {
   fixed32 last_daily_refresh_time = 29; // 最后每日刷新时间
   TutorialDb tutorial = 30; // 教程
   bool is_proficient_player = 31; // 是否老玩家
-  uint32 language_type = 32; // 语言
+  LanguageType language_type = 32; // 语言
   string client_app_version = 33; // 客户端版本
   string client_device_info = 34; // 客户端设备信息
   string client_system_version = 35; // 客户端系统版本
@@ -56,6 +56,7 @@ message PlayerBasicCompBin {
   map<int32, Days> day = 46; // 每日刷新
   bool IsJumpMission = 47; // 是否跳过任务
   Shop shop = 48; // 商店
+  Train train = 49; // 列车
 }
 
 message Activity{
@@ -96,7 +97,7 @@ message TextJoin {
 
 message MusicInfo {
   uint32 music_id = 1;
- //  bool is = 2; // 是否解锁？
+  //  bool is = 2; // 是否解锁？
 }
 
 message ChangeStory {
@@ -477,6 +478,15 @@ message Shop {
 
 message ShopInfo {
 
+}
+
+message Train {
+  PamInfo pam = 1;
+}
+
+message PamInfo {
+  uint32 cur_pam_skin = 1;
+  map<uint32,bool>unlocked_pam_skin = 2;
 }
 
 message BlockBin{// 地图配置

@@ -54,3 +54,43 @@ const (
 	ConditionTypeSubMissionTaken       ConditionType = "SubMissionTaken"
 	ConditionTypeHasItemMainType       ConditionType = "HasItemMainType"
 )
+
+type MapCameraType string
+
+const (
+	MapCameraTypeBase       MapCameraType = ""
+	MapCameraTypeMaze       MapCameraType = "Maze"
+	MapCameraTypeRoom       MapCameraType = "Room"
+	MapCameraTypeLargeSpace MapCameraType = "LargeSpace"
+)
+
+type LevelFeatureType string
+
+const (
+	LevelFeatureTypeUnknown         LevelFeatureType = ""
+	LevelFeatureTypeRotatableRegion LevelFeatureType = "RotatableRegion"
+	LevelFeatureTypeHeartDial       LevelFeatureType = "HeartDial"
+	LevelFeatureTypeEraFlipper      LevelFeatureType = "EraFlipper"
+)
+
+type LevelDimensionCategory string
+
+const (
+	LevelDimensionCategoryMain                LevelDimensionCategory = ""
+	LevelDimensionCategoryStoryLine           LevelDimensionCategory = "StoryLine"
+	LevelDimensionCategoryActivityEarlyAccess LevelDimensionCategory = "ActivityEarlyAccess"
+	LevelDimensionCategoryActivityFirstAccess LevelDimensionCategory = "ActivityFirstAccess"
+	LevelDimensionCategoryCustom              LevelDimensionCategory = "Custom"
+)
+
+type CompareType string
+
+const (
+	CompareTypeUnknow       CompareType = ""
+	CompareTypeGreater      CompareType = "Greater"
+	CompareTypeGreaterEqual CompareType = "GreaterEqual"
+	CompareTypeNotEqual     CompareType = "NotEqual"
+	CompareTypeEqual        CompareType = "Equal"
+	CompareTypeLessEqual    CompareType = "LessEqual"
+	CompareTypeLess         CompareType = "Less"
+)

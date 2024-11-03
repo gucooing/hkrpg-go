@@ -170,12 +170,9 @@ func (g *GameServer) gameMsgHandle(netMsg *mq.NetMsg) {
 	s := g.getPlayerNet(netMsg.Uid)
 	if s != nil {
 		s.p.RecvChan <- player.Msg{
-			CmdId:       netMsg.CmdId,
-			MsgType:     player.Client,
-			PlayerMsg:   protoMsg,
-			CommandList: nil,
-			CommandId:   0,
-			CommandRsp:  "",
+			CmdId:     netMsg.CmdId,
+			MsgType:   player.Client,
+			PlayerMsg: protoMsg,
 		}
 	}
 }

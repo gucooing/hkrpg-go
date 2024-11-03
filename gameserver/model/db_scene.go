@@ -10,6 +10,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 	pb "google.golang.org/protobuf/proto"
@@ -371,7 +372,8 @@ func (g *PlayerData) SetRot(x, y, z int32) {
 }
 
 func (g *PlayerData) IfLoadMap(levelGroup *gdconf.GoppLevelGroup) bool {
-	if levelGroup.GroupName == "TrainVisitorDemo" {
+	if levelGroup.GroupName == "TrainVisitorDemo" ||
+		levelGroup.GroupName == "TrainVisiter" {
 		return false
 	}
 	switch levelGroup.Category {
@@ -403,6 +405,7 @@ func (g *PlayerData) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 		mainMissionList:               g.GetMainMissionList(),
 		finishMainMissionList:         g.GetFinishMainMissionList(),
 		systemUnlockCondition:         levelGroup.SystemUnlockCondition,
+		savedValueCondition:           levelGroup.SavedValueCondition,
 		levelGroupMissionConditionSet: nil,
 	}
 
@@ -415,6 +418,8 @@ func (g *PlayerData) IfMissionLoadMap(levelGroup *gdconf.GoppLevelGroup, mainIsL
 	if !c.CheckSystemUnlockCondition() {
 		return false
 	}
+
+	// FSV 筛选
 
 	if levelGroup.OwnerMainMissionID != 0 {
 		if c.mainMissionList[levelGroup.OwnerMainMissionID] == nil {
@@ -468,6 +473,7 @@ type LevelGroupMissionConditionSet struct {
 	mainMissionList               map[uint32]*spb.MissionInfo // 接取的主任务
 	finishMainMissionList         map[uint32]*spb.MissionInfo // 已完成的主任务
 	systemUnlockCondition         *gdconf.LevelGroupSystemUnlockConditionSet
+	savedValueCondition           *gdconf.LevelGroupSavedValueConditionSet
 	levelGroupMissionConditionSet *gdconf.LevelGroupMissionConditionSet
 }
 
@@ -566,13 +572,13 @@ func (c *LevelGroupMissionConditionSet) CheckLevelGroupMissionConditionSet(defau
 	return isLoaded
 }
 
-func (c *LevelGroupMissionConditionSet) GetMissionStatus(id uint32) constant.LevelGroupMissionPhase {
-	if c.subMainMissionList[id] != nil ||
-		c.mainMissionList[id] != nil {
+func (g *PlayerData) GetMissionStatus(id uint32) constant.LevelGroupMissionPhase {
+	if g.GetSubMainMissionById(id) != nil ||
+		g.GetMainMissionById(id) != nil {
 		return constant.LevelGroupMissionPhaseAccept
 	}
-	if c.finishSubMainMissionList[id] != nil ||
-		c.finishMainMissionList[id] != nil {
+	if g.GetFinishSubMainMissionById(id) != nil ||
+		g.GetFinishMainMissionById(id) != nil {
 		return constant.LevelGroupMissionPhaseFinish
 	}
 	return constant.LevelGroupMissionPhaseCancel
@@ -764,19 +770,21 @@ func (g *PlayerData) GetFloorSavedData(entryId uint32) map[string]int32 {
 	if db.FloorSavedData == nil {
 		db.FloorSavedData = make(map[string]int32)
 	}
-	mapEntrance := gdconf.GetMapEntranceById(entryId)
-	if mapEntrance == nil {
+	planeID, floorID, ok := gdconf.GetPFlaneID(entryId)
+	if !ok {
+		logger.Debug(text.GetTextByL(g.GetLanguageType(), 76), entryId)
+		return nil
+	}
+	dimensionInfo := gdconf.GetGoppRtLevelDimensionInfo(planeID, floorID, g.GetDimensionId())
+	if dimensionInfo == nil {
 		return db.FloorSavedData
 	}
-	foorMap := gdconf.GetFloorById(mapEntrance.PlaneID, mapEntrance.FloorID)
-	if foorMap == nil {
-		return db.FloorSavedData
-	}
-	for _, dimension := range foorMap.DimensionList {
-		for _, savedValue := range dimension.SavedValues {
-			if db.FloorSavedData[savedValue.Name] == 0 {
-				db.FloorSavedData[savedValue.Name] = savedValue.DefaultValue
-			}
+	for _, savedValue := range dimensionInfo.SavedValues {
+		if savedValue.Name == "Connection_MuteStairs" {
+			db.FloorSavedData[savedValue.Name] = 0
+		}
+		if _, ok = db.FloorSavedData[savedValue.Name]; !ok {
+			db.FloorSavedData[savedValue.Name] = savedValue.DefaultValue
 		}
 	}
 	return db.FloorSavedData
@@ -1083,42 +1091,36 @@ func (g *PlayerData) GetNPCByID(entityGroupList *proto.SceneEntityGroupInfo, sce
 }
 
 func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp *spb.Line) *proto.SceneInfo {
+	planeID, floorID, ok := gdconf.GetPFlaneID(entryId)
+	if !ok {
+		logger.Debug(text.GetTextByL(g.GetLanguageType(), 76), entryId)
+		return nil
+	}
 	leaderEntityId := g.GetNextGameObjectGuid()
-	mapEntrance := gdconf.GetMapEntranceById(entryId)
-	if mapEntrance == nil {
-		return nil
-	}
-	foorMap := gdconf.GetServerGroup(mapEntrance.PlaneID, mapEntrance.FloorID)
-	if foorMap == nil {
-		return nil
-	}
-	mazePlane := gdconf.GetMazePlaneById(mapEntrance.PlaneID)
-	if mazePlane == nil {
-		return nil
-	}
-	worldId := mazePlane.WorldID
-	if worldId == 100 {
-		worldId = 401
-	}
+	dimensionId := g.GetDimensionId()
 	scene := &proto.SceneInfo{
 		ClientPosVersion:   0,
-		WorldId:            worldId,
+		WorldId:            gdconf.GetWorldId(planeID),
 		LeaderEntityId:     leaderEntityId,
-		FloorId:            mapEntrance.FloorID,
-		GameModeType:       gdconf.GetPlaneType(mazePlane.PlaneType),
-		PlaneId:            mapEntrance.PlaneID,
+		FloorId:            floorID,
+		GameModeType:       gdconf.GetPlaneType(planeID),
+		PlaneId:            planeID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        make([]uint32, 0),
 		LightenSectionList: make([]uint32, 0),
 		GroupStateList:     make([]*proto.SceneGroupState, 0),
-		SceneMissionInfo:   g.GetMissionStatusBySceneInfo(gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)),
+		SceneMissionInfo: &proto.MissionStatusBySceneInfo{
+			DisabledMainMissionIdList:   make([]uint32, 0),
+			FinishedMainMissionIdList:   make([]uint32, 0),
+			SubMissionStatusList:        make([]*proto.Mission, 0),
+			UnfinishedMainMissionIdList: make([]uint32, 0),
+			MainMissionMcvList:          make([]*proto.MainMissionCustomValue, 0),
+		},
 		FloorSavedData:     g.GetFloorSavedData(entryId),
 		GameStoryLineId:    g.GameStoryLineId(),
-		// DimensionId:        g.GetDimensionId(), // TODO
+		DimensionId:        dimensionId,
 		EntityBuffInfoList: make([]*proto.EntityBuffInfo, 0),
 	}
-	// scene.LightenSectionList = append(scene.LightenSectionList, 0)
 	for i := uint32(0); i < 7; i++ {
 		scene.LightenSectionList = append(scene.LightenSectionList, i)
 	}
@@ -1132,16 +1134,73 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	g.GetSceneAvatarByLineUP(entityGroup, lineUp, leaderEntityId, pos, rot)
 	blockBin := g.GetBlock(entryId)
 	scene.EntityGroupList = append(scene.EntityGroupList, entityGroup)
+	missionMap := make(map[uint32]bool, 0)
+	foorMap := gdconf.GetServerGroup(planeID, floorID)
+	if foorMap == nil {
+		return nil
+	}
+	dimensionInfo := gdconf.GetGoppRtLevelDimensionInfo(planeID, floorID, dimensionId)
 	for _, levelGroup := range foorMap {
+		if !dimensionInfo.GroupIndexList[levelGroup.Index] {
+			continue
+		}
+		// 添加GetMissionStatusBySceneInfo
+		addMainMission := func(mainMissionId uint32) {
+			if mainMissionId != 0 &&
+				!missionMap[mainMissionId] {
+				missionMap[mainMissionId] = true
+				status := g.GetMissionStatus(mainMissionId)
+				if g.GetIsJumpMission() {
+					status = constant.LevelGroupMissionPhaseFinish
+				}
+				if status == constant.LevelGroupMissionPhaseFinish {
+					scene.SceneMissionInfo.FinishedMainMissionIdList = append(scene.SceneMissionInfo.FinishedMainMissionIdList,
+						mainMissionId)
+				} else {
+					scene.SceneMissionInfo.UnfinishedMainMissionIdList = append(scene.SceneMissionInfo.UnfinishedMainMissionIdList,
+						mainMissionId)
+				}
+			}
+		}
+		conditionSet := func(set *gdconf.LevelGroupMissionConditionSet) {
+			if set == nil {
+				return
+			}
+			for _, condition := range set.Conditions {
+				if !missionMap[condition.ID] {
+					continue
+				}
+				switch condition.LevelGroupMissionType {
+				case constant.LevelGroupMissionTypeSubMission:
+					scene.SceneMissionInfo.SubMissionStatusList = append(scene.SceneMissionInfo.SubMissionStatusList,
+						g.getProtoMission(condition.ID))
+				case constant.LevelGroupMissionTypeEventMission:
+					addMainMission(levelGroup.OwnerMainMissionID)
+				}
+				missionMap[condition.ID] = true
+			}
+		}
+		addMainMission(levelGroup.OwnerMainMissionID)
+		conditionSet(levelGroup.LoadCondition)
+		conditionSet(levelGroup.UnloadCondition)
+		conditionSet(levelGroup.ForceUnloadCondition)
+
+		if subMissionId := alg.ExtractDigits(levelGroup.GroupName); subMissionId != 0 &&
+			!missionMap[subMissionId] {
+			missionMap[subMissionId] = true
+			scene.SceneMissionInfo.SubMissionStatusList = append(scene.SceneMissionInfo.SubMissionStatusList,
+				g.getProtoMission(subMissionId))
+		}
+
 		if !g.IfLoadMap(levelGroup) {
-			g.AddNoLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
+			g.AddNoLoadedGroup(entryId, planeID, floorID, levelGroup.GroupId)
 			continue
 		} else {
-			// logger.Info("加载组PlaneID:%v,FloorID:%v,GroupId:%v,Index:%v",
-			// 	mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId, levelGroup.Index)
-			g.AddLoadedGroup(entryId, mapEntrance.PlaneID, mapEntrance.FloorID, levelGroup.GroupId)
+			logger.Info("加载组PlaneID:%v,FloorID:%v,GroupId:%v,Index:%v",
+				planeID, floorID, levelGroup.GroupId, levelGroup.Index)
+			g.AddLoadedGroup(entryId, planeID, floorID, levelGroup.GroupId)
 		}
-		scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
+		// scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)
 		entityGroupLists := &proto.SceneEntityGroupInfo{
 			GroupId:    levelGroup.GroupId,
 			EntityList: make([]*proto.SceneEntityInfo, 0),
@@ -1160,137 +1219,26 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	return scene
 }
 
-func (g *PlayerData) GetMissionStatusBySceneInfo(foorMap map[uint32]*gdconf.LevelGroup) *proto.MissionStatusBySceneInfo {
-	info := &proto.MissionStatusBySceneInfo{
-		DisabledMainMissionIdList:   make([]uint32, 0),
-		FinishedMainMissionIdList:   make([]uint32, 0),
-		SubMissionStatusList:        make([]*proto.Mission, 0),
-		UnfinishedMainMissionIdList: make([]uint32, 0),
-		MainMissionMcvList:          make([]*proto.MainMissionCustomValue, 0),
+func (g *PlayerData) getProtoMission(subMissionId uint32) *proto.Mission {
+	if gdconf.GetSubMainMissionById(subMissionId) == nil {
+		return nil
 	}
-	if foorMap == nil {
-		return info
+	status := g.GetMissionStatus(subMissionId)
+	if g.GetIsJumpMission() {
+		status = constant.LevelGroupMissionPhaseFinish
 	}
-	mainMissionList := g.GetMainMissionList()
-	finishMainMissionList := g.GetFinishMainMissionList()
-	subMissionList := g.GetSubMainMissionList()
-	finishSubMissionList := g.GetFinishSubMainMissionList()
-	for _, groupInfo := range foorMap {
-		// if groupInfo.Category != "Mission" {
-		// 	continue
-		// }
-		if groupInfo.OwnerMainMissionID != 0 {
-			var isAdd = true
-			for _, id := range info.DisabledMainMissionIdList {
-				if id == groupInfo.OwnerMainMissionID {
-					isAdd = false
-					break
-				}
-			}
-			for _, id := range info.FinishedMainMissionIdList {
-				if id == groupInfo.OwnerMainMissionID {
-					isAdd = false
-					break
-				}
-			}
-			if isAdd {
-				var mainMissionId uint32 = 0
-				if finishMainMissionList[groupInfo.OwnerMainMissionID] != nil {
-					mainMissionId = groupInfo.OwnerMainMissionID
-					info.FinishedMainMissionIdList = append(info.FinishedMainMissionIdList, groupInfo.OwnerMainMissionID)
-				}
-				if mainMissionList[groupInfo.OwnerMainMissionID] != nil {
-					info.DisabledMainMissionIdList = append(info.DisabledMainMissionIdList, groupInfo.OwnerMainMissionID)
-				}
+	info := &proto.Mission{
+		Id: subMissionId,
+	}
+	switch status {
+	case constant.LevelGroupMissionPhaseFinish:
+		info.Status = proto.MissionStatus_MISSION_FINISH
+	case constant.LevelGroupMissionPhaseAccept:
+		info.Status = proto.MissionStatus_MISSION_DOING
+	case constant.LevelGroupMissionPhaseCancel:
+		info.Status = proto.MissionStatus_MISSION_PREPARED
+	}
 
-				info.MainMissionMcvList = append(info.MainMissionMcvList, &proto.MainMissionCustomValue{
-					MainMissionId: mainMissionId,
-				})
-			}
-		}
-		if groupInfo.AtmosphereCondition != nil {
-			for _, conditions := range groupInfo.AtmosphereCondition.Conditions {
-				var isAdd = true
-				for _, v := range info.SubMissionStatusList {
-					if v.Id == conditions.SubMissionID {
-						isAdd = false
-						break
-					}
-				}
-				if isAdd {
-					db := finishSubMissionList[conditions.SubMissionID]
-					if db == nil {
-						db = subMissionList[conditions.SubMissionID]
-					}
-					if db != nil {
-						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
-							Status:   proto.MissionStatus(db.Status),
-							Progress: db.Progress,
-							Id:       conditions.SubMissionID,
-						})
-					} else {
-						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
-							Id: conditions.SubMissionID,
-						})
-					}
-				}
-			}
-		}
-		if groupInfo.LoadCondition != nil {
-			for _, conditions := range groupInfo.LoadCondition.Conditions {
-				var isAdd = true
-				if conditions.LevelGroupMissionType != "SubMission" {
-					continue
-				}
-				for _, v := range info.SubMissionStatusList {
-					if v.Id == conditions.ID {
-						isAdd = false
-						break
-					}
-				}
-				if isAdd {
-					db := finishSubMissionList[conditions.ID]
-					if db == nil {
-						db = subMissionList[conditions.ID]
-					}
-					if db != nil {
-						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
-							Status:   proto.MissionStatus(db.Status),
-							Progress: db.Progress,
-							Id:       conditions.ID,
-						})
-					}
-				}
-			}
-		}
-		if groupInfo.UnloadCondition != nil {
-			for _, conditions := range groupInfo.UnloadCondition.Conditions {
-				var isAdd = true
-				if conditions.LevelGroupMissionType != "SubMission" {
-					continue
-				}
-				for _, v := range info.SubMissionStatusList {
-					if v.Id == conditions.ID {
-						isAdd = false
-						break
-					}
-				}
-				if isAdd {
-					db := finishSubMissionList[conditions.ID]
-					if db == nil {
-						db = subMissionList[conditions.ID]
-					}
-					if db != nil {
-						info.SubMissionStatusList = append(info.SubMissionStatusList, &proto.Mission{
-							Status:   proto.MissionStatus(db.Status),
-							Progress: db.Progress,
-							Id:       conditions.ID,
-						})
-					}
-				}
-			}
-		}
-	}
 	return info
 }
 
@@ -1625,8 +1573,8 @@ func (g *PlayerData) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId, 
 
 func (g *PlayerData) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
 	info := &proto.SpringRecoverConfig{
-		DefaultHp:     10000,
-		AutoRecoverHp: true,
+		// DefaultHp:     10000,
+		// AutoRecoverHp: true,
 		// MANPHKHEFPC: nil,
 	}
 	return info
@@ -1634,8 +1582,8 @@ func (g *PlayerData) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
 
 func (g *PlayerData) GetHealPoolInfo() *proto.HealPoolInfo {
 	info := &proto.HealPoolInfo{
-		RefreshTime: time.Now().Unix(),
-		HealPool:    23500,
+		// RefreshTime: time.Now().Unix(),
+		// HealPool:    23500,
 	}
 
 	return info

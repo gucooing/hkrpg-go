@@ -10,7 +10,9 @@ import (
 
 type Config struct {
 	LogLevel           string      `json:"LogLevel"`
+	Language           string      `json:"Language"`
 	MaxPlayer          int64       `json:"MaxPlayer"`
+	DataPrefix         string      `json:"DataPrefix"`
 	GameDataConfigPath string      `json:"GameDataConfigPath"`
 	UpstreamServerList []string    `json:"UpstreamServerList"`
 	SqlPath            string      `json:"SqlPath"`
@@ -33,10 +35,10 @@ type DispatchList struct {
 }
 
 type GameServer struct {
-	GateTcp    bool            `json:"GateTcp"`
-	IsToken    bool            `json:"IsToken"`
-	CheckToken string          `json:"CheckToken"`
-	AppNet     constant.AppNet `json:"AppNet"`
+	GateTcp bool            `json:"GateTcp"`
+	IsToken bool            `json:"IsToken"`
+	BotUid  uint32          `json:"BotUid"`
+	AppNet  constant.AppNet `json:"AppNet"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
@@ -46,6 +48,10 @@ var CONF *Config = nil
 
 func GetConfig() *Config {
 	return CONF
+}
+
+func SetDefaultConfig() {
+	CONF = DefaultConfig
 }
 
 var FileNotExist = errors.New("config file not found")
@@ -73,7 +79,9 @@ func LoadConfig(confName string) error {
 
 var DefaultConfig = &Config{
 	LogLevel:           "Info",
+	Language:           "cn",
 	MaxPlayer:          -1,
+	DataPrefix:         "./data/",
 	GameDataConfigPath: "resources",
 	UpstreamServerList: make([]string, 0),
 	SqlPath:            "./conf/hkrpg-go-pe.db",
@@ -95,9 +103,9 @@ var DefaultConfig = &Config{
 		},
 	},
 	GameServer: &GameServer{
-		GateTcp:    false,
-		IsToken:    true,
-		CheckToken: "http://127.0.0.1:8080/api/token",
+		GateTcp: false,
+		BotUid:  0,
+		IsToken: true,
 		AppNet: constant.AppNet{
 			InnerAddr: "0.0.0.0",
 			InnerPort: "20041",

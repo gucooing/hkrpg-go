@@ -39,6 +39,24 @@ func (g *PlayerData) GetMainMissionList() map[uint32]*spb.MissionInfo {
 	return db.MainMissionList
 }
 
+func (g *PlayerData) GetMainMissionById(id uint32) *spb.MissionInfo {
+	db := g.GetMainMissionList()
+	return db[id]
+}
+
+func (g *PlayerData) GetFinishMainMissionList() map[uint32]*spb.MissionInfo {
+	db := g.GetMainMission()
+	if db.FinishMainMissionList == nil {
+		db.FinishMainMissionList = make(map[uint32]*spb.MissionInfo)
+	}
+	return db.FinishMainMissionList
+}
+
+func (g *PlayerData) GetFinishMainMissionById(id uint32) *spb.MissionInfo {
+	db := g.GetFinishMainMissionList()
+	return db[id]
+}
+
 func (g *PlayerData) GetSubMainMissionList() map[uint32]*spb.MissionInfo {
 	db := g.GetMainMission()
 	if db.SubMissionList == nil {
@@ -50,14 +68,6 @@ func (g *PlayerData) GetSubMainMissionList() map[uint32]*spb.MissionInfo {
 func (g *PlayerData) GetSubMainMissionById(id uint32) *spb.MissionInfo {
 	db := g.GetSubMainMissionList()
 	return db[id]
-}
-
-func (g *PlayerData) GetFinishMainMissionList() map[uint32]*spb.MissionInfo {
-	db := g.GetMainMission()
-	if db.FinishMainMissionList == nil {
-		db.FinishMainMissionList = make(map[uint32]*spb.MissionInfo)
-	}
-	return db.FinishMainMissionList
 }
 
 func (g *PlayerData) GetFinishSubMainMissionList() map[uint32]*spb.MissionInfo {
@@ -453,9 +463,8 @@ func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, addItem *AddI
 	finishMainMissionList := g.GetFinishMainMissionList()
 	for _, id := range finishMainList {
 		conf := gdconf.GetMainMissionById(id)
-		if conf != nil {
-			// 奖励发放
-			addItem.PileItem = append(addItem.PileItem, GetRewardData(conf.RewardID)...)
+		if conf == nil {
+			continue
 		}
 		finishMainMissionList[id] = &spb.MissionInfo{
 			MissionId: id,
@@ -466,6 +475,8 @@ func (g *PlayerData) AddFinishMainMission(finishMainList []uint32, addItem *AddI
 			finishMainMissionList[id].MissionCustomValue = db.MissionCustomValue
 			delete(mainMissionList, id)
 		}
+		// 奖励发放
+		addItem.PileItem = append(addItem.PileItem, GetRewardData(conf.RewardID)...)
 		// 完成全部子任务
 	}
 }
@@ -516,23 +527,20 @@ func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, addItem *AddIte
 	subMissionList := g.GetSubMainMissionList()
 	finishSubMissionList := g.GetFinishSubMainMissionList()
 	for _, subId := range finishSubList {
-		var progress uint32
 		conf := gdconf.GetSubMainMissionById(subId)
 		if conf == nil {
-			progress = 1
-		} else {
-			// 奖励发放
-			addItem.PileItem = append(addItem.PileItem, GetRewardData(conf.SubRewardID)...)
-			progress = conf.Progress
+			continue
 		}
 		if subMissionList[subId] != nil {
 			delete(subMissionList, subId)
 		}
 		finishSubMissionList[subId] = &spb.MissionInfo{
 			MissionId: subId,
-			Progress:  progress,
+			Progress:  conf.Progress,
 			Status:    spb.MissionStatus_MISSION_FINISH,
 		}
+		// 奖励发放
+		addItem.PileItem = append(addItem.PileItem, GetRewardData(conf.SubRewardID)...)
 	}
 }
 

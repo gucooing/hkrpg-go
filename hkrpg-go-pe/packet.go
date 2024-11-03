@@ -1,7 +1,6 @@
 package hkrpg_go_pe
 
 import (
-	"strings"
 	"time"
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
@@ -23,7 +22,7 @@ var packetCaptureMap = map[uint16]packetFunc{ // 抽包
 func (h *HkRpgGoServer) packetCapture(p *PlayerGame, cmdId uint16, protoMsg pb.Message) {
 	handelFunc, ok := packetCaptureMap[cmdId]
 	if !ok {
-		p.sendGameMsg(player.Client, cmdId, protoMsg)
+		p.sendGameMsg(player.Client, cmdId, protoMsg, "")
 		return
 	}
 	handelFunc(h, p, protoMsg)
@@ -42,7 +41,6 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 		MessageText: req.MessageText,
 		ExtraId:     req.ExtraId,
 		MessageType: req.MessageType,
-		BNABNCCMILM: req.BNABNCCMILM,
 		ChatType:    req.ChatType,
 	}
 	for _, targetUid := range targetList {
@@ -52,19 +50,10 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 			PlayerMsg: notify,
 		})
 		if targetUid == 0 {
-			bot := &proto.RevcMsgScNotify{
-				SourceUid:   0,
-				TargetUid:   p.Conn.GetSession().Uid,
-				MessageText: p.GamePlayer.EnterCommand(player.Msg{CommandList: strings.Split(req.MessageText, " ")}),
-				ExtraId:     req.ExtraId,
-				MessageType: req.MessageType,
-				BNABNCCMILM: req.BNABNCCMILM,
-				ChatType:    req.ChatType,
+			if len(req.MessageText) > 0 &&
+				req.MessageText[0] == '/' {
+				p.sendGameMsg(player.GmReq, 0, nil, req.MessageText)
 			}
-			p.toSession(player.Msg{
-				CmdId:     cmd.RevcMsgScNotify,
-				PlayerMsg: bot,
-			})
 			continue
 		}
 		target := h.GetPlayer(targetUid)
@@ -76,10 +65,6 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 			PlayerMsg: notify,
 		})
 	}
-
-	// if req.MessageText == "dump" {
-	// 	p.GamePlayer.Dump()
-	// }
 
 	rsp := &proto.SendMsgScRsp{
 		EndTime: uint64(time.Now().Unix()),

@@ -169,12 +169,12 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 			g.addTypeAvatarCard(itemInfo.Tid, addItem)
 			continue
 		case constant.ItemMainTypeEquipment:
-			uniqueId := g.AddEquipment(itemInfo.Tid)
+			uniqueId := g.AddEquipment(itemInfo.Tid, 1, 1)
 			addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
 			addItem.ItemList = append(addItem.ItemList, g.GetEquipmentItem(uniqueId))
 			continue
 		case constant.ItemMainTypeRelic:
-			uniqueId := g.AddRelic(itemInfo.Tid, 0, nil)
+			uniqueId := g.AddRelic(itemInfo.Tid, 1, 0, nil)
 			addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 			addItem.ItemList = append(addItem.ItemList, g.GetRelicItem(uniqueId))
 			continue
@@ -269,7 +269,7 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 			ItemId: itemInfo.Tid,
 		})
 	case constant.ItemSubTypeGift: // 杂
-		if use := gdconf.GetItemUseData(conf.UseDataID); use != nil && use.IsAutoUse {
+		if use := gdconf.GetItemUseData(conf.ID); use != nil && use.IsAutoUse {
 			// switch expr {
 			//
 			// }
@@ -310,6 +310,7 @@ func (g *PlayerData) GetMaterial() []*proto.Material {
 			conf.ItemMainType == constant.ItemMainTypeMaterial ||
 			conf.ItemMainType == constant.ItemMainTypeMission ||
 			conf.ItemMainType == constant.ItemMainTypePet {
+
 			if conf.PileLimit != 0 && num > conf.PileLimit {
 				num = conf.PileLimit
 				g.SetMaterialById(id, conf.PileLimit)
@@ -390,18 +391,26 @@ func (g *PlayerData) GetEquipment(uniqueId uint32) *proto.Equipment {
 	return equipment
 }
 
-func (g *PlayerData) AddEquipment(tid uint32) uint32 {
+func (g *PlayerData) AddEquipment(tid, level, rank uint32) uint32 {
 	uniqueId := g.GetUniqueId()
 	db := g.GetEquipmentMap()
+	if level < 1 {
+		level = 1
+	}
+	if rank < 1 {
+		rank = 1
+	} else if rank > 5 {
+		rank = 5
+	}
 	db[uniqueId] = &spb.Equipment{
 		Tid:          tid,
 		UniqueId:     uniqueId,
 		Exp:          0,
-		Level:        1,
-		Promotion:    0,
+		Level:        level,
+		Promotion:    gdconf.GetEquipmentPromotion(level),
 		BaseAvatarId: 0,
 		IsProtected:  false,
-		Rank:         1,
+		Rank:         rank,
 	}
 	return uniqueId
 }
@@ -454,11 +463,14 @@ func (g *PlayerData) GetRelic(uniqueId uint32) *proto.Relic {
 }
 
 // 指定属性new
-func (g *PlayerData) AddRelic(tid uint32, mainAffix uint32, subAffix map[uint32]uint32) uint32 {
+func (g *PlayerData) AddRelic(tid, level, mainAffix uint32, subAffix map[uint32]uint32) uint32 {
 	relicConf := gdconf.GetRelicById(tid)
 	if relicConf == nil {
 		logger.Error("relic:%v,error", tid)
 		return 0
+	}
+	if level < 1 {
+		level = 1
 	}
 	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
 	if mainAffixConf == nil { // 当主属性不合法时，随机一个合法的主属性，避免后续空指针
@@ -473,7 +485,7 @@ func (g *PlayerData) AddRelic(tid uint32, mainAffix uint32, subAffix map[uint32]
 		Tid:               tid,
 		UniqueId:          uniqueId,
 		Exp:               0,
-		Level:             0,
+		Level:             level,
 		MainAffixId:       mainAffixConf.AffixID,
 		RelicAffix:        GetRelicAffix(subAffix),
 		BaseAvatarId:      0,
@@ -645,7 +657,7 @@ func (g *PlayerData) UseItem(conf *gdconf.ItemUseBuffData, avatarId uint32, addB
 	if conf == nil {
 		return
 	}
-	g.AddLineUpMp(conf.PreviewSkillPoint)
+	g.AddLineUpMp(uint32(conf.PreviewSkillPoint))
 	g.AvatarRecoverPercent(avatarId, conf.PreviewHPRecoveryValue, conf.PreviewHPRecoveryPercent)
 	if conf.MazeBuffID != 0 {
 		buffDb := g.GetMazeBuffList()

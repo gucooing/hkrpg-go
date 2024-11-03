@@ -26,6 +26,10 @@ func (g *PlayerData) GetAvatar() *spb.Avatar {
 	return db.Avatar
 }
 
+func (g *PlayerData) SetGender(x spb.Gender) {
+	g.GetAvatar().Gender = x
+}
+
 func (g *PlayerData) GetAvatarList() map[uint32]*spb.AvatarBin {
 	db := g.GetAvatar()
 	if db.AvatarList == nil {
@@ -152,6 +156,20 @@ func (g *PlayerData) GetCurMultiPathAvatar(avatarId uint32) *spb.MultiPathAvatar
 	return db.MultiPathAvatarInfoList[db.CurPath]
 }
 
+// 设置命途
+func (g *PlayerData) SetMultiPathAvatar(avatarId uint32) bool {
+	conf := gdconf.GetMultiplePathAvatarConfig(avatarId)
+	if conf != nil {
+		db := g.GetAvatarBinById(conf.BaseAvatarID)
+		if db != nil &&
+			db.MultiPathAvatarInfoList[avatarId] != nil {
+			db.CurPath = avatarId
+			return true
+		}
+	}
+	return false
+}
+
 // 添加技能
 func (g *PlayerData) newSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 	skilltreeList := make([]*spb.AvatarSkillBin, 0)
@@ -185,6 +203,34 @@ func (g *PlayerData) GetSkillTreeList(avatarId uint32) []*spb.AvatarSkillBin {
 		return skilltreeList
 	}
 	return curPath.SkilltreeList
+}
+
+func (g *PlayerData) SetAvatarLevel(db *spb.AvatarBin, level uint32) {
+	if db == nil {
+		return
+	}
+	db.Level = level
+	db.PromoteLevel = (level - 20) / 10
+}
+
+func (g *PlayerData) SetAvatarMultiPath(db *spb.AvatarBin, isMax bool, rank uint32) {
+	if db == nil {
+		return
+	}
+	for _, info := range db.MultiPathAvatarInfoList {
+		if isMax {
+			info.Rank = 6                              // 六命
+			for _, skill := range info.SkilltreeList { // 技能满级
+				conf := gdconf.GetAvatarSkilltreeBySkillId(skill.PointId, 1)
+				if conf == nil {
+					continue
+				}
+				skill.Level = conf.MaxLevel
+			}
+		} else {
+			info.Rank = rank
+		}
+	}
 }
 
 func (g *PlayerData) CopyBattleAvatar(avatarBin *spb.AvatarBin) {
