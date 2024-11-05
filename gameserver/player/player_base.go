@@ -7,6 +7,7 @@ import (
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
+	"github.com/gucooing/hkrpg-go/pkg/lua"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
@@ -161,14 +162,12 @@ func (g *GamePlayer) SetAvatarPathCsReq(payloadMsg pb.Message) {
 	rsp := &proto.SetAvatarPathScRsp{
 		AvatarId: req.AvatarId,
 	}
-	conf := gdconf.GetMultiplePathAvatarConfig(uint32(req.AvatarId))
-	if conf != nil {
-		db := g.GetPd().GetAvatarBinById(conf.BaseAvatarID)
-		if db != nil {
-			db.CurPath = uint32(req.AvatarId)
-			g.AllPlayerSyncScNotify(&model.AllPlayerSync{AvatarList: []uint32{conf.BaseAvatarID}})
-		}
+	if g.GetPd().SetMultiPathAvatar(uint32(req.AvatarId)) {
+		g.AllPlayerSyncScNotify(&model.AllPlayerSync{AvatarList: []uint32{uint32(req.AvatarId)}})
+	} else {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 	}
+
 	g.Send(cmd.SetAvatarPathScRsp, rsp)
 
 }
@@ -237,11 +236,20 @@ func (g *GamePlayer) GetTutorialCsReq(payloadMsg pb.Message) {
 		TutorialList: make([]*proto.Tutorial, 0),
 		Retcode:      0,
 	}
-	for _, db := range g.GetPd().GetTutorial() {
-		rsp.TutorialList = append(rsp.TutorialList, &proto.Tutorial{
-			Id:     db.Id,
-			Status: proto.TutorialStatus(db.Status),
-		})
+	if g.GetPd().GetIsJumpMission() {
+		for id := range gdconf.GetTutorialData() {
+			rsp.TutorialList = append(rsp.TutorialList, &proto.Tutorial{
+				Id:     id,
+				Status: proto.TutorialStatus_TUTORIAL_FINISH,
+			})
+		}
+	} else {
+		for _, db := range g.GetPd().GetTutorial() {
+			rsp.TutorialList = append(rsp.TutorialList, &proto.Tutorial{
+				Id:     db.Id,
+				Status: proto.TutorialStatus(db.Status),
+			})
+		}
 	}
 
 	g.Send(cmd.GetTutorialScRsp, rsp)
@@ -253,15 +261,26 @@ func (g *GamePlayer) GetTutorialGuideCsReq(payloadMsg pb.Message) {
 		TutorialGuideList: make([]*proto.TutorialGuide, 0),
 	}
 
-	for _, db := range g.GetPd().GetTutorialGuide() {
-		rsp.TutorialGuideList = append(rsp.TutorialGuideList, &proto.TutorialGuide{
-			Id:     db.Id,
-			Status: proto.TutorialStatus(db.Status),
-		})
+	if g.GetPd().GetIsJumpMission() {
+		for id := range gdconf.GetTutorialGuideGroupMap() {
+			rsp.TutorialGuideList = append(rsp.TutorialGuideList, &proto.TutorialGuide{
+				Id:     id,
+				Status: proto.TutorialStatus_TUTORIAL_FINISH,
+			})
+		}
+	} else {
+		for _, db := range g.GetPd().GetTutorialGuide() {
+			rsp.TutorialGuideList = append(rsp.TutorialGuideList, &proto.TutorialGuide{
+				Id:     db.Id,
+				Status: proto.TutorialStatus(db.Status),
+			})
+		}
 	}
 
 	g.Send(cmd.GetTutorialGuideScRsp, rsp)
-	// g.ClientDownloadDataScNotify()
+	for _, v := range lua.GetLoginLua() {
+		g.ClientDownloadDataScNotify(v)
+	}
 }
 
 func (g *GamePlayer) UnlockTutorialCsReq(payloadMsg pb.Message) {

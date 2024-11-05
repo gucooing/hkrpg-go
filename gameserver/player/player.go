@@ -19,7 +19,7 @@ func init() {
 	MissionInit()
 }
 
-var LogMsgPlayer uint32 = 5
+var LogMsgPlayer uint32 = 1
 var ISPE = false
 
 type GamePlayer struct {

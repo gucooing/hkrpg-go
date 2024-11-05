@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/gucooing/hkrpg-go/pkg/lua"
 	"github.com/gucooing/hkrpg-go/pkg/text"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
@@ -50,6 +51,9 @@ func GetCommand(list []string, l spb.LanguageType) (CommandAll, error) {
 		return c.getCommand(list[1:], l)
 	case "/set":
 		c = new(CommandSet)
+		return c.getCommand(list[1:], l)
+	case "/lua":
+		c = new(CommandLua)
 		return c.getCommand(list[1:], l)
 	case "/mission":
 
@@ -423,6 +427,22 @@ func (c *CommandSet) getCommand(list []string, l spb.LanguageType) (CommandAll, 
 		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 36), list[0]))
 	}
 	return comm, nil
+}
+
+type CommandLua struct {
+	Uid  uint32
+	Data []byte
+}
+
+func (c *CommandLua) getCommand(list []string, l spb.LanguageType) (CommandAll, error) {
+	if len(list) < 1 {
+		return nil, errors.New(text.GetTextByL(l, 80))
+	}
+	data := lua.GetLaLua(list[0])
+	if data == nil {
+		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 79), list[0]))
+	}
+	return &CommandLua{Uid: c.Uid, Data: data}, nil
 }
 
 func s2U32(msg string) uint32 {

@@ -13,6 +13,7 @@ import (
 	"github.com/gucooing/hkrpg-go/hkrpg-go-pe"
 	"github.com/gucooing/hkrpg-go/pkg"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/lua"
 	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/gucooing/hkrpg-go/pkg/upApi"
@@ -44,6 +45,8 @@ func main() {
 	client.NewPushClient(cfg.PushUrl)
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	// 初始化lua
+	lua.LoadLua(cfg.GameServer.LoadLua)
 	// 初始化服务器
 	s := hkrpg_go_pe.NewServer(cfg)
 	go upApi.UpApi()

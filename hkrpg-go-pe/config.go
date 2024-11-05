@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
+	"github.com/gucooing/hkrpg-go/pkg/lua"
 )
 
 type Config struct {
@@ -38,6 +39,7 @@ type GameServer struct {
 	GateTcp bool            `json:"GateTcp"`
 	IsToken bool            `json:"IsToken"`
 	BotUid  uint32          `json:"BotUid"`
+	LoadLua *lua.ConfLua    `json:"LoadLua"`
 	AppNet  constant.AppNet `json:"AppNet"`
 }
 type Gm struct {
@@ -106,6 +108,11 @@ var DefaultConfig = &Config{
 		GateTcp: false,
 		BotUid:  0,
 		IsToken: true,
+		LoadLua: &lua.ConfLua{
+			LoginLua: make([]string, 0),
+			PingLua:  make([]string, 0),
+			LaLua:    make(map[string]string),
+		},
 		AppNet: constant.AppNet{
 			InnerAddr: "0.0.0.0",
 			InnerPort: "20041",

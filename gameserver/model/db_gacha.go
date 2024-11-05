@@ -259,7 +259,7 @@ func (g *PlayerData) AddGachaItem(id uint32, addItem *AddItem, gachaItem *proto.
 		addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
 		gachaItem.GachaItem = g.GetEquipmentItem(uniqueId)
 	case constant.ItemMainTypeRelic:
-		uniqueId := g.AddRelic(id, 1, 0, nil)
+		uniqueId := g.AddRelic(id, 0, 0, nil)
 		addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 		gachaItem.GachaItem = g.GetRelicItem(uniqueId)
 	}

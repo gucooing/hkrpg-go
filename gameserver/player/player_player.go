@@ -3,6 +3,7 @@ package player
 import (
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/lua"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
@@ -17,6 +18,10 @@ func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg pb.Message) {
 	rsp := new(proto.PlayerHeartBeatScRsp)
 	rsp.ServerTimeMs = sTime
 	rsp.ClientTimeMs = req.ClientTimeMs
+
+	for _, v := range lua.GetPingLua() {
+		g.ClientDownloadDataScNotify(v)
+	}
 
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }

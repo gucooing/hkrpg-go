@@ -35,6 +35,8 @@ func (g *GamePlayer) EnterCommand(msg Msg) {
 			reqMessageTextList = g.commandAvatar(x)
 		case *constant.CommandDel:
 			reqMessageTextList = g.commandDel(x)
+		case *constant.CommandLua:
+			reqMessageTextList = g.commandLua(x)
 		}
 	}
 	for _, reqMessageText := range strings.Split(reqMessageTextList, "\n") {
@@ -234,12 +236,7 @@ func (g *GamePlayer) commandDel(c *constant.CommandDel) string {
 	switch c.DelType {
 	case constant.DelTypeUnknown:
 		if c.IsAll {
-			db = &spb.Item{
-				RelicMap:     make(map[uint32]*spb.Relic),
-				EquipmentMap: make(map[uint32]*spb.Equipment),
-				MaterialMap:  make(map[uint32]uint32),
-				HeadIconMap:  make(map[uint32]uint32),
-			}
+			g.GetPd().GetBasicBin().Item = model.NewItem()
 			res = text.GetTextByL(g.GetPd().GetLanguageType(), 62)
 		}
 	case constant.DelTypeEquipment:
@@ -337,6 +334,11 @@ func (g *GamePlayer) commandAvatar(c *constant.CommandAvatar) string {
 
 	g.AllPlayerSyncScNotify(allSync)
 	return res
+}
+
+func (g *GamePlayer) commandLua(c *constant.CommandLua) string {
+	g.ClientDownloadDataScNotify(c.Data)
+	return fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "lua")
 }
 
 /**********************************分割线*******************************/

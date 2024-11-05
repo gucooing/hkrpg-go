@@ -185,7 +185,7 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 	}
 
 	for i := 0; i < int(req.Count); i++ {
-		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, 1, req.MainAffixId, nil)
+		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, 0, req.MainAffixId, nil)
 		addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
 			ItemId:   req.ComposeRelicId,

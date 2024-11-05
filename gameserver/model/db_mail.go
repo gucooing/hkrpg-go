@@ -84,7 +84,7 @@ func (g *PlayerData) MailReadItem(conf []*constant.Item, addItem *AddItem) {
 				Num: v.Num,
 			})
 		case constant.MailRelic: // 遗器处理
-			uniqueId := g.AddRelic(v.ItemId, 1, v.MainAffixId, v.SubAffixList)
+			uniqueId := g.AddRelic(v.ItemId, 0, v.MainAffixId, v.SubAffixList)
 			addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 		case constant.MailEquipment:
 			uniqueId := g.AddEquipment(v.ItemId, 1, 1)

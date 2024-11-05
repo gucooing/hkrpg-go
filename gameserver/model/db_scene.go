@@ -1196,8 +1196,8 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 			g.AddNoLoadedGroup(entryId, planeID, floorID, levelGroup.GroupId)
 			continue
 		} else {
-			logger.Info("加载组PlaneID:%v,FloorID:%v,GroupId:%v,Index:%v",
-				planeID, floorID, levelGroup.GroupId, levelGroup.Index)
+			// logger.Info("加载组PlaneID:%v,FloorID:%v,GroupId:%v,Index:%v",
+			// 	planeID, floorID, levelGroup.GroupId, levelGroup.Index)
 			g.AddLoadedGroup(entryId, planeID, floorID, levelGroup.GroupId)
 		}
 		// scene.GroupIdList = append(scene.GroupIdList, levelGroup.GroupId)

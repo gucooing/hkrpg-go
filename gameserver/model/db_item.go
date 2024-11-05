@@ -174,7 +174,7 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 			addItem.ItemList = append(addItem.ItemList, g.GetEquipmentItem(uniqueId))
 			continue
 		case constant.ItemMainTypeRelic:
-			uniqueId := g.AddRelic(itemInfo.Tid, 1, 0, nil)
+			uniqueId := g.AddRelic(itemInfo.Tid, 0, 0, nil)
 			addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 			addItem.ItemList = append(addItem.ItemList, g.GetRelicItem(uniqueId))
 			continue

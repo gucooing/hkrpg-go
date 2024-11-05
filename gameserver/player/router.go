@@ -190,6 +190,9 @@ func (r *RouteManager) initRoute(g *GamePlayer) {
 		cmd.SwordTrainingStartGameCsReq: g.SwordTrainingStartGameCsReq, // 开始练剑游戏请求
 		// cmd.SwordTrainingLearnSkillCsReq:g.SwordTrainingLearnSkillCsReq,// 领悟剑招请求
 		// cmd.SwordTrainingTurnActionCsReq:g.SwordTrainingTurnActionCsReq,// 开始日常训练
+		// 音乐游戏
+		cmd.MusicRhythmDataCsReq:       g.MusicRhythmDataCsReq,       // 获取音乐游戏信息
+		cmd.MusicRhythmStartLevelCsReq: g.MusicRhythmStartLevelCsReq, // 获取音乐游戏关卡配置
 		// 基础
 		cmd.GetBasicInfoCsReq:              g.HandleGetBasicInfoCsReq,        // 基础信息
 		cmd.GetPhoneDataCsReq:              g.HandleGetPhoneDataCsReq,        // 获取手机信息
