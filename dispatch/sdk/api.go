@@ -2,10 +2,29 @@ package sdk
 
 import (
 	"io/ioutil"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
+	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 )
+
+func (s *Server) getComboToken(c *gin.Context) {
+	accountId := c.Query("account_id")
+	rsp := &constant.GateGetPlayerComboToken{
+		Retcode:    0,
+		AccountId:  accountId,
+		ComboToken: "",
+	}
+	token := database.GetComboTokenByAccountId(database.DISPATCH.LoginRedis, database.DISPATCH.AccountMysql, accountId)
+	if token == "" {
+		rsp.Retcode = -1
+	} else {
+		rsp.ComboToken = token
+	}
+	c.JSON(http.StatusOK, rsp)
+}
 
 func (s *Server) GetExperimentListHandler(c *gin.Context) {
 	c.Header("Content-type", "application/json")

@@ -26,7 +26,10 @@ func (s *Server) QueryDispatchHandler(c *gin.Context) {
 			Name:        info.Name,
 			Title:       info.Title,
 			EnvType:     strconv.Itoa(int(info.Type)),
-			DispatchUrl: fmt.Sprintf("%s/query_gateway/%s", s.OuterAddr, info.Name),
+			DispatchUrl: info.DispatchUrl,
+		}
+		if info.DispatchUrl == "" {
+			server.DispatchUrl = fmt.Sprintf("%s/query_gateway/%s", s.OuterAddr, info.Name)
 		}
 		serverList = append(serverList, server)
 	}

@@ -34,6 +34,7 @@ type RegionInfo struct {
 	Name        string
 	Title       string
 	Type        uint32
+	DispatchUrl string
 	MinGateAddr string
 	MinGatePort uint32
 	MinGateTcp  bool

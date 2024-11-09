@@ -10,6 +10,7 @@ func (s *Server) GetSdkRouter(router *gin.Engine) {
 	router.Any("/sdk/dataUpload", s.SdkDataUploadHandler)
 	router.POST("/apm/dataUpload", s.apmdataUpload)
 	router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)
+	router.GET("/getComboToken", s.getComboToken)
 
 	router.GET("/query_dispatch", s.QueryDispatchHandler)
 	router.GET("/query_dispatch/gucooing/az", s.QueryDispatchHandler)

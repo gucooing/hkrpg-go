@@ -305,7 +305,7 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 		return rsp
 	}
 
-	comboToken := database.GetComboTokenByAccountIdRedis(database.GATE.LoginRedis, req.AccountUid)
+	comboToken := database.GetComboTokenByAccountId(database.GATE.LoginRedis, nil, req.AccountUid)
 	// token 验证
 	if req.Token != comboToken {
 		rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)

@@ -4,6 +4,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -74,8 +75,18 @@ func UpdatePlayerUid(db *gorm.DB, playerUid *constant.PlayerUid) error {
 	}
 }
 
+func GetComboTokenByAccountId(rc *redis.Client, db *gorm.DB, accountId string) string {
+	if rc != nil {
+		return getComboTokenByAccountIdRedis(rc, accountId)
+	}
+	if db != nil {
+		return GetPlayerUidByAccountId(db, alg.S2U32(accountId)).ComboToken
+	}
+	return ""
+}
+
 // 获取ComboToken Redis
-func GetComboTokenByAccountIdRedis(rc *redis.Client, accountId string) string {
+func getComboTokenByAccountIdRedis(rc *redis.Client, accountId string) string {
 	key := "player_comboToken:" + accountId
 	comboToken, _ := rc.Get(ctx, key).Result()
 	return comboToken

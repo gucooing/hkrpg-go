@@ -245,3 +245,9 @@ type CurrencyAndCountryByIpResp struct {
 		PriceTierVersion string `json:"price_tier_version"`
 	} `json:"data"`
 }
+
+type GateGetPlayerComboToken struct {
+	Retcode    int    `json:"retcode"`
+	AccountId  string `json:"account_id"`
+	ComboToken string `json:"combo_token"`
+}

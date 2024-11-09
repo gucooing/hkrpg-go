@@ -75,7 +75,7 @@ func newBasicBin() *spb.PlayerBasicCompBin {
 		NicknameAuditBin:     nil,
 		IpCountryCode:        "",
 		IpRegionName:         "",
-		IsJumpMission:        true,
+		IsJumpMission:        false,
 	}
 
 	return basicBin

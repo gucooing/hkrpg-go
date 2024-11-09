@@ -24,23 +24,26 @@ type Config struct {
 }
 
 type Dispatch struct {
+	IsOpen       bool              `json:"IsOpen"`
 	AutoCreate   bool              `json:"AutoCreate"`
 	AppNet       constant.AppNet   `json:"AppNet"`
 	DispatchList []DispatchList    `json:"DispatchList"`
 	Url          *constant.UrlList `json:"Url"`
 }
 type DispatchList struct {
-	Name  string `json:"name"`
-	Title string `json:"title"`
-	Type  string `json:"type"`
+	Name        string `json:"name"`
+	Title       string `json:"title"`
+	Type        string `json:"type"`
+	DispatchUrl string `json:"dispatch_url"`
 }
 
 type GameServer struct {
-	GateTcp bool            `json:"GateTcp"`
-	IsToken bool            `json:"IsToken"`
-	BotUid  uint32          `json:"BotUid"`
-	LoadLua *lua.ConfLua    `json:"LoadLua"`
-	AppNet  constant.AppNet `json:"AppNet"`
+	GateTcp     bool            `json:"GateTcp"`
+	IsToken     bool            `json:"IsToken"`
+	GetTokenUrl string          `json:"GetTokenUrl"`
+	BotUid      uint32          `json:"BotUid"`
+	LoadLua     *lua.ConfLua    `json:"LoadLua"`
+	AppNet      constant.AppNet `json:"AppNet"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
@@ -89,6 +92,7 @@ var DefaultConfig = &Config{
 	SqlPath:            "./conf/hkrpg-go-pe.db",
 	PushUrl:            "http://localhost:3000",
 	Dispatch: &Dispatch{
+		IsOpen:     true,
 		AutoCreate: true,
 		AppNet: constant.AppNet{
 			InnerAddr: "0.0.0.0",
@@ -105,9 +109,10 @@ var DefaultConfig = &Config{
 		},
 	},
 	GameServer: &GameServer{
-		GateTcp: false,
-		BotUid:  0,
-		IsToken: true,
+		GateTcp:     false,
+		BotUid:      0,
+		IsToken:     true,
+		GetTokenUrl: "http://127.0.0.1:8080",
 		LoadLua: &lua.ConfLua{
 			LoginLua: make([]string, 0),
 			PingLua:  make([]string, 0),

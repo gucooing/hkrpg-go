@@ -1,6 +1,7 @@
 package hkrpg_go_pe
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"sync"
@@ -8,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
 	"github.com/gucooing/hkrpg-go/dbconf"
 	"github.com/gucooing/hkrpg-go/dispatch/sdk"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
@@ -21,6 +23,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/random"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
@@ -39,6 +42,8 @@ type HkRpgGoServer struct {
 	Listener      session.ListenerAll
 	playerMap     map[uint32]*PlayerGame
 	playerMapLock *sync.RWMutex // 读写锁
+	hc            *resty.Client
+	getTokenUrl   string
 
 	comm *api.ApiServer
 
@@ -59,6 +64,7 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	s.config = cfg
 	s.ec2b = alg.GetEc2b()
 	s.playerMapLock = new(sync.RWMutex)
+	s.getTokenUrl = cfg.GameServer.GetTokenUrl
 	// 加载res
 	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// 初始化数据库
@@ -67,42 +73,50 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	database.GATE = &database.GateStore{PlayerUidMysql: database.PE}
 	database.DISPATCH = &database.DisaptchStore{AccountMysql: database.PE}
 	database.GSS = &database.GameStore{PlayerDataMysql: database.PE, ServerConf: database.PE}
-	// 初始化dispatch
-	s.Sdk = &sdk.Server{
-		IsAutoCreate:       cfg.Dispatch.AutoCreate,
-		OuterAddr:          fmt.Sprintf("http://%s:%s", cfg.Dispatch.AppNet.OuterAddr, cfg.Dispatch.AppNet.OuterPort),
-		RegionInfo:         make(map[string]*sdk.RegionInfo),
-		UpstreamServerList: cfg.UpstreamServerList,
-		UpstreamServerLock: new(sync.RWMutex),
-	}
-	for _, d := range cfg.Dispatch.DispatchList {
-		s.Sdk.RegionInfo[d.Name] = &sdk.RegionInfo{
-			Name:        d.Name,
-			Title:       d.Title,
-			Type:        alg.S2U32(d.Type),
-			Ec2b:        s.ec2b,
-			MinGateAddr: cfg.GameServer.AppNet.OuterAddr,
-			MinGatePort: alg.S2U32(cfg.GameServer.AppNet.OuterPort),
-			MinGateTcp:  cfg.GameServer.GateTcp,
-		}
-	}
+
 	gin.SetMode(gin.ReleaseMode) // 初始化gin
 	sdkRouter := gin.New()
 	sdkRouter.Use(gin.Recovery())
-	s.Sdk.GetSdkRouter(sdkRouter) // 初始化路由
-	if cfg.Dispatch.Url == nil || cfg.Dispatch.Url.Version == "" {
-		go s.Sdk.UpUpstreamServer()
-	} else {
-		s.Sdk.Url = cfg.Dispatch.Url
-	}
 
-	go func() {
-		err := alg.NewHttp(cfg.Dispatch.AppNet, sdkRouter)
-		if err != nil {
-			logger.Error(err.Error())
-			return
+	if cfg.Dispatch.IsOpen {
+		logger.Info(text.GetText(81))
+		// 初始化dispatch
+		s.Sdk = &sdk.Server{
+			IsAutoCreate:       cfg.Dispatch.AutoCreate,
+			OuterAddr:          fmt.Sprintf("http://%s:%s", cfg.Dispatch.AppNet.OuterAddr, cfg.Dispatch.AppNet.OuterPort),
+			RegionInfo:         make(map[string]*sdk.RegionInfo),
+			UpstreamServerList: cfg.UpstreamServerList,
+			UpstreamServerLock: new(sync.RWMutex),
 		}
-	}()
+		for _, d := range cfg.Dispatch.DispatchList {
+			s.Sdk.RegionInfo[d.Name] = &sdk.RegionInfo{
+				Name:        d.Name,
+				Title:       d.Title,
+				Type:        alg.S2U32(d.Type),
+				DispatchUrl: d.DispatchUrl,
+				Ec2b:        s.ec2b,
+				MinGateAddr: cfg.GameServer.AppNet.OuterAddr,
+				MinGatePort: alg.S2U32(cfg.GameServer.AppNet.OuterPort),
+				MinGateTcp:  cfg.GameServer.GateTcp,
+			}
+		}
+		s.Sdk.GetSdkRouter(sdkRouter) // 初始化路由
+		if cfg.Dispatch.Url == nil || cfg.Dispatch.Url.Version == "" {
+			go s.Sdk.UpUpstreamServer()
+		} else {
+			s.Sdk.Url = cfg.Dispatch.Url
+		}
+
+		go func() {
+			err := alg.NewHttp(cfg.Dispatch.AppNet, sdkRouter)
+			if err != nil {
+				logger.Error(err.Error())
+				return
+			}
+		}()
+	} else {
+		logger.Info(text.GetText(82))
+	}
 	// new Kcp
 	l, err := session.NewListener(cfg.GameServer.AppNet, cfg.GameServer.GateTcp)
 	if err != nil {
@@ -128,7 +142,7 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	go s.newHttpApi()
 	client.PushServer(&constant.LogPush{
 		PushMessage: constant.PushMessage{},
-		LogMsg: fmt.Sprintf("AppVersion:%s\nGameVersion:%s\nhkrpg-pe 启动完成!",
+		LogMsg: fmt.Sprintf("AppVersion:%s\nGameVersion:%s\nhkrpg-pe-beta 启动完成!",
 			pkg.GetAppVersion(), pkg.GetGameVersion()),
 		LogLevel: constant.INFO,
 	})
@@ -139,6 +153,15 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	s.everyDay4 = time.NewTicker(everyDay4)
 	go s.gameTicker()
 	return s
+}
+
+func (h *HkRpgGoServer) getHc() *resty.Request {
+	if h.hc == nil {
+		h.hc = resty.New()
+	}
+	return h.hc.R().
+		SetHeader("User-Agent", "hkrpg-go").
+		SetHeader("Content-Type", "application/json")
 }
 
 // Session消息队列
@@ -354,15 +377,28 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 		return rsp
 	}
 
-	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
-
 	if h.config.GameServer.IsToken {
+		c := h.getHc()
+		resp, err := c.Get(fmt.Sprintf("%s/getComboToken?account_id=%s", h.getTokenUrl, req.AccountUid))
+		if err != nil {
+			rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
+			return rsp
+		}
+		resp.Body()
+		hrsp := new(constant.GateGetPlayerComboToken)
+		err = json.Unmarshal(resp.Body(), hrsp)
+		if err != nil || hrsp.Retcode != 0 || hrsp.AccountId != req.AccountUid {
+			rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
+			return rsp
+		}
 		// token 验证
-		if req.Token != account.ComboToken {
+		if req.Token != hrsp.ComboToken {
 			rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 			return rsp
 		}
 	}
+
+	account := database.GetPlayerUidByAccountId(database.GATE.PlayerUidMysql, alg.S2U32(req.AccountUid))
 
 	// ban 验证
 	if account.IsBan && account.BanEndTime >= time.Now().Unix() {
