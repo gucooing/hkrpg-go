@@ -280,6 +280,15 @@ func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {
 
 // 收包
 func (g *GamePlayer) RecvMsg() {
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! session MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			logger.Error("uid: %v", g.Uid)
+			return
+		}
+	}()
 	for {
 		select {
 		case recvMsg, ok := <-g.RecvChan:

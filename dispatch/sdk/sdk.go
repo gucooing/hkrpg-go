@@ -2,9 +2,11 @@ package sdk
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 
@@ -61,7 +63,7 @@ func (s *Server) UpUpstreamServer() {
 
 func (s *Server) handleGateServerResponse(info *constant.UrlList, seed string) bool {
 	for _, server := range s.UpstreamServerList {
-		url := fmt.Sprintf("%sversion=%s&dispatch_seed=%s&platform_type=3&is_need_url=1", server, info.Version, seed)
+		url := fmt.Sprintf("%sversion=%s&dispatch_seed=%s&platform_type=3&is_need_url=1&channel_id=1&sub_channel_id=1", server, info.Version, seed)
 		rsps, err := http.Get(url)
 		if err != nil {
 			continue
@@ -96,27 +98,26 @@ func (s *Server) handleGateServerResponse(info *constant.UrlList, seed string) b
 			AssetBundleUrl: dispatch.AssetBundleUrl,
 		}
 		s.UpstreamServer[seed] = urlList
-		logMsg := fmt.Sprintf(
-			"Version:%s\n"+
-				"MdkResVersion:%s\n"+
-				"IfixVersion:%s\n"+
-				"IfixUrl:%s\n"+
-				"LuaUrl:%s\n"+
-				"ExResourceUrl:%s\n"+
-				"AssetBundleUrl:%s\n",
-			info.Version,
-			dispatch.MdkResVersion,
-			dispatch.IfixVersion,
-			dispatch.IfixUrl,
-			dispatch.LuaUrl,
-			dispatch.ExResourceUrl,
-			dispatch.AssetBundleUrl)
-		// logger.Info("NewVersion:%s", logMsg)
+		addUrlListJson(urlList)
 		client.PushServer(&constant.LogPush{
 			PushMessage: constant.PushMessage{
 				Tag: "NewVersion",
 			},
-			LogMsg:   logMsg,
+			LogMsg: fmt.Sprintf(
+				"Version:%s\n"+
+					"MdkResVersion:%s\n"+
+					"IfixVersion:%s\n"+
+					"IfixUrl:%s\n"+
+					"LuaUrl:%s\n"+
+					"ExResourceUrl:%s\n"+
+					"AssetBundleUrl:%s\n",
+				info.Version,
+				dispatch.MdkResVersion,
+				dispatch.IfixVersion,
+				dispatch.IfixUrl,
+				dispatch.LuaUrl,
+				dispatch.ExResourceUrl,
+				dispatch.AssetBundleUrl),
 			LogLevel: constant.INFO,
 		})
 		return true
@@ -145,4 +146,24 @@ func (s *Server) GetUpstreamServer(version, seed string) *constant.UrlList {
 		s.UpstreamServerLock.Unlock()
 	}
 	return s.UpstreamServer[seed]
+}
+
+func addUrlListJson(info *constant.UrlList) {
+	b, err := json.MarshalIndent(info, "", "  ")
+	if err != nil {
+		logger.Error("Json marshal failed:", err)
+		return
+	}
+	if _, err := os.Stat("./rcv"); os.IsNotExist(err) {
+		os.MkdirAll("./rcv", 0644)
+	}
+	cf, err := os.Create("./rcv/" + info.Version + "_" + time.Now().Format("2006-01-02_15-04-05") + ".json")
+	if err != nil {
+		logger.Error("Create file failed:", err)
+		return
+	}
+	_, err = cf.Write(b)
+	if err != nil {
+		logger.Error("Write file failed:", err)
+	}
 }

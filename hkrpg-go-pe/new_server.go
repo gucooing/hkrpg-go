@@ -158,6 +158,16 @@ func (h *HkRpgGoServer) loginSessionManagement() {
 
 func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
 	s := p.Conn.GetSession()
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! session MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			logger.Error("uid: %v", s.Uid)
+			h.DelPlayer(s.Uid)
+			return
+		}
+	}()
 	for {
 		packMsg, ok := <-s.RecvChan
 		p.LastActiveTime = time.Now().Unix()
@@ -180,6 +190,15 @@ func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
 // 接收game传来的消息
 func (g *PlayerGame) recvGameMsg() {
 	s := g.Conn.GetSession()
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! session MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			logger.Error("uid: %v", s.Uid)
+			return
+		}
+	}()
 	for {
 		bin, ok := <-g.GamePlayer.SendChan
 		if !ok {
@@ -201,7 +220,12 @@ func (g *PlayerGame) toSession(bin player.Msg) {
 		logger.Error(err.Error())
 		return
 	}
-	g.Conn.GetSession().SendChan <- &alg.PackMsg{
+	s := g.Conn.GetSession()
+	if s == nil ||
+		s.SessionState != session.SessionActivity {
+		return
+	}
+	s.SendChan <- &alg.PackMsg{
 		CmdId:     bin.CmdId,
 		HeadData:  nil,
 		ProtoData: protoData,
@@ -210,7 +234,9 @@ func (g *PlayerGame) toSession(bin player.Msg) {
 
 // 将消息发送给game
 func (g *PlayerGame) sendGameMsg(msgType player.MsgType, cmdId uint16, playerMsg pb.Message, command string) {
-	if g.Conn.GetSession().SessionState == session.SessionClose {
+	s := g.Conn.GetSession()
+	if s == nil ||
+		s.SessionState != session.SessionActivity {
 		return
 	}
 	g.GamePlayer.RecvChan <- player.Msg{
