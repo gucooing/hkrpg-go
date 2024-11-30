@@ -416,7 +416,7 @@ func (g *PlayerData) AddMainMission(acceptMainList []uint32) {
 		// 特殊任务处理
 		if id == 1000300 {
 			g.AddAvatar(1003)
-			g.GetTrialAvatar(1003)
+			g.AddCurLineUpAvatar(1003)
 		}
 		// if id == 1011402 {
 		// 	var mainAvatarId uint32 = 1008003
@@ -424,7 +424,7 @@ func (g *PlayerData) AddMainMission(acceptMainList []uint32) {
 		// 		mainAvatarId = 1008004
 		// 	}
 		// 	avatarList := make([]uint32, 0)
-		// 	for _, info := range g.GetBattleLineUp().AvatarIdList {
+		// 	for _, info := range g.GetCurLineUp().AvatarIdList {
 		// 		avatarId := info.AvatarId
 		// 		if avatarId == 8001 {
 		// 			avatarId = mainAvatarId

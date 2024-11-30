@@ -70,7 +70,7 @@ func (k *KcpListener) Run() error {
 }
 
 func (s *KcpSession) recvHandle() {
-	// defer s.Close()
+	defer s.Close()
 	payload := make([]byte, alg.PacketMaxLen)
 	for {
 		recvLen, err := s.kcpConn.Read(payload)
@@ -83,19 +83,16 @@ func (s *KcpSession) recvHandle() {
 		kcpMsgList := make([]*alg.PackMsg, 0)
 		alg.DecodeBinToPayload(bin, &kcpMsgList, s.XorKey)
 		for _, v := range kcpMsgList {
-			if s.SessionState == SessionClose {
-				return
-			}
-			s.RecvChan <- v
+			s.sendServer(v)
 		}
 	}
 }
 
 func (s *KcpSession) sendHandle() {
-	// defer s.Close()
+	defer s.Close()
 	for {
-		packMsg, ok := <-s.SendChan
-		if !ok {
+		packMsg, err := s.recvClient()
+		if err != nil {
 			logger.Debug("exit send loop, send chan close, sessionId: %v", s.SessionId)
 			return
 		}
@@ -109,7 +106,7 @@ func (s *KcpSession) sendHandle() {
 			s.XorKey = random.CreateXorPad(s.Seed, false)
 			logger.Info("uid:%v,seed:%v,密钥交换成功", s.Uid, s.Seed)
 		}
-		_, err := s.kcpConn.Write(binMsg)
+		_, err = s.kcpConn.Write(binMsg)
 		if err != nil {
 			logger.Debug("exit send loop, conn write err: %v", err)
 			return
@@ -125,12 +122,12 @@ func kcpNetInfo() {
 		<-ticker.C
 		snmp := kcp.DefaultSnmp.Copy()
 		kcpErrorCount += snmp.KCPInErrors
-		logger.Debug("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
-		logger.Debug("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
-		logger.Debug("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
+		logger.Info("kcp send: %v B/s, kcp recv: %v B/s", snmp.BytesSent/60, snmp.BytesReceived/60)
+		logger.Info("udp send: %v B/s, udp recv: %v B/s", snmp.OutBytes/60, snmp.InBytes/60)
+		logger.Info("udp send: %v pps, udp recv: %v pps", snmp.OutPkts/60, snmp.InPkts/60)
 		clientConnNum := atomic.LoadInt64(&CLIENT_CONN_NUM)
-		logger.Debug("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
-		logger.Debug("QPS: %v /s", QPS/60)
+		logger.Info("conn num: %v, new conn num: %v, kcp error num: %v", clientConnNum, snmp.CurrEstab, kcpErrorCount)
+		logger.Info("QPS: %v /s", QPS/60)
 		QPS = 0
 		kcp.DefaultSnmp.Reset()
 	}
@@ -143,12 +140,9 @@ func (s *KcpSession) Close() {
 	s.SessionState = SessionClose
 	// 断开kcp
 	s.kcpConn.Close()
-	// 断开通道
-	close(s.RecvChan)
-	close(s.SendChan)
-
+	s.SendClient(nil) // 主动调用关闭
+	s.sendServer(nil) // 主动调用关闭
 	logger.Info("[UID:%v]玩家下线GATE", s.Uid)
-	atomic.AddInt64(&CLIENT_CONN_NUM, -1)
 }
 
 func (k *KcpListener) Close() {

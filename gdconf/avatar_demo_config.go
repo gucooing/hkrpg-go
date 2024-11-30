@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -30,24 +31,22 @@ type AvatarDemoConfig struct {
 func (g *GameDataConfig) loadAvatarDemoConfig() {
 	g.AvatarDemoConfigMap = make(map[uint32]*AvatarDemoConfig)
 	avatarDemoConfigMap := make([]*AvatarDemoConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "AvatarDemoConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "AvatarDemoConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &avatarDemoConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range avatarDemoConfigMap {
 		g.AvatarDemoConfigMap[v.StageID] = v
 	}
-	logger.Info("load %v AvatarDemoConfig", len(g.AvatarDemoConfigMap))
+	logger.Info(text.GetText(17), len(g.AvatarDemoConfigMap), name)
 }
 
 func GetAvatarDemoConfigById(stageID uint32) *AvatarDemoConfig {
-	return CONF.AvatarDemoConfigMap[stageID]
+	return getConf().AvatarDemoConfigMap[stageID]
 }

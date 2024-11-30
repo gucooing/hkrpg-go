@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -26,17 +27,15 @@ type MappingInfo struct {
 func (g *GameDataConfig) loadMappingInfo() {
 	g.MappingInfoMap = make(map[uint32]map[uint32]*MappingInfo)
 	mappingInfoMap := make([]*MappingInfo, 0)
-	playerElementsFilePath := g.excelPrefix + "MappingInfo.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "MappingInfo.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &mappingInfoMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, v := range mappingInfoMap {
@@ -46,9 +45,9 @@ func (g *GameDataConfig) loadMappingInfo() {
 		g.MappingInfoMap[v.ID][v.WorldLevel] = v
 	}
 
-	logger.Info("load %v MappingInfo", len(g.MappingInfoMap))
+	logger.Info(text.GetText(17), len(g.MappingInfoMap), name)
 }
 
 func GetMappingInfoById(id, worldLevel uint32) *MappingInfo {
-	return CONF.MappingInfoMap[id][worldLevel]
+	return getConf().MappingInfoMap[id][worldLevel]
 }

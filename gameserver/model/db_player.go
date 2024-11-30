@@ -1,13 +1,19 @@
 package model
 
 import (
+	"errors"
+	"sync"
+
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/constant"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
+	pb "google.golang.org/protobuf/proto"
 )
 
 type PlayerData struct {
 	OnlineData *OnlineData             // 玩家在线数据
 	BasicBin   *spb.PlayerBasicCompBin // 玩家pb数据
+	BasicSync  sync.RWMutex            // pb 数据读写锁
 }
 
 type OnlineData struct {
@@ -25,10 +31,11 @@ type OnlineData struct {
 func NewPlayerData() *PlayerData {
 	g := new(PlayerData)
 	g.BasicBin = newBasicBin()
+	g.BasicSync = sync.RWMutex{}
 	// 添加默认数据
 	g.AddAvatar(1001)
 	g.AddAvatar(8001)
-	g.NewTrialLine([]uint32{1001005, 0, 0, 0, 1001005})
+	g.NewLineByAvatarList([]uint32{1001005, 0, 0, 0, 1001005})
 	return g
 }
 
@@ -38,7 +45,6 @@ func newBasicBin() *spb.PlayerBasicCompBin {
 		Nickname:             "hkrpg-go",
 		WorldLevel:           0,
 		Activity:             NewActivity(),
-		PojokNostalgia:       newPojokNostalgia(),
 		Signature:            "",
 		HeadImageAvatarId:    0,
 		Birthday:             0,
@@ -75,7 +81,9 @@ func newBasicBin() *spb.PlayerBasicCompBin {
 		NicknameAuditBin:     nil,
 		IpCountryCode:        "",
 		IpRegionName:         "",
-		IsJumpMission:        false,
+		Train:                newTrain(),
+		IsJumpMission:        true,
+		Handbook:             NewHandbook(),
 	}
 
 	return basicBin
@@ -87,10 +95,33 @@ func (g *PlayerData) GetIsProficientPlayer() bool {
 }
 
 func (g *PlayerData) GetBasicBin() *spb.PlayerBasicCompBin {
+	g.BasicSync.RLock()
+	defer g.BasicSync.RUnlock()
 	if g.BasicBin == nil {
 		g.BasicBin = newBasicBin()
 	}
 	return g.BasicBin
+}
+
+// 外部线程安全访问
+func (g *PlayerData) GetDbPlayerData() (*constant.PlayerData, error) {
+	var err error
+	g.BasicSync.Lock()
+	defer g.BasicSync.Unlock()
+	db := g.BasicBin
+	if db == nil {
+		return nil, errors.New("player nil")
+	}
+	dbDate := new(constant.PlayerData)
+	dbDate.Uid = db.Uid
+	dbDate.Level = db.GetLevel()
+	dbDate.Nickname = db.GetNickname()
+	dbDate.DataVersion = db.GetDataVersion()
+	dbDate.BinData, err = pb.Marshal(db)
+	if err != nil {
+		return nil, err
+	}
+	return dbDate, nil
 }
 
 func (g *PlayerData) GetOnlineData() *OnlineData {

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+message Handbook {
+  RogueHandbook rogue_handbook = 1; // 模拟宇宙handbook
+}
+
+/****************************模拟宇宙handbook***********************/
+
+message RogueHandbook {
+  map<uint32,RogueHandbookMiracleInfo> miracle_info = 1; // 奇物
+  map<uint32,RogueHandbookEventInfo> event_info = 2; // 事件
+  map<uint32,RogueHandbookAeonInfo> aeon_info = 3; // 星神
+  map<uint32,bool> buff_list = 4; // buff
+}
+
+message RogueHandbookMiracleInfo {
+   uint32 miracle_handbook_id = 1;
+   bool is_taken_reward = 2;
+}
+
+message RogueHandbookEventInfo {
+  uint32 event_handbook_id = 1;
+  bool is_taken_reward = 2;
+}
+
+message RogueHandbookAeonInfo {
+  uint32  rogue_aeon_id = 1;
+  map<uint32,bool> unlock_aeon_story_map = 2;
+}

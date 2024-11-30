@@ -6,6 +6,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -23,7 +24,7 @@ type ItemUseBuffData struct {
 	UseEffect                string                    `json:"UseEffect"`
 	PreviewHPRecoveryPercent float64                   `json:"PreviewHPRecoveryPercent"` // 回血百分比
 	PreviewHPRecoveryValue   float64                   `json:"PreviewHPRecoveryValue"`   // 回血数值
-	PreviewSkillPoint        uint32                    `json:"PreviewSkillPoint"`        // 秘技回复点数
+	PreviewSkillPoint        float64                   `json:"PreviewSkillPoint"`        // 秘技回复点数
 	IsShowItemDesc           bool                      `json:"IsShowItemDesc"`
 	ActivityCount            uint32                    `json:"ActivityCount"`
 }
@@ -31,24 +32,23 @@ type ItemUseBuffData struct {
 func (g *GameDataConfig) loadItemUseBuffData() {
 	g.ItemUseBuffDataMap = make(map[uint32]*ItemUseBuffData)
 	itemUseBuffData := make([]*ItemUseBuffData, 0)
-	playerElementsFilePath := g.excelPrefix + "ItemUseBuffData.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "ItemUseBuffData.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &itemUseBuffData)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range itemUseBuffData {
 		g.ItemUseBuffDataMap[v.UseDataID] = v
 	}
-	logger.Info("load %v ItemUseBuffData", len(g.ItemUseBuffDataMap))
+
+	logger.Info(text.GetText(17), len(g.ItemUseBuffDataMap), name)
 }
 
 func GetItemUseBuffDataById(id uint32) *ItemUseBuffData {
-	return CONF.ItemUseBuffDataMap[id]
+	return getConf().ItemUseBuffDataMap[id]
 }

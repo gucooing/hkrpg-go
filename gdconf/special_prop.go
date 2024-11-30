@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -19,21 +20,20 @@ type GroupList struct {
 
 func (g *GameDataConfig) loadSpecialProp() {
 	g.SpecialPropMap = make(map[uint32]*SpecialProp)
-	playerElementsFilePath := g.dataPrefix + "SpecialProp.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "SpecialProp.json"
+	playerElementsFile, err := os.ReadFile(g.dataPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &g.SpecialPropMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
-	logger.Info("load %v SpecialProp", len(g.SpecialPropMap))
+
+	logger.Info(text.GetText(17), len(g.SpecialPropMap), name)
 }
 
 func GetSpecialProp(entryId uint32) *SpecialProp {
-	return CONF.SpecialPropMap[entryId]
+	return getConf().SpecialPropMap[entryId]
 }

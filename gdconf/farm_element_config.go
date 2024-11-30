@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -21,24 +22,23 @@ type FarmElementConfig struct {
 func (g *GameDataConfig) loadFarmElementConfig() {
 	g.FarmElementConfigMap = make(map[uint32]*FarmElementConfig)
 	farmElementConfiglist := make([]*FarmElementConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "FarmElementConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "FarmElementConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &farmElementConfiglist)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range farmElementConfiglist {
 		g.FarmElementConfigMap[v.StageID] = v
 	}
-	logger.Info("load %v FarmElementConfig", len(g.FarmElementConfigMap))
+
+	logger.Info(text.GetText(17), len(g.FarmElementConfigMap), name)
 }
 
 func GetFarmElementConfig(id uint32) *FarmElementConfig {
-	return CONF.FarmElementConfigMap[id]
+	return getConf().FarmElementConfigMap[id]
 }

@@ -11,7 +11,7 @@ import (
 )
 
 // 玩家ping包处理
-func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg pb.Message) {
+func HandlePlayerHeartBeatCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PlayerHeartBeatCsReq)
 	sTime := getCurTime()
 
@@ -26,14 +26,14 @@ func (g *GamePlayer) HandlePlayerHeartBeatCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }
 
-func (g *GamePlayer) GetSpringRecoverDataCsReq(payloadMsg pb.Message) {
+func GetSpringRecoverDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetSpringRecoverDataScRsp)
 	rsp.SpringRecoverConfig = g.GetPd().GetSpringRecoverConfig()
 	rsp.HealPoolInfo = g.GetPd().GetHealPoolInfo()
 	g.Send(cmd.GetSpringRecoverDataScRsp, rsp)
 }
 
-func (g *GamePlayer) SetPlayerInfoCsReq(payloadMsg pb.Message) {
+func SetPlayerInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetPlayerInfoCsReq)
 
 	g.GetPd().SetNickname(req.Nickname)
@@ -71,6 +71,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		return
 	}
 	if !allSync.IsBasic &&
+		len(allSync.UnlockPamSkinList) == 0 &&
 		len(allSync.AvatarList) == 0 &&
 		len(allSync.UnlockedHeadIconList) == 0 &&
 		len(allSync.MaterialList) == 0 &&
@@ -82,6 +83,10 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		len(allSync.MissionFinishSubList) == 0 &&
 		len(allSync.MissionProgressSubList) == 0 {
 		return
+	}
+
+	if len(allSync.UnlockPamSkinList) != 0 {
+		g.UnlockPamSkinScNotify(allSync.UnlockPamSkinList)
 	}
 
 	notify := &proto.PlayerSyncScNotify{
@@ -152,7 +157,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 	// 添加光锥
 	if allSync.EquipmentList != nil {
 		for _, uniqueId := range allSync.EquipmentList {
-			notify.EquipmentList = append(notify.EquipmentList, g.GetPd().GetEquipment(uniqueId))
+			notify.EquipmentList = append(notify.EquipmentList, g.GetPd().GetProtoEquipment(uniqueId))
 		}
 	}
 	// 删除光锥
@@ -160,7 +165,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 	// 添加圣遗物
 	if allSync.RelicList != nil {
 		for _, uniqueId := range allSync.RelicList {
-			notify.RelicList = append(notify.RelicList, g.GetPd().GetRelic(uniqueId))
+			notify.RelicList = append(notify.RelicList, g.GetPd().GetProtoRelicById(uniqueId))
 		}
 	}
 	// 删除圣遗物
@@ -222,4 +227,14 @@ func (g *GamePlayer) AllScenePlaneEventScNotify(addPileItem []*model.Material) {
 	notify.GetItemList.ItemList = itemList
 
 	g.Send(cmd.ScenePlaneEventScNotify, notify)
+}
+
+func (g *GamePlayer) UnlockPamSkinScNotify(pamSkinList []uint32) {
+	for _, v := range pamSkinList {
+		notify := &proto.UnlockPamSkinScNotify{
+			PamSkinId: v,
+		}
+		g.Send(cmd.UnlockPamSkinScNotify, notify)
+	}
+
 }

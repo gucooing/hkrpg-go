@@ -152,12 +152,14 @@ func (g *GateServer) GetAllGsSession(gsAppid uint32) map[uint32]session.SessionA
 func (g *GateServer) AddSession(s session.SessionAll) {
 	g.SessionMapMutex.Lock()
 	defer g.SessionMapMutex.Unlock()
+	atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
 	g.SessionMap[s.GetSession().Uid] = s
 }
 
 func (g *GateServer) DelSession(s session.SessionAll) {
 	g.SessionMapMutex.Lock()
 	defer g.SessionMapMutex.Unlock()
+	atomic.AddInt64(&session.CLIENT_CONN_NUM, -1)
 	s.Close()
 	delete(g.SessionMap, s.GetSession().Uid)
 }
@@ -170,7 +172,7 @@ func (g *GateServer) loginSessionManagement() {
 		select {
 		case s := <-listener.LoginSessionChan: // 添加登录会话
 			loginSessionMap[s.GetSession().SessionId] = s
-			go g.sessionMsg(s)
+			go g.loginSession(s)
 		case s := <-listener.DelLoginSessionChan: // 删除登录会话
 			delete(loginSessionMap, s.GetSession().SessionId)
 		case netMsg := <-g.MessageQueue.GetNetMsg():
@@ -194,10 +196,10 @@ func (g *GateServer) gameMsgHandle(netMsg *mq.NetMsg) {
 			s.GetSession().SessionState != session.SessionActivity {
 			return
 		}
-		s.GetSession().SendChan <- &alg.PackMsg{
+		s.GetSession().SendClient(&alg.PackMsg{
 			CmdId:     netMsg.CmdId,
 			ProtoData: netMsg.ServiceMsgByte,
-		}
+		})
 	case mq.ServerMsg:
 		logger.Info("to gate msg")
 	case mq.ServiceLogout:
@@ -231,14 +233,20 @@ func (g *GateServer) nodeMsgHandle(netMsg *mq.NetMsg, loginSessionMap map[uint32
 	}
 }
 
-func (g *GateServer) sessionMsg(sAll session.SessionAll) {
+func (g *GateServer) loginSession(sAll session.SessionAll) {
 	s := sAll.GetSession()
 	listener := g.Listener.GetListener()
 	timeout := time.After(5 * time.Second)
 	for {
 		select {
-		case packMsg, ok := <-s.RecvChan:
-			if !ok {
+		case <-timeout:
+			if s.SessionState == session.SessionLogin {
+				listener.DelLoginSessionChan <- sAll
+				return
+			}
+		default:
+			packMsg, err := s.RecvServer()
+			if err != nil {
 				return
 			}
 			switch s.SessionState {
@@ -257,27 +265,62 @@ func (g *GateServer) sessionMsg(sAll session.SessionAll) {
 					g.AddSession(sAll)
 					s.SessionState = session.SessionActivity
 					s.GameAppId = g.MinGsAppId
-					atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
+					g.recvPlayer(sAll)
 				}
-				s.SendChan <- &alg.PackMsg{
+				s.SendClient(&alg.PackMsg{
 					CmdId:     cmd.PlayerGetTokenScRsp,
 					HeadData:  nil,
 					ProtoData: protoData,
-				}
-			case session.SessionActivity:
-				g.packetCapture(sAll, packMsg)
-			case session.SessionFreeze:
-				continue
-			case session.SessionClose:
-				continue
-			}
-		case <-timeout:
-			if s.SessionState == session.SessionLogin {
-				listener.DelLoginSessionChan <- sAll
+				})
 				return
 			}
 		}
 	}
+}
+
+func (g *GateServer) recvPlayer(sAll session.SessionAll) {
+	s := sAll.GetSession()
+	defer func() {
+		if err := recover(); err != nil {
+			logger.Error("!!! session MAIN LOOP PANIC !!!")
+			logger.Error("error: %v", err)
+			logger.Error("stack: %v", logger.Stack())
+			logger.Error("uid: %v", s.Uid)
+			g.DelSession(sAll)
+			return
+		}
+	}()
+	for {
+		packMsg, err := s.RecvServer()
+		if err != nil {
+			logger.Debug("exit send loop, recv chan close, sessionId: %v", s.SessionId)
+			return
+		}
+		switch s.SessionState {
+		case session.SessionLogin:
+		case session.SessionActivity:
+			g.packetCapture(sAll, packMsg)
+		case session.SessionFreeze:
+			continue
+		}
+	}
+}
+
+func toPlayerMsg(sall session.SessionAll, msg pb.Message, cmdId uint16) {
+	protoData, err := pb.Marshal(msg)
+	if err != nil {
+		logger.Error(err.Error())
+		return
+	}
+	s := sall.GetSession()
+	if s == nil {
+		return
+	}
+	s.SendClient(&alg.PackMsg{
+		CmdId:     cmdId,
+		HeadData:  nil,
+		ProtoData: protoData,
+	})
 }
 
 // 玩家登录
@@ -337,11 +380,11 @@ func (g *GateServer) playerLogin(s *session.Session, playerMsg []byte) *proto.Pl
 					protoData, _ := pb.Marshal(&proto.PlayerKickOutScNotify{
 						BlackInfo: &proto.BlackInfo{},
 					})
-					old.GetSession().SendChan <- &alg.PackMsg{
+					old.GetSession().SendClient(&alg.PackMsg{
 						CmdId:     cmd.PlayerKickOutScNotify,
 						HeadData:  nil,
 						ProtoData: protoData,
-					}
+					})
 					PlayerLogoutCsReq(g, old, nil)
 				}
 			} else {

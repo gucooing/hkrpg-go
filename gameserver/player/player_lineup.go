@@ -18,15 +18,17 @@ func (g *GamePlayer) SyncLineupNotify(db *spb.Line) {
 	g.Send(cmd.SyncLineupNotify, rsq)
 }
 
-func (g *GamePlayer) SceneGroupRefreshScNotify(index uint32) {
+// 场景更新目标队伍
+func (g *GamePlayer) SceneGroupRefreshScNotify(line *spb.Line) {
 	notify := &proto.SceneGroupRefreshScNotify{
 		GroupRefreshList: g.GetPd().GetSceneGroupRefreshInfoByLineUP(
-			g.GetPd().GetLineUpById(index), g.GetPd().GetPosPb(), g.GetPd().GetRotPb()),
+			line, g.GetPd().GetPosPb(), g.GetPd().GetRotPb()),
 	}
 	g.Send(cmd.SceneGroupRefreshScNotify, notify)
 }
 
-func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg pb.Message) {
+// 获取全部队伍
+func HandleGetAllLineupDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetAllLineupDataScRsp)
 	rsp.LineupList = make([]*proto.LineupInfo, 0)
 	db := g.GetPd().GetLineUp()
@@ -46,41 +48,44 @@ func (g *GamePlayer) HandleGetAllLineupDataCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetAllLineupDataScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetCurLineupDataCsReq(payloadMsg pb.Message) {
+// 获取当前队伍
+func HandleGetCurLineupDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetCurLineupDataScRsp)
 	rsp.Lineup = g.GetPd().GetLineUpPb(g.GetPd().GetCurLineUp())
 
 	g.Send(cmd.GetCurLineupDataScRsp, rsp)
 }
 
-func (g *GamePlayer) GetLineupAvatarDataCsReq(payloadMsg pb.Message) {
+// 获取当前队伍角色信息
+func GetLineupAvatarDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetLineupAvatarDataScRsp)
 	rsp.AvatarDataList = g.GetPd().GetLineupAvatarDataList(g.GetPd().GetCurLineUp())
 
 	g.Send(cmd.GetLineupAvatarDataScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleJoinLineupCsReq(payloadMsg pb.Message) {
+// 更新队伍中的指定角色
+func HandleJoinLineupCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.JoinLineupCsReq)
 
 	g.GetPd().UnDbLineUp(req.Index, req.Slot, req.BaseAvatarId)
 
 	// 队伍更新通知
 	g.SyncLineupNotify(g.GetPd().GetLineUpById(req.Index))
-	g.SceneGroupRefreshScNotify(req.Index)
+	g.SceneGroupRefreshScNotify(g.GetPd().GetLineUpById(req.Index))
 
 	rsp := new(proto.LineupAvatar)
 	g.Send(cmd.JoinLineupScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg pb.Message) {
+func HandleSwitchLineupIndexCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SwitchLineupIndexCsReq)
 
-	lineUpDb := g.GetPd().GetLineUp()
-	lineUpDb.MainLineUp = req.Index
+	db := g.GetPd().GetLineUp()
+	db.MainLineUp = req.Index
 	// 队伍更新通知
 	g.SyncLineupNotify(g.GetPd().GetCurLineUp())
-	g.SceneGroupRefreshScNotify(req.Index)
+	g.SceneGroupRefreshScNotify(g.GetPd().GetCurLineUp())
 
 	rsp := &proto.SwitchLineupIndexScRsp{Index: req.Index}
 
@@ -88,7 +93,7 @@ func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg pb.Message) {
 }
 
 // 2.5.0 遗弃
-// func (g *GamePlayer) HandleSwapLineupCsReq(payloadMsg pb.Message) {
+// func HandleSwapLineupCsReq(g *GamePlayer, payloadMsg pb.Message) {
 // 	req := payloadMsg.(*proto.SwapLineupCsReq)
 //
 // 	// 交换角色
@@ -103,14 +108,14 @@ func (g *GamePlayer) HandleSwitchLineupIndexCsReq(payloadMsg pb.Message) {
 // 	g.Send(cmd.SwapLineupScRsp, rsp)
 // }
 
-func (g *GamePlayer) SetLineupNameCsReq(payloadMsg pb.Message) {
+func SetLineupNameCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetLineupNameCsReq)
 	db := g.GetPd().GetLineUpById(req.Index)
 	db.Name = req.Name
 
 	// 队伍更新通知
-	g.SyncLineupNotify(g.GetPd().GetLineUpById(req.Index))
-	g.SceneGroupRefreshScNotify(req.Index)
+	g.SyncLineupNotify(db)
+	g.SceneGroupRefreshScNotify(db)
 
 	rsp := &proto.SetLineupNameScRsp{
 		Index: req.Index,
@@ -120,66 +125,82 @@ func (g *GamePlayer) SetLineupNameCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.SetLineupNameScRsp, rsp)
 }
 
-func (g *GamePlayer) ReplaceLineupCsReq(payloadMsg pb.Message) {
+func ReplaceLineupCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ReplaceLineupCsReq)
 
 	index := req.Index
 	isBattleLine := false
 	var db *spb.Line
-
-	switch req.ExtraLineupType {
-	case proto.ExtraLineupType_LINEUP_NONE:
-		db = g.GetPd().GetLineUpById(index)
-	case proto.ExtraLineupType_LINEUP_CHALLENGE:
-		index = model.Challenge_1
-		db = g.GetPd().GetBattleLineUpById(index)
-		isBattleLine = true
-	case proto.ExtraLineupType_LINEUP_CHALLENGE_2:
-		index = model.Challenge_2
-		db = g.GetPd().GetBattleLineUpById(index)
-		isBattleLine = true
-	case proto.ExtraLineupType_LINEUP_ROGUE:
-		index = model.Rogue
-		db = g.GetPd().GetBattleLineUpById(index)
-		isBattleLine = true
+	if req.GameStoryLineId != 0 {
+		db = g.GetPd().GetStoryLineById(req.GameStoryLineId)
+	} else {
+		switch req.ExtraLineupType {
+		case proto.ExtraLineupType_LINEUP_NONE:
+			db = g.GetPd().GetLineUpById(index)
+		case proto.ExtraLineupType_LINEUP_CHALLENGE:
+			index = model.Challenge_1
+			db = g.GetPd().GetBattleLineUpById(index)
+			isBattleLine = true
+		case proto.ExtraLineupType_LINEUP_CHALLENGE_2:
+			index = model.Challenge_2
+			db = g.GetPd().GetBattleLineUpById(index)
+			isBattleLine = true
+		case proto.ExtraLineupType_LINEUP_ROGUE:
+			index = model.Rogue
+			db = g.GetPd().GetBattleLineUpById(index)
+			isBattleLine = true
+		case proto.ExtraLineupType_LINEUP_TOURN_ROGUE:
+			index = model.RogueTourn
+			db = g.GetPd().GetBattleLineUpById(index)
+			isBattleLine = true
+		}
 	}
+
 	db.LeaderSlot = req.LeaderSlot
 	db.LineType = spb.ExtraLineupType(req.ExtraLineupType)
 	db.AvatarIdList = make(map[uint32]*spb.LineAvatarList)
 	for _, avatarList := range req.LineupSlotList {
-		db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{AvatarId: avatarList.Id, Slot: avatarList.Slot}
+		db.AvatarIdList[avatarList.Slot] = &spb.LineAvatarList{
+			AvatarId:       avatarList.Id,
+			Slot:           avatarList.Slot,
+			LineAvatarType: spb.AvatarType(avatarList.AvatarType),
+		}
 	}
 
 	// 队伍更新通知
 	g.SyncLineupNotify(db)
 	if isBattleLine {
 		// 将角色属性拷贝出来
-		for _, avatar := range req.LineupSlotList {
-			avatarBin := g.GetPd().GetAvatarBinById(avatar.Id)
-			g.GetPd().CopyBattleAvatar(avatarBin)
-		}
+		// for _, avatar := range req.LineupSlotList {
+		// 	avatarBin := g.GetPd().GetAvatarBinById(avatar.Id)
+		// 	g.GetPd().CopyBattleAvatar(avatarBin)
+		// }
 	}
 
 	// 是当前队伍的时候就需要场景通知
 	if g.GetPd().GetCurLineUp().Index == req.Index {
-		g.SceneGroupRefreshScNotify(req.Index)
+		g.SceneGroupRefreshScNotify(db)
 	}
 
 	g.Send(cmd.ReplaceLineupScRsp, &proto.ReplaceLineupScRsp{})
 }
 
-func (g *GamePlayer) ChangeLineupLeaderCsReq(payloadMsg pb.Message) {
+func ChangeLineupLeaderCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ChangeLineupLeaderCsReq)
 
 	rsp := &proto.ChangeLineupLeaderScRsp{Slot: req.Slot}
 
-	db := g.GetPd().GetBattleLineUp()
+	db := g.GetPd().GetCurLineUp()
 	db.LeaderSlot = req.Slot
 
 	g.Send(cmd.ChangeLineupLeaderScRsp, rsp)
 }
 
-func (g *GamePlayer) QuitLineupCsReq(payloadMsg pb.Message) {
+func TriggerVoiceCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	g.Send(cmd.TriggerVoiceScRsp, new(proto.TriggerVoiceScRsp))
+}
+
+func QuitLineupCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.QuitLineupCsReq)
 	db := g.GetPd().GetCurLineUp()
 
@@ -193,7 +214,7 @@ func (g *GamePlayer) QuitLineupCsReq(payloadMsg pb.Message) {
 	}
 	// 队伍更新通知
 	g.SyncLineupNotify(db)
-	g.SceneGroupRefreshScNotify(req.Index)
+	g.SceneGroupRefreshScNotify(db)
 
 	g.Send(cmd.QuitLineupScRsp, nil)
 }
@@ -233,10 +254,10 @@ func (g *GamePlayer) SetBattleLineUp(index uint32, avatarList []uint32) {
 		}
 	}
 	// 拷贝角色
-	for _, avatar := range avatarList {
-		avatarBin := g.GetPd().GetAvatarBinById(avatar)
-		g.GetPd().CopyBattleAvatar(avatarBin)
-	}
+	// for _, avatar := range avatarList {
+	// 	avatarBin := g.GetPd().GetAvatarBinById(avatar)
+	// 	g.GetPd().CopyBattleAvatar(avatarBin)
+	// }
 	db.Mp = 5
 	g.SyncLineupNotify(db)
 }

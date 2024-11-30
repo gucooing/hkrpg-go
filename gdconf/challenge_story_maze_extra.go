@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -18,26 +19,24 @@ type ChallengeStoryMazeExtra struct {
 func (g *GameDataConfig) loadChallengeStoryMazeExtra() {
 	g.ChallengeStoryMazeExtraMap = make(map[uint32]*ChallengeStoryMazeExtra, 0)
 	challengeStoryMazeExtraMap := make([]*ChallengeStoryMazeExtra, 0)
-	playerElementsFilePath := g.excelPrefix + "ChallengeStoryMazeExtra.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "ChallengeStoryMazeExtra.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &challengeStoryMazeExtraMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, v := range challengeStoryMazeExtraMap {
 		g.ChallengeStoryMazeExtraMap[v.ID] = v
 	}
 
-	logger.Info("load %v ChallengeStoryMazeExtra", len(g.ChallengeStoryMazeExtraMap))
+	logger.Info(text.GetText(17), len(g.ChallengeStoryMazeExtraMap), name)
 }
 
 func GetChallengeStoryMazeExtraById(id uint32) *ChallengeStoryMazeExtra {
-	return CONF.ChallengeStoryMazeExtraMap[id]
+	return getConf().ChallengeStoryMazeExtraMap[id]
 }

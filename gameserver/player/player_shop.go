@@ -10,69 +10,36 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetShopListCsReq(payloadMsg pb.Message) {
+func GetShopListCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetShopListCsReq)
 
 	rsp := new(proto.GetShopListScRsp)
 	rsp.ShopList = make([]*proto.Shop, 0)
 
 	if req.ShopType == 0 {
-		for id, shopConf := range gdconf.GetShopGoodsConfigMap() {
-			shop := &proto.Shop{
-				CityLevel:            1,
-				BeginTime:            1622145600,
-				EndTime:              4102257600,
-				GoodsList:            make([]*proto.Goods, 0),
-				CityExp:              0,
-				CityTakenLevelReward: 0,
-				ShopId:               id,
+		for _, conf := range gdconf.GetShopConfigMap() {
+			if conf.ActivityModuleID != 0 {
+				continue
 			}
-			for _, shopc := range shopConf {
-				goods := &proto.Goods{
-					BeginTime: 1622145600,
-					EndTime:   4102257600,
-					BuyTimes:  0,
-					GoodsId:   shopc.GoodsID,
-					ItemId:    shopc.ItemID,
-				}
-				shop.GoodsList = append(shop.GoodsList, goods)
+			shop := g.GetPd().GetPbShop(conf.ShopID)
+			if len(shop.GoodsList) != 0 {
+				rsp.ShopList = append(rsp.ShopList, shop)
 			}
-			rsp.ShopList = append(rsp.ShopList, shop)
 		}
 	} else {
 		rsp.ShopType = req.ShopType
-		for _, shopList := range gdconf.GetShopConfigByTypeId(req.ShopType) {
-			shopConf := gdconf.GetShopGoodsConfigById(shopList.ShopID)
-			if shopList.ShopBar == "RechargePage" {
-				continue
+		for _, conf := range gdconf.GetShopConfigByTypeId(req.ShopType) {
+			shop := g.GetPd().GetPbShop(conf.ShopID)
+			if len(shop.GoodsList) != 0 {
+				rsp.ShopList = append(rsp.ShopList, shop)
 			}
-			shop := &proto.Shop{
-				CityLevel:            1,
-				BeginTime:            1622145600,
-				EndTime:              4102257600,
-				GoodsList:            make([]*proto.Goods, 0),
-				CityExp:              0,
-				CityTakenLevelReward: 0,
-				ShopId:               shopList.ShopID,
-			}
-			for _, shopc := range shopConf {
-				goods := &proto.Goods{
-					BeginTime: 1622145600,
-					EndTime:   4102257600,
-					BuyTimes:  0,
-					GoodsId:   shopc.GoodsID,
-					ItemId:    shopc.ItemID,
-				}
-				shop.GoodsList = append(shop.GoodsList, goods)
-			}
-			rsp.ShopList = append(rsp.ShopList, shop)
 		}
 	}
 
 	g.Send(cmd.GetShopListScRsp, rsp)
 }
 
-func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg pb.Message) {
+func ExchangeHcoinCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ExchangeHcoinCsReq)
 
 	addItem := model.NewAddItem(nil)
@@ -102,16 +69,13 @@ func (g *GamePlayer) ExchangeHcoinCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.ExchangeHcoinScRsp, rsp)
 }
 
-func (g *GamePlayer) ExchangeRogueRewardKeyCsReq(payloadMsg pb.Message) {
+func ExchangeRogueRewardKeyCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ExchangeRogueRewardKeyCsReq)
 	g.Send(cmd.ExchangeRogueRewardKeyScRsp, &proto.ExchangeRogueRewardKeyCsReq{Count: req.Count})
 }
 
-func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
+func BuyGoodsCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.BuyGoodsCsReq)
-
-	addItem := model.NewAddItem(nil)
-
 	rsp := &proto.BuyGoodsScRsp{
 		ReturnItemList: &proto.ItemList{
 			ItemList: make([]*proto.Item, 0),
@@ -120,9 +84,22 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 		GoodsId:       req.GoodsId,               // 商品id
 		GoodsBuyTimes: uint32(time.Now().Unix()), // 商品购买时间
 	}
+	defer g.Send(cmd.BuyGoodsScRsp, rsp)
 
+	addItem := model.NewAddItem(nil)
 	var material []*model.Material // 扣除的货币
 	goodsConfig := gdconf.GetShopGoodsConfigByGoodsID(req.ShopId, req.GoodsId)
+	// 数量限制
+	dbg := g.GetPd().GetShopInfoGoods(req.ShopId, req.GoodsId)
+	if goodsConfig.LimitTimes != 0 {
+		newBuyTimes := dbg.BuyTimes + req.GoodsNum
+		if newBuyTimes > goodsConfig.LimitTimes {
+			rsp.Retcode = uint32(proto.Retcode_RET_ALLEY_SHOP_GOODS_NOT_VALID)
+			return
+		}
+	}
+	dbg.BuyTimes += req.GoodsNum // 用来计数的
+
 	for id, cost := range goodsConfig.CurrencyList {
 		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, cost)
 		material = append(material, &model.Material{
@@ -132,8 +109,12 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 	}
 	if !g.GetPd().DelMaterial(material) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ALLEY_SHOP_GOODS_NOT_VALID)
-		g.Send(cmd.BuyGoodsScRsp, rsp)
 		return
+	}
+
+	if city := gdconf.GetCityShopRewardList(req.ShopId); city != nil {
+		g.GetPd().AddShopExp(req.ShopId, material)
+		g.CityShopInfoScNotify(req.ShopId)
 	}
 
 	num := goodsConfig.ItemCount * req.GoodsNum
@@ -141,17 +122,56 @@ func (g *GamePlayer) BuyGoodsCsReq(payloadMsg pb.Message) {
 		Tid: req.ItemId,
 		Num: num,
 	})
+
 	g.GetPd().AddItem(addItem)
 	rsp.ReturnItemList.ItemList = addItem.ItemList
 	g.AllPlayerSyncScNotify(addItem.AllSync)
+
 	finishSubMission := g.GetPd().MissionGetItem(req.ItemId) // 任务检查
 	if len(finishSubMission) != 0 {
 		g.InspectMission(finishSubMission)
 	}
-	g.Send(cmd.BuyGoodsScRsp, rsp)
 }
 
-func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg pb.Message) {
+func TakeCityShopRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.TakeCityShopRewardCsReq)
+	rsp := &proto.TakeCityShopRewardScRsp{
+		ShopId:  req.ShopId,
+		Reward:  &proto.ItemList{ItemList: make([]*proto.Item, 0)},
+		Level:   req.Level,
+		Retcode: 0,
+	}
+	defer g.Send(cmd.TakeCityShopRewardScRsp, rsp)
+	db := g.GetPd().GetShopInfo(req.ShopId)
+	conf := gdconf.GetCityShopReward(req.ShopId, req.Level)
+	if conf == nil || db.Level < req.Level {
+		rsp.Retcode = uint32(proto.Retcode_RET_ALLEY_SHOP_GOODS_NOT_VALID)
+		return
+	}
+	//  获取奖励
+	addItem := model.NewAddItem(nil)
+	addItem.PileItem = model.GetRewardData(conf.RewardID)
+	g.GetPd().AddItem(addItem)
+	rsp.Reward.ItemList = addItem.ItemList
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	model.UpShopReward(db, req.Level)
+
+	g.CityShopInfoScNotify(req.ShopId)
+}
+
+func (g *GamePlayer) CityShopInfoScNotify(shopId uint32) {
+	db := g.GetPd().GetShopInfo(shopId)
+	notify := &proto.CityShopInfoScNotify{
+		Level:            db.Level,
+		TakenLevelReward: db.Reward,
+		ShopId:           db.ShopId,
+		Exp:              db.Exp,
+	}
+
+	g.Send(cmd.CityShopInfoScNotify, notify)
+}
+
+func GetRollShopInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetRollShopInfoCsReq)
 	rsp := &proto.GetRollShopInfoScRsp{
 		GachaRandom:     1,
@@ -162,7 +182,7 @@ func (g *GamePlayer) GetRollShopInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetRollShopInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) QueryProductInfoCsReq(payloadMsg pb.Message) {
+func QueryProductInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.QueryProductInfoScRsp{
 		// PEKJLBINDGG: 1710014400,
 		// Retcode:     0,

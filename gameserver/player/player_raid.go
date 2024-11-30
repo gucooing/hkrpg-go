@@ -11,7 +11,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetRaidInfoCsReq(payloadMsg pb.Message) {
+func GetRaidInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetRaidInfoScRsp{
 		ChallengeTakenRewardIdList: make([]uint32, 0),
 		ChallengeRaidList:          make([]*proto.ChallengeRaid, 0),
@@ -29,7 +29,7 @@ func (g *GamePlayer) GetRaidInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetRaidInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) StartRaidCsReq(payloadMsg pb.Message) {
+func StartRaidCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.StartRaidCsReq)
 	rsp := &proto.StartRaidScRsp{}
 	g.GetPd().NewRaidInfoDb(req.RaidId) // 重置
@@ -59,7 +59,7 @@ func (g *GamePlayer) StartRaidCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.StartRaidScRsp, rsp)
 }
 
-func (g *GamePlayer) LeaveRaidCsReq(payloadMsg pb.Message) {
+func LeaveRaidCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.LeaveRaidCsReq)
 	rsp := &proto.LeaveRaidScRsp{}
 	db := g.GetPd().GetFinishRaidInfo(req.RaidId)

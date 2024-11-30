@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -18,57 +19,28 @@ type ChallengeGroupConfig struct {
 
 func (g *GameDataConfig) loadChallengeGroupConfig() {
 	g.ChallengeGroupConfigMap = make(map[uint32]*ChallengeGroupConfig)
-	challengeGroupConfigList := make([]*ChallengeGroupConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "ChallengeGroupConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+
+	fileList := []string{"ChallengeGroupConfig.json", "ChallengeStoryGroupConfig.json",
+		"ChallengeBossGroupConfig.json"}
+	for _, file := range fileList {
+		challengeConfigList := make([]*ChallengeGroupConfig, 0)
+		files := g.excelPrefix + file
+		bin, err := os.ReadFile(files)
+		if err != nil {
+			panic(fmt.Sprintf(text.GetText(18), file, err))
+		}
+		err = hjson.Unmarshal(bin, &challengeConfigList)
+		if err != nil {
+			panic(fmt.Sprintf(text.GetText(19), file, err))
+		}
+		for _, v := range challengeConfigList {
+			g.ChallengeGroupConfigMap[v.GroupID] = v
+		}
 	}
 
-	err = hjson.Unmarshal(playerElementsFile, &challengeGroupConfigList)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	challengeStoryGroupConfig := make([]*ChallengeGroupConfig, 0)
-	playerElementsFilePathStory := g.excelPrefix + "ChallengeStoryGroupConfig.json"
-	playerElementsFileStory, err := os.ReadFile(playerElementsFilePathStory)
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-
-	err = hjson.Unmarshal(playerElementsFileStory, &challengeStoryGroupConfig)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-	challengeGroupConfigList = append(challengeGroupConfigList, challengeStoryGroupConfig...)
-
-	challengeBossGroupConfig := make([]*ChallengeGroupConfig, 0)
-	playerElementsFilePathBoss := g.excelPrefix + "ChallengeBossGroupConfig.json"
-	playerElementsFileBoss, err := os.ReadFile(playerElementsFilePathBoss)
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-
-	err = hjson.Unmarshal(playerElementsFileBoss, &challengeBossGroupConfig)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-	challengeGroupConfigList = append(challengeGroupConfigList, challengeBossGroupConfig...)
-
-	for _, v := range challengeGroupConfigList {
-		g.ChallengeGroupConfigMap[v.GroupID] = v
-	}
-
-	logger.Info("load %v ChallengeGroupConfig", len(g.ChallengeGroupConfigMap))
+	logger.Info(text.GetText(17), len(g.ChallengeGroupConfigMap), "ChallengeGroupConfig")
 }
 
 func GetChallengeGroupConfig(guid uint32) *ChallengeGroupConfig {
-	return CONF.ChallengeGroupConfigMap[guid]
+	return getConf().ChallengeGroupConfigMap[guid]
 }

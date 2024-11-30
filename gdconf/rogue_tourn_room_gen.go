@@ -1,11 +1,13 @@
 package gdconf
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -39,17 +41,15 @@ func (g *GameDataConfig) loadRogueTournRoomGen() {
 		RogueTournRoomGenByType: make(map[constant.RogueTournRoomType][]*RogueTournRoomGen),
 	}
 	rogueTournRoomGen := make(map[uint32]*RogueTournRoomGen)
-	playerElementsFilePath := g.dataPrefix + "RogueTournRoomGen.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RogueTournRoomGen.json"
+	playerElementsFile, err := os.ReadFile(g.dataPrefix + name)
 	if err != nil {
-		logger.Error("open file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &rogueTournRoomGen)
 	if err != nil {
-		logger.Error("parse file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	g.RogueTournRoom.RogueTournRoomGenMap = rogueTournRoomGen
 	for _, room := range rogueTournRoomGen {
@@ -60,15 +60,16 @@ func (g *GameDataConfig) loadRogueTournRoomGen() {
 			g.RogueTournRoom.RogueTournRoomGenByType[room.RogueRoomType], room,
 		)
 	}
-	logger.Info("load %v RogueTournRoomGen", len(g.RogueTournRoom.RogueTournRoomGenMap))
+
+	logger.Info(text.GetText(17), len(g.RogueTournRoom.RogueTournRoomGenMap), name)
 }
 
 func GetRogueTournRoomGenById(id uint32) *RogueTournRoomGen {
-	return CONF.RogueTournRoom.RogueTournRoomGenMap[id]
+	return getConf().RogueTournRoom.RogueTournRoomGenMap[id]
 }
 
 func GetRogueTournRoomGenaByType(typeid uint32) *RogueTournRoomGen {
-	list := CONF.RogueTournRoom.RogueTournRoomGenByType[constant.RogueTournRoomType(typeid)]
+	list := getConf().RogueTournRoom.RogueTournRoomGenByType[constant.RogueTournRoomType(typeid)]
 	idIndex := rand.Intn(len(list))
 	return list[idIndex]
 }

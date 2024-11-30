@@ -12,8 +12,9 @@ import (
 )
 
 var CONF *GameDataConfig = nil
+var confSync = &sync.RWMutex{}
 
-const MaxWaitGroup = 5
+var MaxWaitGroup int = 5
 
 type loadFunc func()
 
@@ -43,8 +44,6 @@ type GameDataConfig struct {
 	RelicSubAffixConfigMap       map[uint32]map[uint32]*RelicSubAffixConfig      // 圣遗物副属性配置
 	RelicExpTypeMap              map[uint32]map[uint32]*RelicExpType             // 圣遗物经验配置
 	ItemConfigMap                *ItemList                                       // 材料
-	ItemConfigEquipmentMap       map[uint32]*ItemConfigEquipment                 // 背包光锥配置
-	ItemConfigRelicMap           map[uint32]*ItemConfigRelic                     // 背包遗器配置
 	ItemUseBuffDataMap           map[uint32]*ItemUseBuffData                     // 物品增益配置表
 	ItemComposeConfigMap         map[uint32]*ItemComposeConfig                   // 合成配置表
 	RogueTalentMap               map[uint32]*RogueTalent                         // 模拟宇宙天赋
@@ -55,6 +54,7 @@ type GameDataConfig struct {
 	RogueBuffMap                 *RogueBuffList                                  // 模拟宇宙buff列表
 	RogueAreaConfigMap           map[uint32]*RogueAreaConfig                     // 模拟宇宙关卡配置
 	RogueMap                     map[uint32]*RogueMap                            // 模拟宇宙关卡地图表
+	RogueScoreRewardMap          map[uint32]map[uint32]*RogueScoreReward         // 模拟宇宙奖励配置
 	CocoonConfigMap              map[uint32]map[uint32]*CocoonConfig             // 挑战/周本
 	MappingInfoMap               map[uint32]map[uint32]*MappingInfo              // 挑战/周本奖励
 	AvatarSkilltreeMap           map[uint32]map[uint32]*AvatarSkilltree          // 技能库
@@ -85,8 +85,9 @@ type GameDataConfig struct {
 	PlaneEventMap                map[uint32]map[uint32]*PlaneEvent               // 大世界怪物信息
 	StageConfigMap               map[uint32]*StageConfig                         // 具体怪物群信息
 	LoadingDescMap               map[uint32]*LoadingDesc                         // 战斗随机种子
-	ShopConfigMap                map[uint32][]*ShopConfig                        // 商店配置
+	ShopConfigMap                *ShopInfo                                       // 商店配置
 	ShopGoodsConfigMap           map[uint32]map[uint32]*ShopGoodsConfig          // 商品配置
+	CityShopRewardListMap        map[uint32]map[uint32]*CityShopRewardList       // 商店等级配置
 	RewardDataMap                map[uint32]*RewardData                          // 奖励配置
 	MainMissionMap               map[uint32]*MainMission                         // 主线任务
 	EventMissionMap              map[uint32]*EventMission                        // 事件任务？
@@ -127,6 +128,20 @@ type GameDataConfig struct {
 	ChallengeRewardLineMap       map[uint32]map[uint32]*ChallengeRewardLine
 	FuncUnlockDataMap            map[uint32]*FuncUnlockData
 	GroupSystemUnlockDataMap     map[uint32]*GroupSystemUnlockData
+	TrainVisitorConfigMap        []*TrainVisitorConfig
+	TrainPartyPassengerConfigMap map[uint32]*TrainPartyPassengerConfig
+	TrainPartyCardConfigMap      map[uint32]*TrainPartyCardConfig
+	TrainPartyAreaConfigMap      map[uint32]*TrainPartyAreaConfig
+	TrainPartyStepConfigMap      map[uint32]*TrainPartyStepConfig
+	TrainPartyAreaGoalConfigMap  map[uint32]*TrainPartyAreaGoalConfig
+	RogueHandbookMiracleMap      map[uint32]*RogueHandbookMiracle            // 模拟宇宙奇物handbook配置
+	RogueHandBookEventMap        map[uint32]*RogueHandBookEvent              // 模拟宇宙事件handbook配置
+	RogueAeonStoryConfigMap      map[uint32]map[uint32]*RogueAeonStoryConfig // 模拟宇宙星神配置
+	RogueBonusMap                map[uint32]*RogueBonus                      // 模拟宇宙祝福配置
+	Pet                          *Pet                                        //  宠物
+	MatchThreeLevelMap           map[uint32]map[uint32]*MatchThreeLevel      // 折纸小鸟关卡信息
+	MatchThreeBirdMap            map[uint32]*MatchThreeBird                  // 折纸小鸟小鸟信息
+	ClockParkScriptConfigMap     map[uint32]*ClockParkScriptConfig           // 美梦往事剧本信息
 	// 下面是预处理
 	ServerGroupMap map[uint32]map[uint32]map[uint32]*GoppLevelGroup // 预处理服务器场景
 	Teleports      map[uint32]map[uint32]*Teleports                 // 预处理传送锚点
@@ -137,12 +152,50 @@ type GameDataConfig struct {
 
 func InitGameDataConfig(gameDataConfigPath string) {
 	logger.Info(text.GetText(14))
+	MaxWaitGroup = 5
 	CONF = new(GameDataConfig)
 	startTime := time.Now().Unix()
 	CONF.loadAll(gameDataConfigPath)
 	runtime.GC()
 	endTime := time.Now().Unix()
 	logger.Info(text.GetText(15), endTime-startTime)
+	go confTicker(gameDataConfigPath)
+}
+
+// 安全访问方法
+func getConf() *GameDataConfig {
+	confSync.RLock()
+	defer confSync.RUnlock()
+	return CONF
+}
+
+func confTicker(gameDataConfigPath string) {
+	ticker := time.NewTicker(time.Minute * 15)
+	for {
+		select {
+		case <-ticker.C:
+			func() {
+				defer func() {
+					runtime.GC()
+					if err := recover(); err != nil {
+						logger.Error("@LogTag(server_panic)@ err:%s\nstack:%s", err, logger.Stack())
+						logger.Warn(text.GetText(106))
+					}
+				}()
+				MaxWaitGroup = 1
+				logger.Info(text.GetText(103))
+				newConf := new(GameDataConfig)
+				startTime := time.Now().Unix()
+				newConf.loadAll(gameDataConfigPath)
+				endTime := time.Now().Unix()
+				logger.Info(text.GetText(104), endTime-startTime)
+
+				confSync.Lock()
+				CONF = newConf
+				confSync.Unlock()
+			}()
+		}
+	}
 }
 
 func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
@@ -181,30 +234,39 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.dataPrefix += "/"
 
 	g.load()
-	sem := make(chan struct{}, MaxWaitGroup)
-	g.wg.Add(len(g.loadFunc))
-	for _, fn := range g.loadFunc {
-		sem <- struct{}{}
-		go func() {
+	if MaxWaitGroup == 1 {
+		for _, fn := range g.loadFunc {
 			fn()
-			g.wg.Done()
-			func() { <-sem }()
-		}()
-	}
-	g.wg.Wait()
+		}
+		for _, fn := range g.goppFunc {
+			fn()
+		}
+	} else {
+		sem := make(chan struct{}, MaxWaitGroup)
+		g.wg.Add(len(g.loadFunc))
+		for _, fn := range g.loadFunc {
+			sem <- struct{}{}
+			go func() {
+				fn()
+				g.wg.Done()
+				func() { <-sem }()
+			}()
+		}
+		g.wg.Wait()
 
-	g.gopp()
-	g.wg.Add(len(g.goppFunc))
-	for _, fn := range g.goppFunc {
-		sem <- struct{}{}
-		go func() {
-			fn()
-			g.wg.Done()
-			func() { <-sem }()
-		}()
+		g.gopp()
+		g.wg.Add(len(g.goppFunc))
+		for _, fn := range g.goppFunc {
+			sem <- struct{}{}
+			go func() {
+				fn()
+				g.wg.Done()
+				func() { <-sem }()
+			}()
+		}
+		g.wg.Wait()
+		close(sem)
 	}
-	g.wg.Wait()
-	close(sem)
 }
 
 func (g *GameDataConfig) load() {
@@ -224,8 +286,6 @@ func (g *GameDataConfig) load() {
 		g.loadRelicSubAffixConfig,      // 圣遗物副属性配置
 		g.loadRelicExpType,             // 圣遗物经验配置
 		g.loadItemConfig,               // 材料
-		g.loadItemConfigEquipment,      // 背包光锥配置
-		g.loadItemConfigRelic,          // 背包遗器配置
 		g.loadItemUseBuffData,          // 物品增益配置表
 		g.loadItemComposeConfig,        // 合成配置表
 		g.loadRogueTalent,              // 模拟宇宙天赋
@@ -236,6 +296,7 @@ func (g *GameDataConfig) load() {
 		g.loadRogueBuff,                // 模拟宇宙buff列表
 		g.loadRogueAreaConfig,          // 模拟宇宙关卡配置
 		g.loadRogueMap,                 // 模拟宇宙关卡地图表
+		g.loadRogueScoreReward,         // 模拟宇宙奖励配置
 		g.loadCocoonConfig,             // 挑战/周本
 		g.loadMappingInfo,              // 挑战/周本奖励
 		g.loadAvatarSkilltree,          // 技能库
@@ -266,6 +327,7 @@ func (g *GameDataConfig) load() {
 		g.loadLoadingDesc,               // 战斗随机种子
 		g.loadShopConfig,                // 商店配置
 		g.loadShopGoodsConfig,           // 商品配置
+		g.loadCityShopRewardList,        // 商店等级配置
 		g.loadRewardData,                // 奖励配置
 		g.loadMainMission,               // 主线任务
 		g.loadEventMission,              // 事件任务？
@@ -305,6 +367,20 @@ func (g *GameDataConfig) load() {
 		g.loadChallengeRewardLine,
 		g.loadFuncUnlockData,
 		g.loadGroupSystemUnlockData,
+		g.loadTrainVisitorConfig,
+		g.loadTrainPartyPassengerConfig,
+		g.loadTrainPartyCardConfig,
+		g.loadTrainPartyAreaConfig,
+		g.loadTrainPartyStepConfig,
+		g.loadTrainPartyAreaGoalConfig,
+		g.loadRogueHandbookMiracle,  // 模拟宇宙奇物handbook配置
+		g.loadRogueHandBookEvent,    // 模拟宇宙事件handbook配置
+		g.loadRogueAeonStoryConfig,  // 模拟宇宙星神配置
+		g.loadRogueBonus,            // 模拟宇宙祝福配置
+		g.loadPetConfig,             // 宠物
+		g.loadMatchThreeLevel,       // 折纸小鸟关卡信息
+		g.loadMatchThreeBird,        // 折纸小鸟小鸟信息
+		g.loadClockParkScriptConfig, // 美梦往事剧本信息
 	}
 }
 

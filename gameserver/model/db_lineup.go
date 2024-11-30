@@ -15,7 +15,7 @@ const (
 	Rogue         = 3  // 第一个模拟宇宙队伍
 	RogueTourn    = 4  // 差分宇宙
 	Activity      = 5  // 角色试用队伍
-	Raid          = 6  // 副本队伍
+	Raid          = 6  // 故事性/副本
 )
 
 func NewLineUp() *spb.LineUp {
@@ -36,14 +36,16 @@ func (g *PlayerData) GetLineUp() *spb.LineUp {
 	return db.LineUp
 }
 
+// 获取常规队伍的能量
 func (g *PlayerData) GetLineUpMp() uint32 {
-	db := g.GetBattleLineUp()
+	db := g.GetCurLineUp()
 	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
 		return db.Mp
 	}
 	return g.GetLineUp().Mp
 }
 
+// 获取指定队伍的能量
 func (g *PlayerData) GetLineupDbMp(db *spb.Line) uint32 {
 	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
 		return db.Mp
@@ -51,8 +53,9 @@ func (g *PlayerData) GetLineupDbMp(db *spb.Line) uint32 {
 	return g.GetLineUp().Mp
 }
 
+// 添加当前队伍能量
 func (g *PlayerData) AddLineUpMp(mp uint32) {
-	db := g.GetBattleLineUp()
+	db := g.GetCurLineUp()
 	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
 		if db.Mp += mp; db.Mp > 5 {
 			db.Mp = 5
@@ -65,8 +68,9 @@ func (g *PlayerData) AddLineUpMp(mp uint32) {
 	}
 }
 
+// 删除当前队伍能量
 func (g *PlayerData) DelLineUpMp(mp uint32) {
-	db := g.GetBattleLineUp()
+	db := g.GetCurLineUp()
 	if db.LineType != spb.ExtraLineupType_LINEUP_NONE {
 		if db.Mp -= mp; db.Mp < 0 {
 			db.Mp = 0
@@ -79,7 +83,11 @@ func (g *PlayerData) DelLineUpMp(mp uint32) {
 	}
 }
 
+// 通过id获取常规队伍
 func (g *PlayerData) GetLineUpById(index uint32) *spb.Line {
+	if index > MaxLineupList {
+		return nil
+	}
 	db := g.GetLineUp()
 	if db.LineUpList == nil {
 		db.LineUpList = make(map[uint32]*spb.Line)
@@ -103,6 +111,7 @@ func (g *PlayerData) GetLineUpById(index uint32) *spb.Line {
 	return db.LineUpList[index]
 }
 
+// 通过id获取战斗队伍
 func (g *PlayerData) GetBattleLineUpById(index uint32) *spb.Line {
 	db := g.GetLineUp()
 	if db.BattleLineList == nil {
@@ -117,6 +126,12 @@ func (g *PlayerData) GetBattleLineUpById(index uint32) *spb.Line {
 	return db.BattleLineList[index]
 }
 
+// 获取当前普通队伍
+func (g *PlayerData) GetCurNontLine() *spb.Line {
+	return g.GetLineUpById(g.GetLineUp().MainLineUp)
+}
+
+// 获取故事线队伍
 func (g *PlayerData) GetStoryLine() map[uint32]*spb.Line {
 	db := g.GetLineUp()
 	if db.StoryLineList == nil {
@@ -125,21 +140,7 @@ func (g *PlayerData) GetStoryLine() map[uint32]*spb.Line {
 	return db.StoryLineList
 }
 
-func (g *PlayerData) GetStoryLineById(index uint32) *spb.Line {
-	db := g.GetLineUp()
-	if db.StoryLineList == nil {
-		db.StoryLineList = make(map[uint32]*spb.Line)
-	}
-	if db.StoryLineList[index] == nil {
-		db.StoryLineList[index] = &spb.Line{
-			AvatarIdList: make(map[uint32]*spb.LineAvatarList, 4),
-			LineType:     spb.ExtraLineupType_LINEUP_STAGE_TRIAL,
-			LeaderSlot:   0,
-		}
-	}
-	return db.StoryLineList[index]
-}
-
+// 新建故事线队伍
 func (g *PlayerData) NewStoryLine(storyLineID uint32) {
 	curLineup := g.GetCurLineUp()
 	db := g.GetLineUp()
@@ -163,12 +164,38 @@ func (g *PlayerData) NewStoryLine(storyLineID uint32) {
 	storyLine.AvatarIdList[0] = &spb.LineAvatarList{
 		Slot:           0,
 		AvatarId:       conf.CaptainAvatarID,
-		LineAvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
+		LineAvatarType: spb.AvatarType_AVATAR_TRIAL_TYPE,
 	}
 	db.StoryLineList[storyLineID] = storyLine
 }
 
-func (g *PlayerData) NewTrialLine(trialList []uint32) {
+// 通过id获取故事线队伍
+func (g *PlayerData) GetStoryLineById(index uint32) *spb.Line {
+	db := g.GetLineUp()
+	if db.StoryLineList == nil {
+		db.StoryLineList = make(map[uint32]*spb.Line)
+	}
+	if db.StoryLineList[index] == nil {
+		db.StoryLineList[index] = &spb.Line{
+			AvatarIdList: make(map[uint32]*spb.LineAvatarList, 4),
+			LineType:     spb.ExtraLineupType_LINEUP_STAGE_TRIAL,
+			LeaderSlot:   0,
+		}
+	}
+	return db.StoryLineList[index]
+}
+
+// 获取当前故事线队伍
+func (g *PlayerData) GetCurChangeStory() *spb.Line {
+	if db := g.GetChangeStory(); db == nil || !g.IsChangeStory() {
+		return g.GetCurLineUp()
+	} else {
+		return g.GetStoryLineById(db.CurChangeStory)
+	}
+}
+
+// 新建队伍
+func (g *PlayerData) NewLineByAvatarList(trialList []uint32) {
 	db := g.GetCurLineUp()
 	if len(trialList) < 5 {
 		return
@@ -183,14 +210,14 @@ func (g *PlayerData) NewTrialLine(trialList []uint32) {
 			db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{
 				AvatarId:       id,
 				Slot:           uint32(slot),
-				LineAvatarType: spb.LineAvatarType_LineAvatarType_MI,
+				LineAvatarType: spb.AvatarType_AVATAR_FORMAL_TYPE,
 			}
 		}
 		if gdconf.GetSpecialAvatarById(id) != nil {
 			db.AvatarIdList[uint32(slot)] = &spb.LineAvatarList{
 				AvatarId:       id,
 				Slot:           uint32(slot),
-				LineAvatarType: spb.LineAvatarType_LineAvatarType_TRIAL,
+				LineAvatarType: spb.AvatarType_AVATAR_TRIAL_TYPE,
 			}
 		}
 		if id == trialList[4] {
@@ -199,17 +226,18 @@ func (g *PlayerData) NewTrialLine(trialList []uint32) {
 	}
 }
 
-func (g *PlayerData) GetTrialAvatar(trialAvatarId uint32) *spb.LineAvatarList {
-	db := g.GetBattleLineUp()
-	var lineAvatarType spb.LineAvatarType
-	if g.GetAvatarBinById(trialAvatarId) != nil {
-		lineAvatarType = spb.LineAvatarType_LineAvatarType_MI
+// 向当前队伍中添加一个角色
+func (g *PlayerData) AddCurLineUpAvatar(avatarId uint32) *spb.LineAvatarList {
+	db := g.GetCurLineUp()
+	var lineAvatarType spb.AvatarType
+	if g.GetAvatarBinById(avatarId) != nil {
+		lineAvatarType = spb.AvatarType_AVATAR_FORMAL_TYPE
 	}
-	if gdconf.GetSpecialAvatarById(trialAvatarId) != nil {
-		lineAvatarType = spb.LineAvatarType_LineAvatarType_TRIAL
+	if gdconf.GetSpecialAvatarById(avatarId) != nil {
+		lineAvatarType = spb.AvatarType_AVATAR_TRIAL_TYPE
 	}
 	lineAvatar := &spb.LineAvatarList{
-		AvatarId:       trialAvatarId,
+		AvatarId:       avatarId,
 		LineAvatarType: lineAvatarType,
 	}
 	isUp := false
@@ -235,8 +263,9 @@ func (g *PlayerData) GetTrialAvatar(trialAvatarId uint32) *spb.LineAvatarList {
 	return lineAvatar
 }
 
-func (g *PlayerData) DelTrialAvatar(trialAvatarId uint32) {
-	db := g.GetBattleLineUp()
+// 在当前队伍中删除目标角色
+func (g *PlayerData) DelCurLineUpAvatar(trialAvatarId uint32) {
+	db := g.GetCurLineUp()
 	isJh := false
 	for id, info := range db.AvatarIdList {
 		if info.AvatarId == trialAvatarId {
@@ -271,15 +300,7 @@ func (g *PlayerData) DelTrialAvatar(trialAvatarId uint32) {
 	}
 }
 
-func (g *PlayerData) GetCurLineUp() *spb.Line {
-	if g.IsChangeStory() {
-		db := g.GetChangeStory()
-		return g.GetStoryLineById(db.CurChangeStory)
-	}
-	db := g.GetLineUpById(g.GetLineUp().MainLineUp)
-	return db
-}
-
+// 获取当前上场角色id
 func (g *PlayerData) GetSceneAvatarId() uint32 {
 	db := g.GetCurLineUp()
 	if db.AvatarIdList[db.LeaderSlot] == nil {
@@ -307,30 +328,19 @@ func (g *PlayerData) UnDbLineUp(index uint32, Slot uint32, avatarId uint32) {
 // 	g.SyncLineupNotify(db)
 // }
 
-// 交换角色
-func (g *PlayerData) SwapLineup(index, src_slot, dst_slot uint32) {
-	db := g.GetLineUpById(index)
-	src := db.AvatarIdList[src_slot]
-	dst := db.AvatarIdList[dst_slot]
-	src.Slot = dst.Slot
-	dst.Slot = src.Slot
-	db.AvatarIdList[src_slot] = dst
-	db.AvatarIdList[dst_slot] = src
-}
-
-func (g *PlayerData) GetBattleLineUp() *spb.Line {
+// 获取当前队伍（普通/战斗
+func (g *PlayerData) GetCurLineUp() *spb.Line {
 	if g.IsChangeStory() {
-		return g.GetCurLineUp()
+		return g.GetCurChangeStory()
 	}
-	status := g.GetBattleStatus()
-	switch status {
+	switch g.GetBattleStatus() {
 	case spb.BattleType_Battle_NONE:
-		return g.GetCurLineUp()
+		return g.GetCurNontLine()
 	case spb.BattleType_Battle_CHALLENGE:
 		return g.GetChallengeLineUp()
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		return g.GetChallengeLineUp()
-	case spb.BattleType_Battle_ROGUE:
+	case spb.BattleType_Battle_QUSET_ROGUE:
 		return g.GetBattleLineUpById(Rogue)
 	case spb.BattleType_Battle_ROGUE_TOURN:
 		return g.GetBattleLineUpById(RogueTourn)
@@ -339,10 +349,11 @@ func (g *PlayerData) GetBattleLineUp() *spb.Line {
 	case spb.BattleType_Battle_RAID:
 		return g.GetBattleLineUpById(Raid)
 	default:
-		return g.GetCurLineUp()
+		return g.GetCurNontLine()
 	}
 }
 
+// 获取忘却之庭队伍
 func (g *PlayerData) GetChallengeLineUp() *spb.Line {
 	challengeStatus := g.GetCurChallenge()
 	switch challengeStatus.CurStage {
@@ -352,29 +363,30 @@ func (g *PlayerData) GetChallengeLineUp() *spb.Line {
 		return g.GetBattleLineUpById(Challenge_2)
 	default:
 		logger.Debug("[UID:%v]没有此忘却之庭队伍id:%v", g.GetBasicBin().Uid, challengeStatus.CurStage)
-		return g.GetCurLineUp()
+		return g.GetCurNontLine()
 	}
 }
 
-func (g *PlayerData) SpecialMainAvatar(trialAvatarId uint32) (bool, spb.LineAvatarType) {
+// 筛选试用队伍中 男/女主角
+func (g *PlayerData) SpecialMainAvatar(trialAvatarId uint32) (bool, spb.AvatarType) {
 	conf := gdconf.GetSpecialAvatarById(trialAvatarId)
 	if conf == nil {
-		return true, spb.LineAvatarType_LineAvatarType_MI
+		return true, spb.AvatarType_AVATAR_FORMAL_TYPE
 	}
 	avatarDb := g.GetAvatar()
 	if conf.AvatarID/1000 == 8 {
 		switch avatarDb.Gender {
 		case spb.Gender_GenderMan:
 			if conf.AvatarID%2 == 0 {
-				return false, spb.LineAvatarType_LineAvatarType_TRIAL
+				return false, spb.AvatarType_AVATAR_TRIAL_TYPE
 			}
 		case spb.Gender_GenderWoman:
 			if conf.AvatarID%2 != 0 {
-				return false, spb.LineAvatarType_LineAvatarType_TRIAL
+				return false, spb.AvatarType_AVATAR_TRIAL_TYPE
 			}
 		}
 	}
-	return true, spb.LineAvatarType_LineAvatarType_TRIAL
+	return true, spb.AvatarType_AVATAR_TRIAL_TYPE
 }
 
 /*****************************************功能方法****************************/
@@ -384,24 +396,42 @@ func (g *PlayerData) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 		return nil
 	}
 	avatarList := make([]*proto.LineupAvatar, 0)
-	// if db.AvatarIdList[db.LeaderSlot] == nil {
-	//
-	// }
 	for slot, lineAvatar := range db.AvatarIdList {
+	tx:
+		info := &proto.LineupAvatar{
+			Slot:    slot,
+			Satiety: 0,
+			Hp:      10000,
+			SpBar: &proto.SpBarInfo{
+				CurSp: 6000,
+				MaxSp: 10000,
+			},
+			Id:         lineAvatar.AvatarId,
+			AvatarType: proto.AvatarType(lineAvatar.LineAvatarType),
+		}
+
 		switch lineAvatar.LineAvatarType {
-		case spb.LineAvatarType_LineAvatarType_MI:
-			x := g.GetLineupAvatar(lineAvatar.AvatarId, slot)
-			if x == nil {
+		case spb.AvatarType_AVATAR_TYPE_NONE:
+			lineAvatar.LineAvatarType = spb.AvatarType_AVATAR_FORMAL_TYPE
+			goto tx
+		case spb.AvatarType_AVATAR_FORMAL_TYPE:
+			avatarInfo := g.GetAvatarBinById(lineAvatar.AvatarId)
+			if avatarInfo == nil {
 				delete(db.AvatarIdList, slot)
 				continue
 			}
-			avatarList = append(avatarList, x)
-		case spb.LineAvatarType_LineAvatarType_TRIAL:
-			avatarList = append(avatarList, g.GetTrialLineupAvatar(lineAvatar.AvatarId, slot))
-			continue
+			info.Hp = avatarInfo.Hp
+			info.SpBar.CurSp = avatarInfo.SpBar.CurSp
+			info.SpBar.MaxSp = avatarInfo.SpBar.MaxSp
+
+		case spb.AvatarType_AVATAR_TRIAL_TYPE:
+		case spb.AvatarType_AVATAR_ASSIST_TYPE:
+			// TODO 拉取援助角色信息
 		default:
+			logger.Error("@LogTag(player_error_%v)@异常的队伍角色Type:%s", g.GetBasicBin().Uid, lineAvatar.LineAvatarType.String())
 			continue
 		}
+		avatarList = append(avatarList, info)
 	}
 
 	lineupList := &proto.LineupInfo{
@@ -419,82 +449,40 @@ func (g *PlayerData) GetLineUpPb(db *spb.Line) *proto.LineupInfo {
 	}
 	if changeStory := g.GetCurChangeStoryInfo(); changeStory != nil {
 		lineupList.GameStoryLineId = changeStory.ChangeStoryId
-		// lineupList.Sus = []uint32{15}
 	}
 	return lineupList
 }
 
-func (g *PlayerData) GetLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
-	db := g.GetAvatarBinById(avatarId)
-	if db == nil {
-		return nil
-	}
-	info := &proto.LineupAvatar{
-		Slot:    index,
-		Satiety: 0,
-		Hp:      db.Hp,
-		SpBar: &proto.SpBarInfo{
-			CurSp: db.SpBar.CurSp,
-			MaxSp: db.SpBar.MaxSp,
-		},
-		Id:         avatarId,
-		AvatarType: proto.AvatarType(db.AvatarType),
-	}
-	return info
-}
-
-func (g *PlayerData) GetTrialLineupAvatar(avatarId, index uint32) *proto.LineupAvatar {
-	info := &proto.LineupAvatar{
-		Slot:    index,
-		Satiety: 0,
-		Hp:      10000,
-		SpBar: &proto.SpBarInfo{
-			CurSp: 6000,
-			MaxSp: 10000,
-		},
-		Id:         avatarId,
-		AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
-	}
-	return info
-}
-
 func (g *PlayerData) GetLineupAvatarDataList(db *spb.Line) []*proto.LineupAvatarData {
-	lADList := make([]*proto.LineupAvatarData, 0)
+	infoList := make([]*proto.LineupAvatarData, 0)
 	if db == nil {
-		return lADList
+		return infoList
 	}
-	for slot, lineAvatar := range db.AvatarIdList {
+	for _, lineAvatar := range db.AvatarIdList {
+
+		info := &proto.LineupAvatarData{
+			Hp:         10000,
+			Id:         lineAvatar.AvatarId,
+			AvatarType: proto.AvatarType(lineAvatar.LineAvatarType),
+		}
+
 		switch lineAvatar.LineAvatarType {
-		case spb.LineAvatarType_LineAvatarType_MI:
-			lADList = append(lADList, g.GetLineupAvatarData(lineAvatar.AvatarId, slot))
-		case spb.LineAvatarType_LineAvatarType_TRIAL:
-			lADList = append(lADList, g.GetTrialLineupAvatarData(lineAvatar.AvatarId, slot))
+		case spb.AvatarType_AVATAR_FORMAL_TYPE:
+			avatarInfo := g.GetAvatarBinById(lineAvatar.AvatarId)
+			if avatarInfo == nil {
+				continue
+			}
+			info.Hp = avatarInfo.Hp
+
+		case spb.AvatarType_AVATAR_TRIAL_TYPE:
+		case spb.AvatarType_AVATAR_ASSIST_TYPE:
+			// TODO 拉取援助角色信息
 		default:
+			logger.Error("@LogTag(player_error_%v)@异常的队伍角色Type:%s", g.GetBasicBin().Uid, lineAvatar.LineAvatarType.String())
 			continue
 		}
+		infoList = append(infoList, info)
 	}
 
-	return lADList
-}
-
-func (g *PlayerData) GetLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
-	db := g.GetAvatarBinById(avatarId)
-	if db == nil {
-		return nil
-	}
-	info := &proto.LineupAvatarData{
-		Hp:         db.Hp,
-		Id:         avatarId,
-		AvatarType: proto.AvatarType(db.AvatarType),
-	}
-	return info
-}
-
-func (g *PlayerData) GetTrialLineupAvatarData(avatarId, index uint32) *proto.LineupAvatarData {
-	info := &proto.LineupAvatarData{
-		Hp:         10000,
-		Id:         avatarId,
-		AvatarType: proto.AvatarType_AVATAR_TRIAL_TYPE,
-	}
-	return info
+	return infoList
 }

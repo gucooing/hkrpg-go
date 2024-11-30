@@ -14,7 +14,7 @@ import (
 
 /***********************************忘却之庭***********************************/
 
-func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg pb.Message) {
+func HandleGetChallengeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetChallengeScRsp)
 	rsp.ChallengeList = make([]*proto.Challenge, 0)
 	rsp.ChallengeGroupList = make([]*proto.ChallengeGroup, 0)
@@ -38,7 +38,7 @@ func (g *GamePlayer) HandleGetChallengeCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetChallengeScRsp, rsp)
 }
 
-func (g *GamePlayer) TakeChallengeRewardCsReq(payloadMsg pb.Message) {
+func TakeChallengeRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeChallengeRewardCsReq)
 	rsp := &proto.TakeChallengeRewardScRsp{
 		TakenRewardList: make([]*proto.TakenChallengeRewardInfo, 0),
@@ -79,7 +79,7 @@ func (g *GamePlayer) TakeChallengeRewardCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.TakeChallengeRewardScRsp, rsp)
 }
 
-func (g *GamePlayer) GetChallengeGroupStatisticsCsReq(payloadMsg pb.Message) {
+func GetChallengeGroupStatisticsCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetChallengeGroupStatisticsCsReq)
 	rsp := &proto.GetChallengeGroupStatisticsScRsp{
 		GroupId: req.GroupId,
@@ -100,7 +100,7 @@ func (g *GamePlayer) GetChallengeGroupStatisticsCsReq(payloadMsg pb.Message) {
 
 // 获取状态
 
-func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg pb.Message) {
+func GetCurChallengeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetCurChallengeScRsp{
 		CurChallenge: g.GetPd().GetChallengeInfo(),
 		LineupList: []*proto.LineupInfo{
@@ -113,7 +113,7 @@ func (g *GamePlayer) GetCurChallengeCsReq(payloadMsg pb.Message) {
 
 // 进入忘却之庭
 
-func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
+func StartChallengeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.StartChallengeCsReq)
 	// 设置战斗状态
 	storyInfo := req.GetStageInfo()
@@ -149,7 +149,7 @@ func (g *GamePlayer) StartChallengeCsReq(payloadMsg pb.Message) {
 }
 
 // 忘却之庭重新挑战
-func (g *GamePlayer) RestartChallengePhaseCsReq(payloadMsg pb.Message) {
+func RestartChallengePhaseCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.RestartChallengePhaseScRsp{
 		Retcode: 0,
 		Scene:   nil,
@@ -178,7 +178,7 @@ func (g *GamePlayer) RestartChallengePhaseCsReq(payloadMsg pb.Message) {
 
 // 忘却之庭战斗退出/结束
 
-func (g *GamePlayer) LeaveChallengeCsReq(payloadMsg pb.Message) {
+func LeaveChallengeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	curChallenge := g.GetPd().GetCurChallenge()
 	if curChallenge == nil {
 		return
@@ -438,7 +438,7 @@ func (g *GamePlayer) ChallengesAddMonsterSceneEntityRefreshInfo(mazeGroupID uint
 	return sceneEntityRefreshInfo
 }
 
-func (g *GamePlayer) StartPartialChallengeCsReq(payloadMsg pb.Message) {
+func StartPartialChallengeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.StartPartialChallengeCsReq)
 
 	rsp := &proto.StartPartialChallengeScRsp{
@@ -450,7 +450,7 @@ func (g *GamePlayer) StartPartialChallengeCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.StartPartialChallengeScRsp, rsp)
 }
 
-func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg pb.Message) {
+func EnterChallengeNextPhaseCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.EnterChallengeNextPhaseScRsp{
 		Scene: g.GetChallengeScene(),
 	}
@@ -458,7 +458,7 @@ func (g *GamePlayer) EnterChallengeNextPhaseCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.EnterChallengeNextPhaseScRsp, rsp)
 }
 
-func (g *GamePlayer) GetFriendChallengeLineupCsReq(payloadMsg pb.Message) {
+func GetFriendChallengeLineupCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetFriendChallengeLineupScRsp{}
 
 	g.Send(cmd.GetFriendChallengeLineupScRsp, rsp)

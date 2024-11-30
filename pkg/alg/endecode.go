@@ -99,6 +99,9 @@ func DecodeLoop(data []byte, kcpMsgList *[]*PackMsg) {
 }
 
 func EncodePayloadToBin(kcpMsg *PackMsg, xorKey []byte) (bin []byte) {
+	if kcpMsg == nil {
+		return nil
+	}
 	if kcpMsg.HeadData == nil {
 		kcpMsg.HeadData = make([]byte, 0)
 	}

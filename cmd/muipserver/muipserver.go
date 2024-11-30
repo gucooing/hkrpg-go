@@ -1,14 +1,12 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
 	"github.com/gucooing/hkrpg-go/muipserver/config"
 	"github.com/gucooing/hkrpg-go/pkg"
@@ -26,7 +24,7 @@ func main() {
 			cf.Write(p)
 			cf.Close()
 			fmt.Printf("找不到配置文件\n已生成默认配置文件 %s \n", confName)
-			main()
+			return
 		} else {
 			panic(err)
 		}
@@ -38,30 +36,5 @@ func main() {
 	logger.Info("AppVersion:%s", pkg.GetAppVersion())
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	cfg := config.GetConfig()
-	// 初始化muip
-	s := muip.NewMuip(cfg, appid)
-
-	// 连接nodeserver
-
-	// 启动SDK服务
-	go func() {
-		if err = s.Api.StartApi(); err != nil {
-			logger.Error("无法启动Api")
-		}
-	}()
-
-	go func() {
-		select {
-		case <-done:
-			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-			defer cancel()
-			logger.Info("MuipServer 正在关闭")
-			s.Close()
-			logger.Info("MuipServer 服务已停止")
-			logger.CloseLogger()
-			os.Exit(0)
-		}
-	}()
-	select {}
+	// cfg := config.GetConfig()
 }

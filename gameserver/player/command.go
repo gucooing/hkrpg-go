@@ -6,6 +6,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/gdconf"
+	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
@@ -37,6 +38,10 @@ func (g *GamePlayer) EnterCommand(msg Msg) {
 			reqMessageTextList = g.commandDel(x)
 		case *constant.CommandLua:
 			reqMessageTextList = g.commandLua(x)
+		case *constant.CommandRogue:
+			reqMessageTextList = g.commandRogue(x)
+		case *constant.CommandStatus:
+			reqMessageTextList = g.commandStatus(x)
 		}
 	}
 	for _, reqMessageText := range strings.Split(reqMessageTextList, "\n") {
@@ -57,16 +62,65 @@ func (g *GamePlayer) commandGive(c *constant.CommandGive) string {
 		!g.GetPd().GetIsJumpMission() {
 		return text.GetTextByL(g.GetPd().GetLanguageType(), 48)
 	}
-	if c.IsAll {
-		addItem.PileItem = g.allGive()
-	} else {
-		if gdconf.GetItemConfigById(c.ItemId) == nil {
+	conf := gdconf.GetItemConfig()
+	switch c.Type {
+	case constant.GiveTypeNone:
+		if ic, ok := conf.AllItem[c.ItemId]; ic == nil || !ok {
 			return fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 32), c.ItemId)
+		} else {
+			addItem.PileItem = append(addItem.PileItem, &model.Material{
+				Tid: c.ItemId,
+				Num: alg.GetNoZeroUint32(c.ItemNum, ic.PileLimit),
+			})
 		}
-		addItem.PileItem = append(addItem.PileItem, &model.Material{
-			Tid: c.ItemId,
-			Num: c.ItemNum,
-		})
+	case constant.GiveTypeAll:
+		g.commandGiveType(addItem, c.ItemNum, conf.Item)
+		g.commandGiveType(addItem, 5, conf.Relic)
+		g.commandGiveType(addItem, 5, conf.Equipment)
+		g.commandGiveType(addItem, 1, conf.Avatar)
+		g.commandGiveType(addItem, 1, conf.AvatarPlayerIcon)
+		g.commandGiveType(addItem, 1, conf.Book)
+		g.commandGiveType(addItem, 1, conf.Disk)
+		g.commandGiveType(addItem, c.ItemNum, conf.Food)
+		g.commandGiveType(addItem, c.ItemNum, conf.Formula)
+		g.commandGiveType(addItem, 1, conf.ChatBubble)
+		g.commandGiveType(addItem, 1, conf.PhoneTheme)
+		g.commandGiveType(addItem, c.ItemNum, conf.Mission)
+		g.commandGiveType(addItem, c.ItemNum, conf.ForceOpitonalGift)
+		g.commandGiveType(addItem, 1, conf.PamSkin)
+		g.commandGiveType(addItem, 1, conf.NormalPet)
+	case constant.GiveTypeItem:
+		g.commandGiveType(addItem, c.ItemNum, conf.Item)
+	case constant.GiveTypeRelic:
+		g.commandGiveType(addItem, 5, conf.Relic)
+	case constant.GiveTypeEquipment:
+		g.commandGiveType(addItem, 5, conf.Equipment)
+	case constant.GiveTypeAvatar:
+		g.commandGiveType(addItem, 1, conf.Avatar)
+	case constant.GiveTypeIcon:
+		g.commandGiveType(addItem, 1, conf.AvatarPlayerIcon)
+	case constant.GiveTypeBook:
+		g.commandGiveType(addItem, 1, conf.Book)
+	case constant.GiveTypeDisk:
+		g.commandGiveType(addItem, 1, conf.Disk)
+	case constant.GiveTypeFood:
+		g.commandGiveType(addItem, c.ItemNum, conf.Food)
+	case constant.GiveTypeFormula:
+		g.commandGiveType(addItem, c.ItemNum, conf.Formula)
+	case constant.GiveTypeChat:
+		g.commandGiveType(addItem, 1, conf.ChatBubble)
+	case constant.GiveTypeTheme:
+		g.commandGiveType(addItem, 1, conf.PhoneTheme)
+	case constant.GiveTypeMission:
+		g.commandGiveType(addItem, c.ItemNum, conf.Mission)
+	case constant.GiveTypeGift:
+		g.commandGiveType(addItem, c.ItemNum, conf.ForceOpitonalGift)
+	case constant.GiveTypePam:
+		g.commandGiveType(addItem, 1, conf.PamSkin)
+	case constant.GiveTypePet:
+		g.commandGiveType(addItem, 1, conf.NormalPet)
+	default:
+		return fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 102), c.Type)
 	}
 
 	g.GetPd().AddItem(addItem)
@@ -75,64 +129,13 @@ func (g *GamePlayer) commandGive(c *constant.CommandGive) string {
 	return fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "give")
 }
 
-func (g *GamePlayer) allGive() []*model.Material {
-	var pileItem []*model.Material
-	itemConf := gdconf.GetItemConfig()
-	avatarConf := gdconf.GetAvatarDataMap()
-	// add avatar
-	for _, avatar := range avatarConf {
-		x := avatar.AvatarId / 1000
-		if x != 1 && x != 8 {
-			continue
-		}
-		pileItem = append(pileItem, &model.Material{
-			Tid: avatar.AvatarId,
-			Num: 1,
+func (g *GamePlayer) commandGiveType(addItem *model.AddItem, num uint32, list map[uint32]*gdconf.ItemConfig) {
+	for _, conf := range list {
+		addItem.PileItem = append(addItem.PileItem, &model.Material{
+			Tid: conf.ID,
+			Num: alg.GetNoZeroUint32(num, conf.PileLimit),
 		})
 	}
-	// add playerIcon
-	for _, item := range itemConf.AvatarPlayerIcon {
-		pileItem = append(pileItem, &model.Material{
-			Tid: item.ID,
-			Num: 1,
-		})
-	}
-	// add rank
-	for _, rank := range itemConf.AvatarRank {
-		pileItem = append(pileItem, &model.Material{
-			Tid: rank.ID,
-			Num: 6,
-		})
-	}
-	// add equipment
-	for _, equipment := range itemConf.Equipment {
-		pileItem = append(pileItem, &model.Material{
-			Tid: equipment.ID,
-			Num: 1,
-		})
-	}
-	// add item
-	for _, item := range itemConf.Item {
-		pileItem = append(pileItem, &model.Material{
-			Tid: item.ID,
-			Num: 9999999,
-		})
-	}
-	// add disk
-	for _, item := range itemConf.Disk {
-		pileItem = append(pileItem, &model.Material{
-			Tid: item.ID,
-			Num: 1,
-		})
-	}
-	// add relic
-	for _, relic := range itemConf.Relic {
-		pileItem = append(pileItem, &model.Material{
-			Tid: relic.ID,
-			Num: 1,
-		})
-	}
-	return pileItem
 }
 
 func (g *GamePlayer) commandSet(c *constant.CommandSet) string {
@@ -206,10 +209,12 @@ func (g *GamePlayer) commandEquipment(c *constant.CommandEquipment) string {
 
 	if c.IsAll {
 		for id := range gdconf.GetItemEquipment() {
-			addItem.PileItem = append(addItem.PileItem, &model.Material{
-				Tid: id,
-				Num: c.Num,
-			})
+			if uniqueId := g.GetPd().AddEquipment(id, c.Level, c.Rank); uniqueId == 0 {
+				res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 60), id)
+				break
+			} else {
+				addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
+			}
 		}
 	} else {
 		var i uint32 = 0
@@ -266,11 +271,7 @@ func (g *GamePlayer) commandDel(c *constant.CommandDel) string {
 			db.MaterialMap = make(map[uint32]uint32)
 			res = text.GetTextByL(g.GetPd().GetLanguageType(), 62)
 		} else {
-			if n := db.MaterialMap[c.Id]; n >= c.Num {
-				db.MaterialMap[c.Id] = n - c.Num
-			} else {
-				db.MaterialMap[c.Id] = 0
-			}
+			g.GetPd().SetMaterialById(c.Id, alg.GetNoZeroUint32(db.MaterialMap[c.Id]-c.Num, 0))
 			res = fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 68), c.Id, db.MaterialMap[c.Id])
 			allSync.MaterialList = append(allSync.MaterialList, c.Id)
 		}
@@ -339,6 +340,25 @@ func (g *GamePlayer) commandAvatar(c *constant.CommandAvatar) string {
 func (g *GamePlayer) commandLua(c *constant.CommandLua) string {
 	g.ClientDownloadDataScNotify(c.Data)
 	return fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "lua")
+}
+
+func (g *GamePlayer) commandRogue(c *constant.CommandRogue) string {
+	res := fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "rogue")
+	switch c.Type {
+	case constant.RogueTypeAll:
+
+	case constant.RogueTypeHandbook:
+		if c.Set == constant.Unlock {
+			g.GetPd().UnlockRogueHandbook()
+		}
+		g.SyncRogueHandbookDataUpdateScNotify()
+	}
+
+	return res
+}
+
+func (g *GamePlayer) commandStatus(c *constant.CommandStatus) string {
+	return alg.GetStatus()
 }
 
 /**********************************分割线*******************************/

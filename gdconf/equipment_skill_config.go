@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -23,17 +24,15 @@ type AbilityProperty struct {
 func (g *GameDataConfig) loadEquipmentSkillConfig() {
 	g.EquipmentSkillConfigMap = make(map[uint32]map[uint32]*EquipmentSkillConfig)
 	erquipmentSkillConfig := make([]*EquipmentSkillConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "EquipmentSkillConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "EquipmentSkillConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &erquipmentSkillConfig)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range erquipmentSkillConfig {
 		if g.EquipmentSkillConfigMap[v.SkillID] == nil {
@@ -41,12 +40,13 @@ func (g *GameDataConfig) loadEquipmentSkillConfig() {
 		}
 		g.EquipmentSkillConfigMap[v.SkillID][v.Level] = v
 	}
-	logger.Info("load %v EquipmentSkillConfig", len(g.EquipmentSkillConfigMap))
+
+	logger.Info(text.GetText(17), len(g.EquipmentSkillConfigMap), name)
 }
 
 func GetEquipmentSkillConfig(id, rank uint32) *EquipmentSkillConfig {
-	if CONF.EquipmentSkillConfigMap[id] == nil {
+	if getConf().EquipmentSkillConfigMap[id] == nil {
 		return nil
 	}
-	return CONF.EquipmentSkillConfigMap[id][rank]
+	return getConf().EquipmentSkillConfigMap[id][rank]
 }

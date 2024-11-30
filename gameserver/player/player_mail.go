@@ -9,7 +9,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetMailCsReq(payloadMsg pb.Message) {
+func GetMailCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetMailScRsp{
 		TotalNum:       1,
 		Retcode:        0,
@@ -29,7 +29,7 @@ func (g *GamePlayer) GetMailCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetMailScRsp, rsp)
 }
 
-func (g *GamePlayer) MarkReadMailCsReq(payloadMsg pb.Message) {
+func MarkReadMailCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.MarkReadMailCsReq)
 	g.GetPd().ReadMail(req.Id)
 	rsp := &proto.MarkReadMailScRsp{
@@ -39,7 +39,7 @@ func (g *GamePlayer) MarkReadMailCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.MarkReadMailScRsp, rsp)
 }
 
-func (g *GamePlayer) DelMailCsReq(payloadMsg pb.Message) {
+func DelMailCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DelMailCsReq)
 	rsp := &proto.DelMailScRsp{
 		IdList: make([]uint32, 0),
@@ -55,7 +55,7 @@ func (g *GamePlayer) DelMailCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.DelMailScRsp, rsp)
 }
 
-func (g *GamePlayer) TakeMailAttachmentCsReq(payloadMsg pb.Message) {
+func TakeMailAttachmentCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeMailAttachmentCsReq)
 	rsp := &proto.TakeMailAttachmentScRsp{
 		Retcode:        0,

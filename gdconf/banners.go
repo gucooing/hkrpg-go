@@ -1,10 +1,12 @@
 package gdconf
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -32,17 +34,15 @@ func (g *GameDataConfig) loadBanners() {
 		UpList:             make(map[uint32]*Banners),
 	}
 	banners := make([]*Banners, 0)
-	playerElementsFilePath := g.dataPrefix + "Banners.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "Banners.json"
+	playerElementsFile, err := os.ReadFile(g.dataPrefix + name)
 	if err != nil {
-		logger.Error("open file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &banners)
 	if err != nil {
-		logger.Error("parse file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range banners {
 		switch v.GachaType {
@@ -53,11 +53,11 @@ func (g *GameDataConfig) loadBanners() {
 		case constant.GachaTypeWeaponUp:
 			g.BannersMap.UpList[v.Id] = v
 		default:
-			logger.Warn("unknow GachaType: %v", v.GachaType)
+			logger.Warn(text.GetText(20), v.GachaType)
 		}
 	}
 	if len(g.BannersMap.NormalRateUpItems5) == 0 {
-		logger.Warn("The basic gacha pool does not exist")
+		logger.Warn(text.GetText(21))
 	}
 
 	for _, equi := range GetEquipmentConfigMap() {
@@ -78,17 +78,17 @@ func (g *GameDataConfig) loadBanners() {
 		}
 	}
 
-	logger.Info("load %v Banners", len(g.BannersMap.UpList))
+	logger.Info(text.GetText(17), len(g.BannersMap.UpList), name)
 }
 
 func GetBannersConf() *BannersConf {
-	return CONF.BannersMap
+	return getConf().BannersMap
 }
 
 func GetBannersMap() map[uint32]*Banners {
-	return CONF.BannersMap.UpList
+	return getConf().BannersMap.UpList
 }
 
 func GetBanners(id uint32) *Banners {
-	return CONF.BannersMap.UpList[id]
+	return getConf().BannersMap.UpList[id]
 }

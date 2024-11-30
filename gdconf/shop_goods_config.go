@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -24,17 +25,15 @@ type ShopGoodsConfig struct {
 func (g *GameDataConfig) loadShopGoodsConfig() {
 	g.ShopGoodsConfigMap = make(map[uint32]map[uint32]*ShopGoodsConfig)
 	shopGoodsConfigMap := make([]*ShopGoodsConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "ShopGoodsConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "ShopGoodsConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &shopGoodsConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, shopGoodsConfig := range shopGoodsConfigMap {
@@ -44,18 +43,17 @@ func (g *GameDataConfig) loadShopGoodsConfig() {
 		g.ShopGoodsConfigMap[shopGoodsConfig.ShopID][shopGoodsConfig.GoodsID] = shopGoodsConfig
 	}
 
-	logger.Info("load %v ShopGoodsConfig", len(g.ShopGoodsConfigMap))
-
+	logger.Info(text.GetText(17), len(g.ShopGoodsConfigMap), name)
 }
 
 func GetShopGoodsConfigMap() map[uint32]map[uint32]*ShopGoodsConfig {
-	return CONF.ShopGoodsConfigMap
+	return getConf().ShopGoodsConfigMap
 }
 
 func GetShopGoodsConfigById(Id uint32) map[uint32]*ShopGoodsConfig {
-	return CONF.ShopGoodsConfigMap[Id]
+	return getConf().ShopGoodsConfigMap[Id]
 }
 
 func GetShopGoodsConfigByGoodsID(shopId, goodsID uint32) *ShopGoodsConfig {
-	return CONF.ShopGoodsConfigMap[shopId][goodsID]
+	return getConf().ShopGoodsConfigMap[shopId][goodsID]
 }

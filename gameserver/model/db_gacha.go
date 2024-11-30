@@ -223,7 +223,7 @@ func (g *PlayerData) AddGachaItem(id uint32, addItem *AddItem, gachaItem *proto.
 		Num:    42,
 		ItemId: 251,
 	})
-	conf := gdconf.GetItemConfigById(id)
+	conf := gdconf.GetAllItemConfigById(id)
 	switch conf.ItemMainType {
 	case constant.ItemMainTypeAvatarCard:
 		avatarList := g.GetAvatarList()

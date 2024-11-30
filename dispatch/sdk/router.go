@@ -10,10 +10,10 @@ func (s *Server) GetSdkRouter(router *gin.Engine) {
 	router.Any("/sdk/dataUpload", s.SdkDataUploadHandler)
 	router.POST("/apm/dataUpload", s.apmdataUpload)
 	router.POST("/data_abtest_api/config/experiment/list", s.GetExperimentListHandler)
-	router.GET("/getComboToken", s.getComboToken)
+	router.GET("/hkrpg-go/getComboToken", s.getComboToken)
 
 	router.GET("/query_dispatch", s.QueryDispatchHandler)
-	router.GET("/query_dispatch/gucooing/az", s.QueryDispatchHandler)
+	router.GET("/query_dispatch/gucooi/az", s.QueryDispatchHandler)
 	router.GET("/query_gateway/:regionName", s.QueryGatewayHandler)
 	router.POST("/account/risky/api/check", s.RiskyApiCheckHandler)
 	Global := router.Group("/hkrpg_:type")
@@ -45,5 +45,5 @@ func (s *Server) GetSdkRouter(router *gin.Engine) {
 }
 
 func (s *Server) HandleDefault(c *gin.Context) {
-	c.String(200, "hkrpg-go")
+	c.String(200, "hkrpg-go-beta")
 }

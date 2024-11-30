@@ -56,19 +56,19 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 
 	queryGateway := new(proto.GateServer)
 	queryGateway.EnableVersionUpdate = true
+	queryGateway.PILJCFDPOPM = true
 	queryGateway.EnableWatermark = true
 	queryGateway.EventTrackingOpen = true
-	queryGateway.CloseRedeemCode = true
+	queryGateway.CloseRedeemCode = false
 	queryGateway.EnableAndroidMiddlePackage = true
 	queryGateway.NetworkDiagnostic = true
-	queryGateway.IALOEKGOJOC = true
 	queryGateway.MdkResVersion = url.MdkResVersion
 	queryGateway.IfixVersion = url.IfixVersion
 	queryGateway.IfixUrl = url.IfixUrl
 	queryGateway.LuaUrl = url.LuaUrl
 	queryGateway.ExResourceUrl = url.ExResourceUrl
 	queryGateway.AssetBundleUrl = url.AssetBundleUrl
-	queryGateway.IIJLFILFMDF = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
+	// queryGateway.KEICDBEHMDO = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
 
 	if regionList == nil || info == nil || info.MinGateAddr == "" {
 		queryGateway.Msg = "网关启动中"

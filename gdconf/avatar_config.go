@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -19,6 +20,7 @@ type AvatarData struct {
 	RewardList      []*RewardList `json:"RewardList"`     // 重复获得角色奖励
 	AvatarBaseType  string        `json:"AvatarBaseType"` // 角色类型
 	SkillList       []uint32      `json:"SkillList"`
+	Release         bool          `json:"Release"`
 }
 
 type RewardList struct {
@@ -29,31 +31,29 @@ type RewardList struct {
 func (g *GameDataConfig) loadAvatarData() {
 	g.AvatarDataMap = make(map[uint32]*AvatarData)
 	avatarDataMap := make([]*AvatarData, 0)
-	playerElementsFilePath := g.excelPrefix + "AvatarConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "AvatarConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &avatarDataMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range avatarDataMap {
 		g.AvatarDataMap[v.AvatarId] = v
 	}
-	logger.Info("load %v AvatarConfig", len(g.AvatarDataMap))
+	logger.Info(text.GetText(17), len(g.AvatarDataMap), name)
 	g.loadConfigAdventureAbility()
 }
 
 func GetAvatarDataById(avatarId uint32) *AvatarData {
-	return CONF.AvatarDataMap[avatarId]
+	return getConf().AvatarDataMap[avatarId]
 }
 
 func GetAvatarDataMap() map[uint32]*AvatarData {
-	return CONF.AvatarDataMap
+	return getConf().AvatarDataMap
 }
 
 var damageTypeEnum = map[string]uint32{
@@ -67,7 +67,7 @@ var damageTypeEnum = map[string]uint32{
 }
 
 func GetAvatarDamage(id uint32) uint32 {
-	conf := CONF.AvatarDataMap[id]
+	conf := getConf().AvatarDataMap[id]
 	if conf == nil {
 		return 0
 	}
@@ -76,7 +76,7 @@ func GetAvatarDamage(id uint32) uint32 {
 
 func GetAvatarList() []uint32 {
 	var avatarList []uint32
-	for _, avatar := range CONF.AvatarDataMap {
+	for _, avatar := range getConf().AvatarDataMap {
 		avatarList = append(avatarList, avatar.AvatarId)
 	}
 	return avatarList

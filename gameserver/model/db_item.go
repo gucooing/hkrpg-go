@@ -143,7 +143,7 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 		if itemInfo.Num <= 0 {
 			continue
 		}
-		conf := gdconf.GetItemConfigById(itemInfo.Tid)
+		conf := gdconf.GetAllItemConfigById(itemInfo.Tid)
 		if conf == nil {
 			msg := fmt.Sprintf("[UID:%v]ItemId:%v 异常的物品写入", g.GetBasicBin().Uid, itemInfo.Tid)
 			logger.Error(msg)
@@ -169,18 +169,23 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 			g.addTypeAvatarCard(itemInfo.Tid, addItem)
 			continue
 		case constant.ItemMainTypeEquipment:
-			uniqueId := g.AddEquipment(itemInfo.Tid, 1, 1)
-			addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
-			addItem.ItemList = append(addItem.ItemList, g.GetEquipmentItem(uniqueId))
+			var i uint32 = 0
+			for i = 0; i < itemInfo.Num; i++ {
+				uniqueId := g.AddEquipment(itemInfo.Tid, 1, 1)
+				addItem.AllSync.EquipmentList = append(addItem.AllSync.EquipmentList, uniqueId)
+				addItem.ItemList = append(addItem.ItemList, g.GetEquipmentItem(uniqueId))
+			}
 			continue
 		case constant.ItemMainTypeRelic:
-			uniqueId := g.AddRelic(itemInfo.Tid, 0, 0, nil)
-			addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
-			addItem.ItemList = append(addItem.ItemList, g.GetRelicItem(uniqueId))
+			var i uint32 = 0
+			for i = 0; i < itemInfo.Num; i++ {
+				uniqueId := g.AddRelic(itemInfo.Tid, 0, 0, nil)
+				addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
+				addItem.ItemList = append(addItem.ItemList, g.GetRelicItem(uniqueId))
+			}
 			continue
 		case constant.ItemMainTypeUsable:
 			g.addItemUsable(conf, addItem, itemInfo)
-			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
 			continue
 		case constant.ItemMainTypeMaterial:
 			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
@@ -206,6 +211,9 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 				Num:    itemInfo.Num,
 				ItemId: itemInfo.Tid,
 			})
+			if pc := gdconf.GetPetConfigByItemId(itemInfo.Tid); pc != nil {
+				g.AddPet(pc.PetID)
+			}
 			continue
 		case constant.ItemMainTypeUnknown:
 			logger.Info("ItemMainTypeUnknown ItemId:%v", conf.ID)
@@ -248,14 +256,13 @@ func (g *PlayerData) addTypeAvatarCard(avatarId uint32, addItem *AddItem) {
 func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, itemInfo *Material) {
 	switch conf.ItemSubType {
 	case constant.ItemSubTypeMusicAlbum: // 唱片
-		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
-		addItem.ItemList = append(addItem.ItemList, &proto.Item{
-			Num:    itemInfo.Num,
-			ItemId: itemInfo.Tid,
-		})
+		g.AddMusicInfo(conf.ID)
 	case constant.ItemSubTypeHeadIcon: // 头像
 		g.AddHeadIcon(conf.ID)
 		addItem.AllSync.UnlockedHeadIconList = append(addItem.AllSync.UnlockedHeadIconList, conf.ID)
+	case constant.ItemSubTypePamSkin: // 帕姆衣服
+		g.AddUnlockedPamSkin(conf.ID)
+		addItem.AllSync.UnlockPamSkinList = append(addItem.AllSync.UnlockPamSkinList, conf.ID)
 	case constant.ItemSubTypeFormula: // 配方
 		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
 		addItem.ItemList = append(addItem.ItemList, &proto.Item{
@@ -270,9 +277,6 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 		})
 	case constant.ItemSubTypeGift: // 杂
 		if use := gdconf.GetItemUseData(conf.ID); use != nil && use.IsAutoUse {
-			// switch expr {
-			//
-			// }
 			for _, paramId := range use.UseParam {
 				pile := GetRewardData(paramId)
 				for _, v := range pile { // 避免无限循环，这里只处理一次
@@ -282,7 +286,6 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 						ItemId: v.Tid,
 					})
 				}
-				addItem.MaterialList = append(addItem.MaterialList, pile...)
 			}
 		} else {
 			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
@@ -305,21 +308,14 @@ func (g *PlayerData) GetMaterial() []*proto.Material {
 			delete(db, id)
 			continue
 		}
-		if conf.ItemMainType == constant.ItemMainTypeVirtual ||
-			conf.ItemMainType == constant.ItemMainTypeUsable ||
-			conf.ItemMainType == constant.ItemMainTypeMaterial ||
-			conf.ItemMainType == constant.ItemMainTypeMission ||
-			conf.ItemMainType == constant.ItemMainTypePet {
-
-			if conf.PileLimit != 0 && num > conf.PileLimit {
-				num = conf.PileLimit
-				g.SetMaterialById(id, conf.PileLimit)
-			}
-			list = append(list, &proto.Material{
-				Tid: id,
-				Num: num,
-			})
+		if conf.PileLimit != 0 && num > conf.PileLimit {
+			num = conf.PileLimit
+			g.SetMaterialById(id, conf.PileLimit)
 		}
+		list = append(list, &proto.Material{
+			Tid: id,
+			Num: num,
+		})
 	}
 	return list
 }
@@ -373,24 +369,6 @@ func (g *PlayerData) AddUnlockFormulaList(formulaId uint32) {
 	db.UnlockFormulaList = append(db.UnlockFormulaList, formulaId)
 }
 
-func (g *PlayerData) GetEquipment(uniqueId uint32) *proto.Equipment {
-	equipmentDb := g.GetEquipmentById(uniqueId)
-	if equipmentDb == nil {
-		return nil
-	}
-	equipment := &proto.Equipment{
-		Exp:           equipmentDb.Exp,
-		Promotion:     equipmentDb.Promotion,
-		Level:         equipmentDb.Level,
-		DressAvatarId: equipmentDb.BaseAvatarId,
-		IsProtected:   equipmentDb.IsProtected,
-		Rank:          equipmentDb.Rank,
-		UniqueId:      equipmentDb.UniqueId,
-		Tid:           equipmentDb.Tid,
-	}
-	return equipment
-}
-
 func (g *PlayerData) AddEquipment(tid, level, rank uint32) uint32 {
 	uniqueId := g.GetUniqueId()
 	db := g.GetEquipmentMap()
@@ -434,32 +412,6 @@ func (g *PlayerData) SellDelEquipment(uniqueId uint32) []*Material {
 	}
 	g.DelEquipment([]uint32{uniqueId})
 	return material
-}
-
-func (g *PlayerData) GetRelic(uniqueId uint32) *proto.Relic {
-	relicDb := g.GetRelicById(uniqueId)
-	if relicDb == nil {
-		return nil
-	}
-	relic := &proto.Relic{
-		Tid:           relicDb.Tid,
-		SubAffixList:  make([]*proto.RelicAffix, 0),
-		DressAvatarId: relicDb.BaseAvatarId,
-		UniqueId:      relicDb.UniqueId,
-		Level:         relicDb.Level,
-		IsProtected:   relicDb.IsProtected,
-		MainAffixId:   relicDb.MainAffixId,
-		Exp:           relicDb.Exp,
-	}
-	for _, subAffixList := range relicDb.RelicAffix {
-		relicAffix := &proto.RelicAffix{
-			AffixId: subAffixList.AffixId,
-			Cnt:     subAffixList.Cnt,
-			Step:    subAffixList.Step,
-		}
-		relic.SubAffixList = append(relic.SubAffixList, relicAffix)
-	}
-	return relic
 }
 
 // 指定属性new
@@ -769,6 +721,7 @@ func (g *PlayerData) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 			IsProtected:   relicDb.IsProtected,
 			MainAffixId:   relicDb.MainAffixId,
 			Exp:           relicDb.Exp,
+			IsDiscarded:   relicDb.IsDiscarded,
 		}
 		for _, subAffixList := range relicDb.RelicAffix {
 			relicAffix := &proto.RelicAffix{
@@ -789,10 +742,13 @@ func (g *PlayerData) GetProtoBattleRelicById(uniqueId uint32) *proto.BattleRelic
 	} else {
 		relic := &proto.BattleRelic{
 			Id:           relicDb.Tid,
-			SubAffixList: make([]*proto.RelicAffix, 0),
-			UniqueId:     relicDb.UniqueId,
 			Level:        relicDb.Level,
 			MainAffixId:  relicDb.MainAffixId,
+			SubAffixList: make([]*proto.RelicAffix, 0),
+			UniqueId:     relicDb.UniqueId,
+			SetId:        0,
+			Type:         0,
+			Rarity:       0,
 		}
 		for _, subAffixList := range relicDb.RelicAffix {
 			relicAffix := &proto.RelicAffix{
@@ -822,6 +778,24 @@ func (g *PlayerData) GetRelicItem(uniqueId uint32) *proto.Item {
 		Num:         1,
 		UniqueId:    db.UniqueId,
 	}
+}
+
+func (g *PlayerData) GetProtoEquipment(uniqueId uint32) *proto.Equipment {
+	equipmentDb := g.GetEquipmentById(uniqueId)
+	if equipmentDb == nil {
+		return nil
+	}
+	equipment := &proto.Equipment{
+		Exp:           equipmentDb.Exp,
+		Promotion:     equipmentDb.Promotion,
+		Level:         equipmentDb.Level,
+		DressAvatarId: equipmentDb.BaseAvatarId,
+		IsProtected:   equipmentDb.IsProtected,
+		Rank:          equipmentDb.Rank,
+		UniqueId:      equipmentDb.UniqueId,
+		Tid:           equipmentDb.Tid,
+	}
+	return equipment
 }
 
 func (g *PlayerData) GetEquipmentItem(uniqueId uint32) *proto.Item {
@@ -858,12 +832,21 @@ func (g *PlayerData) DelEquipment(equipmentList []uint32) bool {
 func (g *PlayerData) DelRelic(relicList []uint32) bool {
 	db := g.GetRelicMap()
 	for _, relic := range relicList {
-		if db[relic] == nil {
-			return false
+		if db[relic] != nil {
+			delete(db, relic)
 		}
 	}
-	for _, relic := range relicList {
-		delete(db, relic)
-	}
 	return true
+}
+
+// 遗器弃置
+func (g *PlayerData) DiscardedRelic(relicList []uint32,isDiscarded bool) {
+	for _, uniqueId := range relicList {
+		if r := g.GetRelicById(uniqueId); r != nil {
+			r.IsDiscarded = isDiscarded
+			if isDiscarded {
+				r.IsProtected = false
+			}
+		}
+	}
 }

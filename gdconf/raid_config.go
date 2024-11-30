@@ -6,6 +6,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -45,17 +46,15 @@ type RaidConfig struct {
 func (g *GameDataConfig) loadRaidConfig() {
 	g.RaidConfigMap = make(map[uint32]map[uint32]*RaidConfig)
 	raidConfigMap := make([]*RaidConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "RaidConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RaidConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &raidConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range raidConfigMap {
 		if g.RaidConfigMap[v.RaidID] == nil {
@@ -64,12 +63,12 @@ func (g *GameDataConfig) loadRaidConfig() {
 		g.RaidConfigMap[v.RaidID][v.HardLevel] = v
 	}
 
-	logger.Info("load %v RaidConfig", len(g.RaidConfigMap))
+	logger.Info(text.GetText(17), len(g.RaidConfigMap), name)
 }
 
 func GetRaidConfig(raidID, hardLevel uint32) *RaidConfig {
-	if CONF.RaidConfigMap[raidID] == nil {
+	if getConf().RaidConfigMap[raidID] == nil {
 		return nil
 	}
-	return CONF.RaidConfigMap[raidID][hardLevel]
+	return getConf().RaidConfigMap[raidID][hardLevel]
 }

@@ -8,7 +8,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg pb.Message) {
+func GetMultiPathAvatarInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetMultiPathAvatarInfoScRsp{
 		Retcode:                 0,
 		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),              // 已解锁多命途角色信息
@@ -26,14 +26,30 @@ func (g *GamePlayer) GetMultiPathAvatarInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetMultiPathAvatarInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg pb.Message) {
+func HandleGetAvatarDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetAvatarDataScRsp)
 	rsp.IsGetAll = true
 	rsp.AvatarList = make([]*proto.Avatar, 0)
 
 	avatarDb := g.GetPd().GetAvatar()
 
-	for avatarId, _ := range avatarDb.AvatarList {
+	for avatarId, db := range avatarDb.AvatarList {
+		if conf := gdconf.GetAvatarDataById(avatarId); conf == nil ||
+			!conf.Release {
+			continue
+		}
+		// 检查装备是否存在
+		for _, muip := range db.MultiPathAvatarInfoList {
+			if g.GetPd().GetEquipmentById(muip.EquipmentUniqueId) == nil {
+				muip.EquipmentUniqueId = 0
+			}
+			for index, equipRelic := range muip.EquipRelic {
+				if g.GetPd().GetRelicById(equipRelic) == nil {
+					delete(muip.EquipRelic, index)
+				}
+			}
+		}
+
 		avatarList := g.GetPd().GetProtoAvatarById(avatarId)
 		rsp.AvatarList = append(rsp.AvatarList, avatarList)
 	}
@@ -41,7 +57,7 @@ func (g *GamePlayer) HandleGetAvatarDataCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetAvatarDataScRsp, rsp)
 }
 
-func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg pb.Message) {
+func RankUpAvatarCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.RankUpAvatarCsReq)
 	rsp := &proto.RankUpAvatarScRsp{}
 	db := g.GetPd().GetAvatarBinById(req.GetAvatarId())
@@ -74,7 +90,7 @@ func (g *GamePlayer) RankUpAvatarCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.RankUpAvatarScRsp, rsp)
 }
 
-func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
+func AvatarExpUpCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.AvatarExpUpCsReq)
 	rsp := &proto.AvatarExpUpScRsp{}
 	cost := req.GetItemCost()
@@ -166,7 +182,7 @@ func (g *GamePlayer) AvatarExpUpCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.AvatarExpUpScRsp, rsp)
 }
 
-func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg pb.Message) {
+func PromoteAvatarCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PromoteAvatarCsReq)
 	rsp := &proto.AvatarExpUpScRsp{}
 	itemList := req.GetItemList()
@@ -225,7 +241,7 @@ func (g *GamePlayer) PromoteAvatarCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.PromoteAvatarScRsp, rsp)
 }
 
-func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg pb.Message) {
+func UnlockSkilltreeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.UnlockSkilltreeCsReq)
 	rsp := &proto.UnlockSkilltreeScRsp{}
 	avatarId := req.PointId / 1000 // 获取要升级技能的角色Id
@@ -279,7 +295,7 @@ func (g *GamePlayer) UnlockSkilltreeCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.UnlockSkilltreeScRsp, rsp)
 }
 
-func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg pb.Message) {
+func TakePromotionRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakePromotionRewardCsReq)
 	avatarDb := g.GetPd().GetAvatarBinById(req.BaseAvatarId)
 	if avatarDb == nil {
@@ -306,7 +322,7 @@ func (g *GamePlayer) TakePromotionRewardCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.TakePromotionRewardScRsp, rsq)
 }
 
-func (g *GamePlayer) UnlockAvatarPathCsReq(payloadMsg pb.Message) {
+func UnlockAvatarPathCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.UnlockAvatarPathCsReq)
 
 	g.GetPd().AddMultiPathAvatar(uint32(req.AvatarId))

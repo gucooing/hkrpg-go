@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -38,17 +39,15 @@ type Value struct {
 func (g *GameDataConfig) loadAvatarPromotionConfig() {
 	g.AvatarPromotionConfigMap = make(map[uint32]map[uint32]*AvatarPromotionConfig)
 	avatarPromotionConfigMap := make([]*AvatarPromotionConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "AvatarPromotionConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "AvatarPromotionConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &avatarPromotionConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range avatarPromotionConfigMap {
 		if g.AvatarPromotionConfigMap[v.AvatarID] == nil {
@@ -56,12 +55,11 @@ func (g *GameDataConfig) loadAvatarPromotionConfig() {
 		}
 		g.AvatarPromotionConfigMap[v.AvatarID][v.Promotion] = v
 	}
-	logger.Info("load %v AvatarPromotionConfig", len(g.AvatarPromotionConfigMap))
-
+	logger.Info(text.GetText(17), len(g.AvatarPromotionConfigMap), name)
 }
 
 func GetAvatarPromotionConfigByLevel(avatarId, promotion uint32) uint32 {
-	promotionConfig := CONF.AvatarPromotionConfigMap[avatarId][promotion]
+	promotionConfig := getConf().AvatarPromotionConfigMap[avatarId][promotion]
 	for _, promotionCost := range promotionConfig.PromotionCostList {
 		if promotionCost.ItemID == 2 {
 			return promotionCost.ItemNum
@@ -71,17 +69,17 @@ func GetAvatarPromotionConfigByLevel(avatarId, promotion uint32) uint32 {
 }
 
 func GetAvatarMaxLevel(avatarId, promotion uint32) uint32 {
-	promotionConfig := CONF.AvatarPromotionConfigMap[avatarId][promotion]
+	promotionConfig := getConf().AvatarPromotionConfigMap[avatarId][promotion]
 	return promotionConfig.MaxLevel
 }
 
 func GetAvatarPromotionConfigMap() map[uint32]map[uint32]*AvatarPromotionConfig {
-	return CONF.AvatarPromotionConfigMap
+	return getConf().AvatarPromotionConfigMap
 }
 
 func GetAvatarPromotionConfig(avatarId, promotion uint32) *AvatarPromotionConfig {
-	if CONF.AvatarPromotionConfigMap[avatarId] == nil {
+	if getConf().AvatarPromotionConfigMap[avatarId] == nil {
 		return nil
 	}
-	return CONF.AvatarPromotionConfigMap[avatarId][promotion]
+	return getConf().AvatarPromotionConfigMap[avatarId][promotion]
 }

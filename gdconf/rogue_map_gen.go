@@ -1,33 +1,33 @@
 package gdconf
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
 func (g *GameDataConfig) loadRogueMapGen() {
 	g.RogueMapGenMap = make(map[uint32][]uint32)
-	playerElementsFilePath := g.dataPrefix + "RogueMapGen.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RogueMapGen.json"
+	playerElementsFile, err := os.ReadFile(g.dataPrefix + name)
 	if err != nil {
-		logger.Error("open file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &g.RogueMapGenMap)
 	if err != nil {
-		logger.Error("parse file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
-	logger.Info("load %v RogueMapGen", len(g.RogueMapGenMap))
 
+	logger.Info(text.GetText(17), len(g.RogueMapGenMap), name)
 }
 
 func GetRogueRoomTypeBySiteID(siteID uint32) uint32 {
-	rogue := CONF.RogueMapGenMap[siteID]
+	rogue := getConf().RogueMapGenMap[siteID]
 	idIndex := rand.Intn(len(rogue))
 	typeId := rogue[idIndex]
 

@@ -22,6 +22,14 @@ const (
 	SetJumpMission = 1007
 )
 
+var SetMap = map[string]int{
+	"unlock": Unlock,
+}
+
+const (
+	Unlock = iota + 1
+)
+
 type CommandAll interface {
 	getCommand(list []string, l spb.LanguageType) (CommandAll, error)
 }
@@ -55,6 +63,10 @@ func GetCommand(list []string, l spb.LanguageType) (CommandAll, error) {
 	case "/lua":
 		c = new(CommandLua)
 		return c.getCommand(list[1:], l)
+	case "/rogue":
+		return new(CommandRogue).getCommand(list[1:], l)
+	case "/info":
+		return new(CommandStatus).getCommand(nil, l)
 	case "/mission":
 
 	}
@@ -62,7 +74,7 @@ func GetCommand(list []string, l spb.LanguageType) (CommandAll, error) {
 }
 
 func getHelp(l spb.LanguageType) (CommandAll, error) {
-	return nil, errors.New(fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
+	return nil, errors.New(fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s",
 		text.GetTextByL(l, 29),
 		text.GetTextByL(l, 31),
 		text.GetTextByL(l, 37),
@@ -73,40 +85,78 @@ func getHelp(l spb.LanguageType) (CommandAll, error) {
 		text.GetTextByL(l, 49),
 		text.GetTextByL(l, 55),
 		text.GetTextByL(l, 61),
-		text.GetTextByL(l, 69)))
+		text.GetTextByL(l, 69),
+		text.GetTextByL(l, 83)))
 }
 
 type CommandGive struct {
-	Uid     uint32 // 作用玩家
-	IsAll   bool   // 是否全部
-	ItemId  uint32 // 物品id
-	ItemNum uint32 // 物品数量
+	Uid     uint32   // 作用玩家
+	Type    GiveType // 类型
+	ItemId  uint32   // 物品id
+	ItemNum uint32   // 物品数量
 }
+
+type GiveType string
+
+var GiveTypeMap = map[string]GiveType{
+	"":          GiveTypeNone,
+	"all":       GiveTypeAll,
+	"item":      GiveTypeItem,
+	"relic":     GiveTypeRelic,
+	"equipment": GiveTypeEquipment,
+	"avatar":    GiveTypeAvatar,
+	"icon":      GiveTypeIcon,
+	"book":      GiveTypeBook,
+	"disk":      GiveTypeDisk,
+	"food":      GiveTypeFood,
+	"formula":   GiveTypeFormula,
+	"chat":      GiveTypeChat,
+	"theme":     GiveTypeTheme,
+	"mission":   GiveTypeMission,
+	"gift":      GiveTypeGift,
+	"pam":       GiveTypePam,
+	"pet":       GiveTypePet,
+}
+
+const (
+	GiveTypeNone      GiveType = ""
+	GiveTypeAll       GiveType = "all"
+	GiveTypeItem      GiveType = "item"
+	GiveTypeRelic     GiveType = "relic"
+	GiveTypeEquipment GiveType = "equipment"
+	GiveTypeAvatar    GiveType = "avatar"
+	GiveTypeIcon      GiveType = "icon"
+	GiveTypeBook      GiveType = "book"
+	GiveTypeDisk      GiveType = "disk"
+	GiveTypeFood      GiveType = "food"
+	GiveTypeFormula   GiveType = "formula"
+	GiveTypeChat      GiveType = "chat"
+	GiveTypeTheme     GiveType = "theme"
+	GiveTypeMission   GiveType = "mission"
+	GiveTypeGift      GiveType = "gift"
+	GiveTypePam       GiveType = "pam"
+	GiveTypePet       GiveType = "pet"
+)
 
 func (c *CommandGive) getCommand(list []string, l spb.LanguageType) (CommandAll, error) {
 	if len(list) == 0 {
 		return nil, errors.New(text.GetTextByL(l, 31))
 	}
-
-	if len(list) < 1 {
-		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 33), "?"))
-	}
 	comm := &CommandGive{
-		IsAll:   false,
 		ItemId:  0,
 		ItemNum: 0,
 	}
-	if list[0] == "all" {
-		comm.IsAll = true
-
-		return comm, nil
-	}
-	comm.ItemId = s2U32(list[0])
-	if comm.ItemId == 0 {
-		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 33), list[0]))
+	var ok bool
+	comm.Type, ok = GiveTypeMap[list[0]]
+	if !ok {
+		id := s2U32(list[0])
+		if id == 0 {
+			return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 33), list[0]))
+		}
+		comm.ItemId = id
 	}
 	if len(list) < 2 {
-		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 34), list[0], "?"))
+		return comm, nil
 	}
 	comm.ItemNum = s2U32(list[1])
 	if comm.ItemNum == 0 {
@@ -195,10 +245,10 @@ func (c *CommandEquipment) getCommand(list []string, l spb.LanguageType) (Comman
 	}
 	if list[0] == "all" {
 		comm.IsAll = true
-		return comm, nil
-	}
-	if comm.EquipmentId = s2U32(list[0]); comm.EquipmentId == 0 {
-		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 56), list[0]))
+	} else {
+		if comm.EquipmentId = s2U32(list[0]); comm.EquipmentId == 0 {
+			return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 56), list[0]))
+		}
 	}
 	if len(list) < 2 {
 		return comm, nil
@@ -443,6 +493,47 @@ func (c *CommandLua) getCommand(list []string, l spb.LanguageType) (CommandAll, 
 		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 79), list[0]))
 	}
 	return &CommandLua{Uid: c.Uid, Data: data}, nil
+}
+
+type CommandRogue struct {
+	Uid  uint32
+	Type uint32 // 类型
+	Set  int    // 设置类型
+}
+
+var RogueType = map[string]uint32{
+	"all":      RogueTypeAll,
+	"handbook": RogueTypeHandbook,
+	"quest":    RogueTypeQuest,
+}
+
+const (
+	RogueTypeAll      = 1
+	RogueTypeHandbook = 2
+	RogueTypeQuest    = 101
+)
+
+func (c *CommandRogue) getCommand(list []string, l spb.LanguageType) (CommandAll, error) {
+	if len(list) < 2 {
+		return nil, errors.New(text.GetTextByL(l, 83))
+	}
+	comm := &CommandRogue{}
+	comm.Type = RogueType[list[0]]
+	if comm.Type == 0 {
+		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 84), list[0]))
+	}
+	comm.Set = SetMap[list[1]]
+	if comm.Set == 0 {
+		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 85), list[0], list[1]))
+	}
+
+	return comm, nil
+}
+
+type CommandStatus struct{}
+
+func (c *CommandStatus) getCommand(list []string, l spb.LanguageType) (CommandAll, error) {
+	return c, nil
 }
 
 func s2U32(msg string) uint32 {

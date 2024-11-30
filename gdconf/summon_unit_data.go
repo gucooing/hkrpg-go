@@ -7,6 +7,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -47,29 +48,25 @@ func (g *GameDataConfig) loadSummonUnitData() {
 		SummonUnitDataJsonMap: make(map[uint32]*SummonUnitDataJson),
 	}
 	summonUnitDataList := make([]*SummonUnitData, 0)
-	playerElementsFilePath := g.excelPrefix + "SummonUnitData.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "SummonUnitData.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &summonUnitDataList)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range summonUnitDataList {
 		jsonData := new(SummonUnitDataJson)
 		confElementsFile, err := os.ReadFile(g.pathPrefix + "/" + v.JsonPath)
 		if err != nil {
-			logger.Error("open file error: %v", err)
-			continue
+			panic(fmt.Sprintf(text.GetText(18), confElementsFile, err))
 		}
 		err = hjson.Unmarshal(confElementsFile, &jsonData)
 		if err != nil {
-			logger.Error("parse file error: %v", err)
-			continue
+			panic(fmt.Sprintf(text.GetText(19), confElementsFile, err))
 		}
 		jsonData.Actions = make(map[string][]*MazeSkillAction)
 		if jsonData.TriggerConfig != nil && jsonData.TriggerConfig.CustomTriggers != nil {
@@ -81,12 +78,12 @@ func (g *GameDataConfig) loadSummonUnitData() {
 		g.SummonUnitDataInfo.SummonUnitDataMap[v.ID] = v
 	}
 
-	logger.Info("load %v SummonUnitData", len(g.SummonUnitDataInfo.SummonUnitDataMap))
-	logger.Info("load %v SummonUnitDataJson", len(g.SummonUnitDataInfo.SummonUnitDataJsonMap))
+	logger.Info(text.GetText(17), len(g.SummonUnitDataInfo.SummonUnitDataMap), "SummonUnitData")
+	logger.Info(text.GetText(17), len(g.SummonUnitDataInfo.SummonUnitDataJsonMap), "SummonUnitDataJson")
 }
 
 func GetSummonUnitData(summonId uint32) *SummonUnitData {
-	return CONF.SummonUnitDataInfo.SummonUnitDataMap[summonId]
+	return getConf().SummonUnitDataInfo.SummonUnitDataMap[summonId]
 }
 
 func BuildSummonUnitMazeSkillActions(customTriggers *SummonUnitCustomTrigger) []*MazeSkillAction {
@@ -105,9 +102,9 @@ func BuildSummonUnitMazeSkillActions(customTriggers *SummonUnitCustomTrigger) []
 }
 
 func GetSummonUnitMazeSkillAction(summonId uint32, triggerName string) []*MazeSkillAction {
-	if CONF.SummonUnitDataInfo.SummonUnitDataJsonMap[summonId] == nil ||
-		CONF.SummonUnitDataInfo.SummonUnitDataJsonMap[summonId].Actions == nil {
+	if getConf().SummonUnitDataInfo.SummonUnitDataJsonMap[summonId] == nil ||
+		getConf().SummonUnitDataInfo.SummonUnitDataJsonMap[summonId].Actions == nil {
 		return nil
 	}
-	return CONF.SummonUnitDataInfo.SummonUnitDataJsonMap[summonId].Actions[triggerName]
+	return getConf().SummonUnitDataInfo.SummonUnitDataJsonMap[summonId].Actions[triggerName]
 }

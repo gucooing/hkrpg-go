@@ -7,7 +7,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg pb.Message) {
+func GetFirstTalkNpcCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetFirstTalkNpcCsReq)
 	rsp := &proto.GetFirstTalkNpcScRsp{
 		Retcode:           0,
@@ -22,7 +22,7 @@ func (g *GamePlayer) GetFirstTalkNpcCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetFirstTalkNpcScRsp, rsp)
 }
 
-func (g *GamePlayer) GetNpcTakenRewardCsReq(payloadMsg pb.Message) {
+func GetNpcTakenRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetNpcTakenRewardCsReq)
 	rsp := new(proto.GetNpcTakenRewardScRsp)
 	rsp.NpcId = req.NpcId
@@ -30,7 +30,7 @@ func (g *GamePlayer) GetNpcTakenRewardCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetNpcTakenRewardScRsp, rsp)
 }
 
-func (g *GamePlayer) GetFirstTalkByPerformanceNpcCsReq(payloadMsg pb.Message) {
+func GetFirstTalkByPerformanceNpcCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetFirstTalkByPerformanceNpcCsReq)
 	rsp := &proto.GetFirstTalkByPerformanceNpcScRsp{
 		NpcMeetStatusList: make([]*proto.NpcMeetByPerformanceStatus, 0),
@@ -42,7 +42,7 @@ func (g *GamePlayer) GetFirstTalkByPerformanceNpcCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetFirstTalkByPerformanceNpcScRsp, rsp)
 }
 
-func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg pb.Message) {
+func GetNpcMessageGroupCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetNpcMessageGroupCsReq)
 	rsp := &proto.GetNpcMessageGroupScRsp{
 		MessageGroupList: make([]*proto.MessageGroup, 0),
@@ -75,7 +75,7 @@ func (g *GamePlayer) GetNpcMessageGroupCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetNpcMessageGroupScRsp, rsp)
 }
 
-func (g *GamePlayer) FinishPerformSectionIdCsReq(payloadMsg pb.Message) {
+func FinishPerformSectionIdCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishPerformSectionIdCsReq)
 
 	contactId := g.GetPd().FinishMessageGroup(req.SectionId)
@@ -123,7 +123,7 @@ func (g *GamePlayer) MessageGroupPlayerSyncScNotify(contactId uint32) {
 	g.Send(cmd.PlayerSyncScNotify, notify)
 }
 
-func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg pb.Message) {
+func GetNpcStatusCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetNpcStatusScRsp{
 		NpcStatusList: make([]*proto.NpcStatus, 0),
 		Retcode:       0,
@@ -145,7 +145,7 @@ func (g *GamePlayer) GetNpcStatusCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetNpcStatusScRsp, rsp)
 }
 
-func (g *GamePlayer) FinishItemIdCsReq(payloadMsg pb.Message) {
+func FinishItemIdCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishItemIdCsReq)
 	rsp := &proto.FinishItemIdScRsp{
 		TextId:  req.TextId,
@@ -155,7 +155,7 @@ func (g *GamePlayer) FinishItemIdCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.FinishItemIdScRsp, rsp)
 }
 
-func (g *GamePlayer) FinishFirstTalkByPerformanceNpcCsReq(payloadMsg pb.Message) {
+func FinishFirstTalkByPerformanceNpcCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishFirstTalkByPerformanceNpcCsReq)
 	rsp := &proto.FinishFirstTalkByPerformanceNpcScRsp{
 		PerformanceId: req.PerformanceId,

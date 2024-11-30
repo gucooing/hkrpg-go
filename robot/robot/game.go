@@ -19,7 +19,7 @@ var CLIENT_CONN_NUM int32 = 0   // 当前客户端连接数
 var QPS int64 = 0
 
 func (r *RoBot) newGame() {
-	r.HttpClient = nil
+	r.HttpClient.Clone()
 	var err error
 	serverAddr := r.KcpAddr + ":" + strconv.Itoa(int(r.KcpPort))
 	r.KcpConn, err = kcp.Dial(serverAddr)
@@ -48,6 +48,7 @@ func (r *RoBot) recvHandle() {
 			atomic.AddInt64(&QPS, 1)
 			// payloadMsg := r.DecodePayloadToProto(v)
 			// 密钥交换
+			// logger.Info("S->C:%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(v.CmdId))
 			if v.CmdId == cmd.PlayerGetTokenScRsp {
 				CLIENT_CONN_NUM++
 				r.Game = new(Game)
@@ -90,6 +91,7 @@ func (r *RoBot) sendHandle(cmdid uint16, playerMsg pb.Message) {
 		logger.Error("exit send loop, conn write err: %v", err)
 		return
 	}
+	// logger.Info("C->S:%s", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdid))
 }
 
 func KcpNetInfo() {

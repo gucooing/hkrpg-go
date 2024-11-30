@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -17,8 +18,8 @@ type RogueMapList struct {
 	RogueMapID         uint32   `json:"RogueMapID"`
 	SiteID             uint32   `json:"SiteID"`
 	IsStart            bool     `json:"IsStart"`
-	PosX               int      `json:"PosX"`
-	PosY               int      `json:"PosY"`
+	PosX               float64  `json:"PosX"`
+	PosY               float64  `json:"PosY"`
 	NextSiteIDList     []uint32 `json:"NextSiteIDList"` // 下一阶段id
 	HardLevelGroupList []uint32 `json:"HardLevelGroupList"`
 	LevelList          []uint32 `json:"LevelList"`
@@ -27,17 +28,15 @@ type RogueMapList struct {
 func (g *GameDataConfig) loadRogueMap() {
 	g.RogueMap = make(map[uint32]*RogueMap)
 	rogueMap := make([]*RogueMapList, 0)
-	playerElementsFilePath := g.excelPrefix + "RogueMap.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RogueMap.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &rogueMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, rogueInfo := range rogueMap {
@@ -53,13 +52,13 @@ func (g *GameDataConfig) loadRogueMap() {
 		g.RogueMap[rogueInfo.RogueMapID].SiteList[rogueInfo.SiteID] = rogueInfo
 	}
 
-	logger.Info("load %v RogueMap", len(g.RogueMap))
+	logger.Info(text.GetText(17), len(g.RogueMap), name)
 }
 
 func GetRogueMapSiteById(rogueMapID uint32) map[uint32]*RogueMapList {
-	return CONF.RogueMap[rogueMapID].SiteList
+	return getConf().RogueMap[rogueMapID].SiteList
 }
 
 func GetRogueMapById(rogueMapID uint32) *RogueMap {
-	return CONF.RogueMap[rogueMapID]
+	return getConf().RogueMap[rogueMapID]
 }

@@ -5,8 +5,10 @@ package proto;
 
 option go_package = "./;proto";
 
-import "pojok.nostalgia.proto";
 import "enum.server.proto";
+import "bin.server.rogue.proto";
+import "bin.server.handbook.proto";
+import "bin.server.activity.proto";
 
 message PlayerBasicCompBin {
   uint32 uid = 1; // uid
@@ -47,7 +49,6 @@ message PlayerBasicCompBin {
   uint32 guid_seq_id = 37; // 序列号
   map<uint32, MessageGroup> message_group_list = 38; // NPC聊天信息
   PhoneData phone_data = 39; // 手机信息
-  PojokNostalgia pojok_nostalgia = 40; // 常时传略
   uint64 player_stat_id = 41; // 玩家统计id
   ContentAuditBin nickname_audit_bin = 42; // 昵称审核bin
   string ip_country_code = 43; // ip国家代码
@@ -57,19 +58,9 @@ message PlayerBasicCompBin {
   bool IsJumpMission = 47; // 是否跳过任务
   Shop shop = 48; // 商店
   Train train = 49; // 列车
-}
+  Handbook Handbook = 50; // 图鉴信息
 
-message Activity{
-  map<uint32,TrialActivityInfo> trial_activity = 3; // 角色试用活动
-  map<uint32, uint32> activity_login = 2; // 登录活动
-
-  reserved 1;
-}
-
-message TrialActivityInfo {
-  uint32 stage_id = 1;
-  bool taken_reward = 2;
-  bool finish = 3;
+  reserved 40;
 }
 
 message Scene {
@@ -80,6 +71,12 @@ message Scene {
   VectorBin rot = 5; // 朝向
   uint32 group_id = 6;
   uint32 anchor_id = 7;
+  Pet pet = 8;
+}
+
+message Pet {
+  uint32 cur_pet_id = 1;
+  map<uint32,bool> unlocked_pet_list = 2;
 }
 
 message PhoneData {
@@ -97,7 +94,7 @@ message TextJoin {
 
 message MusicInfo {
   uint32 music_id = 1;
-  //  bool is = 2; // 是否解锁？
+ //  bool is = 2; // 是否解锁？
 }
 
 message ChangeStory {
@@ -114,14 +111,14 @@ message ChangeStoryInfo {
 message Avatar {
   map<uint32, AvatarBin> avatar_list = 1; // 角色列表
   Gender gender = 2; // 性别
-  map<uint32, AvatarBin> battle_avatar_list = 5; // 战斗角色拷贝
+  map<uint32, AvatarBin> assist_avatar_list = 6; // 助战角色列表,使用完需要立马回收
 }
 
 message AvatarBin {
   uint32 avatar_id = 1; // ID
   uint32 exp = 2; // 经验
   uint32 level = 3; // 等级
-  uint32 avatar_type = 4; // 状态
+  AvatarType avatar_type = 4; // 状态
   uint64 first_met_time_stamp = 5; // 获取时间
   uint32 promote_level = 6; // 突破等级
   repeated uint32 taken_rewards = 7; // 已领取的突破奖励
@@ -130,6 +127,7 @@ message AvatarBin {
   bool is_multi_path = 10; // 是否多命途
   uint32 cur_path = 11;//当前命途
   map<uint32, MultiPathAvatarInfo>multi_path_avatar_info_list = 12;//属性列表
+  uint32 uid = 13; // 所属账号
 }
 
 message MultiPathAvatarInfo {
@@ -161,8 +159,8 @@ message LineUp {
   uint32 main_line_up = 1; // 当前上场队伍
   uint32 mp = 2; // 当前能量
   map<uint32, Line> line_up_list = 3; // 普通队伍
-  map<uint32, Line>battle_line_list = 4; // 战斗队伍
-  map<uint32, Line> story_line_list = 5;// 故事线队伍
+  map<uint32, Line> battle_line_list = 4; // 战斗队伍
+  map<uint32, Line> story_line_list = 5; // 故事线队伍
 }
 
 message Line {
@@ -177,7 +175,8 @@ message Line {
 message LineAvatarList {
   uint32 slot = 1;//第几个
   uint32 avatar_id = 2;;//角色id
-  LineAvatarType line_avatar_type = 3; // 角色属性
+  AvatarType line_avatar_type = 3; // 角色属性
+  uint32 uid = 4; // 所属账号
 }
 
 message Item  {
@@ -200,6 +199,7 @@ message Relic {
   uint32 base_avatar_id = 7; // 装备角色
   bool is_protected = 8; // 是否锁定
   string main_affix_property = 9;//主词条类型
+  bool is_discarded = 10; // 是否弃置
 }
 
 message RelicAffix {
@@ -226,84 +226,13 @@ message Material {
 
 message Battle {// 战斗
   BattleType battle_type = 1; // 当前状态
-  Rogue rogue = 2; // 期数-情况
   Challenge challenge = 3; // 忘却之庭
-  RogueTourn rogue_tourn = 4; // 差分宇宙
   Raid rain = 5;// 副本
-}
-
-message Rogue {
-  map<uint32, RogueArea> rogue_area = 1; // 关卡状态
-  CurRogue cur_rogue = 2; // 当前正在进行的
-  map<uint32, RogueHistory> rogue_history_list = 3;// 历史领取信息
-}
-
-message RogueArea {
-  uint32 areaId = 1;
-  RogueAreaStatus rogue_area_status = 2;
-}
-
-message CurRogue {// 当前正在进行的模拟宇宙
-  uint32 cur_area_id = 1; // 当前关卡
-  uint32 cur_siteId = 2; // 当前房间
-  map<uint32, RogueRoom> rogue_room_map = 3; // 房间列表
-  uint32 rogue_map_id = 4; // mapid
-  uint32 buff_num = 5; // buff// 计数器
-  uint32 aeon_id = 6; // 命途
-  map<uint32, RogueBuff> buff_list = 7;// 模拟宇宙已获得祝福列表
-  uint32 RogueActivityModuleID = 8;//模拟宇宙类型
-  bool is_win = 9;// 是否胜利
-  RogueStatus status = 10 ;// 状态
-}
-
-message RogueRoom {
-  uint32 room_id = 1;
-  RoomStatus room_status = 2;
-  repeated uint32 next_site_id_list = 3;
-}
-
-message RogueBuff {
-  uint32 buff_id = 1;
-  uint32 buff_level = 2;
-}
-
-message RogueHistory{
-  uint32 season_id = 1; // 期数
-  uint32 score = 2; // 分数
-}
-
-message RogueTourn {// 差分宇宙
-  uint32 exp = 1; // 经验
-  repeated uint32 taken_level_rewards = 2;// 已领取的等级奖励
-  map<uint32, InspirationCircuitInfo> inspiration_circuit_info = 3; // 灵感回路信息
-  repeated uint32 unlock_difficulty_info = 4;// 已解锁难度
-  CurRogueTourn cur_rogue_tourn = 5;// 当前差分宇宙
-}
-
-message InspirationCircuitInfo {// 灵感回路
-  uint32 inspiration_circuit_id = 1;
-  RogueTalentStatus status = 2;
-}
-
-message CurRogueTourn{// 当前差分宇宙
-  uint32 area_id = 1; // 关卡
-  repeated uint32 formula_list = 2; //方程列表
-  map<uint32, LayerInfo> cur_layer_list = 3;// 关卡列表
-  uint32 cur_layer_index = 4;//第几关当前
-}
-
-message LayerInfo{
-  uint32 layer_id = 1;//小关卡id
-  RogueTournLayerStatus status = 2;// 状态
-  uint32 layer_index = 3;//第几个小房间
-  map<uint32, RogueTournRoomInfo> rogue_tourn_room_list = 4;// 小关卡下属房间
-  uint32 cur_room_index = 5; // 第几个房间当前
-}
-
-message RogueTournRoomInfo{
-  uint32 room_id = 1;//id
-  uint32 room_index = 2;//第几个房间
-  RogueTournRoomStatus status = 3; // 状态
+  // 模拟宇宙信息
+  QuestRogue quest_rogue = 10; // 模拟宇宙
+  TournRogue tourn_rogue = 11; // 差分宇宙
+  // 当前进行中的模拟宇宙
+  CurRogue cur_rogue = 20; // 当前模拟宇宙战斗
 }
 
 message Challenge {
@@ -473,11 +402,20 @@ message Days {
 }
 
 message Shop {
-
+  map<uint32,ShopInfo> shop_info_map = 1;
 }
 
 message ShopInfo {
+  uint32 shop_id = 1;
+  uint32 exp = 2; // 累积
+  uint32 level = 3; // 自动
+  uint64 reward = 4; // 领取
+  map<uint32,ShopGoods> shop_goods = 5; // 商品信息
+}
 
+message ShopGoods {
+  uint32 goods_id = 1;
+  uint32 buy_times = 2;
 }
 
 message Train {

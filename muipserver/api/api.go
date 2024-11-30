@@ -14,10 +14,10 @@ import (
 type ApiFunc func(c *gin.Context) Comm
 
 var ApiMap = map[int]ApiFunc{
-	constant.CommAndTest:   test,
-	constant.SetWorldLevel: worldLevel,
-	constant.GetPlayerDb:   getPlayerPb,
-	// constant.Status:         status,
+	constant.CommAndTest:    test,
+	constant.SetWorldLevel:  worldLevel,
+	constant.GetPlayerDb:    getPlayerPb,
+	constant.Status:         status,
 	constant.Give:           give,
 	constant.GiveRelic:      giveRelic,
 	constant.SetJumpMission: setIsJumpMission,
@@ -142,6 +142,14 @@ func getPlayerPb(c *gin.Context) Comm {
 	comm := Comm{
 		IsPlayer:    false,
 		CommandList: fmt.Sprintf("get_player_pb %s %s", c.Query("uid"), bin),
+	}
+	return comm
+}
+
+func status(c *gin.Context) Comm {
+	comm := Comm{
+		IsPlayer:    false,
+		CommandList: "status",
 	}
 	return comm
 }

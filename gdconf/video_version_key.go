@@ -1,9 +1,11 @@
 package gdconf
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -19,21 +21,20 @@ type VideoKeyInfo struct {
 
 func (g *GameDataConfig) loadVideoVersionKey() {
 	g.VideoVersionKey = new(VideoVersionKey)
-	playerElementsFilePath := g.dataPrefix + "VideoVersionKey.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "VideoVersionKey.json"
+	playerElementsFile, err := os.ReadFile(g.dataPrefix + name)
 	if err != nil {
-		logger.Error("open file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &g.VideoVersionKey)
 	if err != nil {
-		logger.Error("parse file error: %v", err)
-		return
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
-	logger.Info("load %v VideoVersionKey", len(g.VideoVersionKey.VideoKeyInfoList)+len(g.VideoVersionKey.ActivityVideoKeyInfoList))
+
+	logger.Info(text.GetText(17), len(g.VideoVersionKey.VideoKeyInfoList)+len(g.VideoVersionKey.ActivityVideoKeyInfoList), name)
 }
 
 func GetVideoVersionKey() *VideoVersionKey {
-	return CONF.VideoVersionKey
+	return getConf().VideoVersionKey
 }

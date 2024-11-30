@@ -1,6 +1,7 @@
 package gdconf
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -162,8 +163,38 @@ type StageObjectCapture struct {
 
 func (g *GameDataConfig) loadGroup() {
 	g.GroupMap = make(map[uint32]map[uint32]map[uint32]*LevelGroup)
-
 	syncs := sync.RWMutex{}
+	loadGroups := func(planeId, floorId, index uint32, groupInfo *RtLevelGroupInstanceInfo) {
+		func() {
+			levelGroup := new(LevelGroup)
+			playerElementsFile, err := os.ReadFile(g.pathPrefix + "/" + groupInfo.GroupPath)
+			if err != nil {
+				panic(fmt.Sprintf(text.GetText(18), playerElementsFile, err))
+			}
+
+			err = hjson.Unmarshal(playerElementsFile, levelGroup)
+			if err != nil {
+				logger.Error(text.GetText(19), playerElementsFile, err)
+				return
+			}
+			levelGroup.GroupId = groupInfo.ID
+			levelGroup.Index = index
+
+			syncs.Lock()
+			if g.GroupMap[planeId] == nil {
+				g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
+			}
+			if g.GroupMap[planeId][floorId] == nil {
+				g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
+			}
+			if g.GroupMap[planeId][floorId][groupInfo.ID] == nil {
+				g.GroupMap[planeId][floorId][groupInfo.ID] = levelGroup
+			}
+			syncs.Unlock()
+
+		}()
+	}
+
 	wg := sync.WaitGroup{}
 	floor := GetFloor()
 	sem := make(chan struct{}, MaxWaitGroup)
@@ -174,44 +205,19 @@ func (g *GameDataConfig) loadGroup() {
 					groupInfo.IsDelete {
 					continue
 				}
-				loadGroup := func(index uint32) {
+				if MaxWaitGroup == 1 {
+					loadGroups(planeId, floorId, uint32(index), groupInfo)
+				} else {
 					go func() {
-						levelGroup := new(LevelGroup)
-						playerElementsFile, err := os.ReadFile(g.pathPrefix + "/" + groupInfo.GroupPath)
-						if err != nil {
-							logger.Error(text.GetText(18), playerElementsFile, err)
+						defer func() {
 							wg.Done()
 							func() { <-sem }()
-							return
-						}
-
-						err = hjson.Unmarshal(playerElementsFile, levelGroup)
-						if err != nil {
-							logger.Error(text.GetText(19), playerElementsFile, err)
-							return
-						}
-						levelGroup.GroupId = groupInfo.ID
-						levelGroup.Index = index
-
-						syncs.Lock()
-						if g.GroupMap[planeId] == nil {
-							g.GroupMap[planeId] = make(map[uint32]map[uint32]*LevelGroup)
-						}
-						if g.GroupMap[planeId][floorId] == nil {
-							g.GroupMap[planeId][floorId] = make(map[uint32]*LevelGroup)
-						}
-						if g.GroupMap[planeId][floorId][groupInfo.ID] == nil {
-							g.GroupMap[planeId][floorId][groupInfo.ID] = levelGroup
-						}
-						syncs.Unlock()
-						wg.Done()
-						func() { <-sem }()
+						}()
+						sem <- struct{}{}
+						wg.Add(1)
+						loadGroups(planeId, floorId, uint32(index), groupInfo)
 					}()
 				}
-
-				sem <- struct{}{}
-				wg.Add(1)
-				loadGroup(uint32(index))
 			}
 		}
 	}
@@ -222,15 +228,15 @@ func (g *GameDataConfig) loadGroup() {
 }
 
 func GetNGroupById(planeId, floorId, groupId uint32) *LevelGroup {
-	return CONF.GroupMap[planeId][floorId][groupId]
+	return getConf().GroupMap[planeId][floorId][groupId]
 }
 
 func GetGroupById(planeId, floorId uint32) map[uint32]*LevelGroup {
-	return CONF.GroupMap[planeId][floorId]
+	return getConf().GroupMap[planeId][floorId]
 }
 
 func GetGroupMap() map[uint32]map[uint32]map[uint32]*LevelGroup {
-	return CONF.GroupMap
+	return getConf().GroupMap
 }
 
 func scanFiles(dir string) ([]string, error) {

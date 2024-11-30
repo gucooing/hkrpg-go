@@ -14,17 +14,17 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) SetTurnFoodSwitchCsReq(payloadMsg pb.Message) {
+func SetTurnFoodSwitchCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetTurnFoodSwitchCsReq)
 	rsp := &proto.SetTurnFoodSwitchScRsp{
 		Retcode:     0,
-		CIEEDPPEKAC: req.CIEEDPPEKAC,
-		EDHONFLKEGG: req.EDHONFLKEGG,
+		LOKHMBEONGM: req.LOKHMBEONGM,
+		GKJMGGJJCFI: req.GKJMGGJJCFI,
 	}
 	g.Send(cmd.SetTurnFoodSwitchScRsp, rsp)
 }
 
-func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg pb.Message) {
+func SceneCastSkillCostMpCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneCastSkillCostMpCsReq)
 	rsp := &proto.SceneCastSkillCostMpScRsp{
 		CastEntityId: req.CastEntityId,
@@ -33,7 +33,7 @@ func (g *GamePlayer) SceneCastSkillCostMpCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.SceneCastSkillCostMpScRsp, rsp)
 }
 
-func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg pb.Message) {
+func SceneEnterStageCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneEnterStageCsReq)
 	rsp := &proto.SceneEnterStageScRsp{
 		Retcode: 0,
@@ -69,13 +69,13 @@ func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg pb.Message) {
 			avatarMap[baseAvatarId] = &model.BattleAvatar{
 				AvatarId:     trial,
 				BaseAvatarId: baseAvatarId,
-				AvatarType:   spb.LineAvatarType_LineAvatarType_TRIAL,
-				AssistUid:    0,
+				AvatarType:   spb.AvatarType_AVATAR_TRIAL_TYPE,
+				Uid:          0,
 			}
 		}
 	}
 	if len(avatarMap) == 0 {
-		battleBackup.BattleAvatarList = g.GetPd().GetBattleAvatarMap(g.GetPd().GetBattleLineUp())
+		battleBackup.BattleAvatarList = g.GetPd().GetBattleAvatarMap(g.GetPd().GetCurLineUp())
 	} else {
 		battleBackup.BattleAvatarList = avatarMap
 	}
@@ -89,7 +89,7 @@ func (g *GamePlayer) SceneEnterStageCsReq(payloadMsg pb.Message) {
 
 /***********************************攻击事件处理***********************************/
 
-func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
+func SceneCastSkillCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneCastSkillCsReq)
 	rsp := &proto.SceneCastSkillScRsp{
 		CastEntityId: req.CastEntityId, // 攻击唯一id
@@ -139,7 +139,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 				CastEntityId: req.CastEntityId,
 				Mp:           g.GetPd().GetLineUpMp(),
 			})
-			g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
+			g.SyncLineupNotify(g.GetPd().GetCurLineUp())
 		}
 	} else {
 		skill = gdconf.GetGoppMazeSkill(battleBackup.Sce.AvatarId, 1)
@@ -157,7 +157,7 @@ func (g *GamePlayer) SceneCastSkillCsReq(payloadMsg pb.Message) {
 		battleBackup.WorldLevel = g.GetPd().GetFarmElementWorldLevel(battleBackup.FarmElementID)
 	}
 	// 获取战斗角色
-	battleBackup.BattleAvatarList = g.GetPd().GetBattleAvatarMap(g.GetPd().GetBattleLineUp())
+	battleBackup.BattleAvatarList = g.GetPd().GetBattleAvatarMap(g.GetPd().GetCurLineUp())
 	battleInfoPb := g.GetPd().GetSceneBattleInfo(battleBackup)
 	// 记录战斗
 	g.GetPd().AddBattleBackup(battleBackup)
@@ -197,7 +197,7 @@ func (g *GamePlayer) SceneCastSkill(battleInfo *model.BattleBackup, skill *gdcon
 
 /***********************************战斗结算***********************************/
 
-func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
+func PVEBattleResultCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PVEBattleResultCsReq)
 	rsp := &proto.PVEBattleResultScRsp{
 		BattleAvatarList: make([]*proto.BattleAvatar, 0),
@@ -218,7 +218,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 	var teleportToAnchor = false
 	// 更新角色状态
 	g.GetPd().BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
-	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
+	g.SyncLineupNotify(g.GetPd().GetCurLineUp())
 	battleBin.AddItem = model.NewAddItem(battleBin.AddItem)
 	// 根据不同结算状态处理
 	switch req.EndStatus {
@@ -295,7 +295,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 		g.ChallengePVEBattleResultCsReq(req, battleBin)
 	case spb.BattleType_Battle_CHALLENGE_Story:
 		g.ChallengePVEBattleResultCsReq(req, battleBin)
-	case spb.BattleType_Battle_ROGUE:
+	case spb.BattleType_Battle_QUSET_ROGUE:
 		teleportToAnchor = false
 		g.RoguePVEBattleResultCsReq(req, sce)
 	case spb.BattleType_Battle_TrialActivity: // 角色试用
@@ -321,7 +321,7 @@ func (g *GamePlayer) PVEBattleResultCsReq(payloadMsg pb.Message) {
 
 /***********************************关卡/副本***********************************/
 
-func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
+func StartCocoonStageCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.StartCocoonStageCsReq)
 	rsp := &proto.StartCocoonStageScRsp{
 		PropEntityId: req.PropEntityId,
@@ -343,7 +343,7 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
 	battleBackup.StageID = cocoonConfig.StageID
 	battleBackup.StageIDList = cocoonConfig.StageIDList
 	// 获取角色
-	battleBackup.BattleAvatarList = g.GetPd().GetBattleAvatarMap(g.GetPd().GetBattleLineUp())
+	battleBackup.BattleAvatarList = g.GetPd().GetBattleAvatarMap(g.GetPd().GetCurLineUp())
 	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE) // 设置战斗状态
 	battleInfoPb := g.GetPd().GetSceneBattleInfo(battleBackup)
 	if battleInfoPb == nil {
@@ -359,7 +359,7 @@ func (g *GamePlayer) StartCocoonStageCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.StartCocoonStageScRsp, rsp)
 }
 
-func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
+func ActivateFarmElementCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ActivateFarmElementCsReq)
 	rsp := &proto.ActivateFarmElementScRsp{
 		WorldLevel: req.WorldLevel,
@@ -379,14 +379,14 @@ func (g *GamePlayer) ActivateFarmElementCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.ActivateFarmElementScRsp, rsp)
 }
 
-func (g *GamePlayer) ReEnterLastElementStageCsReq(payloadMsg pb.Message) {
+func ReEnterLastElementStageCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ReEnterLastElementStageCsReq)
 	battleBackup := &model.BattleBackup{
 		IsBattle:         true,
 		StageID:          req.StageId,
 		StageIDList:      []uint32{req.StageId},
 		WorldLevel:       req.StageId % 10,
-		BattleAvatarList: g.GetPd().GetBattleAvatarMap(g.GetPd().GetBattleLineUp()),
+		BattleAvatarList: g.GetPd().GetBattleAvatarMap(g.GetPd().GetCurLineUp()),
 		IsFarmElement:    true,
 	}
 	battleInfoPb := g.GetPd().GetSceneBattleInfo(battleBackup)
@@ -400,7 +400,7 @@ func (g *GamePlayer) ReEnterLastElementStageCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.ReEnterLastElementStageScRsp, rsp)
 }
 
-func (g *GamePlayer) DeactivateFarmElementCsReq(payloadMsg pb.Message) {
+func DeactivateFarmElementCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DeactivateFarmElementCsReq)
 	rsp := &proto.DeactivateFarmElementScRsp{
 		EntityId: req.EntityId,
@@ -409,7 +409,7 @@ func (g *GamePlayer) DeactivateFarmElementCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.DeactivateFarmElementScRsp, rsp)
 }
 
-func (g *GamePlayer) RefreshTriggerByClientCsReq(payloadMsg pb.Message) {
+func RefreshTriggerByClientCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.RefreshTriggerByClientCsReq)
 	db := g.GetPd().GetSummonUnitInfo()
 	if db.EntityId == req.TriggerEntityId {
@@ -463,7 +463,7 @@ func (g *GamePlayer) SceneCastSkillProp(sce *model.SceneCastEntity) {
 	}
 	if addMPCost > 0 {
 		g.GetPd().AddLineUpMp(2) // 如果涉及到更新战斗中的队伍状态，这部分需要改
-		g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
+		g.SyncLineupNotify(g.GetPd().GetCurLineUp())
 	}
 	g.AllPlayerSyncScNotify(allSync)
 }

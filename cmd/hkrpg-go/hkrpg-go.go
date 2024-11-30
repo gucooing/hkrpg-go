@@ -20,16 +20,25 @@ import (
 )
 
 func main() {
+	// go func() {
+	// 	log.Println(http.ListenAndServe(":6060", nil))
+	// }()
 	confName := "hkrpg-go-pe.json"
 	err := hkrpg_go_pe.LoadConfig(confName)
 	if err != nil {
 		if err == hkrpg_go_pe.FileNotExist {
+			fmt.Printf("找不到配置文件准备生成默认配置文件 %s \n", confName)
 			p, _ := json.MarshalIndent(hkrpg_go_pe.DefaultConfig, "", "  ")
 			cf, _ := os.Create("./conf/" + confName)
-			cf.Write(p)
+			_, err := cf.Write(p)
 			cf.Close()
-			fmt.Printf("找不到配置文件\n已生成默认配置文件 %s \n", confName)
-			main()
+			if err != nil {
+				fmt.Printf("生成默认配置文件失败 %s \n使用默认配置\n", err.Error())
+				hkrpg_go_pe.SetDefaultConfig()
+			} else {
+				fmt.Printf("生成默认配置文件成功 \n")
+				main()
+			}
 		} else {
 			panic(err)
 		}
@@ -56,9 +65,9 @@ func main() {
 		case <-done:
 			_, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 			defer cancel()
-			logger.Info("hkrpg_go_pe服务正在关闭")
+			logger.Info(text.GetText(3))
 			s.Close()
-			logger.Info("hkrpg_go_pe服务已停止")
+			logger.Info(text.GetText(4))
 			logger.CloseLogger()
 			os.Exit(0)
 		}

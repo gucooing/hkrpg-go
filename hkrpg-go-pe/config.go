@@ -16,15 +16,18 @@ type Config struct {
 	DataPrefix         string      `json:"DataPrefix"`
 	GameDataConfigPath string      `json:"GameDataConfigPath"`
 	UpstreamServerList []string    `json:"UpstreamServerList"`
-	SqlPath            string      `json:"SqlPath"`
+	Db                 *Db         `json:"Db"`
 	Dispatch           *Dispatch   `json:"Dispatch"`
 	GameServer         *GameServer `json:"GameServer"`
 	Gm                 *Gm         `json:"Gm"`
 	PushUrl            string      `json:"PushUrl"`
 }
 
+type Db struct {
+	Type string `json:"Type"`
+	Dns  string `json:"Dns"`
+}
 type Dispatch struct {
-	IsOpen       bool              `json:"IsOpen"`
 	AutoCreate   bool              `json:"AutoCreate"`
 	AppNet       constant.AppNet   `json:"AppNet"`
 	DispatchList []DispatchList    `json:"DispatchList"`
@@ -41,9 +44,10 @@ type GameServer struct {
 	GateTcp     bool            `json:"GateTcp"`
 	IsToken     bool            `json:"IsToken"`
 	GetTokenUrl string          `json:"GetTokenUrl"`
-	BotUid      uint32          `json:"BotUid"`
 	LoadLua     *lua.ConfLua    `json:"LoadLua"`
 	AppNet      constant.AppNet `json:"AppNet"`
+	DebugUid    uint32          `json:"DebugUid"`
+	BlackCmd    map[string]bool `json:"BlackCmd"`
 }
 type Gm struct {
 	SignKey string `json:"SignKey"`
@@ -89,10 +93,12 @@ var DefaultConfig = &Config{
 	DataPrefix:         "./data/",
 	GameDataConfigPath: "resources",
 	UpstreamServerList: make([]string, 0),
-	SqlPath:            "./conf/hkrpg-go-pe.db",
-	PushUrl:            "http://localhost:3000",
+	Db: &Db{
+		Type: "sqlite",
+		Dns:  "./conf/hkrpg-go-pe.db",
+	},
+	PushUrl: "http://localhost:3000",
 	Dispatch: &Dispatch{
-		IsOpen:     true,
 		AutoCreate: true,
 		AppNet: constant.AppNet{
 			InnerAddr: "0.0.0.0",
@@ -110,7 +116,6 @@ var DefaultConfig = &Config{
 	},
 	GameServer: &GameServer{
 		GateTcp:     false,
-		BotUid:      0,
 		IsToken:     true,
 		GetTokenUrl: "http://127.0.0.1:8080",
 		LoadLua: &lua.ConfLua{
@@ -123,6 +128,13 @@ var DefaultConfig = &Config{
 			InnerPort: "20041",
 			OuterAddr: "127.0.0.1",
 			OuterPort: "20041",
+		},
+		DebugUid: 1,
+		BlackCmd: map[string]bool{
+			"SceneEntityMoveScRsp": true,
+			"SceneEntityMoveCsReq": true,
+			"PlayerHeartBeatScRsp": true,
+			"PlayerHeartBeatCsReq": true,
 		},
 	},
 	Gm: &Gm{

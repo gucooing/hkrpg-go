@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -22,17 +23,15 @@ type DisplayItemList struct {
 func (g *GameDataConfig) loadMonsterDrop() {
 	g.MonsterDropMap = make(map[uint32]map[uint32]*MonsterDrop)
 	monsterDropList := make([]*MonsterDrop, 0)
-	playerElementsFilePath := g.excelPrefix + "MonsterDrop.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "MonsterDrop.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &monsterDropList)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range monsterDropList {
 		if g.MonsterDropMap[v.MonsterTemplateID] == nil {
@@ -40,12 +39,13 @@ func (g *GameDataConfig) loadMonsterDrop() {
 		}
 		g.MonsterDropMap[v.MonsterTemplateID][v.WorldLevel] = v
 	}
-	logger.Info("load %v MonsterDrop", len(g.MonsterDropMap))
+
+	logger.Info(text.GetText(17), len(g.MonsterDropMap), name)
 }
 
 func GetMonsterDrop(id, worldLevel uint32) *MonsterDrop {
-	if CONF.MonsterDropMap[id] == nil {
+	if getConf().MonsterDropMap[id] == nil {
 		return nil
 	}
-	return CONF.MonsterDropMap[id][worldLevel]
+	return getConf().MonsterDropMap[id][worldLevel]
 }

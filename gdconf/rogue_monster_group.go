@@ -6,12 +6,13 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
 type RogueMonsterGroups struct {
-	RogueMonsterGroupID       uint32            `json:"RogueMonsterGroupID"`
-	RogueMonsterListAndWeight map[uint32]uint32 `json:"RogueMonsterListAndWeight"`
+	RogueMonsterGroupID       uint32             `json:"RogueMonsterGroupID"`
+	RogueMonsterListAndWeight map[uint32]float64 `json:"RogueMonsterListAndWeight"`
 }
 
 type RogueMonsterGroup struct {
@@ -23,29 +24,27 @@ type RogueMonsterGroup struct {
 func (g *GameDataConfig) loadRogueMonsterGroup() {
 	g.RogueMonsterGroupMap = make(map[uint32]*RogueMonsterGroups)
 	rogueMonsterGroupMap := make([]*RogueMonsterGroups, 0)
-	playerElementsFilePath := g.excelPrefix + "RogueMonsterGroup.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RogueMonsterGroup.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &rogueMonsterGroupMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range rogueMonsterGroupMap {
 		g.RogueMonsterGroupMap[v.RogueMonsterGroupID] = v
 	}
 
-	logger.Info("load %v RogueMonsterGroup", len(g.RogueMonsterGroupMap))
+	logger.Info(text.GetText(17), len(g.RogueMonsterGroupMap), name)
 }
 
 func GetRogueMonsterGroupByGroupID(groupID uint32) uint32 {
-	rogue := CONF.RogueMonsterGroupMap[groupID]
+	rogue := getConf().RogueMonsterGroupMap[groupID]
 	if rogue == nil {
-		rogue = CONF.RogueMonsterGroupMap[1101]
+		rogue = getConf().RogueMonsterGroupMap[1101]
 	}
 	return rogue.Select()
 }

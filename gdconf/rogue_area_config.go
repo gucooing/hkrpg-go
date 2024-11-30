@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -31,27 +32,26 @@ type RogueAreaConfig struct {
 func (g *GameDataConfig) loadRogueAreaConfig() {
 	g.RogueAreaConfigMap = make(map[uint32]*RogueAreaConfig)
 	rogueAreaConfigMap := make([]*RogueAreaConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "RogueAreaConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RogueAreaConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &rogueAreaConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range rogueAreaConfigMap {
 		g.RogueAreaConfigMap[v.RogueAreaID] = v
 	}
-	logger.Info("load %v RogueAreaConfig", len(g.RogueAreaConfigMap))
+
+	logger.Info(text.GetText(17), len(g.RogueAreaConfigMap), name)
 }
 
 func GetRogueAreaMap() map[uint32]*RogueAreaConfig {
-	return CONF.RogueAreaConfigMap
+	return getConf().RogueAreaConfigMap
 }
 func GetRogueAreaConfigById(AreaID uint32) *RogueAreaConfig {
-	return CONF.RogueAreaConfigMap[AreaID]
+	return getConf().RogueAreaConfigMap[AreaID]
 }

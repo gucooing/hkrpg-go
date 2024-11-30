@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -28,17 +29,15 @@ type CocoonConfig struct {
 func (g *GameDataConfig) loadCocoonConfig() {
 	g.CocoonConfigMap = make(map[uint32]map[uint32]*CocoonConfig)
 	cocoonConfigMap := make([]*CocoonConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "CocoonConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "CocoonConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &cocoonConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, v := range cocoonConfigMap {
@@ -48,9 +47,9 @@ func (g *GameDataConfig) loadCocoonConfig() {
 		g.CocoonConfigMap[v.ID][v.WorldLevel] = v
 	}
 
-	logger.Info("load %v CocoonConfig", len(g.CocoonConfigMap))
+	logger.Info(text.GetText(17), len(g.CocoonConfigMap), name)
 }
 
 func GetCocoonConfigById(id, worldLevel uint32) *CocoonConfig {
-	return CONF.CocoonConfigMap[id][worldLevel]
+	return getConf().CocoonConfigMap[id][worldLevel]
 }

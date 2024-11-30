@@ -169,11 +169,11 @@ func (g *GameServer) gameMsgHandle(netMsg *mq.NetMsg) {
 	}
 	s := g.getPlayerNet(netMsg.Uid)
 	if s != nil {
-		s.p.RecvChan <- player.Msg{
+		s.p.ToRecvChan(player.Msg{
 			CmdId:     netMsg.CmdId,
 			MsgType:   player.Client,
 			PlayerMsg: protoMsg,
-		}
+		})
 	}
 }
 

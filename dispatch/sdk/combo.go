@@ -23,7 +23,9 @@ func (s *Server) ComboGranterApiGetConfigHandler(c *gin.Context) {
 		DisableYsdkGuard:        true,
 		EnableAnnouncePicPopup:  true,
 		AppName:                 "崩坏RPG",
-		FunctionalSwitchConfigs: make([]string, 0),
+		FunctionalSwitchConfigs: struct{}{},
+		QrEnabledApps:           nil,
+		QrAppIcons:              nil,
 	}
 	getConfigrsq.Retcode = 0
 	getConfigrsq.Message = "OK"

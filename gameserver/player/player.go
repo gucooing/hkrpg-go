@@ -11,7 +11,6 @@ import (
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
-	"google.golang.org/protobuf/encoding/protojson"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -21,6 +20,7 @@ func init() {
 
 var LogMsgPlayer uint32 = 1
 var ISPE = false
+var BlackCmd = make(map[string]bool)
 
 type GamePlayer struct {
 	Uid uint32
@@ -28,9 +28,8 @@ type GamePlayer struct {
 	PlayerData     *model.PlayerData // 玩家内存
 	Platform       spb.PlatformType  // 登录设备
 	LoginRandom    uint64
-	RouteManager   *RouteManager // 路由
-	SendChan       chan Msg      // 发送消息通道
-	RecvChan       chan Msg      // 接收消息通道
+	SendChan       chan Msg // 发送消息通道
+	RecvChan       chan Msg // 接收消息通道
 	IsClosed       bool
 	LastUpDataTime int64 // 最近一次的活跃时间
 }
@@ -69,12 +68,29 @@ func NewPlayer(uid uint32) *GamePlayer {
 	g.Uid = uid
 	g.RecvChan = make(chan Msg, 100)
 	g.SendChan = make(chan Msg, 100)
-	g.RouteManager = NewRouteManager(g)
 	g.LastUpDataTime = time.Now().Unix()
 	g.GetPlayerDateByDb()                         // 拉取数据
 	g.LoginRandom = random.GetTimeRand().Uint64() // 设置此次随机
 
 	return g
+}
+
+func (g *GamePlayer) ToSendChan(msg Msg) {
+	if g == nil ||
+		g.SendChan == nil ||
+		g.IsClosed {
+		return
+	}
+	g.SendChan <- msg
+}
+
+func (g *GamePlayer) ToRecvChan(msg Msg) {
+	if g == nil ||
+		g.RecvChan == nil ||
+		g.IsClosed {
+		return
+	}
+	g.RecvChan <- msg
 }
 
 // 拉取账户数据
@@ -92,7 +108,6 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 		// 初始化完毕保存账号数据
 		dbPlayer.Uid = g.Uid
 		dbPlayer.Level = g.GetPd().GetLevel()
-		dbPlayer.Exp = g.GetPd().GetMaterialById(model.Exp)
 		dbPlayer.Nickname = g.GetPd().GetNickname()
 		dbPlayer.BinData, err = pb.Marshal(g.GetPd().BasicBin)
 		dbPlayer.DataVersion = g.GetPd().GetDataVersion()
@@ -112,11 +127,11 @@ func (g *GamePlayer) GetPlayerDateByDb() {
 			g.PlayerData = model.NewPlayerData()
 		}
 	}
+
 	g.PlayerData.BasicBin.Uid = g.Uid
 }
 
 func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
-	var err error
 	// 验证状态
 	if !ISPE {
 		redisDb, ok := database.GetPlayerStatus(database.GSS.StatusRedis, g.Uid)
@@ -124,7 +139,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 			return false
 		}
 		statu := new(spb.PlayerStatusRedisData)
-		err = pb.Unmarshal(redisDb, statu)
+		err := pb.Unmarshal(redisDb, statu)
 		if err != nil {
 			logger.Error("PlayerStatusRedisData Unmarshal error")
 			database.DelPlayerStatus(database.GSS.StatusRedis, g.Uid)
@@ -139,15 +154,9 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 			database.DelPlayerStatus(database.GSS.StatusRedis, g.Uid)
 		}
 	}
-	dbDate := new(constant.PlayerData)
-	dbDate.Uid = g.Uid
-	dbDate.Level = g.GetPd().GetLevel()
-	dbDate.Exp = g.GetPd().GetMaterialById(model.Exp)
-	dbDate.Nickname = g.GetPd().GetNickname()
-	dbDate.BinData, err = pb.Marshal(g.GetPd().BasicBin)
-	dbDate.DataVersion = g.GetPd().GetDataVersion()
+	dbDate, err := g.GetPd().GetDbPlayerData()
 	if err != nil {
-		logger.Error("pb marshal error: %v", err)
+		logger.Error("pb marshal error")
 		return false
 	}
 	if err = database.UpPlayerDataByUid(database.GSS.PlayerDataMysql, dbDate); err != nil {
@@ -165,6 +174,7 @@ func (g *GamePlayer) UpPlayerDate(status spb.PlayerStatusType) bool {
 	return true
 }
 
+// todo
 func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) bool {
 	playerBasicBrief := &spb.PlayerBasicBriefData{
 		Nickname:          g.GetPd().GetNickname(),
@@ -197,7 +207,7 @@ func (g *GamePlayer) SetPlayerPlayerBasicBriefData(status spb.PlayerStatusType) 
 
 func (g *GamePlayer) Send(cmdId uint16, playerMsg pb.Message) {
 	if g.Uid == LogMsgPlayer {
-		LogMsgSeed(cmdId, playerMsg)
+		g.logPlayerMsg(cmdId, playerMsg, true)
 	}
 	g.SendMsg(cmdId, playerMsg)
 }
@@ -215,32 +225,6 @@ func (g *GamePlayer) Close() {
 	}
 	g.IsClosed = true
 	logger.Info("[UID:%v]玩家下线GAME", g.Uid)
-	close(g.RecvChan)
-	close(g.SendChan)
 	// 保存数据
 	g.UpPlayerDate(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
-}
-
-var blacklist = []uint16{cmd.SceneEntityMoveScRsp, cmd.SceneEntityMoveCsReq, cmd.PlayerHeartBeatScRsp, cmd.PlayerHeartBeatCsReq} // 黑名单
-func IsValid(cmdid uint16) bool {
-	for _, value := range blacklist {
-		if cmdid == value {
-			return false
-		}
-	}
-	return true
-}
-
-func LogMsgSeed(cmdId uint16, playerMsg pb.Message) {
-	if IsValid(cmdId) {
-		data := protojson.Format(playerMsg)
-		logger.Debug("S --> C : NAME: %s KcpMsg: \n%s\n", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
-	}
-}
-
-func LogMsgRecv(cmdId uint16, payloadMsg pb.Message) {
-	if IsValid(cmdId) {
-		data := protojson.Format(payloadMsg)
-		logger.Debug("C --> S : NAME: %s KcpMsg: \n%s\n", cmd.GetSharedCmdProtoMap().GetCmdNameByCmdId(cmdId), data)
-	}
 }

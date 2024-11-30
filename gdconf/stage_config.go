@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -23,25 +24,23 @@ type StageConfig struct {
 func (g *GameDataConfig) loadStageConfig() {
 	g.StageConfigMap = make(map[uint32]*StageConfig)
 	stageConfigMap := make([]*StageConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "StageConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "StageConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &stageConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range stageConfigMap {
 		g.StageConfigMap[v.StageID] = v
 	}
 
-	logger.Info("load %v StageConfig", len(g.StageConfigMap))
+	logger.Info(text.GetText(17), len(g.StageConfigMap), name)
 }
 
 func GetStageConfigById(stageID uint32) *StageConfig {
-	return CONF.StageConfigMap[stageID]
+	return getConf().StageConfigMap[stageID]
 }

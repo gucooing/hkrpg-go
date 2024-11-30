@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+message Activity{
+  map<uint32, uint32> activity_login = 2; // 登录活动
+  TrialActivity trial_activity = 4; // 角色试用活动
+  AetherDivide aether_divide = 5; // 以太战线
+  MatchThree match_three = 6; // 折纸小鸟
+  reserved 1,3;
+}
+
+/********************角色试用活动********************/
+
+message TrialActivity {
+  CurTrialActivity cur_trial = 1; // 当前角色试用
+  map<uint32,TrialActivityInfo> trial_info_map = 2; // 历史角色试用
+}
+
+message CurTrialActivity {
+  uint32 stage_id = 1; // 试用关卡id
+}
+
+message TrialActivityInfo {
+  uint32 stage_id = 1;
+  bool taken_reward = 2;
+  bool finish = 3;
+}
+
+/********************以太战线********************/
+
+message AetherDivide {
+  map<uint32, AetherDivideAvatarInfo> avatar_list = 1;// 角色信息
+  map<uint32, AetherDivideLineup> lineup = 2; // 队伍信息
+  map<uint32, AetherSkill> aether_skill_list = 3;// 道具列表
+}
+
+message AetherDivideAvatarInfo {
+  uint32 avatar_id = 1;
+  uint32 promotion = 2; // 突破等级
+  map<uint32, uint32> passive_skill = 3; // 装备道具
+  //  uint32 exp = 4;
+  uint32 cur_sp = 5;
+  uint32 max_sp = 6;
+}
+
+message AetherDivideLineup {
+  uint32 index = 1;//序号
+  repeated uint32 avatar_list = 2;// 角色列表
+}
+
+message AetherSkill {
+  uint32 item_id = 1;// id
+  uint32 num = 2;// 数量
+  uint32 dress_avatar_id = 3;// 装备角色
+}
+
+/********************折纸小鸟********************/
+
+message MatchThree {
+  map<uint32,MatchThreeLevelMap> level_list = 1; // 关卡信息 level_id
+  map<uint32,MatchThreeBirdInfo> bird_info_map = 2;
+}
+
+message MatchThreeLevelMap {
+  map<uint32,MatchThreeLevel> level = 1; // mode
+}
+
+message MatchThreeLevel {
+  uint32 level_id = 1;//关卡
+  uint32 mode = 2;//模式
+}
+
+message MatchThreeBirdInfo {
+  uint32 bird_id = 1;
+  uint32 bird_top_score = 2;
+  uint32 count = 3;
+  uint32 pos = 4;
+}
