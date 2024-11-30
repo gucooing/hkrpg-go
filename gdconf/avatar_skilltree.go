@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	"github.com/hjson/hjson-go/v4"
 )
@@ -22,17 +23,15 @@ type AvatarSkilltree struct {
 func (g *GameDataConfig) loadAvatarSkilltree() {
 	g.AvatarSkilltreeMap = make(map[uint32]map[uint32]*AvatarSkilltree)
 	avatarSkilltreeMap := make([]*AvatarSkilltree, 0)
-	playerElementsFilePath := g.excelPrefix + "AvatarSkillTreeConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "AvatarSkillTreeConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &avatarSkilltreeMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range avatarSkilltreeMap {
 		if g.AvatarSkilltreeMap[v.PointID] == nil {
@@ -40,13 +39,12 @@ func (g *GameDataConfig) loadAvatarSkilltree() {
 		}
 		g.AvatarSkilltreeMap[v.PointID][v.Level] = v
 	}
-	logger.Info("load %v AvatarSkillTreeConfig", len(g.AvatarSkilltreeMap))
-
+	logger.Info(text.GetText(17), len(g.AvatarSkilltreeMap), name)
 }
 
 func GetAvatarSkilltreeListById(avatarId uint32) map[uint32]uint32 {
 	skilltreeList := make(map[uint32]uint32)
-	for _, gdconf := range CONF.AvatarSkilltreeMap {
+	for _, gdconf := range getConf().AvatarSkilltreeMap {
 		if gdconf[1].AvatarID == avatarId {
 			skilltree := &proto.AvatarSkillTree{
 				PointId: gdconf[1].PointID,
@@ -63,9 +61,9 @@ func GetAvatarSkilltreeListById(avatarId uint32) map[uint32]uint32 {
 }
 
 func GetAvatarSkilltreeBySkillId(skillId, level uint32) *AvatarSkilltree {
-	return CONF.AvatarSkilltreeMap[skillId][level]
+	return getConf().AvatarSkilltreeMap[skillId][level]
 }
 
 func GetAvatarSkilltreeMap() map[uint32]map[uint32]*AvatarSkilltree {
-	return CONF.AvatarSkilltreeMap
+	return getConf().AvatarSkilltreeMap
 }

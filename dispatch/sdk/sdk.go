@@ -85,10 +85,6 @@ func (s *Server) handleGateServerResponse(info *constant.UrlList, seed string) b
 		if dispatch.Ip == "" {
 			continue
 		}
-		if info.MdkResVersion != dispatch.MdkResVersion {
-			logger.Info("Version:%s|Seed:%s|NewMdkResVersion:%s|NewIfixVersion:%s",
-				info.Version, seed, dispatch.MdkResVersion, dispatch.IfixVersion)
-		}
 		urlList := &constant.UrlList{
 			Version:        info.Version,
 			MdkResVersion:  dispatch.MdkResVersion,
@@ -97,9 +93,15 @@ func (s *Server) handleGateServerResponse(info *constant.UrlList, seed string) b
 			LuaUrl:         dispatch.LuaUrl,
 			ExResourceUrl:  dispatch.ExResourceUrl,
 			AssetBundleUrl: dispatch.AssetBundleUrl,
+			Time:           time.Now().Format("2006-01-02_15-04-05"),
+		}
+		if info.MdkResVersion != dispatch.MdkResVersion ||
+			info.IfixVersion != dispatch.IfixVersion {
+			logger.Info("Version:%s|Seed:%s|NewMdkResVersion:%s|NewIfixVersion:%s",
+				info.Version, seed, dispatch.MdkResVersion, dispatch.IfixVersion)
+			addUrlListJson(urlList)
 		}
 		s.UpstreamServer[seed] = urlList
-		addUrlListJson(urlList)
 		client.PushServer(&constant.LogPush{
 			PushMessage: constant.PushMessage{
 				Tag: "NewVersion",
@@ -158,7 +160,7 @@ func addUrlListJson(info *constant.UrlList) {
 	if _, err := os.Stat("./rcv"); os.IsNotExist(err) {
 		os.MkdirAll("./rcv", 0644)
 	}
-	cf, err := os.Create("./rcv/" + info.Version + "_" + time.Now().Format("2006-01-02_15-04-05") + ".json")
+	cf, err := os.Create("./rcv/" + info.Version + "_" + info.MdkResVersion + "_" + info.IfixVersion + ".json")
 	if err != nil {
 		logger.Error("Create file failed:", err)
 		return

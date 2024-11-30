@@ -11,13 +11,13 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandleGetBagCsReq(payloadMsg pb.Message) {
+func HandleGetBagCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetBagScRsp)
 	// 获取背包材料
 	rsp.MaterialList = g.GetPd().GetMaterial()
 	// 获取背包光锥
 	for _, equipment := range g.GetPd().GetItem().EquipmentMap {
-		equipmentList := g.GetPd().GetEquipment(equipment.UniqueId)
+		equipmentList := g.GetPd().GetProtoEquipment(equipment.UniqueId)
 		rsp.EquipmentList = append(rsp.EquipmentList, equipmentList)
 	}
 	// 获取背包遗器
@@ -31,7 +31,7 @@ func (g *GamePlayer) HandleGetBagCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetBagScRsp, rsp)
 }
 
-func (g *GamePlayer) DestroyItemCsReq(payloadMsg pb.Message) {
+func DestroyItemCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DestroyItemCsReq)
 	db := g.GetPd().GetMaterialById(req.ItemId)
 	allSync := &model.AllPlayerSync{
@@ -45,7 +45,7 @@ func (g *GamePlayer) DestroyItemCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.DestroyItemScRsp, rsp)
 }
 
-func (g *GamePlayer) SellItemCsReq(payloadMsg pb.Message) {
+func SellItemCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SellItemCsReq)
 	addItem := model.NewAddItem(nil)
 
@@ -57,13 +57,14 @@ func (g *GamePlayer) SellItemCsReq(payloadMsg pb.Message) {
 	}
 	itemCost := req.GetCostData()
 	for _, item := range itemCost.GetItemList() {
-		// pileItem := item.GetPileItem()
-		equipmentUniqueId := item.GetEquipmentUniqueId()
-		relicUniqueId := item.GetRelicUniqueId()
-		addItem.PileItem = append(addItem.PileItem, g.GetPd().SellDelEquipment(equipmentUniqueId)...)
-		addItem.PileItem = append(addItem.PileItem, g.GetPd().SellDelRelic(relicUniqueId, req.ToMaterial)...)
-		addItem.AllSync.DelRelicList = append(addItem.AllSync.DelRelicList, relicUniqueId)
-		addItem.AllSync.DelEquipmentList = append(addItem.AllSync.DelEquipmentList, equipmentUniqueId)
+		if equipmentUniqueId := item.GetEquipmentUniqueId(); equipmentUniqueId != 0 {
+			addItem.PileItem = append(addItem.PileItem, g.GetPd().SellDelEquipment(equipmentUniqueId)...)
+			addItem.AllSync.DelEquipmentList = append(addItem.AllSync.DelEquipmentList, equipmentUniqueId)
+		}
+		if relicUniqueId := item.GetRelicUniqueId(); relicUniqueId != 0 {
+			addItem.PileItem = append(addItem.PileItem, g.GetPd().SellDelRelic(relicUniqueId, req.ToMaterial)...)
+			addItem.AllSync.DelRelicList = append(addItem.AllSync.DelRelicList, relicUniqueId)
+		}
 	}
 
 	g.GetPd().AddItem(addItem)
@@ -72,7 +73,21 @@ func (g *GamePlayer) SellItemCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.SellItemScRsp, rsp)
 }
 
-func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
+func DiscardRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.DiscardRelicCsReq)
+	rsp := &proto.DiscardRelicScRsp{
+		IsDiscard: req.IsDiscard,
+		Retcode:   0,
+	}
+	addItem := model.NewAddItem(nil)
+	g.GetPd().DiscardedRelic(req.RelicUniqueIdList, req.IsDiscard)
+	addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, req.RelicUniqueIdList...)
+
+	g.AllPlayerSyncScNotify(addItem.AllSync)
+	g.Send(cmd.DiscardRelicScRsp, rsp)
+}
+
+func UseItemCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.UseItemCsReq)
 
 	rsp := &proto.UseItemScRsp{
@@ -83,7 +98,7 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 
 	addItem := model.NewAddItem(nil)
 
-	conf := gdconf.GetItemConfigById(req.UseItemId)
+	conf := gdconf.GetAllItemConfigById(req.UseItemId)
 	if conf == nil || !g.GetPd().DelMaterial([]*model.Material{{Tid: req.UseItemId, Num: req.UseItemCount}}) {
 		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_SPECIAL_COST_NOT_ENOUGH)
 		g.Send(cmd.UseItemScRsp, rsp)
@@ -122,13 +137,13 @@ func (g *GamePlayer) UseItemCsReq(payloadMsg pb.Message) {
 	rsp.ReturnData.ItemList = addItem.ItemList
 	addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, req.UseItemId)
 	g.AllPlayerSyncScNotify(addItem.AllSync)
-	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
+	g.SyncLineupNotify(g.GetPd().GetCurLineUp())
 	g.SyncEntityBuffChangeListScNotify(addBuffList)
 
 	g.Send(cmd.UseItemScRsp, rsp)
 }
 
-func (g *GamePlayer) ComposeItemCsReq(payloadMsg pb.Message) {
+func ComposeItemCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ComposeItemCsReq)
 	rsp := &proto.ComposeItemScRsp{
 		Count:          req.Count,
@@ -162,7 +177,7 @@ func (g *GamePlayer) ComposeItemCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.ComposeItemScRsp, rsp)
 }
 
-func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
+func ComposeSelectedRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ComposeSelectedRelicCsReq)
 	rsp := &proto.ComposeSelectedRelicScRsp{
 		Retcode:        0,
@@ -198,25 +213,25 @@ func (g *GamePlayer) ComposeSelectedRelicCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
 }
 
-func (g *GamePlayer) CancelCacheNotifyCsReq(payloadMsg pb.Message) {
+func CancelCacheNotifyCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.Send(cmd.CancelCacheNotifyScRsp, &proto.CancelCacheNotifyScRsp{})
 }
 
 /***************************relic*************************************/
 
-func (g *GamePlayer) RelicRecommendCsReq(payloadMsg pb.Message) {
+func RelicRecommendCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.RelicRecommendCsReq)
 	rsp := &proto.RelicRecommendScRsp{}
 	g.Send(cmd.RelicRecommendScRsp, rsp)
 }
 
-func (g *GamePlayer) RelicAvatarRecommendCsReq(payloadMsg pb.Message) {
+func RelicAvatarRecommendCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.RelicRecommendCsReq)
 	rsp := &proto.RelicAvatarRecommendScRsp{}
 	g.Send(cmd.RelicAvatarRecommendScRsp, rsp)
 }
 
-func (g *GamePlayer) LockRelicCsReq(payloadMsg pb.Message) {
+func LockRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.LockRelicCsReq)
 	allSync := &model.AllPlayerSync{
 		RelicList: make([]uint32, 0),
@@ -231,7 +246,7 @@ func (g *GamePlayer) LockRelicCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.LockRelicScRsp, rsp)
 }
 
-func (g *GamePlayer) DressRelicAvatarCsReq(payloadMsg pb.Message) {
+func DressRelicAvatarCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DressRelicAvatarCsReq)
 	g.DressRelicAvatar(req.GetAvatarId(), req.GetSwitchList())
 	g.Send(cmd.DressRelicAvatarScRsp, &proto.DressRelicAvatarScRsp{})
@@ -271,7 +286,7 @@ func (g *GamePlayer) DressRelicAvatar(equipAvatarId uint32, paramList []*proto.D
 	g.AllPlayerSyncScNotify(allSync)
 }
 
-func (g *GamePlayer) TakeOffRelicCsReq(payloadMsg pb.Message) {
+func TakeOffRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeOffRelicCsReq)
 	allSync := &model.AllPlayerSync{
 		RelicList:  make([]uint32, 0),
@@ -282,7 +297,7 @@ func (g *GamePlayer) TakeOffRelicCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.TakeOffRelicScRsp, &proto.TakeOffRelicScRsp{})
 }
 
-func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg pb.Message) {
+func ExpUpRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ExpUpRelicCsReq)
 	rsp := &proto.ExpUpRelicScRsp{}
 	if req.RelicUniqueId == 0 {
@@ -405,7 +420,7 @@ func (g *GamePlayer) ExpUpRelicCsReq(payloadMsg pb.Message) {
 
 /***************************equipment*************************************/
 
-func (g *GamePlayer) LockEquipmentCsReq(payloadMsg pb.Message) {
+func LockEquipmentCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.LockEquipmentCsReq)
 	allSync := &model.AllPlayerSync{
 		EquipmentList: make([]uint32, 0),
@@ -420,7 +435,7 @@ func (g *GamePlayer) LockEquipmentCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.LockEquipmentScRsp, rsp)
 }
 
-func (g *GamePlayer) DressAvatarCsReq(payloadMsg pb.Message) {
+func DressAvatarCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DressAvatarCsReq)
 	g.DressAvatar(req.GetAvatarId(), req.GetEquipmentUniqueId())
 	g.Send(cmd.DressAvatarScRsp, &proto.DressAvatarScRsp{})
@@ -472,7 +487,7 @@ func (g *GamePlayer) DressAvatar(equipAvatarId, equipmentUniqueId uint32) {
 	g.AllPlayerSyncScNotify(allSync)
 }
 
-func (g *GamePlayer) TakeOffEquipmentCsReq(payloadMsg pb.Message) {
+func TakeOffEquipmentCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeOffEquipmentCsReq)
 	allSync := &model.AllPlayerSync{
 		EquipmentList: make([]uint32, 0),
@@ -483,7 +498,7 @@ func (g *GamePlayer) TakeOffEquipmentCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.TakeOffEquipmentScRsp, &proto.TakeOffEquipmentScRsp{})
 }
 
-func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg pb.Message) {
+func ExpUpEquipmentCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ExpUpEquipmentCsReq)
 	rsp := &proto.ExpUpEquipmentScRsp{}
 	if req.EquipmentUniqueId == 0 {
@@ -587,7 +602,7 @@ func (g *GamePlayer) ExpUpEquipmentCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.ExpUpEquipmentScRsp, rsp)
 }
 
-func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg pb.Message) {
+func RankUpEquipmentCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.RankUpEquipmentCsReq)
 	rsp := new(proto.GetChallengeScRsp)
 	var pileItem []*model.Material // 需要删除的叠影材料
@@ -665,7 +680,7 @@ func (g *GamePlayer) RankUpEquipmentCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.RankUpEquipmentScRsp, rsp)
 }
 
-func (g *GamePlayer) PromoteEquipmentCsReq(payloadMsg pb.Message) {
+func PromoteEquipmentCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PromoteEquipmentCsReq)
 	rsp := new(proto.GetChallengeScRsp)
 	var pileItem []*model.Material // 需要删除的突破材料

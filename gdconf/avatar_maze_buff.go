@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -50,17 +51,15 @@ type BuffDescBattle struct {
 func (g *GameDataConfig) loadAvatarMazeBuff() {
 	g.AvatarMazeBuffMap = make(map[uint32]map[uint32]*AvatarMazeBuff)
 	avatarMazeBuffMap := make([]*AvatarMazeBuff, 0)
-	playerElementsFilePath := g.excelPrefix + "AvatarMazeBuff.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "AvatarMazeBuff.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &avatarMazeBuffMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range avatarMazeBuffMap {
 		if g.AvatarMazeBuffMap[v.ID] == nil {
@@ -68,12 +67,12 @@ func (g *GameDataConfig) loadAvatarMazeBuff() {
 		}
 		g.AvatarMazeBuffMap[v.ID][v.Lv] = v
 	}
-	logger.Info("load %v AvatarMazeBuff", len(g.AvatarMazeBuffMap))
+	logger.Info(text.GetText(17), len(g.AvatarMazeBuffMap), name)
 }
 
 func GetAvatarMazeBuffById(id, level uint32) *AvatarMazeBuff {
-	if CONF.AvatarMazeBuffMap[id] == nil {
+	if getConf().AvatarMazeBuffMap[id] == nil {
 		return nil
 	}
-	return CONF.AvatarMazeBuffMap[id][level]
+	return getConf().AvatarMazeBuffMap[id][level]
 }

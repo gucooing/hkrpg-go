@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -50,29 +51,25 @@ func (g *GameDataConfig) loadRelic() {
 	}
 	relicMap := make([]*Relic, 0)
 	relicMaps := make([]*Relic, 0)
-	playerElementsFilePath := g.excelPrefix + "RelicConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RelicConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &relicMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	playerElementsFilePaths := g.excelPrefix + "RelicExpItem.json"
 	playerElementsFiles, err := os.ReadFile(playerElementsFilePaths)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), "RelicExpItem.json", err))
 	}
 	err = hjson.Unmarshal(playerElementsFiles, &relicMaps)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), "RelicExpItem.json", err))
 	}
 	relicMap = append(relicMap, relicMaps...)
 
@@ -92,27 +89,27 @@ func (g *GameDataConfig) loadRelic() {
 		}
 	}
 
-	logger.Info("load %v RelicConfig", len(g.RelicConf.RelicMap))
+	logger.Info(text.GetText(17), len(g.RelicConf.RelicMap), "RelicConfig")
 }
 
 func GetRelicById(ID uint32) *Relic {
-	return CONF.RelicConf.RelicMap[ID]
+	return getConf().RelicConf.RelicMap[ID]
 }
 
 func GetRelicMap() map[uint32]*Relic {
-	return CONF.RelicConf.RelicMap
+	return getConf().RelicConf.RelicMap
 }
 
 func GetRelicMaxLevel(relicId uint32) uint32 {
-	promotionConfig := CONF.RelicConf.RelicMap[relicId]
+	promotionConfig := getConf().RelicConf.RelicMap[relicId]
 	return promotionConfig.MaxLevel
 }
 
 func GetRelicBySetID(setID uint32, rarity string) *Relic {
-	if CONF.RelicConf.RelicMapBySetID[setID] == nil {
+	if getConf().RelicConf.RelicMapBySetID[setID] == nil {
 		return nil
 	}
-	list := CONF.RelicConf.RelicMapBySetID[setID][Rarity[rarity]]
+	list := getConf().RelicConf.RelicMapBySetID[setID][Rarity[rarity]]
 	if list == nil || len(list) == 0 {
 		return nil
 	}

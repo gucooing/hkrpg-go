@@ -5,6 +5,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 )
 
 type GoppAbility struct {
@@ -30,7 +31,7 @@ func (g *GameDataConfig) goppAbility() {
 		GoppMazeSkill: g.newGoppMazeSkill(),
 	}
 
-	logger.Info("gopp %v MazeSkill", len(g.GoppAbility.GoppMazeSkill))
+	logger.Info(text.GetText(17), len(g.GoppAbility.GoppMazeSkill), "MazeSkill")
 }
 
 func (g *GameDataConfig) newGoppMazeSkill() map[uint32]map[int]*GoppMazeSkill {
@@ -73,7 +74,7 @@ func (g *GameDataConfig) newGoppMazeSkill() map[uint32]map[int]*GoppMazeSkill {
 					})
 				}
 			} else {
-				logger.Warn("ability Name:%s", ability.Name)
+				logger.Warn(text.GetText(22), ability.Name)
 				continue
 			}
 
@@ -150,8 +151,8 @@ func parseTask(skill *GoppMazeSkill, task *TaskInfo) []*MazeSkillAction {
 }
 
 func GetGoppMazeSkill(avatar uint32, index int) *GoppMazeSkill {
-	if CONF.GoppAbility.GoppMazeSkill[avatar] == nil {
+	if getConf().GoppAbility.GoppMazeSkill[avatar] == nil {
 		return nil
 	}
-	return CONF.GoppAbility.GoppMazeSkill[avatar][index]
+	return getConf().GoppAbility.GoppMazeSkill[avatar][index]
 }

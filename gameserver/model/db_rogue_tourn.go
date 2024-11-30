@@ -10,8 +10,8 @@ import (
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
 )
 
-func newRogueTourn() *spb.RogueTourn {
-	db := &spb.RogueTourn{
+func newRogueTourn() *spb.TournRogue {
+	db := &spb.TournRogue{
 		Exp:                    0,
 		TakenLevelRewards:      make([]uint32, 0),
 		InspirationCircuitInfo: make(map[uint32]*spb.InspirationCircuitInfo),
@@ -27,12 +27,12 @@ func newRogueTourn() *spb.RogueTourn {
 	return db
 }
 
-func (g *PlayerData) GetRogueTourn() *spb.RogueTourn {
+func (g *PlayerData) GetRogueTourn() *spb.TournRogue {
 	db := g.GetBattle()
-	if db.RogueTourn == nil {
-		db.RogueTourn = newRogueTourn()
+	if db.TournRogue == nil {
+		db.TournRogue = newRogueTourn()
 	}
-	return db.RogueTourn
+	return db.TournRogue
 }
 
 func (g *PlayerData) GetCurRogueTourn() *spb.CurRogueTourn {
@@ -202,9 +202,9 @@ func (g *PlayerData) GetExtraScoreInfo() *proto.ExtraScoreInfo {
 		return nil
 	}
 	info := &proto.ExtraScoreInfo{
-		Week:     2,
-		IsFinish: true,
-		EndTime:  conf.EndTime.Time.Unix(),
+		Week:      2,
+		HasGained: true,
+		EndTime:   conf.EndTime.Time.Unix(),
 		// JLDGFGMEMJH: 1000,
 	}
 	return info
@@ -223,9 +223,9 @@ func (g *PlayerData) GetRogueTournExpInfo() *proto.RogueTournExpInfo {
 func (g *PlayerData) GetRogueTournHandbookInfo() *proto.RogueTournHandbookInfo {
 	info := &proto.RogueTournHandbookInfo{
 		// HandbookFormulaList: make([]uint32, 0),
-		HandbookBuffList: make([]uint32, 0),
+		// HandbookBuffList: make([]uint32, 0),
 		// DFPKGDJNMHA:            1,
-		// HandbookEventList:      make([]uint32, 0),
+		HandbookEventList: make([]uint32, 0),
 		// HandbookAvatarBaseList: make([]uint32, 0),
 		// HandbookMiracleList:    make([]uint32, 0),
 		// TakeHandbookRewardList: make([]uint32, 0),
@@ -254,7 +254,7 @@ func (g *PlayerData) GetRogueTournAreaInfo() []*proto.RogueTournAreaInfo {
 	for _, id := range []uint32{101, 201, 202, 203, 204, 205, 1011, 1012, 1013, 1014, 1015} {
 		info = append(info, &proto.RogueTournAreaInfo{
 			AreaId:                      id,
-			IsTournFinish:               true,
+			Completed:                   true,
 			IsTakenReward:               false,
 			IsUnlocked:                  true,
 			UnlockedTournDifficultyList: make([]uint32, 0),
@@ -270,7 +270,6 @@ func (g *PlayerData) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 	}
 	info := &proto.RogueTournCurInfo{
 		RogueTournCurAreaInfo: g.GetRogueTournCurAreaInfo(),
-
 		RogueTournCurGameInfo: &proto.RogueTournCurGameInfo{
 			RogueTournGameAreaInfo: &proto.RogueTournGameAreaInfo{
 				GameAreaId: curRogueTourn.AreaId,
@@ -441,15 +440,15 @@ func (g *PlayerData) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 	}
 	leaderEntityId := g.GetNextGameObjectGuid()
 	scene := &proto.SceneInfo{
-		ClientPosVersion:   0,
-		PlaneId:            mapEntrance.PlaneID,
-		FloorId:            mapEntrance.FloorID,
-		LeaderEntityId:     leaderEntityId,
-		WorldId:            gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
-		EntryId:            roomConf.MapEntrance,
-		GameModeType:       17, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
-		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
-		GroupIdList:        nil,
+		ClientPosVersion: 0,
+		PlaneId:          mapEntrance.PlaneID,
+		FloorId:          mapEntrance.FloorID,
+		LeaderEntityId:   leaderEntityId,
+		WorldId:          gdconf.GetMazePlaneById(mapEntrance.PlaneID).WorldID,
+		EntryId:          roomConf.MapEntrance,
+		GameModeType:     17, // gdconf.GetPlaneType(gdconf.GetMazePlaneById(mapEntrance.PlaneID).PlaneType),
+		EntityGroupList:  make([]*proto.SceneEntityGroupInfo, 0),
+		// GroupIdList:        nil,
 		LightenSectionList: nil,
 		EntityList:         nil,
 		GroupStateList:     nil,
@@ -464,7 +463,7 @@ func (g *PlayerData) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		if len(sceneGroup.AnchorList) > 0 {
 			avatarGroupID = groupID
 		}
-		scene.GroupIdList = append(scene.GroupIdList, groupID)
+		// scene.GroupIdList = append(scene.GroupIdList, groupID)
 		sceneGroupState := &proto.SceneGroupState{
 			GroupId:   groupID,
 			IsDefault: true,
@@ -480,7 +479,7 @@ func (g *PlayerData) GetRogueTournScene(roomId uint32) *proto.SceneInfo {
 		// 添加怪物实体
 		g.GetRogueTournNPCMonsterByID(entityGroupLists, sceneGroup, roomConf.NpcMonster[groupID])
 		// 添加NPC实体
-		g.GetNPCByID(entityGroupLists, sceneGroup)
+		g.GetSceneNPCByConf(entityGroupLists, sceneGroup)
 		scene.EntityGroupList = append(scene.EntityGroupList, entityGroupLists)
 	}
 	// 添加队伍实体

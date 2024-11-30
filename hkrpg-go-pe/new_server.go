@@ -53,9 +53,8 @@ type HkRpgGoServer struct {
 }
 
 type PlayerGame struct {
-	GamePlayer     *player.GamePlayer // 玩家内存
-	Conn           session.SessionAll // 会话
-	LastActiveTime int64              // 最近一次的活跃时间
+	GamePlayer *player.GamePlayer // 玩家内存
+	Conn       session.SessionAll // 会话
 }
 
 // 初始化数据库步骤
@@ -65,58 +64,60 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	s.ec2b = alg.GetEc2b()
 	s.playerMapLock = new(sync.RWMutex)
 	s.getTokenUrl = cfg.GameServer.GetTokenUrl
-	// 加载res
-	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
 	// 初始化数据库
-	database.NewPE(cfg.SqlPath)
+	database.NewPE(cfg.Db.Type, cfg.Db.Dns)
 	dbconf.GameServer(database.PE)
 	database.GATE = &database.GateStore{PlayerUidMysql: database.PE}
 	database.DISPATCH = &database.DisaptchStore{AccountMysql: database.PE}
 	database.GSS = &database.GameStore{PlayerDataMysql: database.PE, ServerConf: database.PE}
+	// 加载res
+	gdconf.InitGameDataConfig(cfg.GameDataConfigPath)
+	// 初始化gin
+	gin.SetMode(gin.ReleaseMode)
+	var sdkRouter *gin.Engine
+	if logger.GetLogLevel() == logger.DEBUG {
+		sdkRouter = gin.Default()
+	} else {
+		sdkRouter = gin.New()
+	}
 
-	gin.SetMode(gin.ReleaseMode) // 初始化gin
-	sdkRouter := gin.New()
 	sdkRouter.Use(gin.Recovery())
 
-	if cfg.Dispatch.IsOpen {
-		logger.Info(text.GetText(81))
-		// 初始化dispatch
-		s.Sdk = &sdk.Server{
-			IsAutoCreate:       cfg.Dispatch.AutoCreate,
-			OuterAddr:          fmt.Sprintf("http://%s:%s", cfg.Dispatch.AppNet.OuterAddr, cfg.Dispatch.AppNet.OuterPort),
-			RegionInfo:         make(map[string]*sdk.RegionInfo),
-			UpstreamServerList: cfg.UpstreamServerList,
-			UpstreamServerLock: new(sync.RWMutex),
-		}
-		for _, d := range cfg.Dispatch.DispatchList {
-			s.Sdk.RegionInfo[d.Name] = &sdk.RegionInfo{
-				Name:        d.Name,
-				Title:       d.Title,
-				Type:        alg.S2U32(d.Type),
-				DispatchUrl: d.DispatchUrl,
-				Ec2b:        s.ec2b,
-				MinGateAddr: cfg.GameServer.AppNet.OuterAddr,
-				MinGatePort: alg.S2U32(cfg.GameServer.AppNet.OuterPort),
-				MinGateTcp:  cfg.GameServer.GateTcp,
-			}
-		}
-		s.Sdk.GetSdkRouter(sdkRouter) // 初始化路由
-		if cfg.Dispatch.Url == nil || cfg.Dispatch.Url.Version == "" {
-			go s.Sdk.UpUpstreamServer()
-		} else {
-			s.Sdk.Url = cfg.Dispatch.Url
-		}
-
-		go func() {
-			err := alg.NewHttp(cfg.Dispatch.AppNet, sdkRouter)
-			if err != nil {
-				logger.Error(err.Error())
-				return
-			}
-		}()
-	} else {
-		logger.Info(text.GetText(82))
+	logger.Info(text.GetText(81))
+	// 初始化dispatch
+	s.Sdk = &sdk.Server{
+		IsAutoCreate:       cfg.Dispatch.AutoCreate,
+		OuterAddr:          fmt.Sprintf("http://%s:%s", cfg.Dispatch.AppNet.OuterAddr, cfg.Dispatch.AppNet.OuterPort),
+		RegionInfo:         make(map[string]*sdk.RegionInfo),
+		UpstreamServerList: cfg.UpstreamServerList,
+		UpstreamServerLock: new(sync.RWMutex),
 	}
+	for _, d := range cfg.Dispatch.DispatchList {
+		s.Sdk.RegionInfo[d.Name] = &sdk.RegionInfo{
+			Name:        d.Name,
+			Title:       d.Title,
+			Type:        alg.S2U32(d.Type),
+			DispatchUrl: d.DispatchUrl,
+			Ec2b:        s.ec2b,
+			MinGateAddr: cfg.GameServer.AppNet.OuterAddr,
+			MinGatePort: alg.S2U32(cfg.GameServer.AppNet.OuterPort),
+			MinGateTcp:  cfg.GameServer.GateTcp,
+		}
+	}
+	s.Sdk.GetSdkRouter(sdkRouter) // 初始化路由
+	if cfg.Dispatch.Url == nil || cfg.Dispatch.Url.Version == "" {
+		go s.Sdk.UpUpstreamServer()
+	} else {
+		s.Sdk.Url = cfg.Dispatch.Url
+	}
+
+	go func() {
+		err := alg.NewHttp(cfg.Dispatch.AppNet, sdkRouter)
+		if err != nil {
+			logger.Error(err.Error())
+			return
+		}
+	}()
 	// new Kcp
 	l, err := session.NewListener(cfg.GameServer.AppNet, cfg.GameServer.GateTcp)
 	if err != nil {
@@ -136,6 +137,8 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	go s.loginSessionManagement()
 	// new game
 	player.ISPE = true
+	player.LogMsgPlayer = cfg.GameServer.DebugUid
+	player.BlackCmd = cfg.GameServer.BlackCmd
 	s.playerMap = make(map[uint32]*PlayerGame)
 	// 启动http api
 	s.comm = api.NewApiServer(cfg.Gm.SignKey, sdkRouter)
@@ -179,7 +182,7 @@ func (h *HkRpgGoServer) loginSessionManagement() {
 	}
 }
 
-func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
+func (h *HkRpgGoServer) recvPlayerMsg(p *PlayerGame) {
 	s := p.Conn.GetSession()
 	defer func() {
 		if err := recover(); err != nil {
@@ -192,9 +195,9 @@ func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
 		}
 	}()
 	for {
-		packMsg, ok := <-s.RecvChan
-		p.LastActiveTime = time.Now().Unix()
-		if !ok || s.SessionState == session.SessionClose {
+		packMsg, err := s.RecvServer()
+		if err != nil {
+			logger.Debug("exit send loop, recv chan close, sessionId: %v", s.SessionId)
 			return
 		}
 		switch s.SessionState {
@@ -204,8 +207,6 @@ func (h *HkRpgGoServer) sessionMsg(p *PlayerGame) {
 			h.packetCapture(p, packMsg.CmdId, protoMsg)
 		case session.SessionFreeze:
 			continue
-		case session.SessionClose:
-			return
 		}
 	}
 }
@@ -232,27 +233,26 @@ func (g *PlayerGame) recvGameMsg() {
 		}
 		switch bin.MsgType {
 		case player.Server:
-			g.toSession(bin)
+			g.toPlayerMsg(bin)
 		}
 	}
 }
 
-func (g *PlayerGame) toSession(bin player.Msg) {
+func (g *PlayerGame) toPlayerMsg(bin player.Msg) {
 	protoData, err := pb.Marshal(bin.PlayerMsg)
 	if err != nil {
 		logger.Error(err.Error())
 		return
 	}
 	s := g.Conn.GetSession()
-	if s == nil ||
-		s.SessionState != session.SessionActivity {
+	if s == nil {
 		return
 	}
-	s.SendChan <- &alg.PackMsg{
+	s.SendClient(&alg.PackMsg{
 		CmdId:     bin.CmdId,
 		HeadData:  nil,
 		ProtoData: protoData,
-	}
+	})
 }
 
 // 将消息发送给game
@@ -262,27 +262,27 @@ func (g *PlayerGame) sendGameMsg(msgType player.MsgType, cmdId uint16, playerMsg
 		s.SessionState != session.SessionActivity {
 		return
 	}
-	g.GamePlayer.RecvChan <- player.Msg{
+	g.GamePlayer.ToRecvChan(player.Msg{
 		CmdId:     cmdId,
 		MsgType:   msgType,
 		PlayerMsg: playerMsg,
 		Command:   command,
-	}
+	})
 }
 
 func (h *HkRpgGoServer) AddPlayer(sAll session.SessionAll) *PlayerGame {
 	h.playerMapLock.Lock()
 	defer h.playerMapLock.Unlock()
 	s := sAll.GetSession()
+	atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
 	client.PushServer(&constant.LogPush{
 		PushMessage: constant.PushMessage{},
 		LogMsg:      fmt.Sprintf("玩家[UID:%v]登录", s.Uid),
 		LogLevel:    constant.INFO,
 	})
 	g := &PlayerGame{
-		GamePlayer:     player.NewPlayer(s.Uid),
-		Conn:           sAll,
-		LastActiveTime: time.Now().Unix(),
+		GamePlayer: player.NewPlayer(s.Uid),
+		Conn:       sAll,
 	}
 	h.playerMap[s.Uid] = g
 	return h.playerMap[s.Uid]
@@ -315,6 +315,7 @@ func (h *HkRpgGoServer) DelPlayer(uid uint32) {
 			LogMsg:      fmt.Sprintf("玩家[UID:%v]退出登录", uid),
 			LogLevel:    constant.INFO,
 		})
+		atomic.AddInt64(&session.CLIENT_CONN_NUM, -1)
 		p.Close()
 	}
 }
@@ -324,8 +325,12 @@ func (h *HkRpgGoServer) sessionLogin(sAll session.SessionAll) {
 	listener := h.Listener.GetListener()
 	timeout := time.After(5 * time.Second)
 	select {
-	case packMsg, ok := <-s.RecvChan:
-		if !ok {
+	case <-timeout:
+		logger.Warn("Session login timed out")
+		return
+	default:
+		packMsg, err := s.RecvServer()
+		if err != nil {
 			return
 		}
 		if packMsg.CmdId != cmd.PlayerGetTokenCsReq {
@@ -341,18 +346,15 @@ func (h *HkRpgGoServer) sessionLogin(sAll session.SessionAll) {
 		if rsp.Retcode == 0 {
 			p := h.AddPlayer(sAll)
 			s.SessionState = session.SessionActivity
-			atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
-			go h.sessionMsg(p)
+			go h.recvPlayerMsg(p)
 			go p.recvGameMsg()
 			go p.GamePlayer.RecvMsg()
 		}
-		s.SendChan <- &alg.PackMsg{
+		s.SendClient(&alg.PackMsg{
 			CmdId:     cmd.PlayerGetTokenScRsp,
 			HeadData:  nil,
 			ProtoData: protoData,
-		}
-	case <-timeout:
-		logger.Warn("Session login timed out")
+		})
 		return
 	}
 }
@@ -379,7 +381,7 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 
 	if h.config.GameServer.IsToken {
 		c := h.getHc()
-		resp, err := c.Get(fmt.Sprintf("%s/getComboToken?account_id=%s", h.getTokenUrl, req.AccountUid))
+		resp, err := c.Get(fmt.Sprintf("%s/hkrpg-go/getComboToken?account_id=%s", h.getTokenUrl, req.AccountUid))
 		if err != nil {
 			rsp.Retcode = uint32(proto.Retcode_RET_ACCOUNT_VERIFY_ERROR)
 			return rsp
@@ -408,14 +410,13 @@ func (h *HkRpgGoServer) playerLogin(s *session.Session, protoData []byte) *proto
 	// 重复登录验证
 	if old := h.GetPlayer(account.Uid); old != nil {
 		// 通知客户端下线
-		bin, _ := pb.Marshal(&proto.PlayerKickOutScNotify{
+		notify := &proto.PlayerKickOutScNotify{
 			BlackInfo: &proto.BlackInfo{},
-		})
-		old.Conn.GetSession().SendChan <- &alg.PackMsg{
-			CmdId:     cmd.PlayerKickOutScNotify,
-			HeadData:  nil,
-			ProtoData: bin,
 		}
+		old.toPlayerMsg(player.Msg{
+			CmdId:     cmd.PlayerKickOutScNotify,
+			PlayerMsg: notify,
+		})
 		h.DelPlayer(account.Uid)
 	}
 
@@ -450,7 +451,7 @@ func (h *HkRpgGoServer) AutoUpDataPlayer() {
 	logger.Info("开始自动保存玩家数据")
 	var num int
 	for _, g := range playerList {
-		if g.LastActiveTime+50 < timestamp {
+		if g.Conn.GetSession().LastActiveTime+50 < timestamp {
 			logger.Info("[UID:%v]玩家长时间无响应离线", g.Conn.GetSession().Uid)
 			h.DelPlayer(g.Conn.GetSession().Uid)
 			continue

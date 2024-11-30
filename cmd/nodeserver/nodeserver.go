@@ -26,7 +26,7 @@ func main() {
 			cf.Write(p)
 			cf.Close()
 			fmt.Printf("找不到配置文件\n已生成默认配置文件 %s \n", confName)
-			main()
+			return
 		} else {
 			panic(err)
 		}

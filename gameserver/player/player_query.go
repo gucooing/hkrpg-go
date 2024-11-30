@@ -7,7 +7,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) SceneEntityMoveCsReq(payloadMsg pb.Message) {
+func SceneEntityMoveCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SceneEntityMoveCsReq)
 	if g.GetPd().IsChangeStory() {
 	} else if g.GetPd().GetBattleStatus() == spb.BattleType_Battle_RAID {

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -22,26 +23,24 @@ type ContentPackageConfig struct {
 func (g *GameDataConfig) loadContentPackageConfig() {
 	g.ContentPackageConfigMap = make(map[uint32]*ContentPackageConfig)
 	contentPackageConfigList := make([]*ContentPackageConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "ContentPackageConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "ContentPackageConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &contentPackageConfigList)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, v := range contentPackageConfigList {
 		g.ContentPackageConfigMap[v.ContentID] = v
 	}
 
-	logger.Info("load %v ContentPackageConfig", len(g.ContentPackageConfigMap))
+	logger.Info(text.GetText(17), len(g.ContentPackageConfigMap), name)
 }
 
 func GetContentPackageConfigMap() map[uint32]*ContentPackageConfig {
-	return CONF.ContentPackageConfigMap
+	return getConf().ContentPackageConfigMap
 }

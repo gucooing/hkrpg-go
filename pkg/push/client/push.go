@@ -11,6 +11,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 )
 
 var PushServerUrl = "http://localhost:3000"
@@ -33,30 +34,30 @@ func NewPushClient(addr string) {
 		Post(PushServerUrl)
 	if err != nil {
 		Client = nil
-		logger.Error("push server unable to connect")
+		logger.Error(text.GetText(6), err.Error())
 		return
 	}
 	if rsp.StatusCode() != 200 ||
 		rsp.Header().Get("Push") != "Push" {
 		Client = nil
-		logger.Error("push server error")
+		logger.Error(text.GetText(7))
 		return
 	}
 
-	logger.Info("push client start")
+	logger.Info(text.GetText(8))
 }
 
 func PushServer(message constant.PushMessageAll) {
 	go func() {
 		if Client == nil {
-			logger.Error("push client is nil")
+			logger.Error(text.GetText(7))
 			return
 		}
 		switch message.(type) {
 		case *constant.LogPush:
 			logPush(message.(*constant.LogPush))
 		default:
-			logger.Error("push server invalid type")
+			logger.Error(text.GetText(7))
 		}
 	}()
 }

@@ -71,7 +71,7 @@ func (g *GamePlayer) DailyActiveInfoNotify() {
 	g.Send(cmd.DailyActiveInfoNotify, notify)
 }
 
-func (g *GamePlayer) GetDailyActiveInfoCsReq(payloadMsg pb.Message) {
+func GetDailyActiveInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetDailyActiveInfoScRsp{
 		DailyActiveLevelList:   make([]*proto.DailyActivityInfo, 0),
 		DailyActiveQuestIdList: dailyActiveQuestIdList,
@@ -105,7 +105,7 @@ func (g *GamePlayer) StartFinishMainMissionScNotify(mainMissionId uint32) {
 	})
 }
 
-func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg pb.Message) {
+func GetMainMissionCustomValueCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetMainMissionCustomValueCsReq)
 	rsp := &proto.GetMainMissionCustomValueScRsp{MainMissionList: make([]*proto.MainMission, 0)}
 	mainMissionList := g.GetPd().GetMainMissionList()             // 已接取的主任务
@@ -158,12 +158,12 @@ func (g *GamePlayer) GetMainMissionCustomValueCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetMainMissionCustomValueScRsp, rsp)
 }
 
-func (g *GamePlayer) UpdateTrackMainMissionIdCsReq(payloadMsg pb.Message) {
+func UpdateTrackMainMissionIdCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.UpdateTrackMainMissionIdCsReq)
 	g.Send(cmd.UpdateTrackMainMissionIdScRsp, &proto.UpdateTrackMainMissionIdScRsp{TrackMissionId: req.TrackMissionId})
 }
 
-func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg pb.Message) {
+func GetMissionEventDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetMissionEventDataScRsp{
 		Retcode:          0,
 		ChallengeEventId: 0,
@@ -182,7 +182,7 @@ func (g *GamePlayer) GetMissionEventDataCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetMissionEventDataScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg pb.Message) {
+func HandleGetMissionStatusCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetMissionStatusCsReq)
 
 	rsp := &proto.GetMissionStatusScRsp{
@@ -241,7 +241,7 @@ func (g *GamePlayer) HandleGetMissionStatusCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetMissionStatusScRsp, rsp)
 }
 
-func (g *GamePlayer) GetMissionDataCsReq(payloadMsg pb.Message) {
+func GetMissionDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	mainMissionList := g.GetPd().GetMainMissionList()
 	subMainMissionList := g.GetPd().GetSubMainMissionList()
 
@@ -272,7 +272,7 @@ func (g *GamePlayer) GetMissionDataCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetMissionDataScRsp, rsp)
 }
 
-func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg pb.Message) {
+func FinishTalkMissionCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishTalkMissionCsReq)
 	finishSubMission := g.GetPd().TalkStrSubMission(req) // 获取子任务
 	if len(finishSubMission) != 0 {
@@ -281,7 +281,7 @@ func (g *GamePlayer) FinishTalkMissionCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.FinishTalkMissionScRsp, &proto.FinishTalkMissionScRsp{TalkStr: req.TalkStr, CustomValueList: req.CustomValueList})
 }
 
-func (g *GamePlayer) FinishCosumeItemMissionCsReq(payloadMsg pb.Message) {
+func FinishCosumeItemMissionCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishCosumeItemMissionCsReq)
 	allSync := new(model.AllPlayerSync)
 	if g.GetPd().FinishCosumeItemMission(req.SubMissionId, allSync) {
@@ -545,18 +545,18 @@ func Unknown(this *QuestFinishType) {
 }
 
 func GetTrialAvatar(this *QuestFinishType) {
-	lineAvatar := this.GetPd().GetTrialAvatar(this.conf.ParamInt1)
+	lineAvatar := this.GetPd().AddCurLineUpAvatar(this.conf.ParamInt1)
 	this.AddAvatarSceneGroupRefreshScNotify(lineAvatar, this.GetPd().GetPosPb(), this.GetPd().GetRotPb())
-	this.SyncLineupNotify(this.GetPd().GetBattleLineUp())
+	this.SyncLineupNotify(this.GetPd().GetCurLineUp())
 
 	this.addFinishMap()
 }
 
 func DelTrialAvatar(this *QuestFinishType) {
-	this.GetPd().DelTrialAvatar(this.conf.ParamInt1)
+	this.GetPd().DelCurLineUpAvatar(this.conf.ParamInt1)
 	this.GetPd().GetAddAvatarSceneEntityRefreshInfo(
-		this.GetPd().GetBattleLineUp(), this.GetPd().GetPosPb(), this.GetPd().GetRotPb())
-	this.SyncLineupNotify(this.GetPd().GetBattleLineUp())
+		this.GetPd().GetCurLineUp(), this.GetPd().GetPosPb(), this.GetPd().GetRotPb())
+	this.SyncLineupNotify(this.GetPd().GetCurLineUp())
 
 	this.addFinishMap()
 }
@@ -691,7 +691,7 @@ type FinishActionType struct {
 }
 
 func FinishActionChangeLineup(this *FinishActionType) bool {
-	this.GetPd().NewTrialLine(this.finishAction.FinishActionPara) // 设置队伍角色
+	this.GetPd().NewLineByAvatarList(this.finishAction.FinishActionPara) // 设置队伍角色
 	return true
 }
 

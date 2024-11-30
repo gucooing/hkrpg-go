@@ -8,7 +8,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg pb.Message) {
+func GetFarmStageGachaInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetFarmStageGachaInfoCsReq)
 
 	rsp := &proto.GetFarmStageGachaInfoScRsp{
@@ -27,7 +27,7 @@ func (g *GamePlayer) GetFarmStageGachaInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetFarmStageGachaInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg pb.Message) {
+func HandleGetGachaInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetGachaInfoScRsp{
 		Retcode:       0,
 		GachaRandom:   0,
@@ -37,7 +37,7 @@ func (g *GamePlayer) HandleGetGachaInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetGachaInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg pb.Message) {
+func HandleGetGachaCeilingCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetGachaCeilingCsReq)
 	rsp := &proto.GetGachaCeilingScRsp{
 		GachaType: req.GachaType,
@@ -60,7 +60,7 @@ func (g *GamePlayer) HandleGetGachaCeilingCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetGachaCeilingScRsp, rsp)
 }
 
-func (g *GamePlayer) ExchangeGachaCeilingCsReq(payloadMsg pb.Message) {
+func ExchangeGachaCeilingCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.ExchangeGachaCeilingCsReq)
 	addItem := model.NewAddItem(nil)
 	rsp := &proto.ExchangeGachaCeilingScRsp{
@@ -98,7 +98,7 @@ func (g *GamePlayer) ExchangeGachaCeilingCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.ExchangeGachaCeilingScRsp, rsp)
 }
 
-func (g *GamePlayer) DoGachaCsReq(payloadMsg pb.Message) {
+func DoGachaCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DoGachaCsReq)
 	db := g.GetPd().GetDbGacha(req.GachaId)
 	rsp := &proto.DoGachaScRsp{

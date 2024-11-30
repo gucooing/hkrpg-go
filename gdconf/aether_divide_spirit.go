@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -25,28 +26,26 @@ type AetherDivideSpirit struct {
 func (g *GameDataConfig) loadAetherDivideSpirit() {
 	g.AetherDivideSpiritMap = make(map[uint32]*AetherDivideSpirit)
 	aetherDivideSpiritList := make([]*AetherDivideSpirit, 0)
-	playerElementsFilePath := g.excelPrefix + "AetherDivideSpirit.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "AetherDivideSpirit.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &aetherDivideSpiritList)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range aetherDivideSpiritList {
 		g.AetherDivideSpiritMap[v.AvatarID] = v
 	}
-	logger.Info("load %v AetherDivideSpirit", len(g.AetherDivideSpiritMap))
+	logger.Info(text.GetText(17), len(g.AetherDivideSpiritMap), name)
 }
 
 func GetAetherDivideSpiritMap() map[uint32]*AetherDivideSpirit {
-	return CONF.AetherDivideSpiritMap
+	return getConf().AetherDivideSpiritMap
 }
 
 func GetAetherDivideSpirit(id uint32) *AetherDivideSpirit {
-	return CONF.AetherDivideSpiritMap[id]
+	return getConf().AetherDivideSpiritMap[id]
 }

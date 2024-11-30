@@ -106,7 +106,7 @@ func (g *GamePlayer) SceneByServerScNotify(entryId uint32, pos, rot *proto.Vecto
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 }
 
-func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg pb.Message) {
+func HandleGetEnteredSceneCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetEnteredSceneScRsp)
 	db := g.GetPd().GetScene()
 	mapEntrance := gdconf.GetMapEntranceById(db.EntryId)
@@ -123,7 +123,7 @@ func (g *GamePlayer) HandleGetEnteredSceneCsReq(payloadMsg pb.Message) {
 }
 
 // 客户端登录需要的包，不是传送的通知包
-func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg pb.Message) {
+func HandleGetCurSceneInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	pos := g.GetPd().GetPosPb()
 	rot := g.GetPd().GetRotPb()
 	dbScene := g.GetPd().GetScene()
@@ -134,7 +134,7 @@ func (g *GamePlayer) HandleGetCurSceneInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetCurSceneInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
+func HanldeGetSceneMapInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetSceneMapInfoCsReq)
 
 	rsp := new(proto.GetSceneMapInfoScRsp)
@@ -184,7 +184,7 @@ func (g *GamePlayer) HanldeGetSceneMapInfoCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetSceneMapInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
+func EnterSceneCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.ContentPackageSyncDataScNotify()
 	req := payloadMsg.(*proto.EnterSceneCsReq)
 	rsp := &proto.EnterSceneScRsp{
@@ -240,7 +240,7 @@ func (g *GamePlayer) EnterSceneCsReq(payloadMsg pb.Message) {
 	// g.Send(cmd.SceneUpdatePositionVersionNotify, rsp)
 }
 
-func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
+func InteractPropCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.InteractPropCsReq)
 	rsp := &proto.InteractPropScRsp{
 		Retcode:      0,
@@ -319,7 +319,7 @@ func (g *GamePlayer) InteractPropCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 
-func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg pb.Message) {
+func GroupStateChangeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GroupStateChangeCsReq)
 	rsp := &proto.GroupStateChangeScRsp{
 		GroupStateInfo: req.GroupStateInfo,
@@ -355,7 +355,7 @@ func (g *GamePlayer) GroupStateChangeCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GroupStateChangeScRsp, rsp)
 }
 
-func (g *GamePlayer) DeployRotaterCsReq(payloadMsg pb.Message) {
+func DeployRotaterCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.DeployRotaterCsReq)
 	// 设置旋转
 	rsp := &proto.DeployRotaterScRsp{
@@ -366,9 +366,9 @@ func (g *GamePlayer) DeployRotaterCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.DeployRotaterScRsp, rsp)
 }
 
-func (g *GamePlayer) StartWolfBroGameCsReq(payloadMsg pb.Message) {
+func StartWolfBroGameCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.Send(cmd.WolfBroGameDataChangeScNotify, &proto.WolfBroGameDataChangeScNotify{
-		WolfBroGameData: &proto.WolfBroGameData{
+		WolfBroInfo: &proto.WolfBroInfo{
 			// KHOGNFEGNLC: &proto.WolfBroGameInfo{
 			// 	Motion: &proto.MotionInfo{
 			// 		Pos: g.GetPosPb(),
@@ -385,7 +385,7 @@ func (g *GamePlayer) StartWolfBroGameCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.StartWolfBroGameScRsp, &proto.StartWolfBroGameScRsp{})
 }
 
-func (g *GamePlayer) SetGroupCustomSaveDataCsReq(payloadMsg pb.Message) {
+func SetGroupCustomSaveDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetGroupCustomSaveDataCsReq)
 	g.Send(cmd.GroupStateChangeScNotify, &proto.GroupStateChangeScNotify{
 		GroupStateInfo: &proto.GroupStateInfo{
@@ -401,7 +401,67 @@ func (g *GamePlayer) SetGroupCustomSaveDataCsReq(payloadMsg pb.Message) {
 	})
 }
 
-func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg pb.Message) {
+func GetPetDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	db := g.GetPd().GetPet()
+	rsp := &proto.GetPetDataScRsp{
+		CurPetId:      db.CurPetId,
+		Retcode:       0,
+		UnlockedPetId: nil,
+	}
+	for id, ok := range db.UnlockedPetList {
+		if conf := gdconf.GetPetConfigById(id); conf == nil {
+			delete(db.UnlockedPetList, id)
+			continue
+		}
+		if ok {
+			rsp.UnlockedPetId = append(rsp.UnlockedPetId, id)
+		}
+	}
+	g.Send(cmd.GetPetDataScRsp, rsp)
+}
+
+func SummonPetCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SummonPetCsReq)
+	rsp := &proto.SummonPetScRsp{
+		Retcode:     0,
+		CurPetId:    0,
+		SelectPetId: req.SummonedPetId,
+	}
+	defer func() {
+		rsp.CurPetId = g.GetPd().GetCurPet()
+		g.Send(cmd.SummonPetScRsp, rsp)
+	}()
+	db := g.GetPd().GetPet()
+	if _, ok := db.UnlockedPetList[req.SummonedPetId]; !ok {
+		rsp.Retcode = uint32(proto.Retcode_RET_PET_NOT_EXIST)
+		return
+	}
+	if db.CurPetId == req.SummonedPetId {
+		rsp.Retcode = uint32(proto.Retcode_RET_PET_ALREADY_SUMMONED)
+		return
+	}
+	if !g.GetPd().SetCurPet(req.SummonedPetId) {
+		rsp.Retcode = uint32(proto.Retcode_RET_PET_NOT_SUMMONED)
+	}
+}
+
+func RecallPetCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RecallPetCsReq)
+	rsp := &proto.RecallPetScRsp{
+		CurPetId:    0,
+		Retcode:     0,
+		SelectPetId: req.SummonedPetId,
+	}
+	defer func() {
+		rsp.CurPetId = g.GetPd().GetCurPet()
+		g.Send(cmd.RecallPetScRsp, rsp)
+	}()
+	if g.GetPd().GetCurPet() == req.SummonedPetId {
+		g.GetPd().SetCurPet(0)
+	}
+}
+
+func SpringRecoverSingleAvatarCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SpringRecoverSingleAvatarCsReq)
 	g.GetPd().AvatarRecover(req.Id)
 
@@ -411,7 +471,7 @@ func (g *GamePlayer) SpringRecoverSingleAvatarCsReq(payloadMsg pb.Message) {
 		AvatarType: req.AvatarType,
 		Id:         req.Id,
 	}
-	g.SyncLineupNotify(g.GetPd().GetBattleLineUp())
+	g.SyncLineupNotify(g.GetPd().GetCurLineUp())
 	g.Send(cmd.SpringRecoverSingleAvatarScRsp, rsp)
 }
 
@@ -477,7 +537,7 @@ func (g *GamePlayer) AddAvatarSceneGroupRefreshScNotify(lineAvatar *spb.LineAvat
 		Uid:          0,
 	}
 	entityId := g.GetPd().GetNextGameObjectGuid()
-	if lineAvatar.LineAvatarType == spb.LineAvatarType_LineAvatarType_TRIAL {
+	if lineAvatar.LineAvatarType == spb.AvatarType_AVATAR_TRIAL_TYPE {
 		conf := gdconf.GetSpecialAvatarById(lineAvatar.AvatarId)
 		if conf == nil {
 			return

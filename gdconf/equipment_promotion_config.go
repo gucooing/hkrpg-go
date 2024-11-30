@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -26,17 +27,15 @@ type EquipmentPromotionConfig struct {
 func (g *GameDataConfig) loadEquipmentPromotionConfig() {
 	g.EquipmentPromotionConfigMap = make(map[uint32]map[uint32]*EquipmentPromotionConfig)
 	equipmentPromotionConfigMap := make([]*EquipmentPromotionConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "EquipmentPromotionConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "EquipmentPromotionConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &equipmentPromotionConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range equipmentPromotionConfigMap {
 		if g.EquipmentPromotionConfigMap[v.EquipmentID] == nil {
@@ -44,11 +43,12 @@ func (g *GameDataConfig) loadEquipmentPromotionConfig() {
 		}
 		g.EquipmentPromotionConfigMap[v.EquipmentID][v.Promotion] = v
 	}
-	logger.Info("load %v EquipmentPromotionConfig", len(g.EquipmentPromotionConfigMap))
+
+	logger.Info(text.GetText(17), len(g.EquipmentPromotionConfigMap), name)
 }
 
 func GetEquipmentPromotionConfigByLevel(equipmentID, promotion uint32) uint32 {
-	promotionConfig := CONF.EquipmentPromotionConfigMap[equipmentID][promotion]
+	promotionConfig := getConf().EquipmentPromotionConfigMap[equipmentID][promotion]
 	for _, promotionCost := range promotionConfig.PromotionCostList {
 		if promotionCost.ItemID == 2 {
 			return promotionCost.ItemNum
@@ -58,13 +58,13 @@ func GetEquipmentPromotionConfigByLevel(equipmentID, promotion uint32) uint32 {
 }
 
 func GetEquipmentMaxLevel(equipmentId, promotion uint32) uint32 {
-	promotionConfig := CONF.EquipmentPromotionConfigMap[equipmentId][promotion]
+	promotionConfig := getConf().EquipmentPromotionConfigMap[equipmentId][promotion]
 	return promotionConfig.MaxLevel
 }
 
 func GetEquipmentPromotionConfig(equipmentID, promotion uint32) *EquipmentPromotionConfig {
-	if CONF.EquipmentPromotionConfigMap[equipmentID] == nil {
+	if getConf().EquipmentPromotionConfigMap[equipmentID] == nil {
 		return nil
 	}
-	return CONF.EquipmentPromotionConfigMap[equipmentID][promotion]
+	return getConf().EquipmentPromotionConfigMap[equipmentID][promotion]
 }

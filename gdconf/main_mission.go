@@ -6,6 +6,7 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -34,29 +35,27 @@ type TakeParam struct {
 func (g *GameDataConfig) loadMainMission() {
 	g.MainMissionMap = make(map[uint32]*MainMission)
 	mainMissionMap := make([]*MainMission, 0)
-	playerElementsFilePath := g.excelPrefix + "MainMission.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "MainMission.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &mainMissionMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range mainMissionMap {
 		g.MainMissionMap[v.MainMissionID] = v
 	}
 
-	logger.Info("load %v MainMission", len(g.MainMissionMap))
+	logger.Info(text.GetText(17), len(g.MainMissionMap), name)
 }
 
 func GetMainMission() map[uint32]*MainMission {
-	return CONF.MainMissionMap
+	return getConf().MainMissionMap
 }
 
 func GetMainMissionById(id uint32) *MainMission {
-	return CONF.MainMissionMap[id]
+	return getConf().MainMissionMap[id]
 }

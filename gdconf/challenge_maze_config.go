@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -43,80 +44,51 @@ type ChallengeState struct {
 
 func (g *GameDataConfig) loadChallengeMazeConfig() {
 	g.ChallengeMazeConfigMap = make(map[uint32]*ChallengeMazeConfig)
-	challengeMazeConfigMap := make([]*ChallengeMazeConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "ChallengeMazeConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
 
-	err = hjson.Unmarshal(playerElementsFile, &challengeMazeConfigMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
+	fileList := []string{"ChallengeMazeConfig.json", "ChallengeStoryMazeConfig.json",
+		"ChallengeBossMazeConfig.json"}
+	for _, file := range fileList {
+		challengeConfigList := make([]*ChallengeMazeConfig, 0)
+		files := g.excelPrefix + file
+		bin, err := os.ReadFile(files)
+		if err != nil {
+			panic(fmt.Sprintf(text.GetText(18), file, err))
+		}
+		err = hjson.Unmarshal(bin, &challengeConfigList)
+		if err != nil {
+			panic(fmt.Sprintf(text.GetText(19), file, err))
+		}
 
-	challengeStoryMazeConfig := make([]*ChallengeMazeConfig, 0)
-	playerElementsFilePathStory := g.excelPrefix + "ChallengeStoryMazeConfig.json"
-	playerElementsFileStory, err := os.ReadFile(playerElementsFilePathStory)
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-
-	err = hjson.Unmarshal(playerElementsFileStory, &challengeStoryMazeConfig)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-	challengeMazeConfigMap = append(challengeMazeConfigMap, challengeStoryMazeConfig...)
-
-	challengeBossMazeConfig := make([]*ChallengeMazeConfig, 0)
-	playerElementsFilePathBoss := g.excelPrefix + "ChallengeBossMazeConfig.json"
-	playerElementsFileBoss, err := os.ReadFile(playerElementsFilePathBoss)
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-
-	err = hjson.Unmarshal(playerElementsFileBoss, &challengeBossMazeConfig)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-	challengeMazeConfigMap = append(challengeMazeConfigMap, challengeBossMazeConfig...)
-
-	for _, challengeMazeConfig := range challengeMazeConfigMap {
-		challengeMazeConfig.ChallengeState = make(map[uint32]*ChallengeState)
-		if challengeMazeConfig.StageNum == 2 {
-			challengeState := &ChallengeState{
-				NPCMonsterID: challengeMazeConfig.NpcMonsterIDList2[0],
-				EventID:      challengeMazeConfig.EventIDList2[0],
-				GroupID:      challengeMazeConfig.MazeGroupID2,
-				ConfigID:     challengeMazeConfig.ConfigList2[0],
+		for _, challengeMazeConfig := range challengeConfigList {
+			challengeMazeConfig.ChallengeState = make(map[uint32]*ChallengeState)
+			if challengeMazeConfig.StageNum == 2 {
+				challengeState := &ChallengeState{
+					NPCMonsterID: challengeMazeConfig.NpcMonsterIDList2[0],
+					EventID:      challengeMazeConfig.EventIDList2[0],
+					GroupID:      challengeMazeConfig.MazeGroupID2,
+					ConfigID:     challengeMazeConfig.ConfigList2[0],
+				}
+				challengeMazeConfig.ChallengeState[2] = challengeState
 			}
-			challengeMazeConfig.ChallengeState[2] = challengeState
-		}
-		challengeState := &ChallengeState{
-			NPCMonsterID: challengeMazeConfig.NpcMonsterIDList1[0],
-			EventID:      challengeMazeConfig.EventIDList1[0],
-			GroupID:      challengeMazeConfig.MazeGroupID1,
-			ConfigID:     challengeMazeConfig.ConfigList1[0],
-		}
-		challengeMazeConfig.ChallengeState[1] = challengeState
+			challengeState := &ChallengeState{
+				NPCMonsterID: challengeMazeConfig.NpcMonsterIDList1[0],
+				EventID:      challengeMazeConfig.EventIDList1[0],
+				GroupID:      challengeMazeConfig.MazeGroupID1,
+				ConfigID:     challengeMazeConfig.ConfigList1[0],
+			}
+			challengeMazeConfig.ChallengeState[1] = challengeState
 
-		g.ChallengeMazeConfigMap[challengeMazeConfig.ID] = challengeMazeConfig
+			g.ChallengeMazeConfigMap[challengeMazeConfig.ID] = challengeMazeConfig
+		}
 	}
 
-	logger.Info("load %v ChallengeMazeConfig", len(g.ChallengeMazeConfigMap))
-
+	logger.Info(text.GetText(17), len(g.ChallengeMazeConfigMap), "ChallengeMazeConfig")
 }
 
 func GetChallengeMazeConfigById(questID uint32) *ChallengeMazeConfig {
-	return CONF.ChallengeMazeConfigMap[questID]
+	return getConf().ChallengeMazeConfigMap[questID]
 }
 
 func GetChallengeMazeConfigMap() map[uint32]*ChallengeMazeConfig {
-	return CONF.ChallengeMazeConfigMap
+	return getConf().ChallengeMazeConfigMap
 }

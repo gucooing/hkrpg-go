@@ -35,11 +35,11 @@ func (r *RoBot) GetCurSceneInfoScRsp(payloadMsg []byte) {
 }
 
 func (r *RoBot) EnterSceneCsReq() {
-	entryIdList := gdconf.GetEntryIdList()
-	rand.New(rand.NewSource(time.Now().UnixNano()))
 	if r.KcpConn == nil {
 		return
 	}
+	entryIdList := gdconf.GetEntryIdList()
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	entryId := rand.Intn(len(entryIdList)-1) + 1
 	rep := &proto.EnterSceneCsReq{
 		EntryId: entryIdList[entryId],

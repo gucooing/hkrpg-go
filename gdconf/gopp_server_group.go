@@ -36,7 +36,7 @@ type GoppValue struct {
 
 func (g *GameDataConfig) goppServerGroup() {
 	g.ServerGroupMap = make(map[uint32]map[uint32]map[uint32]*GoppLevelGroup)
-	floors := CONF.FloorMap
+	floors := getConf().FloorMap
 	if floors == nil {
 		logger.Error(text.GetText(24))
 		return
@@ -91,25 +91,25 @@ func (g *GameDataConfig) goppServerGroup() {
 }
 
 func GetServerGroup(planeId, floorId uint32) map[uint32]*GoppLevelGroup {
-	if CONF.ServerGroupMap[planeId] == nil {
+	if getConf().ServerGroupMap[planeId] == nil {
 		return nil
 	}
-	return CONF.ServerGroupMap[planeId][floorId]
+	return getConf().ServerGroupMap[planeId][floorId]
 }
 
 func GetServerGroupById(planeId, floorId, groupId uint32) *GoppLevelGroup {
-	if CONF.ServerGroupMap[planeId] == nil || CONF.ServerGroupMap[planeId][floorId] == nil {
+	if getConf().ServerGroupMap[planeId] == nil || getConf().ServerGroupMap[planeId][floorId] == nil {
 		return nil
 	}
-	return CONF.ServerGroupMap[planeId][floorId][groupId]
+	return getConf().ServerGroupMap[planeId][floorId][groupId]
 }
 
 func GetServerPropById(planeId, floorId, groupId, instId uint32) *PropList {
-	if CONF.ServerGroupMap[planeId] == nil ||
-		CONF.ServerGroupMap[planeId][floorId] == nil ||
-		CONF.ServerGroupMap[planeId][floorId][groupId] == nil ||
-		CONF.ServerGroupMap[planeId][floorId][groupId].PropList == nil {
+	if getConf().ServerGroupMap[planeId] == nil ||
+		getConf().ServerGroupMap[planeId][floorId] == nil ||
+		getConf().ServerGroupMap[planeId][floorId][groupId] == nil ||
+		getConf().ServerGroupMap[planeId][floorId][groupId].PropList == nil {
 		return nil
 	}
-	return CONF.ServerGroupMap[planeId][floorId][groupId].PropList[instId]
+	return getConf().ServerGroupMap[planeId][floorId][groupId].PropList[instId]
 }

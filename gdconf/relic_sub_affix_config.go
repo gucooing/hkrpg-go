@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -21,17 +22,15 @@ type RelicSubAffixConfig struct {
 func (g *GameDataConfig) loadRelicSubAffixConfig() {
 	g.RelicSubAffixConfigMap = make(map[uint32]map[uint32]*RelicSubAffixConfig)
 	relicSubAffixConfigMap := make([]*RelicSubAffixConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "RelicSubAffixConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RelicSubAffixConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &relicSubAffixConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range relicSubAffixConfigMap {
 		if g.RelicSubAffixConfigMap[v.GroupID] == nil {
@@ -40,11 +39,11 @@ func (g *GameDataConfig) loadRelicSubAffixConfig() {
 		g.RelicSubAffixConfigMap[v.GroupID][v.AffixID] = v
 	}
 
-	logger.Info("load %v RelicSubAffixConfig", len(g.RelicSubAffixConfigMap))
+	logger.Info(text.GetText(17), len(g.RelicSubAffixConfigMap), name)
 }
 
 func GetRelicSubAffixConfigById(ID uint32) *RelicSubAffixConfig {
-	relicSubAffixConfigMap := CONF.RelicSubAffixConfigMap[ID]
+	relicSubAffixConfigMap := getConf().RelicSubAffixConfigMap[ID]
 	var keys []uint32
 	for k := range relicSubAffixConfigMap {
 		keys = append(keys, k)
@@ -54,8 +53,8 @@ func GetRelicSubAffixConfigById(ID uint32) *RelicSubAffixConfig {
 }
 
 func GetRelicSubAffixConfig(id, index uint32) *RelicSubAffixConfig {
-	if CONF.RelicSubAffixConfigMap[id] == nil {
+	if getConf().RelicSubAffixConfigMap[id] == nil {
 		return nil
 	}
-	return CONF.RelicSubAffixConfigMap[id][index]
+	return getConf().RelicSubAffixConfigMap[id][index]
 }

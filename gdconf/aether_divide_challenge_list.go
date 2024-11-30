@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -21,24 +22,22 @@ type AetherDivideChallengeList struct {
 func (g *GameDataConfig) loadAetherDivideChallengeList() {
 	g.AetherDivideChallengeListMap = make(map[uint32]*AetherDivideChallengeList)
 	aetherDivideChallengeListList := make([]*AetherDivideChallengeList, 0)
-	playerElementsFilePath := g.excelPrefix + "AetherDivideChallengeList.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "AetherDivideChallengeList.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &aetherDivideChallengeListList)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range aetherDivideChallengeListList {
 		g.AetherDivideChallengeListMap[v.ID] = v
 	}
-	logger.Info("load %v AetherDivideChallengeList", len(g.AetherDivideChallengeListMap))
+	logger.Info(text.GetText(17), len(g.AetherDivideChallengeListMap), name)
 }
 
 func GetAetherDivideChallengeList(id uint32) *AetherDivideChallengeList {
-	return CONF.AetherDivideChallengeListMap[id]
+	return getConf().AetherDivideChallengeListMap[id]
 }

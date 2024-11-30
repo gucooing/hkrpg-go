@@ -8,6 +8,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -121,13 +122,11 @@ func (g *GameDataConfig) goppMainMission() {
 		playerElementsFilePath := g.configPrefix + "Level/Mission/" + strconv.Itoa(int(id)) + "/MissionInfo_" + strconv.Itoa(int(id)) + ".json"
 		playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 		if err != nil {
-			logger.Debug("open MainMission error: %v", err)
-			return
+			panic(fmt.Sprintf(text.GetText(18), playerElementsFilePath, err))
 		}
 		err = hjson.Unmarshal(playerElementsFile, &goppMainMission)
 		if err != nil {
-			info := fmt.Sprintf("parse MainMission error: %v", err)
-			panic(info)
+			panic(fmt.Sprintf(text.GetText(19), playerElementsFilePath, err))
 		}
 		if g.GoppMission.GoppMainMission == nil {
 			g.GoppMission.GoppMainMission = make(map[uint32]*GoppMainMission)
@@ -146,7 +145,7 @@ func (g *GameDataConfig) goppMainMission() {
 				mj := new(MissionJson)
 				err = hjson.Unmarshal(missionJsonPathFile, &mj)
 				if err != nil {
-					logger.Debug("open MissionJsonPath error:%s", err)
+					logger.Error(text.GetText(19), missionJsonPathFilePath, err)
 				} else {
 					g.GoppMission.GoppMissionJson[subMission.ID] = mj
 				}
@@ -155,37 +154,37 @@ func (g *GameDataConfig) goppMainMission() {
 		}
 	}
 
-	logger.Info("gopp %v MainMission", len(g.GoppMission.GoppMainMission))
-	logger.Info("gopp %v SubMainMission", len(g.GoppMission.GoppSubMainMission))
-	logger.Info("gopp %v MissionJson", len(g.GoppMission.GoppMissionJson))
+	logger.Info(text.GetText(17), len(g.GoppMission.GoppMainMission), "MainMission")
+	logger.Info(text.GetText(17), len(g.GoppMission.GoppSubMainMission), "SubMainMission")
+	logger.Info(text.GetText(17), len(g.GoppMission.GoppMissionJson), "MissionJson")
 }
 
 func GetGoppMainMission() map[uint32]*GoppMainMission {
-	return CONF.GoppMission.GoppMainMission
+	return getConf().GoppMission.GoppMainMission
 }
 
 func GetGoppMainMissionById(id uint32) *GoppMainMission {
-	return CONF.GoppMission.GoppMainMission[id]
+	return getConf().GoppMission.GoppMainMission[id]
 }
 
 func GetSubMainMission() map[uint32]*SubMission {
-	return CONF.GoppMission.GoppSubMainMission
+	return getConf().GoppMission.GoppSubMainMission
 }
 
 func GetSubMainMissionById(id uint32) *SubMission {
-	return CONF.GoppMission.GoppSubMainMission[id]
+	return getConf().GoppMission.GoppSubMainMission[id]
 }
 
 func GetEntryId(id uint32) (uint32, uint32, uint32, bool) {
 	conf := GetSubMainMissionById(id)
-	jsonConf := CONF.GoppMission.GoppMissionJson[id]
+	jsonConf := getConf().GoppMission.GoppMissionJson[id]
 	if jsonConf != nil {
 		for _, info := range jsonConf.OnStartSequece {
 			if info.TaskList == nil {
 				continue
 			}
 			for _, task := range info.TaskList {
-				if CONF.MapEntranceMap[task.EntranceID] != nil {
+				if getConf().MapEntranceMap[task.EntranceID] != nil {
 					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
 				}
 			}
@@ -195,7 +194,7 @@ func GetEntryId(id uint32) (uint32, uint32, uint32, bool) {
 				continue
 			}
 			for _, task := range info.TaskList {
-				if CONF.MapEntranceMap[task.EntranceID] != nil {
+				if getConf().MapEntranceMap[task.EntranceID] != nil {
 					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
 				}
 			}
@@ -213,7 +212,7 @@ func GetEntryId(id uint32) (uint32, uint32, uint32, bool) {
 
 func IsBattleMission(id, eventId uint32) bool {
 	isFinish := false
-	conf := CONF.GoppMission.GoppMissionJson[id]
+	conf := getConf().GoppMission.GoppMissionJson[id]
 	if conf == nil {
 		return false
 	}

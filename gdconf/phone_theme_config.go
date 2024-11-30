@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -17,26 +18,24 @@ type PhoneThemeConfig struct {
 func (g *GameDataConfig) loadPhoneThemeConfig() {
 	g.PhoneThemeConfigMap = make(map[uint32]*PhoneThemeConfig)
 	phoneThemeConfigist := make([]*PhoneThemeConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "PhoneThemeConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "PhoneThemeConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &phoneThemeConfigist)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, v := range phoneThemeConfigist {
 		g.PhoneThemeConfigMap[v.ID] = v
 	}
 
-	logger.Info("load %v PhoneThemeConfig", len(g.PhoneThemeConfigMap))
+	logger.Info(text.GetText(17), len(g.PhoneThemeConfigMap), name)
 }
 
 func GetPhoneThemeConfigMap() map[uint32]*PhoneThemeConfig {
-	return CONF.PhoneThemeConfigMap
+	return getConf().PhoneThemeConfigMap
 }

@@ -88,17 +88,19 @@ func S2I(msg string) int {
 	return int(ms)
 }
 
-func GetRelicSub(sub string) map[uint32]uint32 {
-	re := regexp.MustCompile(`\[(\d+):(\d+)\]`)
-	matches := re.FindAllStringSubmatch(sub, -1)
-
-	result := make(map[uint32]uint32)
-	for _, match := range matches {
-		key := S2U32(match[1])
-		value := S2U32(match[2])
-		result[key] = value
+func GetNoZeroUint32(sub1, sub2 uint32) uint32 {
+	if sub1 > 0 {
+		return sub1
 	}
-	return result
+	return sub2
+}
+
+func Uin32KeyTList(umap map[uint32]bool) []uint32 {
+	list := make([]uint32, 0)
+	for k := range umap {
+		list = append(list, k)
+	}
+	return list
 }
 
 func GetEveryDay4() time.Duration {

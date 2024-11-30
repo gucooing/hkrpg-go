@@ -129,7 +129,7 @@ func (r *RoBot) PlayerHeartBeatCsReq() {
 			ClientTimeMs: uint64(time.Now().UnixMilli()),
 		}
 		r.send(cmd.PlayerHeartBeatCsReq, req)
-		// time.Sleep(1 * time.Second)
+		time.Sleep(1 * time.Second)
 		r.EnterSceneCsReq()
 	}
 }

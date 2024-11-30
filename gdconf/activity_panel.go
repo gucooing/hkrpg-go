@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -23,35 +24,33 @@ type UnlockConditions struct {
 func (g *GameDataConfig) loadActivityPanel() {
 	g.ActivityPanelMap = make(map[uint32]*ActivityPanel)
 	activityPanelMap := make([]*ActivityPanel, 0)
-	playerElementsFilePath := g.excelPrefix + "ActivityPanel.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "ActivityPanel.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &activityPanelMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range activityPanelMap {
 		g.ActivityPanelMap[v.ActivityModuleID] = v
 	}
-	logger.Info("load %v ActivityPanel", len(g.ActivityPanelMap))
+	logger.Info(text.GetText(17), len(g.ActivityPanelMap), name)
 }
 
 func GetActivityPanelById(ID uint32) *ActivityPanel {
-	return CONF.ActivityPanelMap[ID]
+	return getConf().ActivityPanelMap[ID]
 }
 
 func GetActivityPanelMap() map[uint32]*ActivityPanel {
-	return CONF.ActivityPanelMap
+	return getConf().ActivityPanelMap
 }
 
 func GetActivityPanelList() []uint32 {
 	var activityList []uint32
-	for _, activity := range CONF.ActivityPanelMap {
+	for _, activity := range getConf().ActivityPanelMap {
 		activityList = append(activityList, activity.PanelID)
 	}
 	return activityList

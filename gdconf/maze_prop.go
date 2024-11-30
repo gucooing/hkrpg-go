@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -77,17 +78,15 @@ type MazeProp struct {
 func (g *GameDataConfig) loadMazeProp() {
 	mazePropMap := make([]*mazeProp, 0)
 	g.MazePropMap = make(map[uint32]*MazeProp)
-	playerElementsFilePath := g.excelPrefix + "MazeProp.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "MazeProp.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &mazePropMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, x := range mazePropMap {
 		mp := &MazeProp{
@@ -113,12 +112,12 @@ func (g *GameDataConfig) loadMazeProp() {
 		}
 		g.MazePropMap[x.ID] = mp
 	}
-	logger.Info("load %v MazeProp", len(g.MazePropMap))
 
+	logger.Info(text.GetText(17), len(g.MazePropMap), name)
 }
 
 func GetMazePropId(id uint32) *MazeProp {
-	return CONF.MazePropMap[id]
+	return getConf().MazePropMap[id]
 }
 
 func getPropType(state string) uint32 {

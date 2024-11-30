@@ -70,7 +70,7 @@ func (t *TcpListener) Run() error {
 }
 
 func (s *TcpSession) recvHandle() {
-	// defer s.Close()
+	defer s.Close()
 	payload := make([]byte, alg.PacketMaxLen)
 	bin := make([]byte, 0)
 	for {
@@ -90,21 +90,18 @@ func (s *TcpSession) recvHandle() {
 				return
 			}
 			for _, v := range kcpMsgList {
-				if s.SessionState == SessionClose {
-					return
-				}
 				bin = bin[v.Length:]
-				s.RecvChan <- v
+				s.sendServer(v)
 			}
 		}
 	}
 }
 
 func (s *TcpSession) sendHandle() {
-	// defer s.Close()
+	defer s.Close()
 	for {
-		packMsg, ok := <-s.SendChan
-		if !ok {
+		packMsg, err := s.recvClient()
+		if err != nil {
 			logger.Debug("exit send loop, send chan close, sessionId: %v", s.SessionId)
 			return
 		}
@@ -118,7 +115,7 @@ func (s *TcpSession) sendHandle() {
 			s.XorKey = random.CreateXorPad(s.Seed, false)
 			logger.Info("uid:%v,seed:%v,密钥交换成功", s.Uid, s.Seed)
 		}
-		_, err := s.tcpConn.Write(binMsg)
+		_, err = s.tcpConn.Write(binMsg)
 		if err != nil {
 			logger.Debug("exit send loop, conn write err: %v", err)
 			return
@@ -132,8 +129,8 @@ func tcpNetInfo() {
 	for {
 		<-ticker.C
 		clientConnNum := atomic.LoadInt64(&CLIENT_CONN_NUM)
-		logger.Debug("conn num: %v", clientConnNum)
-		logger.Debug("QPS: %v /s", QPS/60)
+		logger.Info("conn num: %v", clientConnNum)
+		logger.Info("QPS: %v /s", QPS/60)
 		QPS = 0
 		kcp.DefaultSnmp.Reset()
 	}
@@ -146,12 +143,9 @@ func (s *TcpSession) Close() {
 	s.SessionState = SessionClose
 	// 断开kcp
 	s.tcpConn.Close()
-	// 断开通道
-	close(s.RecvChan)
-	close(s.SendChan)
-
+	s.sendChan <- nil // 主动调用关闭
+	s.recvChan <- nil // 主动调用关闭
 	logger.Info("[UID:%v]玩家下线GATE", s.Uid)
-	atomic.AddInt64(&CLIENT_CONN_NUM, -1)
 }
 
 func (t *TcpListener) Close() {

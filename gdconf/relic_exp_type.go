@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -17,17 +18,15 @@ type RelicExpType struct {
 func (g *GameDataConfig) loadRelicExpType() {
 	g.RelicExpTypeMap = make(map[uint32]map[uint32]*RelicExpType)
 	relicExpTypeMap := make([]*RelicExpType, 0)
-	playerElementsFilePath := g.excelPrefix + "RelicExpType.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "RelicExpType.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &relicExpTypeMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range relicExpTypeMap {
 		if g.RelicExpTypeMap[v.TypeID] == nil {
@@ -35,18 +34,19 @@ func (g *GameDataConfig) loadRelicExpType() {
 		}
 		g.RelicExpTypeMap[v.TypeID][v.Level] = v
 	}
-	logger.Info("load %v RelicExpType", len(g.RelicExpTypeMap))
+
+	logger.Info(text.GetText(17), len(g.RelicExpTypeMap), name)
 }
 
 func GetRelicExpByLevel(relicType, exp, level, relicId uint32) (uint32, uint32) {
 	maxLevel := GetRelicMaxLevel(relicId)
 	for ; level <= maxLevel; level++ {
-		if exp < CONF.RelicExpTypeMap[relicType][level].Exp {
+		if exp < getConf().RelicExpTypeMap[relicType][level].Exp {
 			return level, exp
 		} else {
-			exp -= CONF.RelicExpTypeMap[relicType][level].Exp
+			exp -= getConf().RelicExpTypeMap[relicType][level].Exp
 		}
 	}
-	newExp := CONF.RelicExpTypeMap[relicType][maxLevel].Exp
+	newExp := getConf().RelicExpTypeMap[relicType][maxLevel].Exp
 	return maxLevel, newExp
 }

@@ -1,0 +1,126 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "./;proto";
+
+import "enum.server.proto";
+
+/****************************模拟宇宙*************************/
+
+message QuestRogue {
+  map<uint32, QuestRogueArea> rogue_area = 1; // 关卡状态
+  // CurRogue cur_rogue = 2; // 当前正在进行的
+  map<uint32, QuestRogueHistory> quest_rogue_history_list = 3;// 历史领取信息/[年+周次]:2401
+}
+
+message QuestRogueArea {
+  uint32 areaId = 1;
+  RogueAreaStatus rogue_area_status = 2;
+}
+
+message QuestRogueHistory{
+  uint32 week_id = 1; // 周次
+  uint32 score = 2; // 分数
+  map<uint32,bool> row_info = 3;//领取奖励
+}
+
+/****************************差分宇宙*************************/
+
+message TournRogue {// 差分宇宙
+  uint32 exp = 1; // 经验
+  repeated uint32 taken_level_rewards = 2;// 已领取的等级奖励
+  map<uint32, InspirationCircuitInfo> inspiration_circuit_info = 3; // 灵感回路信息
+  repeated uint32 unlock_difficulty_info = 4;// 已解锁难度
+  CurRogueTourn cur_rogue_tourn = 5;// 当前差分宇宙
+}
+
+message InspirationCircuitInfo {// 灵感回路
+  uint32 inspiration_circuit_id = 1;
+  RogueTalentStatus status = 2;
+}
+
+message CurRogueTourn{// 当前差分宇宙
+  uint32 area_id = 1; // 关卡
+  repeated uint32 formula_list = 2; //方程列表
+  map<uint32, LayerInfo> cur_layer_list = 3;// 关卡列表
+  uint32 cur_layer_index = 4;//第几关当前
+}
+
+message LayerInfo{
+  uint32 layer_id = 1;//小关卡id
+  RogueTournLayerStatus status = 2;// 状态
+  uint32 layer_index = 3;//第几个小房间
+  map<uint32, RogueTournRoomInfo> rogue_tourn_room_list = 4;// 小关卡下属房间
+  uint32 cur_room_index = 5; // 第几个房间当前
+}
+
+message RogueTournRoomInfo{
+  uint32 room_id = 1;//id
+  uint32 room_index = 2;//第几个房间
+  RogueTournRoomStatus status = 3; // 状态
+}
+
+/****************************正在进行中的模拟宇宙*************************/
+
+message CurRogue {// 当前正在进行的模拟宇宙
+  uint32 cur_area_id = 1; // 当前关卡
+  uint32 aeon_id = 2; // 命途
+  uint32 queue_position = 3; // 计数器
+  // int32 re_buff_num = 4; // 剩余未兑换数量
+  map<uint32, RogueBuff> buff_list = 7;// 模拟宇宙已获得祝福列表
+  RogueStatus status = 10 ;// 状态
+  oneof rogue_info {
+    CurQuestRogue quest_rogue = 20; // 模拟宇宙
+    // RogueDlc rogue_dlc = 21; // 模拟宇宙•寰宇蝗灾
+    // RogueNous rogue_nous = 22; // 模拟宇宙•黄金与机械
+    // RogueTourn rogue_tourn = 23; // 差分宇宙•人间喜剧
+    // RogueMagic rogue_magic = 24; // 模拟宇宙• 不可知域
+  }
+  map<uint32,RogueAction>  action = 30; // 模拟宇宙选择
+}
+
+message RogueAction {
+  oneof action {
+    BonusSelect bonus_select = 101; // 开拓祝福
+    BuffSelect buff_select = 102; // buff
+    // MiracleSelect miracle_select = 103; // 奇物
+    // FormulaSelect formula_select = 104; // 方程
+  }
+}
+
+message RogueBuff {
+  uint32 buff_id = 1;
+  uint32 buff_level = 2;
+  uint64 add_time = 3;
+}
+
+/********rogue_info*********/
+
+message CurQuestRogue {
+  uint32 rogue_map_id = 1; // mapid
+  uint32 cur_siteId = 2; // 当前房间
+  map<uint32, RogueRoomInfo> rogue_room_map = 3; // 房间列表
+}
+
+message RogueRoomInfo {
+  uint32 room_id = 1;
+  RoomStatus room_status = 2;
+  repeated uint32 next_site_id_list = 3;
+}
+
+/********action*********/
+
+message BonusSelect {
+  map<uint32,bool> bonus_id_map = 1;
+}
+
+message BuffSelect{
+  uint32 source_hint_id = 1;//提示文本/横幅
+  map<uint32,uint32> roll_buff_cost = 2; // 刷新费用
+  bool can_roll =3 ;// 是否允许刷新
+  uint32 roll_buff_count = 4; // 已刷新次数
+  uint32 roll_buff_max_count = 5; // 最大刷新次数
+  uint32 source_cur_count = 6; // 提示
+  map<uint32,RogueBuff> buff_map = 7; // buff列表
+}

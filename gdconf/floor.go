@@ -1,6 +1,7 @@
 package gdconf
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/text"
+	"github.com/gucooing/hkrpg-go/protocol/proto"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -96,14 +98,12 @@ func (g *GameDataConfig) loadFloor() {
 
 		playerElementsFile, err := os.ReadFile(file)
 		if err != nil {
-			logger.Error(text.GetText(18), file, err)
-			return
+			panic(fmt.Sprintf(text.GetText(18), file, err))
 		}
 
 		err = hjson.Unmarshal(playerElementsFile, levelFloor)
 		if err != nil {
-			logger.Error(text.GetText(19), file, err)
-			return
+			panic(fmt.Sprintf(text.GetText(19), file, err))
 		}
 
 		if g.FloorMap[planeId] == nil {
@@ -120,15 +120,15 @@ func (g *GameDataConfig) loadFloor() {
 }
 
 func GetFloor() map[uint32]map[uint32]*LevelFloor {
-	return CONF.FloorMap
+	return getConf().FloorMap
 }
 
 func GetFloorById(planeId, floorId uint32) *LevelFloor {
-	return CONF.FloorMap[planeId][floorId]
+	return getConf().FloorMap[planeId][floorId]
 }
 
 func GetFloorMap() map[uint32]map[uint32]*LevelFloor {
-	return CONF.FloorMap
+	return getConf().FloorMap
 }
 
 func extractNumbersFloor(filename string) (uint32, uint32) {
@@ -190,6 +190,22 @@ func GetAnchor(planeId, floorId, startGroupID, startAnchorID uint32) *AnchorList
 		}
 	}
 	return nil
+}
+
+func GetAnchorByIndexPosRot(planeId, floorId uint32) (*proto.Vector, *proto.Vector) {
+	conf := GetAnchorByIndex(planeId, floorId)
+	if conf == nil {
+		return nil, nil
+	}
+	return &proto.Vector{
+			X: int32(conf.PosX * 1000),
+			Y: int32(conf.PosY * 1000),
+			Z: int32(conf.PosZ * 1000),
+		}, &proto.Vector{
+			X: int32(conf.RotX * 1000),
+			Y: int32(conf.RotY * 1000),
+			Z: int32(conf.RotZ * 1000),
+		}
 }
 
 func GetSavedValue(planeId, floorId uint32, name string) (uint32, uint32) {

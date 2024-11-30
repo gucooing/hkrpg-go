@@ -45,7 +45,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 	}
 	for _, targetUid := range targetList {
 		notify.TargetUid = targetUid
-		p.toSession(player.Msg{
+		p.toPlayerMsg(player.Msg{
 			CmdId:     cmd.RevcMsgScNotify,
 			PlayerMsg: notify,
 		})
@@ -60,7 +60,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 		if target == nil {
 			continue
 		}
-		target.toSession(player.Msg{
+		target.toPlayerMsg(player.Msg{
 			CmdId:     cmd.RevcMsgScNotify,
 			PlayerMsg: notify,
 		})
@@ -70,7 +70,7 @@ func SendMsgCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 		EndTime: uint64(time.Now().Unix()),
 		Retcode: 0,
 	}
-	p.toSession(player.Msg{
+	p.toPlayerMsg(player.Msg{
 		CmdId:     cmd.SendMsgScRsp,
 		PlayerMsg: rsp,
 	})
@@ -82,7 +82,7 @@ func ApplyFriendCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg pb.Message) {
 		Uid:     req.Uid,
 		Retcode: 0,
 	}
-	p.toSession(player.Msg{
+	p.toPlayerMsg(player.Msg{
 		CmdId:     cmd.ApplyFriendScRsp,
 		PlayerMsg: rsp,
 	})
@@ -93,6 +93,7 @@ func GetFriendRecommendListInfoCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg
 		PlayerInfoList: make([]*proto.FriendRecommendInfo, 0),
 		Retcode:        0,
 	}
+	i := 0
 	for _, s := range h.GetAllPlayer() {
 		if s.GamePlayer.Uid == p.Conn.GetSession().Uid {
 			continue
@@ -100,8 +101,12 @@ func GetFriendRecommendListInfoCsReq(h *HkRpgGoServer, p *PlayerGame, payloadMsg
 		rsp.PlayerInfoList = append(rsp.PlayerInfoList, &proto.FriendRecommendInfo{
 			PlayerInfo: model.GetPlayerSimpleInfo(s.GamePlayer.Uid),
 		})
+		i++
+		if i >= 20 {
+			break
+		}
 	}
-	p.toSession(player.Msg{
+	p.toPlayerMsg(player.Msg{
 		CmdId:     cmd.GetFriendRecommendListInfoScRsp,
 		PlayerMsg: rsp,
 	})

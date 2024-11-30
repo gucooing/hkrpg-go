@@ -25,8 +25,8 @@ type BattleRogueMagicRoundCount struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	BattleStandardRoundLimit uint32 `protobuf:"varint,1,opt,name=battle_standard_round_limit,json=battleStandardRoundLimit,proto3" json:"battle_standard_round_limit,omitempty"`
-	BattleExtraRoundLimit    uint32 `protobuf:"varint,2,opt,name=battle_extra_round_limit,json=battleExtraRoundLimit,proto3" json:"battle_extra_round_limit,omitempty"`
+	BattleStandardRoundLimit uint32 `protobuf:"varint,1,opt,name=battle_standard_round_limit,json=battleStandardRoundLimit,proto3" json:"battle_standard_round_limit,omitempty"` // 2
+	BattleExtraRoundLimit    uint32 `protobuf:"varint,2,opt,name=battle_extra_round_limit,json=battleExtraRoundLimit,proto3" json:"battle_extra_round_limit,omitempty"`          // 1
 }
 
 func (x *BattleRogueMagicRoundCount) Reset() {

@@ -5,7 +5,6 @@ import (
 
 	"github.com/gucooing/hkrpg-go/gateserver/session"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
-	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/mq"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
@@ -15,9 +14,8 @@ import (
 type packetFunc func(g *GateServer, s session.SessionAll, payloadMsg pb.Message)
 
 var packetCaptureMap = map[uint16]packetFunc{ // 抽包
-	cmd.PlayerLogoutCsReq:               PlayerLogoutCsReq,               // 下线请求
-	cmd.SendMsgCsReq:                    SendMsgCsReq,                    // 发送聊天消息
-	cmd.GetFriendRecommendListInfoCsReq: GetFriendRecommendListInfoCsReq, // 获取附近的人
+	cmd.PlayerLogoutCsReq: PlayerLogoutCsReq, // 下线请求
+	cmd.SendMsgCsReq:      SendMsgCsReq,      // 发送聊天消息
 }
 
 func (g *GateServer) packetCapture(s session.SessionAll, packMsg *alg.PackMsg) {
@@ -61,52 +59,15 @@ func SendMsgCsReq(g *GateServer, sAll session.SessionAll, payloadMsg pb.Message)
 			ExtraId:     req.ExtraId,
 			MessageType: req.MessageType,
 			TargetUid:   targetUid,
-			BNABNCCMILM: req.BNABNCCMILM,
+			OHINLDBELBA: req.OHINLDBELBA,
 			ChatType:    req.ChatType,
 		}
-		protoData, err := pb.Marshal(notify)
-		if err != nil {
-			logger.Error(err.Error())
-			return
-		}
-		s.SendChan <- &alg.PackMsg{
-			CmdId:     cmd.RevcMsgScNotify,
-			HeadData:  nil,
-			ProtoData: protoData,
-		}
+		toPlayerMsg(sAll, notify, cmd.RevcMsgScNotify)
 	}
 
 	rsp := &proto.SendMsgScRsp{
 		EndTime: uint64(time.Now().Unix()),
 		Retcode: 0,
 	}
-	rspbin, err := pb.Marshal(rsp)
-	if err != nil {
-		logger.Error(err.Error())
-		return
-	}
-	s.SendChan <- &alg.PackMsg{
-		CmdId:     cmd.SendMsgScRsp,
-		HeadData:  nil,
-		ProtoData: rspbin,
-	}
-}
-
-func GetFriendRecommendListInfoCsReq(g *GateServer, sAll session.SessionAll, payloadMsg pb.Message) {
-	rsp := &proto.GetFriendRecommendListInfoScRsp{
-		PlayerInfoList: make([]*proto.FriendRecommendInfo, 0),
-		Retcode:        0,
-	}
-
-	rspbin, err := pb.Marshal(rsp)
-	if err != nil {
-		logger.Error(err.Error())
-		return
-	}
-	s := sAll.GetSession()
-	s.SendChan <- &alg.PackMsg{
-		CmdId:     cmd.SendMsgScRsp,
-		HeadData:  nil,
-		ProtoData: rspbin,
-	}
+	toPlayerMsg(sAll, rsp, cmd.SendMsgScRsp)
 }

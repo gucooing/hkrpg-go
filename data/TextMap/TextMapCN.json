@@ -30,9 +30,9 @@
   "28": "内部服务错误,请携带截图联系管理员解决",
   "29": "欢迎使用hkrpg-go",
   "30": "%s执行成功",
-  "31": "/give [all,id] 数量 (level等级)",
+  "31": "/give [all,item,relic,equipment,avatar,icon,book,disk,food,formula,chat,theme,mission,gift,pam,pet,物品id] 数量",
   "32": "Id:%v物品不存在",
-  "33": "命令 '/give %s' 错误,第二个参数只能是'all'或'物品id'",
+  "33": "命令 '/give %s' 错误,第二个参数只能是'all,item,relic,equipment,avatar,icon,book,disk,food,formula,chat,theme,mission,gift,pam,pet'或'物品id'",
   "34": "命令 '/give %s %s' 错误,第三个参数只能是'物品数量'",
   "35": "/set 设置类型[WorldLevel,PlayerLevel,JumpMission,Language,MainAvatar] 设置目的[6,80,true,(cn,cht,en),(0,1)]",
   "36": "命令 '/set %s' 不合法,第二个参数只能是:'WorldLevel','PlayerLevel','JumpMission','Language','MainAvatar'",
@@ -81,5 +81,11 @@
   "79": "Lua:%s不存在",
   "80": "命令 '/lua 名称',如:'/lua dump'",
   "81": "启用SDK服务器",
-  "82": "不启用SDK服务器"
+  "82": "不启用SDK服务器",
+  "83": "命令 '/rogue [作用类型(all,handbook,quest,dlc,nous,tourn,magic)] [unlock]',如:'/rogue handbook unlock'",
+  "84": "命令 '/rogue %s',错误,第二个参数只能是'all,handbook,quest,dlc,nous,tourn,magic'",
+  "85": "命令 '/rogue %s %s',错误,第三个参数只能是'unlock'",
+  "100": "未知的模拟宇宙类型:%s",
+  "101": "未知的模拟宇宙Action类型:%s",
+  "102": "未知的物品类型:%s"
 }

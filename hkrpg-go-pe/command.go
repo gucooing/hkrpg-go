@@ -4,10 +4,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"strings"
-	"time"
+	"sync/atomic"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gucooing/hkrpg-go/gameserver/player"
+	"github.com/gucooing/hkrpg-go/gateserver/session"
 	"github.com/gucooing/hkrpg-go/muipserver/api"
 	"github.com/gucooing/hkrpg-go/pkg/alg"
 	"github.com/gucooing/hkrpg-go/pkg/database"
@@ -66,26 +67,10 @@ func (h *HkRpgGoServer) newHttpApi() {
 			}
 			continue
 		}
-
-		timeout2 := time.After(2 * time.Second)
-		select {
-		case p.GamePlayer.RecvChan <- player.Msg{
+		p.GamePlayer.ToRecvChan(player.Msg{
 			Command: a.CommandList,
 			MsgType: player.GmReq,
-		}:
-			if p.GamePlayer.IsClosed {
-				close(p.GamePlayer.RecvChan)
-			}
-		case <-timeout2:
-			a.Resp <- api.ApiResp{
-				Code: 404,
-				Obj: gin.H{
-					"code": -1,
-					"msg":  "player recvchan timeout",
-				},
-			}
-			continue
-		}
+		})
 		a.Resp <- api.ApiResp{
 			Code: 200,
 			Obj: gin.H{
@@ -131,8 +116,10 @@ func getPlayerPb(s *HkRpgGoServer, parameter []string) any {
 
 func status(s *HkRpgGoServer, parameter []string) any {
 	return gin.H{
-		"player_num": len(s.playerMap),
-		"status":     alg.GetStatus(),
+		"msg": fmt.Sprintf("在线玩家:%v\nCPU占用:%.2f%%\n内存占用%s",
+			atomic.LoadInt64(&session.CLIENT_CONN_NUM),
+			alg.GetCpuOc(),
+			alg.MemoryOc()),
 	}
 }
 

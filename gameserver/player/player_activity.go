@@ -8,7 +8,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) PlayerReturnInfoQueryCsReq(payloadMsg pb.Message) {
+func PlayerReturnInfoQueryCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.PlayerReturnInfoQueryScRsp{
 		// Retcode: 0,
 		// PGEJDBOBIFA: &proto.KKEOJCONOPE{
@@ -27,34 +27,34 @@ func (g *GamePlayer) PlayerReturnInfoQueryCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.PlayerReturnInfoQueryScRsp, rsp)
 }
 
-func (g *GamePlayer) PlayerReturnTakeRewardCsReq(payloadMsg pb.Message) {
+func PlayerReturnTakeRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.PlayerReturnTakeRewardScRsp{
 		Retcode: 0,
 	}
 	g.Send(cmd.PlayerReturnTakeRewardScRsp, rsp)
 }
 
-func (g *GamePlayer) PlayerReturnSignCsReq(payloadMsg pb.Message) {
+func PlayerReturnSignCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.PlayerReturnSignScRsp{
 		Retcode: 0,
 	}
 	g.Send(cmd.PlayerReturnSignScRsp, rsp)
 }
 
-func (g *GamePlayer) GetTreasureDungeonActivityDataCsReq(payloadMsg pb.Message) {
+func GetTreasureDungeonActivityDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetTreasureDungeonActivityDataScRsp{}
 	g.Send(cmd.GetTreasureDungeonActivityDataScRsp, rsp)
 }
 
-func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg pb.Message) {
+func HandleGetActivityScheduleConfigCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetActivityScheduleConfigScRsp)
 	rsp.ScheduleData = make([]*proto.ActivityScheduleData, 0)
 	for _, activity := range gdconf.GetActivitySchedulingMap() {
 		activityScheduleList := &proto.ActivityScheduleData{
 			ActivityId: activity.ActivityId,
-			EndTime:    activity.EndTime,
+			EndTime:    4294967295, // activity.EndTime,
 			PanelId:    activity.ModuleId,
-			BeginTime:  activity.BeginTime,
+			BeginTime:  1664308800, // activity.BeginTime,
 		}
 		rsp.ScheduleData = append(rsp.ScheduleData, activityScheduleList)
 	}
@@ -62,7 +62,7 @@ func (g *GamePlayer) HandleGetActivityScheduleConfigCsReq(payloadMsg pb.Message)
 	g.Send(cmd.GetActivityScheduleConfigScRsp, rsp)
 }
 
-func (g *GamePlayer) HeliobusActivityDataCsReq(payloadMsg pb.Message) {
+func HeliobusActivityDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.HeliobusActivityDataScRsp{
 		ChallengeList: make([]*proto.ChallengeList, 0),
 		Level:         15,
@@ -71,7 +71,7 @@ func (g *GamePlayer) HeliobusActivityDataCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.HeliobusActivityDataScRsp, rsp)
 }
 
-func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg pb.Message) {
+func GetLoginActivityCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetLoginActivityScRsp{
 		LoginActivityList: make([]*proto.LoginActivityData, 0),
 	}
@@ -96,7 +96,7 @@ func (g *GamePlayer) GetLoginActivityCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.GetLoginActivityScRsp, rsp)
 }
 
-func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
+func TakeLoginActivityRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.TakeLoginActivityRewardCsReq)
 	addItem := model.NewAddItem(nil)
 
@@ -124,47 +124,14 @@ func (g *GamePlayer) TakeLoginActivityRewardCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.TakeLoginActivityRewardScRsp, rsp)
 }
 
-func (g *GamePlayer) GetTrialActivityDataCsReq(payloadMsg pb.Message) {
-	rsp := &proto.GetTrialActivityDataScRsp{
-		TrialActivityInfoList: make([]*proto.TrialActivityInfo, 0),
-	}
+func GetCrossInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	rsp := &proto.GetCrossInfoScRsp{}
 
-	for _, v := range g.GetPd().GetTrialActivity() {
-		if v.Finish {
-			rsp.TrialActivityInfoList = append(rsp.TrialActivityInfoList, &proto.TrialActivityInfo{
-				StageId:     v.StageId,
-				TakenReward: v.TakenReward})
-		}
-	}
-
-	g.Send(cmd.GetTrialActivityDataScRsp, rsp)
-
+	g.Send(cmd.GetCrossInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) TakeTrialActivityRewardCsReq(payloadMsg pb.Message) {
-	req := payloadMsg.(*proto.TakeTrialActivityRewardCsReq)
-	rsp := &proto.TakeTrialActivityRewardScRsp{
-		StageId: req.StageId,
-		Reward: &proto.ItemList{
-			ItemList: make([]*proto.Item, 0),
-		},
-	}
-	conf := gdconf.GetAvatarDemoConfigById(req.StageId)
-	if conf == nil {
-		g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
-		return
-	}
-	db := g.GetPd().GetTrialActivityById(req.StageId)
-	if db.TakenReward || !db.Finish {
-		g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
-		return
-	}
-	addItem := model.NewAddItem(nil)
-	addItem.PileItem = model.GetRewardData(conf.RewardID)
-	g.GetPd().AddItem(addItem)
-	rsp.Reward.ItemList = addItem.ItemList
-	g.AllPlayerSyncScNotify(addItem.AllSync)
-	db.TakenReward = true
+func LobbyGetInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	rsp := &proto.LobbyGetInfoScRsp{}
 
-	g.Send(cmd.TakeTrialActivityRewardScRsp, rsp)
+	g.Send(cmd.LobbyGetInfoScRsp, rsp)
 }

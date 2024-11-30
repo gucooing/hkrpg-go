@@ -1,10 +1,12 @@
 package gdconf
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -79,25 +81,24 @@ func (g *GameDataConfig) loadConfigAdventureAbility() {
 		playerElementsFilePath := g.pathPrefix + "/Config/ConfigAdventureAbility/LocalPlayer/LocalPlayer_" + matches[0][1] + "_Ability.json"
 		playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 		if err != nil {
-			logger.Error("open file error: %v", err)
+			logger.Error(text.GetText(18), playerElementsFilePath, err)
 			continue
 		}
 
 		err = hjson.Unmarshal(playerElementsFile, &localPlayerAbility)
 		if err != nil {
-			logger.Error("parse file error: %v", err)
-			continue
+			panic(fmt.Sprintf(text.GetText(19), playerElementsFilePath, err))
 		}
 		g.ConfigAdventureAbility.LocalPlayer[avatarData.AvatarId] = localPlayerAbility
 	}
 
-	logger.Info("load %v LocalPlayerAbility", len(g.ConfigAdventureAbility.LocalPlayer))
+	logger.Info(text.GetText(17), len(g.ConfigAdventureAbility.LocalPlayer), "LocalPlayerAbility")
 }
 
 func GetAvatarAbilityMap() map[uint32]*LocalPlayerAbility {
-	return CONF.ConfigAdventureAbility.LocalPlayer
+	return getConf().ConfigAdventureAbility.LocalPlayer
 }
 
 func GetAvatarAbility(avatarId uint32) *LocalPlayerAbility {
-	return CONF.ConfigAdventureAbility.LocalPlayer[avatarId]
+	return getConf().ConfigAdventureAbility.LocalPlayer[avatarId]
 }

@@ -12,7 +12,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg pb.Message) {
+func HandlePlayerLoginCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.PlayerLoginCsReq)
 	logger.Info("[UID:%v]登录的客户端版本是:%s", g.Uid, req.ClientVersion)
 	g.Platform = spb.PlatformType(req.Platform)
@@ -36,7 +36,7 @@ func (g *GamePlayer) HandlePlayerLoginCsReq(payloadMsg pb.Message) {
 	g.LoginReady() // 登录准备工作
 }
 
-func (g *GamePlayer) SyncClientResVersionCsReq(payloadMsg pb.Message) {
+func SyncClientResVersionCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SyncClientResVersionCsReq)
 
 	rsp := new(proto.SyncClientResVersionScRsp)
@@ -107,11 +107,6 @@ func (g *GamePlayer) ClientDownloadDataScNotify(data []byte) {
 		},
 	},
 	)
-}
-
-func (g *GamePlayer) SceneUpdatePositionVersionNotify() {
-	notify := &proto.SceneUpdatePositionVersionNotify{}
-	g.Send(cmd.SceneUpdatePositionVersionNotify, notify)
 }
 
 func (g *GamePlayer) Dump() {

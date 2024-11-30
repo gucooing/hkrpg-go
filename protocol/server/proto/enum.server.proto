@@ -30,10 +30,12 @@ enum HeroBasicType {// 主角类型
 
 enum AvatarType {// 角色状态
   AVATAR_TYPE_NONE = 0;
-  AVATAR_TRIAL_TYPE = 1;
-  AVATAR_LIMIT_TYPE = 2;
-  AVATAR_FORMAL_TYPE = 3;
-  AVATAR_ASSIST_TYPE = 4;
+  AVATAR_TRIAL_TYPE = 1; // 试用
+  AVATAR_LIMIT_TYPE = 2; // 死亡
+  AVATAR_FORMAL_TYPE = 3; // 正常
+  AVATAR_ASSIST_TYPE = 4; // 援助
+  AVATAR_AETHER_DIVIDE_TYPE = 5;
+  AVATAR_UPGRADE_AVAILABLE_TYPE = 6;
 }
 
 enum ExtraLineupType {// 队伍类型
@@ -59,7 +61,7 @@ enum BattleType{// 战斗状态
   Battle_CHALLENGE = 1; // 忘却之庭
   Battle_CHALLENGE_Story = 2; // 忘却之庭活动
   Battle_CHALLENGE_Story_2 = 3; // 末日之影
-  Battle_ROGUE = 4;// 模拟宇宙
+  Battle_QUSET_ROGUE = 4;// 模拟宇宙
   Battle_TrialActivity = 5; // 角色试用
   Battle_ROGUE_TOURN = 6; // 差分宇宙
   Battle_RAID = 7;// 副本
@@ -175,12 +177,6 @@ enum MessageSectionStatus{
     MESSAGE_SECTION_DOING = 1;
     MESSAGE_SECTION_FINISH = 2;
     MESSAGE_SECTION_FROZEN = 3;
-}
-
-enum LineAvatarType {// 队伍角色属性
-  LineAvatarType_MI = 0;
-  LineAvatarType_TRIAL = 1;// 试用
-  LineAvatarType_ASSIST = 2;// 援助
 }
 
 enum RogueTalentStatus { // 灵感回路信息

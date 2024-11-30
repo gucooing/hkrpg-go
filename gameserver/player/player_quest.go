@@ -7,7 +7,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) GetQuestDataCsReq(payloadMsg pb.Message) {
+func GetQuestDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := new(proto.GetQuestDataScRsp)
 	rsp.QuestList = make([]*proto.Quest, 0)
 	for _, questInfo := range gdconf.GetQuestDataMap() {

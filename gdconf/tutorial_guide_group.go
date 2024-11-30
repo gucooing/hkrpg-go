@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -21,28 +22,27 @@ type TutorialGuideGroup struct {
 func (g *GameDataConfig) loadTutorialGuideGroup() {
 	g.TutorialGuideGroupMap = make(map[uint32]*TutorialGuideGroup)
 	tutorialGuideGroupMap := make([]*TutorialGuideGroup, 0)
-	playerElementsFilePath := g.excelPrefix + "TutorialGuideGroup.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "TutorialGuideGroup.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &tutorialGuideGroupMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range tutorialGuideGroupMap {
 		g.TutorialGuideGroupMap[v.GroupID] = v
 	}
-	logger.Info("load %v TutorialGuideGroup", len(g.TutorialGuideGroupMap))
+
+	logger.Info(text.GetText(17), len(g.TutorialGuideGroupMap), name)
 }
 
 func GetTutorialGuideGroupMap() map[uint32]*TutorialGuideGroup {
-	return CONF.TutorialGuideGroupMap
+	return getConf().TutorialGuideGroupMap
 }
 
 func GetTutorialGuideGroup(groupID uint32) *TutorialGuideGroup {
-	return CONF.TutorialGuideGroupMap[groupID]
+	return getConf().TutorialGuideGroupMap[groupID]
 }

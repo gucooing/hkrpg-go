@@ -54,7 +54,7 @@ func (g *GameDataConfig) goppFloor() {
 }
 
 func GetGoppRtLevelDimensionInfo(planeID, floorID, dimId uint32) *GoppRtLevelDimensionInfo {
-	f, ok := CONF.GoppFloorMap[planeID][floorID]
+	f, ok := getConf().GoppFloorMap[planeID][floorID]
 	if !ok {
 		return nil
 	}

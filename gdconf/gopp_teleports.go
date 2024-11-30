@@ -2,6 +2,7 @@ package gdconf
 
 import (
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 )
 
 type Teleports struct {
@@ -17,10 +18,9 @@ type TeleportsByGroupId struct {
 
 func (g *GameDataConfig) goppTeleports() {
 	g.Teleports = make(map[uint32]map[uint32]*Teleports)
-	floor := CONF.FloorMap
+	floor := getConf().FloorMap
 	if floor == nil {
-		logger.Error("floor error")
-
+		logger.Error(text.GetText(25))
 		return
 	}
 	for planeId, list := range floor {
@@ -36,7 +36,7 @@ func (g *GameDataConfig) goppTeleports() {
 			}
 			groupList := GetGroupById(planeId, floorId)
 			if groupList == nil {
-				// logger.Debug("goppTeleports planeId:%v,floorId:%v,error", planeId, floorId)
+				logger.Debug(text.GetText(26), planeId, floorId)
 				continue
 			}
 			teleports := make(map[uint32]*PropList)
@@ -62,19 +62,19 @@ func (g *GameDataConfig) goppTeleports() {
 		}
 	}
 
-	logger.Info("gopp %v Teleports", len(g.Teleports))
+	logger.Info(text.GetText(17), len(g.Teleports), "Teleports")
 }
 
 func GetTeleportsById(planeId, floorId uint32) *Teleports {
-	if CONF.Teleports[planeId] == nil {
+	if getConf().Teleports[planeId] == nil {
 		return nil
 	}
-	return CONF.Teleports[planeId][floorId]
+	return getConf().Teleports[planeId][floorId]
 }
 
 func GetGroupTeleportsById(planeId, floorId, groupID uint32) *TeleportsByGroupId {
-	if CONF.Teleports[planeId] == nil || CONF.Teleports[planeId][floorId] == nil {
+	if getConf().Teleports[planeId] == nil || getConf().Teleports[planeId][floorId] == nil {
 		return nil
 	}
-	return CONF.Teleports[planeId][floorId].TeleportsByGroupId[groupID]
+	return getConf().Teleports[planeId][floorId].TeleportsByGroupId[groupID]
 }

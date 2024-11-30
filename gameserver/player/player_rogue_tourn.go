@@ -9,7 +9,7 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
+func RogueTournQueryCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.RogueTournQueryScRsp{
 		Retcode:           0,
 		RogueTournCurInfo: g.GetPd().GetRogueTournCurInfo(),
@@ -27,7 +27,7 @@ func (g *GamePlayer) RogueTournQueryCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.RogueTournQueryScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg pb.Message) {
+func RogueTournGetPermanentTalentInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.RogueTournGetPermanentTalentInfoScRsp{
 		PermanentInfo: g.GetPd().GetInspirationCircuitInfo(),
 		Retcode:       0,
@@ -35,12 +35,12 @@ func (g *GamePlayer) RogueTournGetPermanentTalentInfoCsReq(payloadMsg pb.Message
 	g.Send(cmd.RogueTournGetPermanentTalentInfoScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournGetMiscRealTimeDataCsReq(payloadMsg pb.Message) {
+func RogueTournGetMiscRealTimeDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.RogueTournGetMiscRealTimeDataScRsp{}
 	g.Send(cmd.RogueTournGetMiscRealTimeDataScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournStartCsReq(payloadMsg pb.Message) {
+func RogueTournStartCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.RogueTournStartCsReq)
 	rsp := new(proto.RogueTournStartScRsp)
 	conf := gdconf.GetRogueTournAreaById(req.AreaId)
@@ -64,12 +64,12 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg pb.Message) {
 	rsp.RogueTournCurInfo = g.GetPd().GetRogueTournCurInfo()
 
 	// 选择三个初始方程
-	g.GetPd().AddRogueBuffNum()
+
 	g.FormulaSyncRogueCommonPendingActionScNotify([]uint32{130204, 130408, 130307})
 	rsp.RogueTournCurInfo.RogueTournCurAreaInfo.PendingAction = &proto.RogueCommonPendingAction{
-		QueuePosition: g.GetPd().GetRogueBuffNum(),
+		// QueuePosition: g.GetPd().GetRogueBuffNum(),
 		RogueAction: &proto.RogueAction{
-			Action: &proto.RogueAction_RogueFormulaSelectInfo{
+			PendingAction: &proto.RogueAction_RogueFormulaSelectInfo{
 				RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
 					SelectFormulaIdList: []uint32{130204, 130408, 130307},
 				},
@@ -80,7 +80,7 @@ func (g *GamePlayer) RogueTournStartCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.RogueTournStartScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg pb.Message) {
+func RogueTournEnterCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	curRoom := g.GetPd().GetCurRogueTournRoom()
 	rsp := &proto.RogueTournEnterScRsp{
 		RogueTournCurInfo: g.GetPd().GetRogueTournCurInfo(),
@@ -94,7 +94,7 @@ func (g *GamePlayer) RogueTournEnterCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.RogueTournEnterScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg pb.Message) {
+func RogueTournSettleCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.RogueTournSettleScRsp{
 		Retcode: 0,
 		// IOLFDOIPNKA:            nil,
@@ -105,7 +105,7 @@ func (g *GamePlayer) RogueTournSettleCsReq(payloadMsg pb.Message) {
 	g.Send(cmd.RogueTournSettleScRsp, rsp)
 }
 
-func (g *GamePlayer) RogueTournEnterRoomCsReq(payloadMsg pb.Message) {
+func RogueTournEnterRoomCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.RogueTournEnterRoomCsReq)
 	layerIndex, curRoomIndex := g.GetPd().UpdateRogueTournEnterRoom(req.CurRoomIndex, req.NextRoomType)
 	g.RogueTournLevelInfoUpdateScNotify(layerIndex, curRoomIndex)
@@ -154,9 +154,9 @@ func (g *GamePlayer) FormulaSyncRogueCommonPendingActionScNotify(formulaList []u
 	notify := &proto.SyncRogueCommonPendingActionScNotify{
 		RogueSubMode: 301,
 		Action: &proto.RogueCommonPendingAction{
-			QueuePosition: g.GetPd().GetRogueBuffNum(),
+			// QueuePosition: g.GetPd().GetRogueBuffNum(),
 			RogueAction: &proto.RogueAction{
-				Action: &proto.RogueAction_RogueFormulaSelectInfo{
+				PendingAction: &proto.RogueAction_RogueFormulaSelectInfo{
 					RogueFormulaSelectInfo: &proto.RogueFormulaSelectInfo{
 						SelectFormulaIdList: formulaList,
 					},

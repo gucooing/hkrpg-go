@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -19,28 +20,27 @@ type MonsterConfig struct {
 func (g *GameDataConfig) loadMonsterConfig() {
 	g.MonsterConfigMap = make(map[uint32]*MonsterConfig)
 	monsterConfigMap := make([]*MonsterConfig, 0)
-	playerElementsFilePath := g.excelPrefix + "MonsterConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "MonsterConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &monsterConfigMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range monsterConfigMap {
 		g.MonsterConfigMap[v.MonsterID] = v
 	}
-	logger.Info("load %v MonsterConfig", len(g.MonsterConfigMap))
+
+	logger.Info(text.GetText(17), len(g.MonsterConfigMap), name)
 }
 
 func GetMonsterConfigById(monsterID uint32) *MonsterConfig {
-	return CONF.MonsterConfigMap[monsterID]
+	return getConf().MonsterConfigMap[monsterID]
 }
 
 func GetMonsterConfigMap() map[uint32]*MonsterConfig {
-	return CONF.MonsterConfigMap
+	return getConf().MonsterConfigMap
 }

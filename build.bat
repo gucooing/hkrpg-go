@@ -33,9 +33,9 @@ for %%p in (%PLATFORMS%) do (
             set "OUTPUT_NAME=%%~nf"
 
             if "!GOOS!"=="windows" (
-                go build -ldflags="-s -w" -o "!CURRENT_OUT_DIR!/!OUTPUT_NAME!_!GOOS!_!GOARCH!.exe" %%f
+                go build -tags=push -ldflags="-s -w" -o "!CURRENT_OUT_DIR!/!OUTPUT_NAME!_!GOOS!_!GOARCH!.exe" %%f
             ) else (
-                go build -ldflags="-s -w" -o "!CURRENT_OUT_DIR!/!OUTPUT_NAME!_!GOOS!_!GOARCH!" %%f
+                go build -tags=push -ldflags="-s -w" -o "!CURRENT_OUT_DIR!/!OUTPUT_NAME!_!GOOS!_!GOARCH!" %%f
             )
         )
     )

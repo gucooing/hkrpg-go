@@ -17,3 +17,21 @@ const (
 	RogueTournRoomTypeReforge   RogueTournRoomType = 11
 	RogueTournRoomTypeHidden    RogueTournRoomType = 12
 )
+
+type RogueBuffCategory = string
+
+const (
+	RogueBuffCategoryNone      RogueBuffCategory = ""
+	RogueBuffCategoryCommon    RogueBuffCategory = "Common"
+	RogueBuffCategoryRare      RogueBuffCategory = "Rare"
+	RogueBuffCategoryLegendary RogueBuffCategory = "Legendary"
+)
+
+type RogueBuffAeonType = string
+
+const (
+	RogueBuffAeonTypeNormal                 RogueBuffAeonType = ""
+	RogueBuffAeonTypeBattleEventBuff        RogueBuffAeonType = "BattleEventBuff"
+	RogueBuffAeonTypeBattleEventBuffEnhance RogueBuffAeonType = "BattleEventBuffEnhance"
+	RogueBuffAeonTypeBattleEventBuffCross   RogueBuffAeonType = "BattleEventBuffCross"
+)

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -24,11 +25,10 @@ func (g *GameDataConfig) loadMessageGroupConfig() {
 		LoadMessageGroupConfig: make(map[uint32]*LoadMessageGroupConfig),
 		GoppMessageGroupConfig: make(map[uint32]*LoadMessageGroupConfig),
 	}
-	playerElementsFilePath := g.excelPrefix + "MessageGroupConfig.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "MessageGroupConfig.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	if g.MessageGroupConfig.LoadMessageGroupConfig == nil {
@@ -39,8 +39,7 @@ func (g *GameDataConfig) loadMessageGroupConfig() {
 
 	err = hjson.Unmarshal(playerElementsFile, &loadMessageGroupConfig)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 
 	for _, info := range loadMessageGroupConfig {
@@ -53,14 +52,13 @@ func (g *GameDataConfig) loadMessageGroupConfig() {
 		}
 	}
 
-	logger.Info("load %v MessageGroupConfig", len(g.MessageGroupConfig.LoadMessageGroupConfig))
-
+	logger.Info(text.GetText(17), len(g.MessageGroupConfig.LoadMessageGroupConfig), name)
 }
 
 func GetMessageGroupConfigByID(id uint32) *LoadMessageGroupConfig {
-	return CONF.MessageGroupConfig.LoadMessageGroupConfig[id]
+	return getConf().MessageGroupConfig.LoadMessageGroupConfig[id]
 }
 
 func GetMessageGroupConfigBySectionID(id uint32) *LoadMessageGroupConfig {
-	return CONF.MessageGroupConfig.GoppMessageGroupConfig[id]
+	return getConf().MessageGroupConfig.GoppMessageGroupConfig[id]
 }

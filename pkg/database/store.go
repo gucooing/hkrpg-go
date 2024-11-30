@@ -1,6 +1,8 @@
 package database
 
 import (
+	"log"
+
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/redis/go-redis/v9"
@@ -111,8 +113,16 @@ func NewNodeStore(mysqlList map[string]constant.MysqlConf, redisList map[string]
 
 var PE *gorm.DB
 
-func NewPE(dsn string) {
-	PE = NewSqlite(dsn)
+func NewPE(t, dsn string) {
+	switch t {
+	case "sqlite":
+		PE = NewSqlite(dsn)
+	case "mysql":
+		PE = NewMysql(dsn)
+	default:
+		log.Panicln("数据库的类型只支持 'sqlite' 和 'mysql' ")
+	}
+
 	PE.AutoMigrate(
 		&constant.Account{},      // sdk账户
 		&constant.PlayerUid{},    // 映射表

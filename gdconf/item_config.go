@@ -6,19 +6,30 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
 type ItemList struct {
-	AllItem          map[uint32]*ItemConfig // 总表
-	Item             map[uint32]*ItemConfig // 物品
-	Avatar           map[uint32]*ItemConfig // 角色
-	AvatarPlayerIcon map[uint32]*ItemConfig // 头像
-	AvatarRank       map[uint32]*ItemConfig // 命星
-	Book             map[uint32]*ItemConfig // 书籍
-	Disk             map[uint32]*ItemConfig // 磁盘？
-	Equipment        map[uint32]*ItemConfig // 光锥
-	Relic            map[uint32]*ItemConfig // 圣遗物
+	AllItem           map[uint32]*ItemConfig // 总表
+	Item              map[uint32]*ItemConfig // 物品
+	Avatar            map[uint32]*ItemConfig // 角色
+	AvatarPlayerIcon  map[uint32]*ItemConfig // 头像
+	AvatarRank        map[uint32]*ItemConfig // 命星
+	Book              map[uint32]*ItemConfig // 书籍
+	Disk              map[uint32]*ItemConfig // 音乐
+	Equipment         map[uint32]*ItemConfig // 光锥
+	Relic             map[uint32]*ItemConfig // 圣遗物
+	Food              map[uint32]*ItemConfig // 食物
+	Formula           map[uint32]*ItemConfig // 配方
+	ChatBubble        map[uint32]*ItemConfig // 聊天框
+	PhoneTheme        map[uint32]*ItemConfig // 手机主题
+	Mission           map[uint32]*ItemConfig // 任务物品
+	Material          map[uint32]*ItemConfig // 神奇道具
+	ForceOpitonalGift map[uint32]*ItemConfig // 命途赠礼
+	Virtual           map[uint32]*ItemConfig // 活动道具
+	PamSkin           map[uint32]*ItemConfig // 帕姆衣服
+	NormalPet         map[uint32]*ItemConfig // 宠物
 }
 
 type ItemConfig struct {
@@ -30,200 +41,156 @@ type ItemConfig struct {
 	PurposeType         uint32                `json:"PurposeType"`
 	IsVisible           bool                  `json:"isVisible"`
 	PileLimit           uint32                `json:"PileLimit"`
-	UseDataID           uint32                `json:"UseDataID"`
+	ReturnItemIDList    []*ReturnItemIDList   `json:"ReturnItemIDList"` // 销毁返还物品
 	CustomDataList      []uint32              `json:"CustomDataList"`
 	UseMethod           string                `json:"UseMethod"`
 }
 
-func (g *GameDataConfig) loadItemConfig() {
-	itemMap := make([]*ItemConfig, 0)
-	avatarMap := make([]*ItemConfig, 0)
-	avatarPlayerIconMap := make([]*ItemConfig, 0)
-	avatarRankMap := make([]*ItemConfig, 0)
-	bookMap := make([]*ItemConfig, 0)
-	diskMap := make([]*ItemConfig, 0)
-	equipmentMap := make([]*ItemConfig, 0)
-	relicMap := make([]*ItemConfig, 0)
-	playerCardMap := make([]*ItemConfig, 0)
-
-	playerElementsFileItemConfig, err := os.ReadFile(g.excelPrefix + "ItemConfig.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfig, &itemMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemConfigAvatar, err := os.ReadFile(g.excelPrefix + "ItemConfigAvatar.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigAvatar, &avatarMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemConfigAvatarPlayerIcon, err := os.ReadFile(g.excelPrefix + "ItemConfigAvatarPlayerIcon.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigAvatarPlayerIcon, &avatarPlayerIconMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemConfigAvatarRank, err := os.ReadFile(g.excelPrefix + "ItemConfigAvatarRank.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigAvatarRank, &avatarRankMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemConfigBook, err := os.ReadFile(g.excelPrefix + "ItemConfigBook.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigBook, &bookMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemConfigDisk, err := os.ReadFile(g.excelPrefix + "ItemConfigDisk.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigDisk, &diskMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemConfigEquipment, err := os.ReadFile(g.excelPrefix + "ItemConfigEquipment.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigEquipment, &equipmentMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemConfigRelic, err := os.ReadFile(g.excelPrefix + "ItemConfigRelic.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemConfigRelic, &relicMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	playerElementsFileItemPlayerCard, err := os.ReadFile(g.excelPrefix + "ItemPlayerCard.json")
-	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
-	}
-	err = hjson.Unmarshal(playerElementsFileItemPlayerCard, &playerCardMap)
-	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
-	}
-
-	g.ItemConfigMap = &ItemList{
-		AllItem:          make(map[uint32]*ItemConfig),
-		Item:             make(map[uint32]*ItemConfig),
-		Avatar:           make(map[uint32]*ItemConfig),
-		AvatarPlayerIcon: make(map[uint32]*ItemConfig),
-		AvatarRank:       make(map[uint32]*ItemConfig),
-		Book:             make(map[uint32]*ItemConfig),
-		Disk:             make(map[uint32]*ItemConfig),
-		Equipment:        make(map[uint32]*ItemConfig),
-		Relic:            make(map[uint32]*ItemConfig),
-	}
-
-	for _, v := range itemMap {
-		g.ItemConfigMap.Item[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range avatarMap {
-		g.ItemConfigMap.Avatar[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range avatarPlayerIconMap {
-		g.ItemConfigMap.AvatarPlayerIcon[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range playerCardMap {
-		g.ItemConfigMap.AvatarPlayerIcon[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range avatarRankMap {
-		g.ItemConfigMap.AvatarRank[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range bookMap {
-		g.ItemConfigMap.Book[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range diskMap {
-		g.ItemConfigMap.Disk[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range equipmentMap {
-		g.ItemConfigMap.Equipment[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-	for _, v := range relicMap {
-		g.ItemConfigMap.Relic[v.ID] = v
-		addItem(v, g.ItemConfigMap)
-	}
-
-	logger.Info("load %v ItemConfig", len(g.ItemConfigMap.AllItem))
+type ReturnItemIDList struct {
+	ItemID  uint32 `json:"ItemID"`
+	ItemNum uint32 `json:"ItemNum"`
 }
 
-func addItem(v *ItemConfig, itemMap *ItemList) {
-	if itemMap.AllItem == nil {
-		itemMap.AllItem = make(map[uint32]*ItemConfig)
+func (g *GameDataConfig) loadItemConfig() {
+	fileList := []string{"ItemConfig.json", "ItemConfigAvatar.json", "ItemConfigAvatarPlayerIcon.json",
+		"ItemConfigAvatarRank.json", "ItemConfigBook.json", "ItemConfigDisk.json", "ItemConfigEquipment.json",
+		"ItemConfigRelic.json", "ItemPlayerCard.json", "ItemConfigTrainDynamic.json"}
+
+	g.ItemConfigMap = &ItemList{
+		AllItem:           make(map[uint32]*ItemConfig),
+		Item:              make(map[uint32]*ItemConfig),
+		Avatar:            make(map[uint32]*ItemConfig),
+		AvatarPlayerIcon:  make(map[uint32]*ItemConfig),
+		AvatarRank:        make(map[uint32]*ItemConfig),
+		Book:              make(map[uint32]*ItemConfig),
+		Disk:              make(map[uint32]*ItemConfig),
+		Equipment:         make(map[uint32]*ItemConfig),
+		Relic:             make(map[uint32]*ItemConfig),
+		Food:              make(map[uint32]*ItemConfig),
+		Formula:           make(map[uint32]*ItemConfig),
+		ChatBubble:        make(map[uint32]*ItemConfig),
+		PhoneTheme:        make(map[uint32]*ItemConfig),
+		Mission:           make(map[uint32]*ItemConfig),
+		PamSkin:           make(map[uint32]*ItemConfig),
+		Material:          make(map[uint32]*ItemConfig),
+		Virtual:           make(map[uint32]*ItemConfig),
+		ForceOpitonalGift: make(map[uint32]*ItemConfig),
+		NormalPet:         make(map[uint32]*ItemConfig),
 	}
-	if itemMap.AllItem[v.ID] == nil {
-		itemMap.AllItem[v.ID] = v
-	} else {
-		logger.Error("add item %v fail", v.ID)
+
+	for _, name := range fileList {
+		itemList := make([]*ItemConfig, 0)
+		bin, err := os.ReadFile(g.excelPrefix + name)
+		if err != nil {
+			panic(fmt.Sprintf(text.GetText(18), name, err))
+		}
+		err = hjson.Unmarshal(bin, &itemList)
+		if err != nil {
+			logger.Error(text.GetText(19), name, err)
+			return
+		}
+		g.addItem(itemList)
+		logger.Info(text.GetText(17), len(itemList), name)
+	}
+
+	logger.Info(text.GetText(17), len(g.ItemConfigMap.AllItem), "AllItem")
+}
+
+func (g *GameDataConfig) addItem(list []*ItemConfig) {
+	if g.ItemConfigMap.AllItem == nil { // 用来验证背包是否合法
+		g.ItemConfigMap.AllItem = make(map[uint32]*ItemConfig)
+	}
+	for _, v := range list {
+		if g.ItemConfigMap.AllItem[v.ID] == nil {
+			g.ItemConfigMap.AllItem[v.ID] = v
+		}
+		switch v.ItemSubType {
+		case constant.ItemSubTypeAvatarCard: // 角色
+			g.ItemConfigMap.Avatar[v.ID] = v
+			continue
+		case constant.ItemSubTypeHeadIcon: // 头像
+			g.ItemConfigMap.AvatarPlayerIcon[v.ID] = v
+		case constant.ItemSubTypeEidolon: // 命座
+			g.ItemConfigMap.AvatarRank[v.ID] = v
+			continue
+		case constant.ItemSubTypeBook: // 书籍
+			g.ItemConfigMap.Book[v.ID] = v
+		case constant.ItemSubTypeMusicAlbum: // 音乐
+			g.ItemConfigMap.Disk[v.ID] = v
+		case constant.ItemSubTypeEquipment: // 光锥
+			g.ItemConfigMap.Equipment[v.ID] = v
+			continue
+		case constant.ItemSubTypeRelic: // 遗器
+			g.ItemConfigMap.Relic[v.ID] = v
+			continue
+		case constant.ItemSubTypeFood: // 食物
+			g.ItemConfigMap.Food[v.ID] = v
+		case constant.ItemSubTypeFormula: // 配方
+			g.ItemConfigMap.Formula[v.ID] = v
+		case constant.ItemSubTypeChatBubble: // 聊天框
+			g.ItemConfigMap.ChatBubble[v.ID] = v
+			continue
+		case constant.ItemSubTypePhoneTheme: // 手机主题
+			g.ItemConfigMap.PhoneTheme[v.ID] = v
+			continue
+		case constant.ItemSubTypeMission: // 任务物品
+			g.ItemConfigMap.Mission[v.ID] = v
+		case constant.ItemSubTypeMaterial: // 神奇道具
+			g.ItemConfigMap.Material[v.ID] = v
+		case constant.ItemSubTypeVirtual: // 活动道具
+			g.ItemConfigMap.Virtual[v.ID] = v
+		case constant.ItemSubTypeForceOpitonalGift: // 命途赠礼
+			g.ItemConfigMap.ForceOpitonalGift[v.ID] = v
+		case constant.ItemSubTypeNormalPet: // 宠物
+			g.ItemConfigMap.NormalPet[v.ID] = v
+		case constant.ItemSubTypePamSkin: // 帕姆衣服
+			g.ItemConfigMap.PamSkin[v.ID] = v
+			continue
+		case constant.ItemMainTypeTrainPartyDiyMaterial: // 列车自定义材料
+			continue
+		default:
+
+		}
+		g.ItemConfigMap.Item[v.ID] = v
 	}
 }
 
 func GetItemConfig() *ItemList {
-	return CONF.ItemConfigMap
+	return getConf().ItemConfigMap
 }
 
-func GetItemConfigMap() map[uint32]*ItemConfig {
-	return CONF.ItemConfigMap.AllItem
+func GetAllItemConfigMap() map[uint32]*ItemConfig {
+	return getConf().ItemConfigMap.AllItem
+}
+
+func GetAllItemConfigById(id uint32) *ItemConfig {
+	return getConf().ItemConfigMap.AllItem[id]
 }
 
 func GetItemConfigById(id uint32) *ItemConfig {
-	return CONF.ItemConfigMap.AllItem[id]
+	return getConf().ItemConfigMap.Item[id]
+}
+
+func GetItemItem() map[uint32]*ItemConfig {
+	return getConf().ItemConfigMap.Item
 }
 
 func GetItemRelic() map[uint32]*ItemConfig {
-	return CONF.ItemConfigMap.Relic
+	return getConf().ItemConfigMap.Relic
 }
 
 func GetItemEquipment() map[uint32]*ItemConfig {
-	return CONF.ItemConfigMap.Equipment
+	return getConf().ItemConfigMap.Equipment
+}
+
+func GetItemAvatar() map[uint32]*ItemConfig {
+	return getConf().ItemConfigMap.Avatar
+}
+
+func GetItemConfigRelicById(ID uint32) *ItemConfig {
+	return getConf().ItemConfigMap.Relic[ID]
+}
+
+func GetItemConfigEquipmentById(ID uint32) *ItemConfig {
+	return getConf().ItemConfigMap.Equipment[ID]
 }

@@ -1,6 +1,7 @@
 package gdconf
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -23,14 +24,12 @@ func (g *GameDataConfig) loadMazePlane() {
 	name := "MazePlane.json"
 	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		logger.Error(text.GetText(18), name, err)
-		return
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &mazePlaneMap)
 	if err != nil {
-		logger.Error(text.GetText(19), name, err)
-		return
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range mazePlaneMap {
 		g.MazePlaneMap[v.PlaneID] = v
@@ -40,11 +39,11 @@ func (g *GameDataConfig) loadMazePlane() {
 }
 
 func GetMazePlaneById(planeID uint32) *MazePlane {
-	return CONF.MazePlaneMap[planeID]
+	return getConf().MazePlaneMap[planeID]
 }
 
 func GetMazePlaneMap() map[uint32]*MazePlane {
-	return CONF.MazePlaneMap
+	return getConf().MazePlaneMap
 }
 
 func GetPlaneType(planeID uint32) uint32 {

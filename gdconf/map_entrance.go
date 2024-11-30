@@ -1,6 +1,7 @@
 package gdconf
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
@@ -26,14 +27,12 @@ func (g *GameDataConfig) loadMapEntrance() {
 	name := "MapEntrance.json"
 	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		logger.Error(text.GetText(18), name, err)
-		return
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &mapEntranceMap)
 	if err != nil {
-		logger.Error(text.GetText(19), name, err)
-		return
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range mapEntranceMap {
 		g.MapEntranceMap[v.ID] = v
@@ -43,7 +42,7 @@ func (g *GameDataConfig) loadMapEntrance() {
 }
 
 func GetMapEntranceById(entryId uint32) *MapEntrance {
-	return CONF.MapEntranceMap[entryId]
+	return getConf().MapEntranceMap[entryId]
 }
 
 func GetPFlaneID(entryId uint32) (uint32, uint32, bool) {
@@ -55,12 +54,12 @@ func GetPFlaneID(entryId uint32) (uint32, uint32, bool) {
 }
 
 func GetMapEntranceMap() map[uint32]*MapEntrance {
-	return CONF.MapEntranceMap
+	return getConf().MapEntranceMap
 }
 
 func GetEntryIdList() []uint32 {
 	var entryIdList []uint32
-	for _, id := range CONF.MapEntranceMap {
+	for _, id := range getConf().MapEntranceMap {
 		entryIdList = append(entryIdList, id.ID)
 	}
 	return entryIdList

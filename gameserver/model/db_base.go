@@ -15,6 +15,7 @@ const (
 
 type AllPlayerSync struct {
 	IsBasic                bool     // 基本信息
+	UnlockPamSkinList      []uint32 // 帕姆衣服解锁
 	AvatarList             []uint32 // 角色列表
 	UnlockedHeadIconList   []uint32 // 头像解锁列表
 	MaterialList           []uint32 // 物品id列表
@@ -30,6 +31,7 @@ type AllPlayerSync struct {
 func NewAllPlayerSync() *AllPlayerSync {
 	return &AllPlayerSync{
 		IsBasic:                true,
+		UnlockPamSkinList:      make([]uint32, 0),
 		AvatarList:             make([]uint32, 0),
 		UnlockedHeadIconList:   make([]uint32, 0),
 		MaterialList:           make([]uint32, 0),
@@ -208,29 +210,10 @@ func (g *PlayerData) DelStamina(num uint32) {
 
 func (g *PlayerData) CheckStamina() bool {
 	curStamina := g.GetMaterialById(Stamina)
+	curRStamina := g.GetMaterialById(RStamina)
 	curTime := time.Now().Unix()
 	notify := false
-	if curStamina == 240 {
-		// 检查后备体力恢复情况
-		if g.GetMaterialById(RStamina) < 2400 {
-			if g.GetBasicBin().LastStaminaTime == 0 {
-				g.GetBasicBin().LastStaminaTime = curTime
-			}
-			diff := curTime - g.GetBasicBin().LastStaminaTime
-			reSt := diff / RReserveStaminaTime
-			if reSt > 0 {
-				g.AddMaterial([]*Material{{
-					Tid: RStamina,
-					Num: uint32(reSt),
-				}})
-				g.GetBasicBin().LastStaminaTime = curTime - (diff - reSt*RReserveStaminaTime)
-				notify = true
-			}
-			if g.GetMaterialById(RStamina) == 2400 {
-				g.GetBasicBin().LastStaminaTime = 0
-			}
-		}
-	} else {
+	if curStamina < 240 { // 检查体力恢复情况
 		if g.GetBasicBin().LastStaminaTime == 0 {
 			g.GetBasicBin().LastStaminaTime = curTime
 		}
@@ -244,9 +227,22 @@ func (g *PlayerData) CheckStamina() bool {
 			g.GetBasicBin().LastStaminaTime = curTime - (diff - reSt*ReserveStaminaTime)
 			notify = true
 		}
-		if g.GetMaterialById(Stamina) == 240 {
-			g.GetBasicBin().LastStaminaTime = 0
+	} else if curRStamina < 2400 { // 检查后备体力恢复情况
+		if g.GetBasicBin().LastStaminaTime == 0 {
+			g.GetBasicBin().LastStaminaTime = curTime
 		}
+		diff := curTime - g.GetBasicBin().LastStaminaTime
+		reSt := diff / RReserveStaminaTime
+		if reSt > 0 {
+			g.AddMaterial([]*Material{{
+				Tid: RStamina,
+				Num: uint32(reSt),
+			}})
+			g.GetBasicBin().LastStaminaTime = curTime - (diff - reSt*RReserveStaminaTime)
+			notify = true
+		}
+	} else {
+		g.GetBasicBin().LastStaminaTime = 0
 	}
 	return notify
 }

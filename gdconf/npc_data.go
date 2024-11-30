@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/hjson/hjson-go/v4"
 )
 
@@ -20,25 +21,23 @@ type NPCData struct {
 func (g *GameDataConfig) loadNPCData() {
 	g.NPCDataMap = make(map[uint32]*NPCData)
 	nPCDataMap := make([]*NPCData, 0)
-	playerElementsFilePath := g.excelPrefix + "NPCData.json"
-	playerElementsFile, err := os.ReadFile(playerElementsFilePath)
+	name := "NPCData.json"
+	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
 	if err != nil {
-		info := fmt.Sprintf("open file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(18), name, err))
 	}
 
 	err = hjson.Unmarshal(playerElementsFile, &nPCDataMap)
 	if err != nil {
-		info := fmt.Sprintf("parse file error: %v", err)
-		panic(info)
+		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range nPCDataMap {
 		g.NPCDataMap[v.ID] = v
 	}
-	logger.Info("load %v NPCData", len(g.NPCDataMap))
 
+	logger.Info(text.GetText(17), len(g.NPCDataMap), name)
 }
 
 func GetNPCDataId(id uint32) *NPCData {
-	return CONF.NPCDataMap[id]
+	return getConf().NPCDataMap[id]
 }
