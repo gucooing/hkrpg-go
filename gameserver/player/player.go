@@ -14,10 +14,6 @@ import (
 	pb "google.golang.org/protobuf/proto"
 )
 
-func init() {
-	MissionInit()
-}
-
 var LogMsgPlayer uint32 = 1
 var ISPE = false
 var BlackCmd = make(map[string]bool)

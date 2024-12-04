@@ -116,11 +116,15 @@ func getPlayerPb(s *HkRpgGoServer, parameter []string) any {
 
 func status(s *HkRpgGoServer, parameter []string) any {
 	return gin.H{
-		"msg": fmt.Sprintf("在线玩家:%v\nCPU占用:%.2f%%\n内存占用%s",
-			atomic.LoadInt64(&session.CLIENT_CONN_NUM),
-			alg.GetCpuOc(),
-			alg.MemoryOc()),
+		"msg": GetServerInfo(),
 	}
+}
+
+func GetServerInfo() string {
+	return fmt.Sprintf("在线玩家:%v\nCPU占用:%.2f%%\n内存占用%s",
+		atomic.LoadInt64(&session.CLIENT_CONN_NUM),
+		alg.GetCpuOc(),
+		alg.MemoryOc())
 }
 
 /**********************************分割线*******************************/

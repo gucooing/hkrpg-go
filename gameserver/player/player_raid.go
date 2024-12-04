@@ -44,16 +44,14 @@ func StartRaidCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.SetBattleLineUp(model.Raid, avatarList)
 	rsp.Retcode = uint32(g.GetPd().NewRaidInfo(req))
 	// 检查任务
-	g.InspectMission(nil)
+	g.InspectMission()
 	// 设置状态
 	db := g.GetPd().GetRaidInfo(req.RaidId)
 	g.GetPd().SetBattleStatus(spb.BattleType_Battle_RAID)
 	g.RaidInfoNotify(req.RaidId)
 	if g.RaidEnterSceneByServerScNotify(db.EntryId) {
 		finishSubMission := g.GetPd().EnterMapByEntrance(db.EntryId) // 任务检查
-		if len(finishSubMission) != 0 {
-			g.InspectMission(finishSubMission)
-		}
+		g.InspectMission(finishSubMission...)
 	}
 
 	g.Send(cmd.StartRaidScRsp, rsp)
@@ -90,7 +88,7 @@ func LeaveRaidCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	}
 
 	// 任务检查
-	g.InspectMission(nil)
+	g.InspectMission()
 	g.Send(cmd.LeaveRaidScRsp, rsp)
 }
 

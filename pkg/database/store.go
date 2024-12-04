@@ -121,6 +121,7 @@ func NewPE(t, dsn string) {
 		PE = NewMysql(dsn)
 	default:
 		log.Panicln("数据库的类型只支持 'sqlite' 和 'mysql' ")
+		return
 	}
 
 	PE.AutoMigrate(
@@ -137,4 +138,25 @@ func NewPE(t, dsn string) {
 		&constant.RegionConf{},   // 区服配置
 	)
 	logger.Info("数据库连接成功")
+}
+
+/******************************discord*******************************/
+
+var Discord *gorm.DB
+
+func NewDiscord(t, dsn string) {
+	switch t {
+	case "sqlite":
+		Discord = NewSqlite(dsn)
+	case "mysql":
+		Discord = NewMysql(dsn)
+	default:
+		log.Panicln("数据库的类型只支持 'sqlite' 和 'mysql' ")
+		return
+	}
+
+	Discord.AutoMigrate(
+		&constant.DiscordPlayer{})
+
+	logger.Info("Discord Bot 数据库连接成功")
 }

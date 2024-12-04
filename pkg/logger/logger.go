@@ -75,7 +75,7 @@ var (
 	config *Config = nil
 )
 
-func GetConfig() *Config {
+func getConfig() *Config {
 	if config == nil {
 		config = defaultConfig
 	}
@@ -144,7 +144,7 @@ func InitLogger(appName, logLevel string) {
 }
 
 func GetLogLevel() int {
-	return GetConfig().Level
+	return getConfig().Level
 }
 
 func CloseLogger() {

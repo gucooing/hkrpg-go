@@ -236,9 +236,7 @@ func PVEBattleResultCsReq(g *GamePlayer, payloadMsg pb.Message) {
 			if req.Stt.CustomValues != nil {
 				finishSubMission = append(finishSubMission, g.GetPd().BattleCustomValues(req.Stt.CustomValues, battleBin.EventId)...)
 			}
-			if len(finishSubMission) != 0 {
-				g.InspectMission(finishSubMission)
-			}
+			g.InspectMission(finishSubMission...)
 			entity := g.GetPd().GetTriggerBattleString(battleBin.EventId)
 			if entity != nil {
 				blockBin := g.GetPd().GetBlock(g.GetPd().GetCurEntryId())
@@ -252,18 +250,14 @@ func PVEBattleResultCsReq(g *GamePlayer, payloadMsg pb.Message) {
 				me := g.GetPd().GetMonsterEntityById(entityId)
 				if me != nil {
 					finishSubMission := g.GetPd().UpKillMonsterSubMission(me)
-					if len(finishSubMission) != 0 {
-						g.InspectMission(finishSubMission)
-					}
+					g.InspectMission(finishSubMission...)
 				}
 			}
 		}
 		// 以太战线任务判断
 		if battleBin.AetherDivideId != 0 {
 			finishSubMission := g.GetPd().AetherDivideCertainFinishHyperlinkDuel(battleBin.AetherDivideId)
-			if len(finishSubMission) != 0 {
-				g.InspectMission(finishSubMission)
-			}
+			g.InspectMission(finishSubMission...)
 		}
 		// 参战角色经验添加
 		for _, avatar := range req.Stt.GetBattleAvatarList() {
@@ -275,9 +269,7 @@ func PVEBattleResultCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
 			g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin)
 			finishSubMission := g.GetPd().FinishCocoon(battleBin.CocoonId)
-			if len(finishSubMission) != 0 {
-				g.InspectMission(finishSubMission)
-			}
+			g.InspectMission(finishSubMission...)
 			g.GetPd().DelStamina(conf.StaminaCost)
 		}
 		if conf := gdconf.GetFarmElementConfig(req.StageId); conf != nil {

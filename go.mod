@@ -3,6 +3,7 @@ module github.com/gucooing/hkrpg-go
 go 1.22.1
 
 require (
+	github.com/bwmarrin/discordgo v0.28.1
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-resty/resty/v2 v2.14.0

@@ -1,6 +1,7 @@
 package player
 
 import (
+	"github.com/gucooing/hkrpg-go/gameserver/model"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
@@ -43,33 +44,37 @@ func GetFirstTalkByPerformanceNpcCsReq(g *GamePlayer, payloadMsg pb.Message) {
 }
 
 func GetNpcMessageGroupCsReq(g *GamePlayer, payloadMsg pb.Message) {
-	req := payloadMsg.(*proto.GetNpcMessageGroupCsReq)
+	// req := payloadMsg.(*proto.GetNpcMessageGroupCsReq)
 	rsp := &proto.GetNpcMessageGroupScRsp{
 		MessageGroupList: make([]*proto.MessageGroup, 0),
 		Retcode:          0,
 	}
 
-	for _, contactId := range req.ContactIdList {
-		db := g.GetPd().GetMessageGroupByContactId(contactId)
-		if db != nil {
-			messageGroup := &proto.MessageGroup{
-				Id:                 db.Id,
-				RefreshTime:        db.RefreshTime,
-				Status:             proto.MessageGroupStatus(db.Status),
-				MessageSectionList: make([]*proto.MessageSection, 0),
-				MessageSectionId:   0,
+	for _, db := range g.GetPd().GetMessageGroup() {
+		messageGroup := &proto.MessageGroup{
+			Id:                 db.Id,
+			RefreshTime:        db.RefreshTime,
+			Status:             proto.MessageGroupStatus(db.Status),
+			MessageSectionList: make([]*proto.MessageSection, 0),
+			MessageSectionId:   db.CurMessageSectionId,
+		}
+		for _, msgSection := range db.MessageSectionList {
+			info := &proto.MessageSection{
+				Status:          proto.MessageSectionStatus(msgSection.Status),
+				Id:              msgSection.Id,
+				MessageItemList: make([]uint32, 0),
+				FrozenItemId:    0,
+				ItemList:        make([]*proto.MessageItem, 0),
 			}
-			for _, msgSection := range db.MessageSectionList {
-				messageGroup.MessageSectionList = append(messageGroup.MessageSectionList, &proto.MessageSection{
-					Status:          proto.MessageSectionStatus(msgSection.Status),
-					Id:              msgSection.Id,
-					MessageItemList: make([]uint32, 0),
-					FrozenItemId:    0,
-					ItemList:        make([]*proto.MessageItem, 0),
+			for itemId, _ := range msgSection.MessageItemList {
+				info.ItemList = append(info.ItemList, &proto.MessageItem{
+					TextId: 0,
+					ItemId: itemId,
 				})
 			}
-			rsp.MessageGroupList = append(rsp.MessageGroupList, messageGroup)
+			messageGroup.MessageSectionList = append(messageGroup.MessageSectionList, info)
 		}
+		rsp.MessageGroupList = append(rsp.MessageGroupList, messageGroup)
 	}
 
 	g.Send(cmd.GetNpcMessageGroupScRsp, rsp)
@@ -78,22 +83,27 @@ func GetNpcMessageGroupCsReq(g *GamePlayer, payloadMsg pb.Message) {
 func FinishPerformSectionIdCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.FinishPerformSectionIdCsReq)
 
-	contactId := g.GetPd().FinishMessageGroup(req.SectionId)
+	addItem := model.NewAddItem(nil)
 
-	g.MessageGroupPlayerSyncScNotify(contactId)
+	contactId := g.GetPd().FinishMessageGroup(req)
+
+	if contactId != 0 {
+		addItem.AllSync.MessageGroupList = append(addItem.AllSync.MessageGroupList, contactId)
+		addItem.AllSync.MessageSectionList = append(addItem.AllSync.MessageSectionList, req.SectionId)
+	}
 
 	// 任务检查
 	finishSubMission := g.GetPd().MessagePerformSectionFinish(req.SectionId)
-	if len(finishSubMission) != 0 {
-		g.InspectMission(finishSubMission)
-	}
+	g.InspectMission(finishSubMission...)
 
 	rsp := &proto.FinishPerformSectionIdScRsp{
 		Reward:    &proto.ItemList{},
 		Retcode:   0,
 		SectionId: req.SectionId,
-		ItemList:  make([]*proto.MessageItem, 0),
+		ItemList:  req.ItemList,
 	}
+
+	g.AllPlayerSyncScNotify(addItem.AllSync)
 	g.Send(cmd.FinishPerformSectionIdScRsp, rsp)
 }
 
@@ -153,6 +163,16 @@ func FinishItemIdCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		Retcode: 0,
 	}
 	g.Send(cmd.FinishItemIdScRsp, rsp)
+}
+
+func FinishSectionIdCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.FinishSectionIdCsReq)
+	rsp := &proto.FinishSectionIdScRsp{
+		Retcode:   0,
+		SectionId: req.SectionId,
+		Reward:    nil,
+	}
+	g.Send(cmd.FinishSectionIdScRsp, rsp)
 }
 
 func FinishFirstTalkByPerformanceNpcCsReq(g *GamePlayer, payloadMsg pb.Message) {

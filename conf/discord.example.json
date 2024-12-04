@@ -1,0 +1,8 @@
+{
+  "type": "Bot",
+  "token": "token",
+  "db": {
+    "type": "sqlite",
+    "dns": "./conf/discord.db"
+  }
+}

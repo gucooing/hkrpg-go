@@ -9,9 +9,9 @@ import (
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
+	"github.com/gucooing/hkrpg-go/suppl/pushc"
 )
 
 const (
@@ -147,7 +147,7 @@ func (g *PlayerData) AddItem(addItem *AddItem) {
 		if conf == nil {
 			msg := fmt.Sprintf("[UID:%v]ItemId:%v 异常的物品写入", g.GetBasicBin().Uid, itemInfo.Tid)
 			logger.Error(msg)
-			client.PushServer(&constant.LogPush{
+			pushc.PushServer(&constant.LogPush{
 				PushMessage: constant.PushMessage{
 					Tag: "异常物品写入",
 				},
@@ -840,7 +840,7 @@ func (g *PlayerData) DelRelic(relicList []uint32) bool {
 }
 
 // 遗器弃置
-func (g *PlayerData) DiscardedRelic(relicList []uint32,isDiscarded bool) {
+func (g *PlayerData) DiscardedRelic(relicList []uint32, isDiscarded bool) {
 	for _, uniqueId := range relicList {
 		if r := g.GetRelicById(uniqueId); r != nil {
 			r.IsDiscarded = isDiscarded

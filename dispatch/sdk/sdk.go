@@ -12,9 +12,9 @@ import (
 
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
+	"github.com/gucooing/hkrpg-go/suppl/pushc"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -102,7 +102,7 @@ func (s *Server) handleGateServerResponse(info *constant.UrlList, seed string) b
 			addUrlListJson(urlList)
 		}
 		s.UpstreamServer[seed] = urlList
-		client.PushServer(&constant.LogPush{
+		pushc.PushServer(&constant.LogPush{
 			PushMessage: constant.PushMessage{
 				Tag: "NewVersion",
 			},

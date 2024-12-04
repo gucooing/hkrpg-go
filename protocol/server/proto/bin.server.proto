@@ -389,11 +389,14 @@ message MessageGroup {//NPC聊天信息
   map<uint32, MessageSection>message_section_list = 3;
   int64 refresh_time = 4;
   MessageGroupStatus status = 5;
+  uint32 cur_message_section_id = 6;
 }
 
 message MessageSection {
   uint32 id = 1;
   MessageSectionStatus status = 2;
+  map<uint32,bool> item_list = 3;
+  map<uint32,bool> message_item_list = 4;
 }
 
 message Days {

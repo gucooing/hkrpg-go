@@ -9,9 +9,9 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/kcp"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
+	"github.com/gucooing/hkrpg-go/suppl/pushc"
 )
 
 type KcpListener struct {
@@ -30,7 +30,7 @@ func (k *KcpListener) initListener() error {
 	k.kcpListener = kcpListener
 	k.kcpListener.EnetHandle()
 	go kcpNetInfo()
-	client.PushServer(&constant.LogPush{
+	pushc.PushServer(&constant.LogPush{
 		PushMessage: constant.PushMessage{
 			Tag: "gateway",
 		},

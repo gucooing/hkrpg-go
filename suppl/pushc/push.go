@@ -1,7 +1,4 @@
-//go:build push
-// +build push
-
-package client
+package pushc
 
 import (
 	"crypto/md5"
@@ -50,7 +47,6 @@ func NewPushClient(addr string) {
 func PushServer(message constant.PushMessageAll) {
 	go func() {
 		if Client == nil {
-			logger.Error(text.GetText(7))
 			return
 		}
 		switch message.(type) {

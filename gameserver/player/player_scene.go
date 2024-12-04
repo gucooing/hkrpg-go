@@ -88,9 +88,7 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, an
 	}
 	rsp.Scene = g.GetPd().GetSceneInfo(entryId, pos, rot, curLine)
 	finishSubMission := g.GetPd().EnterMapByEntrance(entryId) // 任务检查
-	if len(finishSubMission) != 0 {
-		g.InspectMission(finishSubMission)
-	}
+	g.InspectMission(finishSubMission...)
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 	g.ChangeStoryLineFinishScNotify()
 }
@@ -137,7 +135,10 @@ func HandleGetCurSceneInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 func HanldeGetSceneMapInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.GetSceneMapInfoCsReq)
 
-	rsp := new(proto.GetSceneMapInfoScRsp)
+	rsp := &proto.GetSceneMapInfoScRsp{
+		Retcode:      0,
+		SceneMapInfo: nil,
+	}
 	for _, entryId := range req.EntryIdList {
 		mapEntrance := gdconf.GetMapEntranceById(entryId)
 		if mapEntrance != nil {
@@ -145,7 +146,6 @@ func HanldeGetSceneMapInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 			block := g.GetPd().GetBlock(entryId)
 			if groupList != nil {
 				mapList := &proto.SceneMapInfo{
-					LightenSectionList: make([]uint32, 0),
 					ChestList: []*proto.ChestInfo{
 						{ChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_NORMAL, OpenedNum: 1},
 						{ChestType: proto.ChestType_MAP_INFO_CHEST_TYPE_CHALLENGE, OpenedNum: 1},
@@ -156,9 +156,15 @@ func HanldeGetSceneMapInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 					EntryStoryLineId:   req.EntryStoryLineId,
 					FloorSavedData:     g.GetPd().GetFloorSavedData(entryId),
 					EntryId:            entryId,
+					LightenSectionList: make([]uint32, 0),
+					MazeGroupList:      make([]*proto.MazeGroup, 0),
+					MazePropList:       make([]*proto.MazePropState, 0),
+					ContentId:          req.ContentId,
+					CurMapEntryId:      0,
+					Retcode:            0,
 				}
 
-				for i := uint32(0); i < 100; i++ {
+				for i := uint32(0); i < 10; i++ {
 					mapList.LightenSectionList = append(mapList.LightenSectionList, i)
 				}
 
@@ -313,9 +319,7 @@ func InteractPropCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.AllScenePlaneEventScNotify(addItem.PileItem)
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin)  // 通知状态更改
 	finishSubMission := g.GetPd().UpInteractSubMission(blockBin) // 检查交互任务
-	if len(finishSubMission) != 0 {
-		g.InspectMission(finishSubMission)
-	}
+	g.InspectMission(finishSubMission...)
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 

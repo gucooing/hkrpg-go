@@ -119,3 +119,10 @@ type AcceptApplyFriend struct {
 	Uid               uint32 `gorm:"primarykey;AUTO_INCREMENT"`
 	AcceptApplyFriend []byte
 }
+
+/******************************discord*******************************/
+
+type DiscordPlayer struct {
+	GameUid     uint32 `gorm:"primarykey"` // 游戏Uid
+	DiscordUuid string // 用户id
+}

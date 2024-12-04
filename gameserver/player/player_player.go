@@ -53,9 +53,7 @@ func SetPlayerInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 			allSync.AvatarList = append(allSync.AvatarList, 8001)
 		}
 		finishSubMission := g.GetPd().CreateCharacterSubMission()
-		if len(finishSubMission) != 0 {
-			g.InspectMission(finishSubMission)
-		}
+		g.InspectMission(finishSubMission...)
 	}
 	rsp := &proto.SetPlayerInfoScRsp{
 		Retcode:       0,
@@ -81,7 +79,9 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		len(allSync.DelRelicList) == 0 &&
 		len(allSync.MissionFinishMainList) == 0 &&
 		len(allSync.MissionFinishSubList) == 0 &&
-		len(allSync.MissionProgressSubList) == 0 {
+		len(allSync.MissionProgressSubList) == 0 &&
+		len(allSync.MessageGroupList) == 0 &&
+		len(allSync.MessageSectionList) == 0 {
 		return
 	}
 
@@ -104,6 +104,8 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		PlayerboardModuleSync: &proto.PlayerBoardModuleSync{
 			UnlockedHeadIconList: make([]*proto.HeadIconData, 0),
 		},
+		SectionStatus:      make([]*proto.SectionStatus, 0),
+		MessageGroupStatus: make([]*proto.GroupStatus, 0),
 	}
 	db := g.GetPd().GetMaterialMap()
 	// 添加账户基本信息
@@ -199,6 +201,32 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 				})
 			} else {
 				logger.Error("finishSubMission db error id:", subId)
+			}
+		}
+	}
+	// 添加对话组
+	if allSync.MessageGroupList != nil {
+		for _, messageGroupId := range allSync.MessageGroupList {
+			group := g.GetPd().GetMessageGroupByContactId(messageGroupId)
+			if group != nil {
+				notify.MessageGroupStatus = append(notify.MessageGroupStatus, &proto.GroupStatus{
+					GroupStatus: proto.MessageGroupStatus(group.Status),
+					RefreshTime: group.RefreshTime,
+					GroupId:     group.Id,
+				})
+			}
+		}
+	}
+
+	// 添加对话
+	if allSync.MessageSectionList != nil {
+		for _, sectionId := range allSync.MessageSectionList {
+			info := g.GetPd().GetMessageSection(sectionId)
+			if info != nil {
+				notify.SectionStatus = append(notify.SectionStatus, &proto.SectionStatus{
+					SectionId:     info.Id,
+					SectionStatus: proto.MessageSectionStatus(info.Status),
+				})
 			}
 		}
 	}

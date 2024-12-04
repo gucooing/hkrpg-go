@@ -169,15 +169,13 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	cmd.GetDailyActiveInfoCsReq:        GetDailyActiveInfoCsReq, // 每日实训
 	cmd.GetMainMissionCustomValueCsReq: GetMainMissionCustomValueCsReq,
 	cmd.GetMissionEventDataCsReq:       GetMissionEventDataCsReq,
-	cmd.GetMissionStatusCsReq:          HandleGetMissionStatusCsReq,  // 获取任务状态
-	cmd.GetMissionDataCsReq:            GetMissionDataCsReq,          // 获取任务数据
-	cmd.FinishTalkMissionCsReq:         FinishTalkMissionCsReq,       // 完成任务
-	cmd.FinishCosumeItemMissionCsReq:   FinishCosumeItemMissionCsReq, // 完成道具提交任务
-	cmd.GetVideoVersionKeyCsReq:        GetVideoVersionKeyCsReq,      // 获取key
-	cmd.GetSecretKeyInfoCsReq:          GetSecretKeyInfoCsReq,        // key
-	cmd.FinishItemIdCsReq:              FinishItemIdCsReq,            // 对话选项
-	// cmd.FinishSectionIdCsReq:           FinishSectionIdCsReq,          // 对话完成
-	cmd.UpdateTrackMainMissionIdCsReq: UpdateTrackMainMissionIdCsReq, //  更改当前任务
+	cmd.GetMissionStatusCsReq:          HandleGetMissionStatusCsReq,   // 获取任务状态
+	cmd.GetMissionDataCsReq:            GetMissionDataCsReq,           // 获取任务数据
+	cmd.FinishTalkMissionCsReq:         FinishTalkMissionCsReq,        // 完成任务
+	cmd.FinishCosumeItemMissionCsReq:   FinishCosumeItemMissionCsReq,  // 完成道具提交任务
+	cmd.GetVideoVersionKeyCsReq:        GetVideoVersionKeyCsReq,       // 获取key
+	cmd.GetSecretKeyInfoCsReq:          GetSecretKeyInfoCsReq,         // key
+	cmd.UpdateTrackMainMissionIdCsReq:  UpdateTrackMainMissionIdCsReq, //  更改当前任务
 	// 活动
 	cmd.PlayerReturnInfoQueryCsReq:          PlayerReturnInfoQueryCsReq,           // 获取回归信息
 	cmd.PlayerReturnTakeRewardCsReq:         PlayerReturnTakeRewardCsReq,          // 领取回归横幅奖励
@@ -217,6 +215,8 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	cmd.MatchThreeGetDataCsReq:    MatchThreeGetDataCsReq,    // 请求折纸小鸟信息
 	cmd.MatchThreeLevelEndCsReq:   MatchThreeLevelEndCsReq,   // 单人折纸小鸟结算请求
 	cmd.MatchThreeSetBirdPosCsReq: MatchThreeSetBirdPosCsReq, // 摆放小鸟
+	// 音乐游戏
+	cmd.MusicRhythmDataCsReq: MusicRhythmDataCsReq, // 获取音乐游戏信息
 	// 基础
 	cmd.GetBasicInfoCsReq:              HandleGetBasicInfoCsReq,        // 基础信息
 	cmd.GetPhoneDataCsReq:              HandleGetPhoneDataCsReq,        // 获取手机信息
@@ -256,17 +256,17 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	cmd.GetUpdatedArchiveDataCsReq: GetUpdatedArchiveDataCsReq, // 更新收集
 	cmd.GetQuestDataCsReq:          GetQuestDataCsReq,          // 获取成就信息
 	// NPC
-	cmd.GetFirstTalkNpcCsReq:              GetFirstTalkNpcCsReq,
-	cmd.GetNpcTakenRewardCsReq:            GetNpcTakenRewardCsReq,            // NPC对话
-	cmd.GetFirstTalkByPerformanceNpcCsReq: GetFirstTalkByPerformanceNpcCsReq, // NPC商店
-	cmd.GetNpcMessageGroupCsReq:           GetNpcMessageGroupCsReq,           // 获取npc聊天信息
-	cmd.FinishPerformSectionIdCsReq:       FinishPerformSectionIdCsReq,       // 完成npc聊天
-	// cmd.FinishSectionIdCsReq:                 FinishSectionIdCsReq,                 // npc聊天任务完成
+	cmd.GetFirstTalkNpcCsReq:                 GetFirstTalkNpcCsReq,
+	cmd.GetNpcTakenRewardCsReq:               GetNpcTakenRewardCsReq,               // NPC对话
+	cmd.GetFirstTalkByPerformanceNpcCsReq:    GetFirstTalkByPerformanceNpcCsReq,    // NPC商店
+	cmd.GetNpcMessageGroupCsReq:              GetNpcMessageGroupCsReq,              // 获取npc聊天信息
+	cmd.FinishPerformSectionIdCsReq:          FinishPerformSectionIdCsReq,          // 完成npc聊天
 	cmd.GetNpcStatusCsReq:                    GetNpcStatusCsReq,                    // 获取npc聊天状态
+	cmd.FinishItemIdCsReq:                    FinishItemIdCsReq,                    // 对话选项
+	cmd.FinishSectionIdCsReq:                 FinishSectionIdCsReq,                 // TODO npc聊天完成,并接取任务
 	cmd.FinishFirstTalkByPerformanceNpcCsReq: FinishFirstTalkByPerformanceNpcCsReq, // 完成对话
 	// 乱七八糟
 	cmd.GetAuthkeyCsReq: GetAuthkeyCsReq,
-	// cmd.ClockParkGetInfoCsReq: ClockParkGetInfoCsReq, // 获取皮诺康妮时钟广场信息
 }
 
 func (g *GamePlayer) registerMessage(cmdId uint16, payloadMsg pb.Message) {

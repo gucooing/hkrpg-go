@@ -21,12 +21,12 @@ import (
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/database"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
-	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/pkg/random"
 	"github.com/gucooing/hkrpg-go/pkg/text"
 	"github.com/gucooing/hkrpg-go/protocol/cmd"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
+	"github.com/gucooing/hkrpg-go/suppl/pushc"
 	pb "google.golang.org/protobuf/proto"
 )
 
@@ -143,7 +143,7 @@ func NewServer(cfg *Config) *HkRpgGoServer {
 	// 启动http api
 	s.comm = api.NewApiServer(cfg.Gm.SignKey, sdkRouter)
 	go s.newHttpApi()
-	client.PushServer(&constant.LogPush{
+	pushc.PushServer(&constant.LogPush{
 		PushMessage: constant.PushMessage{},
 		LogMsg: fmt.Sprintf("AppVersion:%s\nGameVersion:%s\nhkrpg-pe-beta 启动完成!",
 			pkg.GetAppVersion(), pkg.GetGameVersion()),
@@ -275,7 +275,7 @@ func (h *HkRpgGoServer) AddPlayer(sAll session.SessionAll) *PlayerGame {
 	defer h.playerMapLock.Unlock()
 	s := sAll.GetSession()
 	atomic.AddInt64(&session.CLIENT_CONN_NUM, 1)
-	client.PushServer(&constant.LogPush{
+	pushc.PushServer(&constant.LogPush{
 		PushMessage: constant.PushMessage{},
 		LogMsg:      fmt.Sprintf("玩家[UID:%v]登录", s.Uid),
 		LogLevel:    constant.INFO,
@@ -310,7 +310,7 @@ func (h *HkRpgGoServer) DelPlayer(uid uint32) {
 	delete(h.playerMap, uid)
 	h.playerMapLock.Unlock()
 	if p != nil {
-		client.PushServer(&constant.LogPush{
+		pushc.PushServer(&constant.LogPush{
 			PushMessage: constant.PushMessage{},
 			LogMsg:      fmt.Sprintf("玩家[UID:%v]退出登录", uid),
 			LogLevel:    constant.INFO,

@@ -26,6 +26,8 @@ type AllPlayerSync struct {
 	MissionFinishMainList  []uint32 // 已完成的主任务
 	MissionFinishSubList   []uint32 // 已完成的子任务
 	MissionProgressSubList []uint32 // 需要通知的子任务
+	MessageGroupList       []uint32 // 需要通知的对话组
+	MessageSectionList     []uint32 // 需要通知的对话
 }
 
 func NewAllPlayerSync() *AllPlayerSync {
@@ -42,6 +44,8 @@ func NewAllPlayerSync() *AllPlayerSync {
 		MissionFinishMainList:  make([]uint32, 0),
 		MissionFinishSubList:   make([]uint32, 0),
 		MissionProgressSubList: make([]uint32, 0),
+		MessageSectionList:     make([]uint32, 0),
+		MessageGroupList:       make([]uint32, 0),
 	}
 }
 
