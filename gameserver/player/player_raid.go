@@ -51,7 +51,9 @@ func StartRaidCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.RaidInfoNotify(req.RaidId)
 	if g.RaidEnterSceneByServerScNotify(db.EntryId) {
 		finishSubMission := g.GetPd().EnterMapByEntrance(db.EntryId) // 任务检查
-		g.InspectMission(finishSubMission...)
+		if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
 	}
 
 	g.Send(cmd.StartRaidScRsp, rsp)

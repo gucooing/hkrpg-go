@@ -32,6 +32,7 @@ const (
 	// 玩家事件
 	PlayerLogout    MsgType = 4 // 玩家下线
 	PlayerLoginKill MsgType = 5 // 玩家重复登录下线回调给gate
+	PlayerCommand   MsgType = 6 // 玩家指令
 )
 
 func DecodeBinToPayload(data []byte) *NetMsg {

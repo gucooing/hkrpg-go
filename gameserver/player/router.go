@@ -44,11 +44,14 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	cmd.RankUpEquipmentCsReq:  RankUpEquipmentCsReq,  // 光锥叠影
 	cmd.PromoteEquipmentCsReq: PromoteEquipmentCsReq, // 光锥突破
 	// 圣遗物
-	cmd.RelicRecommendCsReq:       RelicRecommendCsReq,       // 获取推荐圣遗物
-	cmd.DressRelicAvatarCsReq:     DressRelicAvatarCsReq,     // 圣遗物装备
-	cmd.TakeOffRelicCsReq:         TakeOffRelicCsReq,         // 卸下圣遗物
-	cmd.ExpUpRelicCsReq:           ExpUpRelicCsReq,           // 圣遗物升级
-	cmd.RelicAvatarRecommendCsReq: RelicAvatarRecommendCsReq, // 查看圣遗物推荐角色
+	cmd.RelicRecommendCsReq:        RelicRecommendCsReq,        // 获取推荐圣遗物
+	cmd.DressRelicAvatarCsReq:      DressRelicAvatarCsReq,      // 圣遗物装备
+	cmd.TakeOffRelicCsReq:          TakeOffRelicCsReq,          // 卸下圣遗物
+	cmd.ExpUpRelicCsReq:            ExpUpRelicCsReq,            // 圣遗物升级
+	cmd.RelicAvatarRecommendCsReq:  RelicAvatarRecommendCsReq,  // 查看圣遗物推荐角色
+	cmd.RelicSmartWearGetPlanCsReq: RelicSmartWearGetPlanCsReq, // 智能装配
+	cmd.RelicReforgeCsReq:          RelicReforgeCsReq,          // 重掷圣遗物
+	cmd.RelicReforgeConfirmCsReq:   RelicReforgeConfirmCsReq,   // 确定重掷结果
 	// 场景
 	cmd.GetEnteredSceneCsReq:        HandleGetEnteredSceneCsReq,  // 获取当前场景id
 	cmd.GetSceneMapInfoCsReq:        HanldeGetSceneMapInfoCsReq,  // 获取地图信息
@@ -64,12 +67,17 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	cmd.GetPetDataCsReq:             GetPetDataCsReq,             // 获取🐖信息
 	cmd.SummonPetCsReq:              SummonPetCsReq,              // 召唤🐖
 	cmd.RecallPetCsReq:              RecallPetCsReq,              // 删除🐖
+	cmd.UpdateMarkChestCsReq:        UpdateMarkChestCsReq,        // 黑塔标记宝箱
 	// 列车
 	cmd.GetPamSkinDataCsReq:          GetPamSkinDataCsReq,          // 获取帕姆服装
 	cmd.SelectPamSkinCsReq:           SelectPamSkinCsReq,           // 切换帕姆服装
 	cmd.TrainPartyGetDataCsReq:       TrainPartyGetDataCsReq,       // 获取列车派对信息
 	cmd.GetTrainVisitorRegisterCsReq: GetTrainVisitorRegisterCsReq, // 获取车厢访客
-	cmd.TrainPartyEnterCsReq:         TrainPartyEnterCsReq,         //
+	cmd.TrainPartyEnterCsReq:         TrainPartyEnterCsReq,         // 开始值日
+	cmd.TrainPartyLeaveCsReq:         TrainPartyLeaveCsReq,         // 退出值日
+	cmd.PlayBackGroundMusicCsReq:     PlayBackGroundMusicCsReq,     // 设置车厢音乐
+	cmd.GetJukeboxDataCsReq:          HandleGetJukeboxDataCsReq,    // 获取车厢音乐
+	cmd.UnlockBackGroundMusicCsReq:   UnlockBackGroundMusicCsReq,   // 解锁车厢音乐
 	// 战斗
 	cmd.SceneCastSkillCostMpCsReq:    SceneCastSkillCostMpCsReq,    // 技能使用
 	cmd.SceneCastSkillCsReq:          SceneCastSkillCsReq,          // 场景开启战斗
@@ -77,9 +85,11 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	cmd.RefreshTriggerByClientCsReq:  RefreshTriggerByClientCsReq,  // 领域buff
 	cmd.PVEBattleResultCsReq:         PVEBattleResultCsReq,         // PVE战斗结算
 	cmd.StartCocoonStageCsReq:        StartCocoonStageCsReq,        // 副本/周本等
+	cmd.QuickStartCocoonStageCsReq:   QuickStartCocoonStageCsReq,   // 快速进行副本/周本战斗
 	cmd.ActivateFarmElementCsReq:     ActivateFarmElementCsReq,     // 虚影战斗
 	cmd.ReEnterLastElementStageCsReq: ReEnterLastElementStageCsReq, // 虚影战斗再来一次
 	cmd.DeactivateFarmElementCsReq:   DeactivateFarmElementCsReq,   // 虚影
+	cmd.QuickStartFarmElementCsReq:   QuickStartFarmElementCsReq,   // 虚影快速战斗
 	cmd.SceneEnterStageCsReq:         SceneEnterStageCsReq,         // 场景直接发起战斗
 	cmd.GetRaidInfoCsReq:             GetRaidInfoCsReq,             // 获取raid
 	cmd.StartRaidCsReq:               StartRaidCsReq,               // 拓境探游
@@ -176,6 +186,11 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	cmd.GetVideoVersionKeyCsReq:        GetVideoVersionKeyCsReq,       // 获取key
 	cmd.GetSecretKeyInfoCsReq:          GetSecretKeyInfoCsReq,         // key
 	cmd.UpdateTrackMainMissionIdCsReq:  UpdateTrackMainMissionIdCsReq, //  更改当前任务
+	// 成就
+	cmd.GetArchiveDataCsReq:        HandleGetArchiveDataCsReq,  // 获取收集
+	cmd.GetUpdatedArchiveDataCsReq: GetUpdatedArchiveDataCsReq, // 更新收集
+	cmd.GetQuestDataCsReq:          GetQuestDataCsReq,          // 获取成就信息
+	// cmd.TakeQuestOptionalRewardCsReq: TakeQuestOptionalRewardCsReq, // 领取可选奖励
 	// 活动
 	cmd.PlayerReturnInfoQueryCsReq:          PlayerReturnInfoQueryCsReq,           // 获取回归信息
 	cmd.PlayerReturnTakeRewardCsReq:         PlayerReturnTakeRewardCsReq,          // 领取回归横幅奖励
@@ -218,43 +233,36 @@ var handlerFuncRouteMap = map[uint16]HandlerFunc{
 	// 音乐游戏
 	cmd.MusicRhythmDataCsReq: MusicRhythmDataCsReq, // 获取音乐游戏信息
 	// 基础
-	cmd.GetBasicInfoCsReq:              HandleGetBasicInfoCsReq,        // 基础信息
-	cmd.GetPhoneDataCsReq:              HandleGetPhoneDataCsReq,        // 获取手机信息
-	cmd.SetClientPausedCsReq:           SetClientPausedCsReq,           // 客户端暂停请求
-	cmd.SyncClientResVersionCsReq:      SyncClientResVersionCsReq,      // 版本同步
-	cmd.GetAssistHistoryCsReq:          HandleGetAssistHistoryCsReq,    // 漫游签证
-	cmd.SetHeadIconCsReq:               SetHeadIconCsReq,               // 切换头像
-	cmd.SetNicknameCsReq:               SetNicknameCsReq,               // 修改昵称请求
-	cmd.SetGameplayBirthdayCsReq:       SetGameplayBirthdayCsReq,       // 修改生日请求
-	cmd.SetSignatureCsReq:              SetSignatureCsReq,              // 简介修改请求
-	cmd.GetPlayerBoardDataCsReq:        HandleGetPlayerBoardDataCsReq,  // 获取角色名片页信息
-	cmd.GetTutorialCsReq:               GetTutorialCsReq,               // 获取新手教程状态
-	cmd.GetTutorialGuideCsReq:          GetTutorialGuideCsReq,          // 获取教程指南
-	cmd.UnlockTutorialCsReq:            UnlockTutorialCsReq,            // 教程解锁
-	cmd.UnlockTutorialGuideCsReq:       UnlockTutorialGuideCsReq,       // 解锁指南
-	cmd.FinishTutorialCsReq:            FinishTutorialCsReq,            // 完成教程
-	cmd.FinishTutorialGuideCsReq:       FinishTutorialGuideCsReq,       // 完成指南
-	cmd.SetPlayerInfoCsReq:             SetPlayerInfoCsReq,             // 新手设置名字
-	cmd.PlayerHeartBeatCsReq:           HandlePlayerHeartBeatCsReq,     // 玩家ping包
-	cmd.GetLevelRewardTakenListCsReq:   GetLevelRewardTakenListCsReq,   // 等级奖励领取情况
-	cmd.GetLevelRewardCsReq:            GetLevelRewardCsReq,            // 领取等级奖励
-	cmd.GetSpringRecoverDataCsReq:      GetSpringRecoverDataCsReq,      // 恢复
-	cmd.SpringRecoverSingleAvatarCsReq: SpringRecoverSingleAvatarCsReq, // 回血锚点
-	cmd.TakeBpRewardCsReq:              TakeBpRewardCsReq,              // 战令奖励领取
-	cmd.TakeAllRewardCsReq:             TakeAllRewardCsReq,             // 领取全部战令奖励
-	cmd.ReserveStaminaExchangeCsReq:    ReserveStaminaExchangeCsReq,    // 取出体力
-	cmd.SelectChatBubbleCsReq:          SelectChatBubbleCsReq,          // 设置聊天主题
-	cmd.SelectPhoneThemeCsReq:          SelectPhoneThemeCsReq,          // 设置手机壁纸
-	cmd.PlayBackGroundMusicCsReq:       PlayBackGroundMusicCsReq,       // 设置车厢音乐
-	cmd.GetJukeboxDataCsReq:            HandleGetJukeboxDataCsReq,      // 获取车厢音乐
-	cmd.UnlockBackGroundMusicCsReq:     UnlockBackGroundMusicCsReq,     // 解锁车厢音乐
-	cmd.TextJoinQueryCsReq:             TextJoinQueryCsReq,             // 获取自定义文本
-	cmd.TextJoinSaveCsReq:              TextJoinSaveCsReq,              // 保存自定义文本
-	cmd.TextJoinBatchSaveCsReq:         TextJoinBatchSaveCsReq,         // 批量保存自定义文本
-	// 成就
-	cmd.GetArchiveDataCsReq:        HandleGetArchiveDataCsReq,  // 获取收集
-	cmd.GetUpdatedArchiveDataCsReq: GetUpdatedArchiveDataCsReq, // 更新收集
-	cmd.GetQuestDataCsReq:          GetQuestDataCsReq,          // 获取成就信息
+	cmd.GetBasicInfoCsReq:            HandleGetBasicInfoCsReq,       // 基础信息
+	cmd.GetPhoneDataCsReq:            HandleGetPhoneDataCsReq,       // 获取手机信息
+	cmd.SetClientPausedCsReq:         SetClientPausedCsReq,          // 客户端暂停请求
+	cmd.SyncClientResVersionCsReq:    SyncClientResVersionCsReq,     // 版本同步
+	cmd.GetAssistHistoryCsReq:        HandleGetAssistHistoryCsReq,   // 漫游签证
+	cmd.SetHeadIconCsReq:             SetHeadIconCsReq,              // 切换头像
+	cmd.SetNicknameCsReq:             SetNicknameCsReq,              // 修改昵称请求
+	cmd.SetGameplayBirthdayCsReq:     SetGameplayBirthdayCsReq,      // 修改生日请求
+	cmd.SetSignatureCsReq:            SetSignatureCsReq,             // 简介修改请求
+	cmd.GetPlayerBoardDataCsReq:      HandleGetPlayerBoardDataCsReq, // 获取角色名片页信息
+	cmd.GetTutorialCsReq:             GetTutorialCsReq,              // 获取新手教程状态
+	cmd.GetTutorialGuideCsReq:        GetTutorialGuideCsReq,         // 获取教程指南
+	cmd.UnlockTutorialCsReq:          UnlockTutorialCsReq,           // 教程解锁
+	cmd.UnlockTutorialGuideCsReq:     UnlockTutorialGuideCsReq,      // 解锁指南
+	cmd.FinishTutorialCsReq:          FinishTutorialCsReq,           // 完成教程
+	cmd.FinishTutorialGuideCsReq:     FinishTutorialGuideCsReq,      // 完成指南
+	cmd.SetPlayerInfoCsReq:           SetPlayerInfoCsReq,            // 新手设置名字
+	cmd.PlayerHeartBeatCsReq:         HandlePlayerHeartBeatCsReq,    // 玩家ping包
+	cmd.GetLevelRewardTakenListCsReq: GetLevelRewardTakenListCsReq,  // 等级奖励领取情况
+	cmd.GetLevelRewardCsReq:          GetLevelRewardCsReq,           // 领取等级奖励
+	// cmd.GetSpringRecoverDataCsReq:      GetSpringRecoverDataCsReq,      // 恢复 // 2.7.5 遗弃
+	// cmd.SpringRecoverSingleAvatarCsReq: SpringRecoverSingleAvatarCsReq, // 回血锚点 // 2.7.5 遗弃
+	cmd.TakeBpRewardCsReq:           TakeBpRewardCsReq,           // 战令奖励领取
+	cmd.TakeAllRewardCsReq:          TakeAllRewardCsReq,          // 领取全部战令奖励
+	cmd.ReserveStaminaExchangeCsReq: ReserveStaminaExchangeCsReq, // 取出体力
+	cmd.SelectChatBubbleCsReq:       SelectChatBubbleCsReq,       // 设置聊天主题
+	cmd.SelectPhoneThemeCsReq:       SelectPhoneThemeCsReq,       // 设置手机壁纸
+	cmd.TextJoinQueryCsReq:          TextJoinQueryCsReq,          // 获取自定义文本
+	cmd.TextJoinSaveCsReq:           TextJoinSaveCsReq,           // 保存自定义文本
+	cmd.TextJoinBatchSaveCsReq:      TextJoinBatchSaveCsReq,      // 批量保存自定义文本
 	// NPC
 	cmd.GetFirstTalkNpcCsReq:                 GetFirstTalkNpcCsReq,
 	cmd.GetNpcTakenRewardCsReq:               GetNpcTakenRewardCsReq,               // NPC对话

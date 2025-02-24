@@ -24,6 +24,7 @@ const (
 	Cf           uint32 = 31     // 宇宙碎片
 	NewM                = 53     // 新道具
 	RelicRemains        = 235    // 遗弃残骸
+	VariableDice        = 238    // 变量骰子
 	Inspiration  uint32 = 281018 // 灵感
 )
 
@@ -264,12 +265,14 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 		g.AddUnlockedPamSkin(conf.ID)
 		addItem.AllSync.UnlockPamSkinList = append(addItem.AllSync.UnlockPamSkinList, conf.ID)
 	case constant.ItemSubTypeFormula: // 配方
+		addItem.MaterialList = append(addItem.MaterialList, itemInfo)
 		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
 		addItem.ItemList = append(addItem.ItemList, &proto.Item{
 			Num:    itemInfo.Num,
 			ItemId: itemInfo.Tid,
 		})
 	case constant.ItemSubTypeFood: // 食物
+		addItem.MaterialList = append(addItem.MaterialList, itemInfo)
 		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
 		addItem.ItemList = append(addItem.ItemList, &proto.Item{
 			Num:    itemInfo.Num,
@@ -280,6 +283,7 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 			for _, paramId := range use.UseParam {
 				pile := GetRewardData(paramId)
 				for _, v := range pile { // 避免无限循环，这里只处理一次
+					addItem.MaterialList = append(addItem.MaterialList, itemInfo)
 					addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, v.Tid)
 					addItem.ItemList = append(addItem.ItemList, &proto.Item{
 						Num:    v.Num,
@@ -288,6 +292,7 @@ func (g *PlayerData) addItemUsable(conf *gdconf.ItemConfig, addItem *AddItem, it
 				}
 			}
 		} else {
+			addItem.MaterialList = append(addItem.MaterialList, itemInfo)
 			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, conf.ID)
 			addItem.ItemList = append(addItem.ItemList, &proto.Item{
 				Num:    itemInfo.Num,
@@ -421,16 +426,14 @@ func (g *PlayerData) AddRelic(tid, level, mainAffix uint32, subAffix map[uint32]
 		logger.Error("relic:%v,error", tid)
 		return 0
 	}
-	if level < 1 {
-		level = 1
+	if level < 0 {
+		level = 0
 	}
-	mainAffixConf := gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
+	mainAffixConf := gdconf.GetRelicMainAffixConfig(relicConf.MainAffixGroup, mainAffix)
 	if mainAffixConf == nil { // 当主属性不合法时，随机一个合法的主属性，避免后续空指针
-		mainAffixConf = gdconf.GetRelicMainAffixConfig(relicConf.MainAffixGroup, mainAffix)
+		mainAffixConf = gdconf.GetRelicMainAffixConfigById(relicConf.MainAffixGroup)
 	}
-	if len(subAffix) == 0 {
-		subAffix = newRelicAffix(relicConf, mainAffixConf.Property)
-	}
+	subAffix = newRelicAffix(relicConf, mainAffixConf.Property, subAffix)
 	uniqueId := g.GetUniqueId()
 	db := g.GetRelicMap()
 	relic := &spb.Relic{
@@ -442,6 +445,7 @@ func (g *PlayerData) AddRelic(tid, level, mainAffix uint32, subAffix map[uint32]
 		RelicAffix:        GetRelicAffix(subAffix),
 		BaseAvatarId:      0,
 		IsProtected:       false,
+		IsDiscarded:       false,
 		MainAffixProperty: mainAffixConf.Property,
 	}
 
@@ -449,12 +453,17 @@ func (g *PlayerData) AddRelic(tid, level, mainAffix uint32, subAffix map[uint32]
 	return uniqueId
 }
 
-func newRelicAffix(relicConf *gdconf.Relic, mainProperty string) map[uint32]uint32 {
-	subAffix := make(map[uint32]uint32)
+func newRelicAffix(relicConf *gdconf.Relic, mainProperty string, subAffix map[uint32]uint32) map[uint32]uint32 {
+	if subAffix == nil {
+		subAffix = make(map[uint32]uint32)
+	}
 	baseSubAffixes := math.Min(math.Max(float64(relicConf.Type-2), 0), 3)
 	addSubAffixes := rand.Intn(2) + int(baseSubAffixes)
-	var addNum = 0
+	addNum := len(subAffix)
 	for {
+		if addSubAffixes <= addNum {
+			break
+		}
 		if len(subAffix) >= 4 {
 			randIndex := rand.Intn(len(subAffix))
 			randKey := uint32(0)
@@ -479,9 +488,6 @@ func newRelicAffix(relicConf *gdconf.Relic, mainProperty string) map[uint32]uint
 			}
 		}
 		addNum++
-		if addSubAffixes <= addNum {
-			break
-		}
 	}
 	return subAffix
 }
@@ -572,6 +578,52 @@ func (g *PlayerData) SellDelRelic(uniqueId uint32, isMaterial bool) []*Material 
 
 	g.DelRelic([]uint32{uniqueId})
 	return material
+}
+
+func (g *PlayerData) RelicReforge(uniqueId uint32, allSync *AllPlayerSync) bool {
+	db := g.GetRelicById(uniqueId)
+	if db == nil {
+		return false
+	}
+	allSync.RelicList = append(allSync.RelicList, uniqueId)
+	var num uint32 = 0
+	newSubAffixes := make(map[uint32]*spb.RelicAffix)
+	for id, info := range db.RelicAffix {
+		num += info.Cnt - 1
+		newSubAffixes[id] = &spb.RelicAffix{
+			AffixId: info.AffixId,
+			Cnt:     1,
+		}
+	}
+	var i uint32 = 0
+	for ; i < num; i++ {
+		randIndex := rand.Intn(len(newSubAffixes))
+		randKey := uint32(0)
+		for key := range newSubAffixes {
+			if randIndex == 0 {
+				randKey = key
+				break
+			}
+			randIndex--
+		}
+		newSubAffixes[randKey].Cnt++
+	}
+	db.NewRelicAffix = newSubAffixes
+	return true
+}
+
+func (g *PlayerData) RelicReforgeConfirm(uniqueId uint32, allSync *AllPlayerSync, isRecall bool) bool {
+	db := g.GetRelicById(uniqueId)
+	if db == nil ||
+		db.NewRelicAffix == nil {
+		return false
+	}
+	allSync.RelicList = append(allSync.RelicList, uniqueId)
+	if !isRecall {
+		db.RelicAffix = db.NewRelicAffix
+	}
+	db.NewRelicAffix = nil
+	return true
 }
 
 func (g *PlayerData) TakeOffRelic(avatarId uint32, relicTypeList []uint32, allSync *AllPlayerSync) {
@@ -674,18 +726,16 @@ func GetRewardData(rewardID uint32) []*Material {
 	return pileItem
 }
 
-func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, composeItemList *proto.ItemCostData, addItem *AddItem) proto.Retcode {
+func (g *PlayerData) ComposeItem(conf *gdconf.ItemComposeConfig, count uint32, itemList []*proto.ItemCost, addItem *AddItem) proto.Retcode {
 	// 扣除材料
 	var pileItem []*Material
 
-	if composeItemList != nil {
-		for _, item := range composeItemList.ItemList {
-			addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, item.GetPileItem().ItemId)
-			pileItem = append(pileItem, &Material{
-				Tid: item.GetPileItem().ItemId,
-				Num: item.GetPileItem().ItemNum,
-			})
-		}
+	for _, item := range itemList {
+		addItem.AllSync.MaterialList = append(addItem.AllSync.MaterialList, item.GetPileItem().ItemId)
+		pileItem = append(pileItem, &Material{
+			Tid: item.GetPileItem().ItemId,
+			Num: item.GetPileItem().ItemNum,
+		})
 	}
 	if conf.MaterialCost != nil {
 		for _, item := range conf.MaterialCost {
@@ -713,15 +763,16 @@ func (g *PlayerData) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 		return nil
 	} else {
 		relic := &proto.Relic{
-			Tid:           relicDb.Tid,
-			SubAffixList:  make([]*proto.RelicAffix, 0),
-			DressAvatarId: relicDb.BaseAvatarId,
-			UniqueId:      relicDb.UniqueId,
-			Level:         relicDb.Level,
-			IsProtected:   relicDb.IsProtected,
-			MainAffixId:   relicDb.MainAffixId,
-			Exp:           relicDb.Exp,
-			IsDiscarded:   relicDb.IsDiscarded,
+			Tid:             relicDb.Tid,
+			SubAffixList:    make([]*proto.RelicAffix, 0),
+			NewSubAffixList: make([]*proto.RelicAffix, 0),
+			DressAvatarId:   relicDb.BaseAvatarId,
+			UniqueId:        relicDb.UniqueId,
+			Level:           relicDb.Level,
+			IsProtected:     relicDb.IsProtected,
+			MainAffixId:     relicDb.MainAffixId,
+			Exp:             relicDb.Exp,
+			IsDiscarded:     relicDb.IsDiscarded,
 		}
 		for _, subAffixList := range relicDb.RelicAffix {
 			relicAffix := &proto.RelicAffix{
@@ -730,6 +781,14 @@ func (g *PlayerData) GetProtoRelicById(uniqueId uint32) *proto.Relic {
 				Step:    subAffixList.Step,
 			}
 			relic.SubAffixList = append(relic.SubAffixList, relicAffix)
+		}
+		for _, subAffixList := range relicDb.NewRelicAffix {
+			relicAffix := &proto.RelicAffix{
+				AffixId: subAffixList.AffixId,
+				Cnt:     subAffixList.Cnt,
+				Step:    subAffixList.Step,
+			}
+			relic.NewSubAffixList = append(relic.NewSubAffixList, relicAffix)
 		}
 
 		return relic

@@ -283,9 +283,11 @@ func (g *PlayerData) GetRogueTournCurInfo() *proto.RogueTournCurInfo {
 			Lineup: &proto.RogueTournLineupInfo{
 				RogueReviveCost: &proto.ItemCostData{ItemList: []*proto.ItemCost{
 					{
-						PileItem: &proto.PileItem{
-							ItemId:  Cf,
-							ItemNum: g.GetMaterialById(Cf),
+						ItemOneofCase: &proto.ItemCost_PileItem{
+							PileItem: &proto.PileItem{
+								ItemId:  Cf,
+								ItemNum: g.GetMaterialById(Cf),
+							},
 						},
 					},
 				}},

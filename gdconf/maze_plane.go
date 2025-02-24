@@ -61,7 +61,7 @@ func (m *MazePlane) getWorldId() uint32 {
 		return 0
 	}
 	if m.WorldID == 100 {
-		return 401
+		return 501
 	}
 	return m.WorldID
 }

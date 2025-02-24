@@ -6,9 +6,9 @@ import (
 	"github.com/gucooing/hkrpg-go/gdconf"
 	"github.com/gucooing/hkrpg-go/pkg/constant"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
+	"github.com/gucooing/hkrpg-go/pkg/push/client"
 	"github.com/gucooing/hkrpg-go/protocol/proto"
 	spb "github.com/gucooing/hkrpg-go/protocol/server/proto"
-	"github.com/gucooing/hkrpg-go/suppl/pushc"
 )
 
 func newMission() *spb.Mission {
@@ -519,7 +519,6 @@ func (g *PlayerData) AllCheckMainMission() []uint32 {
 	return finishSubMission
 }
 
-// 添加完成子任务
 func (g *PlayerData) AddFinishSubMission(finishSubList []uint32, addItem *AddItem) {
 	if finishSubList == nil {
 		return
@@ -597,13 +596,77 @@ func (g *PlayerData) AcceptMainMission() []uint32 {
 	return acceptMainMissionList
 }
 
-func (g *PlayerData) MissionCustomValue(subId uint32) bool {
+var MissionTakeTypeMap map[constant.MissionBeginType]func()
+
+// 检查当前主任务下是否有子任务需要接取
+func (g *PlayerData) AcceptSubMission() []uint32 {
+	mainMissionList := g.GetMainMissionList()               // 已接取的主任务
+	subMissionList := g.GetSubMainMissionList()             // 已接取的子任务
+	finishSubMissionList := g.GetFinishSubMainMissionList() // 已完成的子任务
+	acceptSubMissionList := make([]uint32, 0)
+
+	for _, m := range mainMissionList {
+		conf := gdconf.GetGoppMainMissionById(m.MissionId)
+		if conf == nil {
+			continue
+		}
+		for _, subInfo := range conf.SubMissionList {
+			if subMissionList[subInfo.ID] != nil ||
+				finishSubMissionList[subInfo.ID] != nil {
+				continue
+			}
+			// 检查接取条件
+			var isNext = true
+			switch subInfo.TakeType {
+			case constant.MissionBeginTypeNil:
+				break
+			case constant.MissionBeginTypeAuto:
+				break
+			case constant.MissionBeginTypeUnknown:
+				// isNext = false
+				break
+			case constant.MissionBeginTypeAnySequence:
+				isNext = false
+				for _, takeParamId := range subInfo.TakeParamIntList {
+					if finishSubMissionList[takeParamId] != nil {
+						isNext = true
+						break
+					}
+				}
+			case constant.MissionBeginTypeMultiSequence:
+				for _, takeParamId := range subInfo.TakeParamIntList {
+					if finishSubMissionList[takeParamId] == nil {
+						isNext = false
+						break
+					}
+				}
+			case constant.MissionBeginTypeCustomValue:
+				isNext = g.MissionCustomValue(subInfo.ID, m.MissionCustomValue)
+			default:
+				client.PushServer(&constant.LogPush{
+					PushMessage: constant.PushMessage{
+						Tag: "Mission",
+					},
+					LogMsg: fmt.Sprintf("未知的子任务接取条件,MissionId:%v,接取条件:%s",
+						subInfo.ID, subInfo.TakeType),
+					LogLevel: constant.ERROR,
+				})
+			}
+			if isNext {
+				acceptSubMissionList = append(acceptSubMissionList, subInfo.ID)
+			}
+		}
+	}
+
+	return acceptSubMissionList
+}
+
+func (g *PlayerData) MissionCustomValue(subId uint32, customValueList []*spb.MissionCustomValue) bool {
 	conf := gdconf.GetSubMainMissionById(subId)
-	mainConf := g.GetMainMissionById(conf.MainMissionID)
-	if mainConf == nil || conf.TakeParamIntList == nil {
+	if conf.TakeParamIntList == nil {
 		return false
 	}
-	for _, customValue := range mainConf.MissionCustomValue {
+	for _, customValue := range customValueList {
 		var index uint32 = 0
 		var isAccept = false
 		for _, takeParamId := range conf.TakeParamIntList {
@@ -652,7 +715,7 @@ func (g *PlayerData) IsAcceptMainMission(mission *gdconf.MainMission, mainMissio
 		case constant.MissionBeginTypeManual:
 			return false
 		default:
-			pushc.PushServer(&constant.LogPush{
+			client.PushServer(&constant.LogPush{
 				PushMessage: constant.PushMessage{
 					Tag: "Mission",
 				},
@@ -665,4 +728,35 @@ func (g *PlayerData) IsAcceptMainMission(mission *gdconf.MainMission, mainMissio
 	}
 
 	return isReceive
+}
+
+/*********************************完成检查**********************************/
+
+// 主任务完成检查
+func (g *PlayerData) FinishServerMainMission() []uint32 {
+	mainMissionList := g.GetMainMissionList() // 已接取的主任务
+	// finishMainMissionList := g.GetFinishMainMissionList() // 已完成的主任务
+	finishSubMissionList := g.GetFinishSubMainMissionList() // 已完成的子任务
+	finishServerMainMissionList := make([]uint32, 0)
+	for _, mainMission := range mainMissionList {
+		if mainMission.MissionId == 4030001 || mainMission.MissionId == 4030002 {
+			finishServerMainMissionList = append(finishServerMainMissionList, mainMission.MissionId)
+			continue
+		}
+		iSFinishMain := true
+		mainConf := gdconf.GetGoppMainMissionById(mainMission.MissionId)
+		if mainConf != nil {
+			for _, subMissionId := range mainConf.FinishSubMissionList { // 检查主线任务是否满足完成条件
+				if finishSubMissionList[subMissionId] == nil {
+					iSFinishMain = false
+					break
+				}
+			}
+			if iSFinishMain {
+				finishServerMainMissionList = append(finishServerMainMissionList, mainMission.MissionId)
+			}
+		}
+	}
+
+	return finishServerMainMissionList
 }

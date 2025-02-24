@@ -159,7 +159,7 @@ func ComposeItemCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		g.Send(cmd.ComposeItemScRsp, rsp)
 		return
 	}
-	retcode := g.GetPd().ComposeItem(conf, req.Count, req.ComposeItemList, addItem)
+	retcode := g.GetPd().ComposeItem(conf, req.Count, req.GetComposeItemList().GetItemList(), addItem)
 	rsp.Retcode = uint32(retcode)
 	if retcode != 0 {
 		g.Send(cmd.ComposeItemScRsp, rsp)
@@ -192,7 +192,8 @@ func ComposeSelectedRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
 		return
 	}
-	retcode := g.GetPd().ComposeItem(conf, req.Count, req.ComposeItemList, addItem)
+	allItemCostData := append(req.GetComposeItemList().GetItemList(), req.GetWrItemList().GetItemList()...)
+	retcode := g.GetPd().ComposeItem(conf, req.Count, allItemCostData, addItem)
 	rsp.Retcode = uint32(retcode)
 	if retcode != 0 {
 		g.Send(cmd.ComposeSelectedRelicScRsp, rsp)
@@ -200,7 +201,11 @@ func ComposeSelectedRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	}
 
 	for i := 0; i < int(req.Count); i++ {
-		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, 0, req.MainAffixId, nil)
+		subAffix := make(map[uint32]uint32, 0)
+		for _, subAffixId := range req.SubAffixIdList {
+			subAffix[subAffixId] = 1
+		}
+		uniqueId := g.GetPd().AddRelic(req.ComposeRelicId, 0, req.MainAffixId, subAffix)
 		addItem.AllSync.RelicList = append(addItem.AllSync.RelicList, uniqueId)
 		rsp.ReturnItemList.ItemList = append(rsp.ReturnItemList.ItemList, &proto.Item{
 			ItemId:   req.ComposeRelicId,
@@ -220,8 +225,10 @@ func CancelCacheNotifyCsReq(g *GamePlayer, payloadMsg pb.Message) {
 /***************************relic*************************************/
 
 func RelicRecommendCsReq(g *GamePlayer, payloadMsg pb.Message) {
-	// req := payloadMsg.(*proto.RelicRecommendCsReq)
-	rsp := &proto.RelicRecommendScRsp{}
+	req := payloadMsg.(*proto.RelicRecommendCsReq)
+	rsp := &proto.RelicRecommendScRsp{
+		AvatarId: req.AvatarId,
+	}
 	g.Send(cmd.RelicRecommendScRsp, rsp)
 }
 
@@ -229,6 +236,47 @@ func RelicAvatarRecommendCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	// req := payloadMsg.(*proto.RelicRecommendCsReq)
 	rsp := &proto.RelicAvatarRecommendScRsp{}
 	g.Send(cmd.RelicAvatarRecommendScRsp, rsp)
+}
+
+func RelicSmartWearGetPlanCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	// req := payloadMsg.(*proto.RelicSmartWearGetPlanCsReq)
+	rsp := &proto.RelicSmartWearGetPlanScRsp{}
+	g.Send(cmd.RelicSmartWearGetPlanScRsp, rsp)
+}
+
+func RelicReforgeCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RelicReforgeCsReq)
+	rsp := &proto.RelicReforgeScRsp{}
+	defer g.Send(cmd.RelicReforgeScRsp, rsp)
+	allSync := model.NewAllPlayerSync()
+	// 扣费
+	if !g.GetPd().DelMaterial([]*model.Material{
+		{
+			Tid: model.VariableDice,
+			Num: 1,
+		},
+	}) {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_FORMULA_NOT_EXIST)
+		return
+	}
+	allSync.MaterialList = append(allSync.MaterialList, model.VariableDice)
+	if g.GetPd().RelicReforge(req.RelicUniqueId, allSync) {
+		g.AllPlayerSyncScNotify(allSync)
+	} else {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_FORMULA_NOT_EXIST)
+	}
+}
+
+func RelicReforgeConfirmCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.RelicReforgeConfirmCsReq)
+	rsp := &proto.RelicReforgeConfirmScRsp{}
+	defer g.Send(cmd.RelicReforgeConfirmScRsp, rsp)
+	allSync := model.NewAllPlayerSync()
+	if !g.GetPd().RelicReforgeConfirm(req.RelicUniqueId, allSync, req.IsRecall) {
+		rsp.Retcode = uint32(proto.Retcode_RET_ITEM_FORMULA_NOT_EXIST)
+	} else {
+		g.AllPlayerSyncScNotify(allSync)
+	}
 }
 
 func LockRelicCsReq(g *GamePlayer, payloadMsg pb.Message) {

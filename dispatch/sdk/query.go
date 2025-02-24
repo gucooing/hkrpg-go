@@ -56,7 +56,8 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 
 	queryGateway := new(proto.GateServer)
 	queryGateway.EnableVersionUpdate = true
-	queryGateway.PILJCFDPOPM = true
+	queryGateway.EnableDesignDataVersionUpdate = true
+	queryGateway.HMAOHIGCMOC = true
 	queryGateway.EnableWatermark = true
 	queryGateway.EventTrackingOpen = true
 	queryGateway.CloseRedeemCode = false
@@ -71,10 +72,10 @@ func (s *Server) QueryGatewayHandler(c *gin.Context) {
 	// queryGateway.KEICDBEHMDO = fmt.Sprintf("%s/common/apicdkey/api", s.OuterAddr)
 
 	if regionList == nil || info == nil || info.MinGateAddr == "" {
-		queryGateway.Msg = "网关启动中"
+		queryGateway.LoginWhiteMsg = "网关启动中"
 		queryGateway.Retcode = uint32(proto.Retcode_RET_SERVER_INTERNAL_ERROR)
 	} else {
-		queryGateway.Msg = "OK"
+		queryGateway.LoginWhiteMsg = "OK"
 		queryGateway.Ip = info.MinGateAddr
 		queryGateway.RegionName = info.Name
 		queryGateway.Port = info.MinGatePort

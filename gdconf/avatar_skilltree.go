@@ -13,6 +13,7 @@ import (
 type AvatarSkilltree struct {
 	PointID        uint32   `json:"PointID"`
 	Level          uint32   `json:"Level"`
+	PointType      uint32   `json:"PointType"`
 	MaxLevel       uint32   `json:"MaxLevel"`
 	AvatarID       uint32   `json:"AvatarID"`
 	DefaultUnlock  bool     `json:"DefaultUnlock"` // 是否默认解锁?
@@ -45,17 +46,21 @@ func (g *GameDataConfig) loadAvatarSkilltree() {
 func GetAvatarSkilltreeListById(avatarId uint32) map[uint32]uint32 {
 	skilltreeList := make(map[uint32]uint32)
 	for _, gdconf := range getConf().AvatarSkilltreeMap {
-		if gdconf[1].AvatarID == avatarId {
-			skilltree := &proto.AvatarSkillTree{
-				PointId: gdconf[1].PointID,
-			}
-			if gdconf[1].DefaultUnlock {
-				skilltree.Level = 1
-			} else {
-				skilltree.Level = 0
-			}
-			skilltreeList[skilltree.PointId] = skilltree.Level
+		conf, ok := gdconf[1]
+		if !ok ||
+			conf.AvatarID != avatarId {
+			continue
 		}
+
+		skilltree := &proto.AvatarSkillTree{
+			PointId: conf.PointID,
+		}
+		if conf.DefaultUnlock {
+			skilltree.Level = 1
+		} else {
+			skilltree.Level = 0
+		}
+		skilltreeList[skilltree.PointId] = skilltree.Level
 	}
 	return skilltreeList
 }

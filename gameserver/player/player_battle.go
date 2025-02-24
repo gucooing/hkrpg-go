@@ -18,8 +18,8 @@ func SetTurnFoodSwitchCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetTurnFoodSwitchCsReq)
 	rsp := &proto.SetTurnFoodSwitchScRsp{
 		Retcode:     0,
-		LOKHMBEONGM: req.LOKHMBEONGM,
-		GKJMGGJJCFI: req.GKJMGGJJCFI,
+		NIFNPBLKJBE: req.NIFNPBLKJBE,
+		DPJEHJCDBCM: req.DPJEHJCDBCM,
 	}
 	g.Send(cmd.SetTurnFoodSwitchScRsp, rsp)
 }
@@ -209,73 +209,22 @@ func PVEBattleResultCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		ResVersion:       strconv.Itoa(int(req.ClientVersion)), // 版本验证
 		DropData:         &proto.ItemList{ItemList: make([]*proto.Item, 0)},
 	}
-	battleBin := g.GetPd().GetBattleBackupById(req.BattleId)
-	if battleBin == nil {
-		g.Send(cmd.PVEBattleResultScRsp, rsp)
+	defer g.Send(cmd.PVEBattleResultScRsp, rsp)
+	battleInfo := g.GetPd().GetBattleBackupById(req.BattleId)
+	if battleInfo == nil {
 		return
 	}
-	sce := battleBin.Sce
+	rsp.EventId = battleInfo.EventId
+	sce := battleInfo.Sce
 	var teleportToAnchor = false
 	// 更新角色状态
 	g.GetPd().BattleUpAvatar(req.Stt.GetBattleAvatarList(), req.GetEndStatus())
 	g.SyncLineupNotify(g.GetPd().GetCurLineUp())
-	battleBin.AddItem = model.NewAddItem(battleBin.AddItem)
+	battleInfo.AddItem = model.NewAddItem(battleInfo.AddItem)
 	// 根据不同结算状态处理
 	switch req.EndStatus {
 	case proto.BattleEndStatus_BATTLE_END_WIN: // 胜利
-		// 删除怪物实体
-		if sce != nil && !battleBin.IsFarmElement {
-			g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
-				GroupRefreshList: g.GetPd().GetDelSceneGroupRefreshInfo(sce.MonsterEntityIdList),
-			})
-		}
-		// 任务判断
-		if battleBin.EventId != 0 {
-			rsp.EventId = battleBin.EventId
-			finishSubMission := g.GetPd().UpBattleSubMission(req.BattleId)
-			if req.Stt.CustomValues != nil {
-				finishSubMission = append(finishSubMission, g.GetPd().BattleCustomValues(req.Stt.CustomValues, battleBin.EventId)...)
-			}
-			g.InspectMission(finishSubMission...)
-			entity := g.GetPd().GetTriggerBattleString(battleBin.EventId)
-			if entity != nil {
-				blockBin := g.GetPd().GetBlock(g.GetPd().GetCurEntryId())
-				g.GetPd().UpPropState(blockBin, entity.GroupId, entity.InstId, 1)    // 更新状态
-				g.PropSceneGroupRefreshScNotify([]uint32{entity.EntityId}, blockBin) // 通知状态更改
-			}
-		}
-		// 任务判断二
-		if sce != nil {
-			for _, entityId := range sce.MonsterEntityIdList {
-				me := g.GetPd().GetMonsterEntityById(entityId)
-				if me != nil {
-					finishSubMission := g.GetPd().UpKillMonsterSubMission(me)
-					g.InspectMission(finishSubMission...)
-				}
-			}
-		}
-		// 以太战线任务判断
-		if battleBin.AetherDivideId != 0 {
-			finishSubMission := g.GetPd().AetherDivideCertainFinishHyperlinkDuel(battleBin.AetherDivideId)
-			g.InspectMission(finishSubMission...)
-		}
-		// 参战角色经验添加
-		for _, avatar := range req.Stt.GetBattleAvatarList() {
-			if _, ok := g.GetPd().AvatarAddExp(avatar.Id, battleBin.AvatarExpReward); ok {
-				battleBin.AddItem.AllSync.AvatarList = append(battleBin.AddItem.AllSync.AvatarList, avatar.Id)
-			}
-		}
-		// 获取奖励
-		if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
-			g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin)
-			finishSubMission := g.GetPd().FinishCocoon(battleBin.CocoonId)
-			g.InspectMission(finishSubMission...)
-			g.GetPd().DelStamina(conf.StaminaCost)
-		}
-		if conf := gdconf.GetFarmElementConfig(req.StageId); conf != nil {
-			g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin)
-			g.GetPd().DelStamina(conf.StaminaCost)
-		}
+		g.BattleFinishAction(battleInfo, req)
 	case proto.BattleEndStatus_BATTLE_END_LOSE: // 失败
 		teleportToAnchor = true
 	case proto.BattleEndStatus_BATTLE_END_QUIT:
@@ -284,9 +233,9 @@ func PVEBattleResultCsReq(g *GamePlayer, payloadMsg pb.Message) {
 
 	switch g.GetPd().GetBattleStatus() {
 	case spb.BattleType_Battle_CHALLENGE:
-		g.ChallengePVEBattleResultCsReq(req, battleBin)
+		g.ChallengePVEBattleResultCsReq(req, battleInfo)
 	case spb.BattleType_Battle_CHALLENGE_Story:
-		g.ChallengePVEBattleResultCsReq(req, battleBin)
+		g.ChallengePVEBattleResultCsReq(req, battleInfo)
 	case spb.BattleType_Battle_QUSET_ROGUE:
 		teleportToAnchor = false
 		g.RoguePVEBattleResultCsReq(req, sce)
@@ -295,20 +244,86 @@ func PVEBattleResultCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		teleportToAnchor = true
 	}
 
+	if battleInfo.IsQuick { // 快速挑战不传送
+		teleportToAnchor = false
+	}
+
 	// 是否传送到最近锚点
 	if teleportToAnchor {
 		// 当前坐标通知(移动到最近锚点)
 		g.EnterSceneByServerScNotify(g.GetPd().GetCurEntryId(), 0, 0, 0)
 	}
 
-	g.GetPd().AddItem(battleBin.AddItem)
-	rsp.DropData.ItemList = battleBin.AddItem.ItemList
+	rsp.DropData.ItemList = battleInfo.AddItem.ItemList
 	g.StaminaInfoScNotify()
-	g.AllPlayerSyncScNotify(battleBin.AddItem.AllSync)
-	// g.AllScenePlaneEventScNotify(addPileItem)
-
+	g.AllPlayerSyncScNotify(battleInfo.AddItem.AllSync)
+	// 删除战斗信息
 	g.GetPd().DelBattleBackupById(req.BattleId)
-	g.Send(cmd.PVEBattleResultScRsp, rsp)
+}
+
+func (g *GamePlayer) BattleFinishAction(battleBin *model.BattleBackup, req *proto.PVEBattleResultCsReq) {
+	sce := battleBin.Sce
+	// 删除怪物实体
+	if sce != nil && !battleBin.IsFarmElement {
+		g.Send(cmd.SceneGroupRefreshScNotify, &proto.SceneGroupRefreshScNotify{
+			GroupRefreshList: g.GetPd().GetDelSceneGroupRefreshInfo(sce.MonsterEntityIdList),
+		})
+	}
+	// 任务判断
+	if battleBin.EventId != 0 {
+		finishSubMission := g.GetPd().UpBattleSubMission(req.BattleId)
+		if req.Stt.CustomValues != nil {
+			finishSubMission = append(finishSubMission, g.GetPd().BattleCustomValues(req.Stt.CustomValues, battleBin.EventId)...)
+		}
+		if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
+
+		entity := g.GetPd().GetTriggerBattleString(battleBin.EventId)
+		if entity != nil {
+			blockBin := g.GetPd().GetBlock(g.GetPd().GetCurEntryId())
+			g.GetPd().UpPropState(blockBin, entity.GroupId, entity.InstId, 1)    // 更新状态
+			g.PropSceneGroupRefreshScNotify([]uint32{entity.EntityId}, blockBin) // 通知状态更改
+		}
+	}
+	// 任务判断二
+	if sce != nil {
+		for _, entityId := range sce.MonsterEntityIdList {
+			me := g.GetPd().GetMonsterEntityById(entityId)
+			finishSubMission := g.GetPd().UpKillMonsterSubMission(me)
+			if len(finishSubMission) > 0 {
+				g.InspectMission(finishSubMission...)
+			}
+		}
+	}
+	// 以太战线任务判断
+	if battleBin.AetherDivideId != 0 {
+		finishSubMission := g.GetPd().AetherDivideCertainFinishHyperlinkDuel(battleBin.AetherDivideId)
+		if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
+	}
+	// 参战角色经验添加
+	for _, avatar := range req.Stt.GetBattleAvatarList() {
+		if _, ok := g.GetPd().AvatarAddExp(avatar.Id, battleBin.AvatarExpReward); ok {
+			battleBin.AddItem.AllSync.AvatarList = append(battleBin.AddItem.AllSync.AvatarList, avatar.Id)
+		}
+	}
+	// 获取奖励
+	if conf := gdconf.GetCocoonConfigById(battleBin.CocoonId, battleBin.WorldLevel); conf != nil { // 副本处理
+		g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin)
+		finishSubMission := g.GetPd().FinishCocoon(battleBin.CocoonId)
+		if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
+		g.GetPd().DelStamina(conf.StaminaCost)
+	}
+	if conf := gdconf.GetFarmElementConfigByStageID(req.StageId); conf != nil {
+		g.GetPd().GetBattleDropData(conf.MappingInfoID, battleBin)
+		g.GetPd().DelStamina(conf.StaminaCost)
+	}
+	// 只有胜利才发送奖励
+	g.GetPd().AddItem(battleBin.AddItem)
 }
 
 /***********************************关卡/副本***********************************/
@@ -321,16 +336,43 @@ func StartCocoonStageCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		Retcode:      0,
 		Wave:         req.Wave,
 	}
+	defer g.Send(cmd.StartCocoonStageScRsp, rsp)
+	battleInfoPb := g.StartCocoon(req.CocoonId, req.WorldLevel, false)
+	if battleInfoPb == nil {
+		logger.Warn("No Cocoon like this can be found,cocoonId:%v,worldLevel:%v", req.CocoonId, req.WorldLevel)
+		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+		return
+	}
+	rsp.BattleInfo = battleInfoPb
+}
+
+func QuickStartCocoonStageCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.QuickStartCocoonStageCsReq)
+	rsp := &proto.QuickStartCocoonStageScRsp{
+		CocoonId:   req.CocoonId,
+		BattleInfo: nil,
+		Wave:       req.Wave,
+		Retcode:    0,
+	}
+	defer g.Send(cmd.QuickStartCocoonStageScRsp, rsp)
+	battleInfoPb := g.StartCocoon(req.CocoonId, req.WorldLevel, true)
+	if battleInfoPb == nil {
+		logger.Warn("No Cocoon like this can be found,cocoonId:%v,worldLevel:%v", req.CocoonId, req.WorldLevel)
+		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+		return
+	}
+	rsp.BattleInfo = battleInfoPb
+}
+
+func (g *GamePlayer) StartCocoon(cocoonId, worldLevel uint32, isQuick bool) *proto.SceneBattleInfo {
 	battleBackup := &model.BattleBackup{
 		IsBattle:   false,
-		WorldLevel: req.WorldLevel,
+		IsQuick:    isQuick,
+		WorldLevel: worldLevel,
 	}
-	cocoonConfig := gdconf.GetCocoonConfigById(req.CocoonId, battleBackup.WorldLevel)
+	cocoonConfig := gdconf.GetCocoonConfigById(cocoonId, battleBackup.WorldLevel)
 	if cocoonConfig == nil {
-		logger.Warn("No Cocoon like this can be found,cocoonId:%v,worldLevel:%v", req.CocoonId, battleBackup.WorldLevel)
-		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
-		g.Send(cmd.StartCocoonStageScRsp, rsp)
-		return
+		return nil
 	}
 	battleBackup.StageID = cocoonConfig.StageID
 	battleBackup.StageIDList = cocoonConfig.StageIDList
@@ -339,16 +381,14 @@ func StartCocoonStageCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.GetPd().SetBattleStatus(spb.BattleType_Battle_NONE) // 设置战斗状态
 	battleInfoPb := g.GetPd().GetSceneBattleInfo(battleBackup)
 	if battleInfoPb == nil {
-		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
-		g.Send(cmd.StartCocoonStageScRsp, rsp)
-		return
+		return nil
 	}
-	rsp.BattleInfo = battleInfoPb
 	// 储存战斗信息
-	battleBackup.CocoonId = req.CocoonId
-	battleBackup.WorldLevel = req.WorldLevel
+	battleBackup.CocoonId = cocoonId
+	battleBackup.WorldLevel = worldLevel
 	g.GetPd().AddBattleBackup(battleBackup)
-	g.Send(cmd.StartCocoonStageScRsp, rsp)
+
+	return battleInfoPb
 }
 
 func ActivateFarmElementCsReq(g *GamePlayer, payloadMsg pb.Message) {
@@ -399,6 +439,38 @@ func DeactivateFarmElementCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		Retcode:  0,
 	}
 	g.Send(cmd.DeactivateFarmElementScRsp, rsp)
+}
+
+func QuickStartFarmElementCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.QuickStartFarmElementCsReq)
+	rsp := &proto.QuickStartFarmElementScRsp{
+		Retcode:       0,
+		BattleInfo:    nil,
+		WorldLevel:    req.WorldLevel,
+		FarmElementId: req.FarmElementId,
+	}
+	defer g.Send(cmd.QuickStartFarmElementScRsp, rsp)
+
+	conf := gdconf.GetFarmElementConfigByID(req.FarmElementId, req.WorldLevel)
+	if conf == nil {
+		logger.Warn("No FarmElement like this can be found,farmElementId:%v,worldLevel:%v", req.FarmElementId, req.WorldLevel)
+		rsp.Retcode = uint32(proto.Retcode_RET_FIGHT_ACTIVITY_STAGE_NOT_OPEN)
+		return
+	}
+
+	battleBackup := &model.BattleBackup{
+		IsBattle:         true,
+		IsQuick:          true,
+		StageID:          conf.StageID,
+		StageIDList:      []uint32{conf.StageID},
+		WorldLevel:       req.WorldLevel,
+		BattleAvatarList: g.GetPd().GetBattleAvatarMap(g.GetPd().GetCurLineUp()),
+		IsFarmElement:    true,
+	}
+	battleInfoPb := g.GetPd().GetSceneBattleInfo(battleBackup)
+	rsp.BattleInfo = battleInfoPb
+	// 记录战斗
+	g.GetPd().AddBattleBackup(battleBackup)
 }
 
 func RefreshTriggerByClientCsReq(g *GamePlayer, payloadMsg pb.Message) {

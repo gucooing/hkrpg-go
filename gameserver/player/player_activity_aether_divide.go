@@ -13,9 +13,8 @@ import (
 
 func GetAetherDivideInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetAetherDivideInfoScRsp{
-		AvatarList:      make([]*proto.AetherDivideSpiritInfo, 0),
-		IIPPFOAIOGL:     1,
-		ANDLDDEKLAG:     1,
+		AvatarList: make([]*proto.AetherDivideSpiritInfo, 0),
+
 		Retcode:         0,
 		AetherSkillList: make([]*proto.AetherSkillInfo, 0),
 		LineupList:      make([]*proto.AetherDivideLineupInfo, 0),
@@ -47,8 +46,7 @@ func GetAetherDivideChallengeInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetAetherDivideChallengeInfoScRsp{
 		// ECDFJJCPFJA:         1,
 		// Retcode:             0,
-		MEFNJKOFLND: x,
-		AGCBCOBPGMF: x,
+
 	}
 
 	g.Send(cmd.GetAetherDivideChallengeInfoScRsp, rsp)

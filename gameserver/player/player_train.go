@@ -103,10 +103,19 @@ func SelectPamSkinCsReq(g *GamePlayer, payloadMsg pb.Message) {
 func TrainPartyGetDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.TrainPartyGetDataScRsp{
 		TrainPartyData: &proto.TrainPartyData{
-			DPOLGBKEKLD:        1,
-			PassengerInfo:      g.GetPd().GetPassengerInfo(),
-			TrainPartyGameInfo: g.GetPd().GetTrainPartyGameInfo(),
-			TrainPartyInfo:     g.GetPd().GetTrainPartyInfo(),
+			PassengerInfo: g.GetPd().GetPassengerInfo(),
+			// TrainPartyGameInfo: g.GetPd().GetTrainPartyGameInfo(),
+			TrainPartyGameInfo: &proto.TrainPartyGameInfo{
+				TrainPartyItemInfo: nil,
+				TrainPassengerInfo: nil,
+				TeamId:             0,
+				TrainActionInfo:    nil,
+				TrainPartyGridInfo: nil,
+			},
+			TrainPartyInfo: g.GetPd().GetTrainPartyInfo(),
+			CMGMGNOMJFN:    0,
+			LAGHAPIKBID:    0,
+			RecordId:       6,
 		},
 		Retcode: 0,
 	}
@@ -116,7 +125,6 @@ func TrainPartyGetDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 func GetTrainVisitorRegisterCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.GetTrainVisitorRegisterScRsp{
 		Retcode:         0,
-		BICLJONPGMH:     make([]uint32, 0),
 		VisitorInfoList: g.GetPd().GetVisitorInfoList(),
 	}
 
@@ -125,6 +133,11 @@ func GetTrainVisitorRegisterCsReq(g *GamePlayer, payloadMsg pb.Message) {
 
 func TrainPartyEnterCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.TrainPartyEnterScRsp{}
+	defer g.Send(cmd.TrainPartyEnterScRsp, rsp)
+	g.EnterSceneByServerScNotify(1000201, 0, 0, 0)
+}
 
-	g.Send(cmd.TrainPartyEnterScRsp, rsp)
+func TrainPartyLeaveCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	rsp := &proto.TrainPartyLeaveScRsp{}
+	defer g.Send(cmd.TrainPartyLeaveScRsp, rsp)
 }

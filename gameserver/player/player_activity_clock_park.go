@@ -8,12 +8,9 @@ import (
 
 func ClockParkGetInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.ClockParkGetInfoScRsp{
-		ParkInfos:   g.GetPd().GetClockParkInfoList(),
-		CMAECALDMAN: make([]uint32, 0),
-		Retcode:     0,
-		Progress:    0,
-		GJLJIOICNBE: 0,
-		KGHFABADCHE: 0,
+		ParkInfos: g.GetPd().GetClockParkInfoList(),
+		Retcode:   0,
+		Progress:  0,
 	}
 	g.Send(cmd.ClockParkGetInfoScRsp, rsp)
 }
@@ -29,29 +26,8 @@ func ClockParkStartScriptCsReq(g *GamePlayer, payloadMsg pb.Message) {
 
 func ClockParkGetOngoingScriptInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.ClockParkGetOngoingScriptInfoScRsp{
-		NPONPMGNKIE: 0,
-		ScriptId:    1,
-		JPECEHHAMPE: "114514",
-		Retcode:     0,
-		AOGMMEFAIFJ: 0,
-		PFBOBBMELFB: &proto.AMIGGMENHFA{
-			LDDNDPHOGKK: 0,
-			LHECJKAMCIH: 0,
-			IKDAEHJKBPA: 0,
-		},
-		JOIPFMCOINI: 0,
-		PNOAKGNANBO: 0,
-		RogueBuffInfo: &proto.MGGJKPGEGLP{
-			BuffList: make([]*proto.MIFEPBDNGGC, 0),
-		},
-		EJOMHILNCMC: nil,
-		DMBNHOFLDFO: &proto.HJLBLONCPML{
-			BEBCFIIABLI: 0,
-			GFDAPLICKGC: &proto.HJLBLONCPML_LGNHIBENJDK{
-				LGNHIBENJDK: true,
-			},
-		},
-		FBELDFBDFAG: 0,
+		ScriptId: 1,
+		Retcode:  0,
 	}
 	g.Send(cmd.ClockParkGetOngoingScriptInfoScRsp, rsp)
 }

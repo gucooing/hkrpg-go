@@ -128,7 +128,9 @@ func BuyGoodsCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.AllPlayerSyncScNotify(addItem.AllSync)
 
 	finishSubMission := g.GetPd().MissionGetItem(req.ItemId) // 任务检查
-	g.InspectMission(finishSubMission...)
+	if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
 }
 
 func TakeCityShopRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {

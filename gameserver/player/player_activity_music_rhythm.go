@@ -8,15 +8,15 @@ import (
 
 func MusicRhythmDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.MusicRhythmDataScRsp{
-		Retcode:         0,
-		MusicLevel:      g.GetPd().GetMusicRhythmLevelList(),
-		UnlockPhaseList: nil,
-		CurLevelId:      0,
-		CurSongId:       0,
-		MusicGroup:      nil,
-		ShowHint:        false,
-		UnlockSongList:  nil,
-		UnlockTrackList: nil,
+		Retcode: 0,
+		// MusicLevel:      g.GetPd().GetMusicRhythmLevelList(),
+		// UnlockPhaseList: nil,
+		// CurLevelId:      0,
+		// CurSongId:       0,
+		// MusicGroup:      nil,
+		// ShowHint:        false,
+		// UnlockSongList:  nil,
+		// UnlockTrackList: nil,
 	}
 	g.Send(cmd.MusicRhythmDataScRsp, rsp)
 }

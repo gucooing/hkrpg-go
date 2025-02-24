@@ -94,7 +94,7 @@ message TextJoin {
 
 message MusicInfo {
   uint32 music_id = 1;
- //  bool is = 2; // 是否解锁？
+  //  bool is = 2; // 是否解锁？
 }
 
 message ChangeStory {
@@ -200,6 +200,7 @@ message Relic {
   bool is_protected = 8; // 是否锁定
   string main_affix_property = 9;//主词条类型
   bool is_discarded = 10; // 是否弃置
+  map<uint32, RelicAffix>  new_relic_affix = 11; // 词条 map[affix_id]RelicAffix
 }
 
 message RelicAffix {

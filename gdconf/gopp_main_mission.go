@@ -122,7 +122,8 @@ func (g *GameDataConfig) goppMainMission() {
 		playerElementsFilePath := g.configPrefix + "Level/Mission/" + strconv.Itoa(int(id)) + "/MissionInfo_" + strconv.Itoa(int(id)) + ".json"
 		playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 		if err != nil {
-			panic(fmt.Sprintf(text.GetText(18), playerElementsFilePath, err))
+			logger.Error(fmt.Sprintf(text.GetText(18), playerElementsFilePath, err))
+			continue
 		}
 		err = hjson.Unmarshal(playerElementsFile, &goppMainMission)
 		if err != nil {
@@ -184,7 +185,7 @@ func GetEntryId(id uint32) (uint32, uint32, uint32, bool) {
 				continue
 			}
 			for _, task := range info.TaskList {
-				if getConf().MapEntranceMap[task.EntranceID] != nil {
+				if getConf().MapEntranceMap.MapEntranceMapByEntryId[task.EntranceID] != nil {
 					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
 				}
 			}
@@ -194,7 +195,7 @@ func GetEntryId(id uint32) (uint32, uint32, uint32, bool) {
 				continue
 			}
 			for _, task := range info.TaskList {
-				if getConf().MapEntranceMap[task.EntranceID] != nil {
+				if getConf().MapEntranceMap.MapEntranceMapByEntryId[task.EntranceID] != nil {
 					return task.EntranceID, getGroupIDUint32(task.GroupID), getGroupIDUint32(task.AnchorID), true
 				}
 			}

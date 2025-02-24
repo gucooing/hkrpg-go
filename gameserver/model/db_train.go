@@ -70,9 +70,9 @@ func (g *PlayerData) GetVisitorInfoList() []*proto.TrainVisitorInfo {
 		info := &proto.TrainVisitorInfo{
 			MissionId:              conf.MissionID,
 			VisitorId:              conf.VisitorID,
-			BKHCLMJKOIP:            make([]uint32, 0),
 			ToastFinishMainMission: conf.ToastFinishMainMission,
 			Status:                 proto.TrainVisitorStatus_TRAIN_VISITOR_STATUS_GET_ON,
+			HHHLOHFNNHG:            make([]uint32, 0),
 		}
 		list = append(list, info)
 	}
@@ -86,10 +86,10 @@ func (g *PlayerData) GetPassengerInfo() *proto.TrainPartyPassengerInfo {
 
 	for _, v := range gdconf.GetTrainPartyPassengerConfigMap() {
 		info.PassengerInfoList = append(info.PassengerInfoList, &proto.TrainPartyPassenger{
-			RecordId:    0,
-			DNGLGOMMFNP: false,
-			BFGGMBADMHB: make([]uint32, 0),
+			RecordId:    1,
 			PassengerId: v.PassengerID,
+			BIKCDADJIJJ: []uint32{101},
+			CDKLEKCJBEJ: false,
 		})
 	}
 
@@ -119,25 +119,25 @@ func (g *PlayerData) GetTrainPartyGameInfo() *proto.TrainPartyGameInfo {
 
 func (g *PlayerData) GetTrainPartyGridInfo() *proto.TrainPartyGameGridInfo {
 	info := &proto.TrainPartyGameGridInfo{
-		OOPDLCMLKKL: 1,
-		NOFPLBABCCB: 1,
-		OPDABBNHHCG: &proto.OKFGPABKEJE{
-			AADBGCLODKK: 0,
-			HLIDPIFAJCG: make([]uint32, 0),
-			AOJBNMEECHF: 16,
-			DFNCNGPDILM: 8001,
-			EPALCFOJBKJ: 2,
-			ECFPFKNJINA: 0,
+		ABKEJMFCDDC: 1,
+		GridList:    make([]*proto.TrainPartyGameGrid, 0),
+		MHLBCKDCBOC: &proto.BIGHEDAMILL{
+			OJGKCKEFDLD: make([]uint32, 0),
+			ODFEMLEEMCL: 0,
+			EKLCIHAFNII: 0,
+			HJGJBKNJFJM: 0,
+			KOLEFIFDFHL: 0,
+			JJODFDMFCLB: 0,
 		},
-		GridList: make([]*proto.TrainPartyGameGrid, 0),
+		HNEKCAOJDNA: 1,
 	}
 
 	for i := 1; i < 12; i++ {
 		info.GridList = append(info.GridList, &proto.TrainPartyGameGrid{
-			GAEIOFOPLFN:  uint32(i),
-			GridId:       1001,
 			DisplayValue: 0,
 			UniqueId:     uint32(i),
+			GridId:       1001,
+			ILOFIMODIEN:  uint32(i),
 		})
 	}
 
@@ -146,20 +146,20 @@ func (g *PlayerData) GetTrainPartyGridInfo() *proto.TrainPartyGameGridInfo {
 
 func (g *PlayerData) GetTrainPartyItemInfo() *proto.TrainPartyGameItemInfo {
 	info := &proto.TrainPartyGameItemInfo{
-		ALPDNPDDPJC: 100,
-		ECLBPHPMGIN: false,
+		NEFOLHONILJ: false,
 		TrainPartyCardInfo: &proto.TrainPartyGameCardInfo{
 			TrainPartyCardInfo: make([]*proto.TrainPartyGameCard, 0),
 		},
+		KEBLGELLMED: 100,
 	}
 
 	for _, v := range gdconf.GetTrainPartyCardConfigMap() {
 		info.TrainPartyCardInfo.TrainPartyCardInfo = append(info.TrainPartyCardInfo.TrainPartyCardInfo,
 			&proto.TrainPartyGameCard{
 				UniqueId:    g.GetNextGameObjectGuid(),
-				HMKMKBELCLG: make([]uint32, 0),
-				NAGKACACHGD: 1,
+				LHFLCFNAOPB: 1,
 				CardId:      v.CardID,
+				MCBCBMPDDBL: make([]uint32, 0),
 			})
 	}
 
@@ -171,16 +171,16 @@ func (g *PlayerData) GetTrainPassengerInfo() *proto.TrainPartyGamePassengerInfo 
 		CurPassengerId:       1004,
 		MtRankId:             73,
 		PassengerList:        make([]*proto.TrainPartyGamePassenger, 0),
-		NAGKACACHGD:          0,
+		LHFLCFNAOPB:          0,
 		AetherSkillList:      make([]*proto.TrainPartyGameSkill, 0),
 		PassengerDiaryIdList: []uint32{101},
 	}
 
 	for _, v := range gdconf.GetTrainPartyPassengerConfigMap() {
 		info.PassengerList = append(info.PassengerList, &proto.TrainPartyGamePassenger{
-			DIKPBINAOOH: 100,
+			BNDMGIOJOAN: 100,
+			CFFMOJGHJLM: nil,
 			PassengerId: v.PassengerID,
-			IHLDLJGDCBL: nil,
 		})
 	}
 
@@ -189,16 +189,16 @@ func (g *PlayerData) GetTrainPassengerInfo() *proto.TrainPartyGamePassengerInfo 
 
 func (g *PlayerData) GetTrainPartyInfo() *proto.TrainPartyInfo {
 	info := &proto.TrainPartyInfo{
+		TrainPartyTag:  30, // 等级
 		AreaList:       g.GetTrainPartyAreaList(),
-		CoinCost:       1000,
 		TrainPartyRank: 4,
-		NNBHLDDNLDE:    make([]*proto.HHOKBPHNFNE, 0),
-		CFJKBJHNIJM:    0,
-		TrainPartyTag:  1,
-		KCFEECACMOD:    make([]uint32, 0),
-		CDJFDJIAING:    0,
-		DynamicIdList:  make([]uint32, 0),
-		HIMCAOKDNMP:    0,
+		CoinCost:       1000,
+		DynamicIdList:  []uint32{291001, 291002, 291003, 291004},
+		EPPOFNBMOHO:    make([]*proto.PMEDJIKIJMJ, 0),
+		JGJHODGHEJJ:    make([]uint32, 0),
+		// PEHEHBOAFJF:    30,
+		// MPGCHEJLFEG:    30,
+		// APAPIPMOGGC:    30,
 	}
 
 	return info
@@ -214,11 +214,10 @@ func (g *PlayerData) GetTrainPartyAreaList() []*proto.TrainPartyArea {
 				AreaStepList: make([]*proto.BuildAreaStep, 0), // 该区域主物品信息
 				AreaGlobalId: agc.ID,                          // 当前区域的组Id
 			},
-			StaticPropIdList: make([]uint32, 0), // 解锁的主物品 Prop List
-			StepIdList:       make([]uint32, 0), // 解锁的主物品 List
-			DynamicInfo:      nil,               // 该区域解锁的摆放物
-
-			NOPJINFMFEI: make([]uint32, 0),
+			StaticPropIdList: make([]uint32, 0),                 // 解锁的主物品 Prop List
+			StepIdList:       make([]uint32, 0),                 // 解锁的主物品 List
+			DynamicInfo:      make([]*proto.AreaDynamicInfo, 0), // 该区域摆放的摆放物
+			LOIFBGPGBHJ:      make([]uint32, 0),
 		}
 		for _, groupId := range agc.StepGroupList {
 			stepList := gdconf.GetTrainPartyStepConfigByGroupId(groupId)
@@ -227,12 +226,12 @@ func (g *PlayerData) GetTrainPartyAreaList() []*proto.TrainPartyArea {
 				// if step.CoinCost > 100000000 {
 				// 	continue
 				// }
-				area.AreaStepInfo.AreaStepList = append(area.AreaStepInfo.AreaStepList, &proto.BuildAreaStep{
-					Status:      proto.BuildGoalStep_BuildGoalStepFinish,
-					StepId:      step.ID,
-					MJALJMGLEFP: 0,
-				})
+				// area.AreaStepInfo.AreaStepList = append(area.AreaStepInfo.AreaStepList, &proto.BuildAreaStep{
+				// 	Status: proto.BuildGoalStep_BuildGoalStepFinish,
+				// 	StepId: step.ID,
+				// })
 				area.StepIdList = append(area.StepIdList, step.ID)
+				area.LOIFBGPGBHJ = append(area.LOIFBGPGBHJ, step.ID)
 				area.StaticPropIdList = append(area.StaticPropIdList, step.StaticPropIDList...)
 			}
 		}

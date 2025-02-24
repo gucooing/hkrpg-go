@@ -177,7 +177,7 @@ func (g *GamePlayer) commandSet(c *constant.CommandSet) string {
 
 func (g *GamePlayer) commandRelic(c *constant.CommandRelic) string {
 	addItem := model.NewAddItem(nil)
-	res := fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "equipment")
+	res := fmt.Sprintf(text.GetTextByL(g.GetPd().GetLanguageType(), 30), "relic")
 
 	if c.IsAll {
 		for id := range gdconf.GetItemRelic() {

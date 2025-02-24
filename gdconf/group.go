@@ -167,7 +167,7 @@ func (g *GameDataConfig) loadGroup() {
 	loadGroups := func(planeId, floorId, index uint32, groupInfo *RtLevelGroupInstanceInfo) {
 		func() {
 			levelGroup := new(LevelGroup)
-			playerElementsFile, err := os.ReadFile(g.pathPrefix + "/" + groupInfo.GroupPath)
+			playerElementsFile, err := os.ReadFile(pathPrefix + "/" + groupInfo.GroupPath)
 			if err != nil {
 				panic(fmt.Sprintf(text.GetText(18), playerElementsFile, err))
 			}

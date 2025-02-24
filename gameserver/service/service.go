@@ -52,6 +52,49 @@ func NewGameServer(discoveryClient *rpc.NodeDiscoveryClient, messageQueue *mq.Me
 	return g
 }
 
+func (g *GameServer) getPlayerNet(uid uint32) *PlayerNet {
+	g.PlayerSync.RLock()
+	defer g.PlayerSync.RUnlock()
+	return g.PlayerMap[uid]
+}
+
+func (g *GameServer) getAllPlayerNet() map[uint32]*PlayerNet {
+	g.PlayerSync.RLock()
+	defer g.PlayerSync.RUnlock()
+	all := make(map[uint32]*PlayerNet)
+	for k, v := range g.PlayerMap {
+		all[k] = v
+	}
+	return all
+}
+
+func (g *GameServer) addPlayerNet(playerNet *PlayerNet) {
+	g.PlayerSync.Lock()
+	g.PlayerMap[playerNet.uid] = playerNet
+	g.PlayerSync.Unlock()
+}
+
+func (g *GameServer) delPlayerNet(uid uint32) {
+	g.PlayerSync.Lock()
+	if s := g.PlayerMap[uid]; s != nil {
+		s.SetPlayerStatusRedisData(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
+		s.p.Close()
+		delete(g.PlayerMap, uid)
+	}
+	g.PlayerSync.Unlock()
+}
+
+func (g *GameServer) newPlayerNet(uid, gateAppid uint32) *PlayerNet {
+	playerNet := &PlayerNet{
+		uid:            uid,
+		gateAppid:      gateAppid,
+		gameAppid:      g.AppId,
+		lastActiveTime: time.Now().Unix(),
+		p:              player.NewPlayer(uid),
+	}
+	return playerNet
+}
+
 func (g *GameServer) Close() {
 	logger.Info("开始保存玩家数据")
 	var num int
@@ -108,54 +151,12 @@ func (g *GameServer) mqGateMsg(netMsg *mq.NetMsg) {
 	case mq.GameServer:
 		g.gameMsgHandle(netMsg)
 	case mq.ServerMsg:
+		g.serverMsgHandle(netMsg)
 	case mq.PlayerLogout: // 玩家下线
 		g.delPlayerNet(netMsg.Uid)
 	default:
 		logger.Error("unknow msg type: %v", netMsg.MsgType)
 	}
-}
-
-func (g *GameServer) getPlayerNet(uid uint32) *PlayerNet {
-	g.PlayerSync.RLock()
-	defer g.PlayerSync.RUnlock()
-	return g.PlayerMap[uid]
-}
-
-func (g *GameServer) getAllPlayerNet() map[uint32]*PlayerNet {
-	g.PlayerSync.RLock()
-	defer g.PlayerSync.RUnlock()
-	all := make(map[uint32]*PlayerNet)
-	for k, v := range g.PlayerMap {
-		all[k] = v
-	}
-	return all
-}
-
-func (g *GameServer) addPlayerNet(playerNet *PlayerNet) {
-	g.PlayerSync.Lock()
-	g.PlayerMap[playerNet.uid] = playerNet
-	g.PlayerSync.Unlock()
-}
-
-func (g *GameServer) delPlayerNet(uid uint32) {
-	g.PlayerSync.Lock()
-	if s := g.PlayerMap[uid]; s != nil {
-		s.SetPlayerStatusRedisData(spb.PlayerStatusType_PLAYER_STATUS_OFFLINE)
-		s.p.Close()
-		delete(g.PlayerMap, uid)
-	}
-	g.PlayerSync.Unlock()
-}
-
-func (g *GameServer) newPlayerNet(uid, gateAppid uint32) *PlayerNet {
-	playerNet := &PlayerNet{
-		uid:            uid,
-		gateAppid:      gateAppid,
-		gameAppid:      g.AppId,
-		lastActiveTime: time.Now().Unix(),
-		p:              player.NewPlayer(uid),
-	}
-	return playerNet
 }
 
 func (g *GameServer) gameMsgHandle(netMsg *mq.NetMsg) {
@@ -175,6 +176,10 @@ func (g *GameServer) gameMsgHandle(netMsg *mq.NetMsg) {
 			PlayerMsg: protoMsg,
 		})
 	}
+}
+
+func (g *GameServer) serverMsgHandle(netMsg *mq.NetMsg) {
+
 }
 
 func (g *GameServer) playerLogin(uid, gateAppid uint32) {

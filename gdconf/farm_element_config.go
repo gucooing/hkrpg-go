@@ -9,6 +9,11 @@ import (
 	"github.com/hjson/hjson-go/v4"
 )
 
+type FarmElementConfigMap struct {
+	FarmElementConfigById      map[uint32]map[uint32]*FarmElementConfig // WorldLevel ID
+	FarmElementConfigByStageID map[uint32]*FarmElementConfig
+}
+
 type FarmElementConfig struct {
 	ID            uint32   `json:"ID"`
 	WorldLevel    uint32   `json:"WorldLevel"`
@@ -20,7 +25,10 @@ type FarmElementConfig struct {
 }
 
 func (g *GameDataConfig) loadFarmElementConfig() {
-	g.FarmElementConfigMap = make(map[uint32]*FarmElementConfig)
+	g.FarmElementConfigMap = &FarmElementConfigMap{
+		FarmElementConfigById:      make(map[uint32]map[uint32]*FarmElementConfig),
+		FarmElementConfigByStageID: make(map[uint32]*FarmElementConfig),
+	}
 	farmElementConfiglist := make([]*FarmElementConfig, 0)
 	name := "FarmElementConfig.json"
 	playerElementsFile, err := os.ReadFile(g.excelPrefix + name)
@@ -33,12 +41,23 @@ func (g *GameDataConfig) loadFarmElementConfig() {
 		panic(fmt.Sprintf(text.GetText(19), name, err))
 	}
 	for _, v := range farmElementConfiglist {
-		g.FarmElementConfigMap[v.StageID] = v
+		if g.FarmElementConfigMap.FarmElementConfigById[v.ID] == nil {
+			g.FarmElementConfigMap.FarmElementConfigById[v.ID] = make(map[uint32]*FarmElementConfig)
+		}
+		g.FarmElementConfigMap.FarmElementConfigById[v.ID][v.WorldLevel] = v
+		g.FarmElementConfigMap.FarmElementConfigByStageID[v.StageID] = v
 	}
 
-	logger.Info(text.GetText(17), len(g.FarmElementConfigMap), name)
+	logger.Info(text.GetText(17), len(g.FarmElementConfigMap.FarmElementConfigById), name)
 }
 
-func GetFarmElementConfig(id uint32) *FarmElementConfig {
-	return getConf().FarmElementConfigMap[id]
+func GetFarmElementConfigByStageID(stageID uint32) *FarmElementConfig {
+	return getConf().FarmElementConfigMap.FarmElementConfigByStageID[stageID]
+}
+
+func GetFarmElementConfigByID(id, worldLevel uint32) *FarmElementConfig {
+	if getConf().FarmElementConfigMap.FarmElementConfigById[id] == nil {
+		return nil
+	}
+	return getConf().FarmElementConfigMap.FarmElementConfigById[id][worldLevel]
 }

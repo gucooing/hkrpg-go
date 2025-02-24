@@ -15,13 +15,13 @@ import (
 type CurBattle struct {
 	BattleBackup    map[uint32]*BattleBackup // 正在进行的战斗[战斗id]战斗细节
 	RogueInfoOnline *RogueInfoOnline         // 模拟宇宙临时数据
-	// AvatarBuff         map[uint32]*OnBuffMap // 角色在线buff
-	MazeBuffList   map[uint32]*OnBuffMap // 所有buff
-	FarmElementMap map[uint32]uint32     // [id]world level // 虚影等级设置
+	MazeBuffList    map[uint32]*OnBuffMap    // 所有buff
+	FarmElementMap  map[uint32]uint32        // [id]world level // 虚影等级设置
 }
 
 type BattleBackup struct {
 	IsBattle         bool                     // 是否开启战斗
+	IsQuick          bool                     // 是否快速挑战
 	BattleId         uint32                   // 战斗id
 	BattleAvatarList map[uint32]*BattleAvatar // 参加战斗的角色
 	CocoonId         uint32                   // 关卡id

@@ -60,7 +60,7 @@ func (g *GameDataConfig) loadSummonUnitData() {
 	}
 	for _, v := range summonUnitDataList {
 		jsonData := new(SummonUnitDataJson)
-		confElementsFile, err := os.ReadFile(g.pathPrefix + "/" + v.JsonPath)
+		confElementsFile, err := os.ReadFile(pathPrefix + "/" + v.JsonPath)
 		if err != nil {
 			panic(fmt.Sprintf(text.GetText(18), confElementsFile, err))
 		}

@@ -1,18 +1,23 @@
 package gdconf
 
 import (
+	"encoding/gob"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
 	"sync"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/gucooing/hkrpg-go/pkg/logger"
 	"github.com/gucooing/hkrpg-go/pkg/text"
 )
 
 var CONF *GameDataConfig = nil
 var confSync = &sync.RWMutex{}
+var pathPrefix string
+var revise bool
 
 var MaxWaitGroup int = 5
 
@@ -23,7 +28,6 @@ type GameDataConfig struct {
 	wg       sync.WaitGroup
 	goppFunc []loadFunc // 多线程读取预处理方法
 	// 配置表路径前缀
-	pathPrefix   string
 	resPrefix    string
 	excelPrefix  string
 	configPrefix string
@@ -66,7 +70,7 @@ type GameDataConfig struct {
 	GroupMap                     map[uint32]map[uint32]map[uint32]*LevelGroup    // 场景实体
 	FloorMap                     map[uint32]map[uint32]*LevelFloor               // 地图配置
 	GoppFloorMap                 map[uint32]map[uint32]*GoppLevelFloor           // 地图配置预处理
-	MapEntranceMap               map[uint32]*MapEntrance                         // 地图入口
+	MapEntranceMap               *MapEntranceMap                                 // 地图入口
 	SpecialPropMap               map[uint32]*SpecialProp                         // 物品特殊状态
 	BannersMap                   *BannersConf                                    // 卡池信息
 	ActivityPanelMap             map[uint32]*ActivityPanel                       // 活动
@@ -110,7 +114,7 @@ type GameDataConfig struct {
 	StroyLineTrialAvatarDataMap  map[uint32]*StroyLineTrialAvatarData            // 故事线剧情角色配置
 	StoryLineMap                 map[uint32]*StoryLine                           // 故事线配置
 	StoryLineFloorDataMap        map[uint32]*StoryLineFloorData
-	FarmElementConfigMap         map[uint32]*FarmElementConfig
+	FarmElementConfigMap         *FarmElementConfigMap
 	ItemUseDataMap               map[uint32]*ItemUseData
 	DailyMissionDataMap          map[uint32]*DailyMissionData
 	MonsterDropMap               map[uint32]map[uint32]*MonsterDrop
@@ -150,16 +154,53 @@ type GameDataConfig struct {
 	GoppAbility    *GoppAbility
 }
 
+func initGameDataConfig(gameDataConfigPath string) {
+	logger.Info(text.GetText(14))
+	CONF = new(GameDataConfig)
+	startTime := time.Now().UnixMilli()
+
+	file, err := os.Open("./res.bin")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	gob.Register([]interface{}{})
+	gob.Register(map[string]interface{}{})
+	decoder := gob.NewDecoder(file)
+	if err := decoder.Decode(&CONF); err != nil {
+		log.Fatal(err)
+	}
+
+	runtime.GC()
+	endTime := time.Now().UnixMilli()
+	logger.Info(text.GetText(15), endTime-startTime)
+}
+
 func InitGameDataConfig(gameDataConfigPath string) {
 	logger.Info(text.GetText(14))
+	pathPrefix = gameDataConfigPath
 	MaxWaitGroup = 5
 	CONF = new(GameDataConfig)
 	startTime := time.Now().Unix()
-	CONF.loadAll(gameDataConfigPath)
+	CONF.loadAll()
+
+	file, err := os.Create("./res.bin")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+	gob.Register([]interface{}{})
+	gob.Register(map[string]interface{}{})
+	encoder := gob.NewEncoder(file)
+	if err := encoder.Encode(CONF); err != nil {
+		log.Fatal(err)
+	}
+
 	runtime.GC()
 	endTime := time.Now().Unix()
 	logger.Info(text.GetText(15), endTime-startTime)
-	go confTicker(gameDataConfigPath)
+	go confTicker()
+	go isRevise()
 }
 
 // 安全访问方法
@@ -169,7 +210,7 @@ func getConf() *GameDataConfig {
 	return CONF
 }
 
-func confTicker(gameDataConfigPath string) {
+func confTicker() {
 	ticker := time.NewTicker(time.Minute * 15)
 	for {
 		select {
@@ -182,30 +223,32 @@ func confTicker(gameDataConfigPath string) {
 						logger.Warn(text.GetText(106))
 					}
 				}()
+				if !revise {
+					return
+				}
 				MaxWaitGroup = 1
 				logger.Info(text.GetText(103))
 				newConf := new(GameDataConfig)
 				startTime := time.Now().Unix()
-				newConf.loadAll(gameDataConfigPath)
+				newConf.loadAll()
 				endTime := time.Now().Unix()
 				logger.Info(text.GetText(104), endTime-startTime)
 
 				confSync.Lock()
 				CONF = newConf
 				confSync.Unlock()
+				revise = false
 			}()
 		}
 	}
 }
 
-func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
-	pathPrefix := gameDataConfigPath
+func (g *GameDataConfig) loadAll() {
 	dirInfo, err := os.Stat(pathPrefix)
 	if err != nil || !dirInfo.IsDir() {
 		info := fmt.Sprintf(text.GetText(16), err)
 		panic(info)
 	}
-	g.pathPrefix = pathPrefix
 
 	g.resPrefix = pathPrefix
 	g.resPrefix += "/"
@@ -234,6 +277,7 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 	g.dataPrefix += "/"
 
 	g.load()
+	g.gopp()
 	if MaxWaitGroup == 1 {
 		for _, fn := range g.loadFunc {
 			fn()
@@ -254,7 +298,6 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 		}
 		g.wg.Wait()
 
-		g.gopp()
 		g.wg.Add(len(g.goppFunc))
 		for _, fn := range g.goppFunc {
 			sem <- struct{}{}
@@ -266,6 +309,26 @@ func (g *GameDataConfig) loadAll(gameDataConfigPath string) {
 		}
 		g.wg.Wait()
 		close(sem)
+	}
+}
+
+func isRevise() {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer watcher.Close()
+	err = watcher.Add(pathPrefix)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for {
+		select {
+		case <-watcher.Events:
+			revise = true
+		case err := <-watcher.Errors:
+			logger.Error("Error:", err)
+		}
 	}
 }
 

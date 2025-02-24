@@ -28,9 +28,9 @@ func MatchThreeGetDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
 func MatchThreeLevelEndCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.MatchThreeLevelEndCsReq)
 	rsp := &proto.MatchThreeLevelEndScRsp{
-		LevelScore: req.GetLevelScore(),
-		Retcode:    0,
-		LevelId:    req.GetLevelId(),
+		ModeId:  req.GetModeId(),
+		Retcode: 0,
+		LevelId: req.GetLevelId(),
 	}
 	defer func() {
 		g.MatchThreeSyncDataScNotify()
@@ -39,8 +39,8 @@ func MatchThreeLevelEndCsReq(g *GamePlayer, payloadMsg pb.Message) {
 
 	// 验证数据可靠信 ps验证个蛋
 
-	if conf := gdconf.GetMatchThreeLevel(req.LevelId, req.LevelScore); conf != nil &&
-		g.GetPd().GetMatchThreeLevel(req.LevelId, req.LevelScore) == nil {
+	if conf := gdconf.GetMatchThreeLevel(req.LevelId, req.ModeId); conf != nil &&
+		g.GetPd().GetMatchThreeLevel(req.LevelId, req.ModeId) == nil {
 		// 奖励
 		addItem := model.NewAddItem(nil)
 		addItem.PileItem = append(addItem.PileItem, model.GetRewardData(conf.RewardID)...)
@@ -49,7 +49,7 @@ func MatchThreeLevelEndCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		// 保存数据
 		g.GetPd().AddMatchThreeLevel(&spb.MatchThreeLevel{
 			LevelId: req.LevelId,
-			Mode:    req.LevelScore,
+			Mode:    req.ModeId,
 		})
 	}
 

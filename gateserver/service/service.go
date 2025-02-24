@@ -306,7 +306,7 @@ func (g *GateServer) recvPlayer(sAll session.SessionAll) {
 	}
 }
 
-func toPlayerMsg(sall session.SessionAll, msg pb.Message, cmdId uint16) {
+func sendClient(sall session.SessionAll, msg pb.Message, cmdId uint16) {
 	protoData, err := pb.Marshal(msg)
 	if err != nil {
 		logger.Error(err.Error())

@@ -839,6 +839,12 @@ func (g *PlayerData) GetFloorSavedData(entryId uint32) map[string]int32 {
 			db.FloorSavedData[savedValue.Name] = 0
 		} else if strings.Contains(savedValue.Name, "Activity") {
 			db.FloorSavedData[savedValue.Name] = savedValue.MaxValue
+		} else if strings.Contains(savedValue.Name, "Build") {
+			db.FloorSavedData[savedValue.Name] = 1
+		} else if strings.Contains(savedValue.Name, "Progress") {
+			db.FloorSavedData[savedValue.Name] = 100
+		} else if strings.Contains(savedValue.Name, "Onboarded") {
+			db.FloorSavedData[savedValue.Name] = 1
 		}
 		if _, ok = db.FloorSavedData[savedValue.Name]; !ok {
 			db.FloorSavedData[savedValue.Name] = savedValue.DefaultValue
@@ -1050,16 +1056,19 @@ func (g *PlayerData) GetSceneInfo(entryId uint32, pos, rot *proto.Vector, lineUp
 	planeID, floorID, ok := gdconf.GetPFlaneID(entryId)
 	if !ok {
 		logger.Debug(text.GetTextByL(g.GetLanguageType(), 76), entryId)
-		return nil
+		entryId = 2000101
+		planeID, floorID, _ = gdconf.GetPFlaneID(entryId)
 	}
 	leaderEntityId := g.GetNextGameObjectGuid()
 	dimensionId := g.GetDimensionId()
+	gameModeType := gdconf.GetPlaneType(planeID)
 	scene := &proto.SceneInfo{
+		MGLHEBHJABE:        make([]uint32, 0),
 		ClientPosVersion:   0,
 		WorldId:            gdconf.GetWorldId(planeID),
 		LeaderEntityId:     leaderEntityId,
 		FloorId:            floorID,
-		GameModeType:       gdconf.GetPlaneType(planeID),
+		GameModeType:       gameModeType,
 		PlaneId:            planeID,
 		EntryId:            entryId,
 		EntityGroupList:    make([]*proto.SceneEntityGroupInfo, 0),
@@ -1557,22 +1566,4 @@ func (g *PlayerData) GetAddBuffSceneEntityRefreshInfo(casterEntityId, summonId, 
 	sceneGroupRefreshInfo.RefreshEntity = append(sceneGroupRefreshInfo.RefreshEntity, sceneEntityRefreshInfo)
 	groupRefreshInfo = append(groupRefreshInfo, sceneGroupRefreshInfo)
 	return groupRefreshInfo
-}
-
-func (g *PlayerData) GetSpringRecoverConfig() *proto.SpringRecoverConfig {
-	info := &proto.SpringRecoverConfig{
-		// DefaultHp:     10000,
-		// AutoRecoverHp: true,
-		// MANPHKHEFPC: nil,
-	}
-	return info
-}
-
-func (g *PlayerData) GetHealPoolInfo() *proto.HealPoolInfo {
-	info := &proto.HealPoolInfo{
-		// RefreshTime: time.Now().Unix(),
-		// HealPool:    23500,
-	}
-
-	return info
 }

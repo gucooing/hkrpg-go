@@ -94,7 +94,9 @@ func FinishPerformSectionIdCsReq(g *GamePlayer, payloadMsg pb.Message) {
 
 	// 任务检查
 	finishSubMission := g.GetPd().MessagePerformSectionFinish(req.SectionId)
-	g.InspectMission(finishSubMission...)
+	if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
 
 	rsp := &proto.FinishPerformSectionIdScRsp{
 		Reward:    &proto.ItemList{},
@@ -112,19 +114,22 @@ func (g *GamePlayer) MessageGroupPlayerSyncScNotify(contactId uint32) {
 	if db == nil {
 		return
 	}
-	notify := &proto.PlayerSyncScNotify{
+	syncStatus := &proto.SyncStatus{
 		MessageGroupStatus: make([]*proto.GroupStatus, 0),
 		SectionStatus:      make([]*proto.SectionStatus, 0),
 	}
+	notify := &proto.PlayerSyncScNotify{
+		SyncStatus: syncStatus,
+	}
 
-	notify.MessageGroupStatus = append(notify.MessageGroupStatus, &proto.GroupStatus{
+	syncStatus.MessageGroupStatus = append(syncStatus.MessageGroupStatus, &proto.GroupStatus{
 		RefreshTime: db.RefreshTime,
 		GroupId:     db.Id,
 		GroupStatus: proto.MessageGroupStatus(db.Status),
 	})
 
 	for _, msgSection := range db.MessageSectionList {
-		notify.SectionStatus = append(notify.SectionStatus, &proto.SectionStatus{
+		syncStatus.SectionStatus = append(syncStatus.SectionStatus, &proto.SectionStatus{
 			SectionId:     msgSection.Id,
 			SectionStatus: proto.MessageSectionStatus(msgSection.Status),
 		})

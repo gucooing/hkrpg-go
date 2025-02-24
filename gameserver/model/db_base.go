@@ -11,6 +11,8 @@ import (
 const (
 	ReserveStaminaTime  = 360  // 单体力回复所需时间 s
 	RReserveStaminaTime = 1080 // 单体力回复所需时间 s
+	MaxStamina          = 300  // 最大体力
+	MaxRStamina         = 2400 // 最大后备体力
 )
 
 type AllPlayerSync struct {
@@ -217,7 +219,7 @@ func (g *PlayerData) CheckStamina() bool {
 	curRStamina := g.GetMaterialById(RStamina)
 	curTime := time.Now().Unix()
 	notify := false
-	if curStamina < 240 { // 检查体力恢复情况
+	if curStamina < MaxStamina { // 检查体力恢复情况
 		if g.GetBasicBin().LastStaminaTime == 0 {
 			g.GetBasicBin().LastStaminaTime = curTime
 		}
@@ -231,7 +233,7 @@ func (g *PlayerData) CheckStamina() bool {
 			g.GetBasicBin().LastStaminaTime = curTime - (diff - reSt*ReserveStaminaTime)
 			notify = true
 		}
-	} else if curRStamina < 2400 { // 检查后备体力恢复情况
+	} else if curRStamina < MaxRStamina { // 检查后备体力恢复情况
 		if g.GetBasicBin().LastStaminaTime == 0 {
 			g.GetBasicBin().LastStaminaTime = curTime
 		}

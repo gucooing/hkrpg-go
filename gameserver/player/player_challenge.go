@@ -285,7 +285,9 @@ func (g *GamePlayer) ChallengeSettleNotify() {
 	}
 	if cur.IsWin {
 		finishSubMission := g.GetPd().ChallengeFinishCnt()
-		g.InspectMission(finishSubMission...)
+		if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
 	}
 	g.Send(cmd.ChallengeSettleNotify, notify)
 }

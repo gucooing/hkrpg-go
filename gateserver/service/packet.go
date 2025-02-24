@@ -59,15 +59,14 @@ func SendMsgCsReq(g *GateServer, sAll session.SessionAll, payloadMsg pb.Message)
 			ExtraId:     req.ExtraId,
 			MessageType: req.MessageType,
 			TargetUid:   targetUid,
-			OHINLDBELBA: req.OHINLDBELBA,
 			ChatType:    req.ChatType,
 		}
-		toPlayerMsg(sAll, notify, cmd.RevcMsgScNotify)
+		sendClient(sAll, notify, cmd.RevcMsgScNotify)
 	}
 
 	rsp := &proto.SendMsgScRsp{
 		EndTime: uint64(time.Now().Unix()),
 		Retcode: 0,
 	}
-	toPlayerMsg(sAll, rsp, cmd.SendMsgScRsp)
+	sendClient(sAll, rsp, cmd.SendMsgScRsp)
 }

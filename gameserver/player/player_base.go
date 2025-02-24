@@ -211,7 +211,7 @@ func GetVideoVersionKeyCsReq(g *GamePlayer, payloadMsg pb.Message) {
 func GetSecretKeyInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	KPANKLHNMKE, _ := base64.StdEncoding.DecodeString("85V6dg==")
 	rsp := &proto.GetSecretKeyInfoScRsp{
-		DMLGFPFPOLL: KPANKLHNMKE,
+		ABGKKDCIKGO: KPANKLHNMKE,
 		SecretInfo: []*proto.SecretKeyInfo{
 			{
 				Type:      proto.SecretKeyType_SECRET_KEY_SERVER_CHECK,
@@ -354,9 +354,10 @@ func HandleGetAssistHistoryCsReq(g *GamePlayer, payloadMsg pb.Message) {
 }
 
 func SetClientPausedCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.SetClientPausedCsReq)
 	rsp := new(proto.SetClientPausedScRsp)
 	dbOnl := g.GetPd().GetOnlineData()
-	dbOnl.IsPaused = !dbOnl.IsPaused
+	dbOnl.IsPaused = req.Paused
 	rsp.Paused = dbOnl.IsPaused
 
 	g.Send(cmd.SetClientPausedScRsp, rsp)
@@ -560,6 +561,9 @@ func ReserveStaminaExchangeCsReq(g *GamePlayer, payloadMsg pb.Message) {
 }
 
 func (g *GamePlayer) DailyTaskNotify() {
+	if g.GetPd().GetIsJumpMission() {
+		return
+	}
 	dailyDb := g.GetPd().GetCurDay(alg.GetDaysSinceBaseline(time.Now()))
 	if dailyDb.IsYk {
 		g.Send(cmd.MonthCardRewardNotify, &proto.MonthCardRewardNotify{
@@ -569,20 +573,20 @@ func (g *GamePlayer) DailyTaskNotify() {
 }
 
 func (g *GamePlayer) DailyTaskDataScNotify(missionId uint32) {
-	finishMainMission := g.GetPd().GetFinishMainMissionList()
-	notify := &proto.DailyTaskDataScNotify{
-		FinishedNum:   0,
-		DailyTaskList: make([]*proto.DailyTask, 0),
-	}
-	dailyTask := &proto.DailyTask{
-		MainMissionId: missionId,
-		IsFinished:    false,
-	}
-	if finishMainMission[missionId] != nil {
-		dailyTask.IsFinished = true
-	}
-	notify.DailyTaskList = append(notify.DailyTaskList, dailyTask)
-	g.Send(cmd.DailyTaskDataScNotify, notify)
+	// finishMainMission := g.GetPd().GetFinishMainMissionList()
+	// notify := &proto.DailyTaskDataScNotify{
+	// 	FinishedNum:   0,
+	// 	DailyTaskList: make([]*proto.DailyTask, 0),
+	// }
+	// dailyTask := &proto.DailyTask{
+	// 	MainMissionId: missionId,
+	// 	IsFinished:    false,
+	// }
+	// if finishMainMission[missionId] != nil {
+	// 	dailyTask.IsFinished = true
+	// }
+	// notify.DailyTaskList = append(notify.DailyTaskList, dailyTask)
+	// g.Send(cmd.DailyTaskDataScNotify, notify)
 }
 
 func TextJoinQueryCsReq(g *GamePlayer, payloadMsg pb.Message) {
@@ -624,7 +628,7 @@ func TextJoinSaveCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.TextJoinSaveScRsp{
 		TextItemId:       req.TextItemId,
 		Retcode:          0,
-		EANJBBEKKII:      req.EANJBBEKKII,
+		GMEIABHHGJH:      req.GMEIABHHGJH,
 		TextItemConfigId: req.TextItemConfigId,
 	}
 	g.Send(cmd.TextJoinSaveScRsp, rsp)

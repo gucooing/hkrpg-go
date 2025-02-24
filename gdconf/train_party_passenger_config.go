@@ -11,6 +11,7 @@ import (
 
 type TrainPartyPassengerConfig struct {
 	PassengerID    uint32 `json:"PassengerID"`
+	DiaryOrder     uint32 `json:"DiaryOrder"`
 	PassengerQuest uint32 `json:"PassengerQuest"`
 }
 

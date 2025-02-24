@@ -4,12 +4,12 @@ go 1.22.1
 
 require (
 	github.com/bwmarrin/discordgo v0.28.1
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/go-resty/resty/v2 v2.14.0
 	github.com/goccy/go-json v0.10.3
 	github.com/google/gopacket v1.1.19
-	github.com/gorilla/websocket v1.5.3
 	github.com/gucooing/gunet v0.1.2
 	github.com/hjson/hjson-go/v4 v4.4.0
 	github.com/redis/go-redis/v9 v9.6.0
@@ -23,6 +23,7 @@ require (
 )
 
 require (
+	github.com/brahma-adshonor/gohook v1.1.9 // indirect
 	github.com/bytedance/sonic v1.12.2 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -39,6 +40,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect

@@ -26,13 +26,6 @@ func HandlePlayerHeartBeatCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.Send(cmd.PlayerHeartBeatScRsp, rsp)
 }
 
-func GetSpringRecoverDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
-	rsp := new(proto.GetSpringRecoverDataScRsp)
-	rsp.SpringRecoverConfig = g.GetPd().GetSpringRecoverConfig()
-	rsp.HealPoolInfo = g.GetPd().GetHealPoolInfo()
-	g.Send(cmd.GetSpringRecoverDataScRsp, rsp)
-}
-
 func SetPlayerInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	req := payloadMsg.(*proto.SetPlayerInfoCsReq)
 
@@ -53,7 +46,9 @@ func SetPlayerInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 			allSync.AvatarList = append(allSync.AvatarList, 8001)
 		}
 		finishSubMission := g.GetPd().CreateCharacterSubMission()
-		g.InspectMission(finishSubMission...)
+		if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
 	}
 	rsp := &proto.SetPlayerInfoScRsp{
 		Retcode:       0,
@@ -88,7 +83,10 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 	if len(allSync.UnlockPamSkinList) != 0 {
 		g.UnlockPamSkinScNotify(allSync.UnlockPamSkinList)
 	}
-
+	syncStatus := &proto.SyncStatus{
+		SectionStatus:      make([]*proto.SectionStatus, 0),
+		MessageGroupStatus: make([]*proto.GroupStatus, 0),
+	}
 	notify := &proto.PlayerSyncScNotify{
 		AvatarSync:              &proto.AvatarSync{AvatarList: make([]*proto.Avatar, 0)},
 		MultiPathAvatarInfoList: make([]*proto.MultiPathAvatarInfo, 0),
@@ -104,8 +102,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		PlayerboardModuleSync: &proto.PlayerBoardModuleSync{
 			UnlockedHeadIconList: make([]*proto.HeadIconData, 0),
 		},
-		SectionStatus:      make([]*proto.SectionStatus, 0),
-		MessageGroupStatus: make([]*proto.GroupStatus, 0),
+		SyncStatus: syncStatus,
 	}
 	db := g.GetPd().GetMaterialMap()
 	// 添加账户基本信息
@@ -209,7 +206,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		for _, messageGroupId := range allSync.MessageGroupList {
 			group := g.GetPd().GetMessageGroupByContactId(messageGroupId)
 			if group != nil {
-				notify.MessageGroupStatus = append(notify.MessageGroupStatus, &proto.GroupStatus{
+				syncStatus.MessageGroupStatus = append(syncStatus.MessageGroupStatus, &proto.GroupStatus{
 					GroupStatus: proto.MessageGroupStatus(group.Status),
 					RefreshTime: group.RefreshTime,
 					GroupId:     group.Id,
@@ -223,7 +220,7 @@ func (g *GamePlayer) AllPlayerSyncScNotify(allSync *model.AllPlayerSync) {
 		for _, sectionId := range allSync.MessageSectionList {
 			info := g.GetPd().GetMessageSection(sectionId)
 			if info != nil {
-				notify.SectionStatus = append(notify.SectionStatus, &proto.SectionStatus{
+				syncStatus.SectionStatus = append(syncStatus.SectionStatus, &proto.SectionStatus{
 					SectionId:     info.Id,
 					SectionStatus: proto.MessageSectionStatus(info.Status),
 				})

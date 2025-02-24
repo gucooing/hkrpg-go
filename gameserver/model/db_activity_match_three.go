@@ -118,8 +118,6 @@ func (g *PlayerData) SetMatchThreeBirdPos(birdId, pos uint32) bool {
 func (g *PlayerData) GetMatchThreeData() *proto.MatchThreeData {
 	info := &proto.MatchThreeData{
 		FinishedLevels:  g.MatchThreeFinishedLevelInfo(),
-		GDIHBJJJLKH:     make(map[uint32]uint32),
-		JKGGJELFOBL:     make(map[uint32]uint32),
 		BirdRecordInfos: g.GetMatchThreeBirdInfoList(),
 	}
 
@@ -134,8 +132,8 @@ func (g *PlayerData) MatchThreeFinishedLevelInfo() []*proto.MatchThreeFinishedLe
 		}
 		for _, info := range modeList.Level {
 			list = append(list, &proto.MatchThreeFinishedLevelInfos{
-				LevelScore: info.Mode,
-				LevelId:    info.LevelId,
+				ModeId:  info.Mode,
+				LevelId: info.LevelId,
 			})
 		}
 	}

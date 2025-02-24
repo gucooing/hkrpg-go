@@ -78,7 +78,7 @@ func (g *GameDataConfig) loadConfigAdventureAbility() {
 			continue
 		}
 		localPlayerAbility := new(LocalPlayerAbility)
-		playerElementsFilePath := g.pathPrefix + "/Config/ConfigAdventureAbility/LocalPlayer/LocalPlayer_" + matches[0][1] + "_Ability.json"
+		playerElementsFilePath := pathPrefix + "/Config/ConfigAdventureAbility/LocalPlayer/LocalPlayer_" + matches[0][1] + "_Ability.json"
 		playerElementsFile, err := os.ReadFile(playerElementsFilePath)
 		if err != nil {
 			logger.Error(text.GetText(18), playerElementsFilePath, err)

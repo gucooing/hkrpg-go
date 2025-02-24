@@ -186,7 +186,7 @@ func (c *CommandRelic) getCommand(list []string, l spb.LanguageType) (CommandAll
 		Num:     1,
 		Main:    0,
 		Sub:     nil,
-		Level:   1,
+		Level:   0,
 	}
 	if list[0] == "all" {
 		comm.IsAll = true
@@ -207,7 +207,7 @@ func (c *CommandRelic) getCommand(list []string, l spb.LanguageType) (CommandAll
 	if len(list) < 3 {
 		return comm, nil
 	}
-	if comm.Level = s2U32(list[2]); comm.Level < 1 {
+	if comm.Level = s2U32(list[2]); comm.Level < 0 {
 		return nil, errors.New(fmt.Sprintf(text.GetTextByL(l, 52), list[0], list[1], list[2]))
 	}
 	if len(list) < 4 {
@@ -219,7 +219,7 @@ func (c *CommandRelic) getCommand(list []string, l spb.LanguageType) (CommandAll
 	if len(list) < 5 {
 		return comm, nil
 	}
-	comm.Sub = GetRelicSub(list[5])
+	comm.Sub = GetRelicSub(list[4])
 	return comm, nil
 }
 

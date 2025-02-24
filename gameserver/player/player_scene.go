@@ -88,7 +88,9 @@ func (g *GamePlayer) EnterSceneByServerScNotify(entryId, teleportId, groupID, an
 	}
 	rsp.Scene = g.GetPd().GetSceneInfo(entryId, pos, rot, curLine)
 	finishSubMission := g.GetPd().EnterMapByEntrance(entryId) // 任务检查
-	g.InspectMission(finishSubMission...)
+	if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
 	g.Send(cmd.EnterSceneByServerScNotify, rsp)
 	g.ChangeStoryLineFinishScNotify()
 }
@@ -139,11 +141,10 @@ func HanldeGetSceneMapInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 		Retcode:      0,
 		SceneMapInfo: nil,
 	}
-	for _, entryId := range req.EntryIdList {
-		mapEntrance := gdconf.GetMapEntranceById(entryId)
+	getMapList := func(mapEntrance *gdconf.MapEntrance) *proto.SceneMapInfo {
 		if mapEntrance != nil {
 			groupList := gdconf.GetGroupById(mapEntrance.PlaneID, mapEntrance.FloorID)
-			block := g.GetPd().GetBlock(entryId)
+			block := g.GetPd().GetBlock(mapEntrance.ID)
 			if groupList != nil {
 				mapList := &proto.SceneMapInfo{
 					ChestList: []*proto.ChestInfo{
@@ -154,8 +155,9 @@ func HanldeGetSceneMapInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 					UnlockTeleportList: make([]uint32, 0),
 					DimensionId:        g.GetPd().GetDimensionId(),
 					EntryStoryLineId:   req.EntryStoryLineId,
-					FloorSavedData:     g.GetPd().GetFloorSavedData(entryId),
-					EntryId:            entryId,
+					FloorSavedData:     g.GetPd().GetFloorSavedData(mapEntrance.ID),
+					EntryId:            mapEntrance.ID,
+					FloorId:            mapEntrance.FloorID,
 					LightenSectionList: make([]uint32, 0),
 					MazeGroupList:      make([]*proto.MazeGroup, 0),
 					MazePropList:       make([]*proto.MazePropState, 0),
@@ -182,9 +184,18 @@ func HanldeGetSceneMapInfoCsReq(g *GamePlayer, payloadMsg pb.Message) {
 						}
 					}
 				}
-				rsp.SceneMapInfo = append(rsp.SceneMapInfo, mapList)
+				return mapList
 			}
+			return nil
 		}
+		return nil
+	}
+
+	for _, entryId := range req.EntryIdList {
+		rsp.SceneMapInfo = append(rsp.SceneMapInfo, getMapList(gdconf.GetMapEntranceById(entryId)))
+	}
+	for _, floorId := range req.FloorIdList {
+		rsp.SceneMapInfo = append(rsp.SceneMapInfo, getMapList(gdconf.GetMapEntranceByFloorID(floorId)))
 	}
 
 	g.Send(cmd.GetSceneMapInfoScRsp, rsp)
@@ -319,7 +330,9 @@ func InteractPropCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	g.AllScenePlaneEventScNotify(addItem.PileItem)
 	g.PropSceneGroupRefreshScNotify(propEntityIdList, blockBin)  // 通知状态更改
 	finishSubMission := g.GetPd().UpInteractSubMission(blockBin) // 检查交互任务
-	g.InspectMission(finishSubMission...)
+	if len(finishSubMission) > 0 {
+			g.InspectMission(finishSubMission...)
+		}
 	g.Send(cmd.InteractPropScRsp, rsp)
 }
 
@@ -465,19 +478,51 @@ func RecallPetCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	}
 }
 
-func SpringRecoverSingleAvatarCsReq(g *GamePlayer, payloadMsg pb.Message) {
-	req := payloadMsg.(*proto.SpringRecoverSingleAvatarCsReq)
-	g.GetPd().AvatarRecover(req.Id)
-
-	rsp := &proto.SpringRecoverSingleAvatarScRsp{
-		Hp:         10000,
-		Retcode:    0,
-		AvatarType: req.AvatarType,
-		Id:         req.Id,
+func UpdateMarkChestCsReq(g *GamePlayer, payloadMsg pb.Message) {
+	req := payloadMsg.(*proto.UpdateMarkChestCsReq)
+	rsp := &proto.UpdateMarkChestScRsp{
+		Retcode:         0,
+		NAJMEJJHAEK:     make([]*proto.AGMCNEJANDK, 0),
+		OMBECIMNGEE:     req.OMBECIMNGEE,
+		WorkbenchFuncId: req.WorkbenchFuncId,
 	}
-	g.SyncLineupNotify(g.GetPd().GetCurLineUp())
-	g.Send(cmd.SpringRecoverSingleAvatarScRsp, rsp)
+	defer g.Send(cmd.UpdateMarkChestScRsp, rsp)
+
+	list := []*proto.AGMCNEJANDK{
+		{
+			GOONPNDOCIH:     0,
+			WorkbenchFuncId: req.WorkbenchFuncId,
+			CJGMLCAKLFI:     req.CJGMLCAKLFI,
+		},
+	}
+	rsp.NAJMEJJHAEK = list
+
+	g.Send(cmd.MarkChestChangedScNotify, &proto.MarkChestChangedScNotify{
+		NAJMEJJHAEK: list,
+	})
 }
+
+// // 2.7.5 遗弃
+// func GetSpringRecoverDataCsReq(g *GamePlayer, payloadMsg pb.Message) {
+// 	rsp := new(proto.GetSpringRecoverDataScRsp)
+// 	rsp.SpringRecoverConfig = g.GetPd().GetSpringRecoverConfig()
+// 	rsp.HealPoolInfo = g.GetPd().GetHealPoolInfo()
+// 	g.Send(cmd.GetSpringRecoverDataScRsp, rsp)
+// }
+// // 2.7.5 遗弃
+// func SpringRecoverSingleAvatarCsReq(g *GamePlayer, payloadMsg pb.Message) {
+// 	req := payloadMsg.(*proto.SpringRecoverSingleAvatarCsReq)
+// 	g.GetPd().AvatarRecover(req.Id)
+//
+// 	rsp := &proto.SpringRecoverSingleAvatarScRsp{
+// 		Hp:         10000,
+// 		Retcode:    0,
+// 		AvatarType: req.AvatarType,
+// 		Id:         req.Id,
+// 	}
+// 	g.SyncLineupNotify(g.GetPd().GetCurLineUp())
+// 	g.Send(cmd.SpringRecoverSingleAvatarScRsp, rsp)
+// }
 
 // 更新实体状态
 func (g *GamePlayer) PropSceneGroupRefreshScNotify(propEntityIdList []uint32, db *spb.BlockBin) {

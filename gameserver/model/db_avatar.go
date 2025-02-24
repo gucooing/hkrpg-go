@@ -210,7 +210,16 @@ func (g *PlayerData) SetAvatarLevel(db *spb.AvatarBin, level uint32) {
 		return
 	}
 	db.Level = level
-	db.PromoteLevel = (level - 20) / 10
+	var promoteLevel uint32
+	if level < 20 {
+		promoteLevel = 0
+	} else {
+		promoteLevel = (level - 10) / 10
+		if promoteLevel > 6 {
+			promoteLevel = 6
+		}
+	}
+	db.PromoteLevel = promoteLevel
 }
 
 func (g *PlayerData) SetAvatarMultiPath(db *spb.AvatarBin, isMax bool, rank uint32) {
@@ -525,14 +534,17 @@ func (g *PlayerData) GetProtoAvatarById(avatarId uint32) *proto.Avatar {
 		return nil
 	}
 	avatar := &proto.Avatar{
-		SkilltreeList:               make([]*proto.AvatarSkillTree, 0),
-		Exp:                         avatardb.Exp,
-		BaseAvatarId:                avatardb.AvatarId,
-		EquipRelicList:              make([]*proto.EquipRelic, 0),
-		HasTakenPromotionRewardList: avatardb.TakenRewards,
 		FirstMetTimeStamp:           avatardb.FirstMetTimeStamp,
-		Promotion:                   avatardb.PromoteLevel,
+		EquipRelicList:              make([]*proto.EquipRelic, 0),
+		Exp:                         avatardb.Exp,
 		Level:                       avatardb.Level,
+		SkilltreeList:               make([]*proto.AvatarSkillTree, 0),
+		HasTakenPromotionRewardList: avatardb.TakenRewards,
+		Promotion:                   avatardb.PromoteLevel,
+		BaseAvatarId:                avatardb.AvatarId,
+		
+		IsMarked:      false,
+		DressedSkinId: 0,
 	}
 	avatar.Rank = patch.Rank
 	avatar.EquipmentUniqueId = patch.EquipmentUniqueId

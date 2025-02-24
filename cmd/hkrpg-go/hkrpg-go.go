@@ -1,5 +1,6 @@
 package main
 
+import "C"
 import (
 	"context"
 	"encoding/json"
@@ -19,9 +20,6 @@ import (
 )
 
 func main() {
-	// go func() {
-	// 	log.Println(http.ListenAndServe(":6060", nil))
-	// }()
 	confName := "hkrpg-go-pe.json"
 	err := hkrpg_go_pe.LoadConfig(confName)
 	if err != nil {

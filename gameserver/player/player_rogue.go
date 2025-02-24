@@ -104,9 +104,14 @@ func TakeRogueMiracleHandbookRewardCsReq(g *GamePlayer, payloadMsg pb.Message) {
 
 func CommonRogueQueryCsReq(g *GamePlayer, payloadMsg pb.Message) {
 	rsp := &proto.CommonRogueQueryScRsp{
-		RogueGetInfo: &proto.OINKPDBJJOE{
-			ONGHNJCGJLA: &proto.ADILAOJIMPO{
-				HIPAMHDLBDB: []proto.RogueUnlockFunctionType{
+		RogueGetInfo: &proto.BBIELDAHLAF{
+			FMMEOIAOEND: &proto.ELAFKBOPNIG{
+				AMJAFADNAHJ: 501,
+				CNLHKEKEMHF: 501,
+				JPAGDCKADNA: 163,
+			},
+			RogueAreaInfo: &proto.NFCIPKJACMC{
+				PPLKDHPNMOG: []proto.RogueUnlockFunctionType{
 					proto.RogueUnlockFunctionType_ROGUE_UNLOCK_FUNCTION_TYPE_MIRACLE,
 					proto.RogueUnlockFunctionType_ROGUE_UNLOCK_FUNCTION_TYPE_SHOW_HINT,
 					proto.RogueUnlockFunctionType_ROGUE_UNLOCK_FUNTION_TYPE_EXHIBITION,
@@ -114,13 +119,8 @@ func CommonRogueQueryCsReq(g *GamePlayer, payloadMsg pb.Message) {
 					proto.RogueUnlockFunctionType_ROGUE_UNLOCK_FUNCTION_TYPE_COSMOS_BAN_AEON,
 				},
 			},
-			RogueAreaInfo: &proto.DEIPJCNOIBO{
-				MPOOEPKBGCK: 501,
-				PKDKPGCKKKI: 501,
-				PDDMCKELMIJ: 163,
-			},
 		},
-		GGCGPNABJGA: 0,
+		FNKGAEJJBBI: 0,
 		Retcode:     0,
 	}
 

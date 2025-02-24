@@ -1,0 +1,1 @@
+go build -buildmode=c-shared -o .\build\hkrpg-go.dll .\cmd\hkrpg-go-dll\hkrpg-go-dll.go
